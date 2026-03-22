@@ -20,10 +20,10 @@ import { ButtonModule } from 'primeng/button';
     `
 })
 export class AppErrorStateComponent {
-    readonly title = input<string>('Bir sorun oluştu');
+    readonly title = input<string>('Veri alınamadı');
     readonly detail = input<string>();
     readonly showRetry = input<boolean>(true);
-    readonly retryLabel = input<string>('Yeniden dene');
+    readonly retryLabel = input<string>('Tekrar dene');
 
     readonly retry = output<void>();
 }

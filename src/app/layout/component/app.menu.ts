@@ -25,24 +25,22 @@ export class AppMenu {
         this.model = [
             {
                 label: 'Panel',
-                items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/panel/dashboard'] }]
+                items: [{ label: 'Özet', icon: 'pi pi-fw pi-home', routerLink: ['/panel/dashboard'] }]
             },
             {
-                label: 'Hasta Yonetimi',
+                label: 'Hasta yönetimi',
                 items: [
-                    { label: 'Clients', icon: 'pi pi-fw pi-users', routerLink: ['/panel/clients'] },
-                    { label: 'Pets', icon: 'pi pi-fw pi-heart', routerLink: ['/panel/pets'] },
-                    { label: 'Appointments', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] },
-                    { label: 'Examinations', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/examinations'] },
-                    { label: 'Vaccinations', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/vaccinations'] },
-                    { label: 'Payments', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }
+                    { label: 'Müşteriler', icon: 'pi pi-fw pi-users', routerLink: ['/panel/clients'] },
+                    { label: 'Hayvanlar', icon: 'pi pi-fw pi-heart', routerLink: ['/panel/pets'] },
+                    { label: 'Randevular', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] },
+                    { label: 'Muayeneler', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/examinations'] },
+                    { label: 'Aşılar', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/vaccinations'] },
+                    { label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }
                 ]
             },
             {
-                label: 'Auth',
-                items: [
-                    { label: 'Login', icon: 'pi pi-fw pi-sign-in', routerLink: ['/auth/login'] }
-                ]
+                label: 'Hesap',
+                items: [{ label: 'Giriş', icon: 'pi pi-fw pi-sign-in', routerLink: ['/auth/login'] }]
             }
         ];
     }

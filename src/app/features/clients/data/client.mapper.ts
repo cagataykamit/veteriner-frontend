@@ -1,5 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import type { ClientDetailDto, ClientListItemDto, ClientListItemDtoPagedResult } from '@/app/features/clients/models/client-api.model';
+import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 import type { ClientDetailVm, ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 
@@ -91,5 +92,12 @@ export function filterClientListByStatus(items: ClientListItemVm[], status: stri
     if (!s) {
         return items;
     }
-    return items.filter((i) => (i.status ?? '').toLowerCase() === s.toLowerCase());
+    const target = normalizeFilterKey(s);
+    return items.filter((i) => {
+        const st = (i.status ?? '').trim();
+        if (!st) {
+            return false;
+        }
+        return normalizeFilterKey(st) === target;
+    });
 }

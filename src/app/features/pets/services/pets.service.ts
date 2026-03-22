@@ -30,7 +30,7 @@ export class PetsService {
         return this.api.get<PetListItemDtoPagedResult>(ApiEndpoints.pets.list(), params).pipe(
             map((res) => mapPagedPetsToVm(res)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Pet listesi yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Hayvan listesi yüklenemedi.')))
             )
         );
     }
@@ -39,7 +39,7 @@ export class PetsService {
         return this.api.get<PetDetailDto>(ApiEndpoints.pets.byId(id)).pipe(
             map((dto) => mapPetDetailDtoToVm(dto)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Pet bulunamadı veya yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Hayvan bulunamadı veya yüklenemedi.')))
             )
         );
     }

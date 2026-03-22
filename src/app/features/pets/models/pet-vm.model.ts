@@ -1,5 +1,7 @@
 export interface PetListItemVm {
     id: string;
+    /** Liste DTO’sunda varsa; client’a göre filtre için (API ClientId yok sayarsa yedek). */
+    clientId: string | null;
     name: string;
     species: string;
     breed: string;

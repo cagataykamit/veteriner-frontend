@@ -1,0 +1,60 @@
+import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
+
+const EM = '—';
+
+export function normalizePaymentStatusKey(status: string): string {
+    return normalizeFilterKey(status);
+}
+
+const LABELS: Record<string, string> = {
+    paid: 'Ödendi',
+    completed: 'Tamamlandı',
+    settled: 'Mahsup',
+    pending: 'Bekliyor',
+    scheduled: 'Planlandı',
+    partial: 'Kısmi',
+    overdue: 'Vadesi geçmiş',
+    failed: 'Başarısız',
+    cancelled: 'İptal',
+    canceled: 'İptal',
+    refunded: 'İade',
+    draft: 'Taslak',
+    unknown: 'Bilinmiyor'
+};
+
+export function paymentStatusLabel(status: string | null | undefined): string {
+    if (status == null || status === '') {
+        return EM;
+    }
+    const k = normalizePaymentStatusKey(status);
+    return LABELS[k] ?? status;
+}
+
+/**
+ * paid/completed/settled → success;
+ * pending/scheduled/partial → warn;
+ * overdue/failed/cancelled/refunded → danger;
+ * draft/unknown → secondary.
+ */
+export function paymentStatusSeverity(status: string | null | undefined): StatusTagSeverity {
+    if (status == null || status === '') {
+        return 'secondary';
+    }
+    const k = normalizePaymentStatusKey(status);
+
+    if (k === 'paid' || k === 'completed' || k === 'settled') {
+        return 'success';
+    }
+    if (k === 'pending' || k === 'scheduled' || k === 'partial') {
+        return 'warn';
+    }
+    if (k === 'overdue' || k === 'failed' || k === 'cancelled' || k === 'canceled' || k === 'refunded') {
+        return 'danger';
+    }
+    if (k === 'draft' || k === 'unknown') {
+        return 'secondary';
+    }
+
+    return 'secondary';
+}

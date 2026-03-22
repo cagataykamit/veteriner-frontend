@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 export const guestGuard: CanActivateFn = (): boolean | UrlTree => {
     const auth = inject(AuthService);
     const router = inject(Router);
-    if (auth.isLoggedIn()) {
+    if (auth.isAuthenticated()) {
         return router.createUrlTree(['/panel/dashboard']);
     }
     return true;

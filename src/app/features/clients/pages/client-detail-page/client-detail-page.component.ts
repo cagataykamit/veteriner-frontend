@@ -27,16 +27,16 @@ import { EMPTY, switchMap } from 'rxjs';
         AppStatusTagComponent
     ],
     template: `
-        <a routerLink="/panel/clients" class="text-primary font-medium no-underline inline-block mb-4">← Client listesine dön</a>
+        <a routerLink="/panel/clients" class="text-primary font-medium no-underline inline-block mb-4">← Müşteri listesine dön</a>
 
         @if (loading()) {
-            <app-loading-state message="Client yükleniyor…" />
+            <app-loading-state message="Müşteri yükleniyor…" />
         } @else if (error()) {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (client()) {
-            <app-page-header [title]="client()!.fullName" subtitle="Client" [description]="'Kayıt: ' + formatDt(client()!.createdAtUtc)" />
+            <app-page-header [title]="client()!.fullName" subtitle="Müşteri" [description]="'Kayıt: ' + formatDt(client()!.createdAtUtc)" />
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
@@ -75,9 +75,9 @@ import { EMPTY, switchMap } from 'rxjs';
                 </div>
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Pet özeti</h5>
+                        <h5 class="mt-0 mb-4">Hayvan özeti</h5>
                         @if (client()!.petsSummary.totalCount === 0 && client()!.petsSummary.items.length === 0) {
-                            <app-empty-state message="Pet özeti yok veya henüz kayıt yok." />
+                            <app-empty-state message="Hayvan özeti yok veya henüz kayıt yok." />
                         } @else {
                             <p class="text-muted-color mt-0 mb-3">Toplam: {{ client()!.petsSummary.totalCount }}</p>
                             @if (client()!.petsSummary.items.length > 0) {

@@ -1,7 +1,9 @@
-/** Production build — API kökünü dağıtım ortamınıza göre güncelleyin. */
+/**
+ * Production — `environment.development.ts` ile `fileReplacements` üzerinden değiştirilmez (yalnızca dev build).
+ * `apiBaseUrl`: backend kök URL (sonunda `/` olmadan). CORS izin vermeli.
+ */
 export const environment = {
     production: true,
-    /** Doğrudan backend kökü (CORS açık olmalı). Geliştirmede proxy kullanıldığı için boş bırakılır. */
     apiBaseUrl: 'https://localhost:7173',
     /**
      * Swagger `LoginCommand.tenantId` — backend çok kiracılı ise ve zorunlu tutuyorsa tenant GUID.

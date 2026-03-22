@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 
+/** Panel listeleri / servisler: `ProblemDetails` ve düz metin için ortak mesaj. */
 export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek başarısız.'): string {
     const body = err.error as ProblemDetails | string | null | undefined;
     if (body && typeof body === 'object') {

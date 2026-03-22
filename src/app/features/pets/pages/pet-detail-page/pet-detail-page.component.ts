@@ -27,10 +27,10 @@ import { EMPTY, switchMap } from 'rxjs';
         AppStatusTagComponent
     ],
     template: `
-        <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Pet listesine dön</a>
+        <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
 
         @if (loading()) {
-            <app-loading-state message="Pet yükleniyor…" />
+            <app-loading-state message="Hayvan yükleniyor…" />
         } @else if (error()) {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
@@ -38,7 +38,7 @@ import { EMPTY, switchMap } from 'rxjs';
         } @else if (pet()) {
             <app-page-header
                 [title]="pet()!.name"
-                subtitle="Pet"
+                subtitle="Hayvan"
                 [description]="'Doğum: ' + formatDateOnly(pet()!.birthDateUtc) + ' · ' + pet()!.species"
             />
 
@@ -69,7 +69,7 @@ import { EMPTY, switchMap } from 'rxjs';
                         <h5 class="mt-0 mb-4">Sahip bilgileri</h5>
                         @if (pet()!.ownerId) {
                             <p class="mt-0 mb-3">
-                                <a [routerLink]="['/panel/clients', pet()!.ownerId]" class="text-primary font-medium no-underline">Client detayına git →</a>
+                                <a [routerLink]="['/panel/clients', pet()!.ownerId]" class="text-primary font-medium no-underline">Müşteri detayına git →</a>
                             </p>
                         }
                         <dl class="m-0 grid grid-cols-12 gap-3">

@@ -30,7 +30,7 @@ export class ClientsService {
         return this.api.get<ClientListItemDtoPagedResult>(ApiEndpoints.clients.list(), params).pipe(
             map((res) => mapPagedClientsToVm(res)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Client listesi yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Müşteri listesi yüklenemedi.')))
             )
         );
     }
@@ -39,7 +39,7 @@ export class ClientsService {
         return this.api.get<ClientDetailDto>(ApiEndpoints.clients.byId(id)).pipe(
             map((dto) => mapClientDetailDtoToVm(dto)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Client bulunamadı veya yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Müşteri bulunamadı veya yüklenemedi.')))
             )
         );
     }

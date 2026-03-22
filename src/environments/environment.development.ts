@@ -1,4 +1,7 @@
-/** `ng serve` + proxy: istekler `/api/...` üzerinden 7173’e yönlendirilir. */
+/**
+ * `ng serve` — `angular.json` → `proxyConfig: proxy.conf.json`.
+ * `apiBaseUrl: ''` iken göreli path’ler (`/api/v1/...`) tarayıcıda aynı origin’e gider; proxy 7173’e yollar.
+ */
 export const environment = {
     production: false,
     apiBaseUrl: '',

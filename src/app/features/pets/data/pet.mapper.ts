@@ -1,4 +1,5 @@
 import { HttpParams } from '@angular/common/http';
+import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 import type {
     PetDetailDto,
     PetListItemDto,
@@ -16,6 +17,7 @@ function str(v: string | null | undefined): string {
 export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
     return {
         id: dto.id,
+        clientId: dto.clientId?.trim() ? dto.clientId : null,
         name: str(dto.name),
         species: str(dto.species),
         breed: str(dto.breed),
@@ -111,5 +113,12 @@ export function filterPetListByStatus(items: PetListItemVm[], status: string | n
     if (!s) {
         return items;
     }
-    return items.filter((i) => (i.status ?? '').toLowerCase() === s.toLowerCase());
+    const target = normalizeFilterKey(s);
+    return items.filter((i) => {
+        const st = (i.status ?? '').trim();
+        if (!st) {
+            return false;
+        }
+        return normalizeFilterKey(st) === target;
+    });
 }

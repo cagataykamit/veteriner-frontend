@@ -1,0 +1,16 @@
+/**
+ * Aşı listesi — UI view model.
+ */
+
+export interface VaccinationListItemVm {
+    id: string;
+    appliedAtUtc: string | null;
+    nextDueAtUtc: string | null;
+    vaccineName: string;
+    petId: string | null;
+    petName: string;
+    clientId: string | null;
+    clientName: string;
+    status: string | null;
+    notes: string;
+}

@@ -11,8 +11,12 @@ import { RippleModule } from 'primeng/ripple';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { environment } from '@/environments/environment';
-import { loginFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { loginFailureMessage } from '@/app/core/auth/auth-error.utils';
 
+/**
+ * Tenant: zorunlu tenant UI yok. `environment.authTenantId` doluysa LoginRequest’e eklenir.
+ * Çok kiracılı özel akış (tenant seçici) ileride ayrı ekran/ayar ile genişletilebilir.
+ */
 @Component({
     selector: 'app-login',
     standalone: true,
@@ -41,25 +45,25 @@ import { loginFailureMessage } from '@/app/shared/utils/api-error.utils';
                                     />
                                 </g>
                             </svg>
-                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to PrimeLand!</div>
-                            <span class="text-muted-color font-medium">Sign in to continue</span>
+                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Veteriner paneli</div>
+                            <span class="text-muted-color font-medium">Hesabınızla giriş yapın</span>
                         </div>
 
                         <div>
-                            <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-                            <input pInputText id="email1" type="text" placeholder="Email address" class="w-full md:w-120 mb-8" [(ngModel)]="email" />
+                            <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">E-posta</label>
+                            <input pInputText id="email1" type="text" placeholder="E-posta adresiniz" class="w-full md:w-120 mb-8" [(ngModel)]="email" />
 
-                            <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
-                            <p-password id="password1" [(ngModel)]="password" placeholder="Password" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
+                            <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Şifre</label>
+                            <p-password id="password1" [(ngModel)]="password" placeholder="Şifreniz" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
 
                             <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                                 <div class="flex items-center">
                                     <p-checkbox [(ngModel)]="checked" id="rememberme1" binary class="mr-2"></p-checkbox>
-                                    <label for="rememberme1">Remember me</label>
+                                    <label for="rememberme1">Beni hatırla</label>
                                 </div>
-                                <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
+                                <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Şifremi unuttum</span>
                             </div>
-                            <p-button label="Sign In" styleClass="w-full" [loading]="signInLoading()" [disabled]="signInLoading()" (onClick)="signIn()"></p-button>
+                            <p-button label="Giriş yap" styleClass="w-full" [loading]="signInLoading()" [disabled]="signInLoading()" (onClick)="signIn()"></p-button>
                             @if (loginError()) {
                                 <p class="text-sm text-center mt-4 mb-0 text-muted-color" role="alert">{{ loginError() }}</p>
                             }
@@ -106,7 +110,7 @@ export class Login {
             .pipe(finalize(() => this.signInLoading.set(false)))
             .subscribe({
                 next: () => {
-                    if (!this.auth.isLoggedIn()) {
+                    if (!this.auth.isAuthenticated()) {
                         this.loginError.set('Sunucu yanıtı geçersiz: oturum anahtarı alınamadı.');
                         return;
                     }

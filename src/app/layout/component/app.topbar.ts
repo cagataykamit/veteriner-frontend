@@ -33,7 +33,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                         />
                     </g>
                 </svg>
-                <span>SAKAI</span>
+                <span>Veteriner</span>
             </a>
         </div>
 
@@ -66,15 +66,15 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                 <div class="layout-topbar-menu-content">
                     <button type="button" class="layout-topbar-action">
                         <i class="pi pi-calendar"></i>
-                        <span>Calendar</span>
+                        <span>Takvim</span>
                     </button>
                     <button type="button" class="layout-topbar-action">
                         <i class="pi pi-inbox"></i>
-                        <span>Messages</span>
+                        <span>Mesajlar</span>
                     </button>
                     <button type="button" class="layout-topbar-action">
                         <i class="pi pi-user"></i>
-                        <span>Profile</span>
+                        <span>Profil</span>
                     </button>
                 </div>
             </div>

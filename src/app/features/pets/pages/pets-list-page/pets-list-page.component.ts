@@ -17,6 +17,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
 @Component({
     selector: 'app-pets-list-page',
@@ -36,7 +37,7 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Pets" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay." />
+        <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay." />
 
         <div class="card mb-6">
             <div class="grid grid-cols-12 gap-4 items-end">
@@ -52,7 +53,7 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
                     />
                 </div>
                 <div class="col-span-12 md:col-span-3">
-                    <label for="petSpecies" class="block text-sm font-medium text-muted-color mb-2">Tür (species)</label>
+                    <label for="petSpecies" class="block text-sm font-medium text-muted-color mb-2">Tür</label>
                     <input
                         pInputText
                         id="petSpecies"
@@ -70,33 +71,33 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
                         [(ngModel)]="statusFilter"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="Tümü"
+                        [placeholder]="copy.filterPlaceholderAll"
                         styleClass="w-full"
                         [showClear]="true"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-2 flex flex-wrap gap-2">
-                    <p-button label="Ara" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
-                    <p-button label="Temizle" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
+                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
                 Durum filtresi, API yanıtında <span class="font-medium">status</span> alanı varsa bu sayfadaki kayıtlar üzerinde uygulanır. Tür alanı
-                <span class="font-medium">Species</span> query parametresi olarak gönderilir (backend desteklemiyorsa yok sayılır).
+                <span class="font-medium">species</span> sorgu parametresi olarak gönderilir (backend desteklemiyorsa yok sayılır).
             </p>
         </div>
 
         @if (loading()) {
-            <app-loading-state message="Pet listesi yükleniyor…" />
+            <app-loading-state message="Hayvan listesi yükleniyor…" />
         } @else if (error()) {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else {
             <div class="card">
-                <h5 class="mb-4">Kayıtlar</h5>
+                <h5 class="mb-4">{{ copy.recordsHeading }}</h5>
                 @if (displayedRows().length === 0) {
-                    <app-empty-state message="Kayıt bulunamadı." hint="Arama veya filtreleri değiştirin." />
+                    <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
                     <p-table
                         [value]="displayedRows()"
@@ -145,6 +146,8 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
     `
 })
 export class PetsListPageComponent {
+    readonly copy = PANEL_COPY;
+
     private readonly petsService = inject(PetsService);
 
     readonly loading = signal(false);

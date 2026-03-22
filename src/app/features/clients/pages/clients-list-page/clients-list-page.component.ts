@@ -17,6 +17,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
 @Component({
     selector: 'app-clients-list-page',
@@ -36,7 +37,7 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Clients" subtitle="Hasta yönetimi" description="Kayıtlı client listesi ve detay." />
+        <app-page-header title="Müşteriler" subtitle="Hasta yönetimi" description="Kayıtlı müşteri listesi ve detay." />
 
         <div class="card mb-6">
             <div class="grid grid-cols-12 gap-4 items-end">
@@ -59,14 +60,14 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
                         [(ngModel)]="statusFilter"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="Tümü"
+                        [placeholder]="copy.filterPlaceholderAll"
                         styleClass="w-full"
                         [showClear]="true"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-3 flex flex-wrap gap-2">
-                    <p-button label="Ara" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
-                    <p-button label="Temizle" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
+                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
@@ -75,16 +76,16 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
         </div>
 
         @if (loading()) {
-            <app-loading-state message="Client listesi yükleniyor…" />
+            <app-loading-state message="Müşteri listesi yükleniyor…" />
         } @else if (error()) {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else {
             <div class="card">
-                <h5 class="mb-4">Kayıtlar</h5>
+                <h5 class="mb-4">{{ copy.recordsHeading }}</h5>
                 @if (displayedRows().length === 0) {
-                    <app-empty-state message="Kayıt bulunamadı." hint="Arama veya filtreleri değiştirin." />
+                    <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
                     <p-table
                         [value]="displayedRows()"
@@ -103,7 +104,7 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
                                 <th>Ad Soyad</th>
                                 <th>Telefon</th>
                                 <th>E-posta</th>
-                                <th class="text-right">Pet Sayısı</th>
+                                <th class="text-right">Hayvan sayısı</th>
                                 <th>Kayıt Tarihi</th>
                                 <th>Durum</th>
                                 <th style="width: 8rem">İşlemler</th>
@@ -131,6 +132,8 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
     `
 })
 export class ClientsListPageComponent {
+    readonly copy = PANEL_COPY;
+
     private readonly clientsService = inject(ClientsService);
 
     readonly loading = signal(false);
