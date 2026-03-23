@@ -14,7 +14,6 @@ import type { ClientDetailDto, ClientListItemDtoPagedResult } from '@/app/featur
 import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 import type { ClientDetailVm, ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
-import { messageFromClientCreateHttpError } from '@/app/features/clients/utils/client-create-error.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface ClientsPagedVm {
@@ -51,6 +50,7 @@ export class ClientsService {
     /**
      * POST liste endpoint’i.
      * Yanıt: düz `ClientDetailDto`, sarmalayıcı veya PascalCase `id` — `extractCreatedClientIdFromPostResponse`.
+     * HTTP hataları (400 alan doğrulama vb.) bileşende `parseClientCreateHttpError` için olduğu gibi iletilir (pets create ile aynı desen).
      */
     createClient(payload: CreateClientRequest): Observable<{ id: string }> {
         const body = mapCreateClientToApiBody(payload);
@@ -64,7 +64,7 @@ export class ClientsService {
             }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
-                    return throwError(() => new Error(messageFromClientCreateHttpError(err)));
+                    return throwError(() => err);
                 }
                 if (err instanceof Error && err.message === 'CLIENT_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(

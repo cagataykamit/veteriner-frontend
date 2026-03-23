@@ -21,6 +21,14 @@ export const ApiEndpoints = {
         list: () => `/api/v1/pets`,
         byId: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}`
     },
+    species: {
+        list: () => `/api/v1/species`,
+        byId: (id: string) => `/api/v1/species/${encodeURIComponent(id)}`
+    },
+    breeds: {
+        list: () => `/api/v1/breeds`,
+        byId: (id: string) => `/api/v1/breeds/${encodeURIComponent(id)}`
+    },
     appointments: {
         list: () => `/api/v1/appointments`,
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`

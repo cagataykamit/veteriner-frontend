@@ -17,7 +17,7 @@ export function clientOptionsFromList(items: ClientListItemVm[]): SelectOption[]
 /** Pet dropdown: ad + tür. */
 export function petOptionsFromList(items: PetListItemVm[]): SelectOption[] {
     return items.map((p) => ({
-        label: `${p.name} — ${p.species}`,
+        label: `${p.name} — ${p.speciesName}`,
         value: p.id
     }));
 }

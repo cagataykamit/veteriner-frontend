@@ -20,3 +20,5 @@ export function authRefreshFailureMessage(err: unknown, fallback = 'Oturum yenil
     }
     return fallback;
 }
+
+export const AUTH_TENANT_SELECT_REQUIRED_MESSAGE = 'Bu hesap birden fazla kiracıya bağlı. Devam etmek için kiracı seçin.';

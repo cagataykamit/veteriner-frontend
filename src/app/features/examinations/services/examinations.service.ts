@@ -48,16 +48,70 @@ export class ExaminationsService {
 
     createExamination(payload: CreateExaminationRequest): Observable<{ id: string }> {
         const body = mapCreateExaminationToApiBody(payload);
-        return this.api.post<ExaminationDetailDto>(ApiEndpoints.examinations.list(), body).pipe(
-            map((dto) => {
-                if (!dto?.id) {
-                    throw new Error('Sunucu yanıtında muayene kimliği yok.');
+        return this.api.post<unknown>(ApiEndpoints.examinations.list(), body).pipe(
+            map((raw) => {
+                const id = extractCreatedExaminationIdFromPostResponse(raw);
+                if (!id) {
+                    throw new Error('EXAMINATION_CREATE_NO_ID_IN_RESPONSE');
                 }
-                return { id: dto.id };
+                return { id };
             }),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Muayene oluşturulamadı.')))
-            )
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => new Error(messageFromHttpError(err, 'Muayene oluşturulamadı.')));
+                }
+                if (err instanceof Error && err.message === 'EXAMINATION_CREATE_NO_ID_IN_RESPONSE') {
+                    return throwError(
+                        () =>
+                            new Error(
+                                'Sunucu yanıtında muayene kimliği okunamadı. Kayıt oluşmuş olabilir; muayene listesini kontrol edin.'
+                            )
+                    );
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Muayene oluşturulamadı.')
+                );
+            })
         );
     }
+}
+
+function extractCreatedExaminationIdFromPostResponse(body: unknown): string | null {
+    if (body == null) {
+        return null;
+    }
+    if (typeof body === 'string') {
+        return body.trim() || null;
+    }
+    if (typeof body !== 'object') {
+        return null;
+    }
+    const o = body as Record<string, unknown>;
+    const idKeys = ['id', 'Id', 'examinationId', 'ExaminationId'];
+    for (const k of idKeys) {
+        const v = o[k];
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+        if (typeof v === 'number' && !Number.isNaN(v)) {
+            return String(v);
+        }
+    }
+    const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'examination', 'Examination'];
+    for (const w of wrappers) {
+        const inner = o[w];
+        if (inner && typeof inner === 'object') {
+            const n = inner as Record<string, unknown>;
+            for (const k of idKeys) {
+                const v = n[k];
+                if (typeof v === 'string' && v.trim()) {
+                    return v.trim();
+                }
+                if (typeof v === 'number' && !Number.isNaN(v)) {
+                    return String(v);
+                }
+            }
+        }
+    }
+    return null;
 }

@@ -4,6 +4,7 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
+    extractCreatedPetIdFromPostResponse,
     mapCreatePetToApiBody,
     mapPetDetailDtoToVm,
     mapPagedPetsToVm,
@@ -47,21 +48,36 @@ export class PetsService {
     }
 
     /**
-     * POST liste endpoint’i (clients ve diğer modüllerle aynı varsayım).
-     * Yanıt gövdesinde `PetDetailDto` ve `id` beklenir.
+     * POST liste endpoint’i.
+     * Yanıt: düz DTO, sarmalayıcı veya `petId` — `extractCreatedPetIdFromPostResponse`.
+     * HTTP hataları (400 alan doğrulama vb.) bileşende `parsePetCreateHttpError` için olduğu gibi iletilir.
      */
     createPet(payload: CreatePetRequest): Observable<{ id: string }> {
         const body = mapCreatePetToApiBody(payload);
-        return this.api.post<PetDetailDto>(ApiEndpoints.pets.list(), body).pipe(
-            map((dto) => {
-                if (!dto?.id) {
-                    throw new Error('Sunucu yanıtında hayvan kimliği yok.');
+        return this.api.post<unknown>(ApiEndpoints.pets.list(), body).pipe(
+            map((raw) => {
+                const id = extractCreatedPetIdFromPostResponse(raw);
+                if (!id) {
+                    throw new Error('PET_CREATE_NO_ID_IN_RESPONSE');
                 }
-                return { id: dto.id };
+                return { id };
             }),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Hayvan oluşturulamadı.')))
-            )
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => err);
+                }
+                if (err instanceof Error && err.message === 'PET_CREATE_NO_ID_IN_RESPONSE') {
+                    return throwError(
+                        () =>
+                            new Error(
+                                'Sunucu yanıtında hayvan kimliği okunamadı. Kayıt oluşmuş olabilir; hayvan listesini kontrol edin.'
+                            )
+                    );
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Hayvan oluşturulamadı.')
+                );
+            })
         );
     }
 }

@@ -9,6 +9,8 @@ export interface PaymentsListQuery {
     clientId?: string;
     /** İsteğe bağlı — backend `PetId` desteklemiyorsa istemci tarafında filtre uygulanır. */
     petId?: string;
+    /** İsteğe bağlı — backend destekliyorsa ödeme-randevu ilişkisi için kullanılır. */
+    appointmentId?: string;
     search?: string;
     status?: string;
     method?: string;

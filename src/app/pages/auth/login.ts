@@ -8,19 +8,22 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
+import { SelectModule } from 'primeng/select';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { environment } from '@/environments/environment';
-import { loginFailureMessage } from '@/app/core/auth/auth-error.utils';
+import {
+    AUTH_TENANT_SELECT_REQUIRED_MESSAGE,
+    loginFailureMessage
+} from '@/app/core/auth/auth-error.utils';
+import {
+    type AuthTenantOption,
+    parseTenantRequirement
+} from '@/app/core/auth/auth-tenant.utils';
 
-/**
- * Tenant: zorunlu tenant UI yok. `environment.authTenantId` doluysa LoginRequest’e eklenir.
- * Çok kiracılı özel akış (tenant seçici) ileride ayrı ekran/ayar ile genişletilebilir.
- */
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RippleModule, AppFloatingConfigurator],
+    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, SelectModule, FormsModule, RippleModule, AppFloatingConfigurator],
     template: `
         <app-floating-configurator />
         <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
@@ -56,6 +59,19 @@ import { loginFailureMessage } from '@/app/core/auth/auth-error.utils';
                             <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Şifre</label>
                             <p-password id="password1" [(ngModel)]="password" placeholder="Şifreniz" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
 
+                            @if (tenantStep()) {
+                                <label for="tenantId" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Kiracı</label>
+                                <p-select
+                                    inputId="tenantId"
+                                    [options]="tenantOptions()"
+                                    [(ngModel)]="selectedTenantId"
+                                    optionLabel="name"
+                                    optionValue="id"
+                                    placeholder="Kiracı seçin"
+                                    styleClass="mb-4 w-full"
+                                />
+                            }
+
                             <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                                 <div class="flex items-center">
                                     <p-checkbox [(ngModel)]="checked" id="rememberme1" binary class="mr-2"></p-checkbox>
@@ -63,7 +79,13 @@ import { loginFailureMessage } from '@/app/core/auth/auth-error.utils';
                                 </div>
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Şifremi unuttum</span>
                             </div>
-                            <p-button label="Giriş yap" styleClass="w-full" [loading]="signInLoading()" [disabled]="signInLoading()" (onClick)="signIn()"></p-button>
+                            <p-button
+                                [label]="tenantStep() ? 'Devam et' : 'Giriş yap'"
+                                styleClass="w-full"
+                                [loading]="signInLoading()"
+                                [disabled]="signInLoading() || (tenantStep() && !selectedTenantId)"
+                                (onClick)="signIn()"
+                            ></p-button>
                             @if (loginError()) {
                                 <p class="text-sm text-center mt-4 mb-0 text-muted-color" role="alert">{{ loginError() }}</p>
                             }
@@ -88,6 +110,9 @@ export class Login {
     readonly signInLoading = signal(false);
 
     readonly loginError = signal<string | null>(null);
+    readonly tenantStep = signal(false);
+    readonly tenantOptions = signal<AuthTenantOption[]>([]);
+    selectedTenantId: string | null = null;
 
     signIn(): void {
         if (this.signInLoading()) {
@@ -99,13 +124,16 @@ export class Login {
             this.loginError.set('E-posta ve şifre zorunludur.');
             return;
         }
+        if (this.tenantStep() && !this.selectedTenantId) {
+            this.loginError.set(AUTH_TENANT_SELECT_REQUIRED_MESSAGE);
+            return;
+        }
         this.signInLoading.set(true);
-        const tenant = environment.authTenantId?.trim();
         this.auth
             .login({
                 email,
                 password: this.password,
-                ...(tenant ? { tenantId: tenant } : {})
+                ...(this.selectedTenantId?.trim() ? { tenantId: this.selectedTenantId.trim() } : {})
             })
             .pipe(finalize(() => this.signInLoading.set(false)))
             .subscribe({
@@ -121,7 +149,25 @@ export class Login {
                 },
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
-                    this.loginError.set(http ? loginFailureMessage(http) : 'Giriş başarısız.');
+                    if (http) {
+                        const tenantInfo = parseTenantRequirement(http);
+                        if (tenantInfo.tenantRequired) {
+                            this.tenantStep.set(true);
+                            this.tenantOptions.set(tenantInfo.tenants);
+                            if (!this.selectedTenantId || !tenantInfo.tenants.some((x) => x.id === this.selectedTenantId)) {
+                                this.selectedTenantId = tenantInfo.tenants[0]?.id ?? null;
+                            }
+                            this.loginError.set(
+                                tenantInfo.tenants.length > 0
+                                    ? AUTH_TENANT_SELECT_REQUIRED_MESSAGE
+                                    : 'Bu hesap için kiracı seçimi zorunlu.'
+                            );
+                            return;
+                        }
+                        this.loginError.set(loginFailureMessage(http));
+                        return;
+                    }
+                    this.loginError.set('Giriş başarısız.');
                 }
             });
     }

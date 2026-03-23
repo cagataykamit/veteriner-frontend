@@ -16,48 +16,101 @@ function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
 }
 
-function num(v: number | null | undefined): number | null {
+function firstTrimmed(...vals: Array<string | null | undefined>): string | null {
+    for (const v of vals) {
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function num(v: number | string | null | undefined): number | null {
     if (v == null || Number.isNaN(Number(v))) {
         return null;
     }
     return Number(v);
 }
 
+function canonicalClientId(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+    return firstTrimmed(dto.clientId, dto.ownerId);
+}
+
+function canonicalClientName(dto: PaymentListItemDto | PaymentDetailDto): string {
+    return str(firstTrimmed(dto.clientName, dto.ownerName));
+}
+
+function canonicalPetId(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+    return firstTrimmed(dto.petId, dto.animalId);
+}
+
+function canonicalPetName(dto: PaymentListItemDto | PaymentDetailDto): string {
+    return str(firstTrimmed(dto.petName, dto.animalName));
+}
+
+function canonicalAmount(dto: PaymentListItemDto | PaymentDetailDto): number | null {
+    return num(dto.amount ?? dto.totalAmount ?? dto.paymentAmount);
+}
+
+function canonicalCurrency(dto: PaymentListItemDto | PaymentDetailDto): string {
+    return firstTrimmed(dto.currency, dto.currencyCode) ?? 'TRY';
+}
+
+function canonicalStatus(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+    return firstTrimmed(dto.status, dto.paymentStatus, dto.lifecycleStatus, dto.lifecycle);
+}
+
+function canonicalMethod(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+    return firstTrimmed(dto.method, dto.paymentMethod, dto.methodType);
+}
+
+function canonicalDueDate(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+    return firstTrimmed(dto.dueDateUtc, dto.dueAtUtc);
+}
+
+function canonicalPaidAt(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+    return firstTrimmed(dto.paidAtUtc, dto.paymentDateUtc, dto.paidOnUtc);
+}
+
+function canonicalCreatedAt(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+    return firstTrimmed(dto.createdAtUtc, dto.createdOnUtc);
+}
+
 export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListItemVm {
-    const currency = dto.currency?.trim() ? dto.currency!.trim() : 'TRY';
     return {
         id: dto.id,
-        clientId: dto.clientId?.trim() ? dto.clientId : null,
-        clientName: str(dto.clientName),
-        petId: dto.petId?.trim() ? dto.petId : null,
-        petName: str(dto.petName),
-        amount: num(dto.amount),
-        currency,
-        status: dto.status?.trim() ? dto.status : null,
-        method: dto.method?.trim() ? dto.method : null,
-        dueDateUtc: dto.dueDateUtc ?? null,
-        paidAtUtc: dto.paidAtUtc ?? null,
-        createdAtUtc: dto.createdAtUtc ?? null
+        clientId: canonicalClientId(dto),
+        clientName: canonicalClientName(dto),
+        petId: canonicalPetId(dto),
+        petName: canonicalPetName(dto),
+        appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
+        amount: canonicalAmount(dto),
+        currency: canonicalCurrency(dto),
+        status: canonicalStatus(dto),
+        method: canonicalMethod(dto),
+        dueDateUtc: canonicalDueDate(dto),
+        paidAtUtc: canonicalPaidAt(dto),
+        createdAtUtc: canonicalCreatedAt(dto)
     };
 }
 
 export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm {
-    const currency = dto.currency?.trim() ? dto.currency!.trim() : 'TRY';
     return {
         id: dto.id,
-        clientId: dto.clientId?.trim() ? dto.clientId : null,
-        clientName: str(dto.clientName),
-        petId: dto.petId?.trim() ? dto.petId : null,
-        petName: str(dto.petName),
-        amount: num(dto.amount),
-        currency,
-        status: dto.status?.trim() ? dto.status : null,
-        method: dto.method?.trim() ? dto.method : null,
-        note: str(dto.note),
-        dueDateUtc: dto.dueDateUtc ?? null,
-        paidAtUtc: dto.paidAtUtc ?? null,
-        createdAtUtc: dto.createdAtUtc ?? null,
-        updatedAtUtc: dto.updatedAtUtc ?? null
+        clientId: canonicalClientId(dto),
+        clientName: canonicalClientName(dto),
+        petId: canonicalPetId(dto),
+        petName: canonicalPetName(dto),
+        appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
+        amount: canonicalAmount(dto),
+        currency: canonicalCurrency(dto),
+        status: canonicalStatus(dto),
+        method: canonicalMethod(dto),
+        note: str(firstTrimmed(dto.note, dto.notes, dto.description)),
+        dueDateUtc: canonicalDueDate(dto),
+        paidAtUtc: canonicalPaidAt(dto),
+        createdAtUtc: canonicalCreatedAt(dto),
+        updatedAtUtc: firstTrimmed(dto.updatedAtUtc, dto.updatedOnUtc)
     };
 }
 
@@ -86,19 +139,31 @@ export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams 
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.clientId?.trim()) {
-        p = p.set('ClientId', query.clientId.trim());
+        const clientId = query.clientId.trim();
+        p = p.set('ClientId', clientId);
+        p = p.set('OwnerId', clientId);
     }
     if (query.petId?.trim()) {
-        p = p.set('PetId', query.petId.trim());
+        const petId = query.petId.trim();
+        p = p.set('PetId', petId);
+        p = p.set('AnimalId', petId);
+    }
+    if (query.appointmentId?.trim()) {
+        p = p.set('AppointmentId', query.appointmentId.trim());
     }
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
     if (query.status?.trim()) {
-        p = p.set('Status', query.status.trim());
+        const status = query.status.trim();
+        p = p.set('Status', status);
+        p = p.set('PaymentStatus', status);
+        p = p.set('LifecycleStatus', status);
     }
     if (query.method?.trim()) {
-        p = p.set('Method', query.method.trim());
+        const method = query.method.trim();
+        p = p.set('Method', method);
+        p = p.set('PaymentMethod', method);
     }
     if (query.fromDate?.trim()) {
         p = p.set('FromDate', query.fromDate.trim());
@@ -116,28 +181,50 @@ export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams 
 }
 
 export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCreateRequestDto {
+    const clientId = req.clientId.trim();
+    const petId = req.petId.trim();
+    const currency = req.currency.trim();
+    const method = req.method.trim();
+    const status = req.status.trim();
     const body: PaymentCreateRequestDto = {
-        clientId: req.clientId.trim(),
-        petId: req.petId.trim(),
+        clientId,
+        ownerId: clientId,
+        petId,
+        animalId: petId,
         amount: req.amount,
-        currency: req.currency.trim(),
-        method: req.method.trim(),
-        status: req.status.trim()
+        totalAmount: req.amount,
+        paymentAmount: req.amount,
+        currency,
+        currencyCode: currency,
+        method,
+        paymentMethod: method,
+        status,
+        paymentStatus: status,
+        lifecycleStatus: status
     };
     if (req.dueDateUtc?.trim()) {
-        body.dueDateUtc = req.dueDateUtc.trim();
+        const dueDateUtc = req.dueDateUtc.trim();
+        body.dueDateUtc = dueDateUtc;
+        body.dueAtUtc = dueDateUtc;
     } else {
         body.dueDateUtc = null;
+        body.dueAtUtc = null;
     }
     if (req.paidAtUtc?.trim()) {
-        body.paidAtUtc = req.paidAtUtc.trim();
+        const paidAtUtc = req.paidAtUtc.trim();
+        body.paidAtUtc = paidAtUtc;
+        body.paymentDateUtc = paidAtUtc;
     } else {
         body.paidAtUtc = null;
+        body.paymentDateUtc = null;
     }
     if (req.note?.trim()) {
-        body.note = req.note.trim();
+        const note = req.note.trim();
+        body.note = note;
+        body.notes = note;
     } else {
         body.note = null;
+        body.notes = null;
     }
     return body;
 }

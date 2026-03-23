@@ -44,7 +44,7 @@ export function loginFailureMessage(err: HttpErrorResponse): string {
         if (hasProblemDetails) {
             return messageFromHttpError(err, 'Giriş reddedildi.');
         }
-        return 'Giriş reddedildi. E-posta ve şifreyi kontrol edin. Çok kiracılı API kullanıyorsanız src/environments/environment.development.ts dosyasında authTenantId alanına tenant GUID girin (Swagger: LoginCommand.tenantId).';
+        return 'Giriş reddedildi. E-posta ve şifreyi kontrol edin.';
     }
     if (err.status === 0) {
         return 'Sunucuya ulaşılamıyor. API adresini ve ağı kontrol edin.';

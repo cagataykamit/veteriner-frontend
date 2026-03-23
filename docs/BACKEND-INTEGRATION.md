@@ -27,13 +27,16 @@ Bu dosya **Swagger / gerçek API ile doğrulanması gereken** varsayımları öz
 - **POST yanıtı — kimlik çıkarma:** `extractCreatedClientIdFromPostResponse` şunları dener: gövdede `id` / `Id` / `clientId` / `ClientId`; iç içe `data` / `value` / `result` / `client` alt nesneleri; sayısal `id`. Hiçbiri yoksa kullanıcıya yumuşak hata + listeyi kontrol et uyarısı.
 - **Çakışma:** `409` ve boş gövde → Türkçe duplicate fallback; `ProblemDetails.detail` varsa o önceliklidir.
 - **400 doğrulama:** `ValidationProblemDetails` gövdesinde `errors` sözlüğü (ör. `Phone` / `phone` → `errors.phone`) beklenir; `parseClientCreateHttpError` bunları form alanlarına bağlar. Yalnızca genel `title`/`detail` (veya bozuk kodlama) gelirse alan mesajı çıkmaz; üstte güvenli Türkçe fallback kullanılır.
+- **HTTP hata akışı:** `createClient` başarısızlıkta `HttpErrorResponse` olduğu gibi bileşene iletilir (alan bazlı parse için); kimlik eksikliği servis içinde kullanıcı dostu `Error` metnine çevrilir.
 - **Opsiyonel alanlar:** Backend henüz `email` / `address` / `notes` / `status` desteklemiyorsa mapper’da çıkarılmalı veya zorunlu alan setine göre sadeleştirilmelidir.
 
 ## Hayvanlar (pets)
 
 - **POST** `/api/v1/pets` — gövde (varsayım, camelCase): zorunlu **`clientId`**, **`name`**, **`species`**; isteğe bağlı `breed`, `gender`, `birthDateUtc` (gün başı UTC ISO), `color`, `weight` (sayı), `status`, `notes`. Backend `ownerId` kullanıyorsa `clientId` → `ownerId` eşlemesi `mapCreatePetToApiBody` içinde yapılmalıdır.
 - **Cinsiyet / durum:** Form `male` / `female` ve `active` / `inactive` gönderir; API farklı enum/string bekliyorsa mapper güncellenir.
-- **POST yanıtı:** tam `PetDetailDto` ve **`id`**; yalnızca `{ id }` dönüyorsa `PetsService.createPet` içindeki `map` uyarlanır.
+- **POST yanıtı — kimlik çıkarma:** `extractCreatedPetIdFromPostResponse` şunları dener: `id` / `Id` / `petId` / `PetId`; iç içe `data` / `value` / `result` / `pet`. Hiçbiri yoksa kullanıcıya yumuşak hata + listeyi kontrol et uyarısı.
+- **400 doğrulama:** `ValidationProblemDetails` içindeki `errors` anahtarları `parsePetCreateHttpError` ile forma eşlenir (`ClientId` / `OwnerId` → müşteri, `Weight` → kilo alanı, `BirthDateUtc` → doğum tarihi vb.). Kesin kurallar backend’dedir.
+- **HTTP hata akışı:** `createPet` başarısızlıkta `HttpErrorResponse` olduğu gibi bileşene iletilir (alan bazlı parse için); kimlik eksikliği servis içinde kullanıcı dostu `Error` metnine çevrilir.
 
 ## Dashboard
 

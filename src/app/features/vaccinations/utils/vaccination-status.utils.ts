@@ -9,6 +9,9 @@ export function normalizeVaccinationStatusKey(status: string): string {
 }
 
 const LABELS: Record<string, string> = {
+    '0': 'Uygulandı',
+    '1': 'Yaklaşan',
+    '2': 'Gecikmiş',
     applied: 'Uygulandı',
     completed: 'Tamamlandı',
     upcoming: 'Yaklaşan',
@@ -19,7 +22,12 @@ const LABELS: Record<string, string> = {
     cancelled: 'İptal',
     canceled: 'İptal',
     unknown: 'Bilinmiyor',
-    passive: 'Pasif'
+    passive: 'Pasif',
+    created: 'Oluşturuldu',
+    active: 'Aktif',
+    closed: 'Kapandı',
+    done: 'Tamamlandı',
+    failed: 'Başarısız'
 };
 
 export function vaccinationStatusLabel(status: string | null | undefined): string {
@@ -55,6 +63,15 @@ export function vaccinationStatusSeverity(status: string | null | undefined): St
     }
     const k = normalizeVaccinationStatusKey(status);
 
+    if (k === '0') {
+        return 'success';
+    }
+    if (k === '1') {
+        return 'warn';
+    }
+    if (k === '2') {
+        return 'danger';
+    }
     if (k === 'applied' || k === 'completed') {
         return 'success';
     }
@@ -66,6 +83,15 @@ export function vaccinationStatusSeverity(status: string | null | undefined): St
     }
     if (k === 'unknown' || k === 'passive') {
         return 'secondary';
+    }
+    if (k === 'created' || k === 'active' || k === 'closed') {
+        return 'info';
+    }
+    if (k === 'done') {
+        return 'success';
+    }
+    if (k === 'failed') {
+        return 'danger';
     }
 
     return 'secondary';

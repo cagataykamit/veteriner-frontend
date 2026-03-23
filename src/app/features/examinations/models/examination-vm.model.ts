@@ -9,7 +9,9 @@ export interface ExaminationListItemVm {
     clientName: string;
     petId: string | null;
     petName: string;
+    appointmentId: string | null;
     status: string | null;
+    lifecycleStatus: string | null;
     complaint: string;
     createdAtUtc: string | null;
 }
@@ -21,7 +23,9 @@ export interface ExaminationDetailVm {
     clientName: string;
     petId: string | null;
     petName: string;
+    appointmentId: string | null;
     status: string | null;
+    lifecycleStatus: string | null;
     complaint: string;
     notes: string;
     findings: string;

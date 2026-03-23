@@ -13,7 +13,12 @@ export interface AppointmentListItemDto {
     petName?: string | null;
     type?: string | null;
     appointmentType?: string | null;
+    appointmentTypeName?: string | null;
+    appointmentTypeCode?: string | null;
     status?: string | null;
+    appointmentStatus?: string | null;
+    lifecycleStatus?: string | null;
+    lifecycle?: string | null;
     reason?: string | null;
     createdAtUtc?: string | null;
 }
@@ -37,7 +42,12 @@ export interface AppointmentDetailDto {
     petName?: string | null;
     type?: string | null;
     appointmentType?: string | null;
+    appointmentTypeName?: string | null;
+    appointmentTypeCode?: string | null;
     status?: string | null;
+    appointmentStatus?: string | null;
+    lifecycleStatus?: string | null;
+    lifecycle?: string | null;
     reason?: string | null;
     notes?: string | null;
     createdAtUtc?: string | null;
@@ -53,6 +63,8 @@ export interface AppointmentCreateRequestDto {
     petId: string;
     scheduledAtUtc: string;
     type?: string | null;
+    /** Geçici geri uyumluluk: bazı backend sürümleri `appointmentType` bekleyebilir. */
+    appointmentType?: string | null;
     reason?: string | null;
     notes?: string | null;
 }

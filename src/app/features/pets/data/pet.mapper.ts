@@ -17,16 +17,74 @@ function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
 }
 
+function speciesName(v: string | null | undefined): string {
+    return v?.trim() ? v : '-';
+}
+
 /**
  * Create form → API body.
  * Backend `ownerId` kullanıyorsa `clientId` → `ownerId` eşlemesi burada yapılmalıdır.
  */
+/**
+ * POST /pets yanıtından oluşturulan hayvan kimliğini çıkarır.
+ * `PetDetailDto`, sarmalayıcı `data`/`value` veya `petId` / PascalCase alan adları için uyum katmanı.
+ */
+export function extractCreatedPetIdFromPostResponse(body: unknown): string | null {
+    if (body == null) {
+        return null;
+    }
+    if (typeof body === 'string') {
+        const t = body.trim();
+        return t ? t : null;
+    }
+    if (typeof body !== 'object') {
+        return null;
+    }
+    const o = body as Record<string, unknown>;
+    const idKeys = ['id', 'Id', 'petId', 'PetId'];
+    for (const k of idKeys) {
+        const s = pickPetIdString(o[k]);
+        if (s) {
+            return s;
+        }
+    }
+    const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'pet', 'Pet'];
+    for (const w of wrappers) {
+        const inner = o[w];
+        if (inner && typeof inner === 'object') {
+            const n = inner as Record<string, unknown>;
+            for (const k of idKeys) {
+                const s = pickPetIdString(n[k]);
+                if (s) {
+                    return s;
+                }
+            }
+        }
+    }
+    return null;
+}
+
+function pickPetIdString(v: unknown): string | null {
+    if (typeof v === 'string' && v.trim()) {
+        return v.trim();
+    }
+    if (typeof v === 'number' && !Number.isNaN(v)) {
+        return String(v);
+    }
+    return null;
+}
+
 export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDto {
     const body: PetCreateRequestDto = {
         clientId: req.clientId.trim(),
         name: req.name.trim(),
-        species: req.species.trim()
+        speciesId: req.speciesId.trim()
     };
+    const breedId = req.breedId?.trim();
+    if (breedId) {
+        body.breedId = breedId;
+    }
+    // Geçici geri uyumluluk: text `breed` bekleyen eski backend sürümleri için.
     const breed = req.breed?.trim();
     if (breed) {
         body.breed = breed;
@@ -65,8 +123,8 @@ export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
         id: dto.id,
         clientId: dto.clientId?.trim() ? dto.clientId : null,
         name: str(dto.name),
-        species: str(dto.species),
-        breed: str(dto.breed),
+        speciesName: speciesName(dto.speciesName),
+        breed: str(dto.breedName ?? dto.breed),
         ownerName: str(dto.ownerName),
         gender: str(dto.gender),
         birthDateUtc: dto.birthDateUtc ?? null,
@@ -85,8 +143,8 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
     return {
         id: dto.id,
         name: str(dto.name),
-        species: str(dto.species),
-        breed: str(dto.breed),
+        speciesName: speciesName(dto.speciesName),
+        breed: str(dto.breedName ?? dto.breed),
         gender: str(dto.gender),
         birthDateUtc: dto.birthDateUtc ?? null,
         color: str(dto.color),
@@ -145,6 +203,10 @@ export function petsQueryToHttpParams(query: PetsListQuery): HttpParams {
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+    if (query.speciesId?.trim()) {
+        p = p.set('SpeciesId', query.speciesId.trim());
+    }
+    // Geçici geri uyumluluk: bazı eski backend sürümleri text `Species` bekleyebilir.
     if (query.species?.trim()) {
         p = p.set('Species', query.species.trim());
     }

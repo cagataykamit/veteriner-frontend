@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -10,6 +10,7 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import { filterPetListByStatus } from '@/app/features/pets/data/pet.mapper';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
+import { SpeciesService } from '@/app/features/species/services/species.service';
 import { petGenderLabel, petStatusLabel, petStatusSeverity } from '@/app/features/pets/utils/pet-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -56,13 +57,16 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 </div>
                 <div class="col-span-12 md:col-span-3">
                     <label for="petSpecies" class="block text-sm font-medium text-muted-color mb-2">Tür</label>
-                    <input
-                        pInputText
-                        id="petSpecies"
-                        class="w-full"
-                        [(ngModel)]="speciesInput"
-                        placeholder="Örn. Köpek, Kedi"
-                        (keyup.enter)="applySearch()"
+                    <p-select
+                        inputId="petSpecies"
+                        [options]="speciesOptions()"
+                        [(ngModel)]="speciesIdInput"
+                        optionLabel="label"
+                        optionValue="value"
+                        [placeholder]="copy.filterPlaceholderAll"
+                        styleClass="w-full"
+                        [showClear]="true"
+                        [loading]="loadingSpecies()"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-3">
@@ -84,8 +88,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
-                Durum filtresi, API yanıtında <span class="font-medium">status</span> alanı varsa bu sayfadaki kayıtlar üzerinde uygulanır. Tür alanı
-                <span class="font-medium">species</span> sorgu parametresi olarak gönderilir (backend desteklemiyorsa yok sayılır).
+                Durum filtresi, API yanıtında <span class="font-medium">status</span> alanı varsa bu sayfadaki kayıtlar üzerinde uygulanır. Tür filtresi
+                <span class="font-medium">speciesId</span> sorgu parametresi olarak gönderilir.
             </p>
         </div>
 
@@ -128,7 +132,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <ng-template #body let-row>
                             <tr>
                                 <td class="font-medium">{{ row.name }}</td>
-                                <td>{{ row.species }}</td>
+                                <td>{{ row.speciesName }}</td>
                                 <td>{{ row.breed }}</td>
                                 <td>{{ row.ownerName }}</td>
                                 <td>{{ genderLabel(row.gender) }}</td>
@@ -147,12 +151,14 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         }
     `
 })
-export class PetsListPageComponent {
+export class PetsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly petsService = inject(PetsService);
+    private readonly speciesService = inject(SpeciesService);
 
     readonly loading = signal(false);
+    readonly loadingSpecies = signal(false);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<PetListItemVm[]>([]);
@@ -162,11 +168,12 @@ export class PetsListPageComponent {
     readonly currentPage = signal(1);
 
     readonly activeSearch = signal('');
-    readonly activeSpecies = signal('');
+    readonly activeSpeciesId = signal('');
 
     searchInput = '';
-    speciesInput = '';
+    speciesIdInput = '';
     statusFilter = '';
+    readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
 
     readonly statusOptions = [
         { label: 'Tümü', value: '' },
@@ -183,35 +190,39 @@ export class PetsListPageComponent {
     readonly statusSeverity = petStatusSeverity;
     readonly genderLabel = petGenderLabel;
 
+    ngOnInit(): void {
+        this.loadSpeciesOptions();
+    }
+
     applySearch(): void {
         this.activeSearch.set(this.searchInput.trim());
-        this.activeSpecies.set(this.speciesInput.trim());
+        this.activeSpeciesId.set(this.speciesIdInput.trim());
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpecies());
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId());
     }
 
     resetFilters(): void {
         this.searchInput = '';
-        this.speciesInput = '';
+        this.speciesIdInput = '';
         this.activeSearch.set('');
-        this.activeSpecies.set('');
+        this.activeSpeciesId.set('');
         this.statusFilter = '';
         this.first.set(0);
         this.loadFromServer(1, this.pageSize(), '', '');
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpecies());
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId());
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeSpecies());
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId());
     }
 
-    private loadFromServer(page: number, pageSize: number, search: string, species: string): void {
+    private loadFromServer(page: number, pageSize: number, search: string, speciesId: string): void {
         this.loading.set(true);
         this.error.set(null);
         this.petsService
@@ -219,7 +230,7 @@ export class PetsListPageComponent {
                 page,
                 pageSize,
                 search: search || undefined,
-                species: species || undefined
+                speciesId: speciesId || undefined
             })
             .subscribe({
                 next: (r) => {
@@ -235,5 +246,23 @@ export class PetsListPageComponent {
                     this.loading.set(false);
                 }
             });
+    }
+
+    private loadSpeciesOptions(): void {
+        this.loadingSpecies.set(true);
+        this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
+            next: (items) => {
+                this.speciesOptions.set(
+                    items.map((x) => ({
+                        label: x.name || '-',
+                        value: x.id
+                    }))
+                );
+                this.loadingSpecies.set(false);
+            },
+            error: () => {
+                this.loadingSpecies.set(false);
+            }
+        });
     }
 }

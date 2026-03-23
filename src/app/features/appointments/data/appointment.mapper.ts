@@ -16,8 +16,31 @@ function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
 }
 
+function firstTrimmed(...vals: Array<string | null | undefined>): string | null {
+    for (const v of vals) {
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function canonicalAppointmentType(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
+    return firstTrimmed(dto.type, dto.appointmentType, dto.appointmentTypeName, dto.appointmentTypeCode);
+}
+
+function canonicalAppointmentStatus(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
+    return firstTrimmed(dto.status, dto.appointmentStatus, dto.lifecycleStatus, dto.lifecycle);
+}
+
+function canonicalLifecycleStatus(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
+    return firstTrimmed(dto.lifecycleStatus, dto.lifecycle, dto.status, dto.appointmentStatus);
+}
+
 export function mapAppointmentListItemDtoToVm(dto: AppointmentListItemDto): AppointmentListItemVm {
-    const rawType = dto.type?.trim() || dto.appointmentType?.trim() || null;
+    const rawType = canonicalAppointmentType(dto);
+    const rawStatus = canonicalAppointmentStatus(dto);
+    const rawLifecycle = canonicalLifecycleStatus(dto);
     return {
         id: dto.id,
         scheduledAtUtc: dto.scheduledAtUtc ?? null,
@@ -26,14 +49,17 @@ export function mapAppointmentListItemDtoToVm(dto: AppointmentListItemDto): Appo
         petId: dto.petId?.trim() ? dto.petId : null,
         petName: str(dto.petName),
         type: str(rawType),
-        status: dto.status?.trim() ? dto.status : null,
+        status: rawStatus,
+        lifecycleStatus: rawLifecycle,
         reason: dto.reason?.trim() ? dto.reason : EM,
         createdAtUtc: dto.createdAtUtc ?? null
     };
 }
 
 export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): AppointmentDetailVm {
-    const rawType = dto.type?.trim() || dto.appointmentType?.trim() || null;
+    const rawType = canonicalAppointmentType(dto);
+    const rawStatus = canonicalAppointmentStatus(dto);
+    const rawLifecycle = canonicalLifecycleStatus(dto);
     return {
         id: dto.id,
         scheduledAtUtc: dto.scheduledAtUtc ?? null,
@@ -42,7 +68,8 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
         petId: dto.petId?.trim() ? dto.petId : null,
         petName: str(dto.petName),
         type: str(rawType),
-        status: dto.status?.trim() ? dto.status : null,
+        status: rawStatus,
+        lifecycleStatus: rawLifecycle,
         reason: dto.reason?.trim() ? dto.reason : EM,
         notes: dto.notes?.trim() ? dto.notes : EM,
         createdAtUtc: dto.createdAtUtc ?? null,
@@ -51,11 +78,14 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
 }
 
 export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): AppointmentCreateRequestDto {
+    const type = req.type?.trim() ? req.type.trim() : null;
     return {
         clientId: req.clientId.trim(),
         petId: req.petId.trim(),
         scheduledAtUtc: req.scheduledAtUtc,
-        type: req.type?.trim() ? req.type.trim() : null,
+        type,
+        // Geçici geri uyumluluk: bazı backend sürümleri `appointmentType` anahtarını bekleyebilir.
+        appointmentType: type,
         reason: req.reason?.trim() ? req.reason.trim() : null,
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
@@ -95,7 +125,10 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
         p = p.set('Search', query.search.trim());
     }
     if (query.status?.trim()) {
-        p = p.set('Status', query.status.trim());
+        const status = query.status.trim();
+        p = p.set('Status', status);
+        // Geçici geri uyumluluk: bazı backend sürümleri lifecycle filtresi bekleyebilir.
+        p = p.set('LifecycleStatus', status);
     }
     if (query.fromDate?.trim()) {
         p = p.set('FromDate', query.fromDate.trim());

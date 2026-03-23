@@ -32,6 +32,8 @@ export class AppMenu {
                 items: [
                     { label: 'Müşteriler', icon: 'pi pi-fw pi-users', routerLink: ['/panel/clients'] },
                     { label: 'Hayvanlar', icon: 'pi pi-fw pi-heart', routerLink: ['/panel/pets'] },
+                    { label: 'Türler', icon: 'pi pi-fw pi-tags', routerLink: ['/panel/species'] },
+                    { label: 'Irklar', icon: 'pi pi-fw pi-sitemap', routerLink: ['/panel/breeds'] },
                     { label: 'Randevular', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] },
                     { label: 'Muayeneler', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/examinations'] },
                     { label: 'Aşılar', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/vaccinations'] },

@@ -6,7 +6,10 @@
 export interface CreatePetRequest {
     clientId: string;
     name: string;
-    species: string;
+    speciesId: string;
+    /** Yeni contract: breed referans kimliği */
+    breedId?: string;
+    /** Geçici geri uyumluluk: bazı backend sürümleri text `breed` bekleyebilir. */
     breed?: string;
     gender?: string;
     /** yyyy-MM-dd — boşsa doğum tarihi gönderilmez */

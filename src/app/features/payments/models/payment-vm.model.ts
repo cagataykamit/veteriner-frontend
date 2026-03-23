@@ -8,6 +8,7 @@ export interface PaymentListItemVm {
     clientName: string;
     petId: string | null;
     petName: string;
+    appointmentId: string | null;
     amount: number | null;
     currency: string;
     status: string | null;
@@ -23,6 +24,7 @@ export interface PaymentDetailVm {
     clientName: string;
     petId: string | null;
     petName: string;
+    appointmentId: string | null;
     amount: number | null;
     currency: string;
     status: string | null;

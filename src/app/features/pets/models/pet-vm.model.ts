@@ -3,7 +3,7 @@ export interface PetListItemVm {
     /** Liste DTO’sunda varsa; client’a göre filtre için (API ClientId yok sayarsa yedek). */
     clientId: string | null;
     name: string;
-    species: string;
+    speciesName: string;
     breed: string;
     ownerName: string;
     gender: string;
@@ -14,7 +14,7 @@ export interface PetListItemVm {
 export interface PetDetailVm {
     id: string;
     name: string;
-    species: string;
+    speciesName: string;
     breed: string;
     gender: string;
     birthDateUtc: string | null;

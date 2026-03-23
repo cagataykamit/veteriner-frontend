@@ -11,6 +11,7 @@ export interface AppointmentListItemVm {
     petName: string;
     type: string;
     status: string | null;
+    lifecycleStatus: string | null;
     reason: string;
     createdAtUtc: string | null;
 }
@@ -25,6 +26,7 @@ export interface AppointmentDetailVm {
     petName: string;
     type: string;
     status: string | null;
+    lifecycleStatus: string | null;
     reason: string;
     notes: string;
     createdAtUtc: string | null;

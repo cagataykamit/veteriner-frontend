@@ -8,11 +8,20 @@ export interface ExaminationListItemDto {
     tenantId?: string;
     examinationDateUtc?: string | null;
     clientId?: string | null;
+    ownerId?: string | null;
     clientName?: string | null;
+    ownerName?: string | null;
     petId?: string | null;
+    animalId?: string | null;
     petName?: string | null;
+    animalName?: string | null;
+    appointmentId?: string | null;
     status?: string | null;
+    examinationStatus?: string | null;
+    lifecycleStatus?: string | null;
+    lifecycle?: string | null;
     complaint?: string | null;
+    complaintText?: string | null;
     createdAtUtc?: string | null;
 }
 
@@ -29,13 +38,24 @@ export interface ExaminationDetailDto {
     tenantId?: string;
     examinationDateUtc?: string | null;
     clientId?: string | null;
+    ownerId?: string | null;
     clientName?: string | null;
+    ownerName?: string | null;
     petId?: string | null;
+    animalId?: string | null;
     petName?: string | null;
+    animalName?: string | null;
+    appointmentId?: string | null;
     status?: string | null;
+    examinationStatus?: string | null;
+    lifecycleStatus?: string | null;
+    lifecycle?: string | null;
     complaint?: string | null;
+    complaintText?: string | null;
     notes?: string | null;
+    note?: string | null;
     findings?: string | null;
+    finding?: string | null;
     diagnosis?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
@@ -46,8 +66,15 @@ export interface ExaminationCreateRequestDto {
     clientId: string;
     petId: string;
     examinationDateUtc: string;
+    /** Geçici geri uyumluluk: bazı backend sürümleri `scheduledAtUtc` bekleyebilir. */
+    scheduledAtUtc?: string | null;
+    /** Geçici geri uyumluluk: bazı backend sürümleri `appointmentId` kabul edebilir. */
+    appointmentId?: string | null;
     complaint?: string | null;
+    complaintText?: string | null;
     notes?: string | null;
+    note?: string | null;
     findings?: string | null;
+    finding?: string | null;
     diagnosis?: string | null;
 }

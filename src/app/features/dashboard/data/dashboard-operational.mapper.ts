@@ -13,6 +13,12 @@ const ATTENTION_PAYMENT_KEYS = new Set(['pending', 'overdue', 'scheduled', 'part
 export function normalizeDashboardSummaryDto(raw: DashboardSummaryDto): DashboardSummaryNormalized {
     return {
         ...raw,
+        todayAppointmentsCount: raw.todayAppointmentsCount ?? 0,
+        upcomingAppointmentsCount: raw.upcomingAppointmentsCount ?? 0,
+        completedTodayCount: raw.completedTodayCount ?? 0,
+        cancelledTodayCount: raw.cancelledTodayCount ?? 0,
+        totalClientsCount: raw.totalClientsCount ?? 0,
+        totalPetsCount: raw.totalPetsCount ?? 0,
         upcomingAppointments: raw.upcomingAppointments ?? [],
         recentClients: raw.recentClients ?? [],
         recentPets: raw.recentPets ?? []

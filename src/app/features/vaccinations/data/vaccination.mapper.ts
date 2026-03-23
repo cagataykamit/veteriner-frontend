@@ -16,19 +16,73 @@ function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
 }
 
+function firstTrimmed(...vals: Array<string | null | undefined>): string | null {
+    for (const v of vals) {
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function canonicalAppliedAt(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
+    return firstTrimmed(dto.appliedAtUtc, dto.applicationDateUtc, dto.appliedOnUtc);
+}
+
+function canonicalNextDueAt(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
+    return firstTrimmed(dto.nextDueAtUtc, dto.nextDoseAtUtc, dto.dueAtUtc);
+}
+
+function canonicalVaccineName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
+    return str(firstTrimmed(dto.vaccineName, dto.name, dto.vaccine, dto.vaccineTypeName));
+}
+
+function canonicalPetId(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
+    return firstTrimmed(dto.petId, dto.animalId);
+}
+
+function canonicalPetName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
+    return str(firstTrimmed(dto.petName, dto.animalName));
+}
+
+function canonicalClientId(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
+    return firstTrimmed(dto.clientId, dto.ownerId);
+}
+
+function canonicalClientName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
+    return str(firstTrimmed(dto.clientName, dto.ownerName));
+}
+
+function canonicalStatus(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
+    const raw = firstTrimmed(dto.status, dto.vaccinationStatus, dto.lifecycleStatus, dto.lifecycle, dto.dueState);
+    if (raw) {
+        return raw;
+    }
+    if (dto.isOverdue === true) {
+        return 'overdue';
+    }
+    if (dto.isDueSoon === true) {
+        return 'due-soon';
+    }
+    return null;
+}
+
+function canonicalNotes(dto: VaccinationListItemDto | VaccinationDetailDto): string {
+    return str(firstTrimmed(dto.notes, dto.note, dto.description));
+}
+
 export function mapVaccinationListItemDtoToVm(dto: VaccinationListItemDto): VaccinationListItemVm {
-    const rawName = dto.vaccineName?.trim() || dto.name?.trim() || null;
     return {
         id: dto.id,
-        appliedAtUtc: dto.appliedAtUtc ?? null,
-        nextDueAtUtc: dto.nextDueAtUtc ?? null,
-        vaccineName: str(rawName),
-        petId: dto.petId?.trim() ? dto.petId : null,
-        petName: str(dto.petName),
-        clientId: dto.clientId?.trim() ? dto.clientId : null,
-        clientName: str(dto.clientName),
-        status: dto.status?.trim() ? dto.status : null,
-        notes: str(dto.notes)
+        appliedAtUtc: canonicalAppliedAt(dto),
+        nextDueAtUtc: canonicalNextDueAt(dto),
+        vaccineName: canonicalVaccineName(dto),
+        petId: canonicalPetId(dto),
+        petName: canonicalPetName(dto),
+        clientId: canonicalClientId(dto),
+        clientName: canonicalClientName(dto),
+        status: canonicalStatus(dto),
+        notes: canonicalNotes(dto)
     };
 }
 
@@ -44,20 +98,31 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
 
 /**
  * POST /vaccinations gövdesi.
- * Varsayılan: `clientId` gönderilmez (pet üzerinden müşteri çözülür).
- * Backend `name` bekliyorsa DTO’ya `name` eklenip `vaccineName` ile doldurulur — Swagger ile doğrulanmalı.
+ * Geçiş dönemi uyumluluğu için canonical ve alternatif alan adları birlikte gönderilir.
  */
 export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): VaccinationCreateRequestDto {
     const notes = req.notes?.trim() ? req.notes.trim() : null;
     const status = req.status?.trim() ? req.status.trim() : null;
     const next = req.nextDueAtUtc?.trim() ? req.nextDueAtUtc.trim() : null;
+    const vaccineName = req.vaccineName.trim();
+    const appliedAtUtc = req.appliedAtUtc.trim();
+    const clientId = req.clientId?.trim() ? req.clientId.trim() : null;
     return {
         petId: req.petId.trim(),
-        vaccineName: req.vaccineName.trim(),
-        appliedAtUtc: req.appliedAtUtc.trim(),
+        clientId,
+        ownerId: clientId,
+        vaccineName,
+        name: vaccineName,
+        appliedAtUtc,
+        applicationDateUtc: appliedAtUtc,
+        appliedOnUtc: appliedAtUtc,
         nextDueAtUtc: next,
+        nextDoseAtUtc: next,
+        dueAtUtc: next,
         status,
-        notes
+        vaccinationStatus: status,
+        notes,
+        note: notes
     };
 }
 
@@ -88,11 +153,21 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+    if (query.clientId?.trim()) {
+        const clientId = query.clientId.trim();
+        p = p.set('ClientId', clientId);
+        // Geçici geri uyumluluk: bazı backend sürümleri owner filtresi bekleyebilir.
+        p = p.set('OwnerId', clientId);
+    }
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
     if (query.status?.trim()) {
-        p = p.set('Status', query.status.trim());
+        const status = query.status.trim();
+        p = p.set('Status', status);
+        // Geçici geri uyumluluk: lifecycle/vaccinationStatus filtre adları.
+        p = p.set('VaccinationStatus', status);
+        p = p.set('LifecycleStatus', status);
     }
     if (query.fromDate?.trim()) {
         p = p.set('FromDate', query.fromDate.trim());

@@ -5,10 +5,18 @@ const EM = '—';
 const LABELS: Record<string, string> = {
     cash: 'Nakit',
     card: 'Kart',
+    creditcard: 'Kart',
+    debitcard: 'Kart',
+    bankcard: 'Kart',
     transfer: 'Havale / EFT',
+    banktransfer: 'Havale / EFT',
+    wiretransfer: 'Havale / EFT',
     eft: 'Havale / EFT',
     pos: 'POS',
+    virtualpos: 'POS',
+    qr: 'QR',
     online: 'Online',
+    wallet: 'Cüzdan',
     other: 'Diğer'
 };
 

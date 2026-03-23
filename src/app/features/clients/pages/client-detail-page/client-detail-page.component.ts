@@ -100,7 +100,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                 @for (row of petsItems(); track row.id) {
                                     <li class="mb-3 last:mb-0">
                                         <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">{{ row.name }}</a>
-                                        <div class="text-sm text-muted-color">{{ row.species }} · {{ row.breed }}</div>
+                                        <div class="text-sm text-muted-color">{{ row.speciesName }} · {{ row.breed }}</div>
                                     </li>
                                 }
                             </ul>

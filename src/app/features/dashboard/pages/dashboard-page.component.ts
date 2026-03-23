@@ -14,6 +14,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatDateDisplay, formatDateTimeDisplay, formatTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 
 @Component({
     selector: 'app-dashboard-page',
@@ -300,7 +301,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                             <ng-template #body let-row>
                                                 <tr>
                                                     <td class="font-medium">{{ row.name ?? '—' }}</td>
-                                                    <td>{{ row.species ?? '—' }}</td>
+                                                    <td>{{ petSpeciesText(row) }}</td>
                                                     <td>
                                                         <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
                                                     </td>
@@ -360,7 +361,7 @@ export class DashboardPageComponent implements OnInit {
         });
     }
 
-    metricCount(n: number | undefined): string | number {
+    metricCount(n: number | null | undefined): string | number {
         if (n === undefined || n === null) {
             return '—';
         }
@@ -369,5 +370,11 @@ export class DashboardPageComponent implements OnInit {
 
     money(amount: number | null, currency: string): string {
         return formatMoney(amount, currency);
+    }
+
+    petSpeciesText(row: DashboardRecentPetDto): string {
+        const species = row.speciesName?.trim() || row.species?.trim() || '-';
+        const breed = row.breedName?.trim() || row.breed?.trim() || '';
+        return breed ? `${species} · ${breed}` : species;
     }
 }

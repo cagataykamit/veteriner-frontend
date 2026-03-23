@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -33,6 +33,10 @@ import { EMPTY, switchMap } from 'rxjs';
     template: `
         <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
 
+        @if (showSavedBanner()) {
+            <p class="mb-4 m-0 text-sm font-medium">Hayvan kaydedildi.</p>
+        }
+
         @if (loading()) {
             <app-loading-state message="Hayvan yükleniyor…" />
         } @else if (error()) {
@@ -43,7 +47,7 @@ import { EMPTY, switchMap } from 'rxjs';
             <app-page-header
                 [title]="pet()!.name"
                 subtitle="Hayvan"
-                [description]="'Doğum: ' + formatDateOnly(pet()!.birthDateUtc) + ' · ' + pet()!.species"
+                [description]="'Doğum: ' + formatDateOnly(pet()!.birthDateUtc) + ' · ' + pet()!.speciesName"
             />
 
             <div class="grid grid-cols-12 gap-8">
@@ -56,7 +60,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                 <app-status-tag [label]="statusLabel(pet()!.status)" [severity]="statusSeverity(pet()!.status)" />
                             </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tür</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.species }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.speciesName }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Cins</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.breed }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Cinsiyet</dt>
@@ -187,10 +191,14 @@ import { EMPTY, switchMap } from 'rxjs';
 })
 export class PetDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly petsService = inject(PetsService);
     private readonly related = inject(DetailRelatedSummariesService);
 
     readonly copy = PANEL_COPY;
+
+    /** Yeni oluşturma sonrası kısa onay (query `saved=1`). */
+    readonly showSavedBanner = signal(false);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -220,6 +228,16 @@ export class PetDetailPageComponent implements OnInit {
     readonly typeLabel = appointmentTypeLabel;
 
     ngOnInit(): void {
+        if (this.route.snapshot.queryParamMap.get('saved') === '1') {
+            this.showSavedBanner.set(true);
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { saved: null },
+                queryParamsHandling: '',
+                replaceUrl: true
+            });
+        }
+
         this.route.paramMap
             .pipe(
                 switchMap((params) => {

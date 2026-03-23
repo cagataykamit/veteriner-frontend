@@ -5,7 +5,10 @@ export interface PetListItemDto {
     tenantId?: string;
     clientId?: string | null;
     name?: string | null;
-    species?: string | null;
+    speciesId?: string | null;
+    speciesName?: string | null;
+    breedId?: string | null;
+    breedName?: string | null;
     breed?: string | null;
     ownerName?: string | null;
     gender?: string | null;
@@ -26,7 +29,10 @@ export interface PetDetailDto {
     tenantId?: string;
     clientId?: string | null;
     name?: string | null;
-    species?: string | null;
+    speciesId?: string | null;
+    speciesName?: string | null;
+    breedId?: string | null;
+    breedName?: string | null;
     breed?: string | null;
     gender?: string | null;
     birthDateUtc?: string | null;
@@ -64,7 +70,10 @@ export interface PetAppointmentsSummaryDto {
 export interface PetCreateRequestDto {
     clientId: string;
     name: string;
-    species: string;
+    speciesId: string;
+    /** Yeni contract: referans kimliği */
+    breedId?: string | null;
+    /** Geçici geri uyumluluk: eski backend text `breed` bekleyebilir. */
     breed?: string | null;
     gender?: string | null;
     birthDateUtc?: string | null;

@@ -8,6 +8,9 @@ export function normalizePaymentStatusKey(status: string): string {
 }
 
 const LABELS: Record<string, string> = {
+    '0': 'Bekliyor',
+    '1': 'Ödendi',
+    '2': 'İptal',
     paid: 'Ödendi',
     completed: 'Tamamlandı',
     settled: 'Mahsup',
@@ -20,7 +23,11 @@ const LABELS: Record<string, string> = {
     canceled: 'İptal',
     refunded: 'İade',
     draft: 'Taslak',
-    unknown: 'Bilinmiyor'
+    unknown: 'Bilinmiyor',
+    created: 'Oluşturuldu',
+    active: 'Aktif',
+    closed: 'Kapandı',
+    done: 'Tamamlandı'
 };
 
 export function paymentStatusLabel(status: string | null | undefined): string {
@@ -43,6 +50,15 @@ export function paymentStatusSeverity(status: string | null | undefined): Status
     }
     const k = normalizePaymentStatusKey(status);
 
+    if (k === '0') {
+        return 'warn';
+    }
+    if (k === '1') {
+        return 'success';
+    }
+    if (k === '2') {
+        return 'danger';
+    }
     if (k === 'paid' || k === 'completed' || k === 'settled') {
         return 'success';
     }
@@ -54,6 +70,12 @@ export function paymentStatusSeverity(status: string | null | undefined): Status
     }
     if (k === 'draft' || k === 'unknown') {
         return 'secondary';
+    }
+    if (k === 'created' || k === 'active' || k === 'closed') {
+        return 'info';
+    }
+    if (k === 'done') {
+        return 'success';
     }
 
     return 'secondary';

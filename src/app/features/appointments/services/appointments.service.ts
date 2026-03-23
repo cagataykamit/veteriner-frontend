@@ -52,16 +52,70 @@ export class AppointmentsService {
      */
     createAppointment(payload: CreateAppointmentRequest): Observable<{ id: string }> {
         const body = mapCreateAppointmentToApiBody(payload);
-        return this.api.post<AppointmentDetailDto>(ApiEndpoints.appointments.list(), body).pipe(
-            map((dto) => {
-                if (!dto?.id) {
-                    throw new Error('Sunucu yanıtında randevu kimliği yok.');
+        return this.api.post<unknown>(ApiEndpoints.appointments.list(), body).pipe(
+            map((raw) => {
+                const id = extractCreatedAppointmentIdFromPostResponse(raw);
+                if (!id) {
+                    throw new Error('APPOINTMENT_CREATE_NO_ID_IN_RESPONSE');
                 }
-                return { id: dto.id };
+                return { id };
             }),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Randevu oluşturulamadı.')))
-            )
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => new Error(messageFromHttpError(err, 'Randevu oluşturulamadı.')));
+                }
+                if (err instanceof Error && err.message === 'APPOINTMENT_CREATE_NO_ID_IN_RESPONSE') {
+                    return throwError(
+                        () =>
+                            new Error(
+                                'Sunucu yanıtında randevu kimliği okunamadı. Kayıt oluşmuş olabilir; randevu listesini kontrol edin.'
+                            )
+                    );
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Randevu oluşturulamadı.')
+                );
+            })
         );
     }
+}
+
+function extractCreatedAppointmentIdFromPostResponse(body: unknown): string | null {
+    if (body == null) {
+        return null;
+    }
+    if (typeof body === 'string') {
+        return body.trim() || null;
+    }
+    if (typeof body !== 'object') {
+        return null;
+    }
+    const o = body as Record<string, unknown>;
+    const idKeys = ['id', 'Id', 'appointmentId', 'AppointmentId'];
+    for (const k of idKeys) {
+        const v = o[k];
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+        if (typeof v === 'number' && !Number.isNaN(v)) {
+            return String(v);
+        }
+    }
+    const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'appointment', 'Appointment'];
+    for (const w of wrappers) {
+        const inner = o[w];
+        if (inner && typeof inner === 'object') {
+            const n = inner as Record<string, unknown>;
+            for (const k of idKeys) {
+                const v = n[k];
+                if (typeof v === 'string' && v.trim()) {
+                    return v.trim();
+                }
+                if (typeof v === 'number' && !Number.isNaN(v)) {
+                    return String(v);
+                }
+            }
+        }
+    }
+    return null;
 }

@@ -16,16 +16,55 @@ function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
 }
 
+function firstTrimmed(...vals: Array<string | null | undefined>): string | null {
+    for (const v of vals) {
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function canonicalClientId(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.clientId, dto.ownerId);
+}
+
+function canonicalClientName(dto: ExaminationListItemDto | ExaminationDetailDto): string {
+    return str(firstTrimmed(dto.clientName, dto.ownerName));
+}
+
+function canonicalPetId(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.petId, dto.animalId);
+}
+
+function canonicalPetName(dto: ExaminationListItemDto | ExaminationDetailDto): string {
+    return str(firstTrimmed(dto.petName, dto.animalName));
+}
+
+function canonicalStatus(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.status, dto.examinationStatus, dto.lifecycleStatus, dto.lifecycle);
+}
+
+function canonicalLifecycleStatus(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.lifecycleStatus, dto.lifecycle, dto.status, dto.examinationStatus);
+}
+
+function canonicalComplaint(dto: ExaminationListItemDto | ExaminationDetailDto): string {
+    return str(firstTrimmed(dto.complaint, dto.complaintText));
+}
+
 export function mapExaminationListItemDtoToVm(dto: ExaminationListItemDto): ExaminationListItemVm {
     return {
         id: dto.id,
         examinationDateUtc: dto.examinationDateUtc ?? null,
-        clientId: dto.clientId?.trim() ? dto.clientId : null,
-        clientName: str(dto.clientName),
-        petId: dto.petId?.trim() ? dto.petId : null,
-        petName: str(dto.petName),
-        status: dto.status?.trim() ? dto.status : null,
-        complaint: str(dto.complaint),
+        clientId: canonicalClientId(dto),
+        clientName: canonicalClientName(dto),
+        petId: canonicalPetId(dto),
+        petName: canonicalPetName(dto),
+        appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
+        status: canonicalStatus(dto),
+        lifecycleStatus: canonicalLifecycleStatus(dto),
+        complaint: canonicalComplaint(dto),
         createdAtUtc: dto.createdAtUtc ?? null
     };
 }
@@ -34,14 +73,16 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
     return {
         id: dto.id,
         examinationDateUtc: dto.examinationDateUtc ?? null,
-        clientId: dto.clientId?.trim() ? dto.clientId : null,
-        clientName: str(dto.clientName),
-        petId: dto.petId?.trim() ? dto.petId : null,
-        petName: str(dto.petName),
-        status: dto.status?.trim() ? dto.status : null,
-        complaint: str(dto.complaint),
-        notes: str(dto.notes),
-        findings: str(dto.findings),
+        clientId: canonicalClientId(dto),
+        clientName: canonicalClientName(dto),
+        petId: canonicalPetId(dto),
+        petName: canonicalPetName(dto),
+        appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
+        status: canonicalStatus(dto),
+        lifecycleStatus: canonicalLifecycleStatus(dto),
+        complaint: canonicalComplaint(dto),
+        notes: str(firstTrimmed(dto.notes, dto.note)),
+        findings: str(firstTrimmed(dto.findings, dto.finding)),
         diagnosis: str(dto.diagnosis),
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null
@@ -82,7 +123,10 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
         p = p.set('Search', query.search.trim());
     }
     if (query.status?.trim()) {
-        p = p.set('Status', query.status.trim());
+        const status = query.status.trim();
+        p = p.set('Status', status);
+        // Geçici geri uyumluluk: bazı backend sürümleri lifecycle filtresi bekleyebilir.
+        p = p.set('LifecycleStatus', status);
     }
     if (query.fromDate?.trim()) {
         p = p.set('FromDate', query.fromDate.trim());
@@ -100,13 +144,21 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
 }
 
 export function mapCreateExaminationToApiBody(req: CreateExaminationRequest): ExaminationCreateRequestDto {
+    const complaint = req.complaint?.trim() ? req.complaint.trim() : null;
+    const notes = req.notes?.trim() ? req.notes.trim() : null;
+    const findings = req.findings?.trim() ? req.findings.trim() : null;
     return {
         clientId: req.clientId.trim(),
         petId: req.petId.trim(),
         examinationDateUtc: req.examinationDateUtc,
-        complaint: req.complaint?.trim() ? req.complaint.trim() : null,
-        notes: req.notes?.trim() ? req.notes.trim() : null,
-        findings: req.findings?.trim() ? req.findings.trim() : null,
+        // Geçici geri uyumluluk: bazı backend sürümleri examinationDate yerine scheduledAtUtc kabul eder.
+        scheduledAtUtc: req.examinationDateUtc,
+        complaint,
+        complaintText: complaint,
+        notes,
+        note: notes,
+        findings,
+        finding: findings,
         diagnosis: req.diagnosis?.trim() ? req.diagnosis.trim() : null
     };
 }
