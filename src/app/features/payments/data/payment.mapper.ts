@@ -85,6 +85,12 @@ export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams 
     const pageSize = query.pageSize ?? 10;
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+    if (query.clientId?.trim()) {
+        p = p.set('ClientId', query.clientId.trim());
+    }
+    if (query.petId?.trim()) {
+        p = p.set('PetId', query.petId.trim());
+    }
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }

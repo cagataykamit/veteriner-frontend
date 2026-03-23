@@ -1,5 +1,11 @@
 import { HttpParams } from '@angular/common/http';
-import type { ClientDetailDto, ClientListItemDto, ClientListItemDtoPagedResult } from '@/app/features/clients/models/client-api.model';
+import type {
+    ClientCreateRequestDto,
+    ClientDetailDto,
+    ClientListItemDto,
+    ClientListItemDtoPagedResult
+} from '@/app/features/clients/models/client-api.model';
+import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
 import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 import type { ClientDetailVm, ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
@@ -19,6 +25,74 @@ export function mapClientListItemDtoToVm(dto: ClientListItemDto): ClientListItem
         petCount: dto.petCount ?? null,
         status: dto.status?.trim() ? dto.status : null,
         createdAtUtc: dto.createdAtUtc ?? null
+    };
+}
+
+/**
+ * Create form → API body.
+ * Backend bazı alanları istemiyorsa burada çıkarılır (Swagger ile hizalanır).
+ */
+/**
+ * POST /clients yanıtından oluşturulan müşteri kimliğini çıkarır.
+ * Doğrudan `ClientDetailDto`, sarmalayıcı `data`/`value` veya PascalCase alan adları için küçük uyum katmanı.
+ */
+export function extractCreatedClientIdFromPostResponse(body: unknown): string | null {
+    if (body == null) {
+        return null;
+    }
+    if (typeof body === 'string') {
+        const t = body.trim();
+        return t ? t : null;
+    }
+    if (typeof body !== 'object') {
+        return null;
+    }
+    const o = body as Record<string, unknown>;
+    const idKeys = ['id', 'Id', 'clientId', 'ClientId'];
+    for (const k of idKeys) {
+        const s = pickIdString(o[k]);
+        if (s) {
+            return s;
+        }
+    }
+    const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'client', 'Client'];
+    for (const w of wrappers) {
+        const inner = o[w];
+        if (inner && typeof inner === 'object') {
+            const n = inner as Record<string, unknown>;
+            for (const k of idKeys) {
+                const s = pickIdString(n[k]);
+                if (s) {
+                    return s;
+                }
+            }
+        }
+    }
+    return null;
+}
+
+function pickIdString(v: unknown): string | null {
+    if (typeof v === 'string' && v.trim()) {
+        return v.trim();
+    }
+    if (typeof v === 'number' && !Number.isNaN(v)) {
+        return String(v);
+    }
+    return null;
+}
+
+export function mapCreateClientToApiBody(req: CreateClientRequest): ClientCreateRequestDto {
+    const email = req.email?.trim() ? req.email.trim() : null;
+    const address = req.address?.trim() ? req.address.trim() : null;
+    const notes = req.notes?.trim() ? req.notes.trim() : null;
+    const status = req.status?.trim() ? req.status.trim() : null;
+    return {
+        fullName: req.fullName.trim(),
+        phone: req.phone.trim(),
+        email,
+        address,
+        notes,
+        status
     };
 }
 

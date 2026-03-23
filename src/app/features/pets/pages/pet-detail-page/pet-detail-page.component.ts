@@ -1,15 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TableModule } from 'primeng/table';
+import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { petGenderLabel, petStatusLabel, petStatusSeverity } from '@/app/features/pets/utils/pet-status.utils';
+import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { EMPTY, switchMap } from 'rxjs';
 
@@ -19,7 +24,6 @@ import { EMPTY, switchMap } from 'rxjs';
     imports: [
         CommonModule,
         RouterLink,
-        TableModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -86,61 +90,94 @@ import { EMPTY, switchMap } from 'rxjs';
                         <p class="m-0 whitespace-pre-wrap">{{ pet()!.notes }}</p>
                     </div>
                 </div>
+
                 <div class="col-span-12 lg:col-span-4">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Aşı özeti</h5>
-                        @if (pet()!.vaccinationsSummary.totalCount === 0 && pet()!.vaccinationsSummary.items.length === 0) {
-                            <app-empty-state message="Aşı özeti yok veya henüz kayıt yok." />
+                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <h5 class="mt-0 mb-0">Son aşılar</h5>
+                            <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (vacLoading()) {
+                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                        } @else if (vacError()) {
+                            <p class="text-muted-color m-0">{{ vacError() }}</p>
+                        } @else if (vacItems().length === 0) {
+                            <app-empty-state [message]="copy.listEmptyMessage" />
                         } @else {
-                            <p class="text-muted-color mt-0 mb-3">Toplam: {{ pet()!.vaccinationsSummary.totalCount }}</p>
-                            @if (pet()!.vaccinationsSummary.items.length > 0) {
-                                <p-table [value]="pet()!.vaccinationsSummary.items" [paginator]="false" [tableStyle]="{ 'min-width': '100%' }">
-                                    <ng-template #header>
-                                        <tr>
-                                            <th>Kayıt</th>
-                                        </tr>
-                                    </ng-template>
-                                    <ng-template #body let-row>
-                                        <tr>
-                                            <td>{{ row.name }}</td>
-                                        </tr>
-                                    </ng-template>
-                                </p-table>
-                            }
+                            <ul class="list-none m-0 p-0">
+                                @for (row of vacItems(); track row.id) {
+                                    <li class="mb-3 last:mb-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <span class="text-muted-color text-sm">{{ formatDateOnly(row.appliedAtUtc) }}</span>
+                                            <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0"
+                                                >Detay →</a
+                                            >
+                                        </div>
+                                        <div class="font-medium">{{ row.vaccineName }}</div>
+                                    </li>
+                                }
+                            </ul>
                         }
                     </div>
                 </div>
                 <div class="col-span-12 lg:col-span-4">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Muayene özeti</h5>
-                        @if (pet()!.examinationsSummary.totalCount === 0 && pet()!.examinationsSummary.lastExaminedAtUtc == null) {
-                            <app-empty-state message="Muayene özeti yok veya henüz kayıt yok." />
+                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <h5 class="mt-0 mb-0">Son muayeneler</h5>
+                            <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (exLoading()) {
+                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                        } @else if (exError()) {
+                            <p class="text-muted-color m-0">{{ exError() }}</p>
+                        } @else if (exItems().length === 0) {
+                            <app-empty-state [message]="copy.listEmptyMessage" />
                         } @else {
-                            <dl class="m-0 grid grid-cols-12 gap-3">
-                                <dt class="col-span-12 text-muted-color">Toplam</dt>
-                                <dd class="col-span-12 m-0">{{ pet()!.examinationsSummary.totalCount }}</dd>
-                                @if (pet()!.examinationsSummary.lastExaminedAtUtc) {
-                                    <dt class="col-span-12 text-muted-color">Son muayene</dt>
-                                    <dd class="col-span-12 m-0">{{ formatDt(pet()!.examinationsSummary.lastExaminedAtUtc) }}</dd>
+                            <ul class="list-none m-0 p-0">
+                                @for (row of exItems(); track row.id) {
+                                    <li class="mb-3 last:mb-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <span class="text-muted-color text-sm">{{ formatDt(row.examinationDateUtc) }}</span>
+                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0"
+                                                >Detay →</a
+                                            >
+                                        </div>
+                                        <div class="font-medium">{{ row.complaint }}</div>
+                                    </li>
                                 }
-                            </dl>
+                            </ul>
                         }
                     </div>
                 </div>
                 <div class="col-span-12 lg:col-span-4">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Randevu özeti</h5>
-                        @if (pet()!.appointmentsSummary.totalCount === 0 && pet()!.appointmentsSummary.upcomingCount == null) {
-                            <app-empty-state message="Randevu özeti yok veya henüz kayıt yok." />
+                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <h5 class="mt-0 mb-0">Yaklaşan randevular</h5>
+                            <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (apLoading()) {
+                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                        } @else if (apError()) {
+                            <p class="text-muted-color m-0">{{ apError() }}</p>
+                        } @else if (apItems().length === 0) {
+                            <app-empty-state message="Yaklaşan randevu yok." />
                         } @else {
-                            <dl class="m-0 grid grid-cols-12 gap-3">
-                                <dt class="col-span-12 sm:col-span-6 text-muted-color">Toplam</dt>
-                                <dd class="col-span-12 sm:col-span-6 m-0">{{ pet()!.appointmentsSummary.totalCount }}</dd>
-                                @if (pet()!.appointmentsSummary.upcomingCount != null) {
-                                    <dt class="col-span-12 sm:col-span-6 text-muted-color">Yaklaşan</dt>
-                                    <dd class="col-span-12 sm:col-span-6 m-0">{{ pet()!.appointmentsSummary.upcomingCount }}</dd>
+                            <ul class="list-none m-0 p-0">
+                                @for (row of apItems(); track row.id) {
+                                    <li class="mb-3 last:mb-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <span class="text-muted-color text-sm">{{ formatDt(row.scheduledAtUtc) }}</span>
+                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0"
+                                                >Detay →</a
+                                            >
+                                        </div>
+                                        <div class="font-medium">{{ typeLabel(row.type) }}</div>
+                                        @if (row.reason !== emptyReason) {
+                                            <div class="text-sm text-muted-color mt-1">{{ row.reason }}</div>
+                                        }
+                                    </li>
                                 }
-                            </dl>
+                            </ul>
                         }
                     </div>
                 </div>
@@ -151,18 +188,36 @@ import { EMPTY, switchMap } from 'rxjs';
 export class PetDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly petsService = inject(PetsService);
+    private readonly related = inject(DetailRelatedSummariesService);
+
+    readonly copy = PANEL_COPY;
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly pet = signal<PetDetailVm | null>(null);
 
+    readonly vacLoading = signal(false);
+    readonly vacError = signal<string | null>(null);
+    readonly vacItems = signal<VaccinationListItemVm[]>([]);
+
+    readonly exLoading = signal(false);
+    readonly exError = signal<string | null>(null);
+    readonly exItems = signal<ExaminationListItemVm[]>([]);
+
+    readonly apLoading = signal(false);
+    readonly apError = signal<string | null>(null);
+    readonly apItems = signal<AppointmentListItemVm[]>([]);
+
     private lastId: string | null = null;
+
+    readonly emptyReason = '—';
 
     readonly formatDateOnly = (v: string | null) => formatDateDisplay(v);
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
     readonly statusLabel = petStatusLabel;
     readonly statusSeverity = petStatusSeverity;
     readonly genderLabel = petGenderLabel;
+    readonly typeLabel = appointmentTypeLabel;
 
     ngOnInit(): void {
         this.route.paramMap
@@ -184,6 +239,7 @@ export class PetDetailPageComponent implements OnInit {
                 next: (p) => {
                     this.pet.set(p);
                     this.loading.set(false);
+                    this.loadRelatedBlocks(p.id);
                 },
                 error: (e: Error) => {
                     this.error.set(e.message ?? 'Yükleme hatası');
@@ -202,10 +258,52 @@ export class PetDetailPageComponent implements OnInit {
             next: (p) => {
                 this.pet.set(p);
                 this.loading.set(false);
+                this.loadRelatedBlocks(p.id);
             },
             error: (e: Error) => {
                 this.error.set(e.message ?? 'Yükleme hatası');
                 this.loading.set(false);
+            }
+        });
+    }
+
+    private loadRelatedBlocks(petId: string): void {
+        this.vacLoading.set(true);
+        this.vacError.set(null);
+        this.related.loadRecentVaccinationsForPet(petId).subscribe({
+            next: (items) => {
+                this.vacItems.set(items);
+                this.vacLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.vacError.set(e.message ?? 'Aşı özeti yüklenemedi.');
+                this.vacLoading.set(false);
+            }
+        });
+
+        this.exLoading.set(true);
+        this.exError.set(null);
+        this.related.loadRecentExaminationsForPet(petId).subscribe({
+            next: (items) => {
+                this.exItems.set(items);
+                this.exLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.exError.set(e.message ?? 'Muayene özeti yüklenemedi.');
+                this.exLoading.set(false);
+            }
+        });
+
+        this.apLoading.set(true);
+        this.apError.set(null);
+        this.related.loadUpcomingAppointmentsForPet(petId).subscribe({
+            next: (items) => {
+                this.apItems.set(items);
+                this.apLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.apError.set(e.message ?? 'Randevu özeti yüklenemedi.');
+                this.apLoading.set(false);
             }
         });
     }

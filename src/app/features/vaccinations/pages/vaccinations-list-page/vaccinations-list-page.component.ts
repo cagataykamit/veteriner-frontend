@@ -37,7 +37,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Aşılar" subtitle="Klinik" description="Aşı kayıtları ve takip." />
+        <app-page-header title="Aşılar" subtitle="Klinik" description="Aşı kayıtları ve takip.">
+            <a actions routerLink="/panel/vaccinations/new" pButton type="button" label="Yeni Aşı" icon="pi pi-plus" class="p-button-primary"></a>
+        </app-page-header>
 
         <div class="card mb-6">
             <div class="grid grid-cols-12 gap-4 items-end">
@@ -104,7 +106,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         [lazy]="true"
                         [first]="first()"
                         (onLazyLoad)="onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '72rem' }"
+                        [tableStyle]="{ 'min-width': '76rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                     >
@@ -117,6 +119,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th>Müşteri</th>
                                 <th>Durum</th>
                                 <th>Not</th>
+                                <th>İşlem</th>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
@@ -144,6 +147,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </td>
                                 <td>{{ row.notes }}</td>
+                                <td>
+                                    <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                </td>
                             </tr>
                         </ng-template>
                     </p-table>

@@ -63,6 +63,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
+                        <p class="text-muted-color text-sm mt-2 mb-0">
+                            Aradığınız kayıt yoksa
+                            <a routerLink="/panel/clients/new" class="text-primary font-medium no-underline">Yeni Müşteri</a>.
+                        </p>
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
@@ -82,6 +86,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
+                        <p class="text-muted-color text-sm mt-2 mb-0">
+                            <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
+                            — bu müşteri için hayvan ekleyebilirsiniz.
+                        </p>
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="scheduledAtLocal" class="block text-sm font-medium text-muted-color mb-2">Tarih / saat *</label>

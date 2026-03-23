@@ -4,13 +4,17 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
+    extractCreatedClientIdFromPostResponse,
     mapClientDetailDtoToVm,
+    mapCreateClientToApiBody,
     mapPagedClientsToVm,
     clientsQueryToHttpParams
 } from '@/app/features/clients/data/client.mapper';
 import type { ClientDetailDto, ClientListItemDtoPagedResult } from '@/app/features/clients/models/client-api.model';
+import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 import type { ClientDetailVm, ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
+import { messageFromClientCreateHttpError } from '@/app/features/clients/utils/client-create-error.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface ClientsPagedVm {
@@ -41,6 +45,39 @@ export class ClientsService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Müşteri bulunamadı veya yüklenemedi.')))
             )
+        );
+    }
+
+    /**
+     * POST liste endpoint’i.
+     * Yanıt: düz `ClientDetailDto`, sarmalayıcı veya PascalCase `id` — `extractCreatedClientIdFromPostResponse`.
+     */
+    createClient(payload: CreateClientRequest): Observable<{ id: string }> {
+        const body = mapCreateClientToApiBody(payload);
+        return this.api.post<unknown>(ApiEndpoints.clients.list(), body).pipe(
+            map((raw) => {
+                const id = extractCreatedClientIdFromPostResponse(raw);
+                if (!id) {
+                    throw new Error('CLIENT_CREATE_NO_ID_IN_RESPONSE');
+                }
+                return { id };
+            }),
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => new Error(messageFromClientCreateHttpError(err)));
+                }
+                if (err instanceof Error && err.message === 'CLIENT_CREATE_NO_ID_IN_RESPONSE') {
+                    return throwError(
+                        () =>
+                            new Error(
+                                'Sunucu yanıtında müşteri kimliği okunamadı. Kayıt oluşmuş olabilir; müşteri listesini kontrol edin.'
+                            )
+                    );
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Müşteri oluşturulamadı.')
+                );
+            })
         );
     }
 }

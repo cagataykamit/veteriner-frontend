@@ -56,3 +56,20 @@ export interface PetAppointmentsSummaryDto {
     totalCount?: number;
     upcomingCount?: number | null;
 }
+
+/**
+ * POST /pets gövdesi — camelCase (Swagger ile doğrulanmalı).
+ * Opsiyonel alanlar backend’de yoksa mapper’da çıkarılabilir.
+ */
+export interface PetCreateRequestDto {
+    clientId: string;
+    name: string;
+    species: string;
+    breed?: string | null;
+    gender?: string | null;
+    birthDateUtc?: string | null;
+    color?: string | null;
+    weight?: number | null;
+    status?: string | null;
+    notes?: string | null;
+}

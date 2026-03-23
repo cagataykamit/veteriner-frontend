@@ -35,6 +35,20 @@ export function vaccinationStatusLabel(status: string | null | undefined): strin
  * applied/completed → success; upcoming/scheduled/due-soon → warn;
  * overdue/missed/cancelled → danger; unknown/passive → secondary.
  */
+/** Yeni kayıt formu — liste filtresindeki değerlerle uyumlu (Tümü yok). */
+export const VACCINATION_STATUS_FORM_OPTIONS = [
+    { label: 'Uygulandı', value: 'applied' },
+    { label: 'Tamamlandı', value: 'completed' },
+    { label: 'Yaklaşan', value: 'upcoming' },
+    { label: 'Planlandı', value: 'scheduled' },
+    { label: 'Yakında', value: 'due-soon' },
+    { label: 'Gecikmiş', value: 'overdue' },
+    { label: 'Kaçırıldı', value: 'missed' },
+    { label: 'İptal', value: 'cancelled' },
+    { label: 'Bilinmiyor', value: 'unknown' },
+    { label: 'Pasif', value: 'passive' }
+] as const;
+
 export function vaccinationStatusSeverity(status: string | null | undefined): StatusTagSeverity {
     if (status == null || status === '') {
         return 'secondary';

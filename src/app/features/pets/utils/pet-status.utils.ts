@@ -1,5 +1,17 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
+/** Yeni kayıt formu — liste filtresiyle uyumlu. */
+export const PET_STATUS_FORM_OPTIONS = [
+    { label: 'Aktif', value: 'active' },
+    { label: 'Pasif', value: 'inactive' }
+] as const;
+
+/** Form seçimi — API’de genelde `male` / `female` veya backend sözleşmesine göre. */
+export const PET_GENDER_FORM_OPTIONS = [
+    { label: 'Erkek', value: 'male' },
+    { label: 'Dişi', value: 'female' }
+] as const;
+
 const EM = '—';
 
 const LABELS: Record<string, string> = {

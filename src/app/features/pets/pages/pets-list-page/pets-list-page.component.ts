@@ -37,7 +37,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay." />
+        <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay.">
+            <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hayvan" icon="pi pi-plus" class="p-button-primary"></a>
+        </app-page-header>
 
         <div class="card mb-6">
             <div class="grid grid-cols-12 gap-4 items-end">

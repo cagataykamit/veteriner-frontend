@@ -47,3 +47,16 @@ export interface ClientAppointmentsSummaryDto {
     totalCount?: number;
     upcomingCount?: number;
 }
+
+/**
+ * POST /clients gövdesi — camelCase (Swagger ile doğrulanmalı).
+ * Opsiyonel alanlar backend’de yoksa mapper’dan çıkarılabilir.
+ */
+export interface ClientCreateRequestDto {
+    fullName: string;
+    phone: string;
+    email?: string | null;
+    address?: string | null;
+    notes?: string | null;
+    status?: string | null;
+}

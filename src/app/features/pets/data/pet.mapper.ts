@@ -1,10 +1,13 @@
 import { HttpParams } from '@angular/common/http';
 import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 import type {
+    PetCreateRequestDto,
     PetDetailDto,
     PetListItemDto,
     PetListItemDtoPagedResult
 } from '@/app/features/pets/models/pet-api.model';
+import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
+import { dateOnlyInputToUtcIso } from '@/app/shared/utils/date.utils';
 import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
 import type { PetDetailVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 
@@ -12,6 +15,49 @@ const EM = '—';
 
 function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
+}
+
+/**
+ * Create form → API body.
+ * Backend `ownerId` kullanıyorsa `clientId` → `ownerId` eşlemesi burada yapılmalıdır.
+ */
+export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDto {
+    const body: PetCreateRequestDto = {
+        clientId: req.clientId.trim(),
+        name: req.name.trim(),
+        species: req.species.trim()
+    };
+    const breed = req.breed?.trim();
+    if (breed) {
+        body.breed = breed;
+    }
+    const gender = req.gender?.trim();
+    if (gender) {
+        body.gender = gender;
+    }
+    const birthIn = req.birthDateInput?.trim();
+    if (birthIn) {
+        const iso = dateOnlyInputToUtcIso(birthIn);
+        if (iso) {
+            body.birthDateUtc = iso;
+        }
+    }
+    const color = req.color?.trim();
+    if (color) {
+        body.color = color;
+    }
+    if (req.weight != null && !Number.isNaN(Number(req.weight))) {
+        body.weight = Number(req.weight);
+    }
+    const status = req.status?.trim();
+    if (status) {
+        body.status = status;
+    }
+    const notes = req.notes?.trim();
+    if (notes) {
+        body.notes = notes;
+    }
+    return body;
 }
 
 export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {

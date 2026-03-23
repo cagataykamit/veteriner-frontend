@@ -1,7 +1,13 @@
 import { HttpParams } from '@angular/common/http';
-import type { VaccinationListItemDto, VaccinationListItemDtoPagedResult } from '@/app/features/vaccinations/models/vaccination-api.model';
+import type {
+    VaccinationCreateRequestDto,
+    VaccinationDetailDto,
+    VaccinationListItemDto,
+    VaccinationListItemDtoPagedResult
+} from '@/app/features/vaccinations/models/vaccination-api.model';
+import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
-import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import type { VaccinationDetailVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { normalizeVaccinationStatusKey } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 
 const EM = '—';
@@ -23,6 +29,35 @@ export function mapVaccinationListItemDtoToVm(dto: VaccinationListItemDto): Vacc
         clientName: str(dto.clientName),
         status: dto.status?.trim() ? dto.status : null,
         notes: str(dto.notes)
+    };
+}
+
+/** GET /vaccinations/{id} — liste öğesi ile aynı çekirdek eşleme + audit. */
+export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): VaccinationDetailVm {
+    const base = mapVaccinationListItemDtoToVm(dto);
+    return {
+        ...base,
+        createdAtUtc: dto.createdAtUtc ?? null,
+        updatedAtUtc: dto.updatedAtUtc ?? null
+    };
+}
+
+/**
+ * POST /vaccinations gövdesi.
+ * Varsayılan: `clientId` gönderilmez (pet üzerinden müşteri çözülür).
+ * Backend `name` bekliyorsa DTO’ya `name` eklenip `vaccineName` ile doldurulur — Swagger ile doğrulanmalı.
+ */
+export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): VaccinationCreateRequestDto {
+    const notes = req.notes?.trim() ? req.notes.trim() : null;
+    const status = req.status?.trim() ? req.status.trim() : null;
+    const next = req.nextDueAtUtc?.trim() ? req.nextDueAtUtc.trim() : null;
+    return {
+        petId: req.petId.trim(),
+        vaccineName: req.vaccineName.trim(),
+        appliedAtUtc: req.appliedAtUtc.trim(),
+        nextDueAtUtc: next,
+        status,
+        notes
     };
 }
 
@@ -50,6 +85,9 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     const pageSize = query.pageSize ?? 10;
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+    if (query.petId?.trim()) {
+        p = p.set('PetId', query.petId.trim());
+    }
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }

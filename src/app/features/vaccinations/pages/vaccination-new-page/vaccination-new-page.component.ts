@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -7,8 +8,9 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
+import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
+import { VACCINATION_STATUS_FORM_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import {
@@ -17,13 +19,12 @@ import {
     petOptionsFromList,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { HttpErrorResponse } from '@angular/common/http';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 
 @Component({
-    selector: 'app-examination-new-page',
+    selector: 'app-vaccination-new-page',
     standalone: true,
     imports: [
         CommonModule,
@@ -35,9 +36,9 @@ import { HttpErrorResponse } from '@angular/common/http';
         AppPageHeaderComponent
     ],
     template: `
-        <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
+        <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
 
-        <app-page-header title="Yeni Muayene" subtitle="Klinik" description="Muayene kaydı oluşturun." />
+        <app-page-header title="Yeni Aşı" subtitle="Klinik" description="Aşı kaydı oluşturun." />
 
         <div class="card">
             @if (selectionError()) {
@@ -92,32 +93,46 @@ import { HttpErrorResponse } from '@angular/common/http';
                         </p>
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="examinationDateLocal" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi / saati *</label>
-                        <input
-                            id="examinationDateLocal"
-                            type="datetime-local"
-                            class="w-full p-inputtext p-component"
-                            formControlName="examinationDateLocal"
-                        />
-                        @if (form.controls.examinationDateLocal.invalid && form.controls.examinationDateLocal.touched) {
+                        <label for="vaccineName" class="block text-sm font-medium text-muted-color mb-2">Aşı adı *</label>
+                        <input id="vaccineName" pInputText class="w-full" formControlName="vaccineName" />
+                        @if (form.controls.vaccineName.invalid && form.controls.vaccineName.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                     </div>
-                    <div class="col-span-12">
-                        <label for="complaint" class="block text-sm font-medium text-muted-color mb-2">Şikayet</label>
-                        <textarea id="complaint" rows="3" class="w-full p-inputtext p-component" formControlName="complaint"></textarea>
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
+                        <p-select
+                            inputId="status"
+                            formControlName="status"
+                            [options]="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Durum seçin"
+                            styleClass="w-full"
+                        />
+                        @if (form.controls.status.invalid && form.controls.status.touched) {
+                            <small class="text-red-500">Zorunlu alan.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati *</label>
+                        <input
+                            id="appliedAtLocal"
+                            type="datetime-local"
+                            class="w-full p-inputtext p-component"
+                            formControlName="appliedAtLocal"
+                        />
+                        @if (form.controls.appliedAtLocal.invalid && form.controls.appliedAtLocal.touched) {
+                            <small class="text-red-500">Zorunlu alan.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="nextDueDate" class="block text-sm font-medium text-muted-color mb-2">Sonraki tarih</label>
+                        <input id="nextDueDate" type="date" class="w-full p-inputtext p-component" formControlName="nextDueDate" />
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
-                    </div>
-                    <div class="col-span-12">
-                        <label for="findings" class="block text-sm font-medium text-muted-color mb-2">Bulgular</label>
-                        <textarea id="findings" rows="3" class="w-full p-inputtext p-component" formControlName="findings"></textarea>
-                    </div>
-                    <div class="col-span-12">
-                        <label for="diagnosis" class="block text-sm font-medium text-muted-color mb-2">Tanı</label>
-                        <textarea id="diagnosis" rows="3" class="w-full p-inputtext p-component" formControlName="diagnosis"></textarea>
                     </div>
                 </div>
 
@@ -133,17 +148,24 @@ import { HttpErrorResponse } from '@angular/common/http';
                         [loading]="submitting()"
                         [disabled]="form.invalid || submitting() || loadingClients()"
                     />
-                    <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
+                    <p-button
+                        type="button"
+                        [label]="copy.buttonCancel"
+                        icon="pi pi-times"
+                        severity="secondary"
+                        (onClick)="goList()"
+                        [disabled]="submitting()"
+                    />
                 </div>
             </form>
         </div>
     `
 })
-export class ExaminationNewPageComponent implements OnInit {
+export class VaccinationNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly fb = inject(FormBuilder);
-    private readonly examinationsService = inject(ExaminationsService);
+    private readonly vaccinationsService = inject(VaccinationsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
@@ -158,14 +180,16 @@ export class ExaminationNewPageComponent implements OnInit {
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
 
+    readonly statusOptions = [...VACCINATION_STATUS_FORM_OPTIONS];
+
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        examinationDateLocal: ['', Validators.required],
-        complaint: [''],
-        notes: [''],
-        findings: [''],
-        diagnosis: ['']
+        vaccineName: ['', Validators.required],
+        status: ['applied', Validators.required],
+        appliedAtLocal: ['', Validators.required],
+        nextDueDate: [''],
+        notes: ['']
     });
 
     ngOnInit(): void {
@@ -186,7 +210,7 @@ export class ExaminationNewPageComponent implements OnInit {
     }
 
     goList(): void {
-        void this.router.navigate(['/panel/examinations']);
+        void this.router.navigate(['/panel/vaccinations']);
     }
 
     onSubmit(): void {
@@ -197,27 +221,38 @@ export class ExaminationNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const examinationDateUtc = dateTimeLocalInputToIsoUtc(v.examinationDateLocal);
-        if (!examinationDateUtc) {
-            this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
+        const appliedAtUtc = dateTimeLocalInputToIsoUtc(v.appliedAtLocal);
+        if (!appliedAtUtc) {
+            this.submitError.set('Geçerli bir uygulama tarihi ve saati seçin.');
             return;
         }
 
-        const payload: CreateExaminationRequest = {
+        let nextDueAtUtc: string | undefined;
+        const nd = v.nextDueDate?.trim();
+        if (nd) {
+            const iso = dateOnlyInputToUtcIso(nd);
+            if (!iso) {
+                this.submitError.set('Geçerli bir sonraki tarih seçin.');
+                return;
+            }
+            nextDueAtUtc = iso;
+        }
+
+        const payload: CreateVaccinationRequest = {
             clientId: v.clientId.trim(),
             petId: v.petId.trim(),
-            examinationDateUtc,
-            complaint: v.complaint.trim() || undefined,
-            notes: v.notes.trim() || undefined,
-            findings: v.findings.trim() || undefined,
-            diagnosis: v.diagnosis.trim() || undefined
+            vaccineName: v.vaccineName.trim(),
+            appliedAtUtc,
+            nextDueAtUtc,
+            status: v.status.trim(),
+            notes: v.notes.trim() || undefined
         };
 
         this.submitting.set(true);
-        this.examinationsService.createExamination(payload).subscribe({
+        this.vaccinationsService.createVaccination(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/examinations', id]);
+                void this.router.navigate(['/panel/vaccinations', id]);
             },
             error: (e: unknown) => {
                 this.submitting.set(false);

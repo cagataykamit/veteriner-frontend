@@ -1,15 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
+import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+import { paymentStatusLabel } from '@/app/features/payments/utils/payment-status.utils';
+import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatMoney } from '@/app/shared/utils/money.utils';
 import { EMPTY, switchMap } from 'rxjs';
 
 @Component({
@@ -79,6 +86,95 @@ import { EMPTY, switchMap } from 'rxjs';
                         </dl>
                     </div>
                 </div>
+
+                <div class="col-span-12 lg:col-span-4">
+                    <div class="card">
+                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <h5 class="mt-0 mb-0">İlgili ödemeler</h5>
+                            <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (payLoading()) {
+                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                        } @else if (payError()) {
+                            <p class="text-muted-color m-0">{{ payError() }}</p>
+                        } @else if (payItems().length === 0) {
+                            <app-empty-state message="Özet için uygun ödeme bulunamadı." />
+                        } @else {
+                            <ul class="list-none m-0 p-0">
+                                @for (row of payItems(); track row.id) {
+                                    <li class="mb-3 last:mb-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <span class="font-medium">{{ money(row.amount, row.currency) }}</span>
+                                            <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                        </div>
+                                        <div class="text-sm text-muted-color">
+                                            {{ formatDate(row.paidAtUtc ?? row.createdAtUtc) }} · {{ payStatusShort(row.status) }}
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div class="col-span-12 lg:col-span-4">
+                    <div class="card">
+                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <h5 class="mt-0 mb-0">Aynı hayvana ait muayeneler</h5>
+                            <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (!exam()!.petId) {
+                            <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
+                        } @else if (sibLoading()) {
+                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                        } @else if (sibError()) {
+                            <p class="text-muted-color m-0">{{ sibError() }}</p>
+                        } @else if (sibItems().length === 0) {
+                            <app-empty-state message="Başka muayene kaydı yok." />
+                        } @else {
+                            <ul class="list-none m-0 p-0">
+                                @for (row of sibItems(); track row.id) {
+                                    <li class="mb-3 last:mb-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <span class="text-muted-color text-sm">{{ formatDt(row.examinationDateUtc) }}</span>
+                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                        </div>
+                                        <div class="font-medium">{{ row.complaint }}</div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div class="col-span-12 lg:col-span-4">
+                    <div class="card">
+                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <h5 class="mt-0 mb-0">Randevular (aynı hayvan)</h5>
+                            <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (!exam()!.petId) {
+                            <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
+                        } @else if (apptLoading()) {
+                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                        } @else if (apptError()) {
+                            <p class="text-muted-color m-0">{{ apptError() }}</p>
+                        } @else if (apptItems().length === 0) {
+                            <app-empty-state message="Kayıt bulunamadı." />
+                        } @else {
+                            <ul class="list-none m-0 p-0">
+                                @for (row of apptItems(); track row.id) {
+                                    <li class="mb-3 last:mb-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <span class="text-muted-color text-sm">{{ formatDt(row.scheduledAtUtc) }}</span>
+                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                        </div>
+                                        <div class="font-medium">{{ typeLabel(row.type) }}</div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
                 <div class="col-span-12">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Şikayet</h5>
@@ -126,6 +222,9 @@ import { EMPTY, switchMap } from 'rxjs';
 export class ExaminationDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly examinationsService = inject(ExaminationsService);
+    private readonly related = inject(DetailRelatedSummariesService);
+
+    readonly copy = PANEL_COPY;
 
     /** Mapper boş metin için kullandığı EM ile aynı. */
     readonly emptyMark = '—';
@@ -134,12 +233,28 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly error = signal<string | null>(null);
     readonly exam = signal<ExaminationDetailVm | null>(null);
 
+    readonly payLoading = signal(false);
+    readonly payError = signal<string | null>(null);
+    readonly payItems = signal<PaymentListItemVm[]>([]);
+
+    readonly sibLoading = signal(false);
+    readonly sibError = signal<string | null>(null);
+    readonly sibItems = signal<ExaminationListItemVm[]>([]);
+
+    readonly apptLoading = signal(false);
+    readonly apptError = signal<string | null>(null);
+    readonly apptItems = signal<AppointmentListItemVm[]>([]);
+
     private lastId: string | null = null;
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
     readonly statusLabel = examinationStatusLabel;
     readonly statusSeverity = examinationStatusSeverity;
+    readonly typeLabel = appointmentTypeLabel;
+    readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
+    readonly payStatusShort = (s: string | null) => paymentStatusLabel(s);
 
     ngOnInit(): void {
         this.route.paramMap
@@ -161,6 +276,7 @@ export class ExaminationDetailPageComponent implements OnInit {
                 next: (x) => {
                     this.exam.set(x);
                     this.loading.set(false);
+                    this.loadRelatedBlocks(x);
                 },
                 error: (e: Error) => {
                     this.error.set(e.message ?? 'Yükleme hatası');
@@ -179,10 +295,64 @@ export class ExaminationDetailPageComponent implements OnInit {
             next: (x) => {
                 this.exam.set(x);
                 this.loading.set(false);
+                this.loadRelatedBlocks(x);
             },
             error: (e: Error) => {
                 this.error.set(e.message ?? 'Yükleme hatası');
                 this.loading.set(false);
+            }
+        });
+    }
+
+    private loadRelatedBlocks(x: ExaminationDetailVm): void {
+        this.payLoading.set(true);
+        this.payError.set(null);
+        this.related.loadRelatedPaymentsForExaminationContext(x.petId, x.clientId).subscribe({
+            next: (items) => {
+                this.payItems.set(items);
+                this.payLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.payError.set(e.message ?? 'Ödemeler yüklenemedi.');
+                this.payLoading.set(false);
+            }
+        });
+
+        if (!x.petId?.trim()) {
+            this.sibItems.set([]);
+            this.sibLoading.set(false);
+            this.sibError.set(null);
+            this.apptItems.set([]);
+            this.apptLoading.set(false);
+            this.apptError.set(null);
+            return;
+        }
+
+        const petId = x.petId.trim();
+
+        this.sibLoading.set(true);
+        this.sibError.set(null);
+        this.related.loadSiblingExaminationsForPet(petId, x.id).subscribe({
+            next: (items) => {
+                this.sibItems.set(items);
+                this.sibLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.sibError.set(e.message ?? 'Muayene listesi yüklenemedi.');
+                this.sibLoading.set(false);
+            }
+        });
+
+        this.apptLoading.set(true);
+        this.apptError.set(null);
+        this.related.loadRecentAppointmentsForPetChronological(petId).subscribe({
+            next: (items) => {
+                this.apptItems.set(items);
+                this.apptLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.apptError.set(e.message ?? 'Randevular yüklenemedi.');
+                this.apptLoading.set(false);
             }
         });
     }

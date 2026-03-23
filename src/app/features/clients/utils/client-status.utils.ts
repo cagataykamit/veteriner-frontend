@@ -1,5 +1,11 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
+/** Yeni kayıt formu — liste filtresiyle uyumlu (Tümü yok). */
+export const CLIENT_STATUS_FORM_OPTIONS = [
+    { label: 'Aktif', value: 'active' },
+    { label: 'Pasif', value: 'inactive' }
+] as const;
+
 const LABELS: Record<string, string> = {
     active: 'Aktif',
     inactive: 'Pasif',
