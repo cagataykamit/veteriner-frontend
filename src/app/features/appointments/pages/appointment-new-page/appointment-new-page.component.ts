@@ -21,6 +21,7 @@ import {
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
 
 @Component({
     selector: 'app-appointment-new-page',
@@ -289,6 +290,10 @@ export class AppointmentNewPageComponent implements OnInit {
 
     private mapSubmitError(e: unknown): string {
         if (e instanceof HttpErrorResponse) {
+            const clinicMsg = messageFromClinicResolutionHttpError(e);
+            if (clinicMsg) {
+                return clinicMsg;
+            }
             return messageFromHttpError(e, 'Kayıt oluşturulamadı.');
         }
         return e instanceof Error ? e.message : 'Kayıt oluşturulamadı.';

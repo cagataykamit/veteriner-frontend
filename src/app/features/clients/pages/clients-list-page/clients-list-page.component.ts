@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -133,7 +133,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         }
     `
 })
-export class ClientsListPageComponent {
+export class ClientsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly clientsService = inject(ClientsService);
@@ -167,6 +167,13 @@ export class ClientsListPageComponent {
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly statusLabel = clientStatusLabel;
     readonly statusSeverity = clientStatusSeverity;
+    private suppressNextLazy = false;
+    private lastLoadKey = '';
+
+    ngOnInit(): void {
+        this.suppressNextLazy = true;
+        this.loadFromServer(1, this.pageSize(), this.activeSearch());
+    }
 
     applySearch(): void {
         this.activeSearch.set(this.searchInput.trim());
@@ -183,17 +190,26 @@ export class ClientsListPageComponent {
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch());
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), true);
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
+        if (this.suppressNextLazy) {
+            this.suppressNextLazy = false;
+            return;
+        }
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
         this.loadFromServer(page, rows, this.activeSearch());
     }
 
-    private loadFromServer(page: number, pageSize: number, search: string): void {
+    private loadFromServer(page: number, pageSize: number, search: string, force = false): void {
+        const key = `${page}|${pageSize}|${search.trim()}`;
+        if (!force && key === this.lastLoadKey) {
+            return;
+        }
+        this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
         this.clientsService

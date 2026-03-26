@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { StyleClassModule } from 'primeng/styleclass';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '@/app/layout/service/layout.service';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-topbar',
@@ -65,6 +66,10 @@ import { LayoutService } from '@/app/layout/service/layout.service';
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
                     <button type="button" class="layout-topbar-action">
+                        <i class="pi pi-building"></i>
+                        <span>Aktif Klinik: {{ activeClinicLabel }}</span>
+                    </button>
+                    <button type="button" class="layout-topbar-action">
                         <i class="pi pi-calendar"></i>
                         <span>Takvim</span>
                     </button>
@@ -85,6 +90,11 @@ export class AppTopbar {
     items!: MenuItem[];
 
     layoutService = inject(LayoutService);
+    private readonly auth = inject(AuthService);
+
+    get activeClinicLabel(): string {
+        return this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi';
+    }
 
     toggleDarkMode() {
         this.layoutService.layoutConfig.update((state) => ({

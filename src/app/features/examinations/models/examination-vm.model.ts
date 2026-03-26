@@ -33,3 +33,15 @@ export interface ExaminationDetailVm {
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
 }
+
+export interface ExaminationEditVm {
+    id: string;
+    clientId: string;
+    petId: string;
+    examinationDateUtc: string | null;
+    status: string;
+    complaint: string;
+    notes: string;
+    findings: string;
+    diagnosis: string;
+}

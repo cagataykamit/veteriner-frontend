@@ -38,3 +38,18 @@ export interface PetDetailVm {
         upcomingCount: number | null;
     };
 }
+
+/** Edit form için ham değerlere yakın, canonical alanlar. */
+export interface PetEditVm {
+    id: string;
+    clientId: string;
+    name: string;
+    speciesId: string;
+    breedId: string;
+    gender: string;
+    birthDateInput: string;
+    color: string;
+    weightStr: string;
+    status: string;
+    notes: string;
+}

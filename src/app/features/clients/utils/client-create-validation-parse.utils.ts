@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { CLIENT_CREATE_PHONE_MSG_INVALID } from '@/app/features/clients/utils/client-create-phone.utils';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromClientCreateHttpError } from '@/app/features/clients/utils/client-create-error.utils';
+import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
 
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
@@ -21,63 +22,25 @@ type ProblemBody = ProblemDetails & {
     errors?: Record<string, string[] | string | unknown> | null;
     validationErrors?: Record<string, string[] | string | unknown> | null;
 };
-
-/** ASP.NET / yaygın API: `errors` sözlüğü (alan adı → string[] veya string). */
-function extractRawValidationErrors(body: unknown): Record<string, unknown> | null {
-    if (!body || typeof body !== 'object') {
-        return null;
-    }
-    const o = body as Record<string, unknown>;
-    const raw = o['errors'] ?? o['validationErrors'];
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-        return null;
-    }
-    return raw as Record<string, unknown>;
-}
-
-function firstStringMessage(v: unknown): string | null {
-    if (typeof v === 'string' && v.trim()) {
-        return v.trim();
-    }
-    if (Array.isArray(v)) {
-        for (const item of v) {
-            if (typeof item === 'string' && item.trim()) {
-                return item.trim();
-            }
-        }
-    }
-    return null;
-}
-
-/** `Phone`, `phone`, `$.phone` vb. → form alanı. */
-function mapApiFieldKeyToFormField(rawKey: string): ClientCreateFormFieldKey | null {
-    const key = rawKey
-        .replace(/^\$/, '')
-        .replace(/\[\d+]$/, '')
-        .toLowerCase()
-        .replace(/[^a-z]/g, '');
-
-    const map: Record<string, ClientCreateFormFieldKey> = {
-        phone: 'phone',
-        phonenumber: 'phone',
-        mobile: 'phone',
-        mobil: 'phone',
-        email: 'email',
-        mail: 'email',
-        fullname: 'fullName',
-        full_name: 'fullName',
-        name: 'fullName',
-        adsoyad: 'fullName',
-        address: 'address',
-        adres: 'address',
-        notes: 'notes',
-        not: 'notes',
-        notlar: 'notes',
-        status: 'status',
-        durum: 'status'
-    };
-    return map[key] ?? null;
-}
+const FIELD_MAP: Record<string, ClientCreateFormFieldKey> = {
+    phone: 'phone',
+    phonenumber: 'phone',
+    mobile: 'phone',
+    mobil: 'phone',
+    email: 'email',
+    mail: 'email',
+    fullname: 'fullName',
+    full_name: 'fullName',
+    name: 'fullName',
+    adsoyad: 'fullName',
+    address: 'address',
+    adres: 'address',
+    notes: 'notes',
+    not: 'notes',
+    notlar: 'notes',
+    status: 'status',
+    durum: 'status'
+};
 
 /** Yaygın İngilizce doğrulama metinlerini Türkçe ürün diline yaklaştır (opsiyonel). */
 function normalizeFieldMessage(formKey: ClientCreateFormFieldKey, message: string): string {
@@ -91,29 +54,6 @@ function normalizeFieldMessage(formKey: ClientCreateFormFieldKey, message: strin
         return 'Geçerli e-posta girin.';
     }
     return m;
-}
-
-function extractFieldErrorsFromBody(body: unknown): ClientCreateFieldErrors {
-    const out: ClientCreateFieldErrors = {};
-    const raw = extractRawValidationErrors(body);
-    if (!raw) {
-        return out;
-    }
-
-    for (const [apiKey, val] of Object.entries(raw)) {
-        const formKey = mapApiFieldKeyToFormField(apiKey);
-        if (!formKey) {
-            continue;
-        }
-        const msg = firstStringMessage(val);
-        if (!msg) {
-            continue;
-        }
-        if (!out[formKey]) {
-            out[formKey] = normalizeFieldMessage(formKey, msg);
-        }
-    }
-    return out;
 }
 
 /** Bozuk UTF-8 / yanlış kodlama ile gelen ProblemDetails başlıkları. */
@@ -180,17 +120,10 @@ function resolveNonFieldErrorMessage(err: HttpErrorResponse): string {
  * Component içinde ham parse yapılmaz; tek giriş noktası.
  */
 export function parseClientCreateHttpError(err: HttpErrorResponse): ParsedClientCreateHttpError {
-    const fieldErrors = extractFieldErrorsFromBody(err.error);
-
-    if (Object.keys(fieldErrors).length > 0) {
-        return {
-            fieldErrors,
-            summaryMessage: SUMMARY_FIELD_ERRORS
-        };
-    }
-
-    return {
-        fieldErrors: {},
-        summaryMessage: resolveNonFieldErrorMessage(err)
-    };
+    return parseValidationHttpError<ClientCreateFormFieldKey>(err, {
+        fieldMap: FIELD_MAP,
+        normalizeMessage: normalizeFieldMessage,
+        nonFieldMessage: resolveNonFieldErrorMessage,
+        fieldErrorsSummaryMessage: SUMMARY_FIELD_ERRORS
+    });
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -158,7 +158,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         }
     `
 })
-export class VaccinationsListPageComponent {
+export class VaccinationsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly vaccinationsService = inject(VaccinationsService);
@@ -202,6 +202,13 @@ export class VaccinationsListPageComponent {
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly statusLabel = vaccinationStatusLabel;
     readonly statusSeverity = vaccinationStatusSeverity;
+    private suppressNextLazy = false;
+    private lastLoadKey = '';
+
+    ngOnInit(): void {
+        this.suppressNextLazy = true;
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+    }
 
     applySearch(): void {
         let from = this.fromDateInput?.trim() ?? '';
@@ -240,11 +247,16 @@ export class VaccinationsListPageComponent {
             this.activeSearch(),
             this.activeFromDate(),
             this.activeToDate(),
-            this.statusFilter
+            this.statusFilter,
+            true
         );
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
+        if (this.suppressNextLazy) {
+            this.suppressNextLazy = false;
+            return;
+        }
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
@@ -257,8 +269,14 @@ export class VaccinationsListPageComponent {
         search: string,
         fromDate: string,
         toDate: string,
-        status: string
+        status: string,
+        force = false
     ): void {
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}`;
+        if (!force && key === this.lastLoadKey) {
+            return;
+        }
+        this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
         this.vaccinationsService

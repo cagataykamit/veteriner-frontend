@@ -189,9 +189,13 @@ export class PetsListPageComponent implements OnInit {
     readonly statusLabel = petStatusLabel;
     readonly statusSeverity = petStatusSeverity;
     readonly genderLabel = petGenderLabel;
+    private suppressNextLazy = false;
+    private lastLoadKey = '';
 
     ngOnInit(): void {
         this.loadSpeciesOptions();
+        this.suppressNextLazy = true;
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId());
     }
 
     applySearch(): void {
@@ -212,17 +216,26 @@ export class PetsListPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId());
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId(), true);
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
+        if (this.suppressNextLazy) {
+            this.suppressNextLazy = false;
+            return;
+        }
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
         this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId());
     }
 
-    private loadFromServer(page: number, pageSize: number, search: string, speciesId: string): void {
+    private loadFromServer(page: number, pageSize: number, search: string, speciesId: string, force = false): void {
+        const key = `${page}|${pageSize}|${search.trim()}|${speciesId.trim()}`;
+        if (!force && key === this.lastLoadKey) {
+            return;
+        }
+        this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
         this.petsService

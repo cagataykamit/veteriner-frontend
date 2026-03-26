@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -177,7 +177,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         }
     `
 })
-export class PaymentsListPageComponent {
+export class PaymentsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly paymentsService = inject(PaymentsService);
@@ -235,6 +235,13 @@ export class PaymentsListPageComponent {
     readonly statusLabel = paymentStatusLabel;
     readonly statusSeverity = paymentStatusSeverity;
     readonly methodLabel = paymentMethodLabel;
+    private suppressNextLazy = false;
+    private lastLoadKey = '';
+
+    ngOnInit(): void {
+        this.suppressNextLazy = true;
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter, this.methodFilter);
+    }
 
     applySearch(): void {
         let from = this.fromDateInput?.trim() ?? '';
@@ -275,11 +282,16 @@ export class PaymentsListPageComponent {
             this.activeFromDate(),
             this.activeToDate(),
             this.statusFilter,
-            this.methodFilter
+            this.methodFilter,
+            true
         );
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
+        if (this.suppressNextLazy) {
+            this.suppressNextLazy = false;
+            return;
+        }
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
@@ -293,8 +305,14 @@ export class PaymentsListPageComponent {
         fromDate: string,
         toDate: string,
         status: string,
-        method: string
+        method: string,
+        force = false
     ): void {
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}|${method.trim()}`;
+        if (!force && key === this.lastLoadKey) {
+            return;
+        }
+        this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
         this.paymentsService

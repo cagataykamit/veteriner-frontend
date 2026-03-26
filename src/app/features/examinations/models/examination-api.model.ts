@@ -63,18 +63,12 @@ export interface ExaminationDetailDto {
 
 /** POST body — alan adları API ile uyumlu. */
 export interface ExaminationCreateRequestDto {
-    clientId: string;
-    petId: string;
-    examinationDateUtc: string;
-    /** Geçici geri uyumluluk: bazı backend sürümleri `scheduledAtUtc` bekleyebilir. */
-    scheduledAtUtc?: string | null;
-    /** Geçici geri uyumluluk: bazı backend sürümleri `appointmentId` kabul edebilir. */
     appointmentId?: string | null;
-    complaint?: string | null;
-    complaintText?: string | null;
+    clinicId?: string | null;
+    petId?: string | null;
+    examinedAtUtc: string;
+    visitReason: string;
+    findings: string;
+    assessment?: string | null;
     notes?: string | null;
-    note?: string | null;
-    findings?: string | null;
-    finding?: string | null;
-    diagnosis?: string | null;
 }

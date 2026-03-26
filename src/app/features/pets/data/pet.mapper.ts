@@ -9,7 +9,7 @@ import type {
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
 import { dateOnlyInputToUtcIso } from '@/app/shared/utils/date.utils';
 import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
-import type { PetDetailVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetDetailVm, PetEditVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 
 const EM = '—';
 
@@ -170,6 +170,43 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
             upcomingCount: ap?.upcomingCount ?? null
         }
     };
+}
+
+export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
+    const birthDateInput = toDateInput(dto.birthDateUtc);
+    const speciesId = dto.speciesId?.trim() ?? '';
+    const breedId = dto.breedId?.trim() ?? '';
+    const clientId = dto.clientId?.trim() || dto.ownerId?.trim() || '';
+    const weightStr =
+        dto.weight != null && !Number.isNaN(Number(dto.weight)) ? String(dto.weight) : '';
+
+    return {
+        id: dto.id,
+        clientId,
+        name: dto.name?.trim() ?? '',
+        speciesId,
+        breedId,
+        gender: dto.gender?.trim() ?? '',
+        birthDateInput,
+        color: dto.color?.trim() ?? '',
+        weightStr,
+        status: dto.status?.trim() || 'active',
+        notes: dto.notes?.trim() ?? ''
+    };
+}
+
+function toDateInput(isoUtc: string | null | undefined): string {
+    if (!isoUtc?.trim()) {
+        return '';
+    }
+    const d = new Date(isoUtc);
+    if (Number.isNaN(d.getTime())) {
+        return '';
+    }
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
 }
 
 export function mapPagedPetsToVm(result: PetListItemDtoPagedResult): {

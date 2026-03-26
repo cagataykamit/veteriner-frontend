@@ -6,6 +6,9 @@ export const guestGuard: CanActivateFn = (): boolean | UrlTree => {
     const auth = inject(AuthService);
     const router = inject(Router);
     if (auth.isAuthenticated()) {
+        if (!auth.hasSelectedClinic()) {
+            return router.createUrlTree(['/auth/select-clinic']);
+        }
         return router.createUrlTree(['/panel/dashboard']);
     }
     return true;

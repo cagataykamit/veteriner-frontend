@@ -19,6 +19,7 @@ import {
     type AuthTenantOption,
     parseTenantRequirement
 } from '@/app/core/auth/auth-tenant.utils';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
 
 @Component({
     selector: 'app-login',
@@ -142,10 +143,7 @@ export class Login {
                         this.loginError.set('Sunucu yanıtı geçersiz: oturum anahtarı alınamadı.');
                         return;
                     }
-                    const raw = this.route.snapshot.queryParamMap.get('returnUrl');
-                    const safe =
-                        raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/panel/dashboard';
-                    void this.router.navigateByUrl(safe);
+                    this.resolveClinicStepAfterLogin();
                 },
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
@@ -170,5 +168,48 @@ export class Login {
                     this.loginError.set('Giriş başarısız.');
                 }
             });
+    }
+
+    private resolveClinicStepAfterLogin(): void {
+        this.auth.getMyClinics().subscribe({
+            next: (clinics) => {
+                if (clinics.length === 0) {
+                    this.loginError.set('Erişilebilir aktif klinik bulunamadı.');
+                    return;
+                }
+                if (clinics.length === 1) {
+                    this.autoSelectSingleClinic(clinics[0]);
+                    return;
+                }
+                void this.router.navigate(['/auth/select-clinic'], {
+                    queryParams: { returnUrl: this.safeReturnUrl() }
+                });
+            },
+            error: (err: unknown) => {
+                const http = err instanceof HttpErrorResponse ? err : null;
+                this.loginError.set(http ? loginFailureMessage(http) : 'Klinikler yüklenemedi.');
+            }
+        });
+    }
+
+    private autoSelectSingleClinic(clinic: ClinicSummary): void {
+        this.signInLoading.set(true);
+        this.auth
+            .selectClinic(clinic.id, clinic.name)
+            .pipe(finalize(() => this.signInLoading.set(false)))
+            .subscribe({
+                next: () => {
+                    void this.router.navigateByUrl(this.safeReturnUrl());
+                },
+                error: (err: unknown) => {
+                    const http = err instanceof HttpErrorResponse ? err : null;
+                    this.loginError.set(http ? loginFailureMessage(http) : 'Klinik seçimi yapılamadı.');
+                }
+            });
+    }
+
+    private safeReturnUrl(): string {
+        const raw = this.route.snapshot.queryParamMap.get('returnUrl');
+        return raw && raw.startsWith('/panel') && !raw.startsWith('//') ? raw : '/panel/dashboard';
     }
 }

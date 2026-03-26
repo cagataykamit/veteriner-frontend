@@ -30,3 +30,14 @@ export interface VaccinationDetailVm {
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
 }
+
+export interface VaccinationEditVm {
+    id: string;
+    clientId: string;
+    petId: string;
+    vaccineName: string;
+    appliedAtUtc: string | null;
+    nextDueAtUtc: string | null;
+    status: string;
+    notes: string;
+}

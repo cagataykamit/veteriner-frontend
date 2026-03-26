@@ -35,3 +35,16 @@ export interface PaymentDetailVm {
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
 }
+
+export interface PaymentEditVm {
+    id: string;
+    clientId: string;
+    petId: string;
+    amountStr: string;
+    currency: string;
+    method: string;
+    status: string;
+    dueDateUtc: string | null;
+    paidAtUtc: string | null;
+    note: string;
+}

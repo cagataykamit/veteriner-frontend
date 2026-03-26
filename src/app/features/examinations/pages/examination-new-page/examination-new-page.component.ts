@@ -92,6 +92,19 @@ import { HttpErrorResponse } from '@angular/common/http';
                         </p>
                     </div>
                     <div class="col-span-12 md:col-span-6">
+                        <label for="clinicId" class="block text-sm font-medium text-muted-color mb-2">Klinik *</label>
+                        <input
+                            id="clinicId"
+                            type="text"
+                            class="w-full p-inputtext p-component"
+                            formControlName="clinicId"
+                            placeholder="ClinicId (GUID)"
+                        />
+                        @if (form.controls.clinicId.invalid && form.controls.clinicId.touched) {
+                            <small class="text-red-500">Zorunlu alan.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-6">
                         <label for="examinationDateLocal" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi / saati *</label>
                         <input
                             id="examinationDateLocal"
@@ -104,20 +117,26 @@ import { HttpErrorResponse } from '@angular/common/http';
                         }
                     </div>
                     <div class="col-span-12">
-                        <label for="complaint" class="block text-sm font-medium text-muted-color mb-2">Şikayet</label>
-                        <textarea id="complaint" rows="3" class="w-full p-inputtext p-component" formControlName="complaint"></textarea>
+                        <label for="visitReason" class="block text-sm font-medium text-muted-color mb-2">Ziyaret sebebi *</label>
+                        <textarea id="visitReason" rows="3" class="w-full p-inputtext p-component" formControlName="visitReason"></textarea>
+                        @if (form.controls.visitReason.invalid && form.controls.visitReason.touched) {
+                            <small class="text-red-500">Zorunlu alan.</small>
+                        }
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                     </div>
                     <div class="col-span-12">
-                        <label for="findings" class="block text-sm font-medium text-muted-color mb-2">Bulgular</label>
+                        <label for="findings" class="block text-sm font-medium text-muted-color mb-2">Bulgular *</label>
                         <textarea id="findings" rows="3" class="w-full p-inputtext p-component" formControlName="findings"></textarea>
+                        @if (form.controls.findings.invalid && form.controls.findings.touched) {
+                            <small class="text-red-500">Zorunlu alan.</small>
+                        }
                     </div>
                     <div class="col-span-12">
-                        <label for="diagnosis" class="block text-sm font-medium text-muted-color mb-2">Tanı</label>
-                        <textarea id="diagnosis" rows="3" class="w-full p-inputtext p-component" formControlName="diagnosis"></textarea>
+                        <label for="assessment" class="block text-sm font-medium text-muted-color mb-2">Değerlendirme</label>
+                        <textarea id="assessment" rows="3" class="w-full p-inputtext p-component" formControlName="assessment"></textarea>
                     </div>
                 </div>
 
@@ -161,11 +180,12 @@ export class ExaminationNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
+        clinicId: ['', Validators.required],
         examinationDateLocal: ['', Validators.required],
-        complaint: [''],
+        visitReason: ['', Validators.required],
         notes: [''],
-        findings: [''],
-        diagnosis: ['']
+        findings: ['', Validators.required],
+        assessment: ['']
     });
 
     ngOnInit(): void {
@@ -197,20 +217,20 @@ export class ExaminationNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const examinationDateUtc = dateTimeLocalInputToIsoUtc(v.examinationDateLocal);
-        if (!examinationDateUtc) {
+        const examinedAtUtc = dateTimeLocalInputToIsoUtc(v.examinationDateLocal);
+        if (!examinedAtUtc) {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
             return;
         }
 
         const payload: CreateExaminationRequest = {
-            clientId: v.clientId.trim(),
-            petId: v.petId.trim(),
-            examinationDateUtc,
-            complaint: v.complaint.trim() || undefined,
-            notes: v.notes.trim() || undefined,
-            findings: v.findings.trim() || undefined,
-            diagnosis: v.diagnosis.trim() || undefined
+            clinicId: v.clinicId.trim() || undefined,
+            petId: v.petId.trim() || undefined,
+            examinedAtUtc,
+            visitReason: v.visitReason.trim(),
+            findings: v.findings.trim(),
+            assessment: v.assessment.trim() || null,
+            notes: v.notes.trim() || null
         };
 
         this.submitting.set(true);

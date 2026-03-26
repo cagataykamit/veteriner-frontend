@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -25,6 +26,7 @@ import { EMPTY, switchMap } from 'rxjs';
     imports: [
         CommonModule,
         RouterLink,
+        ButtonModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -33,6 +35,10 @@ import { EMPTY, switchMap } from 'rxjs';
     ],
     template: `
         <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
+
+        @if (showSavedBanner()) {
+            <p class="mb-4 m-0 text-sm font-medium">Ödeme kaydedildi.</p>
+        }
 
         @if (loading()) {
             <app-loading-state message="Ödeme yükleniyor…" />
@@ -45,7 +51,17 @@ import { EMPTY, switchMap } from 'rxjs';
                 title="Ödeme"
                 subtitle="Finans"
                 [description]="moneyLine(payment()!) + ' · ' + statusLabel(payment()!.status) + ' · ' + methodLabel(payment()!.method)"
-            />
+            >
+                <a
+                    actions
+                    [routerLink]="['/panel/payments', payment()!.id, 'edit']"
+                    pButton
+                    type="button"
+                    label="Düzenle"
+                    icon="pi pi-pencil"
+                    class="p-button-secondary"
+                ></a>
+            </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
@@ -187,10 +203,12 @@ import { EMPTY, switchMap } from 'rxjs';
 })
 export class PaymentDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly paymentsService = inject(PaymentsService);
     private readonly related = inject(DetailRelatedSummariesService);
 
     readonly copy = PANEL_COPY;
+    readonly showSavedBanner = signal(false);
 
     readonly emptyMark = '—';
 
@@ -221,6 +239,16 @@ export class PaymentDetailPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        if (this.route.snapshot.queryParamMap.get('saved') === '1') {
+            this.showSavedBanner.set(true);
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { saved: null },
+                queryParamsHandling: '',
+                replaceUrl: true
+            });
+        }
+
         this.route.paramMap
             .pipe(
                 switchMap((params) => {

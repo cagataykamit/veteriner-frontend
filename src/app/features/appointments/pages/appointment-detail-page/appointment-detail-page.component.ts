@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import type { AppointmentDetailVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
@@ -19,6 +20,7 @@ import { EMPTY, switchMap } from 'rxjs';
     imports: [
         CommonModule,
         RouterLink,
+        ButtonModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -27,6 +29,10 @@ import { EMPTY, switchMap } from 'rxjs';
     ],
     template: `
         <a routerLink="/panel/appointments" class="text-primary font-medium no-underline inline-block mb-4">← Randevu listesine dön</a>
+
+        @if (showSavedBanner()) {
+            <p class="mb-4 m-0 text-sm font-medium">Randevu kaydedildi.</p>
+        }
 
         @if (loading()) {
             <app-loading-state message="Randevu yükleniyor…" />
@@ -39,7 +45,17 @@ import { EMPTY, switchMap } from 'rxjs';
                 title="Randevu"
                 subtitle="Operasyon"
                 [description]="formatDateTime(appt()!.scheduledAtUtc) + ' · ' + statusLabel(appt()!.status) + ' · ' + typeLabel(appt()!.type)"
-            />
+            >
+                <a
+                    actions
+                    [routerLink]="['/panel/appointments', appt()!.id, 'edit']"
+                    pButton
+                    type="button"
+                    label="Düzenle"
+                    icon="pi pi-pencil"
+                    class="p-button-secondary"
+                ></a>
+            </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
@@ -117,9 +133,11 @@ import { EMPTY, switchMap } from 'rxjs';
 })
 export class AppointmentDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly appointmentsService = inject(AppointmentsService);
 
     readonly emptyMark = '—';
+    readonly showSavedBanner = signal(false);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -135,6 +153,16 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly typeSeverity = appointmentTypeSeverity;
 
     ngOnInit(): void {
+        if (this.route.snapshot.queryParamMap.get('saved') === '1') {
+            this.showSavedBanner.set(true);
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { saved: null },
+                queryParamsHandling: '',
+                replaceUrl: true
+            });
+        }
+
         this.route.paramMap
             .pipe(
                 switchMap((params) => {

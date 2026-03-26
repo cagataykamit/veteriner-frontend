@@ -7,7 +7,7 @@ import type {
 } from '@/app/features/payments/models/payment-api.model';
 import type { CreatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
 import type { PaymentsListQuery } from '@/app/features/payments/models/payment-query.model';
-import type { PaymentDetailVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 
 const EM = '—';
@@ -111,6 +111,22 @@ export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm 
         paidAtUtc: canonicalPaidAt(dto),
         createdAtUtc: canonicalCreatedAt(dto),
         updatedAtUtc: firstTrimmed(dto.updatedAtUtc, dto.updatedOnUtc)
+    };
+}
+
+export function mapPaymentDetailDtoToEditVm(dto: PaymentDetailDto): PaymentEditVm {
+    const amount = canonicalAmount(dto);
+    return {
+        id: dto.id,
+        clientId: canonicalClientId(dto) ?? '',
+        petId: canonicalPetId(dto) ?? '',
+        amountStr: amount != null ? String(amount) : '',
+        currency: canonicalCurrency(dto),
+        method: canonicalMethod(dto) ?? 'cash',
+        status: canonicalStatus(dto) ?? 'pending',
+        dueDateUtc: canonicalDueDate(dto),
+        paidAtUtc: canonicalPaidAt(dto),
+        note: firstTrimmed(dto.note, dto.notes, dto.description) ?? ''
     };
 }
 

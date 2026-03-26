@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -25,6 +26,7 @@ import { EMPTY, switchMap } from 'rxjs';
     imports: [
         CommonModule,
         RouterLink,
+        ButtonModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -33,6 +35,10 @@ import { EMPTY, switchMap } from 'rxjs';
     ],
     template: `
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
+
+        @if (showSavedBanner()) {
+            <p class="mb-4 m-0 text-sm font-medium">Muayene kaydedildi.</p>
+        }
 
         @if (loading()) {
             <app-loading-state message="Muayene yükleniyor…" />
@@ -45,7 +51,17 @@ import { EMPTY, switchMap } from 'rxjs';
                 title="Muayene"
                 subtitle="Klinik"
                 [description]="formatDateTime(exam()!.examinationDateUtc) + ' · ' + statusLabel(exam()!.status)"
-            />
+            >
+                <a
+                    actions
+                    [routerLink]="['/panel/examinations', exam()!.id, 'edit']"
+                    pButton
+                    type="button"
+                    label="Düzenle"
+                    icon="pi pi-pencil"
+                    class="p-button-secondary"
+                ></a>
+            </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
@@ -221,10 +237,12 @@ import { EMPTY, switchMap } from 'rxjs';
 })
 export class ExaminationDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly examinationsService = inject(ExaminationsService);
     private readonly related = inject(DetailRelatedSummariesService);
 
     readonly copy = PANEL_COPY;
+    readonly showSavedBanner = signal(false);
 
     /** Mapper boş metin için kullandığı EM ile aynı. */
     readonly emptyMark = '—';
@@ -257,6 +275,16 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly payStatusShort = (s: string | null) => paymentStatusLabel(s);
 
     ngOnInit(): void {
+        if (this.route.snapshot.queryParamMap.get('saved') === '1') {
+            this.showSavedBanner.set(true);
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { saved: null },
+                queryParamsHandling: '',
+                replaceUrl: true
+            });
+        }
+
         this.route.paramMap
             .pipe(
                 switchMap((params) => {

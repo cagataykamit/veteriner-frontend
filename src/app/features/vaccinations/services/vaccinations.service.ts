@@ -5,6 +5,7 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     mapCreateVaccinationToApiBody,
+    mapVaccinationDetailDtoToEditVm,
     mapPagedVaccinationsToVm,
     mapVaccinationDetailDtoToVm,
     vaccinationsQueryToHttpParams
@@ -12,7 +13,7 @@ import {
 import type { VaccinationDetailDto, VaccinationListItemDtoPagedResult } from '@/app/features/vaccinations/models/vaccination-api.model';
 import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
-import type { VaccinationDetailVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import type { VaccinationDetailVm, VaccinationEditVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface VaccinationsPagedVm {
@@ -46,6 +47,15 @@ export class VaccinationsService {
         );
     }
 
+    getVaccinationForEditById(id: string): Observable<VaccinationEditVm> {
+        return this.api.get<VaccinationDetailDto>(ApiEndpoints.vaccinations.byId(id)).pipe(
+            map((dto) => mapVaccinationDetailDtoToEditVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Aşı düzenleme bilgileri yüklenemedi.')))
+            )
+        );
+    }
+
     /**
      * POST liste endpoint’i (muayene/randevu ile aynı varsayım).
      * Yanıt gövdesinde tam `VaccinationDetailDto` ve `id` beklenir; yalnızca `{ id }` dönen sarmalayıcılar için mapper genişletilir.
@@ -73,6 +83,21 @@ export class VaccinationsService {
                     );
                 }
                 return throwError(() => (err instanceof Error ? err : new Error('Aşı kaydı oluşturulamadı.')));
+            })
+        );
+    }
+
+    updateVaccination(id: string, payload: CreateVaccinationRequest): Observable<void> {
+        const body = mapCreateVaccinationToApiBody(payload);
+        return this.api.put<unknown>(ApiEndpoints.vaccinations.byId(id), body).pipe(
+            map(() => void 0),
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => err);
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Aşı kaydı güncellenemedi.')
+                );
             })
         );
     }

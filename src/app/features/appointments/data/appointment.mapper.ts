@@ -8,7 +8,7 @@ import type {
 } from '@/app/features/appointments/models/appointment-api.model';
 import type { CreateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
 import type { AppointmentsListQuery } from '@/app/features/appointments/models/appointment-query.model';
-import type { AppointmentDetailVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 
 const EM = '—';
 
@@ -77,18 +77,40 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
     };
 }
 
+export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): AppointmentEditVm {
+    const rawType = canonicalAppointmentType(dto);
+    const rawStatus = canonicalAppointmentStatus(dto);
+    return {
+        id: dto.id,
+        clientId: dto.clientId?.trim() ?? '',
+        petId: dto.petId?.trim() ?? '',
+        scheduledAtUtc: dto.scheduledAtUtc ?? null,
+        type: rawType ?? '',
+        status: rawStatus ?? 'scheduled',
+        reason: dto.reason?.trim() ?? '',
+        notes: dto.notes?.trim() ?? ''
+    };
+}
+
 export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): AppointmentCreateRequestDto {
     const type = req.type?.trim() ? req.type.trim() : null;
-    return {
+    const status = req.status?.trim() ? req.status.trim() : null;
+    const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : '';
+    const base: AppointmentCreateRequestDto = {
         clientId: req.clientId.trim(),
         petId: req.petId.trim(),
         scheduledAtUtc: req.scheduledAtUtc,
         type,
         // Geçici geri uyumluluk: bazı backend sürümleri `appointmentType` anahtarını bekleyebilir.
         appointmentType: type,
+        status,
+        lifecycleStatus: status,
         reason: req.reason?.trim() ? req.reason.trim() : null,
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
+    // Backend artık ClinicId olmadan da klinik resolve edebiliyor.
+    // Kullanıcı klinik seçimi yaptığında (gelecekte) bu alan gönderilebilir; boşsa tamamen omit edilir.
+    return clinicId ? { ...base, clinicId } : base;
 }
 
 export function mapPagedAppointmentsToVm(result: AppointmentListItemDtoPagedResult): {

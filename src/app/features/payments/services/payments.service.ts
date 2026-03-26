@@ -5,6 +5,7 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     mapCreatePaymentToApiBody,
+    mapPaymentDetailDtoToEditVm,
     mapPaymentDetailDtoToVm,
     mapPagedPaymentsToVm,
     paymentsQueryToHttpParams
@@ -12,7 +13,7 @@ import {
 import type { PaymentDetailDto, PaymentListItemDtoPagedResult } from '@/app/features/payments/models/payment-api.model';
 import type { CreatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
 import type { PaymentsListQuery } from '@/app/features/payments/models/payment-query.model';
-import type { PaymentDetailVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface PaymentsPagedVm {
@@ -46,6 +47,15 @@ export class PaymentsService {
         );
     }
 
+    getPaymentForEditById(id: string): Observable<PaymentEditVm> {
+        return this.api.get<PaymentDetailDto>(ApiEndpoints.payments.byId(id)).pipe(
+            map((dto) => mapPaymentDetailDtoToEditVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Ödeme düzenleme bilgileri yüklenemedi.')))
+            )
+        );
+    }
+
     createPayment(payload: CreatePaymentRequest): Observable<{ id: string }> {
         const body = mapCreatePaymentToApiBody(payload);
         return this.api.post<unknown>(ApiEndpoints.payments.list(), body).pipe(
@@ -67,6 +77,21 @@ export class PaymentsService {
                     );
                 }
                 return throwError(() => (err instanceof Error ? err : new Error('Ödeme oluşturulamadı.')));
+            })
+        );
+    }
+
+    updatePayment(id: string, payload: CreatePaymentRequest): Observable<void> {
+        const body = mapCreatePaymentToApiBody(payload);
+        return this.api.put<unknown>(ApiEndpoints.payments.byId(id), body).pipe(
+            map(() => void 0),
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => err);
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Ödeme güncellenemedi.')
+                );
             })
         );
     }

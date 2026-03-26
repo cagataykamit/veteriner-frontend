@@ -1,0 +1,41 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
+
+const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
+const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
+
+export type AppointmentUpsertFormFieldKey = 'clientId' | 'petId' | 'scheduledAtLocal' | 'type' | 'status' | 'reason' | 'notes';
+export type AppointmentUpsertFieldErrors = Partial<Record<AppointmentUpsertFormFieldKey, string>>;
+
+export interface ParsedAppointmentUpsertHttpError {
+    fieldErrors: AppointmentUpsertFieldErrors;
+    summaryMessage: string | null;
+}
+
+const FIELD_MAP: Record<string, AppointmentUpsertFormFieldKey> = {
+    clientid: 'clientId',
+    ownerid: 'clientId',
+    petid: 'petId',
+    animalid: 'petId',
+    scheduledatutc: 'scheduledAtLocal',
+    scheduledat: 'scheduledAtLocal',
+    appointmentdateutc: 'scheduledAtLocal',
+    type: 'type',
+    appointmenttype: 'type',
+    status: 'status',
+    appointmentstatus: 'status',
+    lifestylestatus: 'status',
+    lifecyclestatus: 'status',
+    reason: 'reason',
+    notes: 'notes',
+    note: 'notes'
+};
+
+export function parseAppointmentUpsertHttpError(err: HttpErrorResponse): ParsedAppointmentUpsertHttpError {
+    return parseValidationHttpError<AppointmentUpsertFormFieldKey>(err, {
+        fieldMap: FIELD_MAP,
+        nonFieldMessage: (e) => messageFromHttpError(e, FALLBACK_GENERIC),
+        fieldErrorsSummaryMessage: SUMMARY_FIELD_ERRORS
+    });
+}

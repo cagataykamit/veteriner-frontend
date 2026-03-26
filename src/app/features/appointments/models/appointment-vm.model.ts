@@ -32,3 +32,14 @@ export interface AppointmentDetailVm {
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
 }
+
+export interface AppointmentEditVm {
+    id: string;
+    clientId: string;
+    petId: string;
+    scheduledAtUtc: string | null;
+    type: string;
+    status: string;
+    reason: string;
+    notes: string;
+}

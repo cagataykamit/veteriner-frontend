@@ -6,13 +6,14 @@ import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     appointmentsQueryToHttpParams,
     mapAppointmentDetailDtoToVm,
+    mapAppointmentDetailDtoToEditVm,
     mapCreateAppointmentToApiBody,
     mapPagedAppointmentsToVm
 } from '@/app/features/appointments/data/appointment.mapper';
 import type { AppointmentDetailDto, AppointmentListItemDtoPagedResult } from '@/app/features/appointments/models/appointment-api.model';
 import type { CreateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
 import type { AppointmentsListQuery } from '@/app/features/appointments/models/appointment-query.model';
-import type { AppointmentDetailVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface AppointmentsPagedVm {
@@ -46,6 +47,15 @@ export class AppointmentsService {
         );
     }
 
+    getAppointmentForEditById(id: string): Observable<AppointmentEditVm> {
+        return this.api.get<AppointmentDetailDto>(ApiEndpoints.appointments.byId(id)).pipe(
+            map((dto) => mapAppointmentDetailDtoToEditVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Randevu düzenleme bilgileri yüklenemedi.')))
+            )
+        );
+    }
+
     /**
      * POST liste endpoint’ine gönderir (muayene/ödeme ile aynı varsayım).
      * Yanıt gövdesinde `id` beklenir; yalnızca `{ id }` dönen sarmalayıcılar için mapper genişletilir.
@@ -74,6 +84,21 @@ export class AppointmentsService {
                 }
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Randevu oluşturulamadı.')
+                );
+            })
+        );
+    }
+
+    updateAppointment(id: string, payload: CreateAppointmentRequest): Observable<void> {
+        const body = mapCreateAppointmentToApiBody(payload);
+        return this.api.put<unknown>(ApiEndpoints.appointments.byId(id), body).pipe(
+            map(() => void 0),
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => err);
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Randevu güncellenemedi.')
                 );
             })
         );

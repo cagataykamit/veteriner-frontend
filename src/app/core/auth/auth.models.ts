@@ -22,3 +22,13 @@ export interface SessionTokens {
     refreshToken: string | null;
     expiresAt?: string | null;
 }
+
+export interface ClinicSummary {
+    id: string;
+    name: string;
+}
+
+export interface SelectClinicRequest {
+    refreshToken: string;
+    clinicId: string;
+}

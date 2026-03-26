@@ -8,7 +8,7 @@ import type {
 } from '@/app/features/examinations/models/examination-api.model';
 import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
-import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm, ExaminationEditVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 
 const EM = '—';
 
@@ -89,6 +89,20 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
     };
 }
 
+export function mapExaminationDetailDtoToEditVm(dto: ExaminationDetailDto): ExaminationEditVm {
+    return {
+        id: dto.id,
+        clientId: canonicalClientId(dto) ?? '',
+        petId: canonicalPetId(dto) ?? '',
+        examinationDateUtc: dto.examinationDateUtc ?? null,
+        status: canonicalStatus(dto) ?? 'draft',
+        complaint: firstTrimmed(dto.complaint, dto.complaintText) ?? '',
+        notes: firstTrimmed(dto.notes, dto.note) ?? '',
+        findings: firstTrimmed(dto.findings, dto.finding) ?? '',
+        diagnosis: dto.diagnosis?.trim() ?? ''
+    };
+}
+
 export function mapPagedExaminationsToVm(result: ExaminationListItemDtoPagedResult): {
     items: ExaminationListItemVm[];
     page: number;
@@ -144,22 +158,15 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
 }
 
 export function mapCreateExaminationToApiBody(req: CreateExaminationRequest): ExaminationCreateRequestDto {
-    const complaint = req.complaint?.trim() ? req.complaint.trim() : null;
-    const notes = req.notes?.trim() ? req.notes.trim() : null;
-    const findings = req.findings?.trim() ? req.findings.trim() : null;
     return {
-        clientId: req.clientId.trim(),
-        petId: req.petId.trim(),
-        examinationDateUtc: req.examinationDateUtc,
-        // Geçici geri uyumluluk: bazı backend sürümleri examinationDate yerine scheduledAtUtc kabul eder.
-        scheduledAtUtc: req.examinationDateUtc,
-        complaint,
-        complaintText: complaint,
-        notes,
-        note: notes,
-        findings,
-        finding: findings,
-        diagnosis: req.diagnosis?.trim() ? req.diagnosis.trim() : null
+        appointmentId: req.appointmentId?.trim() ? req.appointmentId.trim() : null,
+        clinicId: req.clinicId?.trim() ? req.clinicId.trim() : null,
+        petId: req.petId?.trim() ? req.petId.trim() : null,
+        examinedAtUtc: req.examinedAtUtc,
+        visitReason: req.visitReason.trim(),
+        findings: req.findings.trim(),
+        assessment: req.assessment?.trim() ? req.assessment.trim() : null,
+        notes: req.notes?.trim() ? req.notes.trim() : null
     };
 }
 

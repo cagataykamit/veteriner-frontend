@@ -7,7 +7,7 @@ import type {
 } from '@/app/features/vaccinations/models/vaccination-api.model';
 import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
-import type { VaccinationDetailVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import type { VaccinationDetailVm, VaccinationEditVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { normalizeVaccinationStatusKey } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 
 const EM = '—';
@@ -93,6 +93,19 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
         ...base,
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null
+    };
+}
+
+export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): VaccinationEditVm {
+    return {
+        id: dto.id,
+        clientId: canonicalClientId(dto) ?? '',
+        petId: canonicalPetId(dto) ?? '',
+        vaccineName: firstTrimmed(dto.vaccineName, dto.name, dto.vaccine, dto.vaccineTypeName) ?? '',
+        appliedAtUtc: canonicalAppliedAt(dto),
+        nextDueAtUtc: canonicalNextDueAt(dto),
+        status: canonicalStatus(dto) ?? 'applied',
+        notes: firstTrimmed(dto.notes, dto.note, dto.description) ?? ''
     };
 }
 

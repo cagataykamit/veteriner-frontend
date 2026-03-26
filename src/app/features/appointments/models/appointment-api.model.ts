@@ -59,12 +59,17 @@ export interface AppointmentDetailDto {
  * Varsayım: backend bu gövdeyi kabul eder; şema farklıysa mapper güncellenir.
  */
 export interface AppointmentCreateRequestDto {
+    clinicId?: string | null;
     clientId: string;
     petId: string;
     scheduledAtUtc: string;
     type?: string | null;
     /** Geçici geri uyumluluk: bazı backend sürümleri `appointmentType` bekleyebilir. */
     appointmentType?: string | null;
+    /** Update akışında backend status kabul ediyorsa kullanılır. */
+    status?: string | null;
+    /** Geçici geri uyumluluk: lifecycle anahtarı bekleyen backend sürümleri. */
+    lifecycleStatus?: string | null;
     reason?: string | null;
     notes?: string | null;
 }

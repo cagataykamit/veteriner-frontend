@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -24,6 +25,7 @@ import { EMPTY, switchMap } from 'rxjs';
     imports: [
         CommonModule,
         RouterLink,
+        ButtonModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -48,7 +50,17 @@ import { EMPTY, switchMap } from 'rxjs';
                 [title]="pet()!.name"
                 subtitle="Hayvan"
                 [description]="'Doğum: ' + formatDateOnly(pet()!.birthDateUtc) + ' · ' + pet()!.speciesName"
-            />
+            >
+                <a
+                    actions
+                    [routerLink]="['/panel/pets', pet()!.id, 'edit']"
+                    pButton
+                    type="button"
+                    label="Düzenle"
+                    icon="pi pi-pencil"
+                    class="p-button-secondary"
+                ></a>
+            </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">

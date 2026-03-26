@@ -7,8 +7,12 @@ export const ApiEndpoints = {
     auth: {
         login: () => `/api/v1/Auth/login`,
         refresh: () => `/api/v1/Auth/refresh`,
+        selectClinic: () => `/api/v1/auth/select-clinic`,
         logout: () => `/api/v1/Auth/logout`,
         logoutAll: () => `/api/v1/Auth/logout-all`
+    },
+    me: {
+        clinics: () => `/api/v1/me/clinics`
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`

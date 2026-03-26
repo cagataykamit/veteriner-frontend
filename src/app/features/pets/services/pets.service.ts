@@ -7,13 +7,14 @@ import {
     extractCreatedPetIdFromPostResponse,
     mapCreatePetToApiBody,
     mapPetDetailDtoToVm,
+    mapPetDetailDtoToEditVm,
     mapPagedPetsToVm,
     petsQueryToHttpParams
 } from '@/app/features/pets/data/pet.mapper';
 import type { PetDetailDto, PetListItemDtoPagedResult } from '@/app/features/pets/models/pet-api.model';
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
 import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
-import type { PetDetailVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetDetailVm, PetEditVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface PetsPagedVm {
@@ -47,6 +48,15 @@ export class PetsService {
         );
     }
 
+    getPetForEditById(id: string): Observable<PetEditVm> {
+        return this.api.get<PetDetailDto>(ApiEndpoints.pets.byId(id)).pipe(
+            map((dto) => mapPetDetailDtoToEditVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Hayvan düzenleme bilgileri yüklenemedi.')))
+            )
+        );
+    }
+
     /**
      * POST liste endpoint’i.
      * Yanıt: düz DTO, sarmalayıcı veya `petId` — `extractCreatedPetIdFromPostResponse`.
@@ -76,6 +86,21 @@ export class PetsService {
                 }
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Hayvan oluşturulamadı.')
+                );
+            })
+        );
+    }
+
+    updatePet(id: string, payload: CreatePetRequest): Observable<void> {
+        const body = mapCreatePetToApiBody(payload);
+        return this.api.put<unknown>(ApiEndpoints.pets.byId(id), body).pipe(
+            map(() => void 0),
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => err);
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Hayvan güncellenemedi.')
                 );
             })
         );

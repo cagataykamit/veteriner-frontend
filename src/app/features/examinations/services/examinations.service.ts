@@ -6,13 +6,14 @@ import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     mapCreateExaminationToApiBody,
     mapExaminationDetailDtoToVm,
+    mapExaminationDetailDtoToEditVm,
     mapPagedExaminationsToVm,
     examinationsQueryToHttpParams
 } from '@/app/features/examinations/data/examination.mapper';
 import type { ExaminationDetailDto, ExaminationListItemDtoPagedResult } from '@/app/features/examinations/models/examination-api.model';
 import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
-import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm, ExaminationEditVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface ExaminationsPagedVm {
@@ -46,6 +47,15 @@ export class ExaminationsService {
         );
     }
 
+    getExaminationForEditById(id: string): Observable<ExaminationEditVm> {
+        return this.api.get<ExaminationDetailDto>(ApiEndpoints.examinations.byId(id)).pipe(
+            map((dto) => mapExaminationDetailDtoToEditVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Muayene düzenleme bilgileri yüklenemedi.')))
+            )
+        );
+    }
+
     createExamination(payload: CreateExaminationRequest): Observable<{ id: string }> {
         const body = mapCreateExaminationToApiBody(payload);
         return this.api.post<unknown>(ApiEndpoints.examinations.list(), body).pipe(
@@ -70,6 +80,21 @@ export class ExaminationsService {
                 }
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Muayene oluşturulamadı.')
+                );
+            })
+        );
+    }
+
+    updateExamination(id: string, payload: CreateExaminationRequest): Observable<void> {
+        const body = mapCreateExaminationToApiBody(payload);
+        return this.api.put<unknown>(ApiEndpoints.examinations.byId(id), body).pipe(
+            map(() => void 0),
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => err);
+                }
+                return throwError(() =>
+                    err instanceof Error ? err : new Error('Muayene güncellenemedi.')
                 );
             })
         );
