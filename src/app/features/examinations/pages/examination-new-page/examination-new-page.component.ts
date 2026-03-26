@@ -21,6 +21,7 @@ import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { HttpErrorResponse } from '@angular/common/http';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-examination-new-page',
@@ -43,6 +44,7 @@ import { HttpErrorResponse } from '@angular/common/http';
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
+            <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -90,19 +92,6 @@ import { HttpErrorResponse } from '@angular/common/http';
                             <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
                             — bu müşteri için hayvan ekleyebilirsiniz.
                         </p>
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="clinicId" class="block text-sm font-medium text-muted-color mb-2">Klinik *</label>
-                        <input
-                            id="clinicId"
-                            type="text"
-                            class="w-full p-inputtext p-component"
-                            formControlName="clinicId"
-                            placeholder="ClinicId (GUID)"
-                        />
-                        @if (form.controls.clinicId.invalid && form.controls.clinicId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
-                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="examinationDateLocal" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi / saati *</label>
@@ -167,6 +156,7 @@ export class ExaminationNewPageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -180,7 +170,6 @@ export class ExaminationNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        clinicId: ['', Validators.required],
         examinationDateLocal: ['', Validators.required],
         visitReason: ['', Validators.required],
         notes: [''],
@@ -188,7 +177,10 @@ export class ExaminationNewPageComponent implements OnInit {
         assessment: ['']
     });
 
+    readonly activeClinicLabel = signal<string>('Belirlenmedi');
+
     ngOnInit(): void {
+        this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
@@ -222,9 +214,14 @@ export class ExaminationNewPageComponent implements OnInit {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
             return;
         }
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!clinicId) {
+            this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+            return;
+        }
 
         const payload: CreateExaminationRequest = {
-            clinicId: v.clinicId.trim() || undefined,
+            clinicId,
             petId: v.petId.trim() || undefined,
             examinedAtUtc,
             visitReason: v.visitReason.trim(),

@@ -28,6 +28,7 @@ import {
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-examination-edit-page',
@@ -59,6 +60,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
+                <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
@@ -204,6 +206,7 @@ export class ExaminationEditPageComponent implements OnInit {
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -215,6 +218,7 @@ export class ExaminationEditPageComponent implements OnInit {
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<ExaminationUpsertFieldErrors>({});
+    readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
     private examinationId = '';
     private isInitializingClient = false;
@@ -262,6 +266,7 @@ export class ExaminationEditPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
         if (!id) {
             this.loadError.set('Geçersiz muayene.');
@@ -333,8 +338,14 @@ export class ExaminationEditPageComponent implements OnInit {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
             return;
         }
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!clinicId) {
+            this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+            return;
+        }
 
         const payload: CreateExaminationRequest = {
+            clinicId,
             petId: v.petId.trim() || undefined,
             examinedAtUtc,
             visitReason: v.visitReason.trim(),
