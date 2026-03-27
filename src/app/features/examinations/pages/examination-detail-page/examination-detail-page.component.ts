@@ -50,7 +50,7 @@ import { EMPTY, switchMap } from 'rxjs';
             <app-page-header
                 title="Muayene"
                 subtitle="Klinik"
-                [description]="formatDateTime(exam()!.examinationDateUtc) + ' · ' + statusLabel(exam()!.status)"
+                [description]="formatDateTime(exam()!.examinedAtUtc) + ' · ' + statusLabel(exam()!.status)"
             >
                 <a
                     actions
@@ -73,7 +73,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                 <app-status-tag [label]="statusLabel(exam()!.status)" [severity]="statusSeverity(exam()!.status)" />
                             </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(exam()!.examinationDateUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(exam()!.examinedAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(exam()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
@@ -151,10 +151,10 @@ import { EMPTY, switchMap } from 'rxjs';
                                 @for (row of sibItems(); track row.id) {
                                     <li class="mb-3 last:mb-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDt(row.examinationDateUtc) }}</span>
+                                            <span class="text-muted-color text-sm">{{ formatDt(row.examinedAtUtc) }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
-                                        <div class="font-medium">{{ row.complaint }}</div>
+                                        <div class="font-medium">{{ row.visitReason }}</div>
                                     </li>
                                 }
                             </ul>
@@ -193,11 +193,11 @@ import { EMPTY, switchMap } from 'rxjs';
 
                 <div class="col-span-12">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Şikayet</h5>
-                        @if (exam()!.complaint === emptyMark) {
-                            <app-empty-state message="Şikayet girilmemiş." />
+                        <h5 class="mt-0 mb-4">Ziyaret sebebi</h5>
+                        @if (exam()!.visitReason === emptyMark) {
+                            <app-empty-state message="Ziyaret sebebi girilmemiş." />
                         } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ exam()!.complaint }}</p>
+                            <p class="m-0 whitespace-pre-wrap">{{ exam()!.visitReason }}</p>
                         }
                     </div>
                 </div>
@@ -213,11 +213,11 @@ import { EMPTY, switchMap } from 'rxjs';
                 </div>
                 <div class="col-span-12">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Tanı</h5>
-                        @if (exam()!.diagnosis === emptyMark) {
-                            <app-empty-state message="Tanı girilmemiş." />
+                        <h5 class="mt-0 mb-4">Değerlendirme</h5>
+                        @if (exam()!.assessment === emptyMark) {
+                            <app-empty-state message="Değerlendirme girilmemiş." />
                         } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ exam()!.diagnosis }}</p>
+                            <p class="m-0 whitespace-pre-wrap">{{ exam()!.assessment }}</p>
                         }
                     </div>
                 </div>

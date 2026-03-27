@@ -61,7 +61,7 @@ export class DetailRelatedSummariesService {
             .pipe(
                 map((r) => {
                     const rows = filterByPetId(r.items, petId);
-                    return sortIsoDesc(rows, (x) => x.examinationDateUtc).slice(0, DETAIL_LIMIT);
+                    return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
                 })
             );
     }
@@ -158,7 +158,7 @@ export class DetailRelatedSummariesService {
         return this.examinations.getExaminations({ page: 1, pageSize: DETAIL_FETCH_SIZE, petId: pid }).pipe(
             map((r) => {
                 const rows = filterByPetId(r.items, pid).filter((x) => x.id !== exId);
-                return sortIsoDesc(rows, (x) => x.examinationDateUtc).slice(0, DETAIL_LIMIT);
+                return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
             })
         );
     }
@@ -188,7 +188,7 @@ export class DetailRelatedSummariesService {
             return this.examinations.getExaminations({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId: cid }).pipe(
                 map((r) => {
                     const rows = filterByClientId(r.items, cid);
-                    return sortIsoDesc(rows, (x) => x.examinationDateUtc).slice(0, DETAIL_LIMIT);
+                    return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
                 })
             );
         }

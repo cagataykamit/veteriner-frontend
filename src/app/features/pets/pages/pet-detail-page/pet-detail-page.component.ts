@@ -153,12 +153,12 @@ import { EMPTY, switchMap } from 'rxjs';
                                 @for (row of exItems(); track row.id) {
                                     <li class="mb-3 last:mb-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDt(row.examinationDateUtc) }}</span>
+                                            <span class="text-muted-color text-sm">{{ formatDt(row.examinedAtUtc) }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0"
                                                 >Detay →</a
                                             >
                                         </div>
-                                        <div class="font-medium">{{ row.complaint }}</div>
+                                        <div class="font-medium">{{ row.visitReason }}</div>
                                     </li>
                                 }
                             </ul>

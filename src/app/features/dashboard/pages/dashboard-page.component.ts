@@ -201,7 +201,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                                 </ng-template>
                                 <ng-template #body let-row>
                                     <tr>
-                                        <td>{{ formatDateTime(row.examinationDateUtc) }}</td>
+                                        <td>{{ formatDateTime(row.examinedAtUtc) }}</td>
                                         <td>{{ row.petName }}</td>
                                         <td>{{ row.clientName }}</td>
                                         <td>

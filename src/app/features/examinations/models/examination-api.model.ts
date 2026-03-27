@@ -6,6 +6,9 @@
 export interface ExaminationListItemDto {
     id: string;
     tenantId?: string;
+    clinicId?: string | null;
+    clinicName?: string | null;
+    examinedAtUtc?: string | null;
     examinationDateUtc?: string | null;
     clientId?: string | null;
     ownerId?: string | null;
@@ -20,8 +23,15 @@ export interface ExaminationListItemDto {
     examinationStatus?: string | null;
     lifecycleStatus?: string | null;
     lifecycle?: string | null;
+    visitReason?: string | null;
     complaint?: string | null;
     complaintText?: string | null;
+    findings?: string | null;
+    finding?: string | null;
+    assessment?: string | null;
+    diagnosis?: string | null;
+    notes?: string | null;
+    note?: string | null;
     createdAtUtc?: string | null;
 }
 
@@ -36,6 +46,9 @@ export interface ExaminationListItemDtoPagedResult {
 export interface ExaminationDetailDto {
     id: string;
     tenantId?: string;
+    clinicId?: string | null;
+    clinicName?: string | null;
+    examinedAtUtc?: string | null;
     examinationDateUtc?: string | null;
     clientId?: string | null;
     ownerId?: string | null;
@@ -50,12 +63,14 @@ export interface ExaminationDetailDto {
     examinationStatus?: string | null;
     lifecycleStatus?: string | null;
     lifecycle?: string | null;
+    visitReason?: string | null;
     complaint?: string | null;
     complaintText?: string | null;
     notes?: string | null;
     note?: string | null;
     findings?: string | null;
     finding?: string | null;
+    assessment?: string | null;
     diagnosis?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;

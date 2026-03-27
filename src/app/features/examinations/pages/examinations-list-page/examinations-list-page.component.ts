@@ -116,14 +116,14 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th>Müşteri</th>
                                 <th>Hayvan</th>
                                 <th>Durum</th>
-                                <th>Şikayet</th>
+                                <th>Ziyaret sebebi</th>
                                 <th>Oluşturulma</th>
                                 <th style="width: 8rem">İşlemler</th>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
                             <tr>
-                                <td>{{ formatDate(row.examinationDateUtc) }}</td>
+                                <td>{{ formatDate(row.examinedAtUtc) }}</td>
                                 <td>
                                     @if (row.clientId) {
                                         <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
@@ -143,7 +143,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <td>
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </td>
-                                <td>{{ row.complaint }}</td>
+                                <td>{{ row.visitReason }}</td>
                                 <td>{{ formatCreated(row.createdAtUtc) }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline">Detay</a>

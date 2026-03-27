@@ -302,12 +302,12 @@ export class ExaminationEditPageComponent implements OnInit {
                 this.form.patchValue({
                     clientId: x.clientId,
                     petId: '',
-                    examinationDateLocal: toDateTimeLocalInput(x.examinationDateUtc),
+                    examinationDateLocal: toDateTimeLocalInput(x.examinedAtUtc),
                     status: x.status,
-                    visitReason: x.complaint,
+                    visitReason: x.visitReason,
                     notes: x.notes,
                     findings: x.findings,
-                    assessment: x.diagnosis
+                    assessment: x.assessment
                 });
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });

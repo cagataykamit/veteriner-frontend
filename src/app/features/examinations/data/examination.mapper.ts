@@ -29,6 +29,14 @@ function canonicalClientId(dto: ExaminationListItemDto | ExaminationDetailDto): 
     return firstTrimmed(dto.clientId, dto.ownerId);
 }
 
+function canonicalClinicId(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.clinicId);
+}
+
+function canonicalClinicName(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.clinicName);
+}
+
 function canonicalClientName(dto: ExaminationListItemDto | ExaminationDetailDto): string {
     return str(firstTrimmed(dto.clientName, dto.ownerName));
 }
@@ -49,14 +57,32 @@ function canonicalLifecycleStatus(dto: ExaminationListItemDto | ExaminationDetai
     return firstTrimmed(dto.lifecycleStatus, dto.lifecycle, dto.status, dto.examinationStatus);
 }
 
-function canonicalComplaint(dto: ExaminationListItemDto | ExaminationDetailDto): string {
-    return str(firstTrimmed(dto.complaint, dto.complaintText));
+function canonicalExaminedAt(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.examinedAtUtc, dto.examinationDateUtc);
+}
+
+function canonicalVisitReason(dto: ExaminationListItemDto | ExaminationDetailDto): string {
+    return str(firstTrimmed(dto.visitReason, dto.complaint, dto.complaintText));
+}
+
+function canonicalFindings(dto: ExaminationListItemDto | ExaminationDetailDto): string {
+    return str(firstTrimmed(dto.findings, dto.finding));
+}
+
+function canonicalAssessment(dto: ExaminationListItemDto | ExaminationDetailDto): string {
+    return str(firstTrimmed(dto.assessment, dto.diagnosis));
+}
+
+function canonicalNotes(dto: ExaminationListItemDto | ExaminationDetailDto): string {
+    return str(firstTrimmed(dto.notes, dto.note));
 }
 
 export function mapExaminationListItemDtoToVm(dto: ExaminationListItemDto): ExaminationListItemVm {
     return {
         id: dto.id,
-        examinationDateUtc: dto.examinationDateUtc ?? null,
+        clinicId: canonicalClinicId(dto),
+        clinicName: canonicalClinicName(dto),
+        examinedAtUtc: canonicalExaminedAt(dto),
         clientId: canonicalClientId(dto),
         clientName: canonicalClientName(dto),
         petId: canonicalPetId(dto),
@@ -64,7 +90,7 @@ export function mapExaminationListItemDtoToVm(dto: ExaminationListItemDto): Exam
         appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
         status: canonicalStatus(dto),
         lifecycleStatus: canonicalLifecycleStatus(dto),
-        complaint: canonicalComplaint(dto),
+        visitReason: canonicalVisitReason(dto),
         createdAtUtc: dto.createdAtUtc ?? null
     };
 }
@@ -72,7 +98,9 @@ export function mapExaminationListItemDtoToVm(dto: ExaminationListItemDto): Exam
 export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): ExaminationDetailVm {
     return {
         id: dto.id,
-        examinationDateUtc: dto.examinationDateUtc ?? null,
+        clinicId: canonicalClinicId(dto),
+        clinicName: canonicalClinicName(dto),
+        examinedAtUtc: canonicalExaminedAt(dto),
         clientId: canonicalClientId(dto),
         clientName: canonicalClientName(dto),
         petId: canonicalPetId(dto),
@@ -80,10 +108,10 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
         appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
         status: canonicalStatus(dto),
         lifecycleStatus: canonicalLifecycleStatus(dto),
-        complaint: canonicalComplaint(dto),
-        notes: str(firstTrimmed(dto.notes, dto.note)),
-        findings: str(firstTrimmed(dto.findings, dto.finding)),
-        diagnosis: str(dto.diagnosis),
+        visitReason: canonicalVisitReason(dto),
+        notes: canonicalNotes(dto),
+        findings: canonicalFindings(dto),
+        assessment: canonicalAssessment(dto),
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null
     };
@@ -92,14 +120,16 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
 export function mapExaminationDetailDtoToEditVm(dto: ExaminationDetailDto): ExaminationEditVm {
     return {
         id: dto.id,
+        clinicId: canonicalClinicId(dto) ?? '',
+        clinicName: canonicalClinicName(dto) ?? '',
         clientId: canonicalClientId(dto) ?? '',
         petId: canonicalPetId(dto) ?? '',
-        examinationDateUtc: dto.examinationDateUtc ?? null,
+        examinedAtUtc: canonicalExaminedAt(dto),
         status: canonicalStatus(dto) ?? 'draft',
-        complaint: firstTrimmed(dto.complaint, dto.complaintText) ?? '',
+        visitReason: firstTrimmed(dto.visitReason, dto.complaint, dto.complaintText) ?? '',
         notes: firstTrimmed(dto.notes, dto.note) ?? '',
         findings: firstTrimmed(dto.findings, dto.finding) ?? '',
-        diagnosis: dto.diagnosis?.trim() ?? ''
+        assessment: firstTrimmed(dto.assessment, dto.diagnosis) ?? ''
     };
 }
 

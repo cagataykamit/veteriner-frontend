@@ -4,7 +4,9 @@
 
 export interface ExaminationListItemVm {
     id: string;
-    examinationDateUtc: string | null;
+    clinicId: string | null;
+    clinicName: string | null;
+    examinedAtUtc: string | null;
     clientId: string | null;
     clientName: string;
     petId: string | null;
@@ -12,13 +14,15 @@ export interface ExaminationListItemVm {
     appointmentId: string | null;
     status: string | null;
     lifecycleStatus: string | null;
-    complaint: string;
+    visitReason: string;
     createdAtUtc: string | null;
 }
 
 export interface ExaminationDetailVm {
     id: string;
-    examinationDateUtc: string | null;
+    clinicId: string | null;
+    clinicName: string | null;
+    examinedAtUtc: string | null;
     clientId: string | null;
     clientName: string;
     petId: string | null;
@@ -26,22 +30,24 @@ export interface ExaminationDetailVm {
     appointmentId: string | null;
     status: string | null;
     lifecycleStatus: string | null;
-    complaint: string;
+    visitReason: string;
     notes: string;
     findings: string;
-    diagnosis: string;
+    assessment: string;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
 }
 
 export interface ExaminationEditVm {
     id: string;
+    clinicId: string;
+    clinicName: string;
     clientId: string;
     petId: string;
-    examinationDateUtc: string | null;
+    examinedAtUtc: string | null;
     status: string;
-    complaint: string;
+    visitReason: string;
     notes: string;
     findings: string;
-    diagnosis: string;
+    assessment: string;
 }
