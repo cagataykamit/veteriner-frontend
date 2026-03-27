@@ -7,8 +7,12 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
+import { mapExaminationUpsertFormToCreateRequest } from '@/app/features/examinations/data/examination.mapper';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import {
+    type ExaminationUpsertFieldErrors,
+    parseExaminationUpsertHttpError
+} from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import {
@@ -18,7 +22,6 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -64,6 +67,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (apiFieldErrors().clientId) {
+                            <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         }
                         <p class="text-muted-color text-sm mt-2 mb-0">
                             Aradığınız kayıt yoksa
@@ -87,6 +92,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (apiFieldErrors().petId) {
+                            <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
                         <p class="text-muted-color text-sm mt-2 mb-0">
                             <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
@@ -103,6 +110,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         />
                         @if (form.controls.examinationDateLocal.invalid && form.controls.examinationDateLocal.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (apiFieldErrors().examinationDateLocal) {
+                            <small class="text-red-500">{{ apiFieldErrors().examinationDateLocal }}</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -110,22 +119,32 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         <textarea id="visitReason" rows="3" class="w-full p-inputtext p-component" formControlName="visitReason"></textarea>
                         @if (form.controls.visitReason.invalid && form.controls.visitReason.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (apiFieldErrors().visitReason) {
+                            <small class="text-red-500">{{ apiFieldErrors().visitReason }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
+                        @if (apiFieldErrors().notes) {
+                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                        }
                     </div>
                     <div class="col-span-12">
                         <label for="findings" class="block text-sm font-medium text-muted-color mb-2">Bulgular *</label>
                         <textarea id="findings" rows="3" class="w-full p-inputtext p-component" formControlName="findings"></textarea>
                         @if (form.controls.findings.invalid && form.controls.findings.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (apiFieldErrors().findings) {
+                            <small class="text-red-500">{{ apiFieldErrors().findings }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="assessment" class="block text-sm font-medium text-muted-color mb-2">Değerlendirme</label>
                         <textarea id="assessment" rows="3" class="w-full p-inputtext p-component" formControlName="assessment"></textarea>
+                        @if (apiFieldErrors().assessment) {
+                            <small class="text-red-500">{{ apiFieldErrors().assessment }}</small>
+                        }
                     </div>
                 </div>
 
@@ -166,6 +185,7 @@ export class ExaminationNewPageComponent implements OnInit {
     readonly loadingPets = signal(false);
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
+    readonly apiFieldErrors = signal<ExaminationUpsertFieldErrors>({});
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -203,6 +223,7 @@ export class ExaminationNewPageComponent implements OnInit {
 
     onSubmit(): void {
         this.submitError.set(null);
+        this.apiFieldErrors.set({});
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
@@ -220,15 +241,15 @@ export class ExaminationNewPageComponent implements OnInit {
             return;
         }
 
-        const payload: CreateExaminationRequest = {
+        const payload = mapExaminationUpsertFormToCreateRequest({
             clinicId,
-            petId: v.petId.trim() || undefined,
+            petId: v.petId,
             examinedAtUtc,
-            visitReason: v.visitReason.trim(),
-            findings: v.findings.trim(),
-            assessment: v.assessment.trim() || null,
-            notes: v.notes.trim() || null
-        };
+            visitReason: v.visitReason,
+            findings: v.findings,
+            assessment: v.assessment,
+            notes: v.notes
+        });
 
         this.submitting.set(true);
         this.examinationsService.createExamination(payload).subscribe({
@@ -238,7 +259,13 @@ export class ExaminationNewPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
-                this.submitError.set(this.mapSubmitError(e));
+                if (e instanceof HttpErrorResponse) {
+                    const parsed = parseExaminationUpsertHttpError(e);
+                    this.apiFieldErrors.set(parsed.fieldErrors);
+                    this.submitError.set(parsed.summaryMessage);
+                    return;
+                }
+                this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
     }
@@ -280,15 +307,9 @@ export class ExaminationNewPageComponent implements OnInit {
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
-            return messageFromHttpError(e, fallback);
+            const parsed = parseExaminationUpsertHttpError(e);
+            return parsed.summaryMessage ?? fallback;
         }
         return e instanceof Error ? e.message : fallback;
-    }
-
-    private mapSubmitError(e: unknown): string {
-        if (e instanceof HttpErrorResponse) {
-            return messageFromHttpError(e, 'Kayıt oluşturulamadı.');
-        }
-        return e instanceof Error ? e.message : 'Kayıt oluşturulamadı.';
     }
 }

@@ -4,6 +4,7 @@ import { catchError, finalize, map, share, tap } from 'rxjs/operators';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import type {
+    AuthOperationResponse,
     ClinicSummary,
     LoginRequest,
     RefreshTokenRequest,
@@ -161,6 +162,22 @@ export class AuthService {
         this.clearSession();
     }
 
+    /** Backend logout endpoint'i + typed response normalize + local session clear. */
+    logoutCurrentSession(): Observable<AuthOperationResponse> {
+        return this.api.post<unknown>(ApiEndpoints.auth.logout(), {}).pipe(
+            map((raw) => this.mapAuthOperationResponse(raw)),
+            tap(() => this.clearSession())
+        );
+    }
+
+    /** Backend logout-all endpoint'i + typed response normalize + local session clear. */
+    logoutAllSessions(): Observable<AuthOperationResponse> {
+        return this.api.post<unknown>(ApiEndpoints.auth.logoutAll(), {}).pipe(
+            map((raw) => this.mapAuthOperationResponse(raw)),
+            tap(() => this.clearSession())
+        );
+    }
+
     private persistFromTokens(tokens: SessionTokens): void {
         if (tokens.accessToken) {
             localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
@@ -194,6 +211,28 @@ export class AuthService {
             refreshToken: typeof refresh === 'string' && refresh.trim() ? refresh.trim() : null,
             expiresAt: typeof exp === 'string' ? exp : null
         };
+    }
+
+    private mapAuthOperationResponse(raw: unknown): AuthOperationResponse {
+        if (!raw || typeof raw !== 'object') {
+            return { ok: false };
+        }
+        const r = raw as Record<string, unknown>;
+        const okRaw = r['ok'] ?? r['Ok'] ?? r['success'] ?? r['Success'] ?? r['succeeded'] ?? r['Succeeded'];
+        const ok = okRaw === true;
+        const message =
+            typeof (r['message'] ?? r['Message']) === 'string'
+                ? String(r['message'] ?? r['Message'])
+                : null;
+        const code =
+            typeof (r['code'] ?? r['Code']) === 'string'
+                ? String(r['code'] ?? r['Code'])
+                : null;
+        const timestampUtc =
+            typeof (r['timestampUtc'] ?? r['TimestampUtc']) === 'string'
+                ? String(r['timestampUtc'] ?? r['TimestampUtc'])
+                : null;
+        return { ok, message, code, timestampUtc };
     }
 
     private mapClinicsResponse(raw: unknown): ClinicSummary[] {

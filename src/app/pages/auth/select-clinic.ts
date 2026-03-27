@@ -9,7 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconfigurator';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { authFailureMessage } from '@/app/core/auth/auth-error.utils';
 
 @Component({
     selector: 'app-select-clinic-page',
@@ -133,7 +133,7 @@ export class SelectClinicPage implements OnInit {
 
     private resolveError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
-            return messageFromHttpError(e, fallback);
+            return authFailureMessage(e, fallback);
         }
         return e instanceof Error ? e.message : fallback;
     }

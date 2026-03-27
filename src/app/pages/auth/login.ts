@@ -13,6 +13,7 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     AUTH_TENANT_SELECT_REQUIRED_MESSAGE,
+    authFailureMessage,
     loginFailureMessage
 } from '@/app/core/auth/auth-error.utils';
 import {
@@ -187,7 +188,7 @@ export class Login {
             },
             error: (err: unknown) => {
                 const http = err instanceof HttpErrorResponse ? err : null;
-                this.loginError.set(http ? loginFailureMessage(http) : 'Klinikler yüklenemedi.');
+                this.loginError.set(http ? authFailureMessage(http, 'Klinikler yüklenemedi.') : 'Klinikler yüklenemedi.');
             }
         });
     }
@@ -203,7 +204,7 @@ export class Login {
                 },
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
-                    this.loginError.set(http ? loginFailureMessage(http) : 'Klinik seçimi yapılamadı.');
+                    this.loginError.set(http ? authFailureMessage(http, 'Klinik seçimi yapılamadı.') : 'Klinik seçimi yapılamadı.');
                 }
             });
     }

@@ -61,7 +61,15 @@ export class VaccinationsService {
      * Yanıt gövdesinde tam `VaccinationDetailDto` ve `id` beklenir; yalnızca `{ id }` dönen sarmalayıcılar için mapper genişletilir.
      */
     createVaccination(payload: CreateVaccinationRequest): Observable<{ id: string }> {
-        const body = mapCreateVaccinationToApiBody(payload);
+        let body: unknown;
+        try {
+            body = mapCreateVaccinationToApiBody(payload);
+        } catch (e: unknown) {
+            if (e instanceof Error && e.message === 'VACCINATION_WRITE_STATUS_UNSUPPORTED') {
+                return throwError(() => new Error('Durum değeri desteklenmiyor. Lütfen tekrar seçin.'));
+            }
+            return throwError(() => (e instanceof Error ? e : new Error('Aşı kaydı oluşturulamadı.')));
+        }
         return this.api.post<unknown>(ApiEndpoints.vaccinations.list(), body).pipe(
             map((raw) => {
                 const id = extractCreatedVaccinationIdFromPostResponse(raw);
@@ -88,7 +96,15 @@ export class VaccinationsService {
     }
 
     updateVaccination(id: string, payload: CreateVaccinationRequest): Observable<void> {
-        const body = mapCreateVaccinationToApiBody(payload);
+        let body: unknown;
+        try {
+            body = mapCreateVaccinationToApiBody(payload);
+        } catch (e: unknown) {
+            if (e instanceof Error && e.message === 'VACCINATION_WRITE_STATUS_UNSUPPORTED') {
+                return throwError(() => new Error('Durum değeri desteklenmiyor. Lütfen tekrar seçin.'));
+            }
+            return throwError(() => (e instanceof Error ? e : new Error('Aşı kaydı güncellenemedi.')));
+        }
         return this.api.put<unknown>(ApiEndpoints.vaccinations.byId(id), body).pipe(
             map(() => void 0),
             catchError((err: unknown) => {

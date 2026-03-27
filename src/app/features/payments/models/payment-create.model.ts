@@ -11,12 +11,6 @@ export interface CreatePaymentRequest {
     amount: number;
     currency: string;
     method: string;
-    paidAtUtc?: string;
+    paidAtUtc: string;
     notes?: string | null;
-    /** @deprecated update/legacy uyumluluğu için tutulur, create mapper kullanmaz. */
-    status?: string;
-    /** @deprecated update/legacy uyumluluğu için tutulur, create mapper kullanmaz. */
-    dueDateUtc?: string;
-    /** @deprecated update/legacy uyumluluğu için tutulur, create mapper kullanmaz. */
-    note?: string;
 }

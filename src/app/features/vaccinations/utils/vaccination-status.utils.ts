@@ -57,6 +57,20 @@ export const VACCINATION_STATUS_FORM_OPTIONS = [
     { label: 'Pasif', value: 'passive' }
 ] as const;
 
+/**
+ * Strict write contract için izin verilen durumlar.
+ * - Scheduled (Planlandı)
+ * - Applied (Uygulandı)
+ * - Cancelled (İptal)
+ */
+export const VACCINATION_WRITE_STATUS_OPTIONS = [
+    { label: 'Planlandı', value: 'scheduled' },
+    { label: 'Uygulandı', value: 'applied' },
+    { label: 'İptal', value: 'cancelled' }
+] as const;
+
+export type VaccinationWriteStatus = (typeof VACCINATION_WRITE_STATUS_OPTIONS)[number]['value'];
+
 export function vaccinationStatusSeverity(status: string | null | undefined): StatusTagSeverity {
     if (status == null || status === '') {
         return 'secondary';

@@ -15,7 +15,7 @@ import {
     type VaccinationUpsertFormFieldKey,
     parseVaccinationUpsertHttpError
 } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
-import { VACCINATION_STATUS_FORM_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { VACCINATION_WRITE_STATUS_OPTIONS, type VaccinationWriteStatus } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -29,6 +29,7 @@ import {
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-vaccination-edit-page',
@@ -60,6 +61,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
+                <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
@@ -131,7 +133,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati *</label>
+                            <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati</label>
                             <input
                                 id="appliedAtLocal"
                                 type="datetime-local"
@@ -141,7 +143,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                             @if (apiFieldErrors().appliedAtLocal) {
                                 <small class="text-red-500">{{ apiFieldErrors().appliedAtLocal }}</small>
                             } @else if (form.controls.appliedAtLocal.invalid && form.controls.appliedAtLocal.touched) {
-                                <small class="text-red-500">Uygulama tarihi zorunludur.</small>
+                                <small class="text-red-500">Bu durum için uygulama tarihi / saati zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -149,6 +151,8 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                             <input id="nextDueDate" type="date" class="w-full p-inputtext p-component" formControlName="nextDueDate" />
                             @if (apiFieldErrors().nextDueDate) {
                                 <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
+                            } @else if (form.controls.nextDueDate.invalid && form.controls.nextDueDate.touched) {
+                                <small class="text-red-500">Bu durum için sonraki tarih zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12">
@@ -196,6 +200,7 @@ export class VaccinationEditPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -207,18 +212,19 @@ export class VaccinationEditPageComponent implements OnInit {
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<VaccinationUpsertFieldErrors>({});
+    readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
     private vaccinationId = '';
     private isInitializingClient = false;
 
-    readonly statusOptions = [...VACCINATION_STATUS_FORM_OPTIONS];
+    readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
         vaccineName: ['', Validators.required],
         status: ['applied', Validators.required],
-        appliedAtLocal: ['', Validators.required],
+        appliedAtLocal: [''],
         nextDueDate: [''],
         notes: ['']
     });
@@ -246,6 +252,7 @@ export class VaccinationEditPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
         if (!id) {
             this.loadError.set('Geçersiz aşı kaydı.');
@@ -253,6 +260,11 @@ export class VaccinationEditPageComponent implements OnInit {
             return;
         }
         this.vaccinationId = id;
+
+        this.updateDateValidators(this.form.controls.status.value);
+        this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((status) => {
+            this.updateDateValidators(status);
+        });
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             const cid = (clientId ?? '').trim();
@@ -311,30 +323,57 @@ export class VaccinationEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const appliedAtUtc = dateTimeLocalInputToIsoUtc(v.appliedAtLocal);
-        if (!appliedAtUtc) {
-            this.submitError.set('Geçerli bir uygulama tarihi ve saati seçin.');
+        const status = (v.status ?? '').trim() as VaccinationWriteStatus;
+        const needsAppliedAt = status === 'applied';
+        const needsDueAt = status === 'scheduled';
+
+        let appliedAtUtc: string | undefined;
+        const appliedRaw = v.appliedAtLocal?.trim();
+        if (appliedRaw) {
+            const iso = dateTimeLocalInputToIsoUtc(appliedRaw);
+            if (!iso) {
+                this.submitError.set('Geçerli bir uygulama tarihi ve saati seçin.');
+                return;
+            }
+            appliedAtUtc = iso;
+        }
+        if (needsAppliedAt && !appliedAtUtc) {
+            this.submitError.set('Seçilen durum için uygulama tarihi / saati zorunludur.');
+            return;
+        }
+        if (!needsAppliedAt) {
+            appliedAtUtc = undefined;
+        }
+
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!clinicId) {
+            this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
             return;
         }
 
-        let nextDueAtUtc: string | undefined;
+        let dueAtUtc: string | undefined;
         if (v.nextDueDate?.trim()) {
             const iso = dateOnlyInputToUtcIso(v.nextDueDate.trim());
             if (!iso) {
                 this.submitError.set('Geçerli bir sonraki tarih seçin.');
                 return;
             }
-            nextDueAtUtc = iso;
+            dueAtUtc = iso;
+        }
+        if (needsDueAt && !dueAtUtc) {
+            this.submitError.set('Seçilen durum için sonraki tarih zorunludur.');
+            return;
         }
 
         const payload: CreateVaccinationRequest = {
+            clinicId,
             clientId: v.clientId.trim(),
             petId: v.petId.trim(),
             vaccineName: v.vaccineName.trim(),
-            appliedAtUtc,
-            nextDueAtUtc,
-            status: v.status.trim(),
-            notes: v.notes.trim() || undefined
+            appliedAtUtc: appliedAtUtc ?? null,
+            dueAtUtc: dueAtUtc ?? null,
+            status,
+            notes: v.notes.trim() || null
         };
 
         this.submitting.set(true);
@@ -408,6 +447,25 @@ export class VaccinationEditPageComponent implements OnInit {
             return messageFromHttpError(e, fallback);
         }
         return e instanceof Error ? e.message : fallback;
+    }
+
+    private updateDateValidators(status: string): void {
+        const s = (status ?? '').trim();
+        const needsAppliedAt = s === 'applied';
+        const needsDueAt = s === 'scheduled';
+
+        this.form.controls.appliedAtLocal.setValidators(needsAppliedAt ? [Validators.required] : []);
+        this.form.controls.nextDueDate.setValidators(needsDueAt ? [Validators.required] : []);
+
+        if (!needsAppliedAt) {
+            this.form.controls.appliedAtLocal.setValue('', { emitEvent: false });
+        }
+        if (!needsDueAt) {
+            this.form.controls.nextDueDate.setValue('', { emitEvent: false });
+        }
+
+        this.form.controls.appliedAtLocal.updateValueAndValidity({ emitEvent: false });
+        this.form.controls.nextDueDate.updateValueAndValidity({ emitEvent: false });
     }
 }
 

@@ -9,7 +9,6 @@ export type ExaminationUpsertFormFieldKey =
     | 'clientId'
     | 'petId'
     | 'examinationDateLocal'
-    | 'status'
     | 'visitReason'
     | 'notes'
     | 'findings'
@@ -30,9 +29,6 @@ const FIELD_MAP: Record<string, ExaminationUpsertFormFieldKey> = {
     examinedatutc: 'examinationDateLocal',
     examinationdateutc: 'examinationDateLocal',
     scheduledatutc: 'examinationDateLocal',
-    status: 'status',
-    examinationstatus: 'status',
-    lifecyclestatus: 'status',
     visitreason: 'visitReason',
     complaint: 'visitReason',
     complainttext: 'visitReason',

@@ -20,6 +20,12 @@ const LABELS: Record<string, string> = {
     other: 'Diğer'
 };
 
+export const PAYMENT_WRITE_METHOD_OPTIONS = [
+    { label: 'Nakit', value: 'cash' },
+    { label: 'Kart', value: 'card' },
+    { label: 'Havale / EFT', value: 'transfer' }
+] as const;
+
 export function normalizePaymentMethodKey(method: string): string {
     return normalizeFilterKey(method);
 }

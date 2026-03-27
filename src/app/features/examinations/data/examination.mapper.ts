@@ -125,7 +125,6 @@ export function mapExaminationDetailDtoToEditVm(dto: ExaminationDetailDto): Exam
         clientId: canonicalClientId(dto) ?? '',
         petId: canonicalPetId(dto) ?? '',
         examinedAtUtc: canonicalExaminedAt(dto),
-        status: canonicalStatus(dto) ?? 'draft',
         visitReason: firstTrimmed(dto.visitReason, dto.complaint, dto.complaintText) ?? '',
         notes: firstTrimmed(dto.notes, dto.note) ?? '',
         findings: firstTrimmed(dto.findings, dto.finding) ?? '',
@@ -197,6 +196,28 @@ export function mapCreateExaminationToApiBody(req: CreateExaminationRequest): Ex
         findings: req.findings.trim(),
         assessment: req.assessment?.trim() ? req.assessment.trim() : null,
         notes: req.notes?.trim() ? req.notes.trim() : null
+    };
+}
+
+export interface ExaminationUpsertFormAdapterInput {
+    clinicId: string;
+    petId: string;
+    examinedAtUtc: string;
+    visitReason: string;
+    findings: string;
+    assessment?: string | null;
+    notes?: string | null;
+}
+
+export function mapExaminationUpsertFormToCreateRequest(input: ExaminationUpsertFormAdapterInput): CreateExaminationRequest {
+    return {
+        clinicId: input.clinicId.trim(),
+        petId: input.petId.trim() || undefined,
+        examinedAtUtc: input.examinedAtUtc,
+        visitReason: input.visitReason.trim(),
+        findings: input.findings.trim(),
+        assessment: input.assessment?.trim() ? input.assessment.trim() : null,
+        notes: input.notes?.trim() ? input.notes.trim() : null
     };
 }
 

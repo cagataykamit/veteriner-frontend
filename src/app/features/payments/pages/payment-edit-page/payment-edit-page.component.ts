@@ -8,11 +8,11 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { CreatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
+import { mapPaymentUpsertFormToCreateRequest } from '@/app/features/payments/data/payment.mapper';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
+import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/features/payments/utils/payment-method.utils';
 import {
     type PaymentUpsertFieldErrors,
-    type PaymentUpsertFormFieldKey,
     parsePaymentUpsertHttpError
 } from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
@@ -26,8 +26,9 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-payment-edit-page',
@@ -141,27 +142,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             }
                         </div>
                         <div class="col-span-12 md:col-span-4">
-                            <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                            <p-select
-                                inputId="status"
-                                [options]="statusOptions"
-                                formControlName="status"
-                                optionLabel="label"
-                                optionValue="value"
-                                styleClass="w-full"
-                            />
-                            @if (apiFieldErrors().status) {
-                                <small class="text-red-500">{{ apiFieldErrors().status }}</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="dueDate" class="block text-sm font-medium text-muted-color mb-2">Vade tarihi</label>
-                            <input id="dueDate" type="date" class="w-full p-inputtext p-component" formControlName="dueDate" />
-                            @if (apiFieldErrors().dueDate) {
-                                <small class="text-red-500">{{ apiFieldErrors().dueDate }}</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-4">
                             <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati</label>
                             <input id="paidAtLocal" type="datetime-local" class="w-full p-inputtext p-component" formControlName="paidAtLocal" />
                             @if (apiFieldErrors().paidAtLocal) {
@@ -213,6 +193,7 @@ export class PaymentEditPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -234,24 +215,7 @@ export class PaymentEditPageComponent implements OnInit {
         { label: 'EUR', value: 'EUR' }
     ];
 
-    readonly methodOptions = [
-        { label: 'Nakit', value: 'cash' },
-        { label: 'Kart', value: 'card' },
-        { label: 'Havale / EFT', value: 'transfer' },
-        { label: 'Online', value: 'online' },
-        { label: 'Diğer', value: 'other' }
-    ];
-
-    readonly statusOptions = [
-        { label: 'Bekliyor', value: 'pending' },
-        { label: 'Planlandı', value: 'scheduled' },
-        { label: 'Kısmi', value: 'partial' },
-        { label: 'Ödendi', value: 'paid' },
-        { label: 'Tamamlandı', value: 'completed' },
-        { label: 'Taslak', value: 'draft' },
-        { label: 'Vadesi geçmiş', value: 'overdue' },
-        { label: 'İptal', value: 'cancelled' }
-    ];
+    readonly methodOptions = [...PAYMENT_WRITE_METHOD_OPTIONS];
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -259,25 +223,9 @@ export class PaymentEditPageComponent implements OnInit {
         amount: ['', Validators.required],
         currency: ['TRY', Validators.required],
         method: ['cash', Validators.required],
-        status: ['pending', Validators.required],
-        dueDate: [''],
         paidAtLocal: [''],
         note: ['']
     });
-
-    constructor() {
-        const fields: PaymentUpsertFormFieldKey[] = ['clientId', 'petId', 'amount', 'currency', 'method', 'status', 'dueDate', 'paidAtLocal', 'note'];
-        for (const f of fields) {
-            this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-                const cur = this.apiFieldErrors();
-                if (cur[f]) {
-                    const next = { ...cur };
-                    delete next[f];
-                    this.apiFieldErrors.set(next);
-                }
-            });
-        }
-    }
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
@@ -318,8 +266,6 @@ export class PaymentEditPageComponent implements OnInit {
                     amount: normalizeAmountForForm(x.amountStr),
                     currency: x.currency || 'TRY',
                     method: x.method || 'cash',
-                    status: x.status || 'pending',
-                    dueDate: toDateInput(x.dueDateUtc),
                     paidAtLocal: toDateTimeLocalInput(x.paidAtUtc),
                     note: x.note
                 });
@@ -354,37 +300,33 @@ export class PaymentEditPageComponent implements OnInit {
             return;
         }
 
-        let dueDateUtc: string | undefined;
-        if (v.dueDate?.trim()) {
-            const iso = dateOnlyInputToUtcIso(v.dueDate.trim());
-            if (!iso) {
-                this.submitError.set('Geçerli bir vade tarihi seçin.');
-                return;
-            }
-            dueDateUtc = iso;
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!clinicId) {
+            this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+            return;
         }
 
-        let paidAtUtc: string | undefined;
-        if (v.paidAtLocal?.trim()) {
-            const iso = dateTimeLocalInputToIsoUtc(v.paidAtLocal.trim());
-            if (!iso) {
-                this.submitError.set('Geçerli bir ödeme tarihi / saati seçin.');
-                return;
-            }
-            paidAtUtc = iso;
+        const paidAtLocal = v.paidAtLocal?.trim() ?? '';
+        if (!paidAtLocal) {
+            this.submitError.set('Ödeme tarihi / saati zorunludur.');
+            return;
+        }
+        const paidAtUtc = dateTimeLocalInputToIsoUtc(paidAtLocal);
+        if (!paidAtUtc) {
+            this.submitError.set('Geçerli bir ödeme tarihi / saati seçin.');
+            return;
         }
 
-        const payload: CreatePaymentRequest = {
-            clientId: v.clientId.trim(),
-            petId: v.petId.trim(),
+        const payload = mapPaymentUpsertFormToCreateRequest({
+            clinicId,
+            clientId: v.clientId,
+            petId: v.petId,
             amount,
-            currency: v.currency.trim(),
-            method: v.method.trim(),
-            status: v.status.trim(),
-            dueDateUtc,
+            currency: v.currency,
+            method: v.method,
             paidAtUtc,
-            note: v.note.trim() || undefined
-        };
+            note: v.note
+        });
 
         this.submitting.set(true);
         this.paymentsService.updatePayment(this.paymentId, payload).subscribe({
@@ -478,20 +420,6 @@ function normalizeAmountInput(v: string): number | null {
         return null;
     }
     return n;
-}
-
-function toDateInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
 }
 
 function toDateTimeLocalInput(isoUtc: string | null): string {

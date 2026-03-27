@@ -43,8 +43,6 @@ export interface PaymentEditVm {
     amountStr: string;
     currency: string;
     method: string;
-    status: string;
-    dueDateUtc: string | null;
     paidAtUtc: string | null;
     note: string;
 }

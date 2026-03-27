@@ -22,6 +22,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
+import type { VaccinationUpsertFieldErrors, VaccinationUpsertFormFieldKey } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
+import { VACCINATION_WRITE_STATUS_OPTIONS, type VaccinationWriteStatus } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 
 @Component({
     selector: 'app-vaccination-new-page',
@@ -62,7 +65,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             styleClass="w-full"
                             [loading]="loadingClients()"
                         />
-                        @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
+                        @if (apiFieldErrors().clientId) {
+                            <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                        } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                         <p class="text-muted-color text-sm mt-2 mb-0">
@@ -85,7 +90,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             styleClass="w-full"
                             [loading]="loadingPets()"
                         />
-                        @if (form.controls.petId.invalid && form.controls.petId.touched) {
+                        @if (apiFieldErrors().petId) {
+                            <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
+                        } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                         <p class="text-muted-color text-sm mt-2 mb-0">
@@ -96,7 +103,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
                     <div class="col-span-12 md:col-span-6">
                         <label for="vaccineName" class="block text-sm font-medium text-muted-color mb-2">Aşı adı *</label>
                         <input id="vaccineName" pInputText class="w-full" formControlName="vaccineName" />
-                        @if (form.controls.vaccineName.invalid && form.controls.vaccineName.touched) {
+                        @if (apiFieldErrors().vaccineName) {
+                            <small class="text-red-500">{{ apiFieldErrors().vaccineName }}</small>
+                        } @else if (form.controls.vaccineName.invalid && form.controls.vaccineName.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                     </div>
@@ -111,7 +120,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             placeholder="Durum seçin"
                             styleClass="w-full"
                         />
-                        @if (form.controls.status.invalid && form.controls.status.touched) {
+                        @if (apiFieldErrors().status) {
+                            <small class="text-red-500">{{ apiFieldErrors().status }}</small>
+                        } @else if (form.controls.status.invalid && form.controls.status.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                     </div>
@@ -123,15 +134,22 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             class="w-full p-inputtext p-component"
                             formControlName="appliedAtLocal"
                         />
-                        @if (form.controls.appliedAtLocal.invalid && form.controls.appliedAtLocal.touched) {
+                        @if (apiFieldErrors().appliedAtLocal) {
+                            <small class="text-red-500">{{ apiFieldErrors().appliedAtLocal }}</small>
+                        } @else if (form.controls.appliedAtLocal.invalid && form.controls.appliedAtLocal.touched) {
                             <small class="text-red-500">Bu durum için uygulama tarihi / saati zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="nextDueDate" class="block text-sm font-medium text-muted-color mb-2">Sonraki tarih</label>
                         <input id="nextDueDate" type="date" class="w-full p-inputtext p-component" formControlName="nextDueDate" />
-                        @if (form.controls.nextDueDate.invalid && form.controls.nextDueDate.touched) {
+                        @if (apiFieldErrors().nextDueDate) {
+                            <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
+                        } @else if (form.controls.nextDueDate.invalid && form.controls.nextDueDate.touched) {
                             <small class="text-red-500">Bu durum için sonraki tarih zorunludur.</small>
+                        }
+                        @if (apiFieldErrors().notes) {
+                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -179,6 +197,7 @@ export class VaccinationNewPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
+    readonly apiFieldErrors = signal<VaccinationUpsertFieldErrors>({});
 
     readonly loadingClients = signal(false);
     readonly loadingPets = signal(false);
@@ -186,17 +205,13 @@ export class VaccinationNewPageComponent implements OnInit {
     readonly petOptions = signal<SelectOption[]>([]);
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
-    readonly statusOptions = [
-        { label: 'Planlandı', value: 'Scheduled' },
-        { label: 'Uygulandı', value: 'Applied' },
-        { label: 'İptal', value: 'Cancelled' }
-    ];
+    readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
         vaccineName: ['', Validators.required],
-        status: ['Applied', Validators.required],
+        status: ['applied', Validators.required],
         appliedAtLocal: [''],
         nextDueDate: [''],
         notes: ['']
@@ -213,6 +228,7 @@ export class VaccinationNewPageComponent implements OnInit {
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+            this.apiFieldErrors.set({});
             const id = typeof clientId === 'string' ? clientId.trim() : '';
             if (!id) {
                 this.petOptions.set([]);
@@ -230,15 +246,16 @@ export class VaccinationNewPageComponent implements OnInit {
 
     onSubmit(): void {
         this.submitError.set(null);
+        this.apiFieldErrors.set({});
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
         }
 
         const v = this.form.getRawValue();
-        const status = (v.status ?? '').trim();
-        const needsAppliedAt = status === 'Applied';
-        const needsDueAt = status === 'Scheduled';
+        const status = (v.status ?? '').trim() as VaccinationWriteStatus;
+        const needsAppliedAt = status === 'applied';
+        const needsDueAt = status === 'scheduled';
 
         let appliedAtUtc: string | undefined;
         const appliedRaw = v.appliedAtLocal?.trim();
@@ -296,6 +313,12 @@ export class VaccinationNewPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+                if (e instanceof HttpErrorResponse) {
+                    const parsed = parseVaccinationUpsertHttpError(e);
+                    this.apiFieldErrors.set(parsed.fieldErrors);
+                    this.submitError.set(parsed.summaryMessage);
+                    return;
+                }
                 this.submitError.set(this.mapSubmitError(e));
             }
         });
@@ -351,8 +374,9 @@ export class VaccinationNewPageComponent implements OnInit {
     }
 
     private updateDateValidators(status: string): void {
-        const needsAppliedAt = status === 'Applied';
-        const needsDueAt = status === 'Scheduled';
+        const s = (status ?? '').trim();
+        const needsAppliedAt = s === 'applied';
+        const needsDueAt = s === 'scheduled';
 
         this.form.controls.appliedAtLocal.setValidators(needsAppliedAt ? [Validators.required] : []);
         this.form.controls.nextDueDate.setValidators(needsDueAt ? [Validators.required] : []);

@@ -32,3 +32,11 @@ export interface SelectClinicRequest {
     refreshToken: string;
     clinicId: string;
 }
+
+/** Auth mutate endpointleri (logout/logout-all) için typed başarı yanıtı. */
+export interface AuthOperationResponse {
+    ok: boolean;
+    message?: string | null;
+    code?: string | null;
+    timestampUtc?: string | null;
+}

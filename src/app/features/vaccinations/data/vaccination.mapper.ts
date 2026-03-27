@@ -117,12 +117,8 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
     const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : null;
     const examinationId = req.examinationId?.trim() ? req.examinationId.trim() : null;
     const notes = req.notes?.trim() ? req.notes.trim() : null;
-    const status = toCreateVaccinationStatusEnum(req.status);
-    const dueAtUtc = req.dueAtUtc?.trim()
-        ? req.dueAtUtc.trim()
-        : req.nextDueAtUtc?.trim()
-          ? req.nextDueAtUtc.trim()
-          : null;
+    const status = toCreateVaccinationStatusEnumOrThrow(req.status);
+    const dueAtUtc = req.dueAtUtc?.trim() ? req.dueAtUtc.trim() : null;
     const appliedAtUtc = req.appliedAtUtc?.trim() ? req.appliedAtUtc.trim() : null;
     return {
         clinicId,
@@ -136,7 +132,7 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
     };
 }
 
-function toCreateVaccinationStatusEnum(status: string): number {
+function toCreateVaccinationStatusEnumOrThrow(status: string): number {
     const normalized = normalizeVaccinationStatusKey(status);
     if (normalized === 'scheduled') {
         return 0;
@@ -147,7 +143,8 @@ function toCreateVaccinationStatusEnum(status: string): number {
     if (normalized === 'cancelled' || normalized === 'canceled') {
         return 2;
     }
-    return 1;
+    // Sessiz fallback yerine açık hata: yanlış status -> yanlış enum'a dönüşmesin.
+    throw new Error('VACCINATION_WRITE_STATUS_UNSUPPORTED');
 }
 
 export function mapPagedVaccinationsToVm(result: VaccinationListItemDtoPagedResult): {

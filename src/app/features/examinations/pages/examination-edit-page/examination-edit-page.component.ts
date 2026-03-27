@@ -8,7 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
+import { mapExaminationUpsertFormToCreateRequest } from '@/app/features/examinations/data/examination.mapper';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import {
     type ExaminationUpsertFieldErrors,
@@ -119,23 +119,6 @@ import { AuthService } from '@/app/core/auth/auth.service';
                                 <small class="text-red-500">Muayene tarihi zorunludur.</small>
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                            <p-select
-                                inputId="status"
-                                formControlName="status"
-                                [options]="statusOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Durum seçin"
-                                styleClass="w-full"
-                            />
-                            @if (apiFieldErrors().status) {
-                                <small class="text-red-500">{{ apiFieldErrors().status }}</small>
-                            } @else if (form.controls.status.invalid && form.controls.status.touched) {
-                                <small class="text-red-500">Durum seçimi zorunludur.</small>
-                            }
-                        </div>
                         <div class="col-span-12">
                             <label for="visitReason" class="block text-sm font-medium text-muted-color mb-2">Ziyaret sebebi *</label>
                             <textarea id="visitReason" rows="3" class="w-full p-inputtext p-component" formControlName="visitReason"></textarea>
@@ -223,19 +206,10 @@ export class ExaminationEditPageComponent implements OnInit {
     private examinationId = '';
     private isInitializingClient = false;
 
-    readonly statusOptions = [
-        { label: 'Taslak', value: 'draft' },
-        { label: 'Bekliyor', value: 'pending' },
-        { label: 'Devam ediyor', value: 'in_progress' },
-        { label: 'Tamamlandı', value: 'completed' },
-        { label: 'İptal', value: 'cancelled' }
-    ];
-
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
         examinationDateLocal: ['', Validators.required],
-        status: ['draft', Validators.required],
         visitReason: ['', Validators.required],
         notes: [''],
         findings: ['', Validators.required],
@@ -247,7 +221,6 @@ export class ExaminationEditPageComponent implements OnInit {
             'clientId',
             'petId',
             'examinationDateLocal',
-            'status',
             'visitReason',
             'notes',
             'findings',
@@ -303,7 +276,6 @@ export class ExaminationEditPageComponent implements OnInit {
                     clientId: x.clientId,
                     petId: '',
                     examinationDateLocal: toDateTimeLocalInput(x.examinedAtUtc),
-                    status: x.status,
                     visitReason: x.visitReason,
                     notes: x.notes,
                     findings: x.findings,
@@ -344,15 +316,15 @@ export class ExaminationEditPageComponent implements OnInit {
             return;
         }
 
-        const payload: CreateExaminationRequest = {
+        const payload = mapExaminationUpsertFormToCreateRequest({
             clinicId,
-            petId: v.petId.trim() || undefined,
+            petId: v.petId,
             examinedAtUtc,
-            visitReason: v.visitReason.trim(),
-            findings: v.findings.trim(),
-            assessment: v.assessment.trim() || null,
-            notes: v.notes.trim() || null
-        };
+            visitReason: v.visitReason,
+            findings: v.findings,
+            assessment: v.assessment,
+            notes: v.notes
+        });
 
         this.submitting.set(true);
         this.examinationsService.updateExamination(this.examinationId, payload).subscribe({

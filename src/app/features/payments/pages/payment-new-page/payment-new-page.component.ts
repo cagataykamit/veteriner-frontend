@@ -8,8 +8,13 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { CreatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
+import { mapPaymentUpsertFormToCreateRequest } from '@/app/features/payments/data/payment.mapper';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
+import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/features/payments/utils/payment-method.utils';
+import {
+    type PaymentUpsertFieldErrors,
+    parsePaymentUpsertHttpError
+} from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import {
@@ -18,7 +23,6 @@ import {
     petOptionsFromList,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -64,6 +68,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (apiFieldErrors().clientId) {
+                            <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         }
                         <p class="text-muted-color text-sm mt-2 mb-0">
                             Aradığınız kayıt yoksa
@@ -87,6 +93,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (apiFieldErrors().petId) {
+                            <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
                         <p class="text-muted-color text-sm mt-2 mb-0">
                             <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
@@ -98,6 +106,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         <input id="amount" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="amount" />
                         @if (form.controls.amount.invalid && form.controls.amount.touched) {
                             <small class="text-red-500">Geçerli tutar girin.</small>
+                        } @else if (apiFieldErrors().amount) {
+                            <small class="text-red-500">{{ apiFieldErrors().amount }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-4">
@@ -110,6 +120,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             optionValue="value"
                             styleClass="w-full"
                         />
+                        @if (apiFieldErrors().currency) {
+                            <small class="text-red-500">{{ apiFieldErrors().currency }}</small>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
@@ -121,29 +134,23 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             optionValue="value"
                             styleClass="w-full"
                         />
-                    </div>
-                    <div class="col-span-12 md:col-span-4">
-                        <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                        <p-select
-                            inputId="status"
-                            [options]="statusOptions"
-                            formControlName="status"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                        />
-                    </div>
-                    <div class="col-span-12 md:col-span-4">
-                        <label for="dueDate" class="block text-sm font-medium text-muted-color mb-2">Vade tarihi</label>
-                        <input id="dueDate" type="date" class="w-full p-inputtext p-component" formControlName="dueDate" />
+                        @if (apiFieldErrors().method) {
+                            <small class="text-red-500">{{ apiFieldErrors().method }}</small>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati</label>
                         <input id="paidAtLocal" type="datetime-local" class="w-full p-inputtext p-component" formControlName="paidAtLocal" />
+                        @if (apiFieldErrors().paidAtLocal) {
+                            <small class="text-red-500">{{ apiFieldErrors().paidAtLocal }}</small>
+                        }
                     </div>
                     <div class="col-span-12">
                         <label for="note" class="block text-sm font-medium text-muted-color mb-2">Not</label>
                         <textarea id="note" rows="3" class="w-full p-inputtext p-component" formControlName="note"></textarea>
+                        @if (apiFieldErrors().note) {
+                            <small class="text-red-500">{{ apiFieldErrors().note }}</small>
+                        }
                     </div>
                 </div>
 
@@ -185,6 +192,7 @@ export class PaymentNewPageComponent implements OnInit {
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
+    readonly apiFieldErrors = signal<PaymentUpsertFieldErrors>({});
 
     readonly currencyOptions = [
         { label: 'TRY', value: 'TRY' },
@@ -192,24 +200,7 @@ export class PaymentNewPageComponent implements OnInit {
         { label: 'EUR', value: 'EUR' }
     ];
 
-    readonly methodOptions = [
-        { label: 'Nakit', value: 'cash' },
-        { label: 'Kart', value: 'card' },
-        { label: 'Havale / EFT', value: 'transfer' },
-        { label: 'Online', value: 'online' },
-        { label: 'Diğer', value: 'other' }
-    ];
-
-    readonly statusOptions = [
-        { label: 'Bekliyor', value: 'pending' },
-        { label: 'Planlandı', value: 'scheduled' },
-        { label: 'Kısmi', value: 'partial' },
-        { label: 'Ödendi', value: 'paid' },
-        { label: 'Tamamlandı', value: 'completed' },
-        { label: 'Taslak', value: 'draft' },
-        { label: 'Vadesi geçmiş', value: 'overdue' },
-        { label: 'İptal', value: 'cancelled' }
-    ];
+    readonly methodOptions = [...PAYMENT_WRITE_METHOD_OPTIONS];
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -217,8 +208,6 @@ export class PaymentNewPageComponent implements OnInit {
         amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
         currency: ['TRY', Validators.required],
         method: ['cash', Validators.required],
-        status: ['pending', Validators.required],
-        dueDate: [''],
         paidAtLocal: [''],
         note: ['']
     });
@@ -247,6 +236,7 @@ export class PaymentNewPageComponent implements OnInit {
 
     onSubmit(): void {
         this.submitError.set(null);
+        this.apiFieldErrors.set({});
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
@@ -275,16 +265,16 @@ export class PaymentNewPageComponent implements OnInit {
             return;
         }
 
-        const payload: CreatePaymentRequest = {
+        const payload = mapPaymentUpsertFormToCreateRequest({
             clinicId,
-            clientId: v.clientId.trim(),
-            petId: v.petId.trim(),
+            clientId: v.clientId,
+            petId: v.petId,
             amount,
             currency: v.currency,
             method: v.method,
             paidAtUtc,
-            notes: v.note.trim() || null
-        };
+            note: v.note
+        });
 
         this.submitting.set(true);
         this.paymentsService.createPayment(payload).subscribe({
@@ -294,7 +284,13 @@ export class PaymentNewPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
-                this.submitError.set(this.mapSubmitError(e));
+                if (e instanceof HttpErrorResponse) {
+                    const parsed = parsePaymentUpsertHttpError(e);
+                    this.apiFieldErrors.set(parsed.fieldErrors);
+                    this.submitError.set(parsed.summaryMessage);
+                    return;
+                }
+                this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
     }
@@ -336,15 +332,9 @@ export class PaymentNewPageComponent implements OnInit {
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
-            return messageFromHttpError(e, fallback);
+            const parsed = parsePaymentUpsertHttpError(e);
+            return parsed.summaryMessage ?? fallback;
         }
         return e instanceof Error ? e.message : fallback;
-    }
-
-    private mapSubmitError(e: unknown): string {
-        if (e instanceof HttpErrorResponse) {
-            return messageFromHttpError(e, 'Kayıt oluşturulamadı.');
-        }
-        return e instanceof Error ? e.message : 'Kayıt oluşturulamadı.';
     }
 }

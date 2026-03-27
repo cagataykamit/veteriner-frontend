@@ -57,7 +57,18 @@ export class PaymentsService {
     }
 
     createPayment(payload: CreatePaymentRequest): Observable<{ id: string }> {
-        const body = mapCreatePaymentToApiBody(payload);
+        let body: unknown;
+        try {
+            body = mapCreatePaymentToApiBody(payload);
+        } catch (e: unknown) {
+            if (e instanceof Error && e.message === 'PAYMENT_WRITE_METHOD_UNSUPPORTED') {
+                return throwError(() => new Error('Ödeme yöntemi desteklenmiyor. Lütfen geçerli bir yöntem seçin.'));
+            }
+            if (e instanceof Error && e.message === 'PAYMENT_WRITE_PAID_AT_REQUIRED') {
+                return throwError(() => new Error('Ödeme tarihi / saati zorunludur.'));
+            }
+            return throwError(() => (e instanceof Error ? e : new Error('Ödeme oluşturulamadı.')));
+        }
         return this.api.post<unknown>(ApiEndpoints.payments.list(), body).pipe(
             map((raw) => {
                 const id = extractCreatedPaymentIdFromPostResponse(raw);
@@ -82,7 +93,18 @@ export class PaymentsService {
     }
 
     updatePayment(id: string, payload: CreatePaymentRequest): Observable<void> {
-        const body = mapCreatePaymentToApiBody(payload);
+        let body: unknown;
+        try {
+            body = mapCreatePaymentToApiBody(payload);
+        } catch (e: unknown) {
+            if (e instanceof Error && e.message === 'PAYMENT_WRITE_METHOD_UNSUPPORTED') {
+                return throwError(() => new Error('Ödeme yöntemi desteklenmiyor. Lütfen geçerli bir yöntem seçin.'));
+            }
+            if (e instanceof Error && e.message === 'PAYMENT_WRITE_PAID_AT_REQUIRED') {
+                return throwError(() => new Error('Ödeme tarihi / saati zorunludur.'));
+            }
+            return throwError(() => (e instanceof Error ? e : new Error('Ödeme güncellenemedi.')));
+        }
         return this.api.put<unknown>(ApiEndpoints.payments.byId(id), body).pipe(
             map(() => void 0),
             catchError((err: unknown) => {

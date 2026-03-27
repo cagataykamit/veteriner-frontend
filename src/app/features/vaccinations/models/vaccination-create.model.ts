@@ -13,8 +13,6 @@ export interface CreateVaccinationRequest {
     vaccineName: string;
     status: string;
     appliedAtUtc?: string | null;
-    /** Deprecated: create formu dueAtUtc kullanır; edit tarafı geçici olarak bunu doldurabilir. */
-    nextDueAtUtc?: string;
     dueAtUtc?: string | null;
     notes?: string | null;
 }

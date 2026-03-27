@@ -123,8 +123,6 @@ export function mapPaymentDetailDtoToEditVm(dto: PaymentDetailDto): PaymentEditV
         amountStr: amount != null ? String(amount) : '',
         currency: canonicalCurrency(dto),
         method: canonicalMethod(dto) ?? 'cash',
-        status: canonicalStatus(dto) ?? 'pending',
-        dueDateUtc: canonicalDueDate(dto),
         paidAtUtc: canonicalPaidAt(dto),
         note: firstTrimmed(dto.note, dto.notes, dto.description) ?? ''
     };
@@ -202,7 +200,11 @@ export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCre
     const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : null;
     const appointmentId = req.appointmentId?.trim() ? req.appointmentId.trim() : null;
     const examinationId = req.examinationId?.trim() ? req.examinationId.trim() : null;
-    const notes = req.notes?.trim() ? req.notes.trim() : req.note?.trim() ? req.note.trim() : null;
+    const notes = req.notes?.trim() ? req.notes.trim() : null;
+    const paidAtUtc = req.paidAtUtc?.trim() ?? '';
+    if (!paidAtUtc) {
+        throw new Error('PAYMENT_WRITE_PAID_AT_REQUIRED');
+    }
     const body: PaymentCreateRequestDto = {
         clinicId,
         clientId,
@@ -212,7 +214,7 @@ export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCre
         amount: req.amount,
         currency: req.currency.trim(),
         method: toCreatePaymentMethodEnum(req.method),
-        paidAtUtc: req.paidAtUtc?.trim() ?? '',
+        paidAtUtc,
         notes
     };
     return body;
@@ -229,7 +231,31 @@ function toCreatePaymentMethodEnum(method: string): number {
     if (k === 'transfer' || k === 'banktransfer' || k === 'wiretransfer' || k === 'eft') {
         return 2;
     }
-    return 0;
+    throw new Error('PAYMENT_WRITE_METHOD_UNSUPPORTED');
+}
+
+export interface PaymentUpsertFormAdapterInput {
+    clinicId: string;
+    clientId: string;
+    petId: string;
+    amount: number;
+    currency: string;
+    method: string;
+    paidAtUtc: string;
+    note?: string | null;
+}
+
+export function mapPaymentUpsertFormToCreateRequest(input: PaymentUpsertFormAdapterInput): CreatePaymentRequest {
+    return {
+        clinicId: input.clinicId.trim(),
+        clientId: input.clientId.trim(),
+        petId: input.petId.trim(),
+        amount: input.amount,
+        currency: input.currency.trim(),
+        method: input.method.trim(),
+        paidAtUtc: input.paidAtUtc.trim(),
+        notes: input.note?.trim() ? input.note.trim() : null
+    };
 }
 
 export function filterPaymentListByStatus(

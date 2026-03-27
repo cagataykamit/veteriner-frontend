@@ -11,8 +11,6 @@ export type PaymentUpsertFormFieldKey =
     | 'amount'
     | 'currency'
     | 'method'
-    | 'status'
-    | 'dueDate'
     | 'paidAtLocal'
     | 'note';
 
@@ -36,11 +34,6 @@ const FIELD_MAP: Record<string, PaymentUpsertFormFieldKey> = {
     method: 'method',
     paymentmethod: 'method',
     methodtype: 'method',
-    status: 'status',
-    paymentstatus: 'status',
-    lifecyclestatus: 'status',
-    duedateutc: 'dueDate',
-    dueatutc: 'dueDate',
     paidatutc: 'paidAtLocal',
     paymentdateutc: 'paidAtLocal',
     paidonutc: 'paidAtLocal',

@@ -45,7 +45,6 @@ export interface ExaminationEditVm {
     clientId: string;
     petId: string;
     examinedAtUtc: string | null;
-    status: string;
     visitReason: string;
     notes: string;
     findings: string;
