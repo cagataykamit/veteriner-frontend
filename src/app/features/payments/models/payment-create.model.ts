@@ -3,13 +3,20 @@
  */
 
 export interface CreatePaymentRequest {
+    clinicId?: string;
     clientId: string;
-    petId: string;
+    petId?: string | null;
+    appointmentId?: string | null;
+    examinationId?: string | null;
     amount: number;
     currency: string;
     method: string;
-    status: string;
-    dueDateUtc?: string;
     paidAtUtc?: string;
+    notes?: string | null;
+    /** @deprecated update/legacy uyumluluğu için tutulur, create mapper kullanmaz. */
+    status?: string;
+    /** @deprecated update/legacy uyumluluğu için tutulur, create mapper kullanmaz. */
+    dueDateUtc?: string;
+    /** @deprecated update/legacy uyumluluğu için tutulur, create mapper kullanmaz. */
     note?: string;
 }

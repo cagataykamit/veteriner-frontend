@@ -5,12 +5,16 @@
  */
 
 export interface CreateVaccinationRequest {
+    clinicId?: string;
     petId: string;
-    /** Form seçimi — API istemiyorsa mapper çıkarır */
+    /** Form içi seçim için tutulur, create mapper canonical payload'a eklemez. */
     clientId?: string;
+    examinationId?: string | null;
     vaccineName: string;
-    appliedAtUtc: string;
+    status: string;
+    appliedAtUtc?: string | null;
+    /** Deprecated: create formu dueAtUtc kullanır; edit tarafı geçici olarak bunu doldurabilir. */
     nextDueAtUtc?: string;
-    status?: string;
-    notes?: string;
+    dueAtUtc?: string | null;
+    notes?: string | null;
 }

@@ -19,8 +19,9 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-payment-new-page',
@@ -43,6 +44,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
+            <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -172,6 +174,7 @@ export class PaymentNewPageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -181,6 +184,7 @@ export class PaymentNewPageComponent implements OnInit {
     readonly loadingPets = signal(false);
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
+    readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
     readonly currencyOptions = [
         { label: 'TRY', value: 'TRY' },
@@ -220,6 +224,7 @@ export class PaymentNewPageComponent implements OnInit {
     });
 
     ngOnInit(): void {
+        this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
@@ -253,37 +258,32 @@ export class PaymentNewPageComponent implements OnInit {
             this.submitError.set('Geçerli bir tutar girin.');
             return;
         }
-
-        let dueDateUtc: string | undefined;
-        if (v.dueDate?.trim()) {
-            const iso = dateOnlyInputToUtcIso(v.dueDate.trim());
-            if (!iso) {
-                this.submitError.set('Geçerli bir vade tarihi seçin.');
-                return;
-            }
-            dueDateUtc = iso;
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!clinicId) {
+            this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+            return;
         }
 
-        let paidAtUtc: string | undefined;
-        if (v.paidAtLocal?.trim()) {
-            const iso = dateTimeLocalInputToIsoUtc(v.paidAtLocal.trim());
-            if (!iso) {
-                this.submitError.set('Geçerli bir ödeme tarihi / saati seçin.');
-                return;
-            }
-            paidAtUtc = iso;
+        const paidAtLocal = v.paidAtLocal?.trim() ?? '';
+        if (!paidAtLocal) {
+            this.submitError.set('Ödeme tarihi / saati zorunludur.');
+            return;
+        }
+        const paidAtUtc = dateTimeLocalInputToIsoUtc(paidAtLocal);
+        if (!paidAtUtc) {
+            this.submitError.set('Geçerli bir ödeme tarihi / saati seçin.');
+            return;
         }
 
         const payload: CreatePaymentRequest = {
+            clinicId,
             clientId: v.clientId.trim(),
             petId: v.petId.trim(),
             amount,
             currency: v.currency,
             method: v.method,
-            status: v.status,
-            dueDateUtc,
             paidAtUtc,
-            note: v.note.trim() || undefined
+            notes: v.note.trim() || null
         };
 
         this.submitting.set(true);

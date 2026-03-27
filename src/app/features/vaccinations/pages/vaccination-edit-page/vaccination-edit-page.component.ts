@@ -333,7 +333,7 @@ export class VaccinationEditPageComponent implements OnInit {
             vaccineName: v.vaccineName.trim(),
             appliedAtUtc,
             nextDueAtUtc,
-            status: v.status.trim() || undefined,
+            status: v.status.trim(),
             notes: v.notes.trim() || undefined
         };
 

@@ -44,7 +44,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                     <div class="card mb-0">
                         <span class="block text-muted-color font-medium mb-4">Bugünkü randevular</span>
                         <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-                            {{ metricCount(d.summary.data?.todayAppointmentsCount) }}
+                            {{ metricCount(todayAppointmentsMetric(d)) }}
                         </div>
                     </div>
                 </div>
@@ -366,6 +366,15 @@ export class DashboardPageComponent implements OnInit {
             return '—';
         }
         return n;
+    }
+
+    todayAppointmentsMetric(d: DashboardOperationalVm): number | null {
+        // "Bugünkü randevular" kartı ve tablosu aynı kavramı göstersin:
+        // öncelik tablo verisi (aynı source/filter), fallback summary sayacı.
+        if (!d.todayAppointments.error) {
+            return d.todayAppointments.data.length;
+        }
+        return d.summary.data?.todayAppointmentsCount ?? null;
     }
 
     money(amount: number | null, currency: string): string {

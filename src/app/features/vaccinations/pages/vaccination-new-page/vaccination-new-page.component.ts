@@ -10,7 +10,6 @@ import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
-import { VACCINATION_STATUS_FORM_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import {
@@ -22,6 +21,7 @@ import {
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-vaccination-new-page',
@@ -44,6 +44,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
+            <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -115,7 +116,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati *</label>
+                        <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati</label>
                         <input
                             id="appliedAtLocal"
                             type="datetime-local"
@@ -123,12 +124,15 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                             formControlName="appliedAtLocal"
                         />
                         @if (form.controls.appliedAtLocal.invalid && form.controls.appliedAtLocal.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-red-500">Bu durum için uygulama tarihi / saati zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="nextDueDate" class="block text-sm font-medium text-muted-color mb-2">Sonraki tarih</label>
                         <input id="nextDueDate" type="date" class="w-full p-inputtext p-component" formControlName="nextDueDate" />
+                        @if (form.controls.nextDueDate.invalid && form.controls.nextDueDate.touched) {
+                            <small class="text-red-500">Bu durum için sonraki tarih zorunludur.</small>
+                        }
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
@@ -170,6 +174,7 @@ export class VaccinationNewPageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -179,20 +184,30 @@ export class VaccinationNewPageComponent implements OnInit {
     readonly loadingPets = signal(false);
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
+    readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
-    readonly statusOptions = [...VACCINATION_STATUS_FORM_OPTIONS];
+    readonly statusOptions = [
+        { label: 'Planlandı', value: 'Scheduled' },
+        { label: 'Uygulandı', value: 'Applied' },
+        { label: 'İptal', value: 'Cancelled' }
+    ];
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
         vaccineName: ['', Validators.required],
-        status: ['applied', Validators.required],
-        appliedAtLocal: ['', Validators.required],
+        status: ['Applied', Validators.required],
+        appliedAtLocal: [''],
         nextDueDate: [''],
         notes: ['']
     });
 
     ngOnInit(): void {
+        this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
+        this.updateDateValidators(this.form.controls.status.value);
+        this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((status) => {
+            this.updateDateValidators(status);
+        });
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
@@ -221,13 +236,34 @@ export class VaccinationNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const appliedAtUtc = dateTimeLocalInputToIsoUtc(v.appliedAtLocal);
-        if (!appliedAtUtc) {
-            this.submitError.set('Geçerli bir uygulama tarihi ve saati seçin.');
+        const status = (v.status ?? '').trim();
+        const needsAppliedAt = status === 'Applied';
+        const needsDueAt = status === 'Scheduled';
+
+        let appliedAtUtc: string | undefined;
+        const appliedRaw = v.appliedAtLocal?.trim();
+        if (appliedRaw) {
+            const iso = dateTimeLocalInputToIsoUtc(appliedRaw);
+            if (!iso) {
+                this.submitError.set('Geçerli bir uygulama tarihi ve saati seçin.');
+                return;
+            }
+            appliedAtUtc = iso;
+        }
+        if (needsAppliedAt && !appliedAtUtc) {
+            this.submitError.set('Seçilen durum için uygulama tarihi / saati zorunludur.');
+            return;
+        }
+        if (!needsAppliedAt) {
+            appliedAtUtc = undefined;
+        }
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!clinicId) {
+            this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
             return;
         }
 
-        let nextDueAtUtc: string | undefined;
+        let dueAtUtc: string | undefined;
         const nd = v.nextDueDate?.trim();
         if (nd) {
             const iso = dateOnlyInputToUtcIso(nd);
@@ -235,17 +271,21 @@ export class VaccinationNewPageComponent implements OnInit {
                 this.submitError.set('Geçerli bir sonraki tarih seçin.');
                 return;
             }
-            nextDueAtUtc = iso;
+            dueAtUtc = iso;
+        }
+        if (needsDueAt && !dueAtUtc) {
+            this.submitError.set('Seçilen durum için sonraki tarih zorunludur.');
+            return;
         }
 
         const payload: CreateVaccinationRequest = {
-            clientId: v.clientId.trim(),
+            clinicId,
             petId: v.petId.trim(),
             vaccineName: v.vaccineName.trim(),
-            appliedAtUtc,
-            nextDueAtUtc,
-            status: v.status.trim(),
-            notes: v.notes.trim() || undefined
+            appliedAtUtc: appliedAtUtc ?? null,
+            dueAtUtc: dueAtUtc ?? null,
+            status,
+            notes: v.notes.trim() || null
         };
 
         this.submitting.set(true);
@@ -308,5 +348,23 @@ export class VaccinationNewPageComponent implements OnInit {
             return messageFromHttpError(e, 'Kayıt oluşturulamadı.');
         }
         return e instanceof Error ? e.message : 'Kayıt oluşturulamadı.';
+    }
+
+    private updateDateValidators(status: string): void {
+        const needsAppliedAt = status === 'Applied';
+        const needsDueAt = status === 'Scheduled';
+
+        this.form.controls.appliedAtLocal.setValidators(needsAppliedAt ? [Validators.required] : []);
+        this.form.controls.nextDueDate.setValidators(needsDueAt ? [Validators.required] : []);
+
+        if (!needsAppliedAt) {
+            this.form.controls.appliedAtLocal.setValue('', { emitEvent: false });
+        }
+        if (!needsDueAt) {
+            this.form.controls.nextDueDate.setValue('', { emitEvent: false });
+        }
+
+        this.form.controls.appliedAtLocal.updateValueAndValidity({ emitEvent: false });
+        this.form.controls.nextDueDate.updateValueAndValidity({ emitEvent: false });
     }
 }

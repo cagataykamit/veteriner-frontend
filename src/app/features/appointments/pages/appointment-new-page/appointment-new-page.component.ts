@@ -22,6 +22,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-appointment-new-page',
@@ -44,6 +45,7 @@ import { messageFromClinicResolutionHttpError } from '@/app/features/appointment
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
+            <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -157,6 +159,7 @@ export class AppointmentNewPageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -166,6 +169,7 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly loadingPets = signal(false);
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
+    readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
     readonly typeOptions = [
         { label: 'Konsültasyon', value: 'consultation' },
@@ -190,6 +194,7 @@ export class AppointmentNewPageComponent implements OnInit {
     });
 
     ngOnInit(): void {
+        this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
@@ -223,8 +228,14 @@ export class AppointmentNewPageComponent implements OnInit {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
             return;
         }
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!clinicId) {
+            this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+            return;
+        }
 
         const payload: CreateAppointmentRequest = {
+            clinicId,
             clientId: v.clientId.trim(),
             petId: v.petId.trim(),
             scheduledAtUtc,

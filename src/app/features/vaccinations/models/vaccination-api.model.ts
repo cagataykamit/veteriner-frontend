@@ -86,22 +86,12 @@ export interface VaccinationDetailDto {
  * Backend `name` kullanıyorsa mapper’da `vaccineName` → `name` eşlemesi yapılır.
  */
 export interface VaccinationCreateRequestDto {
+    clinicId?: string | null;
     petId: string;
-    /** Geçici geri uyumluluk: bazı backend sürümleri owner/client kimliği de bekleyebilir. */
-    clientId?: string | null;
-    ownerId?: string | null;
+    examinationId?: string | null;
     vaccineName: string;
-    /** Geçici geri uyumluluk: bazı backend sürümleri `name` alanını kullanabilir. */
-    name?: string | null;
-    appliedAtUtc: string;
-    /** Geçici geri uyumluluk: bazı backend sürümleri `applicationDateUtc`/`appliedOnUtc` alanlarını kullanabilir. */
-    applicationDateUtc?: string | null;
-    appliedOnUtc?: string | null;
-    nextDueAtUtc?: string | null;
-    nextDoseAtUtc?: string | null;
+    status: number;
+    appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
-    status?: string | null;
-    vaccinationStatus?: string | null;
     notes?: string | null;
-    note?: string | null;
 }

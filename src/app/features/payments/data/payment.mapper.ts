@@ -198,51 +198,38 @@ export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams 
 
 export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCreateRequestDto {
     const clientId = req.clientId.trim();
-    const petId = req.petId.trim();
-    const currency = req.currency.trim();
-    const method = req.method.trim();
-    const status = req.status.trim();
+    const petId = req.petId?.trim() ? req.petId.trim() : null;
+    const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : null;
+    const appointmentId = req.appointmentId?.trim() ? req.appointmentId.trim() : null;
+    const examinationId = req.examinationId?.trim() ? req.examinationId.trim() : null;
+    const notes = req.notes?.trim() ? req.notes.trim() : req.note?.trim() ? req.note.trim() : null;
     const body: PaymentCreateRequestDto = {
+        clinicId,
         clientId,
-        ownerId: clientId,
         petId,
-        animalId: petId,
+        appointmentId,
+        examinationId,
         amount: req.amount,
-        totalAmount: req.amount,
-        paymentAmount: req.amount,
-        currency,
-        currencyCode: currency,
-        method,
-        paymentMethod: method,
-        status,
-        paymentStatus: status,
-        lifecycleStatus: status
+        currency: req.currency.trim(),
+        method: toCreatePaymentMethodEnum(req.method),
+        paidAtUtc: req.paidAtUtc?.trim() ?? '',
+        notes
     };
-    if (req.dueDateUtc?.trim()) {
-        const dueDateUtc = req.dueDateUtc.trim();
-        body.dueDateUtc = dueDateUtc;
-        body.dueAtUtc = dueDateUtc;
-    } else {
-        body.dueDateUtc = null;
-        body.dueAtUtc = null;
-    }
-    if (req.paidAtUtc?.trim()) {
-        const paidAtUtc = req.paidAtUtc.trim();
-        body.paidAtUtc = paidAtUtc;
-        body.paymentDateUtc = paidAtUtc;
-    } else {
-        body.paidAtUtc = null;
-        body.paymentDateUtc = null;
-    }
-    if (req.note?.trim()) {
-        const note = req.note.trim();
-        body.note = note;
-        body.notes = note;
-    } else {
-        body.note = null;
-        body.notes = null;
-    }
     return body;
+}
+
+function toCreatePaymentMethodEnum(method: string): number {
+    const k = normalizeFilterKey(method);
+    if (k === 'cash') {
+        return 0;
+    }
+    if (k === 'card' || k === 'creditcard' || k === 'debitcard' || k === 'bankcard' || k === 'pos' || k === 'virtualpos') {
+        return 1;
+    }
+    if (k === 'transfer' || k === 'banktransfer' || k === 'wiretransfer' || k === 'eft') {
+        return 2;
+    }
+    return 0;
 }
 
 export function filterPaymentListByStatus(

@@ -22,6 +22,7 @@ import { PaymentsService } from '@/app/features/payments/services/payments.servi
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
+import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
@@ -65,7 +66,9 @@ export class DashboardService {
         return forkJoin({
             summary: summary$,
             todayAppointments: section(
-                this.appointments.getAppointments({ page: 1, pageSize: 40, fromDate: today, toDate: today }).pipe(map((r) => r.items)),
+                this.appointments
+                    .getAppointments({ page: 1, pageSize: 40, fromDate: today, toDate: today })
+                    .pipe(map((r) => r.items.filter((x) => isSameLocalDay(x, today)))),
                 [],
                 'Bugünkü randevular yüklenemedi.'
             ),
@@ -122,4 +125,16 @@ export class DashboardService {
             )
         );
     }
+}
+
+function isSameLocalDay(item: AppointmentListItemVm, yyyyMmDd: string): boolean {
+    const v = item.scheduledAtUtc?.trim();
+    if (!v) {
+        return false;
+    }
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) {
+        return false;
+    }
+    return localDateYyyyMmDd(d) === yyyyMmDd;
 }

@@ -29,6 +29,7 @@ import {
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-appointment-edit-page',
@@ -60,6 +61,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
+                <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
@@ -206,6 +208,7 @@ export class AppointmentEditPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -217,6 +220,7 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<AppointmentUpsertFieldErrors>({});
+    readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
     private appointmentId = '';
     private isInitializingClient = false;
@@ -267,6 +271,7 @@ export class AppointmentEditPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
         if (!id) {
             this.loadError.set('Geçersiz randevu.');
@@ -337,8 +342,14 @@ export class AppointmentEditPageComponent implements OnInit {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
             return;
         }
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!clinicId) {
+            this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+            return;
+        }
 
         const payload: CreateAppointmentRequest = {
+            clinicId,
             clientId: v.clientId.trim(),
             petId: v.petId.trim(),
             scheduledAtUtc,

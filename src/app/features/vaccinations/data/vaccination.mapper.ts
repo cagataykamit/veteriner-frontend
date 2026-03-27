@@ -114,29 +114,40 @@ export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): Vacc
  * Geçiş dönemi uyumluluğu için canonical ve alternatif alan adları birlikte gönderilir.
  */
 export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): VaccinationCreateRequestDto {
+    const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : null;
+    const examinationId = req.examinationId?.trim() ? req.examinationId.trim() : null;
     const notes = req.notes?.trim() ? req.notes.trim() : null;
-    const status = req.status?.trim() ? req.status.trim() : null;
-    const next = req.nextDueAtUtc?.trim() ? req.nextDueAtUtc.trim() : null;
-    const vaccineName = req.vaccineName.trim();
-    const appliedAtUtc = req.appliedAtUtc.trim();
-    const clientId = req.clientId?.trim() ? req.clientId.trim() : null;
+    const status = toCreateVaccinationStatusEnum(req.status);
+    const dueAtUtc = req.dueAtUtc?.trim()
+        ? req.dueAtUtc.trim()
+        : req.nextDueAtUtc?.trim()
+          ? req.nextDueAtUtc.trim()
+          : null;
+    const appliedAtUtc = req.appliedAtUtc?.trim() ? req.appliedAtUtc.trim() : null;
     return {
+        clinicId,
+        examinationId,
         petId: req.petId.trim(),
-        clientId,
-        ownerId: clientId,
-        vaccineName,
-        name: vaccineName,
-        appliedAtUtc,
-        applicationDateUtc: appliedAtUtc,
-        appliedOnUtc: appliedAtUtc,
-        nextDueAtUtc: next,
-        nextDoseAtUtc: next,
-        dueAtUtc: next,
+        vaccineName: req.vaccineName.trim(),
         status,
-        vaccinationStatus: status,
-        notes,
-        note: notes
+        appliedAtUtc,
+        dueAtUtc,
+        notes
     };
+}
+
+function toCreateVaccinationStatusEnum(status: string): number {
+    const normalized = normalizeVaccinationStatusKey(status);
+    if (normalized === 'scheduled') {
+        return 0;
+    }
+    if (normalized === 'applied' || normalized === 'completed') {
+        return 1;
+    }
+    if (normalized === 'cancelled' || normalized === 'canceled') {
+        return 2;
+    }
+    return 1;
 }
 
 export function mapPagedVaccinationsToVm(result: VaccinationListItemDtoPagedResult): {

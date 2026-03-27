@@ -83,25 +83,14 @@ export interface PaymentDetailDto {
 }
 
 export interface PaymentCreateRequestDto {
+    clinicId?: string | null;
     clientId: string;
-    ownerId?: string | null;
-    petId: string;
-    animalId?: string | null;
+    petId?: string | null;
     appointmentId?: string | null;
+    examinationId?: string | null;
     amount: number;
-    totalAmount?: number;
-    paymentAmount?: number;
     currency: string;
-    currencyCode?: string;
-    method: string;
-    paymentMethod?: string;
-    status: string;
-    paymentStatus?: string;
-    lifecycleStatus?: string;
-    dueDateUtc?: string | null;
-    dueAtUtc?: string | null;
-    paidAtUtc?: string | null;
-    paymentDateUtc?: string | null;
-    note?: string | null;
+    method: number;
+    paidAtUtc: string;
     notes?: string | null;
 }
