@@ -25,3 +25,8 @@ export function createPetUpsertFormGroup(fb: FormBuilder): PetUpsertFormGroup {
         notes: fb.nonNullable.control('')
     });
 }
+
+/** Typed `FormGroup` için `getRawValue()` — bileşende `as` kullanılmaz. */
+export function getPetUpsertFormValue(form: PetUpsertFormGroup): PetUpsertFormValue {
+    return form.getRawValue();
+}

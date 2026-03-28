@@ -2,26 +2,47 @@ import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-ta
 
 const EM = '—';
 
-/** Tek kaynak: canonical `value`, görünen `label`, tag `severity`, form seçiminde kullanım. */
+export type AppointmentCanonicalStatus =
+    | 'scheduled'
+    | 'pending'
+    | 'confirmed'
+    | 'draft'
+    | 'in_progress'
+    | 'completed'
+    | 'cancelled'
+    | 'no_show'
+    | 'created'
+    | 'active'
+    | 'closed'
+    | 'failed';
+
 interface AppointmentStatusDef {
-    readonly canonical: string;
+    readonly canonical: AppointmentCanonicalStatus;
     readonly label: string;
     readonly severity: StatusTagSeverity;
-    /** Create/edit dropdown’da göster */
     readonly write: boolean;
-    /** API / legacy / dil varyantları — `normalizeAppointmentStatus` ile indekslenir */
     readonly aliases: readonly string[];
 }
 
+interface AppointmentStatusMeta {
+    readonly label: string;
+    readonly severity: StatusTagSeverity;
+}
+
+export interface AppointmentWriteStatusOption {
+    readonly label: string;
+    readonly value: AppointmentCanonicalStatus;
+}
+
 /**
- * Randevu durumu string’ini tek biçimde anahtara çevirir (META ve eşleştirme için).
- * Boşluk ve tire tekilleştirilir; büyük/küçük harf yok sayılır.
+ * Randevu durumu string’ini tek biçimde anahtara çevirir.
+ * - büyük/küçük harf farkını kaldırır
+ * - baş/son boşlukları kaldırır
+ * - iç boşlukları kaldırır
+ * - `-` karakterini `_` ile tekilleştirir
  */
 export function normalizeAppointmentStatus(status: string | null | undefined): string {
-    if (status == null || status === '') {
-        return '';
-    }
-    return status.toLowerCase().replace(/\s+/g, '').replace(/-/g, '_');
+    return (status ?? '').toLowerCase().trim().replace(/\s+/g, '').replace(/-/g, '_');
 }
 
 const STATUS_DEFS: readonly AppointmentStatusDef[] = [
@@ -111,49 +132,58 @@ const STATUS_DEFS: readonly AppointmentStatusDef[] = [
     }
 ];
 
-type StatusMeta = Pick<AppointmentStatusDef, 'label' | 'severity'>;
+function buildStatusMetaByNormalizedKey(defs: readonly AppointmentStatusDef[]): ReadonlyMap<string, AppointmentStatusMeta> {
+    const map = new Map<string, AppointmentStatusMeta>();
 
-function buildMetaByNormalizedKey(): ReadonlyMap<string, StatusMeta> {
-    const m = new Map<string, StatusMeta>();
-    for (const def of STATUS_DEFS) {
-        const meta: StatusMeta = { label: def.label, severity: def.severity };
-        const phrases = [def.canonical, ...def.aliases];
-        for (const p of phrases) {
-            const key = normalizeAppointmentStatus(p);
-            if (key !== '') {
-                m.set(key, meta);
+    for (const def of defs) {
+        const meta: AppointmentStatusMeta = {
+            label: def.label,
+            severity: def.severity
+        };
+
+        const keys = [def.canonical, ...def.aliases];
+
+        for (const rawKey of keys) {
+            const normalizedKey = normalizeAppointmentStatus(rawKey);
+
+            if (normalizedKey === '') {
+                continue;
             }
+
+            if (map.has(normalizedKey)) {
+                throw new Error(`Duplicate appointment status key detected: "${normalizedKey}"`);
+            }
+
+            map.set(normalizedKey, meta);
         }
     }
-    return m;
+
+    return map;
 }
 
-const STATUS_META_BY_KEY = buildMetaByNormalizedKey();
+const STATUS_META_BY_KEY = buildStatusMetaByNormalizedKey(STATUS_DEFS);
 
-function resolveStatusMeta(status: string | null | undefined): StatusMeta | undefined {
-    if (status == null || status === '') {
-        return undefined;
-    }
-    return STATUS_META_BY_KEY.get(normalizeAppointmentStatus(status));
+function resolveAppointmentStatusMeta(status: string | null | undefined): AppointmentStatusMeta | undefined {
+    const normalizedKey = normalizeAppointmentStatus(status);
+    return normalizedKey === '' ? undefined : STATUS_META_BY_KEY.get(normalizedKey);
 }
 
 export function appointmentStatusLabel(status: string | null | undefined): string {
-    if (status == null || status === '') {
-        return EM;
+    const meta = resolveAppointmentStatusMeta(status);
+    if (meta) {
+        return meta.label;
     }
-    const meta = resolveStatusMeta(status);
-    return meta?.label ?? status;
+    return normalizeAppointmentStatus(status) === '' ? EM : (status ?? '');
 }
 
 export function appointmentStatusSeverity(status: string | null | undefined): StatusTagSeverity {
-    if (status == null || status === '') {
-        return 'secondary';
-    }
-    const meta = resolveStatusMeta(status);
-    return meta?.severity ?? 'secondary';
+    return resolveAppointmentStatusMeta(status)?.severity ?? 'secondary';
 }
 
-/** Create/edit — `STATUS_DEFS` içinde `write: true` olanlar, tanım sırasıyla. */
-export const APPOINTMENT_WRITE_STATUS_OPTIONS: ReadonlyArray<{ label: string; value: string }> = STATUS_DEFS.filter(
-    (d) => d.write
-).map((d) => ({ label: d.label, value: d.canonical }));
+/** Create/edit — yalnızca `write: true` olan durumlar. */
+export const APPOINTMENT_WRITE_STATUS_OPTIONS: ReadonlyArray<AppointmentWriteStatusOption> = STATUS_DEFS.filter((def) => def.write).map(
+    (def) => ({
+        label: def.label,
+        value: def.canonical
+    })
+);

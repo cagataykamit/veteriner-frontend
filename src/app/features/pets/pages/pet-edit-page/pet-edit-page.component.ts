@@ -9,8 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
-import { createPetUpsertFormGroup, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
-import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
+import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
@@ -353,7 +352,7 @@ export class PetEditPageComponent implements OnInit {
             return;
         }
 
-        const payload = mapPetUpsertFormToCreateRequest(this.form.getRawValue() as PetUpsertFormValue, this.breedOptions());
+        const payload = mapPetUpsertFormToCreateRequest(getPetUpsertFormValue(this.form), this.breedOptions());
 
         this.submitting.set(true);
         this.petsService.updatePet(this.petId, payload).subscribe({

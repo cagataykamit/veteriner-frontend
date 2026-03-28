@@ -1,37 +1,62 @@
 ---
-description: Angular (Sakai) frontend — kurumsal kod standardı, katmanlar ve tekrar kullanılabilirlik
+description: Angular (Sakai) veteriner frontend — kurumsal kod standardı, katmanlar, tek kaynak metadata
 globs: src/**/*.ts,src/**/*.html
 alwaysApply: true
 ---
 
 # Veteriner frontend — kod standardı
 
-## Mimari
+Bu kurallar **tüm yeni kod ve refactor** için geçerlidir. “Çalışıyor” yeterli değildir; okunabilirlik, tek kaynak, tip güvenliği ve bakım maliyeti hedeflenir.
 
-- **Form → (typed) model → mapper → request DTO → API body** zinciri açık ve tekrar kullanılabilir olmalı; iş kuralı ve normalize/parse **component içinde** tutulmaz.
-- Aynı entity için create/edit **aynı form factory / aynı value tipi** (ör. `PetUpsertFormValue` + `createPetUpsertFormGroup`).
-- Tekrarlayan `if/else` zincirleri, `typeof`/`null` kontrolleri, string normalize, parse, mapping **shared utility** veya feature **policy/mapper** içinde toplanır.
-- Label, severity, status, enum benzeri eşlemeler **map / dictionary / config** ile; uzun `switch` tercih edilmez.
-- `any`, gevşek `unknown`→model dönüşümü ve **sessiz veri kaybı** kullanılmaz; `as` minimumda; sorun **type-safe tasarımla** çözülür (typed `FormGroup`, ortak tipler).
+## 1. Veri akışı (write ekranları)
 
-## Paylaşılan dönüşümler
+Zorunlu sıra:
 
-- Ondalık form girdisi: `src/app/shared/utils/decimal-form.utils.ts` — `parseDecimalFormInput`.
-- Tarih: `src/app/shared/utils/date.utils.ts` — mevcut yardımcılar.
+1. **Form value tipi** — `*.model.ts` veya `*-form.model.ts` (ör. `PetUpsertFormValue`).
+2. **Typed form factory** — `createXxxFormGroup(fb)` → `FormGroup` + `getXxxFormValue(form)` ile snapshot (**bileşende `as` kullanılmaz**).
+3. **Mapper** — `mapXxxFormToCreateRequest` / API body (`*.mapper.ts`).
+4. **Servis** — HTTP; structured error parse write path’te korunur.
 
-## Örnek referans (Pets)
+Bileşen: **yalnızca orchestration** (bağlama, yükleme, submit, navigasyon, sinyal). Parse, normalize, iş kuralı, uzun `if/else` zinciri yok.
 
-- Form değer tipi: `src/app/features/pets/forms/pet-upsert-form.model.ts`
-- Typed form factory: `src/app/features/pets/forms/pet-upsert-form.factory.ts`
-- Form → API isteği: `src/app/features/pets/data/pet.mapper.ts` — `mapPetUpsertFormToCreateRequest`
+## 2. Metadata (label / severity / value / write options)
 
-Yeni entity’lerde benzer dosya ve isimlendirme düzeni izlenir.
+- **Tek tablo / config dizisi** (`STATUS_DEFS` benzeri): `canonical`, `label`, `severity`, `write`, `aliases`.
+- `label` ve `severity` **aynı kaynaktan**; uzun `if` veya ayrı `Record`+koşul zinciri yok.
+- Dropdown seçenekleri mümkünse **`write: true` satırlarından türetilir** (`APPOINTMENT_WRITE_STATUS_OPTIONS` örneği).
+- Ortak **normalize** fonksiyonu dışa açık ve test edilebilir (ör. `normalizeAppointmentStatus`).
 
-## Bileşenler
+Referans: `src/app/features/appointments/utils/appointment-status.utils.ts`
 
-- Bileşen yalnızca **orchestration**: form bağlama, yükleme durumu, submit, yönlendirme.
-- **Structured HTTP error parse** (ör. `parsePetCreateHttpError`) korunur; GET preload için gereksiz genişletme yapılmaz.
+## 3. Parse / normalize
 
-## Test edilebilirlik
+- Tekrarlayan string/number/date/normalize mantığı **shared utility** (ör. `parseDecimalFormInput`, `date.utils`).
+- Feature’a özel ama tekrar eden kurallar **mapper veya `*-policy.utils.ts`**.
+- **Gevşek `any` / sessiz `unknown`→model** yok; `as` yalnızca gerekçeli ve mümkünse **tek merkezde** (tercihen factory helper, bileşen değil).
 
-- Saf fonksiyonlar (parse, map, policy) tek dosyada ve yan etkisiz; birim testi eklenebilir yapıda tutulur.
+## 4. Anti-pattern (kaçınılacaklar)
+
+- Bileşende `getRawValue() as SomeFormValue` — yerine `getXxxFormValue(this.form)` (factory).
+- Aynı entity için **ayrı** label ve severity mantığı.
+- Uzun `switch` / `if` ile status/type eşlemesi — yerine config + `Map` veya normalize + lookup.
+- Inline API body / request objesi bileşende — mapper’a.
+
+## 5. Yayılım önceliği (borç listesi)
+
+Aşağıdaki alanlar zamanla bu standarda çekilir; tek seferde tüm repo zorunlu değildir, ancak **dokunulan dosya** mümkünse yükseltilir.
+
+| Alan | Hedef |
+|------|--------|
+| Appointments | Durum metadata — **tamam** (`appointment-status.utils.ts`) |
+| Pets | Form model + factory + mapper — **örnek**; diğer feature’lar aynı kalıp |
+| Clients, examinations, vaccinations, payments, breeds, species, … | Typed form factory + mapper pipeline |
+| `appointment-type.utils.ts` vb. | İstenirse `appointment-status` ile aynı **tek-kaynak config** modeli |
+
+## 6. GET / liste / detay
+
+- Structured field parse önceliği **write (create/update)** hatalarında.
+- GET preload için mevcut genel hata mesajı davranışı **gereksiz genişletilmeden** korunabilir.
+
+## 7. Test edilebilirlik
+
+Saf fonksiyonlar (normalize, map, meta lookup) yan etkisiz; dosya bazında birim testine uygun tutulur.
