@@ -2,17 +2,18 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
-import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
+import { createPetUpsertFormGroup, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
+import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
+import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import { petBirthDateValidator, petWeightStrValidator } from '@/app/features/pets/utils/pet-create-form.validators';
 import {
     type PetCreateFieldErrors,
     type PetCreateFormFieldKey,
@@ -136,23 +137,37 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                                 [showClear]="true"
                                 styleClass="w-full"
                             />
+                            @if (apiFieldErrors().gender) {
+                                <small class="text-red-500">{{ apiFieldErrors().gender }}</small>
+                            }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="birthDate" class="block text-sm font-medium text-muted-color mb-2">Doğum tarihi</label>
                             <input id="birthDate" type="date" class="w-full p-inputtext p-component" formControlName="birthDate" />
                             @if (apiFieldErrors().birthDate) {
                                 <small class="text-red-500">{{ apiFieldErrors().birthDate }}</small>
+                            } @else if (form.controls.birthDate.invalid && form.controls.birthDate.touched) {
+                                @if (form.controls.birthDate.hasError('birthDateInvalid')) {
+                                    <small class="text-red-500">Doğum tarihi geçerli değil.</small>
+                                }
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="color" class="block text-sm font-medium text-muted-color mb-2">Renk</label>
                             <input id="color" pInputText class="w-full" formControlName="color" />
+                            @if (apiFieldErrors().color) {
+                                <small class="text-red-500">{{ apiFieldErrors().color }}</small>
+                            }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="weight" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg)</label>
                             <input id="weight" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="weightStr" />
                             @if (apiFieldErrors().weightStr) {
                                 <small class="text-red-500">{{ apiFieldErrors().weightStr }}</small>
+                            } @else if (form.controls.weightStr.invalid && form.controls.weightStr.touched) {
+                                @if (form.controls.weightStr.hasError('weightInvalid')) {
+                                    <small class="text-red-500">Kilo geçerli bir sayı olmalıdır (0–9999 arası).</small>
+                                }
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -175,6 +190,9 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                         <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
+                            @if (apiFieldErrors().notes) {
+                                <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                            }
                         </div>
                     </div>
 
@@ -235,18 +253,7 @@ export class PetEditPageComponent implements OnInit {
     private petId = '';
     private isInitializingSpecies = false;
 
-    readonly form = this.fb.nonNullable.group({
-        clientId: ['', Validators.required],
-        name: ['', Validators.required],
-        speciesId: ['', Validators.required],
-        breedId: [''],
-        gender: [''],
-        birthDate: ['', petBirthDateValidator()],
-        color: [''],
-        weightStr: ['', petWeightStrValidator()],
-        status: ['active', Validators.required],
-        notes: ['']
-    });
+    readonly form: PetUpsertFormGroup = createPetUpsertFormGroup(this.fb);
 
     constructor() {
         const fields: PetCreateFormFieldKey[] = [
@@ -282,7 +289,7 @@ export class PetEditPageComponent implements OnInit {
         }
         this.petId = id;
 
-        this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId) => {
+        this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId: string) => {
             const sid = speciesId?.trim() ?? '';
             if (!sid) {
                 this.form.controls.breedId.setValue('');
@@ -346,23 +353,7 @@ export class PetEditPageComponent implements OnInit {
             return;
         }
 
-        const v = this.form.getRawValue();
-        const wRaw = v.weightStr.trim();
-        const wNum = wRaw === '' ? null : Number(wRaw.replace(',', '.'));
-        const selectedBreed = this.breedOptions().find((x) => x.value === v.breedId);
-        const payload: CreatePetRequest = {
-            clientId: v.clientId.trim(),
-            name: v.name.trim(),
-            speciesId: v.speciesId.trim(),
-            breedId: v.breedId.trim() || undefined,
-            breed: selectedBreed?.label?.trim() || undefined,
-            gender: v.gender.trim() || undefined,
-            birthDateInput: v.birthDate.trim() || undefined,
-            color: v.color.trim() || undefined,
-            weight: wNum != null && !Number.isNaN(wNum) ? wNum : null,
-            status: v.status.trim(),
-            notes: v.notes.trim() || undefined
-        };
+        const payload = mapPetUpsertFormToCreateRequest(this.form.getRawValue() as PetUpsertFormValue, this.breedOptions());
 
         this.submitting.set(true);
         this.petsService.updatePet(this.petId, payload).subscribe({

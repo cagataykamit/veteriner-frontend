@@ -1,0 +1,37 @@
+---
+description: Angular (Sakai) frontend — kurumsal kod standardı, katmanlar ve tekrar kullanılabilirlik
+globs: src/**/*.ts,src/**/*.html
+alwaysApply: true
+---
+
+# Veteriner frontend — kod standardı
+
+## Mimari
+
+- **Form → (typed) model → mapper → request DTO → API body** zinciri açık ve tekrar kullanılabilir olmalı; iş kuralı ve normalize/parse **component içinde** tutulmaz.
+- Aynı entity için create/edit **aynı form factory / aynı value tipi** (ör. `PetUpsertFormValue` + `createPetUpsertFormGroup`).
+- Tekrarlayan `if/else` zincirleri, `typeof`/`null` kontrolleri, string normalize, parse, mapping **shared utility** veya feature **policy/mapper** içinde toplanır.
+- Label, severity, status, enum benzeri eşlemeler **map / dictionary / config** ile; uzun `switch` tercih edilmez.
+- `any`, gevşek `unknown`→model dönüşümü ve **sessiz veri kaybı** kullanılmaz; `as` minimumda; sorun **type-safe tasarımla** çözülür (typed `FormGroup`, ortak tipler).
+
+## Paylaşılan dönüşümler
+
+- Ondalık form girdisi: `src/app/shared/utils/decimal-form.utils.ts` — `parseDecimalFormInput`.
+- Tarih: `src/app/shared/utils/date.utils.ts` — mevcut yardımcılar.
+
+## Örnek referans (Pets)
+
+- Form değer tipi: `src/app/features/pets/forms/pet-upsert-form.model.ts`
+- Typed form factory: `src/app/features/pets/forms/pet-upsert-form.factory.ts`
+- Form → API isteği: `src/app/features/pets/data/pet.mapper.ts` — `mapPetUpsertFormToCreateRequest`
+
+Yeni entity’lerde benzer dosya ve isimlendirme düzeni izlenir.
+
+## Bileşenler
+
+- Bileşen yalnızca **orchestration**: form bağlama, yükleme durumu, submit, yönlendirme.
+- **Structured HTTP error parse** (ör. `parsePetCreateHttpError`) korunur; GET preload için gereksiz genişletme yapılmaz.
+
+## Test edilebilirlik
+
+- Saf fonksiyonlar (parse, map, policy) tek dosyada ve yan etkisiz; birim testi eklenebilir yapıda tutulur.

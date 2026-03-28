@@ -1,6 +1,7 @@
 /**
  * Yeni hayvan kaydı — UI / servis isteği.
  * `birthDateInput` HTML `type="date"` (yyyy-MM-dd); ISO UTC mapper’da `date.utils` ile üretilir.
+ * Create/edit: typed `PetUpsertFormValue` → `mapPetUpsertFormToCreateRequest` → `mapCreatePetToApiBody` (`pet.mapper.ts`, `pet-upsert-form.factory.ts`).
  */
 
 export interface CreatePetRequest {

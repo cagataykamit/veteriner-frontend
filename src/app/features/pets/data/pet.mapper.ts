@@ -6,8 +6,10 @@ import type {
     PetListItemDto,
     PetListItemDtoPagedResult
 } from '@/app/features/pets/models/pet-api.model';
+import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
 import { dateOnlyInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
 import type { PetDetailVm, PetEditVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 
@@ -21,10 +23,6 @@ function speciesName(v: string | null | undefined): string {
     return v?.trim() ? v : '-';
 }
 
-/**
- * Create form → API body.
- * Backend `ownerId` kullanıyorsa `clientId` → `ownerId` eşlemesi burada yapılmalıdır.
- */
 /**
  * POST /pets yanıtından oluşturulan hayvan kimliğini çıkarır.
  * `PetDetailDto`, sarmalayıcı `data`/`value` veya `petId` / PascalCase alan adları için uyum katmanı.
@@ -74,6 +72,46 @@ function pickPetIdString(v: unknown): string | null {
     return null;
 }
 
+/** Tür/ırk seçicide `value`/`label` — `SelectOption` ile uyumlu. */
+export interface PetBreedOptionLike {
+    value: string;
+    label: string;
+}
+
+/** Seçili `breedId` için legacy `breed` metin alanı (ırk adı). */
+export function resolvePetBreedWriteLabel(breedId: string, options: ReadonlyArray<PetBreedOptionLike>): string | undefined {
+    const id = breedId?.trim();
+    if (!id) {
+        return undefined;
+    }
+    const opt = options.find((x) => x.value === id);
+    const label = opt?.label?.trim();
+    return label ? label : undefined;
+}
+
+/** Typed form değeri → `CreatePetRequest` (`parseDecimalFormInput`, `birthDateInput`, breed legacy metni). */
+export function mapPetUpsertFormToCreateRequest(
+    v: Readonly<PetUpsertFormValue>,
+    breedOptions: ReadonlyArray<PetBreedOptionLike>
+): CreatePetRequest {
+    const wNum = parseDecimalFormInput(v.weightStr);
+    const breedLabel = resolvePetBreedWriteLabel(v.breedId, breedOptions);
+    return {
+        clientId: v.clientId.trim(),
+        name: v.name.trim(),
+        speciesId: v.speciesId.trim(),
+        breedId: v.breedId.trim() || undefined,
+        breed: breedLabel,
+        gender: v.gender.trim() || undefined,
+        birthDateInput: v.birthDate.trim() || undefined,
+        color: v.color.trim() || undefined,
+        weight: wNum,
+        status: v.status.trim(),
+        notes: v.notes.trim() || undefined
+    };
+}
+
+/** `CreatePetRequest` → API gövdesi. `clientId`↔`ownerId` write farkı backend teyidi gerektirir; şimdilik `clientId`. */
 export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDto {
     const body: PetCreateRequestDto = {
         clientId: req.clientId.trim(),

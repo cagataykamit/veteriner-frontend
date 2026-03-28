@@ -92,9 +92,41 @@ export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): Appo
     };
 }
 
+/** Create ve update write hattında status boş gelirse backend ile uyumlu tek varsayılan. */
+export const APPOINTMENT_DEFAULT_WRITE_STATUS = 'scheduled';
+
+export function resolveAppointmentWriteStatus(status?: string | null): string {
+    const t = status?.trim();
+    return t ? t : APPOINTMENT_DEFAULT_WRITE_STATUS;
+}
+
+export interface AppointmentUpsertFormAdapterInput {
+    clinicId: string;
+    clientId: string;
+    petId: string;
+    scheduledAtUtc: string;
+    type: string;
+    status: string;
+    reason?: string;
+    notes?: string;
+}
+
+export function mapAppointmentUpsertFormToCreateRequest(input: AppointmentUpsertFormAdapterInput): CreateAppointmentRequest {
+    return {
+        clinicId: input.clinicId.trim(),
+        clientId: input.clientId.trim(),
+        petId: input.petId.trim(),
+        scheduledAtUtc: input.scheduledAtUtc,
+        type: input.type.trim() || undefined,
+        status: input.status.trim(),
+        reason: input.reason?.trim() || undefined,
+        notes: input.notes?.trim() || undefined
+    };
+}
+
 export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): AppointmentCreateRequestDto {
     const type = req.type?.trim() ? req.type.trim() : null;
-    const status = req.status?.trim() ? req.status.trim() : null;
+    const status = resolveAppointmentWriteStatus(req.status);
     const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : '';
     const base: AppointmentCreateRequestDto = {
         clientId: req.clientId.trim(),

@@ -2,17 +2,18 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
-import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
+import { createPetUpsertFormGroup, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
+import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
+import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import { petBirthDateValidator, petWeightStrValidator } from '@/app/features/pets/utils/pet-create-form.validators';
 import {
     type PetCreateFieldErrors,
     type PetCreateFormFieldKey,
@@ -234,18 +235,7 @@ export class PetNewPageComponent implements OnInit {
     readonly statusOptions = [...PET_STATUS_FORM_OPTIONS];
     readonly genderOptions = [...PET_GENDER_FORM_OPTIONS];
 
-    readonly form = this.fb.nonNullable.group({
-        clientId: ['', Validators.required],
-        name: ['', Validators.required],
-        speciesId: ['', Validators.required],
-        breedId: [''],
-        gender: [''],
-        birthDate: ['', petBirthDateValidator()],
-        color: [''],
-        weightStr: ['', petWeightStrValidator()],
-        status: ['active', Validators.required],
-        notes: ['']
-    });
+    readonly form: PetUpsertFormGroup = createPetUpsertFormGroup(this.fb);
 
     constructor() {
         const fields: PetCreateFormFieldKey[] = [
@@ -275,7 +265,7 @@ export class PetNewPageComponent implements OnInit {
     ngOnInit(): void {
         this.loadClients();
         this.loadSpecies();
-        this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId) => {
+        this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId: string) => {
             // Tür değiştiğinde yanlış eşleşmeyi önlemek için seçili ırk temizlenir.
             this.form.controls.breedId.setValue('');
             this.breedOptions.set([]);
@@ -299,23 +289,7 @@ export class PetNewPageComponent implements OnInit {
             return;
         }
 
-        const v = this.form.getRawValue();
-        const wRaw = v.weightStr.trim();
-        const wNum = wRaw === '' ? null : Number(wRaw.replace(',', '.'));
-        const selectedBreed = this.breedOptions().find((x) => x.value === v.breedId);
-        const payload: CreatePetRequest = {
-            clientId: v.clientId.trim(),
-            name: v.name.trim(),
-            speciesId: v.speciesId.trim(),
-            breedId: v.breedId.trim() || undefined,
-            breed: selectedBreed?.label?.trim() || undefined,
-            gender: v.gender.trim() || undefined,
-            birthDateInput: v.birthDate.trim() || undefined,
-            color: v.color.trim() || undefined,
-            weight: wNum != null && !Number.isNaN(wNum) ? wNum : null,
-            status: v.status.trim(),
-            notes: v.notes.trim() || undefined
-        };
+        const payload = mapPetUpsertFormToCreateRequest(this.form.getRawValue() as PetUpsertFormValue, this.breedOptions());
 
         this.submitting.set(true);
         this.petsService.createPet(payload).subscribe({

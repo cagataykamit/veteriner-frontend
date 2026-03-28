@@ -8,7 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { CreateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
+import { mapAppointmentUpsertFormToCreateRequest } from '@/app/features/appointments/data/appointment.mapper';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import {
     type AppointmentUpsertFieldErrors,
@@ -20,6 +20,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
+import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
 import {
     clientOptionsFromList,
     filterPetsByClientId,
@@ -238,13 +239,7 @@ export class AppointmentEditPageComponent implements OnInit {
         { label: 'Diğer', value: 'other' }
     ];
 
-    readonly statusOptions = [
-        { label: 'Taslak', value: 'draft' },
-        { label: 'Bekliyor', value: 'pending' },
-        { label: 'Devam ediyor', value: 'in_progress' },
-        { label: 'Tamamlandı', value: 'completed' },
-        { label: 'İptal', value: 'cancelled' }
-    ];
+    readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -348,16 +343,16 @@ export class AppointmentEditPageComponent implements OnInit {
             return;
         }
 
-        const payload: CreateAppointmentRequest = {
+        const payload = mapAppointmentUpsertFormToCreateRequest({
             clinicId,
-            clientId: v.clientId.trim(),
-            petId: v.petId.trim(),
+            clientId: v.clientId,
+            petId: v.petId,
             scheduledAtUtc,
-            type: v.type.trim() || undefined,
-            status: v.status.trim() || undefined,
-            reason: v.reason.trim() || undefined,
-            notes: v.notes.trim() || undefined
-        };
+            type: v.type,
+            status: v.status,
+            reason: v.reason,
+            notes: v.notes
+        });
 
         this.submitting.set(true);
         this.appointmentsService.updateAppointment(this.appointmentId, payload).subscribe({

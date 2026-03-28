@@ -25,7 +25,6 @@ const FIELD_MAP: Record<string, AppointmentUpsertFormFieldKey> = {
     appointmenttype: 'type',
     status: 'status',
     appointmentstatus: 'status',
-    lifestylestatus: 'status',
     lifecyclestatus: 'status',
     reason: 'reason',
     notes: 'notes',

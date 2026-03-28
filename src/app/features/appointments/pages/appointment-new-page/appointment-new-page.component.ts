@@ -8,8 +8,13 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { CreateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
+import { mapAppointmentUpsertFormToCreateRequest } from '@/app/features/appointments/data/appointment.mapper';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import {
+    type AppointmentUpsertFieldErrors,
+    type AppointmentUpsertFormFieldKey,
+    parseAppointmentUpsertHttpError
+} from '@/app/features/appointments/utils/appointment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import {
@@ -20,8 +25,8 @@ import {
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
-import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
+import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
@@ -63,7 +68,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             styleClass="w-full"
                             [loading]="loadingClients()"
                         />
-                        @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
+                        @if (apiFieldErrors().clientId) {
+                            <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                        } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                         <p class="text-muted-color text-sm mt-2 mb-0">
@@ -86,7 +93,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             styleClass="w-full"
                             [loading]="loadingPets()"
                         />
-                        @if (form.controls.petId.invalid && form.controls.petId.touched) {
+                        @if (apiFieldErrors().petId) {
+                            <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
+                        } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                         <p class="text-muted-color text-sm mt-2 mb-0">
@@ -102,7 +111,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             class="w-full p-inputtext p-component"
                             formControlName="scheduledAtLocal"
                         />
-                        @if (form.controls.scheduledAtLocal.invalid && form.controls.scheduledAtLocal.touched) {
+                        @if (apiFieldErrors().scheduledAtLocal) {
+                            <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
+                        } @else if (form.controls.scheduledAtLocal.invalid && form.controls.scheduledAtLocal.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                     </div>
@@ -118,17 +129,43 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             [showClear]="true"
                             styleClass="w-full"
                         />
-                        @if (form.controls.type.invalid && form.controls.type.touched) {
+                        @if (apiFieldErrors().type) {
+                            <small class="text-red-500">{{ apiFieldErrors().type }}</small>
+                        } @else if (form.controls.type.invalid && form.controls.type.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
+                        <p-select
+                            inputId="status"
+                            formControlName="status"
+                            [options]="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Durum seçin"
+                            [showClear]="true"
+                            styleClass="w-full"
+                        />
+                        @if (apiFieldErrors().status) {
+                            <small class="text-red-500">{{ apiFieldErrors().status }}</small>
+                        } @else if (form.controls.status.invalid && form.controls.status.touched) {
+                            <small class="text-red-500">Durum seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="reason" class="block text-sm font-medium text-muted-color mb-2">Sebep</label>
                         <textarea id="reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
+                        @if (apiFieldErrors().reason) {
+                            <small class="text-red-500">{{ apiFieldErrors().reason }}</small>
+                        }
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
+                        @if (apiFieldErrors().notes) {
+                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                        }
                     </div>
                 </div>
 
@@ -151,8 +188,6 @@ import { AuthService } from '@/app/core/auth/auth.service';
     `
 })
 export class AppointmentNewPageComponent implements OnInit {
-    readonly copy = PANEL_COPY;
-
     private readonly fb = inject(FormBuilder);
     private readonly appointmentsService = inject(AppointmentsService);
     private readonly clientsService = inject(ClientsService);
@@ -164,6 +199,7 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
+    readonly apiFieldErrors = signal<AppointmentUpsertFieldErrors>({});
 
     readonly loadingClients = signal(false);
     readonly loadingPets = signal(false);
@@ -184,14 +220,31 @@ export class AppointmentNewPageComponent implements OnInit {
         { label: 'Diğer', value: 'other' }
     ];
 
+    readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
+
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
         scheduledAtLocal: ['', Validators.required],
         type: ['', Validators.required],
+        status: ['scheduled', Validators.required],
         reason: [''],
         notes: ['']
     });
+
+    constructor() {
+        const fields: AppointmentUpsertFormFieldKey[] = ['clientId', 'petId', 'scheduledAtLocal', 'type', 'status', 'reason', 'notes'];
+        for (const f of fields) {
+            this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+                const cur = this.apiFieldErrors();
+                if (cur[f]) {
+                    const next = { ...cur };
+                    delete next[f];
+                    this.apiFieldErrors.set(next);
+                }
+            });
+        }
+    }
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
@@ -217,6 +270,7 @@ export class AppointmentNewPageComponent implements OnInit {
 
     onSubmit(): void {
         this.submitError.set(null);
+        this.apiFieldErrors.set({});
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
@@ -234,15 +288,16 @@ export class AppointmentNewPageComponent implements OnInit {
             return;
         }
 
-        const payload: CreateAppointmentRequest = {
+        const payload = mapAppointmentUpsertFormToCreateRequest({
             clinicId,
-            clientId: v.clientId.trim(),
-            petId: v.petId.trim(),
+            clientId: v.clientId,
+            petId: v.petId,
             scheduledAtUtc,
-            type: v.type.trim(),
-            reason: v.reason.trim() || undefined,
-            notes: v.notes.trim() || undefined
-        };
+            type: v.type,
+            status: v.status,
+            reason: v.reason,
+            notes: v.notes
+        });
 
         this.submitting.set(true);
         this.appointmentsService.createAppointment(payload).subscribe({
@@ -252,7 +307,18 @@ export class AppointmentNewPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
-                this.submitError.set(this.mapSubmitError(e));
+                if (e instanceof HttpErrorResponse) {
+                    const clinicMsg = messageFromClinicResolutionHttpError(e);
+                    if (clinicMsg) {
+                        this.submitError.set(clinicMsg);
+                        return;
+                    }
+                    const parsed = parseAppointmentUpsertHttpError(e);
+                    this.apiFieldErrors.set(parsed.fieldErrors);
+                    this.submitError.set(parsed.summaryMessage);
+                    return;
+                }
+                this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
     }
@@ -297,16 +363,5 @@ export class AppointmentNewPageComponent implements OnInit {
             return messageFromHttpError(e, fallback);
         }
         return e instanceof Error ? e.message : fallback;
-    }
-
-    private mapSubmitError(e: unknown): string {
-        if (e instanceof HttpErrorResponse) {
-            const clinicMsg = messageFromClinicResolutionHttpError(e);
-            if (clinicMsg) {
-                return clinicMsg;
-            }
-            return messageFromHttpError(e, 'Kayıt oluşturulamadı.');
-        }
-        return e instanceof Error ? e.message : 'Kayıt oluşturulamadı.';
     }
 }

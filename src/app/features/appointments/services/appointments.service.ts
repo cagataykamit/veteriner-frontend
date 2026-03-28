@@ -72,7 +72,7 @@ export class AppointmentsService {
             }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
-                    return throwError(() => new Error(messageFromHttpError(err, 'Randevu oluşturulamadı.')));
+                    return throwError(() => err);
                 }
                 if (err instanceof Error && err.message === 'APPOINTMENT_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(
