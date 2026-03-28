@@ -1,62 +1,150 @@
 ---
-description: Angular (Sakai) veteriner frontend — kurumsal kod standardı, katmanlar, tek kaynak metadata
+description: Angular — minimum 9/10 kod kalitesi; write pipeline; config-driven metadata; görev sonu çıktı formatı
 globs: src/**/*.ts,src/**/*.html
 alwaysApply: true
 ---
 
-# Veteriner frontend — kod standardı
+# Veteriner frontend — Angular kod kalitesi (≥ 9/10)
 
-Bu kurallar **tüm yeni kod ve refactor** için geçerlidir. “Çalışıyor” yeterli değildir; okunabilirlik, tek kaynak, tip güvenliği ve bakım maliyeti hedeflenir.
+**Hedef:** Sadece “çalışan kod” değil; sürdürülebilir, tip güvenli, tekrarsız, config-driven, test edilebilir, kurumsal ölçekte bakımı yapılabilir yapı.
 
-## 1. Veri akışı (write ekranları)
+Bu doküman tamamlanmış proje iddiası taşımaz; **referans pattern** ve **zorunlu kalite çizgisidir**. Yeni kod mevcut çizginin altına inmemeli.
 
-Zorunlu sıra:
+---
 
-1. **Form value tipi** — `*.model.ts` veya `*-form.model.ts` (ör. `PetUpsertFormValue`).
-2. **Typed form factory** — `createXxxFormGroup(fb)` → `FormGroup` + `getXxxFormValue(form)` ile snapshot (**bileşende `as` kullanılmaz**).
-3. **Mapper** — `mapXxxFormToCreateRequest` / API body (`*.mapper.ts`).
-4. **Servis** — HTTP; structured error parse write path’te korunur.
+## 1. Genel yaklaşım
 
-Bileşen: **yalnızca orchestration** (bağlama, yükleme, submit, navigasyon, sinyal). Parse, normalize, iş kuralı, uzun `if/else` zinciri yok.
+- Lokal workaround değil; **pattern** kur.
+- Sorunu yamamak değil; **tasarımı** düzelt.
+- Aynı problem başka feature’da da oluşacaksa **ortak çözüm** (shared util, mapper, factory).
+- **Component içinde** iş kuralı, parse, normalize, mapping **bırakma**.
+- Her değişiklik mevcut standardı **yükseltsin**; teknik borç **ekleme**.
 
-## 2. Metadata (label / severity / value / write options)
+---
 
-- **Tek tablo / config dizisi** (`STATUS_DEFS` benzeri): `canonical`, `label`, `severity`, `write`, `aliases`.
-- `label` ve `severity` **aynı kaynaktan**; uzun `if` veya ayrı `Record`+koşul zinciri yok.
-- Dropdown seçenekleri mümkünse **`write: true` satırlarından türetilir** (`APPOINTMENT_WRITE_STATUS_OPTIONS` örneği).
-- Ortak **normalize** fonksiyonu dışa açık ve test edilebilir (ör. `normalizeAppointmentStatus`).
+## 2. Angular mimari standardı
 
-Referans: `src/app/features/appointments/utils/appointment-status.utils.ts`
+- **Component = yalnızca orchestration** (bağlama, yükleme, submit, navigasyon, sinyaller).
+- Form kuralları component içinde **dağınık tanımlanmaz**; factory’de toplanır.
 
-## 3. Parse / normalize
+**Write akışı (zorunlu sıra):**
 
-- Tekrarlayan string/number/date/normalize mantığı **shared utility** (ör. `parseDecimalFormInput`, `date.utils`).
-- Feature’a özel ama tekrar eden kurallar **mapper veya `*-policy.utils.ts`**.
-- **Gevşek `any` / sessiz `unknown`→model** yok; `as` yalnızca gerekçeli ve mümkünse **tek merkezde** (tercihen factory helper, bileşen değil).
+`form model` → `typed form factory` → `getXxxFormValue(form)` → `mapper` → `service`
 
-## 4. Anti-pattern (kaçınılacaklar)
+**Dosya isimlendirmesi (mümkün olduğunca tutarlı):**
 
-- Bileşende `getRawValue() as SomeFormValue` — yerine `getXxxFormValue(this.form)` (factory).
-- Aynı entity için **ayrı** label ve severity mantığı.
-- Uzun `switch` / `if` ile status/type eşlemesi — yerine config + `Map` veya normalize + lookup.
-- Inline API body / request objesi bileşende — mapper’a.
+| Katman | Örnek |
+|--------|--------|
+| Form value | `xxx-upsert-form.model.ts` |
+| Factory | `xxx-upsert-form.factory.ts` |
+| Mapper | `xxx.mapper.ts` (veya feature `data/` altında) |
+| Servis | `xxx.service.ts` |
+| Metadata | `xxx-status.utils.ts`, `xxx-type.utils.ts` (config-driven) |
 
-## 5. Yayılım önceliği (borç listesi)
+**Referans:** Pets write hattı; `appointment-status.utils.ts`.
 
-Aşağıdaki alanlar zamanla bu standarda çekilir; tek seferde tüm repo zorunlu değildir, ancak **dokunulan dosya** mümkünse yükseltilir.
+---
 
-| Alan | Hedef |
+## 3. Type safety
+
+- `any`, gevşek `unknown`, gereksiz `as` **minimum**.
+- **`getRawValue() as ...` anti-pattern** — kabul edilmez; `getXxxFormValue(form)` kullan.
+- **Typed `FormGroup`**; domain için **string union** / `readonly` / daraltılmış tipler tercih edilir.
+
+---
+
+## 4. Mapping / normalize / parse
+
+- Inline parse/normalize **component veya template içinde yok**.
+- Ortak kurallar **shared utility** veya **feature mapper** içinde.
+- Trim, nullable, decimal, date input vb. **standart helper** üzerinden (`decimal-form.utils`, `date.utils`, …).
+- Aynı dönüşüm kuralı **iki kez yazılmaz**.
+
+---
+
+## 5. Status / type / label / severity
+
+- Uzun **`if/else`** ve **`switch`** zincirleri **istemiyoruz**.
+- `label`, `severity`, write seçeneği, `aliases`, **canonical** tek **config kaynağından** (`*_DEFS` benzeri).
+- `normalizeXxx(...)` **export**; tekrar kullanılabilir.
+- Dropdown **sabit kopya dizi değil**; metadata’dan **türetilir**.
+- Duplicate alias / key için **guard** (modül yükünde hata veya test).
+
+**Referans:** `appointment-status.utils.ts`
+
+---
+
+## 6. Yeniden kullanım ve standardizasyon
+
+- Aynı problem için feature’lar arası **farklı çözüm yazma**; Pets + appointment-status **referans**.
+- Shared çıkarılabilecek yerde **lokal helper bırakma**.
+
+---
+
+## 7. Kalite beklentisi (kısa)
+
+- Daha az tekrar ve koşul zinciri; daha güçlü tip güvenliği; net katman ayrımı; okunabilirlik; kolay unit test; düşük bakım maliyeti; genişletilebilirlik.
+
+---
+
+## 8. Refactor tetikleyicileri (biri varsa refactor et)
+
+- Aynı mantık birden fazla yerde.
+- Component içinde parse/normalize.
+- Status/type mapping dağınık.
+- `as` ile derleyici susturma (özellikle bileşende).
+- Kopya option listeleri.
+- Aynı verinin label / severity / value bilgisi **farklı dosyalarda**.
+
+---
+
+## 9. Çalışma prensibi
+
+**Minimal patch değil** — gerekirse:
+
+- Birden fazla dosyaya yay.
+- Utility çıkar.
+- İsimlendirmeyi düzelt.
+- Model / factory / mapper katmanını kur.
+
+**Sonuç:** Başka feature’lara da uygulanabilir **referans pattern**.
+
+---
+
+## 10. Görev sonu cevap formatı (her Angular görevinde)
+
+Aşağıdaki başlıklarla özet ver:
+
+1. **Kısa teşhis**
+2. **Tasarım seviyesi kök neden**
+3. **Refactor yaklaşımı**
+4. **Değişen dosyalar**
+5. **Final kod** (özet veya kritik parçalar; gereksiz dump yok)
+6. **Neden bu çözüm 9/10 seviyesine daha yakın**
+
+---
+
+## 11. Referans dosyalar (kopyalanacak kalıp)
+
+| Konu | Dosya |
 |------|--------|
-| Appointments | Durum metadata — **tamam** (`appointment-status.utils.ts`) |
-| Pets | Form model + factory + mapper — **örnek**; diğer feature’lar aynı kalıp |
-| Clients, examinations, vaccinations, payments, breeds, species, … | Typed form factory + mapper pipeline |
-| `appointment-type.utils.ts` vb. | İstenirse `appointment-status` ile aynı **tek-kaynak config** modeli |
+| Config-driven status + normalize + türetilmiş write options | `src/app/features/appointments/utils/appointment-status.utils.ts` |
+| Typed form model + factory + `getPetUpsertFormValue` | `src/app/features/pets/forms/pet-upsert-form.model.ts`, `pet-upsert-form.factory.ts` |
+| Form → API isteği | `src/app/features/pets/data/pet.mapper.ts` |
 
-## 6. GET / liste / detay
+---
 
-- Structured field parse önceliği **write (create/update)** hatalarında.
-- GET preload için mevcut genel hata mesajı davranışı **gereksiz genişletilmeden** korunabilir.
+## 12. Yayılım borcu (dokunuldukça hizala)
 
-## 7. Test edilebilirlik
+| Alan | Örnek |
+|------|--------|
+| Randevu türü | **tamam** — `appointment-type.utils.ts` (`TYPE_DEFS`, `APPOINTMENT_TYPE_WRITE_OPTIONS`, `normalizeAppointmentType`) |
+| Hayvan durum vb. | `pet-status.utils.ts` |
+| Diğer write formlar | clients, examinations, vaccinations, payments, breeds, species, … |
 
-Saf fonksiyonlar (normalize, map, meta lookup) yan etkisiz; dosya bazında birim testine uygun tutulur.
+---
+
+## 13. GET / test
+
+- Structured error parse önceliği **write** path’inde.
+- Saf fonksiyonlar yan etkisiz ve test edilebilir.

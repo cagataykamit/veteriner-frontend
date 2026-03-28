@@ -20,6 +20,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
+import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
 import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
 import {
     clientOptionsFromList,
@@ -226,18 +227,7 @@ export class AppointmentEditPageComponent implements OnInit {
     private appointmentId = '';
     private isInitializingClient = false;
 
-    readonly typeOptions = [
-        { label: 'Konsültasyon', value: 'consultation' },
-        { label: 'Genel kontrol', value: 'checkup' },
-        { label: 'Aşı', value: 'vaccination' },
-        { label: 'Cerrahi', value: 'surgery' },
-        { label: 'Bakım / tıraş', value: 'grooming' },
-        { label: 'Acil', value: 'emergency' },
-        { label: 'Kontrol', value: 'followup' },
-        { label: 'Diş', value: 'dental' },
-        { label: 'Görüntüleme', value: 'imaging' },
-        { label: 'Diğer', value: 'other' }
-    ];
+    readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
 
     readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
 
