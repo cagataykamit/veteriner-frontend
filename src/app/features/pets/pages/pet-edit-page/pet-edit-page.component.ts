@@ -11,6 +11,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
+import type { PetEditVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import {
@@ -251,6 +252,7 @@ export class PetEditPageComponent implements OnInit {
 
     private petId = '';
     private isInitializingSpecies = false;
+    private editVmCache: PetEditVm | null = null;
 
     readonly form: PetUpsertFormGroup = createPetUpsertFormGroup(this.fb);
 
@@ -311,19 +313,23 @@ export class PetEditPageComponent implements OnInit {
         this.loadError.set(null);
         this.petsService.getPetForEditById(this.petId).subscribe({
             next: (pet) => {
+                this.editVmCache = pet;
                 this.isInitializingSpecies = true;
-                this.form.patchValue({
-                    clientId: pet.clientId,
-                    name: pet.name,
-                    speciesId: pet.speciesId,
-                    breedId: '',
-                    gender: pet.gender,
-                    birthDate: pet.birthDateInput,
-                    color: pet.color,
-                    weightStr: pet.weightStr,
-                    status: pet.status,
-                    notes: pet.notes
-                });
+                this.form.patchValue(
+                    {
+                        clientId: pet.clientId,
+                        name: pet.name,
+                        speciesId: pet.speciesId,
+                        breedId: '',
+                        gender: pet.gender,
+                        birthDate: pet.birthDateInput,
+                        color: pet.color,
+                        weightStr: pet.weightStr,
+                        status: pet.status,
+                        notes: pet.notes
+                    },
+                    { emitEvent: false }
+                );
 
                 if (pet.speciesId) {
                     this.loadBreedsForSpecies(pet.speciesId, pet.breedId);
@@ -409,9 +415,13 @@ export class PetEditPageComponent implements OnInit {
         this.breedsService.getBreedList({ activeOnly: true, speciesId }).subscribe({
             next: (items) => {
                 this.breedOptions.set(items.map((x) => ({ value: x.id, label: x.name })));
+                this.mergeBreedOptionFromCache();
                 if (selectedBreedId) {
                     const exists = items.some((x) => x.id === selectedBreedId);
-                    this.form.controls.breedId.setValue(exists ? selectedBreedId : '');
+                    const allowFromDetail =
+                        !!this.editVmCache?.breedName?.trim() &&
+                        (this.editVmCache?.breedId ?? '').trim() === selectedBreedId;
+                    this.form.controls.breedId.setValue(exists || allowFromDetail ? selectedBreedId : '');
                 }
                 this.loadingBreeds.set(false);
                 this.isInitializingSpecies = false;
@@ -422,6 +432,21 @@ export class PetEditPageComponent implements OnInit {
                 this.isInitializingSpecies = false;
             }
         });
+    }
+
+    /** API’deki ırk, tür listesinde yoksa detaydan gelen etiketle seçenek ekle. */
+    private mergeBreedOptionFromCache(): void {
+        const vm = this.editVmCache;
+        const bid = vm?.breedId?.trim();
+        const label = vm?.breedName?.trim();
+        if (!bid || !label) {
+            return;
+        }
+        const opts = this.breedOptions();
+        if (opts.some((o) => o.value === bid)) {
+            return;
+        }
+        this.breedOptions.set([{ value: bid, label }, ...opts]);
     }
 
     private mapLoadError(e: unknown, fallback: string): string {

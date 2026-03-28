@@ -33,8 +33,13 @@ export interface VaccinationDetailVm {
 
 export interface VaccinationEditVm {
     id: string;
+    /** GET detay `clientId` — müşteri select `optionValue` ile eşleşir. */
     clientId: string;
     petId: string;
+    /** Preload’da dropdown etiketi; liste dışı müşteriler için seçenek birleştirmede kullanılır. */
+    clientName: string | null;
+    /** Preload’da dropdown etiketi; liste dışı hayvanlar için seçenek birleştirmede kullanılır. */
+    petName: string | null;
     vaccineName: string;
     appliedAtUtc: string | null;
     nextDueAtUtc: string | null;

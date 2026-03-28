@@ -139,7 +139,7 @@ Aşağıdaki başlıklarla özet ver:
 | Alan | Örnek |
 |------|--------|
 | Randevu türü | **tamam** — `appointment-type.utils.ts` (`TYPE_DEFS`, `APPOINTMENT_TYPE_WRITE_OPTIONS`, `normalizeAppointmentType`) |
-| Hayvan durum vb. | `pet-status.utils.ts` |
+| Hayvan durum / cinsiyet | **tamam** — `pet-status.utils.ts` + `normalizeLookupKey` (`shared/utils/normalize-lookup-key.utils.ts`) |
 | Diğer write formlar | clients, examinations, vaccinations, payments, breeds, species, … |
 
 ---

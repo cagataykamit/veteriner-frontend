@@ -46,6 +46,8 @@ export interface PetEditVm {
     name: string;
     speciesId: string;
     breedId: string;
+    /** Irk listesinde yoksa seçici etiketi (sentetik seçenek). */
+    breedName: string | null;
     gender: string;
     birthDateInput: string;
     color: string;

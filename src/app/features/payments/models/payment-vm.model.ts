@@ -2,6 +2,7 @@
  * Ödeme — UI view modelleri.
  */
 
+/** Liste — ekstra GET gerekmez; API `clientName` / `petName`. */
 export interface PaymentListItemVm {
     id: string;
     clientId: string | null;
@@ -18,6 +19,7 @@ export interface PaymentListItemVm {
     createdAtUtc: string | null;
 }
 
+/** Detay — müşteri/hayvan adları DTO’dan. */
 export interface PaymentDetailVm {
     id: string;
     clientId: string | null;

@@ -26,6 +26,7 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { amountToFormString, parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -263,9 +264,9 @@ export class PaymentEditPageComponent implements OnInit {
                 this.form.patchValue({
                     clientId: x.clientId,
                     petId: '',
-                    amount: normalizeAmountForForm(x.amountStr),
+                    amount: amountToFormString(x.amountStr),
                     currency: x.currency || 'TRY',
-                    method: x.method || 'cash',
+                    method: x.method ?? 'cash',
                     paidAtLocal: toDateTimeLocalInput(x.paidAtUtc),
                     note: x.note
                 });
@@ -294,7 +295,7 @@ export class PaymentEditPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const amount = normalizeAmountInput(v.amount);
+        const amount = parseAmountFormValue(v.amount);
         if (amount == null || amount < 0.01) {
             this.submitError.set('Geçerli bir tutar girin.');
             return;
@@ -400,26 +401,6 @@ export class PaymentEditPageComponent implements OnInit {
         }
         return e instanceof Error ? e.message : fallback;
     }
-}
-
-function normalizeAmountForForm(v: string): string {
-    if (!v) {
-        return '';
-    }
-    const n = Number(v);
-    return Number.isNaN(n) ? '' : String(n);
-}
-
-function normalizeAmountInput(v: string): number | null {
-    const raw = (v ?? '').trim().replace(',', '.');
-    if (!raw) {
-        return null;
-    }
-    const n = Number(raw);
-    if (Number.isNaN(n)) {
-        return null;
-    }
-    return n;
 }
 
 function toDateTimeLocalInput(isoUtc: string | null): string {

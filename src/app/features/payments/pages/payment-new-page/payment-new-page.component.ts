@@ -24,6 +24,7 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 
@@ -243,8 +244,8 @@ export class PaymentNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const amount = v.amount != null ? Number(v.amount) : NaN;
-        if (Number.isNaN(amount) || amount < 0.01) {
+        const amount = parseAmountFormValue(v.amount);
+        if (amount == null || amount < 0.01) {
             this.submitError.set('Geçerli bir tutar girin.');
             return;
         }

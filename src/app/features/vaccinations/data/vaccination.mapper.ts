@@ -25,6 +25,34 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
     return null;
 }
 
+/** JSON’da PascalCase veya ek anahtarlarla gelen düz string alanlar. */
+function readDtoString(dto: VaccinationListItemDto | VaccinationDetailDto, keys: string[]): string | null {
+    const o = dto as unknown as Record<string, unknown>;
+    for (const k of keys) {
+        const v = o[k];
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function readNestedName(dto: Record<string, unknown>, objectKeys: string[], nameKeys: string[]): string | null {
+    for (const ok of objectKeys) {
+        const inner = dto[ok];
+        if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+            const io = inner as Record<string, unknown>;
+            for (const nk of nameKeys) {
+                const v = io[nk];
+                if (typeof v === 'string' && v.trim()) {
+                    return v.trim();
+                }
+            }
+        }
+    }
+    return null;
+}
+
 function canonicalAppliedAt(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
     return firstTrimmed(dto.appliedAtUtc, dto.applicationDateUtc, dto.appliedOnUtc);
 }
@@ -38,19 +66,49 @@ function canonicalVaccineName(dto: VaccinationListItemDto | VaccinationDetailDto
 }
 
 function canonicalPetId(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    return firstTrimmed(dto.petId, dto.animalId);
+    return firstTrimmed(dto.petId, dto.animalId, readDtoString(dto, ['PetId', 'AnimalId']));
+}
+
+function rawPetName(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
+    const nested = readNestedName(dto as unknown as Record<string, unknown>, ['pet', 'Pet', 'animal', 'Animal'], [
+        'name',
+        'Name',
+        'fullName',
+        'FullName'
+    ]);
+    return firstTrimmed(
+        dto.petName,
+        dto.animalName,
+        readDtoString(dto, ['PetName', 'AnimalName', 'PatientName', 'patientName']),
+        nested
+    );
 }
 
 function canonicalPetName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
-    return str(firstTrimmed(dto.petName, dto.animalName));
+    return str(rawPetName(dto));
 }
 
 function canonicalClientId(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    return firstTrimmed(dto.clientId, dto.ownerId);
+    return firstTrimmed(dto.clientId, dto.ownerId, readDtoString(dto, ['ClientId', 'OwnerId', 'CustomerId', 'customerId']));
+}
+
+function rawClientName(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
+    const nested = readNestedName(dto as unknown as Record<string, unknown>, ['client', 'Client', 'owner', 'Owner', 'customer', 'Customer'], [
+        'name',
+        'Name',
+        'fullName',
+        'FullName'
+    ]);
+    return firstTrimmed(
+        dto.clientName,
+        dto.ownerName,
+        readDtoString(dto, ['ClientName', 'OwnerName', 'CustomerName', 'customerName']),
+        nested
+    );
 }
 
 function canonicalClientName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
-    return str(firstTrimmed(dto.clientName, dto.ownerName));
+    return str(rawClientName(dto));
 }
 
 function canonicalStatus(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
@@ -96,11 +154,14 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
     };
 }
 
+/** Detay → edit: `clientId` / `petId` canonical; backend camelCase veya OwnerId/PetId vb. */
 export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): VaccinationEditVm {
     return {
         id: dto.id,
         clientId: canonicalClientId(dto) ?? '',
         petId: canonicalPetId(dto) ?? '',
+        clientName: rawClientName(dto),
+        petName: rawPetName(dto),
         vaccineName: firstTrimmed(dto.vaccineName, dto.name, dto.vaccine, dto.vaccineTypeName) ?? '',
         appliedAtUtc: canonicalAppliedAt(dto),
         nextDueAtUtc: canonicalNextDueAt(dto),

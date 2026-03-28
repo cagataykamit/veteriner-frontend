@@ -12,6 +12,7 @@ import { dateOnlyInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
 import type { PetDetailVm, PetEditVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import { normalizePetGender, resolvePetGenderFormValue } from '@/app/features/pets/utils/pet-status.utils';
 
 const EM = '—';
 
@@ -21,6 +22,56 @@ function str(v: string | null | undefined): string {
 
 function speciesName(v: string | null | undefined): string {
     return v?.trim() ? v : '-';
+}
+
+function firstTrimmed(...vals: Array<string | null | undefined>): string | null {
+    for (const v of vals) {
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function readDtoString(dto: PetListItemDto | PetDetailDto, keys: string[]): string | null {
+    const o = dto as unknown as Record<string, unknown>;
+    for (const k of keys) {
+        const v = o[k];
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function canonicalBreedId(dto: PetListItemDto | PetDetailDto): string {
+    return firstTrimmed(dto.breedId, readDtoString(dto, ['BreedId'])) ?? '';
+}
+
+function canonicalBreedDisplay(dto: PetListItemDto | PetDetailDto): string {
+    return str(firstTrimmed(dto.breedName, dto.breed, readDtoString(dto, ['BreedName', 'Breed'])));
+}
+
+/** GET DTO: `gender` / `Gender` sayı (1/2) veya metin. */
+function readPetGenderRaw(dto: PetListItemDto | PetDetailDto): string | number | null | undefined {
+    const o = dto as unknown as Record<string, unknown>;
+    const g = o['gender'] ?? o['Gender'];
+    if (g === null || g === undefined) {
+        return undefined;
+    }
+    if (typeof g === 'number' && !Number.isNaN(g)) {
+        return g;
+    }
+    if (typeof g === 'string' && g.trim()) {
+        return g.trim();
+    }
+    return undefined;
+}
+
+/** Detay/liste VM: `petGenderLabel` için canonical `male`/`female` veya boşta EM. */
+function canonicalGenderRaw(dto: PetListItemDto | PetDetailDto): string {
+    const resolved = resolvePetGenderFormValue(readPetGenderRaw(dto));
+    return resolved ? resolved : EM;
 }
 
 /**
@@ -111,6 +162,22 @@ export function mapPetUpsertFormToCreateRequest(
     };
 }
 
+/** Form canonical (`male` / `female`) → API `PetGender` sayısı (Male=1, Female=2). Bilinmeyen/boş → gönderilmez. */
+function petGenderFormToApiEnum(gender: string | null | undefined): 1 | 2 | null {
+    const t = gender?.trim();
+    if (!t) {
+        return null;
+    }
+    const n = normalizePetGender(t);
+    if (n === 'male') {
+        return 1;
+    }
+    if (n === 'female') {
+        return 2;
+    }
+    return null;
+}
+
 /** `CreatePetRequest` → API gövdesi. `clientId`↔`ownerId` write farkı backend teyidi gerektirir; şimdilik `clientId`. */
 export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDto {
     const body: PetCreateRequestDto = {
@@ -127,9 +194,9 @@ export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDt
     if (breed) {
         body.breed = breed;
     }
-    const gender = req.gender?.trim();
-    if (gender) {
-        body.gender = gender;
+    const genderNum = petGenderFormToApiEnum(req.gender);
+    if (genderNum != null) {
+        body.gender = genderNum;
     }
     const birthIn = req.birthDateInput?.trim();
     if (birthIn) {
@@ -162,9 +229,9 @@ export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
         clientId: dto.clientId?.trim() ? dto.clientId : null,
         name: str(dto.name),
         speciesName: speciesName(dto.speciesName),
-        breed: str(dto.breedName ?? dto.breed),
+        breed: canonicalBreedDisplay(dto),
         ownerName: str(dto.ownerName),
-        gender: str(dto.gender),
+        gender: canonicalGenderRaw(dto),
         birthDateUtc: dto.birthDateUtc ?? null,
         status: dto.status?.trim() ? dto.status : null
     };
@@ -182,8 +249,8 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
         id: dto.id,
         name: str(dto.name),
         speciesName: speciesName(dto.speciesName),
-        breed: str(dto.breedName ?? dto.breed),
-        gender: str(dto.gender),
+        breed: canonicalBreedDisplay(dto),
+        gender: canonicalGenderRaw(dto),
         birthDateUtc: dto.birthDateUtc ?? null,
         color: str(dto.color),
         weight: weightStr,
@@ -213,18 +280,20 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
 export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
     const birthDateInput = toDateInput(dto.birthDateUtc);
     const speciesId = dto.speciesId?.trim() ?? '';
-    const breedId = dto.breedId?.trim() ?? '';
+    const breedId = canonicalBreedId(dto);
+    const breedNameLabel =
+        firstTrimmed(dto.breedName, dto.breed, readDtoString(dto, ['BreedName', 'Breed'])) ?? null;
     const clientId = dto.clientId?.trim() || dto.ownerId?.trim() || '';
     const weightStr =
         dto.weight != null && !Number.isNaN(Number(dto.weight)) ? String(dto.weight) : '';
-
     return {
         id: dto.id,
         clientId,
         name: dto.name?.trim() ?? '',
         speciesId,
         breedId,
-        gender: dto.gender?.trim() ?? '',
+        breedName: breedNameLabel,
+        gender: resolvePetGenderFormValue(readPetGenderRaw(dto)),
         birthDateInput,
         color: dto.color?.trim() ?? '',
         weightStr,

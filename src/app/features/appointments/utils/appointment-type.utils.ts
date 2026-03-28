@@ -1,4 +1,5 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { normalizeLookupKey } from '@/app/shared/utils/normalize-lookup-key.utils';
 
 const EM = '—';
 
@@ -37,7 +38,7 @@ export interface AppointmentTypeWriteOption {
  * Randevu türü string’ini tek biçimde anahtara çevirir (`appointment-status` ile aynı kural).
  */
 export function normalizeAppointmentType(type: string | null | undefined): string {
-    return (type ?? '').toLowerCase().trim().replace(/\s+/g, '').replace(/-/g, '_');
+    return normalizeLookupKey(type);
 }
 
 const TYPE_DEFS: readonly AppointmentTypeDef[] = [
@@ -168,3 +169,28 @@ export const APPOINTMENT_TYPE_WRITE_OPTIONS: ReadonlyArray<AppointmentTypeWriteO
         value: d.canonical
     })
 );
+
+/**
+ * Detay API’den gelen ham türü, edit formundaki `p-select` `value` (canonical) ile hizalar.
+ * Bilinmeyen değerler için `other` kullanılır; boş için `''`.
+ */
+export function resolveAppointmentWriteTypeFormValue(raw: string | null | undefined): string {
+    const n = normalizeAppointmentType(raw ?? '');
+    if (!n) {
+        return '';
+    }
+    for (const def of TYPE_DEFS) {
+        if (!def.write) {
+            continue;
+        }
+        if (normalizeAppointmentType(def.canonical) === n) {
+            return def.canonical;
+        }
+        for (const a of def.aliases) {
+            if (normalizeAppointmentType(a) === n) {
+                return def.canonical;
+            }
+        }
+    }
+    return 'other';
+}

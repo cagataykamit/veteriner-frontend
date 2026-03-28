@@ -1,4 +1,5 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { normalizeLookupKey } from '@/app/shared/utils/normalize-lookup-key.utils';
 
 const EM = '—';
 
@@ -42,7 +43,7 @@ export interface AppointmentWriteStatusOption {
  * - `-` karakterini `_` ile tekilleştirir
  */
 export function normalizeAppointmentStatus(status: string | null | undefined): string {
-    return (status ?? '').toLowerCase().trim().replace(/\s+/g, '').replace(/-/g, '_');
+    return normalizeLookupKey(status);
 }
 
 const STATUS_DEFS: readonly AppointmentStatusDef[] = [
@@ -79,7 +80,8 @@ const STATUS_DEFS: readonly AppointmentStatusDef[] = [
         label: 'Devam ediyor',
         severity: 'info',
         write: true,
-        aliases: ['inprogress', 'in-progress']
+        /** `in-progress` normalize ile `in_progress` ile aynı anahtara düşer; canonical yeterli. */
+        aliases: ['inprogress']
     },
     {
         canonical: 'completed',
@@ -141,14 +143,14 @@ function buildStatusMetaByNormalizedKey(defs: readonly AppointmentStatusDef[]): 
             severity: def.severity
         };
 
-        const keys = [def.canonical, ...def.aliases];
-
-        for (const rawKey of keys) {
+        const seenInDef = new Set<string>();
+        for (const rawKey of [def.canonical, ...def.aliases]) {
             const normalizedKey = normalizeAppointmentStatus(rawKey);
 
-            if (normalizedKey === '') {
+            if (normalizedKey === '' || seenInDef.has(normalizedKey)) {
                 continue;
             }
+            seenInDef.add(normalizedKey);
 
             if (map.has(normalizedKey)) {
                 throw new Error(`Duplicate appointment status key detected: "${normalizedKey}"`);
@@ -187,3 +189,30 @@ export const APPOINTMENT_WRITE_STATUS_OPTIONS: ReadonlyArray<AppointmentWriteSta
         value: def.canonical
     })
 );
+
+const DEFAULT_WRITE_STATUS: AppointmentCanonicalStatus = 'scheduled';
+
+/**
+ * Detay API’den gelen ham durumu edit formundaki `p-select` canonical değerine çevirir.
+ * Yazılabilir olmayan veya eşleşmeyen değerler için `scheduled` kullanılır.
+ */
+export function resolveAppointmentWriteStatusFormValue(raw: string | null | undefined): string {
+    const n = normalizeAppointmentStatus(raw ?? '');
+    if (!n) {
+        return DEFAULT_WRITE_STATUS;
+    }
+    for (const def of STATUS_DEFS) {
+        if (!def.write) {
+            continue;
+        }
+        if (normalizeAppointmentStatus(def.canonical) === n) {
+            return def.canonical;
+        }
+        for (const a of def.aliases) {
+            if (normalizeAppointmentStatus(a) === n) {
+                return def.canonical;
+            }
+        }
+    }
+    return DEFAULT_WRITE_STATUS;
+}

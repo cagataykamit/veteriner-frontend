@@ -35,11 +35,21 @@ export interface AppointmentListItemDtoPagedResult {
 export interface AppointmentDetailDto {
     id: string;
     tenantId?: string;
+    /** Birincil planlama zamanı (UTC ISO). */
     scheduledAtUtc?: string | null;
+    /** Alternatif backend adları (mapper canonical’da birleşir). */
+    scheduledAt?: string | null;
+    startAtUtc?: string | null;
+    startsAtUtc?: string | null;
     clientId?: string | null;
+    /** Müşteri için alternatif anahtarlar. */
+    ownerId?: string | null;
     clientName?: string | null;
+    ownerName?: string | null;
     petId?: string | null;
+    animalId?: string | null;
     petName?: string | null;
+    animalName?: string | null;
     type?: string | null;
     appointmentType?: string | null;
     appointmentTypeName?: string | null;
@@ -49,6 +59,7 @@ export interface AppointmentDetailDto {
     lifecycleStatus?: string | null;
     lifecycle?: string | null;
     reason?: string | null;
+    appointmentReason?: string | null;
     notes?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;

@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
+import type { VaccinationEditVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import {
     type VaccinationUpsertFieldErrors,
@@ -216,6 +217,8 @@ export class VaccinationEditPageComponent implements OnInit {
 
     private vaccinationId = '';
     private isInitializingClient = false;
+    /** GET /vaccinations/:id — dropdown’larda eksik etiketleri tamamlamak için önbellek. */
+    private editVmCache: VaccinationEditVm | null = null;
 
     readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
 
@@ -289,16 +292,28 @@ export class VaccinationEditPageComponent implements OnInit {
         this.loadError.set(null);
         this.vaccinationsService.getVaccinationForEditById(this.vaccinationId).subscribe({
             next: (x) => {
+                this.editVmCache = x;
                 this.isInitializingClient = true;
-                this.form.patchValue({
-                    clientId: x.clientId,
-                    petId: '',
-                    vaccineName: x.vaccineName,
-                    status: x.status,
-                    appliedAtLocal: toDateTimeLocalInput(x.appliedAtUtc),
-                    nextDueDate: toDateInput(x.nextDueAtUtc),
-                    notes: x.notes
-                });
+                // clientId patch’i valueChanges tetiklemesin: pet sıfırlanmasın, loadPets tek kez ve petId ile gitsin.
+                this.form.patchValue(
+                    {
+                        clientId: x.clientId,
+                        petId: '',
+                        vaccineName: x.vaccineName,
+                        status: x.status,
+                        notes: x.notes
+                    },
+                    { emitEvent: false }
+                );
+                this.updateDateValidators(x.status);
+                this.form.patchValue(
+                    {
+                        appliedAtLocal: toDateTimeLocalInput(x.appliedAtUtc),
+                        nextDueDate: toDateInput(x.nextDueAtUtc)
+                    },
+                    { emitEvent: false }
+                );
+                this.mergeClientOptionFromCache();
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
                     this.loadPetsForClient(x.clientId, x.petId);
@@ -405,6 +420,7 @@ export class VaccinationEditPageComponent implements OnInit {
         this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
+                this.mergeClientOptionFromCache();
                 this.loadingClients.set(false);
             },
             error: (e: unknown) => {
@@ -424,9 +440,13 @@ export class VaccinationEditPageComponent implements OnInit {
                     items = filterPetsByClientId(items, clientId);
                 }
                 this.petOptions.set(petOptionsFromList(items));
+                this.mergePetOptionFromCache();
                 if (selectedPetId) {
                     const exists = items.some((x) => x.id === selectedPetId);
-                    this.form.controls.petId.setValue(exists ? selectedPetId : '');
+                    const allowFromDetail =
+                        !!this.editVmCache?.petName?.trim() &&
+                        (this.editVmCache?.petId ?? '').trim() === selectedPetId;
+                    this.form.controls.petId.setValue(exists || allowFromDetail ? selectedPetId : '');
                 } else if (!this.isInitializingClient) {
                     this.form.controls.petId.setValue('');
                 }
@@ -440,6 +460,36 @@ export class VaccinationEditPageComponent implements OnInit {
                 this.isInitializingClient = false;
             }
         });
+    }
+
+    /** Liste sayfası (ör. 300) dışında kalan müşteri için API’den gelen adı seçenek olarak ekle. */
+    private mergeClientOptionFromCache(): void {
+        const vm = this.editVmCache;
+        const cid = vm?.clientId?.trim();
+        const label = vm?.clientName?.trim();
+        if (!cid || !label) {
+            return;
+        }
+        const opts = this.clientOptions();
+        if (opts.some((o) => o.value === cid)) {
+            return;
+        }
+        this.clientOptions.set([{ value: cid, label }, ...opts]);
+    }
+
+    /** Hayvan listesi eşleşmezse detay yanıtındaki adı seçenek olarak ekle. */
+    private mergePetOptionFromCache(): void {
+        const vm = this.editVmCache;
+        const pid = vm?.petId?.trim();
+        const label = vm?.petName?.trim();
+        if (!pid || !label) {
+            return;
+        }
+        const opts = this.petOptions();
+        if (opts.some((o) => o.value === pid)) {
+            return;
+        }
+        this.petOptions.set([{ value: pid, label }, ...opts]);
     }
 
     private mapLoadError(e: unknown, fallback: string): string {

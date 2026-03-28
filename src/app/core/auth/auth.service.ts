@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, finalize, map, share, tap } from 'rxjs/operators';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -27,6 +27,22 @@ export class AuthService {
     private readonly tokenSignal = signal<string | null>(this.readAccessTokenFromStorage());
     private readonly activeClinicIdSignal = signal<string | null>(localStorage.getItem(ACTIVE_CLINIC_ID_KEY));
     private readonly activeClinicNameSignal = signal<string | null>(localStorage.getItem(ACTIVE_CLINIC_NAME_KEY));
+
+    /**
+     * Topbar / layout: klinik adı veya id; ikisi de yoksa null.
+     * `computed` ile token / storage güncellemelerinde şablon güncellenir.
+     */
+    readonly activeClinicLabel = computed(() => {
+        const name = this.getClinicName();
+        const id = this.getClinicId();
+        if (name?.trim()) {
+            return name.trim();
+        }
+        if (id?.trim()) {
+            return id.trim();
+        }
+        return null;
+    });
 
     /** Aynı anda tek refresh HTTP çağrısı (paralel 401’lerde paylaşılır). */
     private refreshShare: Observable<SessionTokens> | null = null;

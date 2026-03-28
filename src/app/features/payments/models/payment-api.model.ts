@@ -3,6 +3,7 @@
  * Şema farklıysa bu dosya ve mapper ince ayarlanır.
  */
 
+/** Liste satırı — backend batch lookup ile `clientName` / `petName` doldurulur (yoksa ""). */
 export interface PaymentListItemDto {
     id: string;
     tenantId?: string;
@@ -24,9 +25,10 @@ export interface PaymentListItemDto {
     paymentStatus?: string | null;
     lifecycleStatus?: string | null;
     lifecycle?: string | null;
-    method?: string | null;
-    paymentMethod?: string | null;
-    methodType?: string | null;
+    /** Backend genelde 0/1/2 enum; bazen string. */
+    method?: string | number | null;
+    paymentMethod?: string | number | null;
+    methodType?: string | number | null;
     dueDateUtc?: string | null;
     dueAtUtc?: string | null;
     paidAtUtc?: string | null;
@@ -44,6 +46,7 @@ export interface PaymentListItemDtoPagedResult {
     totalPages: number;
 }
 
+/** GET /payments/{id} — `clientName` / `petName` Client/Pet lookup (PetId yoksa petName ""). */
 export interface PaymentDetailDto {
     id: string;
     tenantId?: string;
@@ -65,9 +68,10 @@ export interface PaymentDetailDto {
     paymentStatus?: string | null;
     lifecycleStatus?: string | null;
     lifecycle?: string | null;
-    method?: string | null;
-    paymentMethod?: string | null;
-    methodType?: string | null;
+    /** Backend genelde 0/1/2 enum; bazen string. */
+    method?: string | number | null;
+    paymentMethod?: string | number | null;
+    methodType?: string | number | null;
     note?: string | null;
     notes?: string | null;
     description?: string | null;

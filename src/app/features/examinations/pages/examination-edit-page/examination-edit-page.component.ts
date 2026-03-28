@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { mapExaminationUpsertFormToCreateRequest } from '@/app/features/examinations/data/examination.mapper';
+import type { ExaminationEditVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import {
     type ExaminationUpsertFieldErrors,
@@ -205,6 +206,7 @@ export class ExaminationEditPageComponent implements OnInit {
 
     private examinationId = '';
     private isInitializingClient = false;
+    private editVmCache: ExaminationEditVm | null = null;
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -271,16 +273,21 @@ export class ExaminationEditPageComponent implements OnInit {
         this.loadError.set(null);
         this.examinationsService.getExaminationForEditById(this.examinationId).subscribe({
             next: (x) => {
+                this.editVmCache = x;
                 this.isInitializingClient = true;
-                this.form.patchValue({
-                    clientId: x.clientId,
-                    petId: '',
-                    examinationDateLocal: toDateTimeLocalInput(x.examinedAtUtc),
-                    visitReason: x.visitReason,
-                    notes: x.notes,
-                    findings: x.findings,
-                    assessment: x.assessment
-                });
+                this.form.patchValue(
+                    {
+                        clientId: x.clientId,
+                        petId: '',
+                        examinationDateLocal: toDateTimeLocalInput(x.examinedAtUtc),
+                        visitReason: x.visitReason,
+                        notes: x.notes,
+                        findings: x.findings,
+                        assessment: x.assessment
+                    },
+                    { emitEvent: false }
+                );
+                this.mergeClientOptionFromCache();
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
                     this.loadPetsForClient(x.clientId, x.petId);
@@ -355,6 +362,7 @@ export class ExaminationEditPageComponent implements OnInit {
         this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
+                this.mergeClientOptionFromCache();
                 this.loadingClients.set(false);
             },
             error: (e: unknown) => {
@@ -374,9 +382,13 @@ export class ExaminationEditPageComponent implements OnInit {
                     items = filterPetsByClientId(items, clientId);
                 }
                 this.petOptions.set(petOptionsFromList(items));
+                this.mergePetOptionFromCache();
                 if (selectedPetId) {
                     const exists = items.some((x) => x.id === selectedPetId);
-                    this.form.controls.petId.setValue(exists ? selectedPetId : '');
+                    const allowFromDetail =
+                        !!this.editVmCache?.petName?.trim() &&
+                        (this.editVmCache?.petId ?? '').trim() === selectedPetId;
+                    this.form.controls.petId.setValue(exists || allowFromDetail ? selectedPetId : '');
                 } else if (!this.isInitializingClient) {
                     this.form.controls.petId.setValue('');
                 }
@@ -390,6 +402,34 @@ export class ExaminationEditPageComponent implements OnInit {
                 this.isInitializingClient = false;
             }
         });
+    }
+
+    private mergeClientOptionFromCache(): void {
+        const vm = this.editVmCache;
+        const cid = vm?.clientId?.trim();
+        const label = vm?.clientName?.trim();
+        if (!cid || !label) {
+            return;
+        }
+        const opts = this.clientOptions();
+        if (opts.some((o) => o.value === cid)) {
+            return;
+        }
+        this.clientOptions.set([{ value: cid, label }, ...opts]);
+    }
+
+    private mergePetOptionFromCache(): void {
+        const vm = this.editVmCache;
+        const pid = vm?.petId?.trim();
+        const label = vm?.petName?.trim();
+        if (!pid || !label) {
+            return;
+        }
+        const opts = this.petOptions();
+        if (opts.some((o) => o.value === pid)) {
+            return;
+        }
+        this.petOptions.set([{ value: pid, label }, ...opts]);
     }
 
     private mapLoadError(e: unknown, fallback: string): string {

@@ -37,6 +37,10 @@ export interface AppointmentEditVm {
     id: string;
     clientId: string;
     petId: string;
+    /** Dropdown etiketi — liste dışı müşteri için sentetik seçenek. */
+    clientName: string | null;
+    /** Dropdown etiketi — liste dışı hayvan için sentetik seçenek. */
+    petName: string | null;
     scheduledAtUtc: string | null;
     type: string;
     status: string;

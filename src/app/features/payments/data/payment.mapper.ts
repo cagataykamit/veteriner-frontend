@@ -8,6 +8,10 @@ import type {
 import type { CreatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
 import type { PaymentsListQuery } from '@/app/features/payments/models/payment-query.model';
 import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+import {
+    paymentMethodCanonicalToApiEnum,
+    resolvePaymentMethodFormValue
+} from '@/app/features/payments/utils/payment-method.utils';
 import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 
 const EM = '—';
@@ -25,6 +29,17 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
     return null;
 }
 
+function readDtoString(dto: PaymentListItemDto | PaymentDetailDto, keys: string[]): string | null {
+    const o = dto as unknown as Record<string, unknown>;
+    for (const k of keys) {
+        const v = o[k];
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
 function num(v: number | string | null | undefined): number | null {
     if (v == null || Number.isNaN(Number(v))) {
         return null;
@@ -33,19 +48,25 @@ function num(v: number | string | null | undefined): number | null {
 }
 
 function canonicalClientId(dto: PaymentListItemDto | PaymentDetailDto): string | null {
-    return firstTrimmed(dto.clientId, dto.ownerId);
+    return firstTrimmed(dto.clientId, dto.ownerId, readDtoString(dto, ['ClientId', 'OwnerId', 'CustomerId']));
 }
 
 function canonicalClientName(dto: PaymentListItemDto | PaymentDetailDto): string {
-    return str(firstTrimmed(dto.clientName, dto.ownerName));
+    return str(
+        firstTrimmed(
+            dto.clientName,
+            dto.ownerName,
+            readDtoString(dto, ['ClientName', 'OwnerName', 'CustomerName', 'customerName'])
+        )
+    );
 }
 
 function canonicalPetId(dto: PaymentListItemDto | PaymentDetailDto): string | null {
-    return firstTrimmed(dto.petId, dto.animalId);
+    return firstTrimmed(dto.petId, dto.animalId, readDtoString(dto, ['PetId', 'AnimalId']));
 }
 
 function canonicalPetName(dto: PaymentListItemDto | PaymentDetailDto): string {
-    return str(firstTrimmed(dto.petName, dto.animalName));
+    return str(firstTrimmed(dto.petName, dto.animalName, readDtoString(dto, ['PetName', 'AnimalName', 'PatientName'])));
 }
 
 function canonicalAmount(dto: PaymentListItemDto | PaymentDetailDto): number | null {
@@ -60,8 +81,28 @@ function canonicalStatus(dto: PaymentListItemDto | PaymentDetailDto): string | n
     return firstTrimmed(dto.status, dto.paymentStatus, dto.lifecycleStatus, dto.lifecycle);
 }
 
-function canonicalMethod(dto: PaymentListItemDto | PaymentDetailDto): string | null {
-    return firstTrimmed(dto.method, dto.paymentMethod, dto.methodType);
+/** method / paymentMethod sayı veya string olabilir (backend enum 0/1/2). */
+function readRawMethodFromDto(dto: PaymentListItemDto | PaymentDetailDto): unknown {
+    const o = dto as unknown as Record<string, unknown>;
+    const keys = ['method', 'paymentMethod', 'methodType', 'Method', 'PaymentMethod', 'MethodType'];
+    for (const k of keys) {
+        if (!(k in o)) {
+            continue;
+        }
+        const v = o[k];
+        if (v === null || v === undefined) {
+            continue;
+        }
+        if (typeof v === 'string' && !v.trim()) {
+            continue;
+        }
+        return v;
+    }
+    return null;
+}
+
+function canonicalMethodFromDto(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+    return resolvePaymentMethodFormValue(readRawMethodFromDto(dto));
 }
 
 function canonicalDueDate(dto: PaymentListItemDto | PaymentDetailDto): string | null {
@@ -87,7 +128,7 @@ export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListI
         amount: canonicalAmount(dto),
         currency: canonicalCurrency(dto),
         status: canonicalStatus(dto),
-        method: canonicalMethod(dto),
+        method: canonicalMethodFromDto(dto),
         dueDateUtc: canonicalDueDate(dto),
         paidAtUtc: canonicalPaidAt(dto),
         createdAtUtc: canonicalCreatedAt(dto)
@@ -105,7 +146,7 @@ export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm 
         amount: canonicalAmount(dto),
         currency: canonicalCurrency(dto),
         status: canonicalStatus(dto),
-        method: canonicalMethod(dto),
+        method: canonicalMethodFromDto(dto),
         note: str(firstTrimmed(dto.note, dto.notes, dto.description)),
         dueDateUtc: canonicalDueDate(dto),
         paidAtUtc: canonicalPaidAt(dto),
@@ -122,7 +163,7 @@ export function mapPaymentDetailDtoToEditVm(dto: PaymentDetailDto): PaymentEditV
         petId: canonicalPetId(dto) ?? '',
         amountStr: amount != null ? String(amount) : '',
         currency: canonicalCurrency(dto),
-        method: canonicalMethod(dto) ?? 'cash',
+        method: canonicalMethodFromDto(dto) ?? 'cash',
         paidAtUtc: canonicalPaidAt(dto),
         note: firstTrimmed(dto.note, dto.notes, dto.description) ?? ''
     };
@@ -213,25 +254,11 @@ export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCre
         examinationId,
         amount: req.amount,
         currency: req.currency.trim(),
-        method: toCreatePaymentMethodEnum(req.method),
+        method: paymentMethodCanonicalToApiEnum(req.method),
         paidAtUtc,
         notes
     };
     return body;
-}
-
-function toCreatePaymentMethodEnum(method: string): number {
-    const k = normalizeFilterKey(method);
-    if (k === 'cash') {
-        return 0;
-    }
-    if (k === 'card' || k === 'creditcard' || k === 'debitcard' || k === 'bankcard' || k === 'pos' || k === 'virtualpos') {
-        return 1;
-    }
-    if (k === 'transfer' || k === 'banktransfer' || k === 'wiretransfer' || k === 'eft') {
-        return 2;
-    }
-    throw new Error('PAYMENT_WRITE_METHOD_UNSUPPORTED');
 }
 
 export interface PaymentUpsertFormAdapterInput {

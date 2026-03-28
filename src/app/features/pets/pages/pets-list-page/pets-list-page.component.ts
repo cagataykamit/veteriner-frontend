@@ -11,7 +11,12 @@ import { filterPetListByStatus } from '@/app/features/pets/data/pet.mapper';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import { petGenderLabel, petStatusLabel, petStatusSeverity } from '@/app/features/pets/utils/pet-status.utils';
+import {
+    PET_STATUS_FILTER_OPTIONS,
+    petGenderLabel,
+    petStatusLabel,
+    petStatusSeverity
+} from '@/app/features/pets/utils/pet-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -175,11 +180,7 @@ export class PetsListPageComponent implements OnInit {
     statusFilter = '';
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
 
-    readonly statusOptions = [
-        { label: 'Tümü', value: '' },
-        { label: 'Aktif', value: 'active' },
-        { label: 'Pasif', value: 'inactive' }
-    ];
+    readonly statusOptions = [...PET_STATUS_FILTER_OPTIONS];
 
     readonly displayedRows = computed(() =>
         filterPetListByStatus(this.rawItems(), this.statusFilter ? this.statusFilter : null)

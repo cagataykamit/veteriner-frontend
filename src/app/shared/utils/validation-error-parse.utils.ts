@@ -15,7 +15,13 @@ export function extractRawValidationErrors(body: unknown): Record<string, unknow
     }
     const o = body as Record<string, unknown>;
 
-    const candidates: unknown[] = [o['errors'], o['error'], o['validationErrors']];
+    const candidates: unknown[] = [
+        o['errors'],
+        o['Errors'],
+        o['error'],
+        o['validationErrors'],
+        o['ValidationErrors']
+    ];
     for (const c of candidates) {
         if (c && typeof c === 'object' && !Array.isArray(c)) {
             return c as Record<string, unknown>;

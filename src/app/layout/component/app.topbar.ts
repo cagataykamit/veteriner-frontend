@@ -1,16 +1,18 @@
-import { Component, inject } from '@angular/core';
-import { MenuItem } from 'primeng/api';
-import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { MenuItem } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
 import { StyleClassModule } from 'primeng/styleclass';
+import { AuthService } from '@/app/core/auth/auth.service';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '@/app/layout/service/layout.service';
-import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator],
+    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator, MenuModule, ButtonModule],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
             <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
@@ -39,12 +41,20 @@ import { AuthService } from '@/app/core/auth/auth.service';
         </div>
 
         <div class="layout-topbar-actions">
+            @if (auth.activeClinicLabel(); as clinicLabel) {
+                <div class="layout-topbar-clinic" [attr.title]="clinicLabel">
+                    <i class="pi pi-building"></i>
+                    <span class="layout-topbar-clinic-text">{{ clinicLabel }}</span>
+                </div>
+            }
+
             <div class="layout-config-menu">
                 <button type="button" class="layout-topbar-action" (click)="toggleDarkMode()">
                     <i [ngClass]="{ 'pi ': true, 'pi-moon': layoutService.isDarkTheme(), 'pi-sun': !layoutService.isDarkTheme() }"></i>
                 </button>
                 <div class="relative">
                     <button
+                        type="button"
                         class="layout-topbar-action layout-topbar-action-highlight"
                         pStyleClass="@next"
                         enterFromClass="hidden"
@@ -59,16 +69,25 @@ import { AuthService } from '@/app/core/auth/auth.service';
                 </div>
             </div>
 
+            <div class="relative">
+                <button
+                    type="button"
+                    class="layout-topbar-action"
+                    (click)="userMenu.toggle($event)"
+                    aria-haspopup="true"
+                    aria-label="Kullanıcı menüsü"
+                >
+                    <i class="pi pi-user"></i>
+                </button>
+                <p-menu #userMenu [popup]="true" [model]="userMenuItems" [appendTo]="'body'" />
+            </div>
+
             <button class="layout-topbar-menu-button layout-topbar-action" pStyleClass="@next" enterFromClass="hidden" enterActiveClass="animate-scalein" leaveToClass="hidden" leaveActiveClass="animate-fadeout" [hideOnOutsideClick]="true">
                 <i class="pi pi-ellipsis-v"></i>
             </button>
 
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-building"></i>
-                        <span>Aktif Klinik: {{ activeClinicLabel }}</span>
-                    </button>
                     <button type="button" class="layout-topbar-action">
                         <i class="pi pi-calendar"></i>
                         <span>Takvim</span>
@@ -77,23 +96,23 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         <i class="pi pi-inbox"></i>
                         <span>Mesajlar</span>
                     </button>
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-user"></i>
-                        <span>Profil</span>
-                    </button>
                 </div>
             </div>
         </div>
     </div>`
 })
-export class AppTopbar {
-    items!: MenuItem[];
+export class AppTopbar implements OnInit {
+    readonly layoutService = inject(LayoutService);
+    readonly auth = inject(AuthService);
+    private readonly router = inject(Router);
 
-    layoutService = inject(LayoutService);
-    private readonly auth = inject(AuthService);
+    userMenuItems: MenuItem[] = [];
 
-    get activeClinicLabel(): string {
-        return this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi';
+    ngOnInit(): void {
+        this.userMenuItems = [
+            { label: 'Çıkış yap', icon: 'pi pi-sign-out', command: () => this.logoutCurrent() },
+            { label: 'Tüm oturumları kapat', icon: 'pi pi-ban', command: () => this.logoutAll() }
+        ];
     }
 
     toggleDarkMode() {
@@ -101,5 +120,32 @@ export class AppTopbar {
             ...state,
             darkTheme: !state.darkTheme
         }));
+    }
+
+    private logoutCurrent(): void {
+        this.auth.logoutCurrentSession().subscribe({
+            next: () => {
+                void this.router.navigate(['/auth/login'], { replaceUrl: true });
+            },
+            error: () => {
+                this.auth.logout();
+                void this.router.navigate(['/auth/login'], { replaceUrl: true });
+            }
+        });
+    }
+
+    private logoutAll(): void {
+        if (!window.confirm('Tüm cihazlardaki oturumlarınız sonlandırılacak. Devam edilsin mi?')) {
+            return;
+        }
+        this.auth.logoutAllSessions().subscribe({
+            next: () => {
+                void this.router.navigate(['/auth/login'], { replaceUrl: true });
+            },
+            error: () => {
+                this.auth.logout();
+                void this.router.navigate(['/auth/login'], { replaceUrl: true });
+            }
+        });
     }
 }

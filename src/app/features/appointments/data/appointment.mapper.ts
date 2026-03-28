@@ -9,6 +9,8 @@ import type {
 import type { CreateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
 import type { AppointmentsListQuery } from '@/app/features/appointments/models/appointment-query.model';
 import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import { resolveAppointmentWriteTypeFormValue } from '@/app/features/appointments/utils/appointment-type.utils';
+import { resolveAppointmentWriteStatusFormValue } from '@/app/features/appointments/utils/appointment-status.utils';
 
 const EM = '—';
 
@@ -23,6 +25,79 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
         }
     }
     return null;
+}
+
+function readDtoString(dto: AppointmentDetailDto, keys: string[]): string | null {
+    const o = dto as unknown as Record<string, unknown>;
+    for (const k of keys) {
+        const v = o[k];
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function readNestedName(dto: Record<string, unknown>, objectKeys: string[], nameKeys: string[]): string | null {
+    for (const ok of objectKeys) {
+        const inner = dto[ok];
+        if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+            const io = inner as Record<string, unknown>;
+            for (const nk of nameKeys) {
+                const v = io[nk];
+                if (typeof v === 'string' && v.trim()) {
+                    return v.trim();
+                }
+            }
+        }
+    }
+    return null;
+}
+
+function canonicalScheduledAtUtc(dto: AppointmentDetailDto): string | null {
+    return firstTrimmed(
+        dto.scheduledAtUtc,
+        dto.scheduledAt,
+        dto.startAtUtc,
+        dto.startsAtUtc,
+        readDtoString(dto, ['ScheduledAtUtc', 'StartAtUtc', 'StartsAtUtc'])
+    );
+}
+
+function canonicalClientIdDetail(dto: AppointmentDetailDto): string | null {
+    return firstTrimmed(dto.clientId, dto.ownerId, readDtoString(dto, ['ClientId', 'OwnerId', 'CustomerId']));
+}
+
+function canonicalPetIdDetail(dto: AppointmentDetailDto): string | null {
+    return firstTrimmed(dto.petId, dto.animalId, readDtoString(dto, ['PetId', 'AnimalId']));
+}
+
+function rawClientNameDetail(dto: AppointmentDetailDto): string | null {
+    const nested = readNestedName(dto as unknown as Record<string, unknown>, ['client', 'Client', 'owner', 'Owner', 'customer', 'Customer'], [
+        'name',
+        'Name',
+        'fullName',
+        'FullName'
+    ]);
+    return firstTrimmed(dto.clientName, dto.ownerName, readDtoString(dto, ['ClientName', 'OwnerName', 'CustomerName']), nested);
+}
+
+function rawPetNameDetail(dto: AppointmentDetailDto): string | null {
+    const nested = readNestedName(dto as unknown as Record<string, unknown>, ['pet', 'Pet', 'animal', 'Animal'], [
+        'name',
+        'Name',
+        'fullName',
+        'FullName'
+    ]);
+    return firstTrimmed(dto.petName, dto.animalName, readDtoString(dto, ['PetName', 'AnimalName']), nested);
+}
+
+function canonicalReasonDetail(dto: AppointmentDetailDto): string {
+    return firstTrimmed(dto.reason, dto.appointmentReason, readDtoString(dto, ['Reason', 'AppointmentReason'])) ?? '';
+}
+
+function canonicalNotesDetail(dto: AppointmentDetailDto): string {
+    return firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])) ?? '';
 }
 
 function canonicalAppointmentType(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
@@ -60,18 +135,23 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
     const rawType = canonicalAppointmentType(dto);
     const rawStatus = canonicalAppointmentStatus(dto);
     const rawLifecycle = canonicalLifecycleStatus(dto);
+    const scheduledAt = canonicalScheduledAtUtc(dto);
+    const clientId = canonicalClientIdDetail(dto);
+    const petId = canonicalPetIdDetail(dto);
+    const reason = canonicalReasonDetail(dto);
+    const notes = canonicalNotesDetail(dto);
     return {
         id: dto.id,
-        scheduledAtUtc: dto.scheduledAtUtc ?? null,
-        clientId: dto.clientId?.trim() ? dto.clientId : null,
-        clientName: str(dto.clientName),
-        petId: dto.petId?.trim() ? dto.petId : null,
-        petName: str(dto.petName),
+        scheduledAtUtc: scheduledAt,
+        clientId: clientId?.trim() ? clientId : null,
+        clientName: str(rawClientNameDetail(dto)),
+        petId: petId?.trim() ? petId : null,
+        petName: str(rawPetNameDetail(dto)),
         type: str(rawType),
         status: rawStatus,
         lifecycleStatus: rawLifecycle,
-        reason: dto.reason?.trim() ? dto.reason : EM,
-        notes: dto.notes?.trim() ? dto.notes : EM,
+        reason: reason.trim() ? reason : EM,
+        notes: notes.trim() ? notes : EM,
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null
     };
@@ -80,15 +160,19 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
 export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): AppointmentEditVm {
     const rawType = canonicalAppointmentType(dto);
     const rawStatus = canonicalAppointmentStatus(dto);
+    const clientId = canonicalClientIdDetail(dto) ?? '';
+    const petId = canonicalPetIdDetail(dto) ?? '';
     return {
         id: dto.id,
-        clientId: dto.clientId?.trim() ?? '',
-        petId: dto.petId?.trim() ?? '',
-        scheduledAtUtc: dto.scheduledAtUtc ?? null,
-        type: rawType ?? '',
-        status: rawStatus ?? 'scheduled',
-        reason: dto.reason?.trim() ?? '',
-        notes: dto.notes?.trim() ?? ''
+        clientId,
+        petId,
+        clientName: rawClientNameDetail(dto),
+        petName: rawPetNameDetail(dto),
+        scheduledAtUtc: canonicalScheduledAtUtc(dto),
+        type: resolveAppointmentWriteTypeFormValue(rawType),
+        status: resolveAppointmentWriteStatusFormValue(rawStatus),
+        reason: canonicalReasonDetail(dto),
+        notes: canonicalNotesDetail(dto)
     };
 }
 

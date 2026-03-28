@@ -43,6 +43,11 @@ export interface ExaminationListItemDtoPagedResult {
     totalPages: number;
 }
 
+/**
+ * GET /examinations/{id}
+ * Çekirdek: id, clinicId?, clientId?, clientName?, petId?, petName?, examinedAtUtc, visitReason, findings, assessment, notes,
+ * appointmentId?, createdAtUtc?, updatedAtUtc?
+ */
 export interface ExaminationDetailDto {
     id: string;
     tenantId?: string;
@@ -50,6 +55,7 @@ export interface ExaminationDetailDto {
     clinicName?: string | null;
     examinedAtUtc?: string | null;
     examinationDateUtc?: string | null;
+    /** Müşteri seçimi / detay gösterimi için. */
     clientId?: string | null;
     ownerId?: string | null;
     clientName?: string | null;

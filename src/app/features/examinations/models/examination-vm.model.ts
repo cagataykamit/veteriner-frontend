@@ -44,6 +44,10 @@ export interface ExaminationEditVm {
     clinicName: string;
     clientId: string;
     petId: string;
+    /** Dropdown sentetik etiket (liste dışı müşteri). */
+    clientName: string | null;
+    /** Dropdown sentetik etiket (liste dışı hayvan). */
+    petName: string | null;
     examinedAtUtc: string | null;
     visitReason: string;
     notes: string;

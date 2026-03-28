@@ -44,10 +44,18 @@ export interface VaccinationListItemDtoPagedResult {
     totalPages: number;
 }
 
-/** GET /vaccinations/{id} — liste öğesi ile aynı çekirdek alanlar + audit. */
+/**
+ * GET /vaccinations/{id}
+ * Beklenen çekirdek: id, clinicId?, clientId, clientName?, petId, petName?, vaccineName, status,
+ * appliedAtUtc, dueAtUtc (liste: nextDueAtUtc), notes, examinationId?
+ */
 export interface VaccinationDetailDto {
     id: string;
     tenantId?: string;
+    clinicId?: string | null;
+    examinationId?: string | null;
+    /** Müşteri seçimi için zorunlu; edit preload zinciri buna bağlı. */
+    clientId?: string | null;
     appliedAtUtc?: string | null;
     applicationDateUtc?: string | null;
     appliedOnUtc?: string | null;
@@ -62,7 +70,6 @@ export interface VaccinationDetailDto {
     animalId?: string | null;
     petName?: string | null;
     animalName?: string | null;
-    clientId?: string | null;
     ownerId?: string | null;
     clientName?: string | null;
     ownerName?: string | null;
