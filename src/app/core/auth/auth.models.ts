@@ -3,11 +3,10 @@
  * Ham JSON farklıysa eşleme yalnızca AuthService içinde yapılır.
  */
 
-/** Swagger: LoginCommand */
+/** Swagger: LoginCommand — tek kiracı modeli; `tenantId` yalnız backend uyumluluğu için opsiyonel kalabilir. */
 export interface LoginRequest {
     email: string;
     password: string;
-    /** Çok kiracılı API: isteğe bağlı; UI’da zorunlu alan yok — `environment.authTenantId` veya ileride ayar ekranından beslenebilir. */
     tenantId?: string | null;
 }
 

@@ -9,7 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconfigurator';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { authFailureMessage } from '@/app/core/auth/auth-error.utils';
+import { AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE, authFailureMessage } from '@/app/core/auth/auth-error.utils';
 
 @Component({
     selector: 'app-select-clinic-page',
@@ -26,7 +26,7 @@ import { authFailureMessage } from '@/app/core/auth/auth-error.utils';
                     @if (loading()) {
                         <p class="m-0 text-muted-color">Klinikler yükleniyor…</p>
                     } @else if (clinics().length === 0) {
-                        <p class="m-0 text-red-500">Erişilebilir aktif klinik bulunamadı.</p>
+                        <p class="m-0 text-red-500">{{ noClinicsMessage }}</p>
                     } @else {
                         <label for="clinicSelect" class="block text-sm font-medium text-muted-color mb-2">Aktif klinik</label>
                         <p-select
@@ -64,6 +64,8 @@ export class SelectClinicPage implements OnInit {
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
+
+    readonly noClinicsMessage = AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE;
 
     readonly loading = signal(true);
     readonly submitting = signal(false);
@@ -106,7 +108,7 @@ export class SelectClinicPage implements OnInit {
                 next: (items) => {
                     this.clinics.set(items);
                     if (items.length === 0) {
-                        this.error.set('Erişilebilir aktif klinik bulunamadı.');
+                        this.error.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
                         return;
                     }
                     if (items.length === 1) {

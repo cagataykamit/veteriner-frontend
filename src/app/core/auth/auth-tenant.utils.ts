@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
+/** Eski çok kiracılı login akışı için — güncel uygulama tek kiracı + `/me/clinics` kullanır; login bu util’i çağırmaz. */
 export interface AuthTenantOption {
     id: string;
     name: string;

@@ -8,24 +8,19 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
-import { SelectModule } from 'primeng/select';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
-    AUTH_TENANT_SELECT_REQUIRED_MESSAGE,
+    AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE,
     authFailureMessage,
     loginFailureMessage
 } from '@/app/core/auth/auth-error.utils';
-import {
-    type AuthTenantOption,
-    parseTenantRequirement
-} from '@/app/core/auth/auth-tenant.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, SelectModule, FormsModule, RippleModule, AppFloatingConfigurator],
+    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RippleModule, AppFloatingConfigurator],
     template: `
         <app-floating-configurator />
         <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
@@ -61,19 +56,6 @@ import type { ClinicSummary } from '@/app/core/auth/auth.models';
                             <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Şifre</label>
                             <p-password id="password1" [(ngModel)]="password" placeholder="Şifreniz" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
 
-                            @if (tenantStep()) {
-                                <label for="tenantId" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Kiracı</label>
-                                <p-select
-                                    inputId="tenantId"
-                                    [options]="tenantOptions()"
-                                    [(ngModel)]="selectedTenantId"
-                                    optionLabel="name"
-                                    optionValue="id"
-                                    placeholder="Kiracı seçin"
-                                    styleClass="mb-4 w-full"
-                                />
-                            }
-
                             <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                                 <div class="flex items-center">
                                     <p-checkbox [(ngModel)]="checked" id="rememberme1" binary class="mr-2"></p-checkbox>
@@ -82,14 +64,28 @@ import type { ClinicSummary } from '@/app/core/auth/auth.models';
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Şifremi unuttum</span>
                             </div>
                             <p-button
-                                [label]="tenantStep() ? 'Devam et' : 'Giriş yap'"
+                                label="Giriş yap"
                                 styleClass="w-full"
                                 [loading]="signInLoading()"
-                                [disabled]="signInLoading() || (tenantStep() && !selectedTenantId)"
+                                [disabled]="signInLoading()"
                                 (onClick)="signIn()"
                             ></p-button>
                             @if (loginError()) {
-                                <p class="text-sm text-center mt-4 mb-0 text-muted-color" role="alert">{{ loginError() }}</p>
+                                <div class="flex justify-center w-full mt-3 mb-0">
+                                    <div
+                                        class="inline-flex items-center justify-center gap-1.5 max-w-max rounded-sm border-l-[3px] border-l-red-400/75 bg-red-500/[0.06] py-1.5 pl-2.5 pr-2.5 text-center dark:border-l-red-500/45 dark:bg-red-500/[0.08]"
+                                        role="alert"
+                                        aria-live="assertive"
+                                    >
+                                        <i
+                                            class="pi pi-info-circle shrink-0 text-[0.6875rem] text-red-600/75 dark:text-red-400/70"
+                                            aria-hidden="true"
+                                        ></i>
+                                        <span class="text-sm font-medium leading-tight text-red-950 dark:text-red-100">{{
+                                            loginError()
+                                        }}</span>
+                                    </div>
+                                </div>
                             }
                         </div>
                     </div>
@@ -112,9 +108,6 @@ export class Login {
     readonly signInLoading = signal(false);
 
     readonly loginError = signal<string | null>(null);
-    readonly tenantStep = signal(false);
-    readonly tenantOptions = signal<AuthTenantOption[]>([]);
-    selectedTenantId: string | null = null;
 
     signIn(): void {
         if (this.signInLoading()) {
@@ -126,16 +119,11 @@ export class Login {
             this.loginError.set('E-posta ve şifre zorunludur.');
             return;
         }
-        if (this.tenantStep() && !this.selectedTenantId) {
-            this.loginError.set(AUTH_TENANT_SELECT_REQUIRED_MESSAGE);
-            return;
-        }
         this.signInLoading.set(true);
         this.auth
             .login({
                 email,
-                password: this.password,
-                ...(this.selectedTenantId?.trim() ? { tenantId: this.selectedTenantId.trim() } : {})
+                password: this.password
             })
             .pipe(finalize(() => this.signInLoading.set(false)))
             .subscribe({
@@ -149,20 +137,6 @@ export class Login {
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
                     if (http) {
-                        const tenantInfo = parseTenantRequirement(http);
-                        if (tenantInfo.tenantRequired) {
-                            this.tenantStep.set(true);
-                            this.tenantOptions.set(tenantInfo.tenants);
-                            if (!this.selectedTenantId || !tenantInfo.tenants.some((x) => x.id === this.selectedTenantId)) {
-                                this.selectedTenantId = tenantInfo.tenants[0]?.id ?? null;
-                            }
-                            this.loginError.set(
-                                tenantInfo.tenants.length > 0
-                                    ? AUTH_TENANT_SELECT_REQUIRED_MESSAGE
-                                    : 'Bu hesap için kiracı seçimi zorunlu.'
-                            );
-                            return;
-                        }
                         this.loginError.set(loginFailureMessage(http));
                         return;
                     }
@@ -175,7 +149,7 @@ export class Login {
         this.auth.getMyClinics().subscribe({
             next: (clinics) => {
                 if (clinics.length === 0) {
-                    this.loginError.set('Erişilebilir aktif klinik bulunamadı.');
+                    this.loginError.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
                     return;
                 }
                 if (clinics.length === 1) {
