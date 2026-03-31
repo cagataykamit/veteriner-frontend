@@ -72,18 +72,10 @@ export function authFailureMessage(err: HttpErrorResponse, fallback = 'İşlem b
     if (err.status === 429) {
         const retryAfter = err.headers.get('Retry-After');
         const sec = retryAfter ? Number.parseInt(retryAfter, 10) : NaN;
-        const waitHint = !Number.isNaN(sec) ? ` Yaklaşık ${sec} saniye sonra tekrar deneyin.` : ' Lütfen kısa süre sonra tekrar deneyin.';
-        const detail = problem?.detail?.trim() ?? '';
-        const title = problem?.title?.trim() ?? '';
-        const fromProblem =
-            detail && !isUnhelpfulProblemText(detail)
-                ? detail
-                : title && !isUnhelpfulProblemText(title)
-                  ? title
-                  : '';
-        const base =
-            'Çok fazla istek (rate limit). Sunucu geçici olarak girişi sınırladı.' + waitHint;
-        return fromProblem ? `${base} (${fromProblem})` : base;
+        if (!Number.isNaN(sec) && sec > 0) {
+            return `Çok fazla istek gönderildi. Lütfen ${sec} saniye sonra tekrar deneyin.`;
+        }
+        return 'Çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin.';
     }
 
     if (err.status === 401) {
