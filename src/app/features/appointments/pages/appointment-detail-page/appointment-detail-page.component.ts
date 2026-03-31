@@ -5,7 +5,10 @@ import { ButtonModule } from 'primeng/button';
 import type { AppointmentDetailVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
-import { appointmentTypeLabel, appointmentTypeSeverity } from '@/app/features/appointments/utils/appointment-type.utils';
+import {
+    appointmentTypeDisplayLabel,
+    appointmentTypeDisplaySeverity
+} from '@/app/features/appointments/utils/appointment-type.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -44,7 +47,9 @@ import { EMPTY, switchMap } from 'rxjs';
             <app-page-header
                 title="Randevu"
                 subtitle="Operasyon"
-                [description]="formatDateTime(appt()!.scheduledAtUtc) + ' · ' + statusLabel(appt()!.status) + ' · ' + typeLabel(appt()!.type)"
+                [description]="
+                    formatDateTime(appt()!.scheduledAtUtc) + ' · ' + statusLabel(appt()!.status) + ' · ' + typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)
+                "
             >
                 <a
                     actions
@@ -66,10 +71,17 @@ import { EMPTY, switchMap } from 'rxjs';
                             <dd class="col-span-12 sm:col-span-8 m-0">
                                 <app-status-tag [label]="statusLabel(appt()!.status)" [severity]="statusSeverity(appt()!.status)" />
                             </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Tür</dt>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu Türü</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="typeLabel(appt()!.type)" [severity]="typeSeverity(appt()!.type)" />
+                                <app-status-tag
+                                    [label]="typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)"
+                                    [severity]="typeSeverity(appt()!.appointmentType)"
+                                />
                             </dd>
+                            @if (appt()!.speciesName) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan Türü</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.speciesName }}</dd>
+                            }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tarih / saat</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.scheduledAtUtc) }}</dd>
                         </dl>
@@ -94,16 +106,6 @@ import { EMPTY, switchMap } from 'rxjs';
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.petName }}</dd>
                         </dl>
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Randevu nedeni</h5>
-                        @if (appt()!.reason === emptyMark) {
-                            <app-empty-state message="Sebep girilmemiş." />
-                        } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ appt()!.reason }}</p>
-                        }
                     </div>
                 </div>
                 <div class="col-span-12">
@@ -149,8 +151,8 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
-    readonly typeLabel = appointmentTypeLabel;
-    readonly typeSeverity = appointmentTypeSeverity;
+    readonly typeDisplay = appointmentTypeDisplayLabel;
+    readonly typeSeverity = appointmentTypeDisplaySeverity;
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {

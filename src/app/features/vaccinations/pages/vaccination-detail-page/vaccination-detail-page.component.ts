@@ -98,7 +98,7 @@ import { EMPTY, switchMap } from 'rxjs';
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.appliedAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.nextDueAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
                         </dl>
                     </div>
                 </div>

@@ -5,7 +5,13 @@ import { parseValidationHttpError } from '@/app/shared/utils/validation-error-pa
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 
-export type AppointmentUpsertFormFieldKey = 'clientId' | 'petId' | 'scheduledAtLocal' | 'type' | 'status' | 'reason' | 'notes';
+export type AppointmentUpsertFormFieldKey =
+    | 'clientId'
+    | 'petId'
+    | 'scheduledAtLocal'
+    | 'appointmentType'
+    | 'status'
+    | 'notes';
 export type AppointmentUpsertFieldErrors = Partial<Record<AppointmentUpsertFormFieldKey, string>>;
 
 export interface ParsedAppointmentUpsertHttpError {
@@ -21,12 +27,11 @@ const FIELD_MAP: Record<string, AppointmentUpsertFormFieldKey> = {
     scheduledatutc: 'scheduledAtLocal',
     scheduledat: 'scheduledAtLocal',
     appointmentdateutc: 'scheduledAtLocal',
-    type: 'type',
-    appointmenttype: 'type',
+    type: 'appointmentType',
+    appointmenttype: 'appointmentType',
     status: 'status',
     appointmentstatus: 'status',
     lifecyclestatus: 'status',
-    reason: 'reason',
     notes: 'notes',
     note: 'notes'
 };

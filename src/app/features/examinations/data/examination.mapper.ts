@@ -1,5 +1,4 @@
 import { HttpParams } from '@angular/common/http';
-import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 import type {
     ExaminationCreateRequestDto,
     ExaminationDetailDto,
@@ -106,14 +105,6 @@ function canonicalPetName(dto: ExaminationListItemDto | ExaminationDetailDto): s
     return str(rawPetName(dto));
 }
 
-function canonicalStatus(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
-    return firstTrimmed(dto.status, dto.examinationStatus, dto.lifecycleStatus, dto.lifecycle);
-}
-
-function canonicalLifecycleStatus(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
-    return firstTrimmed(dto.lifecycleStatus, dto.lifecycle, dto.status, dto.examinationStatus);
-}
-
 function canonicalExaminedAt(dto: ExaminationListItemDto | ExaminationDetailDto): string | null {
     return firstTrimmed(dto.examinedAtUtc, dto.examinationDateUtc);
 }
@@ -134,6 +125,14 @@ function canonicalNotes(dto: ExaminationListItemDto | ExaminationDetailDto): str
     return str(firstTrimmed(dto.notes, dto.note));
 }
 
+function canonicalDetailCreatedAtUtc(dto: ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.createdAtUtc, readDtoString(dto, ['CreatedAtUtc']));
+}
+
+function canonicalDetailUpdatedAtUtc(dto: ExaminationDetailDto): string | null {
+    return firstTrimmed(dto.updatedAtUtc, readDtoString(dto, ['UpdatedAtUtc']));
+}
+
 export function mapExaminationListItemDtoToVm(dto: ExaminationListItemDto): ExaminationListItemVm {
     return {
         id: dto.id,
@@ -145,10 +144,7 @@ export function mapExaminationListItemDtoToVm(dto: ExaminationListItemDto): Exam
         petId: canonicalPetId(dto),
         petName: canonicalPetName(dto),
         appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
-        status: canonicalStatus(dto),
-        lifecycleStatus: canonicalLifecycleStatus(dto),
-        visitReason: canonicalVisitReason(dto),
-        createdAtUtc: dto.createdAtUtc ?? null
+        visitReason: canonicalVisitReason(dto)
     };
 }
 
@@ -163,14 +159,12 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
         petId: canonicalPetId(dto),
         petName: canonicalPetName(dto),
         appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
-        status: canonicalStatus(dto),
-        lifecycleStatus: canonicalLifecycleStatus(dto),
         visitReason: canonicalVisitReason(dto),
         notes: canonicalNotes(dto),
         findings: canonicalFindings(dto),
         assessment: canonicalAssessment(dto),
-        createdAtUtc: dto.createdAtUtc ?? null,
-        updatedAtUtc: dto.updatedAtUtc ?? null
+        createdAtUtc: canonicalDetailCreatedAtUtc(dto),
+        updatedAtUtc: canonicalDetailUpdatedAtUtc(dto)
     };
 }
 
@@ -208,7 +202,7 @@ export function mapPagedExaminationsToVm(result: ExaminationListItemDtoPagedResu
     };
 }
 
-/** Page, PageSize, Search, Status, FromDate, ToDate, Sort, Order */
+/** Page, PageSize, Search, FromDate, ToDate, Sort, Order */
 export function examinationsQueryToHttpParams(query: ExaminationsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -223,12 +217,6 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     }
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
-    }
-    if (query.status?.trim()) {
-        const status = query.status.trim();
-        p = p.set('Status', status);
-        // Geçici geri uyumluluk: bazı backend sürümleri lifecycle filtresi bekleyebilir.
-        p = p.set('LifecycleStatus', status);
     }
     if (query.fromDate?.trim()) {
         p = p.set('FromDate', query.fromDate.trim());
@@ -280,21 +268,3 @@ export function mapExaminationUpsertFormToCreateRequest(input: ExaminationUpsert
     };
 }
 
-/** Status filtresi: API desteklemediğinde istemci tarafında uygulanır. */
-export function filterExaminationListByStatus(
-    items: ExaminationListItemVm[],
-    status: string | null | undefined
-): ExaminationListItemVm[] {
-    const s = status?.trim();
-    if (!s) {
-        return items;
-    }
-    const target = normalizeFilterKey(s);
-    return items.filter((i) => {
-        const st = (i.status ?? '').trim();
-        if (!st) {
-            return false;
-        }
-        return normalizeFilterKey(st) === target;
-    });
-}

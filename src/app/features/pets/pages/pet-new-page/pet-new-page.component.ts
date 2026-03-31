@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -11,6 +11,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
+import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import {
@@ -18,7 +19,7 @@ import {
     type PetCreateFormFieldKey,
     parsePetCreateHttpError
 } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
-import { PET_GENDER_FORM_OPTIONS, PET_STATUS_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
+import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { clientOptionsFromList, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -141,10 +142,20 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="color" class="block text-sm font-medium text-muted-color mb-2">Renk</label>
-                        <input id="color" pInputText class="w-full" formControlName="color" />
-                        @if (apiFieldErrors().color) {
-                            <small class="text-red-500">{{ apiFieldErrors().color }}</small>
+                        <label for="colorId" class="block text-sm font-medium text-muted-color mb-2">Renk</label>
+                        <p-select
+                            inputId="colorId"
+                            formControlName="colorId"
+                            [options]="colorOptions()"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Renk seçin"
+                            styleClass="w-full"
+                            [loading]="loadingColors()"
+                            [showClear]="true"
+                        />
+                        @if (apiFieldErrors().colorId) {
+                            <small class="text-red-500">{{ apiFieldErrors().colorId }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -156,23 +167,6 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                             @if (form.controls.weightStr.hasError('weightInvalid')) {
                                 <small class="text-red-500">Kilo geçerli bir sayı olmalıdır (0–9999 arası).</small>
                             }
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                        <p-select
-                            inputId="status"
-                            formControlName="status"
-                            [options]="statusOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Durum seçin"
-                            styleClass="w-full"
-                        />
-                        @if (apiFieldErrors().status) {
-                            <small class="text-red-500">{{ apiFieldErrors().status }}</small>
-                        } @else if (form.controls.status.invalid && form.controls.status.touched) {
-                            <small class="text-red-500">Durum seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -194,7 +188,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients() || loadingSpecies() || loadingBreeds()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || loadingSpecies() || loadingBreeds() || loadingColors()"
                     />
                     <p-button
                         type="button"
@@ -214,6 +208,7 @@ export class PetNewPageComponent implements OnInit {
 
     private readonly fb = inject(FormBuilder);
     private readonly petsService = inject(PetsService);
+    private readonly petColorsService = inject(PetColorsService);
     private readonly clientsService = inject(ClientsService);
     private readonly breedsService = inject(BreedsService);
     private readonly speciesService = inject(SpeciesService);
@@ -226,12 +221,13 @@ export class PetNewPageComponent implements OnInit {
     readonly loadingClients = signal(false);
     readonly loadingSpecies = signal(false);
     readonly loadingBreeds = signal(false);
+    readonly loadingColors = signal(false);
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly speciesOptions = signal<SelectOption[]>([]);
     readonly breedOptions = signal<SelectOption[]>([]);
+    readonly colorOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<PetCreateFieldErrors>({});
 
-    readonly statusOptions = [...PET_STATUS_FORM_OPTIONS];
     readonly genderOptions = [...PET_GENDER_FORM_OPTIONS];
 
     readonly form: PetUpsertFormGroup = createPetUpsertFormGroup(this.fb);
@@ -244,13 +240,13 @@ export class PetNewPageComponent implements OnInit {
             'breedId',
             'gender',
             'birthDate',
-            'color',
+            'colorId',
             'weightStr',
-            'status',
             'notes'
         ];
         for (const f of fields) {
-            this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            const control = this.form.controls[f] as AbstractControl;
+            control.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
                 if (cur[f]) {
                     const next = { ...cur };
@@ -264,6 +260,7 @@ export class PetNewPageComponent implements OnInit {
     ngOnInit(): void {
         this.loadClients();
         this.loadSpecies();
+        this.loadPetColors();
         this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId: string) => {
             // Tür değiştiğinde yanlış eşleşmeyi önlemek için seçili ırk temizlenir.
             this.form.controls.breedId.setValue('');
@@ -340,6 +337,21 @@ export class PetNewPageComponent implements OnInit {
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Tür listesi yüklenemedi.'));
                 this.loadingSpecies.set(false);
+            }
+        });
+    }
+
+    private loadPetColors(): void {
+        this.loadingColors.set(true);
+        this.selectionError.set(null);
+        this.petColorsService.getPetColors().subscribe({
+            next: (items) => {
+                this.colorOptions.set(items);
+                this.loadingColors.set(false);
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Renk listesi yüklenemedi.'));
+                this.loadingColors.set(false);
             }
         });
     }

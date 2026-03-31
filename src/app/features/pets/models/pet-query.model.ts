@@ -13,5 +13,4 @@ export interface PetsListQuery {
      */
     species?: string | null;
     clientId?: string | null;
-    status?: string | null;
 }

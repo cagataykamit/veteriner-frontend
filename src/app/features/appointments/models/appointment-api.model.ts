@@ -1,6 +1,7 @@
 /**
- * Backend Veteriner API — randevu listesi DTO’ları.
- * Şema farklıysa bu dosya ve mapper ince ayarlanır.
+ * Backend Veteriner API — randevu DTO’ları (resmi contract).
+ * Randevu türü: `appointmentType` (int enum). Hayvan türü: `speciesName` / `speciesId`.
+ * Eski `type` alanı kaldırıldı — kullanılmaz.
  */
 
 export interface AppointmentListItemDto {
@@ -11,15 +12,16 @@ export interface AppointmentListItemDto {
     clientName?: string | null;
     petId?: string | null;
     petName?: string | null;
-    type?: string | null;
-    appointmentType?: string | null;
+    /** Hayvan türü (örn. Köpek) — randevu türü değildir. */
+    speciesId?: string | null;
+    speciesName?: string | null;
+    /** Randevu türü — int enum (`AppointmentType`). */
+    appointmentType?: number | string | null;
     appointmentTypeName?: string | null;
-    appointmentTypeCode?: string | null;
-    status?: string | null;
-    appointmentStatus?: string | null;
-    lifecycleStatus?: string | null;
-    lifecycle?: string | null;
-    reason?: string | null;
+    status?: string | number | null;
+    appointmentStatus?: string | number | null;
+    lifecycleStatus?: string | number | null;
+    lifecycle?: string | number | null;
     createdAtUtc?: string | null;
 }
 
@@ -31,18 +33,15 @@ export interface AppointmentListItemDtoPagedResult {
     totalPages: number;
 }
 
-/** GET /appointments/{id} — alanlar backend şemasına göre genişletilebilir. */
+/** GET /appointments/{id} */
 export interface AppointmentDetailDto {
     id: string;
     tenantId?: string;
-    /** Birincil planlama zamanı (UTC ISO). */
     scheduledAtUtc?: string | null;
-    /** Alternatif backend adları (mapper canonical’da birleşir). */
     scheduledAt?: string | null;
     startAtUtc?: string | null;
     startsAtUtc?: string | null;
     clientId?: string | null;
-    /** Müşteri için alternatif anahtarlar. */
     ownerId?: string | null;
     clientName?: string | null;
     ownerName?: string | null;
@@ -50,37 +49,41 @@ export interface AppointmentDetailDto {
     animalId?: string | null;
     petName?: string | null;
     animalName?: string | null;
-    type?: string | null;
-    appointmentType?: string | null;
+    speciesId?: string | null;
+    speciesName?: string | null;
+    appointmentType?: number | string | null;
     appointmentTypeName?: string | null;
-    appointmentTypeCode?: string | null;
-    status?: string | null;
-    appointmentStatus?: string | null;
-    lifecycleStatus?: string | null;
-    lifecycle?: string | null;
-    reason?: string | null;
-    appointmentReason?: string | null;
+    status?: string | number | null;
+    appointmentStatus?: string | number | null;
+    lifecycleStatus?: string | number | null;
+    lifecycle?: string | number | null;
     notes?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
 }
 
-/**
- * POST /appointments body — alan adları API ile uyumlu (camelCase).
- * Varsayım: backend bu gövdeyi kabul eder; şema farklıysa mapper güncellenir.
- */
+/** POST/PUT /appointments body — durum backend’de ayrı iş akışlarıyla yönetilir; gövdede yok. */
 export interface AppointmentCreateRequestDto {
     clinicId?: string | null;
-    clientId: string;
     petId: string;
     scheduledAtUtc: string;
-    type?: string | null;
-    /** Geçici geri uyumluluk: bazı backend sürümleri `appointmentType` bekleyebilir. */
-    appointmentType?: string | null;
-    /** Update akışında backend status kabul ediyorsa kullanılır. */
-    status?: string | null;
-    /** Geçici geri uyumluluk: lifecycle anahtarı bekleyen backend sürümleri. */
-    lifecycleStatus?: string | null;
-    reason?: string | null;
+    appointmentType: number;
+    /**
+     * Backend `AppointmentStatus` (0/1/2). Create için opsiyonel:
+     * gönderilmezse backend Scheduled (=0) başlatır.
+     */
+    status?: number | null;
+    notes?: string | null;
+}
+
+/** PUT /appointments body (güncelleme) — id + status zorunlu. */
+export interface AppointmentUpdateRequestDto {
+    id: string;
+    clinicId?: string | null;
+    petId: string;
+    scheduledAtUtc: string;
+    appointmentType: number;
+    /** Backend `AppointmentStatus` (0/1/2) — update için zorunlu. */
+    status: number;
     notes?: string | null;
 }

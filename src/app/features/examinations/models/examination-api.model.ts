@@ -19,10 +19,6 @@ export interface ExaminationListItemDto {
     petName?: string | null;
     animalName?: string | null;
     appointmentId?: string | null;
-    status?: string | null;
-    examinationStatus?: string | null;
-    lifecycleStatus?: string | null;
-    lifecycle?: string | null;
     visitReason?: string | null;
     complaint?: string | null;
     complaintText?: string | null;
@@ -32,7 +28,6 @@ export interface ExaminationListItemDto {
     diagnosis?: string | null;
     notes?: string | null;
     note?: string | null;
-    createdAtUtc?: string | null;
 }
 
 export interface ExaminationListItemDtoPagedResult {
@@ -46,7 +41,8 @@ export interface ExaminationListItemDtoPagedResult {
 /**
  * GET /examinations/{id}
  * Çekirdek: id, clinicId?, clientId?, clientName?, petId?, petName?, examinedAtUtc, visitReason, findings, assessment, notes,
- * appointmentId?, createdAtUtc?, updatedAtUtc?
+ * appointmentId?
+ * Audit: createdAtUtc (non-null), updatedAtUtc (nullable)
  */
 export interface ExaminationDetailDto {
     id: string;
@@ -65,10 +61,6 @@ export interface ExaminationDetailDto {
     petName?: string | null;
     animalName?: string | null;
     appointmentId?: string | null;
-    status?: string | null;
-    examinationStatus?: string | null;
-    lifecycleStatus?: string | null;
-    lifecycle?: string | null;
     visitReason?: string | null;
     complaint?: string | null;
     complaintText?: string | null;
@@ -78,7 +70,7 @@ export interface ExaminationDetailDto {
     finding?: string | null;
     assessment?: string | null;
     diagnosis?: string | null;
-    createdAtUtc?: string | null;
+    createdAtUtc: string;
     updatedAtUtc?: string | null;
 }
 

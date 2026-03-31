@@ -119,25 +119,25 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="type" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
+                        <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu Türü *</label>
                         <p-select
-                            inputId="type"
-                            formControlName="type"
+                            inputId="appointmentType"
+                            formControlName="appointmentType"
                             [options]="typeOptions"
                             optionLabel="label"
                             optionValue="value"
-                            placeholder="Tür seçin"
+                            placeholder="Randevu Türü seçin"
                             [showClear]="true"
                             styleClass="w-full"
                         />
-                        @if (apiFieldErrors().type) {
-                            <small class="text-red-500">{{ apiFieldErrors().type }}</small>
-                        } @else if (form.controls.type.invalid && form.controls.type.touched) {
+                        @if (apiFieldErrors().appointmentType) {
+                            <small class="text-red-500">{{ apiFieldErrors().appointmentType }}</small>
+                        } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
+                        <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum</label>
                         <p-select
                             inputId="status"
                             formControlName="status"
@@ -150,15 +150,6 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         />
                         @if (apiFieldErrors().status) {
                             <small class="text-red-500">{{ apiFieldErrors().status }}</small>
-                        } @else if (form.controls.status.invalid && form.controls.status.touched) {
-                            <small class="text-red-500">Durum seçimi zorunludur.</small>
-                        }
-                    </div>
-                    <div class="col-span-12">
-                        <label for="reason" class="block text-sm font-medium text-muted-color mb-2">Sebep</label>
-                        <textarea id="reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
-                        @if (apiFieldErrors().reason) {
-                            <small class="text-red-500">{{ apiFieldErrors().reason }}</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -209,31 +200,32 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
-
     readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
 
-    readonly form = this.fb.nonNullable.group({
-        clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }, Validators.required],
-        scheduledAtLocal: ['', Validators.required],
-        type: ['', Validators.required],
-        status: ['scheduled', Validators.required],
-        reason: [''],
-        notes: ['']
+    readonly form = this.fb.group({
+        clientId: this.fb.nonNullable.control('', Validators.required),
+        petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
+        scheduledAtLocal: this.fb.nonNullable.control('', Validators.required),
+        appointmentType: this.fb.control<number | null>(null, Validators.required),
+        status: this.fb.control<number | null>(0),
+        notes: this.fb.nonNullable.control('')
     });
 
     constructor() {
-        const fields: AppointmentUpsertFormFieldKey[] = ['clientId', 'petId', 'scheduledAtLocal', 'type', 'status', 'reason', 'notes'];
-        for (const f of fields) {
-            this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-                const cur = this.apiFieldErrors();
-                if (cur[f]) {
-                    const next = { ...cur };
-                    delete next[f];
-                    this.apiFieldErrors.set(next);
-                }
-            });
-        }
+        const clearApiError = (f: AppointmentUpsertFormFieldKey): void => {
+            const cur = this.apiFieldErrors();
+            if (cur[f]) {
+                const next = { ...cur };
+                delete next[f];
+                this.apiFieldErrors.set(next);
+            }
+        };
+        this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('clientId'));
+        this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('petId'));
+        this.form.controls.scheduledAtLocal.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
+        this.form.controls.appointmentType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('appointmentType'));
+        this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('status'));
+        this.form.controls.notes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('notes'));
     }
 
     ngOnInit(): void {
@@ -278,14 +270,19 @@ export class AppointmentNewPageComponent implements OnInit {
             return;
         }
 
+        const appointmentType = v.appointmentType;
+        if (appointmentType === null || appointmentType === undefined) {
+            this.form.markAllAsTouched();
+            this.submitError.set('Randevu Türü seçin.');
+            return;
+        }
+
         const payload = mapAppointmentUpsertFormToCreateRequest({
             clinicId,
-            clientId: v.clientId,
             petId: v.petId,
             scheduledAtUtc,
-            type: v.type,
+            appointmentType,
             status: v.status,
-            reason: v.reason,
             notes: v.notes
         });
 

@@ -118,14 +118,13 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th>Hayvan</th>
                                 <th>Müşteri</th>
                                 <th>Durum</th>
-                                <th>Not</th>
                                 <th>İşlem</th>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
                             <tr>
                                 <td>{{ formatDate(row.appliedAtUtc) }}</td>
-                                <td>{{ formatDate(row.nextDueAtUtc) }}</td>
+                                <td>{{ formatDate(row.dueAtUtc) }}</td>
                                 <td>{{ row.vaccineName }}</td>
                                 <td>
                                     @if (row.petId) {
@@ -146,7 +145,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <td>
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </td>
-                                <td>{{ row.notes }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                 </td>
@@ -183,16 +181,9 @@ export class VaccinationsListPageComponent implements OnInit {
 
     readonly statusOptions = [
         { label: 'Tümü', value: '' },
-        { label: 'Uygulandı', value: 'applied' },
-        { label: 'Tamamlandı', value: 'completed' },
-        { label: 'Yaklaşan', value: 'upcoming' },
-        { label: 'Planlandı', value: 'scheduled' },
-        { label: 'Yakında', value: 'due-soon' },
-        { label: 'Gecikmiş', value: 'overdue' },
-        { label: 'Kaçırıldı', value: 'missed' },
-        { label: 'İptal', value: 'cancelled' },
-        { label: 'Bilinmiyor', value: 'unknown' },
-        { label: 'Pasif', value: 'passive' }
+        { label: 'Planlandı', value: '0' },
+        { label: 'Uygulandı', value: '1' },
+        { label: 'İptal', value: '2' }
     ];
 
     readonly displayedRows = computed(() =>

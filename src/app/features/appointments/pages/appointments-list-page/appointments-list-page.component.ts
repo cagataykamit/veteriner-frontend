@@ -11,13 +11,13 @@ import { filterAppointmentListByStatus } from '@/app/features/appointments/data/
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
-import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
 @Component({
@@ -51,7 +51,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="apptSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Müşteri, hayvan, sebep…"
+                        placeholder="Müşteri, hayvan…"
                         (keyup.enter)="applySearch()"
                     />
                 </div>
@@ -116,10 +116,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th>Tarih / Saat</th>
                                 <th>Müşteri</th>
                                 <th>Hayvan</th>
-                                <th>Tür</th>
+                                <th>Randevu Türü</th>
                                 <th>Durum</th>
-                                <th>Sebep</th>
-                                <th>Oluşturulma</th>
                                 <th>İşlem</th>
                             </tr>
                         </ng-template>
@@ -142,12 +140,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         {{ row.petName }}
                                     }
                                 </td>
-                                <td>{{ typeLabel(row.type) }}</td>
+                                <td>{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</td>
                                 <td>
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </td>
-                                <td>{{ row.reason }}</td>
-                                <td>{{ formatDate(row.createdAtUtc) }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                 </td>
@@ -185,22 +181,19 @@ export class AppointmentsListPageComponent implements OnInit {
 
     readonly statusOptions = [
         { label: 'Tümü', value: '' },
-        { label: 'Planlandı', value: 'scheduled' },
-        { label: 'Bekliyor', value: 'pending' },
-        { label: 'Onaylandı', value: 'confirmed' },
-        { label: 'Tamamlandı', value: 'completed' },
-        { label: 'İptal', value: 'cancelled' }
+        { label: 'Planlandı', value: '0' },
+        { label: 'Tamamlandı', value: '1' },
+        { label: 'İptal', value: '2' }
     ];
 
     readonly displayedRows = computed(() =>
         filterAppointmentListByStatus(this.rawItems(), this.statusFilter ? this.statusFilter : null)
     );
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
-    readonly typeLabel = appointmentTypeLabel;
+    readonly typeDisplay = appointmentTypeDisplayLabel;
     private suppressNextLazy = false;
     private lastLoadKey = '';
 

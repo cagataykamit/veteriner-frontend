@@ -33,6 +33,10 @@ export const ApiEndpoints = {
         list: () => `/api/v1/breeds`,
         byId: (id: string) => `/api/v1/breeds/${encodeURIComponent(id)}`
     },
+    /** Ref-data — PetColors; path Swagger ile teyit edilmeli. */
+    petColors: {
+        list: () => `/api/v1/pet-colors`
+    },
     appointments: {
         list: () => `/api/v1/appointments`,
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`

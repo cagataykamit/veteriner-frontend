@@ -10,7 +10,6 @@ export interface ExaminationsListQuery {
     /** İsteğe bağlı — backend `ClientId` desteklemiyorsa istemci tarafında filtre uygulanır. */
     clientId?: string;
     search?: string;
-    status?: string;
     /** yyyy-MM-dd */
     fromDate?: string;
     /** yyyy-MM-dd */

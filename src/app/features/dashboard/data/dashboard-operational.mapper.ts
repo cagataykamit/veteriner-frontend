@@ -38,16 +38,16 @@ export function pickUpcomingVaccinations(
     const now = Date.now();
     return [...items]
         .filter((v) => {
-            if (!v.nextDueAtUtc?.trim()) {
+            if (!v.dueAtUtc?.trim()) {
                 return false;
             }
-            const t = new Date(v.nextDueAtUtc).getTime();
+            const t = new Date(v.dueAtUtc).getTime();
             if (Number.isNaN(t)) {
                 return false;
             }
             return t <= now + horizonMs;
         })
-        .sort((a, b) => new Date(a.nextDueAtUtc!).getTime() - new Date(b.nextDueAtUtc!).getTime())
+        .sort((a, b) => new Date(a.dueAtUtc!).getTime() - new Date(b.dueAtUtc!).getTime())
         .slice(0, max);
 }
 

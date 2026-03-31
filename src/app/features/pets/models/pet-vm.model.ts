@@ -7,8 +7,10 @@ export interface PetListItemVm {
     breed: string;
     ownerName: string;
     gender: string;
-    birthDateUtc: string | null;
-    status: string | null;
+    /** Doğum — backend DateOnly veya eski mapper’dan normalize (yyyy-MM-dd veya ISO). */
+    birthDate: string | null;
+    colorName: string;
+    weight: string;
 }
 
 export interface PetDetailVm {
@@ -17,14 +19,16 @@ export interface PetDetailVm {
     speciesName: string;
     breed: string;
     gender: string;
-    birthDateUtc: string | null;
-    color: string;
+    birthDate: string | null;
+    colorName: string;
     weight: string;
-    status: string | null;
     notes: string;
+    /** Müteri detay rotası — `ownerId` veya `clientId`. */
     ownerId: string | null;
-    ownerName: string;
-    ownerPhone: string;
+    /** Sahip: API `clientName` → yedek `ownerName`. */
+    clientName: string;
+    clientPhone: string;
+    clientEmail: string;
     vaccinationsSummary: {
         totalCount: number;
         items: { id: string; name: string }[];
@@ -50,8 +54,9 @@ export interface PetEditVm {
     breedName: string | null;
     gender: string;
     birthDateInput: string;
-    color: string;
+    colorId: string;
+    /** Katalogda yoksa seçici etiketi (sentetik seçenek). */
+    colorName: string | null;
     weightStr: string;
-    status: string;
     notes: string;
 }

@@ -163,7 +163,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                                 </ng-template>
                                 <ng-template #body let-row>
                                     <tr>
-                                        <td>{{ formatDate(row.nextDueAtUtc) }}</td>
+                                        <td>{{ formatDate(row.dueAtUtc) }}</td>
                                         <td>{{ row.vaccineName }}</td>
                                         <td>
                                             @if (row.petId) {

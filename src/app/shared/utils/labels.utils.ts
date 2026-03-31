@@ -8,11 +8,11 @@ export function labelFromMap<T extends string>(value: T | null | undefined, map:
 
 /**
  * Swagger: `AppointmentStatus` (int32 enum — sunucudaki sıraya göre güncelleyin).
- * Tipik: 0 = Planlandı, 1 = Onaylı/Tamamlandı, 2 = İptal (doğrulama için backend’e bakın).
+ * Randevu API: 0 = Planlandı (Scheduled), 1 = Tamamlandı (Completed), 2 = İptal (Cancelled).
  */
 const APPOINTMENT_STATUS_BY_CODE: Record<number, string> = {
     0: 'Planlandı',
-    1: 'Onaylı',
+    1: 'Tamamlandı',
     2: 'İptal'
 };
 

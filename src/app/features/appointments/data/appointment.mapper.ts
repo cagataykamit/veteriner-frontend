@@ -1,16 +1,19 @@
 import { HttpParams } from '@angular/common/http';
-import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 import type {
     AppointmentCreateRequestDto,
     AppointmentDetailDto,
     AppointmentListItemDto,
-    AppointmentListItemDtoPagedResult
+    AppointmentListItemDtoPagedResult,
+    AppointmentUpdateRequestDto
 } from '@/app/features/appointments/models/appointment-api.model';
-import type { CreateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
+import type { CreateAppointmentRequest, UpdateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
 import type { AppointmentsListQuery } from '@/app/features/appointments/models/appointment-query.model';
 import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import { resolveAppointmentWriteTypeFormValue } from '@/app/features/appointments/utils/appointment-type.utils';
-import { resolveAppointmentWriteStatusFormValue } from '@/app/features/appointments/utils/appointment-status.utils';
+import {
+    parseAppointmentTypeEnumValue,
+    resolveAppointmentWriteTypeFormValue
+} from '@/app/features/appointments/utils/appointment-type.utils';
+import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
 
 const EM = '—';
 
@@ -92,30 +95,72 @@ function rawPetNameDetail(dto: AppointmentDetailDto): string | null {
     return firstTrimmed(dto.petName, dto.animalName, readDtoString(dto, ['PetName', 'AnimalName']), nested);
 }
 
-function canonicalReasonDetail(dto: AppointmentDetailDto): string {
-    return firstTrimmed(dto.reason, dto.appointmentReason, readDtoString(dto, ['Reason', 'AppointmentReason'])) ?? '';
-}
-
 function canonicalNotesDetail(dto: AppointmentDetailDto): string {
     return firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])) ?? '';
 }
 
-function canonicalAppointmentType(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
-    return firstTrimmed(dto.type, dto.appointmentType, dto.appointmentTypeName, dto.appointmentTypeCode);
+function readFirstScalarFromDto(o: Record<string, unknown>, keys: string[]): unknown {
+    for (const k of keys) {
+        if (!(k in o)) {
+            continue;
+        }
+        const v = o[k];
+        if (v === null || v === undefined) {
+            continue;
+        }
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+        if (typeof v === 'number' && Number.isFinite(v) && !Number.isNaN(v)) {
+            return v;
+        }
+    }
+    return null;
 }
 
-function canonicalAppointmentStatus(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
-    return firstTrimmed(dto.status, dto.appointmentStatus, dto.lifecycleStatus, dto.lifecycle);
+/** Yalnızca `appointmentType` (int enum); eski `type` okunmaz. */
+function readAppointmentTypeNumericFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): number | null {
+    const o = dto as unknown as Record<string, unknown>;
+    const v = readFirstScalarFromDto(o, ['appointmentType', 'AppointmentType']);
+    return parseAppointmentTypeEnumValue(v);
 }
 
-function canonicalLifecycleStatus(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
-    return firstTrimmed(dto.lifecycleStatus, dto.lifecycle, dto.status, dto.appointmentStatus);
+function readAppointmentTypeNameFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
+    const o = dto as unknown as Record<string, unknown>;
+    const v = o['appointmentTypeName'] ?? o['AppointmentTypeName'];
+    return typeof v === 'string' && v.trim() ? v.trim() : null;
+}
+
+function readSpeciesNameFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
+    const o = dto as unknown as Record<string, unknown>;
+    const v = o['speciesName'] ?? o['SpeciesName'];
+    return typeof v === 'string' && v.trim() ? v.trim() : null;
+}
+
+function readAppointmentStatusEnumFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): number | null {
+    const o = dto as unknown as Record<string, unknown>;
+    const v = readFirstScalarFromDto(o, [
+        'status',
+        'Status',
+        'state',
+        'State',
+        'appointmentStatus',
+        'AppointmentStatus',
+        'lifecycleStatus',
+        'LifecycleStatus'
+    ]);
+    return parseAppointmentStatusRawToEnum(v);
+}
+
+function readAppointmentLifecycleEnumFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): number | null {
+    const o = dto as unknown as Record<string, unknown>;
+    const v = readFirstScalarFromDto(o, ['lifecycleStatus', 'LifecycleStatus', 'lifecycle', 'Lifecycle']);
+    return parseAppointmentStatusRawToEnum(v);
 }
 
 export function mapAppointmentListItemDtoToVm(dto: AppointmentListItemDto): AppointmentListItemVm {
-    const rawType = canonicalAppointmentType(dto);
-    const rawStatus = canonicalAppointmentStatus(dto);
-    const rawLifecycle = canonicalLifecycleStatus(dto);
+    const typeNum = readAppointmentTypeNumericFromDto(dto);
+    const typeName = readAppointmentTypeNameFromDto(dto);
     return {
         id: dto.id,
         scheduledAtUtc: dto.scheduledAtUtc ?? null,
@@ -123,22 +168,20 @@ export function mapAppointmentListItemDtoToVm(dto: AppointmentListItemDto): Appo
         clientName: str(dto.clientName),
         petId: dto.petId?.trim() ? dto.petId : null,
         petName: str(dto.petName),
-        type: str(rawType),
-        status: rawStatus,
-        lifecycleStatus: rawLifecycle,
-        reason: dto.reason?.trim() ? dto.reason : EM,
-        createdAtUtc: dto.createdAtUtc ?? null
+        speciesName: readSpeciesNameFromDto(dto),
+        appointmentType: typeNum,
+        appointmentTypeName: typeName,
+        status: readAppointmentStatusEnumFromDto(dto),
+        lifecycleStatus: readAppointmentLifecycleEnumFromDto(dto)
     };
 }
 
 export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): AppointmentDetailVm {
-    const rawType = canonicalAppointmentType(dto);
-    const rawStatus = canonicalAppointmentStatus(dto);
-    const rawLifecycle = canonicalLifecycleStatus(dto);
+    const typeNum = readAppointmentTypeNumericFromDto(dto);
+    const typeName = readAppointmentTypeNameFromDto(dto);
     const scheduledAt = canonicalScheduledAtUtc(dto);
     const clientId = canonicalClientIdDetail(dto);
     const petId = canonicalPetIdDetail(dto);
-    const reason = canonicalReasonDetail(dto);
     const notes = canonicalNotesDetail(dto);
     return {
         id: dto.id,
@@ -147,10 +190,11 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
         clientName: str(rawClientNameDetail(dto)),
         petId: petId?.trim() ? petId : null,
         petName: str(rawPetNameDetail(dto)),
-        type: str(rawType),
-        status: rawStatus,
-        lifecycleStatus: rawLifecycle,
-        reason: reason.trim() ? reason : EM,
+        speciesName: readSpeciesNameFromDto(dto),
+        appointmentType: typeNum,
+        appointmentTypeName: typeName,
+        status: readAppointmentStatusEnumFromDto(dto),
+        lifecycleStatus: readAppointmentLifecycleEnumFromDto(dto),
         notes: notes.trim() ? notes : EM,
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null
@@ -158,8 +202,8 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
 }
 
 export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): AppointmentEditVm {
-    const rawType = canonicalAppointmentType(dto);
-    const rawStatus = canonicalAppointmentStatus(dto);
+    const typeNum = readAppointmentTypeNumericFromDto(dto);
+    const typeName = readAppointmentTypeNameFromDto(dto);
     const clientId = canonicalClientIdDetail(dto) ?? '';
     const petId = canonicalPetIdDetail(dto) ?? '';
     return {
@@ -169,63 +213,76 @@ export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): Appo
         clientName: rawClientNameDetail(dto),
         petName: rawPetNameDetail(dto),
         scheduledAtUtc: canonicalScheduledAtUtc(dto),
-        type: resolveAppointmentWriteTypeFormValue(rawType),
-        status: resolveAppointmentWriteStatusFormValue(rawStatus),
-        reason: canonicalReasonDetail(dto),
+        appointmentType: resolveAppointmentWriteTypeFormValue(typeNum, typeName),
+        status: readAppointmentStatusEnumFromDto(dto),
         notes: canonicalNotesDetail(dto)
     };
 }
 
-/** Create ve update write hattında status boş gelirse backend ile uyumlu tek varsayılan. */
-export const APPOINTMENT_DEFAULT_WRITE_STATUS = 'scheduled';
-
-export function resolveAppointmentWriteStatus(status?: string | null): string {
-    const t = status?.trim();
-    return t ? t : APPOINTMENT_DEFAULT_WRITE_STATUS;
-}
-
 export interface AppointmentUpsertFormAdapterInput {
     clinicId: string;
-    clientId: string;
     petId: string;
     scheduledAtUtc: string;
-    type: string;
-    status: string;
-    reason?: string;
+    appointmentType: number;
+    status?: number | null;
     notes?: string;
 }
 
 export function mapAppointmentUpsertFormToCreateRequest(input: AppointmentUpsertFormAdapterInput): CreateAppointmentRequest {
     return {
         clinicId: input.clinicId.trim(),
-        clientId: input.clientId.trim(),
         petId: input.petId.trim(),
         scheduledAtUtc: input.scheduledAtUtc,
-        type: input.type.trim() || undefined,
-        status: input.status.trim(),
-        reason: input.reason?.trim() || undefined,
+        appointmentType: input.appointmentType,
+        status: input.status ?? undefined,
         notes: input.notes?.trim() || undefined
     };
 }
 
 export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): AppointmentCreateRequestDto {
-    const type = req.type?.trim() ? req.type.trim() : null;
-    const status = resolveAppointmentWriteStatus(req.status);
     const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : '';
+    const status = req.status;
+    const statusParsed = status === null || status === undefined ? null : parseAppointmentStatusRawToEnum(status);
     const base: AppointmentCreateRequestDto = {
-        clientId: req.clientId.trim(),
         petId: req.petId.trim(),
         scheduledAtUtc: req.scheduledAtUtc,
-        type,
-        // Geçici geri uyumluluk: bazı backend sürümleri `appointmentType` anahtarını bekleyebilir.
-        appointmentType: type,
-        status,
-        lifecycleStatus: status,
-        reason: req.reason?.trim() ? req.reason.trim() : null,
+        appointmentType: req.appointmentType,
+        ...(statusParsed === null ? {} : { status: statusParsed }),
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
-    // Backend artık ClinicId olmadan da klinik resolve edebiliyor.
-    // Kullanıcı klinik seçimi yaptığında (gelecekte) bu alan gönderilebilir; boşsa tamamen omit edilir.
+    return clinicId ? { ...base, clinicId } : base;
+}
+
+export function mapAppointmentUpsertFormToUpdateRequest(id: string, input: AppointmentUpsertFormAdapterInput): UpdateAppointmentRequest {
+    const statusParsed = parseAppointmentStatusRawToEnum(input.status);
+    if (statusParsed === null) {
+        throw new Error('Geçersiz randevu durumu (0–2 beklenir).');
+    }
+    return {
+        id: id.trim(),
+        clinicId: input.clinicId.trim(),
+        petId: input.petId.trim(),
+        scheduledAtUtc: input.scheduledAtUtc,
+        appointmentType: input.appointmentType,
+        status: statusParsed,
+        notes: input.notes?.trim() || undefined
+    };
+}
+
+export function mapUpdateAppointmentToApiBody(req: UpdateAppointmentRequest): AppointmentUpdateRequestDto {
+    const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : '';
+    const statusParsed = parseAppointmentStatusRawToEnum(req.status);
+    if (statusParsed === null) {
+        throw new Error('Geçersiz randevu durumu (0–2 beklenir).');
+    }
+    const base: AppointmentUpdateRequestDto = {
+        id: req.id.trim(),
+        petId: req.petId.trim(),
+        scheduledAtUtc: req.scheduledAtUtc,
+        appointmentType: req.appointmentType,
+        status: statusParsed,
+        notes: req.notes?.trim() ? req.notes.trim() : null
+    };
     return clinicId ? { ...base, clinicId } : base;
 }
 
@@ -263,10 +320,7 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
         p = p.set('Search', query.search.trim());
     }
     if (query.status?.trim()) {
-        const status = query.status.trim();
-        p = p.set('Status', status);
-        // Geçici geri uyumluluk: bazı backend sürümleri lifecycle filtresi bekleyebilir.
-        p = p.set('LifecycleStatus', status);
+        p = p.set('Status', query.status.trim());
     }
     if (query.fromDate?.trim()) {
         p = p.set('FromDate', query.fromDate.trim());
@@ -283,7 +337,7 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
     return p;
 }
 
-/** Status filtresi: API desteklemediğinde istemci tarafında uygulanır. */
+/** Status filtresi: API desteklemediğinde istemci tarafında uygulanır (`'0'|'1'|'2'`). */
 export function filterAppointmentListByStatus(
     items: AppointmentListItemVm[],
     status: string | null | undefined
@@ -292,12 +346,9 @@ export function filterAppointmentListByStatus(
     if (!s) {
         return items;
     }
-    const target = normalizeFilterKey(s);
-    return items.filter((i) => {
-        const st = (i.status ?? '').trim();
-        if (!st) {
-            return false;
-        }
-        return normalizeFilterKey(st) === target;
-    });
+    const target = Number.parseInt(s, 10);
+    if (!Number.isFinite(target) || target < 0 || target > 2) {
+        return items;
+    }
+    return items.filter((i) => i.status === target);
 }

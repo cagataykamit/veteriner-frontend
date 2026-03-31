@@ -1,8 +1,14 @@
 /**
  * Form alanlarında ondalık için yaygın girdi (virgül veya nokta) → finite sayı.
- * İş kuralı katmanında tekrarlanan `trim` + `replace` + `Number` zincirini tekilleştirir.
+ * `input[type=number]` bazen `number`, boşta `null` dönebildiği için string dışı tipler güvenli işlenir.
  */
-export function parseDecimalFormInput(input: string): number | null {
+export function parseDecimalFormInput(input: string | number | null | undefined): number | null {
+    if (input === null || input === undefined) {
+        return null;
+    }
+    if (typeof input === 'number') {
+        return Number.isFinite(input) && !Number.isNaN(input) ? input : null;
+    }
     const t = input.trim();
     if (t === '') {
         return null;
@@ -15,13 +21,7 @@ export function parseDecimalFormInput(input: string): number | null {
  * Tutar alanı: `type="number"` bazen `number`, preload bazen `string` döndürür; güvenli parse.
  */
 export function parseAmountFormValue(value: string | number | null | undefined): number | null {
-    if (value === null || value === undefined) {
-        return null;
-    }
-    if (typeof value === 'number') {
-        return Number.isFinite(value) && !Number.isNaN(value) ? value : null;
-    }
-    return parseDecimalFormInput(String(value));
+    return parseDecimalFormInput(value);
 }
 
 /** Form patch / `input[type=number]` string beklediğinde. */

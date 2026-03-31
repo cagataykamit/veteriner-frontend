@@ -3,10 +3,9 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import { paymentStatusLabel } from '@/app/features/payments/utils/payment-status.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
@@ -15,7 +14,6 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { EMPTY, switchMap } from 'rxjs';
@@ -30,8 +28,7 @@ import { EMPTY, switchMap } from 'rxjs';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
@@ -50,7 +47,7 @@ import { EMPTY, switchMap } from 'rxjs';
             <app-page-header
                 title="Muayene"
                 subtitle="Klinik"
-                [description]="formatDateTime(exam()!.examinedAtUtc) + ' · ' + statusLabel(exam()!.status)"
+                [description]="formatDateTime(exam()!.examinedAtUtc)"
             >
                 <a
                     actions
@@ -68,10 +65,6 @@ import { EMPTY, switchMap } from 'rxjs';
                     <div class="card">
                         <h5 class="mt-0 mb-4">Genel bilgiler</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="statusLabel(exam()!.status)" [severity]="statusSeverity(exam()!.status)" />
-                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene tarihi</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(exam()!.examinedAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
@@ -183,7 +176,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                             <span class="text-muted-color text-sm">{{ formatDt(row.scheduledAtUtc) }}</span>
                                             <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
-                                        <div class="font-medium">{{ typeLabel(row.type) }}</div>
+                                        <div class="font-medium">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
                                     </li>
                                 }
                             </ul>
@@ -268,9 +261,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
-    readonly statusLabel = examinationStatusLabel;
-    readonly statusSeverity = examinationStatusSeverity;
-    readonly typeLabel = appointmentTypeLabel;
+    readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
     readonly payStatusShort = (s: string | null) => paymentStatusLabel(s);
 

@@ -19,9 +19,8 @@ export function createPetUpsertFormGroup(fb: FormBuilder): PetUpsertFormGroup {
         breedId: fb.nonNullable.control(''),
         gender: fb.nonNullable.control(''),
         birthDate: fb.nonNullable.control('', petBirthDateValidator()),
-        color: fb.nonNullable.control(''),
-        weightStr: fb.nonNullable.control('', petWeightStrValidator()),
-        status: fb.nonNullable.control('active', Validators.required),
+        colorId: fb.nonNullable.control(''),
+        weightStr: fb.nonNullable.control<string | number>('', petWeightStrValidator()),
         notes: fb.nonNullable.control('')
     });
 }

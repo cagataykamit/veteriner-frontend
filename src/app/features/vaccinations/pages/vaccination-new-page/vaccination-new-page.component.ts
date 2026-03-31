@@ -24,7 +24,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
 import { AuthService } from '@/app/core/auth/auth.service';
 import { parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import type { VaccinationUpsertFieldErrors, VaccinationUpsertFormFieldKey } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
-import { VACCINATION_WRITE_STATUS_OPTIONS, type VaccinationWriteStatus } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 
 @Component({
     selector: 'app-vaccination-new-page',
@@ -211,7 +211,7 @@ export class VaccinationNewPageComponent implements OnInit {
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
         vaccineName: ['', Validators.required],
-        status: ['applied', Validators.required],
+        status: [0 as number | null, Validators.required],
         appliedAtLocal: [''],
         nextDueDate: [''],
         notes: ['']
@@ -253,9 +253,13 @@ export class VaccinationNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const status = (v.status ?? '').trim() as VaccinationWriteStatus;
-        const needsAppliedAt = status === 'applied';
-        const needsDueAt = status === 'scheduled';
+        const status = Number(v.status);
+        if (!Number.isFinite(status) || ![0, 1, 2].includes(status)) {
+            this.submitError.set('Geçerli bir durum seçin.');
+            return;
+        }
+        const needsAppliedAt = status === 1;
+        const needsDueAt = status === 0;
 
         let appliedAtUtc: string | undefined;
         const appliedRaw = v.appliedAtLocal?.trim();
@@ -270,9 +274,6 @@ export class VaccinationNewPageComponent implements OnInit {
         if (needsAppliedAt && !appliedAtUtc) {
             this.submitError.set('Seçilen durum için uygulama tarihi / saati zorunludur.');
             return;
-        }
-        if (!needsAppliedAt) {
-            appliedAtUtc = undefined;
         }
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
         if (!clinicId) {
@@ -373,10 +374,10 @@ export class VaccinationNewPageComponent implements OnInit {
         return e instanceof Error ? e.message : 'Kayıt oluşturulamadı.';
     }
 
-    private updateDateValidators(status: string): void {
-        const s = (status ?? '').trim();
-        const needsAppliedAt = s === 'applied';
-        const needsDueAt = s === 'scheduled';
+    private updateDateValidators(status: unknown): void {
+        const s = String(status ?? '').trim();
+        const needsAppliedAt = s === '1';
+        const needsDueAt = s === '0';
 
         this.form.controls.appliedAtLocal.setValidators(needsAppliedAt ? [Validators.required] : []);
         this.form.controls.nextDueDate.setValidators(needsDueAt ? [Validators.required] : []);

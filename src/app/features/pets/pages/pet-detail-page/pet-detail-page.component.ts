@@ -3,18 +3,17 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { petGenderLabel, petStatusLabel, petStatusSeverity } from '@/app/features/pets/utils/pet-status.utils';
+import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { EMPTY, switchMap } from 'rxjs';
@@ -29,8 +28,7 @@ import { EMPTY, switchMap } from 'rxjs';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
         <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
@@ -49,7 +47,7 @@ import { EMPTY, switchMap } from 'rxjs';
             <app-page-header
                 [title]="pet()!.name"
                 subtitle="Hayvan"
-                [description]="'Doğum: ' + formatDateOnly(pet()!.birthDateUtc) + ' · ' + pet()!.speciesName"
+                [description]="'Doğum: ' + formatDateOnly(pet()!.birthDate) + ' · ' + pet()!.speciesName"
             >
                 <a
                     actions
@@ -67,10 +65,6 @@ import { EMPTY, switchMap } from 'rxjs';
                     <div class="card">
                         <h5 class="mt-0 mb-4">Genel bilgiler</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="statusLabel(pet()!.status)" [severity]="statusSeverity(pet()!.status)" />
-                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tür</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.speciesName }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Cins</dt>
@@ -78,7 +72,7 @@ import { EMPTY, switchMap } from 'rxjs';
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Cinsiyet</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ genderLabel(pet()!.gender) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Renk</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.color }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.colorName }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Ağırlık</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.weight }}</dd>
                         </dl>
@@ -94,9 +88,11 @@ import { EMPTY, switchMap } from 'rxjs';
                         }
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Ad</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.ownerName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.clientName }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Telefon</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.ownerPhone }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.clientPhone }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">E-posta</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.clientEmail }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -187,10 +183,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                                 >Detay →</a
                                             >
                                         </div>
-                                        <div class="font-medium">{{ typeLabel(row.type) }}</div>
-                                        @if (row.reason !== emptyReason) {
-                                            <div class="text-sm text-muted-color mt-1">{{ row.reason }}</div>
-                                        }
+                                        <div class="font-medium">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
                                     </li>
                                 }
                             </ul>
@@ -230,14 +223,10 @@ export class PetDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly emptyReason = '—';
-
     readonly formatDateOnly = (v: string | null) => formatDateDisplay(v);
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
-    readonly statusLabel = petStatusLabel;
-    readonly statusSeverity = petStatusSeverity;
     readonly genderLabel = petGenderLabel;
-    readonly typeLabel = appointmentTypeLabel;
+    readonly typeDisplay = appointmentTypeDisplayLabel;
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {

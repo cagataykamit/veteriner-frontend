@@ -5,13 +5,13 @@
 export interface VaccinationListItemVm {
     id: string;
     appliedAtUtc: string | null;
-    nextDueAtUtc: string | null;
+    dueAtUtc: string | null;
     vaccineName: string;
     petId: string | null;
     petName: string;
     clientId: string | null;
     clientName: string;
-    status: string | null;
+    status: number | null;
     notes: string;
 }
 
@@ -19,13 +19,13 @@ export interface VaccinationListItemVm {
 export interface VaccinationDetailVm {
     id: string;
     appliedAtUtc: string | null;
-    nextDueAtUtc: string | null;
+    dueAtUtc: string | null;
     vaccineName: string;
     petId: string | null;
     petName: string;
     clientId: string | null;
     clientName: string;
-    status: string | null;
+    status: number | null;
     notes: string;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
@@ -33,6 +33,8 @@ export interface VaccinationDetailVm {
 
 export interface VaccinationEditVm {
     id: string;
+    clinicId: string;
+    examinationId: string | null;
     /** GET detay `clientId` — müşteri select `optionValue` ile eşleşir. */
     clientId: string;
     petId: string;
@@ -42,7 +44,7 @@ export interface VaccinationEditVm {
     petName: string | null;
     vaccineName: string;
     appliedAtUtc: string | null;
-    nextDueAtUtc: string | null;
-    status: string;
+    dueAtUtc: string | null;
+    status: number | null;
     notes: string;
 }

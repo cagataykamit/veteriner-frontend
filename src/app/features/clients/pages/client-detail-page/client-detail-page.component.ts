@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { clientStatusLabel, clientStatusSeverity } from '@/app/features/clients/utils/client-status.utils';
@@ -129,7 +129,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                                 >Detay →</a
                                             >
                                         </div>
-                                        <div class="font-medium">{{ row.petName }} · {{ typeLabel(row.type) }}</div>
+                                        <div class="font-medium">{{ row.petName }} · {{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
                                     </li>
                                 }
                             </ul>
@@ -204,7 +204,7 @@ export class ClientDetailPageComponent implements OnInit {
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
     readonly statusLabel = clientStatusLabel;
     readonly statusSeverity = clientStatusSeverity;
-    readonly typeLabel = appointmentTypeLabel;
+    readonly typeDisplay = appointmentTypeDisplayLabel;
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {

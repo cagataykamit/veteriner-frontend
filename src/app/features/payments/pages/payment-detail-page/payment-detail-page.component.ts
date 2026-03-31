@@ -3,7 +3,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { PaymentDetailVm } from '@/app/features/payments/models/payment-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
@@ -179,7 +179,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                             <span class="text-muted-color text-sm">{{ formatDt(row.scheduledAtUtc) }}</span>
                                             <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
-                                        <div class="font-medium">{{ typeLabel(row.type) }}</div>
+                                        <div class="font-medium">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
                                     </li>
                                 }
                             </ul>
@@ -232,7 +232,7 @@ export class PaymentDetailPageComponent implements OnInit {
     readonly statusLabel = paymentStatusLabel;
     readonly statusSeverity = paymentStatusSeverity;
     readonly methodLabel = paymentMethodLabel;
-    readonly typeLabel = appointmentTypeLabel;
+    readonly typeDisplay = appointmentTypeDisplayLabel;
 
     moneyLine(p: PaymentDetailVm): string {
         return formatMoney(p.amount, p.currency || 'TRY');

@@ -3,12 +3,13 @@ import type {
     VaccinationCreateRequestDto,
     VaccinationDetailDto,
     VaccinationListItemDto,
-    VaccinationListItemDtoPagedResult
+    VaccinationListItemDtoPagedResult,
+    VaccinationUpdateRequestDto
 } from '@/app/features/vaccinations/models/vaccination-api.model';
-import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
+import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
 import type { VaccinationDetailVm, VaccinationEditVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
-import { normalizeVaccinationStatusKey } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { parseVaccinationStatusRawToEnum } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 
 const EM = '—';
 
@@ -25,7 +26,6 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
     return null;
 }
 
-/** JSON’da PascalCase veya ek anahtarlarla gelen düz string alanlar. */
 function readDtoString(dto: VaccinationListItemDto | VaccinationDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
     for (const k of keys) {
@@ -37,103 +37,62 @@ function readDtoString(dto: VaccinationListItemDto | VaccinationDetailDto, keys:
     return null;
 }
 
-function readNestedName(dto: Record<string, unknown>, objectKeys: string[], nameKeys: string[]): string | null {
-    for (const ok of objectKeys) {
-        const inner = dto[ok];
-        if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
-            const io = inner as Record<string, unknown>;
-            for (const nk of nameKeys) {
-                const v = io[nk];
-                if (typeof v === 'string' && v.trim()) {
-                    return v.trim();
-                }
-            }
-        }
-    }
-    return null;
-}
-
 function canonicalAppliedAt(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    return firstTrimmed(dto.appliedAtUtc, dto.applicationDateUtc, dto.appliedOnUtc);
+    return firstTrimmed(
+        dto.appliedAtUtc,
+        readDtoString(dto, ['AppliedAtUtc'])
+    );
 }
 
-function canonicalNextDueAt(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    return firstTrimmed(dto.nextDueAtUtc, dto.nextDoseAtUtc, dto.dueAtUtc);
+function canonicalDueAt(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
+    return firstTrimmed(
+        dto.dueAtUtc,
+        readDtoString(dto, ['DueAtUtc'])
+    );
 }
 
 function canonicalVaccineName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
-    return str(firstTrimmed(dto.vaccineName, dto.name, dto.vaccine, dto.vaccineTypeName));
+    return str(firstTrimmed(dto.vaccineName, readDtoString(dto, ['VaccineName'])));
 }
 
 function canonicalPetId(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    return firstTrimmed(dto.petId, dto.animalId, readDtoString(dto, ['PetId', 'AnimalId']));
-}
-
-function rawPetName(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    const nested = readNestedName(dto as unknown as Record<string, unknown>, ['pet', 'Pet', 'animal', 'Animal'], [
-        'name',
-        'Name',
-        'fullName',
-        'FullName'
-    ]);
-    return firstTrimmed(
-        dto.petName,
-        dto.animalName,
-        readDtoString(dto, ['PetName', 'AnimalName', 'PatientName', 'patientName']),
-        nested
-    );
+    return firstTrimmed(dto.petId, readDtoString(dto, ['PetId']));
 }
 
 function canonicalPetName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
-    return str(rawPetName(dto));
+    return str(firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])));
 }
 
 function canonicalClientId(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    return firstTrimmed(dto.clientId, dto.ownerId, readDtoString(dto, ['ClientId', 'OwnerId', 'CustomerId', 'customerId']));
-}
-
-function rawClientName(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    const nested = readNestedName(dto as unknown as Record<string, unknown>, ['client', 'Client', 'owner', 'Owner', 'customer', 'Customer'], [
-        'name',
-        'Name',
-        'fullName',
-        'FullName'
-    ]);
-    return firstTrimmed(
-        dto.clientName,
-        dto.ownerName,
-        readDtoString(dto, ['ClientName', 'OwnerName', 'CustomerName', 'customerName']),
-        nested
-    );
+    return firstTrimmed(dto.clientId, readDtoString(dto, ['ClientId']));
 }
 
 function canonicalClientName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
-    return str(rawClientName(dto));
+    return str(firstTrimmed(dto.clientName, readDtoString(dto, ['ClientName'])));
 }
 
-function canonicalStatus(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    const raw = firstTrimmed(dto.status, dto.vaccinationStatus, dto.lifecycleStatus, dto.lifecycle, dto.dueState);
-    if (raw) {
-        return raw;
-    }
-    if (dto.isOverdue === true) {
-        return 'overdue';
-    }
-    if (dto.isDueSoon === true) {
-        return 'due-soon';
-    }
-    return null;
+function canonicalStatus(dto: VaccinationListItemDto | VaccinationDetailDto): number | null {
+    const raw = dto.status ?? readDtoString(dto, ['Status']);
+    return parseVaccinationStatusRawToEnum(raw);
 }
 
 function canonicalNotes(dto: VaccinationListItemDto | VaccinationDetailDto): string {
-    return str(firstTrimmed(dto.notes, dto.note, dto.description));
+    return str(firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])));
+}
+
+function canonicalCreatedAt(dto: VaccinationDetailDto): string | null {
+    return firstTrimmed(dto.createdAtUtc, readDtoString(dto, ['CreatedAtUtc']));
+}
+
+function canonicalUpdatedAt(dto: VaccinationDetailDto): string | null {
+    return firstTrimmed(dto.updatedAtUtc, readDtoString(dto, ['UpdatedAtUtc']));
 }
 
 export function mapVaccinationListItemDtoToVm(dto: VaccinationListItemDto): VaccinationListItemVm {
     return {
         id: dto.id,
         appliedAtUtc: canonicalAppliedAt(dto),
-        nextDueAtUtc: canonicalNextDueAt(dto),
+        dueAtUtc: canonicalDueAt(dto),
         vaccineName: canonicalVaccineName(dto),
         petId: canonicalPetId(dto),
         petName: canonicalPetName(dto),
@@ -149,24 +108,27 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
     const base = mapVaccinationListItemDtoToVm(dto);
     return {
         ...base,
-        createdAtUtc: dto.createdAtUtc ?? null,
-        updatedAtUtc: dto.updatedAtUtc ?? null
+        createdAtUtc: canonicalCreatedAt(dto),
+        updatedAtUtc: canonicalUpdatedAt(dto)
     };
 }
 
 /** Detay → edit: `clientId` / `petId` canonical; backend camelCase veya OwnerId/PetId vb. */
 export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): VaccinationEditVm {
+    const status = canonicalStatus(dto);
     return {
         id: dto.id,
+        clinicId: dto.clinicId?.trim() ?? '',
+        examinationId: dto.examinationId?.trim() ? dto.examinationId.trim() : null,
         clientId: canonicalClientId(dto) ?? '',
         petId: canonicalPetId(dto) ?? '',
-        clientName: rawClientName(dto),
-        petName: rawPetName(dto),
-        vaccineName: firstTrimmed(dto.vaccineName, dto.name, dto.vaccine, dto.vaccineTypeName) ?? '',
+        clientName: firstTrimmed(dto.clientName, readDtoString(dto, ['ClientName'])),
+        petName: firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])),
+        vaccineName: firstTrimmed(dto.vaccineName, readDtoString(dto, ['VaccineName'])) ?? '',
         appliedAtUtc: canonicalAppliedAt(dto),
-        nextDueAtUtc: canonicalNextDueAt(dto),
-        status: canonicalStatus(dto) ?? 'applied',
-        notes: firstTrimmed(dto.notes, dto.note, dto.description) ?? ''
+        dueAtUtc: canonicalDueAt(dto),
+        status,
+        notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])) ?? ''
     };
 }
 
@@ -175,10 +137,13 @@ export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): Vacc
  * Geçiş dönemi uyumluluğu için canonical ve alternatif alan adları birlikte gönderilir.
  */
 export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): VaccinationCreateRequestDto {
-    const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : null;
+    const clinicId = req.clinicId.trim();
+    if (!clinicId) {
+        throw new Error('VACCINATION_WRITE_CLINIC_REQUIRED');
+    }
     const examinationId = req.examinationId?.trim() ? req.examinationId.trim() : null;
     const notes = req.notes?.trim() ? req.notes.trim() : null;
-    const status = toCreateVaccinationStatusEnumOrThrow(req.status);
+    const status = toVaccinationStatusEnumOrThrow(req.status);
     const dueAtUtc = req.dueAtUtc?.trim() ? req.dueAtUtc.trim() : null;
     const appliedAtUtc = req.appliedAtUtc?.trim() ? req.appliedAtUtc.trim() : null;
     return {
@@ -193,18 +158,34 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
     };
 }
 
-function toCreateVaccinationStatusEnumOrThrow(status: string): number {
-    const normalized = normalizeVaccinationStatusKey(status);
-    if (normalized === 'scheduled') {
-        return 0;
+export function mapUpdateVaccinationToApiBody(routeId: string, req: UpdateVaccinationRequest): VaccinationUpdateRequestDto {
+    const clinicId = req.clinicId.trim();
+    if (!clinicId) {
+        throw new Error('VACCINATION_WRITE_CLINIC_REQUIRED');
     }
-    if (normalized === 'applied' || normalized === 'completed') {
-        return 1;
+    const status = toVaccinationStatusEnumOrThrow(req.status);
+    const bodyId = req.id?.trim();
+    if (bodyId && bodyId !== routeId.trim()) {
+        throw new Error('VACCINATION_WRITE_ID_MISMATCH');
     }
-    if (normalized === 'cancelled' || normalized === 'canceled') {
-        return 2;
+    return {
+        ...(bodyId ? { id: bodyId } : {}),
+        clinicId,
+        petId: req.petId.trim(),
+        examinationId: req.examinationId?.trim() ? req.examinationId.trim() : null,
+        vaccineName: req.vaccineName.trim(),
+        status,
+        appliedAtUtc: req.appliedAtUtc?.trim() ? req.appliedAtUtc.trim() : null,
+        dueAtUtc: req.dueAtUtc?.trim() ? req.dueAtUtc.trim() : null,
+        notes: req.notes?.trim() ? req.notes.trim() : null
+    };
+}
+
+function toVaccinationStatusEnumOrThrow(status: number): number {
+    const parsed = parseVaccinationStatusRawToEnum(status);
+    if (parsed !== null) {
+        return parsed;
     }
-    // Sessiz fallback yerine açık hata: yanlış status -> yanlış enum'a dönüşmesin.
     throw new Error('VACCINATION_WRITE_STATUS_UNSUPPORTED');
 }
 
@@ -238,8 +219,6 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     if (query.clientId?.trim()) {
         const clientId = query.clientId.trim();
         p = p.set('ClientId', clientId);
-        // Geçici geri uyumluluk: bazı backend sürümleri owner filtresi bekleyebilir.
-        p = p.set('OwnerId', clientId);
     }
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
@@ -247,9 +226,6 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     if (query.status?.trim()) {
         const status = query.status.trim();
         p = p.set('Status', status);
-        // Geçici geri uyumluluk: lifecycle/vaccinationStatus filtre adları.
-        p = p.set('VaccinationStatus', status);
-        p = p.set('LifecycleStatus', status);
     }
     if (query.fromDate?.trim()) {
         p = p.set('FromDate', query.fromDate.trim());
@@ -275,12 +251,11 @@ export function filterVaccinationListByStatus(
     if (!s) {
         return items;
     }
-    const target = normalizeVaccinationStatusKey(s);
+    const target = parseVaccinationStatusRawToEnum(s);
+    if (target === null) {
+        return items;
+    }
     return items.filter((i) => {
-        const st = (i.status ?? '').trim();
-        if (!st) {
-            return false;
-        }
-        return normalizeVaccinationStatusKey(st) === target;
+        return i.status === target;
     });
 }

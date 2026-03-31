@@ -13,8 +13,13 @@ export interface PetListItemDto {
     ownerName?: string | null;
     /** Detay: backend `PetGender` enum (1=Male, 2=Female) veya metin. */
     gender?: string | number | null;
+    birthDate?: string | null;
     birthDateUtc?: string | null;
-    status?: string | null;
+    colorId?: string | null;
+    colorName?: string | null;
+    /** Eski yanıtlar: düz metin renk (gösterim yedeği). */
+    color?: string | null;
+    weight?: number | null;
 }
 
 export interface PetListItemDtoPagedResult {
@@ -39,12 +44,20 @@ export interface PetDetailDto {
     breed?: string | null;
     /** Backend `PetGender` (1=Male, 2=Female) veya metin; form `male`/`female` mapper’da çözülür. */
     gender?: string | number | null;
+    birthDate?: string | null;
     birthDateUtc?: string | null;
+    colorId?: string | null;
+    colorName?: string | null;
+    /** Eski okuma yedeği. */
     color?: string | null;
     weight?: number | null;
-    status?: string | null;
     notes?: string | null;
     ownerId?: string | null;
+    /** Yeni contract: sahip metin alanları (öncelikli okuma). */
+    clientName?: string | null;
+    clientPhone?: string | null;
+    clientEmail?: string | null;
+    /** Eski / alternatif sahip alanları (mapper yedeği). */
     ownerName?: string | null;
     ownerPhone?: string | null;
     vaccinationsSummary?: PetVaccinationsSummaryDto | null;
@@ -81,9 +94,9 @@ export interface PetCreateRequestDto {
     breed?: string | null;
     /** Backend `PetGender` enum: Male = 1, Female = 2. Boşsa alan gönderilmez. */
     gender?: number | null;
-    birthDateUtc?: string | null;
-    color?: string | null;
+    /** DateOnly (yyyy-MM-dd) */
+    birthDate?: string | null;
+    colorId?: string | null;
     weight?: number | null;
-    status?: string | null;
     notes?: string | null;
 }

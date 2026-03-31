@@ -4,18 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { filterExaminationListByStatus } from '@/app/features/examinations/data/examination.mapper';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
@@ -29,12 +25,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         TableModule,
         ButtonModule,
         InputTextModule,
-        SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
         <app-page-header title="Muayeneler" subtitle="Klinik" description="Muayene kayıtları ve takip.">
@@ -55,19 +49,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     />
                 </div>
                 <div class="col-span-12 md:col-span-2">
-                    <label for="exStatus" class="block text-sm font-medium text-muted-color mb-2">Durum</label>
-                    <p-select
-                        inputId="exStatus"
-                        [options]="statusOptions"
-                        [(ngModel)]="statusFilter"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
-                    />
-                </div>
-                <div class="col-span-12 md:col-span-2">
                     <label for="exFrom" class="block text-sm font-medium text-muted-color mb-2">Başlangıç</label>
                     <input id="exFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
                 </div>
@@ -81,8 +62,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
-                Durum filtresi, API yanıtında <span class="font-medium">status</span> alanı varsa bu sayfadaki kayıtlar üzerinde de uygulanır. Tarih aralığı
-                <span class="font-medium">fromDate / toDate</span> parametreleriyle gönderilir (backend desteklemiyorsa yok sayılır).
+                Tarih aralığı <span class="font-medium">fromDate / toDate</span> parametreleriyle gönderilir (backend desteklemiyorsa yok sayılır).
             </p>
         </div>
 
@@ -115,9 +95,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th>Tarih</th>
                                 <th>Müşteri</th>
                                 <th>Hayvan</th>
-                                <th>Durum</th>
                                 <th>Ziyaret sebebi</th>
-                                <th>Oluşturulma</th>
                                 <th style="width: 8rem">İşlemler</th>
                             </tr>
                         </ng-template>
@@ -140,11 +118,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         {{ row.petName }}
                                     }
                                 </td>
-                                <td>
-                                    <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                </td>
                                 <td>{{ row.visitReason }}</td>
-                                <td>{{ formatCreated(row.createdAtUtc) }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                 </td>
@@ -177,30 +151,15 @@ export class ExaminationsListPageComponent implements OnInit {
     searchInput = '';
     fromDateInput = '';
     toDateInput = '';
-    statusFilter = '';
-
-    readonly statusOptions = [
-        { label: 'Tümü', value: '' },
-        { label: 'Taslak', value: 'draft' },
-        { label: 'Devam ediyor', value: 'in_progress' },
-        { label: 'Tamamlandı', value: 'completed' },
-        { label: 'İptal', value: 'cancelled' }
-    ];
-
-    readonly displayedRows = computed(() =>
-        filterExaminationListByStatus(this.rawItems(), this.statusFilter ? this.statusFilter : null)
-    );
+    readonly displayedRows = computed(() => this.rawItems());
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly formatCreated = (v: string | null) => formatDateDisplay(v);
-    readonly statusLabel = examinationStatusLabel;
-    readonly statusSeverity = examinationStatusSeverity;
     private suppressNextLazy = false;
     private lastLoadKey = '';
 
     ngOnInit(): void {
         this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
     applySearch(): void {
@@ -218,7 +177,7 @@ export class ExaminationsListPageComponent implements OnInit {
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
     resetFilters(): void {
@@ -228,9 +187,8 @@ export class ExaminationsListPageComponent implements OnInit {
         this.activeSearch.set('');
         this.activeFromDate.set('');
         this.activeToDate.set('');
-        this.statusFilter = '';
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '', '', '', '');
+        this.loadFromServer(1, this.pageSize(), '', '', '');
     }
 
     reload(): void {
@@ -240,7 +198,6 @@ export class ExaminationsListPageComponent implements OnInit {
             this.activeSearch(),
             this.activeFromDate(),
             this.activeToDate(),
-            this.statusFilter,
             true
         );
     }
@@ -253,7 +210,7 @@ export class ExaminationsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
     private loadFromServer(
@@ -262,10 +219,9 @@ export class ExaminationsListPageComponent implements OnInit {
         search: string,
         fromDate: string,
         toDate: string,
-        status: string,
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -278,8 +234,7 @@ export class ExaminationsListPageComponent implements OnInit {
                 pageSize,
                 search: search || undefined,
                 fromDate: fromDate || undefined,
-                toDate: toDate || undefined,
-                status: status || undefined
+                toDate: toDate || undefined
             })
             .subscribe({
                 next: (r) => {

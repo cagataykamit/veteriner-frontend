@@ -5,13 +5,14 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     mapCreateVaccinationToApiBody,
+    mapUpdateVaccinationToApiBody,
     mapVaccinationDetailDtoToEditVm,
     mapPagedVaccinationsToVm,
     mapVaccinationDetailDtoToVm,
     vaccinationsQueryToHttpParams
 } from '@/app/features/vaccinations/data/vaccination.mapper';
 import type { VaccinationDetailDto, VaccinationListItemDtoPagedResult } from '@/app/features/vaccinations/models/vaccination-api.model';
-import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
+import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
 import type { VaccinationDetailVm, VaccinationEditVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -68,6 +69,9 @@ export class VaccinationsService {
             if (e instanceof Error && e.message === 'VACCINATION_WRITE_STATUS_UNSUPPORTED') {
                 return throwError(() => new Error('Durum değeri desteklenmiyor. Lütfen tekrar seçin.'));
             }
+            if (e instanceof Error && e.message === 'VACCINATION_WRITE_CLINIC_REQUIRED') {
+                return throwError(() => new Error('Klinik bilgisi zorunludur.'));
+            }
             return throwError(() => (e instanceof Error ? e : new Error('Aşı kaydı oluşturulamadı.')));
         }
         return this.api.post<unknown>(ApiEndpoints.vaccinations.list(), body).pipe(
@@ -95,13 +99,19 @@ export class VaccinationsService {
         );
     }
 
-    updateVaccination(id: string, payload: CreateVaccinationRequest): Observable<void> {
+    updateVaccination(id: string, payload: UpdateVaccinationRequest): Observable<void> {
         let body: unknown;
         try {
-            body = mapCreateVaccinationToApiBody(payload);
+            body = mapUpdateVaccinationToApiBody(id, payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'VACCINATION_WRITE_STATUS_UNSUPPORTED') {
                 return throwError(() => new Error('Durum değeri desteklenmiyor. Lütfen tekrar seçin.'));
+            }
+            if (e instanceof Error && e.message === 'VACCINATION_WRITE_CLINIC_REQUIRED') {
+                return throwError(() => new Error('Klinik bilgisi zorunludur.'));
+            }
+            if (e instanceof Error && e.message === 'VACCINATION_WRITE_ID_MISMATCH') {
+                return throwError(() => new Error('Aşı kimliği uyuşmuyor. Sayfayı yenileyip tekrar deneyin.'));
             }
             return throwError(() => (e instanceof Error ? e : new Error('Aşı kaydı güncellenemedi.')));
         }

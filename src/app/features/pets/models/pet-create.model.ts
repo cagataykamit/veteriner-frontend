@@ -15,8 +15,8 @@ export interface CreatePetRequest {
     gender?: string;
     /** yyyy-MM-dd — boşsa doğum tarihi gönderilmez */
     birthDateInput?: string;
-    color?: string;
+    /** Ref-data PetColors kimliği — boşsa gönderilmez */
+    colorId?: string;
     weight?: number | null;
-    status?: string;
     notes?: string;
 }

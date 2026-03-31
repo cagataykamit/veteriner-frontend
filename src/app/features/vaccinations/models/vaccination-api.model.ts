@@ -5,35 +5,18 @@
 
 export interface VaccinationListItemDto {
     id: string;
-    tenantId?: string;
-    appliedAtUtc?: string | null;
-    applicationDateUtc?: string | null;
-    appliedOnUtc?: string | null;
-    nextDueAtUtc?: string | null;
-    nextDoseAtUtc?: string | null;
-    dueAtUtc?: string | null;
-    vaccineName?: string | null;
-    name?: string | null;
-    vaccine?: string | null;
-    vaccineTypeName?: string | null;
+    tenantId?: string | null;
     petId?: string | null;
-    animalId?: string | null;
     petName?: string | null;
-    animalName?: string | null;
-    clientId?: string | null;
-    ownerId?: string | null;
     clientName?: string | null;
-    ownerName?: string | null;
-    status?: string | null;
-    vaccinationStatus?: string | null;
-    lifecycleStatus?: string | null;
-    lifecycle?: string | null;
-    dueState?: string | null;
-    isDueSoon?: boolean | null;
-    isOverdue?: boolean | null;
+    clientId?: string | null;
+    clinicId?: string | null;
+    examinationId?: string | null;
+    vaccineName?: string | null;
+    appliedAtUtc?: string | null;
+    dueAtUtc?: string | null;
+    status?: number | null;
     notes?: string | null;
-    note?: string | null;
-    description?: string | null;
 }
 
 export interface VaccinationListItemDtoPagedResult {
@@ -51,39 +34,19 @@ export interface VaccinationListItemDtoPagedResult {
  */
 export interface VaccinationDetailDto {
     id: string;
-    tenantId?: string;
+    tenantId?: string | null;
+    petId: string;
+    petName?: string | null;
+    clientName?: string | null;
+    clientId: string;
     clinicId?: string | null;
     examinationId?: string | null;
-    /** Müşteri seçimi için zorunlu; edit preload zinciri buna bağlı. */
-    clientId?: string | null;
+    vaccineName: string;
     appliedAtUtc?: string | null;
-    applicationDateUtc?: string | null;
-    appliedOnUtc?: string | null;
-    nextDueAtUtc?: string | null;
-    nextDoseAtUtc?: string | null;
     dueAtUtc?: string | null;
-    vaccineName?: string | null;
-    name?: string | null;
-    vaccine?: string | null;
-    vaccineTypeName?: string | null;
-    petId?: string | null;
-    animalId?: string | null;
-    petName?: string | null;
-    animalName?: string | null;
-    ownerId?: string | null;
-    clientName?: string | null;
-    ownerName?: string | null;
-    status?: string | null;
-    vaccinationStatus?: string | null;
-    lifecycleStatus?: string | null;
-    lifecycle?: string | null;
-    dueState?: string | null;
-    isDueSoon?: boolean | null;
-    isOverdue?: boolean | null;
+    status: number;
     notes?: string | null;
-    note?: string | null;
-    description?: string | null;
-    createdAtUtc?: string | null;
+    createdAtUtc: string;
     updatedAtUtc?: string | null;
 }
 
@@ -93,7 +56,19 @@ export interface VaccinationDetailDto {
  * Backend `name` kullanıyorsa mapper’da `vaccineName` → `name` eşlemesi yapılır.
  */
 export interface VaccinationCreateRequestDto {
-    clinicId?: string | null;
+    clinicId: string;
+    petId: string;
+    examinationId?: string | null;
+    vaccineName: string;
+    status: number;
+    appliedAtUtc?: string | null;
+    dueAtUtc?: string | null;
+    notes?: string | null;
+}
+
+export interface VaccinationUpdateRequestDto {
+    id?: string;
+    clinicId: string;
     petId: string;
     examinationId?: string | null;
     vaccineName: string;

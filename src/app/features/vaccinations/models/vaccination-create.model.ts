@@ -5,13 +5,23 @@
  */
 
 export interface CreateVaccinationRequest {
-    clinicId?: string;
+    clinicId: string;
     petId: string;
-    /** Form içi seçim için tutulur, create mapper canonical payload'a eklemez. */
-    clientId?: string;
     examinationId?: string | null;
     vaccineName: string;
-    status: string;
+    status: number;
+    appliedAtUtc?: string | null;
+    dueAtUtc?: string | null;
+    notes?: string | null;
+}
+
+export interface UpdateVaccinationRequest {
+    id?: string;
+    clinicId: string;
+    petId: string;
+    examinationId?: string | null;
+    vaccineName: string;
+    status: number;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
     notes?: string | null;

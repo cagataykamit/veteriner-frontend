@@ -9,8 +9,8 @@ export interface PetUpsertFormValue {
     breedId: string;
     gender: string;
     birthDate: string;
-    color: string;
-    weightStr: string;
-    status: string;
+    colorId: string;
+    /** `type="number"` ile bazen `number` döner. */
+    weightStr: string | number;
     notes: string;
 }

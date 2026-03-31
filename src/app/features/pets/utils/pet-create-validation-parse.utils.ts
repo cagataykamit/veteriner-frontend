@@ -14,9 +14,8 @@ export type PetCreateFormFieldKey =
     | 'breedId'
     | 'gender'
     | 'birthDate'
-    | 'color'
+    | 'colorId'
     | 'weightStr'
-    | 'status'
     | 'notes';
 
 export type PetCreateFieldErrors = Partial<Record<PetCreateFormFieldKey, string>>;
@@ -42,10 +41,9 @@ const FIELD_MAP: Record<string, PetCreateFormFieldKey> = {
     gender: 'gender',
     birthdate: 'birthDate',
     birthdateutc: 'birthDate',
-    color: 'color',
+    color: 'colorId',
+    colorid: 'colorId',
     weight: 'weightStr',
-    status: 'status',
-    durum: 'status',
     notes: 'notes',
     not: 'notes',
     notlar: 'notes'

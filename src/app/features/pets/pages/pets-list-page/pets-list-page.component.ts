@@ -7,21 +7,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { filterPetListByStatus } from '@/app/features/pets/data/pet.mapper';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import {
-    PET_STATUS_FILTER_OPTIONS,
-    petGenderLabel,
-    petStatusLabel,
-    petStatusSeverity
-} from '@/app/features/pets/utils/pet-status.utils';
+import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
@@ -39,8 +32,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
         <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay.">
@@ -60,7 +52,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         (keyup.enter)="applySearch()"
                     />
                 </div>
-                <div class="col-span-12 md:col-span-3">
+                <div class="col-span-12 md:col-span-4">
                     <label for="petSpecies" class="block text-sm font-medium text-muted-color mb-2">Tür</label>
                     <p-select
                         inputId="petSpecies"
@@ -74,27 +66,13 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         [loading]="loadingSpecies()"
                     />
                 </div>
-                <div class="col-span-12 md:col-span-3">
-                    <label for="petStatus" class="block text-sm font-medium text-muted-color mb-2">Durum</label>
-                    <p-select
-                        inputId="petStatus"
-                        [options]="statusOptions"
-                        [(ngModel)]="statusFilter"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
-                    />
-                </div>
-                <div class="col-span-12 md:col-span-2 flex flex-wrap gap-2">
+                <div class="col-span-12 md:col-span-4 flex flex-wrap gap-2">
                     <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
-                Durum filtresi, API yanıtında <span class="font-medium">status</span> alanı varsa bu sayfadaki kayıtlar üzerinde uygulanır. Tür filtresi
-                <span class="font-medium">speciesId</span> sorgu parametresi olarak gönderilir.
+                Tür filtresi <span class="font-medium">speciesId</span> sorgu parametresi olarak gönderilir.
             </p>
         </div>
 
@@ -118,7 +96,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         [lazy]="true"
                         [first]="first()"
                         (onLazyLoad)="onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '60rem' }"
+                        [tableStyle]="{ 'min-width': '64rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                     >
@@ -129,8 +107,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th>Cins</th>
                                 <th>Sahibi</th>
                                 <th>Cinsiyet</th>
+                                <th>Renk</th>
                                 <th>Doğum Tarihi</th>
-                                <th>Durum</th>
+                                <th>Kilo (kg)</th>
                                 <th style="width: 8rem">İşlemler</th>
                             </tr>
                         </ng-template>
@@ -141,10 +120,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <td>{{ row.breed }}</td>
                                 <td>{{ row.ownerName }}</td>
                                 <td>{{ genderLabel(row.gender) }}</td>
-                                <td>{{ formatDate(row.birthDateUtc) }}</td>
-                                <td>
-                                    <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                </td>
+                                <td>{{ row.colorName }}</td>
+                                <td>{{ formatDate(row.birthDate) }}</td>
+                                <td>{{ row.weight }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                 </td>
@@ -177,18 +155,11 @@ export class PetsListPageComponent implements OnInit {
 
     searchInput = '';
     speciesIdInput = '';
-    statusFilter = '';
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
 
-    readonly statusOptions = [...PET_STATUS_FILTER_OPTIONS];
-
-    readonly displayedRows = computed(() =>
-        filterPetListByStatus(this.rawItems(), this.statusFilter ? this.statusFilter : null)
-    );
+    readonly displayedRows = computed(() => this.rawItems());
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly statusLabel = petStatusLabel;
-    readonly statusSeverity = petStatusSeverity;
     readonly genderLabel = petGenderLabel;
     private suppressNextLazy = false;
     private lastLoadKey = '';
@@ -211,7 +182,6 @@ export class PetsListPageComponent implements OnInit {
         this.speciesIdInput = '';
         this.activeSearch.set('');
         this.activeSpeciesId.set('');
-        this.statusFilter = '';
         this.first.set(0);
         this.loadFromServer(1, this.pageSize(), '', '');
     }

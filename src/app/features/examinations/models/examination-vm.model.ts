@@ -12,10 +12,7 @@ export interface ExaminationListItemVm {
     petId: string | null;
     petName: string;
     appointmentId: string | null;
-    status: string | null;
-    lifecycleStatus: string | null;
     visitReason: string;
-    createdAtUtc: string | null;
 }
 
 export interface ExaminationDetailVm {
@@ -28,8 +25,6 @@ export interface ExaminationDetailVm {
     petId: string | null;
     petName: string;
     appointmentId: string | null;
-    status: string | null;
-    lifecycleStatus: string | null;
     visitReason: string;
     notes: string;
     findings: string;
