@@ -43,13 +43,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
     return next(outgoing).pipe(
         catchError((err: HttpErrorResponse) => {
-            if (err.status !== 401) {
+            // Yenileme uçları: geçersiz/süresi dolmuş token için 401 yanı sıra 400 veya 403 da sık görülür.
+            // 429 ağır deneme sınırı olabilir — oturumu silmeyelim; kullanıcı tekrar denebilir.
+            if (isAuthRefreshUrl(url)) {
+                if (err.status === 401 || err.status === 400 || err.status === 403) {
+                    auth.clearSession();
+                    router.navigate(['/auth/login'], {
+                        queryParams: { returnUrl: router.url, reauth: '1' }
+                    });
+                }
                 return throwError(() => err);
             }
 
-            if (isAuthRefreshUrl(url)) {
-                auth.clearSession();
-                router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
+            if (err.status !== 401) {
                 return throwError(() => err);
             }
 
@@ -59,13 +65,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
             if (req.headers.has(AUTH_RETRY_HEADER)) {
                 auth.clearSession();
-                router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
+                router.navigate(['/auth/login'], {
+                    queryParams: { returnUrl: router.url, reauth: '1' }
+                });
                 return throwError(() => err);
             }
 
             if (!auth.getRefreshToken()) {
                 auth.clearSession();
-                router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
+                router.navigate(['/auth/login'], {
+                    queryParams: { returnUrl: router.url, reauth: '1' }
+                });
                 return throwError(() => err);
             }
 
@@ -74,7 +84,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                     const newAccess = session.accessToken ?? auth.getAccessToken();
                     if (!newAccess) {
                         auth.clearSession();
-                        router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
+                        router.navigate(['/auth/login'], {
+                            queryParams: { returnUrl: router.url, reauth: '1' }
+                        });
                         return throwError(() => err);
                     }
                     const retry = req.clone({
@@ -87,7 +99,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                 }),
                 catchError(() => {
                     auth.clearSession();
-                    router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
+                    router.navigate(['/auth/login'], {
+                        queryParams: { returnUrl: router.url, reauth: '1' }
+                    });
                     return throwError(() => err);
                 })
             );

@@ -28,7 +28,7 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 
@@ -324,8 +324,8 @@ export class VaccinationEditPageComponent implements OnInit {
                 }
                 this.loading.set(false);
             },
-            error: (e: Error) => {
-                this.loadError.set(e.message ?? 'Yükleme hatası');
+            error: (e: unknown) => {
+                this.loadError.set(panelHttpFailureMessage(e, 'Aşı kaydı bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
         });

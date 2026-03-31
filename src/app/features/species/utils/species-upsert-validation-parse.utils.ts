@@ -1,5 +1,4 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
 
@@ -14,11 +13,6 @@ export interface ParsedSpeciesUpsertHttpError {
     summaryMessage: string | null;
 }
 
-type ProblemBody = ProblemDetails & {
-    errors?: Record<string, string[] | string | unknown> | null;
-    validationErrors?: Record<string, string[] | string | unknown> | null;
-};
-
 const FIELD_MAP: Record<string, SpeciesUpsertFormFieldKey> = {
     code: 'code',
     name: 'name',
@@ -31,15 +25,7 @@ const FIELD_MAP: Record<string, SpeciesUpsertFormFieldKey> = {
 export function parseSpeciesUpsertHttpError(err: HttpErrorResponse): ParsedSpeciesUpsertHttpError {
     return parseValidationHttpError<SpeciesUpsertFormFieldKey>(err, {
         fieldMap: FIELD_MAP,
-        nonFieldMessage: resolveNonFieldErrorMessage,
+        nonFieldMessage: (e) => messageFromHttpError(e, FALLBACK_GENERIC),
         fieldErrorsSummaryMessage: SUMMARY_FIELD_ERRORS
     });
-}
-
-function resolveNonFieldErrorMessage(err: HttpErrorResponse): string {
-    const body = err.error as ProblemBody | string | null | undefined;
-    if (typeof body === 'string' && body.trim()) {
-        return body.trim();
-    }
-    return messageFromHttpError(err, FALLBACK_GENERIC);
 }

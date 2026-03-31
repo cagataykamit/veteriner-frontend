@@ -45,10 +45,10 @@ function canonicalAppliedAt(dto: VaccinationListItemDto | VaccinationDetailDto):
 }
 
 function canonicalDueAt(dto: VaccinationListItemDto | VaccinationDetailDto): string | null {
-    return firstTrimmed(
-        dto.dueAtUtc,
-        readDtoString(dto, ['DueAtUtc'])
-    );
+    const o = dto as unknown as Record<string, unknown>;
+    const nextRaw = o['nextDueAtUtc'] ?? o['NextDueAtUtc'];
+    const nextDue = typeof nextRaw === 'string' && nextRaw.trim() ? nextRaw.trim() : null;
+    return firstTrimmed(dto.dueAtUtc, readDtoString(dto, ['DueAtUtc']), nextDue);
 }
 
 function canonicalVaccineName(dto: VaccinationListItemDto | VaccinationDetailDto): string {

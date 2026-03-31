@@ -47,7 +47,7 @@ function resolveVaccinationUpsertNonFieldMessage(err: HttpErrorResponse): string
     }
 
     if (status === 400 || status === 422) {
-        return FALLBACK_GENERIC;
+        return messageFromHttpError(err, FALLBACK_GENERIC);
     }
 
     return messageFromHttpError(err, FALLBACK_GENERIC);

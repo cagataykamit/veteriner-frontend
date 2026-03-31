@@ -10,12 +10,10 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
 @Component({
@@ -48,7 +46,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="petSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Ad, sahip, tür…"
+                        placeholder="Ad, tür, cins…"
                         (keyup.enter)="applySearch()"
                     />
                 </div>
@@ -105,10 +103,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th>Ad</th>
                                 <th>Tür</th>
                                 <th>Cins</th>
-                                <th>Sahibi</th>
-                                <th>Cinsiyet</th>
                                 <th>Renk</th>
-                                <th>Doğum Tarihi</th>
                                 <th>Kilo (kg)</th>
                                 <th style="width: 8rem">İşlemler</th>
                             </tr>
@@ -118,10 +113,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <td class="font-medium">{{ row.name }}</td>
                                 <td>{{ row.speciesName }}</td>
                                 <td>{{ row.breed }}</td>
-                                <td>{{ row.ownerName }}</td>
-                                <td>{{ genderLabel(row.gender) }}</td>
                                 <td>{{ row.colorName }}</td>
-                                <td>{{ formatDate(row.birthDate) }}</td>
                                 <td>{{ row.weight }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">Detay</a>
@@ -159,8 +151,6 @@ export class PetsListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly genderLabel = petGenderLabel;
     private suppressNextLazy = false;
     private lastLoadKey = '';
 

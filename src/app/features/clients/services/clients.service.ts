@@ -80,4 +80,14 @@ export class ClientsService {
             })
         );
     }
+
+    updateClient(id: string, payload: CreateClientRequest): Observable<void> {
+        const body = mapCreateClientToApiBody(payload);
+        return this.api.put<unknown>(ApiEndpoints.clients.byId(id), body).pipe(
+            map(() => void 0),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Müşteri güncellenemedi.')))
+            )
+        );
+    }
 }

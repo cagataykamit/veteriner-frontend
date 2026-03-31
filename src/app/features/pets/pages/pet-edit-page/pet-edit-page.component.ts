@@ -26,7 +26,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { clientOptionsFromList, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-pet-edit-page',
@@ -49,7 +49,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
             <app-loading-state message="Hayvan düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
             <div class="card">
-                <app-error-state [detail]="loadError()!" (retry)="reload()" />
+                <app-error-state [detail]="loadError()!" [showRetry]="petLoadRetryEnabled()" (retry)="reload()" />
             </div>
         } @else {
             <app-page-header title="Hayvanı Düzenle" subtitle="Hasta yönetimi" description="Hayvan kaydını güncelleyin." />
@@ -231,6 +231,8 @@ export class PetEditPageComponent implements OnInit {
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
+    /** Geçersiz rota kimliğinde tekrar dene anlamsız olur. */
+    readonly petLoadRetryEnabled = signal(false);
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
@@ -282,9 +284,11 @@ export class PetEditPageComponent implements OnInit {
         if (!id) {
             this.loadError.set('Geçersiz hayvan kaydı.');
             this.loading.set(false);
+            this.petLoadRetryEnabled.set(false);
             return;
         }
         this.petId = id;
+        this.petLoadRetryEnabled.set(true);
 
         this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId: string) => {
             const sid = speciesId?.trim() ?? '';
@@ -336,8 +340,8 @@ export class PetEditPageComponent implements OnInit {
 
                 this.loading.set(false);
             },
-            error: (e: Error) => {
-                this.loadError.set(e.message ?? 'Yükleme hatası');
+            error: (e: unknown) => {
+                this.loadError.set(panelHttpFailureMessage(e, 'Hayvan bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
         });
@@ -478,9 +482,6 @@ export class PetEditPageComponent implements OnInit {
     }
 
     private mapLoadError(e: unknown, fallback: string): string {
-        if (e instanceof HttpErrorResponse) {
-            return messageFromHttpError(e, fallback);
-        }
-        return e instanceof Error ? e.message : fallback;
+        return panelHttpFailureMessage(e, fallback);
     }
 }

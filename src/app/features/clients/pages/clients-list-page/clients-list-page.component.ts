@@ -4,18 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { filterClientListByStatus } from '@/app/features/clients/data/client.mapper';
 import type { ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { clientStatusLabel, clientStatusSeverity } from '@/app/features/clients/utils/client-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
@@ -29,12 +25,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         TableModule,
         ButtonModule,
         InputTextModule,
-        SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
         <app-page-header title="Müşteriler" subtitle="Hasta yönetimi" description="Kayıtlı müşteri listesi ve detay.">
@@ -43,7 +37,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
         <div class="card mb-6">
             <div class="grid grid-cols-12 gap-4 items-end">
-                <div class="col-span-12 md:col-span-5">
+                <div class="col-span-12 md:col-span-9">
                     <label for="clientSearch" class="block text-sm font-medium text-muted-color mb-2">Arama</label>
                     <input
                         pInputText
@@ -54,27 +48,11 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         (keyup.enter)="applySearch()"
                     />
                 </div>
-                <div class="col-span-12 md:col-span-4">
-                    <label for="clientStatus" class="block text-sm font-medium text-muted-color mb-2">Durum</label>
-                    <p-select
-                        inputId="clientStatus"
-                        [options]="statusOptions"
-                        [(ngModel)]="statusFilter"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
-                    />
-                </div>
                 <div class="col-span-12 md:col-span-3 flex flex-wrap gap-2">
                     <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
-            <p class="text-muted-color text-sm mt-3 mb-0">
-                Durum filtresi, API yanıtında <span class="font-medium">status</span> alanı varsa bu sayfadaki kayıtlar üzerinde uygulanır.
-            </p>
         </div>
 
         @if (loading()) {
@@ -106,9 +84,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th>Ad Soyad</th>
                                 <th>Telefon</th>
                                 <th>E-posta</th>
-                                <th class="text-right">Hayvan sayısı</th>
                                 <th>Kayıt Tarihi</th>
-                                <th>Durum</th>
                                 <th style="width: 8rem">İşlemler</th>
                             </tr>
                         </ng-template>
@@ -117,11 +93,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <td class="font-medium">{{ row.fullName }}</td>
                                 <td>{{ row.phone }}</td>
                                 <td>{{ row.email }}</td>
-                                <td class="text-right">{{ row.petCount ?? '—' }}</td>
                                 <td>{{ formatDate(row.createdAtUtc) }}</td>
-                                <td>
-                                    <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                </td>
                                 <td>
                                     <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                 </td>
@@ -151,22 +123,9 @@ export class ClientsListPageComponent implements OnInit {
     readonly activeSearch = signal('');
 
     searchInput = '';
-    /** Tümü = '' — p-select null değerlerde sorun çıkarabildiği için boş string kullanılır. */
-    statusFilter = '';
-
-    readonly statusOptions = [
-        { label: 'Tümü', value: '' },
-        { label: 'Aktif', value: 'active' },
-        { label: 'Pasif', value: 'inactive' }
-    ];
-
-    readonly displayedRows = computed(() =>
-        filterClientListByStatus(this.rawItems(), this.statusFilter ? this.statusFilter : null)
-    );
+    readonly displayedRows = computed(() => this.rawItems());
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly statusLabel = clientStatusLabel;
-    readonly statusSeverity = clientStatusSeverity;
     private suppressNextLazy = false;
     private lastLoadKey = '';
 
@@ -184,7 +143,6 @@ export class ClientsListPageComponent implements OnInit {
     resetFilters(): void {
         this.searchInput = '';
         this.activeSearch.set('');
-        this.statusFilter = '';
         this.first.set(0);
         this.loadFromServer(1, this.pageSize(), '');
     }

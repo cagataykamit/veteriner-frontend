@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { isUnhelpfulProblemText, messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /** `/me/clinics` boş veya kullanıcıya atanmış klinik yok. */
 export const AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE = 'Bu hesap için erişilebilir klinik bulunamadı.';
@@ -53,10 +53,7 @@ export function authRefreshFailureMessage(err: unknown, fallback = 'Oturum yenil
     if (err instanceof HttpErrorResponse) {
         return authFailureMessage(err, fallback);
     }
-    if (err instanceof Error) {
-        return err.message || fallback;
-    }
-    return fallback;
+    return panelHttpFailureMessage(err, fallback);
 }
 
 export function authFailureMessage(err: HttpErrorResponse, fallback = 'İşlem başarısız.'): string {
@@ -76,17 +73,35 @@ export function authFailureMessage(err: HttpErrorResponse, fallback = 'İşlem b
         const retryAfter = err.headers.get('Retry-After');
         const sec = retryAfter ? Number.parseInt(retryAfter, 10) : NaN;
         const waitHint = !Number.isNaN(sec) ? ` Yaklaşık ${sec} saniye sonra tekrar deneyin.` : ' Lütfen kısa süre sonra tekrar deneyin.';
-        return problem?.detail?.trim() || problem?.title?.trim() || `Çok fazla istek (429).${waitHint}`;
+        const detail = problem?.detail?.trim() ?? '';
+        const title = problem?.title?.trim() ?? '';
+        const fromProblem =
+            detail && !isUnhelpfulProblemText(detail)
+                ? detail
+                : title && !isUnhelpfulProblemText(title)
+                  ? title
+                  : '';
+        const base =
+            'Çok fazla istek (rate limit). Sunucu geçici olarak girişi sınırladı.' + waitHint;
+        return fromProblem ? `${base} (${fromProblem})` : base;
     }
 
     if (err.status === 401) {
-        return problem?.detail?.trim() || problem?.title?.trim() || 'Yetkisiz işlem. Lütfen tekrar giriş yapın.';
+        const detail = problem?.detail?.trim() ?? '';
+        const title = problem?.title?.trim() ?? '';
+        if (detail && !isUnhelpfulProblemText(detail)) {
+            return detail;
+        }
+        if (title && !isUnhelpfulProblemText(title)) {
+            return title;
+        }
+        return 'Yetkisiz işlem. Lütfen tekrar giriş yapın.';
     }
 
-    if (problem?.detail?.trim()) {
+    if (problem?.detail?.trim() && !isUnhelpfulProblemText(problem.detail)) {
         return problem.detail.trim();
     }
-    if (problem?.title?.trim()) {
+    if (problem?.title?.trim() && !isUnhelpfulProblemText(problem.title)) {
         return problem.title.trim();
     }
     return messageFromHttpError(err, fallback);

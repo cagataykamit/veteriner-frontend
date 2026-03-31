@@ -2,13 +2,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { CLIENT_CREATE_PHONE_MSG_INVALID } from '@/app/features/clients/utils/client-create-phone.utils';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromClientCreateHttpError } from '@/app/features/clients/utils/client-create-error.utils';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
 
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 
 /** Client create form kontrol adlarıyla hizalı. */
-export type ClientCreateFormFieldKey = 'fullName' | 'phone' | 'email' | 'address' | 'notes' | 'status';
+export type ClientCreateFormFieldKey = 'fullName' | 'phone' | 'email' | 'address';
 
 export type ClientCreateFieldErrors = Partial<Record<ClientCreateFormFieldKey, string>>;
 
@@ -34,12 +35,7 @@ const FIELD_MAP: Record<string, ClientCreateFormFieldKey> = {
     name: 'fullName',
     adsoyad: 'fullName',
     address: 'address',
-    adres: 'address',
-    notes: 'notes',
-    not: 'notes',
-    notlar: 'notes',
-    status: 'status',
-    durum: 'status'
+    adres: 'address'
 };
 
 /** Yaygın İngilizce doğrulama metinlerini Türkçe ürün diline yaklaştır (opsiyonel). */
@@ -71,10 +67,12 @@ function isLikelyMojibake(s: string): boolean {
 }
 
 function isGenericValidationTitle(s: string): boolean {
+    const t = s.trim();
     return (
+        /^İstek\s+işlenemedi\.?$/iu.test(t) ||
         /one or more validation errors occurred/i.test(s) ||
-        /^validation failed/i.test(s.trim()) ||
-        /^bad request$/i.test(s.trim())
+        /^validation failed/i.test(t) ||
+        /^bad request$/i.test(t)
     );
 }
 
@@ -109,7 +107,7 @@ function resolveNonFieldErrorMessage(err: HttpErrorResponse): string {
     }
 
     if (status === 400 || status === 422) {
-        return FALLBACK_GENERIC;
+        return messageFromHttpError(err, FALLBACK_GENERIC);
     }
 
     return messageFromClientCreateHttpError(err);

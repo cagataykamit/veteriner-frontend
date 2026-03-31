@@ -4,9 +4,7 @@
 
 export interface CreateClientRequest {
     fullName: string;
-    phone: string;
+    phone?: string;
     email?: string;
     address?: string;
-    notes?: string;
-    status?: string;
 }

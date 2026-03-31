@@ -1,7 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-export const CLIENT_CREATE_PHONE_MSG_REQUIRED = 'Telefon numarası zorunludur.';
-
 /** Yerel doğrulama: biçim / uzunluk / harf vb. */
 export const CLIENT_CREATE_PHONE_MSG_INVALID =
     'Telefon numarası geçerli değil. Türkiye cep telefonu olarak 05XXXXXXXXX, 5XXXXXXXXX veya +90XXXXXXXXXX formatında girin.';
@@ -35,7 +33,7 @@ export function turkishMobilePhoneValidator(): ValidatorFn {
         const v = raw.trim();
 
         if (v === '') {
-            return { phoneRequired: true };
+            return null;
         }
 
         if (/[a-zA-ZğüşıöçĞÜŞİÖÇ]/.test(v)) {

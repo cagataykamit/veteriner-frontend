@@ -5,10 +5,6 @@ export interface PetListItemVm {
     name: string;
     speciesName: string;
     breed: string;
-    ownerName: string;
-    gender: string;
-    /** Doğum — backend DateOnly veya eski mapper’dan normalize (yyyy-MM-dd veya ISO). */
-    birthDate: string | null;
     colorName: string;
     weight: string;
 }

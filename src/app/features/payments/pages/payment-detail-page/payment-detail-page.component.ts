@@ -8,15 +8,13 @@ import type { ExaminationListItemVm } from '@/app/features/examinations/models/e
 import type { PaymentDetailVm } from '@/app/features/payments/models/payment-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
-import { paymentStatusLabel, paymentStatusSeverity } from '@/app/features/payments/utils/payment-status.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { EMPTY, switchMap } from 'rxjs';
 
@@ -30,8 +28,7 @@ import { EMPTY, switchMap } from 'rxjs';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
         <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
@@ -47,11 +44,7 @@ import { EMPTY, switchMap } from 'rxjs';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (payment()) {
-            <app-page-header
-                title="Ödeme"
-                subtitle="Finans"
-                [description]="moneyLine(payment()!) + ' · ' + statusLabel(payment()!.status) + ' · ' + methodLabel(payment()!.method)"
-            >
+            <app-page-header title="Ödeme" subtitle="Finans" [description]="headerDescription(payment()!)">
                 <a
                     actions
                     [routerLink]="['/panel/payments', payment()!.id, 'edit']"
@@ -64,21 +57,6 @@ import { EMPTY, switchMap } from 'rxjs';
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel bilgiler</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="statusLabel(payment()!.status)" [severity]="statusSeverity(payment()!.status)" />
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(payment()!.createdAtUtc) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(payment()!.updatedAtUtc) }}</dd>
-                        </dl>
-                    </div>
-                </div>
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Müşteri / hayvan</h5>
@@ -107,24 +85,15 @@ import { EMPTY, switchMap } from 'rxjs';
 
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Tutar ve yöntem</h5>
+                        <h5 class="mt-0 mb-4">Tutar ve ödeme</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tutar</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0 font-medium">{{ moneyLine(payment()!) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Para birimi</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ payment()!.currency }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Yöntem</dt>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Kanal</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ methodLabel(payment()!.method) }}</dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Tarihler</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Vade</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(payment()!.dueDateUtc) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Ödeme</dt>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Ödeme zamanı</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(payment()!.paidAtUtc) }}</dd>
                         </dl>
                     </div>
@@ -189,9 +158,9 @@ import { EMPTY, switchMap } from 'rxjs';
 
                 <div class="col-span-12">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Not</h5>
+                        <h5 class="mt-0 mb-4">Notlar</h5>
                         @if (payment()!.note === emptyMark) {
-                            <app-empty-state message="Not yok." />
+                            <app-empty-state message="Not bulunmuyor." />
                         } @else {
                             <p class="m-0 whitespace-pre-wrap">{{ payment()!.note }}</p>
                         }
@@ -226,16 +195,22 @@ export class PaymentDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
-    readonly statusLabel = paymentStatusLabel;
-    readonly statusSeverity = paymentStatusSeverity;
     readonly methodLabel = paymentMethodLabel;
     readonly typeDisplay = appointmentTypeDisplayLabel;
 
     moneyLine(p: PaymentDetailVm): string {
         return formatMoney(p.amount, p.currency || 'TRY');
+    }
+
+    headerDescription(p: PaymentDetailVm): string {
+        const parts: string[] = [this.moneyLine(p), this.methodLabel(p.method)];
+        const paid = p.paidAtUtc?.trim();
+        if (paid) {
+            parts.push('Ödeme: ' + this.formatDateTime(paid));
+        }
+        return parts.join(' · ');
     }
 
     ngOnInit(): void {

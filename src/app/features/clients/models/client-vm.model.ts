@@ -3,8 +3,6 @@ export interface ClientListItemVm {
     fullName: string;
     phone: string;
     email: string;
-    petCount: number | null;
-    status: string | null;
     createdAtUtc: string | null;
 }
 
@@ -23,11 +21,7 @@ export interface ClientDetailVm {
     fullName: string;
     phone: string;
     email: string;
-    notes: string;
     address: string;
-    status: string | null;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
-    petsSummary: PetsSummaryVm;
-    appointmentsSummary: AppointmentsSummaryVm;
 }

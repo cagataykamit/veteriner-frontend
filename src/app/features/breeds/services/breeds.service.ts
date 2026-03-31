@@ -5,9 +5,10 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     extractCreatedBreedIdFromPostResponse,
+    mapBreedCreateToApiBody,
     mapBreedDetailDtoToVm,
     mapBreedListResponseToVm,
-    mapBreedUpsertToApiBody
+    mapBreedUpdateToApiBody
 } from '@/app/features/breeds/data/breed.mapper';
 import type { BreedDetailDto } from '@/app/features/breeds/models/breed-api.model';
 import type { BreedUpsertRequest } from '@/app/features/breeds/models/breed-upsert.model';
@@ -48,7 +49,7 @@ export class BreedsService {
     }
 
     createBreed(payload: BreedUpsertRequest): Observable<{ id: string }> {
-        return this.api.post<unknown>(ApiEndpoints.breeds.list(), mapBreedUpsertToApiBody(payload)).pipe(
+        return this.api.post<unknown>(ApiEndpoints.breeds.list(), mapBreedCreateToApiBody(payload)).pipe(
             map((raw) => {
                 const id = extractCreatedBreedIdFromPostResponse(raw);
                 if (!id) {
@@ -76,7 +77,7 @@ export class BreedsService {
     }
 
     updateBreed(id: string, payload: BreedUpsertRequest): Observable<void> {
-        return this.api.put<unknown>(ApiEndpoints.breeds.byId(id), mapBreedUpsertToApiBody(payload)).pipe(
+        return this.api.put<unknown>(ApiEndpoints.breeds.byId(id), mapBreedUpdateToApiBody(id, payload)).pipe(
             map(() => void 0),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {

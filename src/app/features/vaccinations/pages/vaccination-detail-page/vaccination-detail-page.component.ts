@@ -11,6 +11,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { EMPTY, switchMap } from 'rxjs';
 
 @Component({
@@ -177,8 +178,8 @@ export class VaccinationDetailPageComponent implements OnInit {
                     this.vac.set(x);
                     this.loading.set(false);
                 },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
+                error: (e: unknown) => {
+                    this.error.set(panelHttpFailureMessage(e, 'Aşı kaydı yüklenemedi.'));
                     this.loading.set(false);
                 }
             });
@@ -195,8 +196,8 @@ export class VaccinationDetailPageComponent implements OnInit {
                 this.vac.set(x);
                 this.loading.set(false);
             },
-            error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
+            error: (e: unknown) => {
+                this.error.set(panelHttpFailureMessage(e, 'Aşı kaydı yüklenemedi.'));
                 this.loading.set(false);
             }
         });

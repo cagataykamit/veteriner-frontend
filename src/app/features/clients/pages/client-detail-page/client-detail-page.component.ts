@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { clientStatusLabel, clientStatusSeverity } from '@/app/features/clients/utils/client-status.utils';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
@@ -13,7 +13,6 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -25,11 +24,11 @@ import { EMPTY, switchMap } from 'rxjs';
     imports: [
         CommonModule,
         RouterLink,
+        ButtonModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
         <a routerLink="/panel/clients" class="text-primary font-medium no-underline inline-block mb-4">← Müşteri listesine dön</a>
@@ -45,17 +44,23 @@ import { EMPTY, switchMap } from 'rxjs';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (client()) {
-            <app-page-header [title]="client()!.fullName" subtitle="Müşteri" [description]="'Kayıt: ' + formatDt(client()!.createdAtUtc)" />
+            <app-page-header [title]="client()!.fullName" subtitle="Müşteri" [description]="'Kayıt: ' + formatDt(client()!.createdAtUtc)">
+                <a
+                    actions
+                    [routerLink]="['/panel/clients', client()!.id, 'edit']"
+                    pButton
+                    type="button"
+                    label="Düzenle"
+                    icon="pi pi-pencil"
+                    class="p-button-secondary"
+                ></a>
+            </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Genel bilgiler</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="statusLabel(client()!.status)" [severity]="statusSeverity(client()!.status)" />
-                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDt(client()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
@@ -76,13 +81,6 @@ import { EMPTY, switchMap } from 'rxjs';
                         </dl>
                     </div>
                 </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Notlar</h5>
-                        <p class="m-0 whitespace-pre-wrap">{{ client()!.notes }}</p>
-                    </div>
-                </div>
-
                 <div class="col-span-12 lg:col-span-4">
                     <div class="card">
                         <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
@@ -202,8 +200,6 @@ export class ClientDetailPageComponent implements OnInit {
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
-    readonly statusLabel = clientStatusLabel;
-    readonly statusSeverity = clientStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;
 
     ngOnInit(): void {

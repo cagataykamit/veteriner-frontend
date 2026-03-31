@@ -29,10 +29,19 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
     return null;
 }
 
-function readDtoString(dto: PaymentListItemDto | PaymentDetailDto, keys: string[]): string | null {
-    const o = dto as unknown as Record<string, unknown>;
+function isRecord(x: unknown): x is Record<string, unknown> {
+    return x !== null && typeof x === 'object';
+}
+
+function readDtoString(dto: unknown, keys: string[]): string | null {
+    if (!isRecord(dto)) {
+        return null;
+    }
     for (const k of keys) {
-        const v = o[k];
+        if (!(k in dto)) {
+            continue;
+        }
+        const v = dto[k];
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
@@ -47,11 +56,11 @@ function num(v: number | string | null | undefined): number | null {
     return Number(v);
 }
 
-function canonicalClientId(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+function canonicalClientId(dto: PaymentListItemDto): string | null {
     return firstTrimmed(dto.clientId, dto.ownerId, readDtoString(dto, ['ClientId', 'OwnerId', 'CustomerId']));
 }
 
-function canonicalClientName(dto: PaymentListItemDto | PaymentDetailDto): string {
+function canonicalClientName(dto: PaymentListItemDto): string {
     return str(
         firstTrimmed(
             dto.clientName,
@@ -61,35 +70,37 @@ function canonicalClientName(dto: PaymentListItemDto | PaymentDetailDto): string
     );
 }
 
-function canonicalPetId(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+function canonicalPetId(dto: PaymentListItemDto): string | null {
     return firstTrimmed(dto.petId, dto.animalId, readDtoString(dto, ['PetId', 'AnimalId']));
 }
 
-function canonicalPetName(dto: PaymentListItemDto | PaymentDetailDto): string {
+function canonicalPetName(dto: PaymentListItemDto): string {
     return str(firstTrimmed(dto.petName, dto.animalName, readDtoString(dto, ['PetName', 'AnimalName', 'PatientName'])));
 }
 
-function canonicalAmount(dto: PaymentListItemDto | PaymentDetailDto): number | null {
+function canonicalAmount(dto: PaymentListItemDto): number | null {
     return num(dto.amount ?? dto.totalAmount ?? dto.paymentAmount);
 }
 
-function canonicalCurrency(dto: PaymentListItemDto | PaymentDetailDto): string {
+function canonicalCurrency(dto: PaymentListItemDto): string {
     return firstTrimmed(dto.currency, dto.currencyCode) ?? 'TRY';
 }
 
-function canonicalStatus(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+function canonicalStatus(dto: PaymentListItemDto): string | null {
     return firstTrimmed(dto.status, dto.paymentStatus, dto.lifecycleStatus, dto.lifecycle);
 }
 
 /** method / paymentMethod sayı veya string olabilir (backend enum 0/1/2). */
-function readRawMethodFromDto(dto: PaymentListItemDto | PaymentDetailDto): unknown {
-    const o = dto as unknown as Record<string, unknown>;
+function readRawMethodFromUnknown(dto: unknown): unknown {
+    if (!isRecord(dto)) {
+        return null;
+    }
     const keys = ['method', 'paymentMethod', 'methodType', 'Method', 'PaymentMethod', 'MethodType'];
     for (const k of keys) {
-        if (!(k in o)) {
+        if (!(k in dto)) {
             continue;
         }
-        const v = o[k];
+        const v = dto[k];
         if (v === null || v === undefined) {
             continue;
         }
@@ -101,19 +112,51 @@ function readRawMethodFromDto(dto: PaymentListItemDto | PaymentDetailDto): unkno
     return null;
 }
 
-function canonicalMethodFromDto(dto: PaymentListItemDto | PaymentDetailDto): string | null {
-    return resolvePaymentMethodFormValue(readRawMethodFromDto(dto));
+function canonicalMethodFromListDto(dto: PaymentListItemDto): string | null {
+    return resolvePaymentMethodFormValue(readRawMethodFromUnknown(dto));
 }
 
-function canonicalDueDate(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+function detailClientId(dto: PaymentDetailDto): string | null {
+    return firstTrimmed(dto.clientId, readDtoString(dto, ['ClientId']));
+}
+
+function detailClientName(dto: PaymentDetailDto): string {
+    return str(firstTrimmed(dto.clientName, readDtoString(dto, ['ClientName'])));
+}
+
+function detailPetId(dto: PaymentDetailDto): string | null {
+    return firstTrimmed(dto.petId, readDtoString(dto, ['PetId']));
+}
+
+function detailPetName(dto: PaymentDetailDto): string {
+    return str(firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])));
+}
+
+function detailAmount(dto: PaymentDetailDto): number | null {
+    return num(dto.amount);
+}
+
+function detailCurrency(dto: PaymentDetailDto): string {
+    return firstTrimmed(dto.currency, readDtoString(dto, ['Currency'])) ?? 'TRY';
+}
+
+function detailPaidAt(dto: PaymentDetailDto): string | null {
+    return firstTrimmed(dto.paidAtUtc, readDtoString(dto, ['PaidAtUtc']));
+}
+
+function detailNotes(dto: PaymentDetailDto): string {
+    return str(firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])));
+}
+
+function canonicalDueDate(dto: PaymentListItemDto): string | null {
     return firstTrimmed(dto.dueDateUtc, dto.dueAtUtc);
 }
 
-function canonicalPaidAt(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+function canonicalPaidAt(dto: PaymentListItemDto): string | null {
     return firstTrimmed(dto.paidAtUtc, dto.paymentDateUtc, dto.paidOnUtc);
 }
 
-function canonicalCreatedAt(dto: PaymentListItemDto | PaymentDetailDto): string | null {
+function canonicalCreatedAt(dto: PaymentListItemDto): string | null {
     return firstTrimmed(dto.createdAtUtc, dto.createdOnUtc);
 }
 
@@ -128,7 +171,7 @@ export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListI
         amount: canonicalAmount(dto),
         currency: canonicalCurrency(dto),
         status: canonicalStatus(dto),
-        method: canonicalMethodFromDto(dto),
+        method: canonicalMethodFromListDto(dto),
         dueDateUtc: canonicalDueDate(dto),
         paidAtUtc: canonicalPaidAt(dto),
         createdAtUtc: canonicalCreatedAt(dto)
@@ -138,34 +181,29 @@ export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListI
 export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm {
     return {
         id: dto.id,
-        clientId: canonicalClientId(dto),
-        clientName: canonicalClientName(dto),
-        petId: canonicalPetId(dto),
-        petName: canonicalPetName(dto),
-        appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
-        amount: canonicalAmount(dto),
-        currency: canonicalCurrency(dto),
-        status: canonicalStatus(dto),
-        method: canonicalMethodFromDto(dto),
-        note: str(firstTrimmed(dto.note, dto.notes, dto.description)),
-        dueDateUtc: canonicalDueDate(dto),
-        paidAtUtc: canonicalPaidAt(dto),
-        createdAtUtc: canonicalCreatedAt(dto),
-        updatedAtUtc: firstTrimmed(dto.updatedAtUtc, dto.updatedOnUtc)
+        clientId: detailClientId(dto),
+        clientName: detailClientName(dto),
+        petId: detailPetId(dto),
+        petName: detailPetName(dto),
+        amount: detailAmount(dto),
+        currency: detailCurrency(dto),
+        method: resolvePaymentMethodFormValue(readRawMethodFromUnknown(dto)),
+        note: detailNotes(dto),
+        paidAtUtc: detailPaidAt(dto)
     };
 }
 
 export function mapPaymentDetailDtoToEditVm(dto: PaymentDetailDto): PaymentEditVm {
-    const amount = canonicalAmount(dto);
+    const amount = detailAmount(dto);
     return {
         id: dto.id,
-        clientId: canonicalClientId(dto) ?? '',
-        petId: canonicalPetId(dto) ?? '',
+        clientId: detailClientId(dto) ?? '',
+        petId: detailPetId(dto) ?? '',
         amountStr: amount != null ? String(amount) : '',
-        currency: canonicalCurrency(dto),
-        method: canonicalMethodFromDto(dto) ?? 'cash',
-        paidAtUtc: canonicalPaidAt(dto),
-        note: firstTrimmed(dto.note, dto.notes, dto.description) ?? ''
+        currency: detailCurrency(dto),
+        method: resolvePaymentMethodFormValue(readRawMethodFromUnknown(dto)) ?? 'cash',
+        paidAtUtc: detailPaidAt(dto),
+        note: firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])) ?? ''
     };
 }
 

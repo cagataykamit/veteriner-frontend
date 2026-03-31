@@ -6,7 +6,6 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
 import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import {
@@ -16,10 +15,8 @@ import {
 } from '@/app/features/clients/utils/client-create-validation-parse.utils';
 import {
     CLIENT_CREATE_PHONE_MSG_INVALID,
-    CLIENT_CREATE_PHONE_MSG_REQUIRED,
     turkishMobilePhoneValidator
 } from '@/app/features/clients/utils/client-create-phone.utils';
-import { CLIENT_STATUS_FORM_OPTIONS } from '@/app/features/clients/utils/client-status.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
@@ -32,7 +29,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         RouterLink,
         ButtonModule,
         InputTextModule,
-        SelectModule,
         AppPageHeaderComponent
     ],
     template: `
@@ -53,15 +49,12 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
+                        <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
                         <input id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                         @if (apiFieldErrors().phone) {
                             <small class="text-red-500">{{ apiFieldErrors().phone }}</small>
                         } @else if (form.controls.phone.invalid && form.controls.phone.touched) {
-                            @if (form.controls.phone.hasError('phoneRequired')) {
-                                <small class="text-red-500">{{ phoneMsgRequired }}</small>
-                            } @else if (
-                                form.controls.phone.hasError('phoneInvalidChars') ||
+                            @if (form.controls.phone.hasError('phoneInvalidChars') ||
                                 form.controls.phone.hasError('phoneInvalidFormat')
                             ) {
                                 <small class="text-red-500">{{ phoneMsgInvalid }}</small>
@@ -77,35 +70,11 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             <small class="text-red-500">Geçerli e-posta girin.</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                        <p-select
-                            inputId="status"
-                            formControlName="status"
-                            [options]="statusOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Durum seçin"
-                            styleClass="w-full"
-                        />
-                        @if (apiFieldErrors().status) {
-                            <small class="text-red-500">{{ apiFieldErrors().status }}</small>
-                        } @else if (form.controls.status.invalid && form.controls.status.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
-                        }
-                    </div>
                     <div class="col-span-12">
                         <label for="address" class="block text-sm font-medium text-muted-color mb-2">Adres</label>
                         <textarea id="address" rows="2" class="w-full p-inputtext p-component" formControlName="address"></textarea>
                         @if (apiFieldErrors().address) {
                             <small class="text-red-500">{{ apiFieldErrors().address }}</small>
-                        }
-                    </div>
-                    <div class="col-span-12">
-                        <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
-                        <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
-                        @if (apiFieldErrors().notes) {
-                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
                         }
                     </div>
                 </div>
@@ -138,7 +107,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 export class ClientNewPageComponent {
     readonly copy = PANEL_COPY;
 
-    readonly phoneMsgRequired = CLIENT_CREATE_PHONE_MSG_REQUIRED;
     readonly phoneMsgInvalid = CLIENT_CREATE_PHONE_MSG_INVALID;
 
     private readonly fb = inject(FormBuilder);
@@ -151,19 +119,15 @@ export class ClientNewPageComponent {
     /** Sunucu / ValidationProblemDetails alan mesajları — input altında gösterilir. */
     readonly apiFieldErrors = signal<ClientCreateFieldErrors>({});
 
-    readonly statusOptions = [...CLIENT_STATUS_FORM_OPTIONS];
-
     readonly form = this.fb.nonNullable.group({
         fullName: ['', Validators.required],
         phone: ['', turkishMobilePhoneValidator()],
         email: ['', Validators.email],
-        address: [''],
-        notes: [''],
-        status: ['active', Validators.required]
+        address: ['']
     });
 
     constructor() {
-        const fields: ClientCreateFormFieldKey[] = ['fullName', 'phone', 'email', 'address', 'notes', 'status'];
+        const fields: ClientCreateFormFieldKey[] = ['fullName', 'phone', 'email', 'address'];
         for (const f of fields) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
@@ -191,11 +155,9 @@ export class ClientNewPageComponent {
         const v = this.form.getRawValue();
         const payload: CreateClientRequest = {
             fullName: v.fullName,
-            phone: v.phone.trim(),
+            phone: v.phone.trim() || undefined,
             email: v.email.trim() || undefined,
-            address: v.address.trim() || undefined,
-            notes: v.notes.trim() || undefined,
-            status: v.status
+            address: v.address.trim() || undefined
         };
 
         this.submitting.set(true);

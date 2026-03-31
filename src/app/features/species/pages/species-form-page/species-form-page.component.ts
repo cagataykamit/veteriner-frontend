@@ -13,23 +13,43 @@ import {
     type SpeciesUpsertFormFieldKey,
     parseSpeciesUpsertHttpError
 } from '@/app/features/species/utils/species-upsert-validation-parse.utils';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
+import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
 @Component({
     selector: 'app-species-form-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        RouterLink,
+        ButtonModule,
+        InputTextModule,
+        SelectModule,
+        AppPageHeaderComponent,
+        AppLoadingStateComponent,
+        AppErrorStateComponent
+    ],
     template: `
         <a routerLink="/panel/species" class="text-primary font-medium no-underline inline-block mb-4">← Tür listesine dön</a>
 
-        <app-page-header
-            [title]="editing() ? 'Tür Düzenle' : 'Yeni Tür'"
-            subtitle="Referans yönetimi"
-            [description]="editing() ? 'Tür kaydını güncelleyin.' : 'Yeni tür kaydı oluşturun.'"
-        />
+        @if (editing() && loading()) {
+            <app-loading-state message="Tür bilgileri yükleniyor…" />
+        } @else if (editing() && loadError()) {
+            <div class="card">
+                <app-error-state [detail]="loadError()!" [showRetry]="!!currentId()" (retry)="reloadSpeciesRecord()" />
+            </div>
+        } @else {
+            <app-page-header
+                [title]="editing() ? 'Tür Düzenle' : 'Yeni Tür'"
+                subtitle="Referans yönetimi"
+                [description]="editing() ? 'Tür kaydını güncelleyin.' : 'Yeni tür kaydı oluşturun.'"
+            />
 
-        <div class="card">
+            <div class="card">
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -110,6 +130,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 </div>
             </form>
         </div>
+        }
     `
 })
 export class SpeciesFormPageComponent implements OnInit {
@@ -121,6 +142,7 @@ export class SpeciesFormPageComponent implements OnInit {
 
     readonly editing = signal(false);
     readonly loading = signal(false);
+    readonly loadError = signal<string | null>(null);
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly apiFieldErrors = signal<SpeciesUpsertFieldErrors>({});
@@ -145,7 +167,16 @@ export class SpeciesFormPageComponent implements OnInit {
         }
         this.editing.set(true);
         this.currentId.set(id);
+        this.reloadSpeciesRecord();
+    }
+
+    reloadSpeciesRecord(): void {
+        const id = this.currentId();
+        if (!id) {
+            return;
+        }
         this.loading.set(true);
+        this.loadError.set(null);
         this.speciesService.getSpeciesById(id).subscribe({
             next: (item) => {
                 this.form.patchValue({
@@ -156,8 +187,8 @@ export class SpeciesFormPageComponent implements OnInit {
                 });
                 this.loading.set(false);
             },
-            error: (e: Error) => {
-                this.submitError.set(e.message ?? 'Kayıt yüklenemedi.');
+            error: (e: unknown) => {
+                this.loadError.set(panelHttpFailureMessage(e, 'Tür bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
         });
@@ -211,6 +242,6 @@ export class SpeciesFormPageComponent implements OnInit {
             this.submitError.set(parsed.summaryMessage);
             return;
         }
-        this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
+        this.submitError.set(panelHttpFailureMessage(e, 'Kayıt sırasında hata oluştu.'));
     }
 }

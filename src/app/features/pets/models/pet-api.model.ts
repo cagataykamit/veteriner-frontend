@@ -10,11 +10,6 @@ export interface PetListItemDto {
     breedId?: string | null;
     breedName?: string | null;
     breed?: string | null;
-    ownerName?: string | null;
-    /** Detay: backend `PetGender` enum (1=Male, 2=Female) veya metin. */
-    gender?: string | number | null;
-    birthDate?: string | null;
-    birthDateUtc?: string | null;
     colorId?: string | null;
     colorName?: string | null;
     /** Eski yanıtlar: düz metin renk (gösterim yedeği). */

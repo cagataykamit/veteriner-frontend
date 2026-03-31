@@ -26,16 +26,11 @@ export interface PaymentDetailVm {
     clientName: string;
     petId: string | null;
     petName: string;
-    appointmentId: string | null;
     amount: number | null;
     currency: string;
-    status: string | null;
     method: string | null;
     note: string;
-    dueDateUtc: string | null;
     paidAtUtc: string | null;
-    createdAtUtc: string | null;
-    updatedAtUtc: string | null;
 }
 
 export interface PaymentEditVm {

@@ -48,6 +48,11 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                             </svg>
                             <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Veteriner paneli</div>
                             <span class="text-muted-color font-medium">Hesabınızla giriş yapın</span>
+                            @if (sessionRenewHint()) {
+                                <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium text-primary" role="status">
+                                    {{ sessionRenewHint() }}
+                                </p>
+                            }
                         </div>
 
                         <div>
@@ -110,8 +115,20 @@ export class Login implements OnInit {
 
     readonly loginError = signal<string | null>(null);
 
+    /** Yenileme başarısız / ikinci 401 sonrası interceptor `reauth=1` ile yönlendirir. */
+    readonly sessionRenewHint = signal<string | null>(null);
+
     ngOnInit(): void {
         removeOrphanedPrimeMenuPopupsFromBody(document);
+        if (this.route.snapshot.queryParamMap.get('reauth') === '1') {
+            this.sessionRenewHint.set('Oturum süresi doldu veya oturum yenilenemedi. Lütfen tekrar giriş yapın.');
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { reauth: null },
+                queryParamsHandling: 'merge',
+                replaceUrl: true
+            });
+        }
     }
 
     signIn(): void {
@@ -119,6 +136,7 @@ export class Login implements OnInit {
             return;
         }
         this.loginError.set(null);
+        this.sessionRenewHint.set(null);
         const email = this.email?.trim() ?? '';
         if (!email || !this.password) {
             this.loginError.set('E-posta ve şifre zorunludur.');

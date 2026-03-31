@@ -70,7 +70,8 @@ export interface ExaminationDetailDto {
     finding?: string | null;
     assessment?: string | null;
     diagnosis?: string | null;
-    createdAtUtc: string;
+    /** Audit — API eksik döndürebilir; mapper null kabul eder. */
+    createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
 }
 

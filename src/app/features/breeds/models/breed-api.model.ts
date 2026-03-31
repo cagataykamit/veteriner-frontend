@@ -2,26 +2,26 @@ export interface BreedListItemDto {
     id: string;
     speciesId?: string | null;
     speciesName?: string | null;
-    code?: string | null;
     name?: string | null;
     isActive?: boolean | null;
-    displayOrder?: number | null;
 }
 
 export interface BreedDetailDto {
     id: string;
     speciesId?: string | null;
+    speciesCode?: string | null;
     speciesName?: string | null;
-    code?: string | null;
     name?: string | null;
     isActive?: boolean | null;
-    displayOrder?: number | null;
 }
 
-export interface BreedUpsertRequestDto {
+export interface BreedCreateRequestDto {
     speciesId: string;
-    code: string;
+    name: string;
+}
+
+export interface BreedUpdateRequestDto {
+    id: string;
     name: string;
     isActive: boolean;
-    displayOrder: number;
 }

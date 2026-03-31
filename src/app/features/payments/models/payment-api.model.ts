@@ -46,44 +46,23 @@ export interface PaymentListItemDtoPagedResult {
     totalPages: number;
 }
 
-/** GET /payments/{id} — `clientName` / `petName` Client/Pet lookup (PetId yoksa petName ""). */
+/** GET /payments/{id} — backend aggregate: tutar, kanal (method), ödeme zamanı (paidAtUtc), notlar. */
 export interface PaymentDetailDto {
     id: string;
-    tenantId?: string;
+    tenantId?: string | null;
+    clinicId?: string | null;
     clientId?: string | null;
-    ownerId?: string | null;
     clientName?: string | null;
-    ownerName?: string | null;
     petId?: string | null;
-    animalId?: string | null;
     petName?: string | null;
-    animalName?: string | null;
     appointmentId?: string | null;
+    examinationId?: string | null;
     amount?: number | string | null;
-    totalAmount?: number | string | null;
-    paymentAmount?: number | string | null;
     currency?: string | null;
-    currencyCode?: string | null;
-    status?: string | null;
-    paymentStatus?: string | null;
-    lifecycleStatus?: string | null;
-    lifecycle?: string | null;
-    /** Backend genelde 0/1/2 enum; bazen string. */
+    /** Ödeme kanalı — backend enum (sayı) veya string. */
     method?: string | number | null;
-    paymentMethod?: string | number | null;
-    methodType?: string | number | null;
-    note?: string | null;
-    notes?: string | null;
-    description?: string | null;
-    dueDateUtc?: string | null;
-    dueAtUtc?: string | null;
     paidAtUtc?: string | null;
-    paymentDateUtc?: string | null;
-    paidOnUtc?: string | null;
-    createdAtUtc?: string | null;
-    createdOnUtc?: string | null;
-    updatedAtUtc?: string | null;
-    updatedOnUtc?: string | null;
+    notes?: string | null;
 }
 
 export interface PaymentCreateRequestDto {

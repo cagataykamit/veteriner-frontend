@@ -83,8 +83,8 @@ function canonicalGenderRaw(dto: PetListItemDto | PetDetailDto): string {
     return resolved ? resolved : EM;
 }
 
-/** Okuma: canonical `birthDate` (DateOnly); yalnızca eski API için `birthDateUtc` yedeği. */
-function canonicalPetBirthDateRead(dto: PetListItemDto | PetDetailDto): string | null {
+/** Detay okuma: canonical `birthDate` (DateOnly); yalnızca eski API için `birthDateUtc` yedeği. */
+function canonicalPetBirthDateRead(dto: PetDetailDto): string | null {
     return firstTrimmed(
         dto.birthDate,
         readDtoString(dto, ['BirthDate']),
@@ -255,10 +255,7 @@ export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
         clientId: dto.clientId?.trim() ? dto.clientId : null,
         name: str(dto.name),
         speciesName: speciesName(dto.speciesName),
-        breed: canonicalBreedDisplay(dto),
-        ownerName: str(dto.ownerName),
-        gender: canonicalGenderRaw(dto),
-        birthDate: canonicalPetBirthDateRead(dto),
+        breed: str(firstTrimmed(dto.breed, dto.breedName)),
         colorName: canonicalColorDisplayName(dto),
         weight: weightStr
     };

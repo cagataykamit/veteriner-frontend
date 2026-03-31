@@ -1,12 +1,11 @@
 import { HttpParams } from '@angular/common/http';
 import type {
-    ClientCreateRequestDto,
+    ClientUpsertRequestDto,
     ClientDetailDto,
     ClientListItemDto,
     ClientListItemDtoPagedResult
 } from '@/app/features/clients/models/client-api.model';
 import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
-import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 import type { ClientDetailVm, ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 
@@ -22,8 +21,6 @@ export function mapClientListItemDtoToVm(dto: ClientListItemDto): ClientListItem
         fullName: str(dto.fullName),
         phone: str(dto.phone),
         email: dto.email?.trim() ? dto.email : EM,
-        petCount: dto.petCount ?? null,
-        status: dto.status?.trim() ? dto.status : null,
         createdAtUtc: dto.createdAtUtc ?? null
     };
 }
@@ -81,46 +78,27 @@ function pickIdString(v: unknown): string | null {
     return null;
 }
 
-export function mapCreateClientToApiBody(req: CreateClientRequest): ClientCreateRequestDto {
+export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsertRequestDto {
     const email = req.email?.trim() ? req.email.trim() : null;
     const address = req.address?.trim() ? req.address.trim() : null;
-    const notes = req.notes?.trim() ? req.notes.trim() : null;
-    const status = req.status?.trim() ? req.status.trim() : null;
+    const phone = req.phone?.trim() ? req.phone.trim() : null;
     return {
         fullName: req.fullName.trim(),
-        phone: req.phone.trim(),
+        phone,
         email,
-        address,
-        notes,
-        status
+        address
     };
 }
 
 export function mapClientDetailDtoToVm(dto: ClientDetailDto): ClientDetailVm {
-    const pets = dto.petsSummary;
-    const appt = dto.appointmentsSummary;
-
     return {
         id: dto.id,
         fullName: str(dto.fullName),
         phone: str(dto.phone),
         email: str(dto.email),
-        notes: dto.notes?.trim() ? dto.notes : EM,
         address: dto.address?.trim() ? dto.address : EM,
-        status: dto.status?.trim() ? dto.status : null,
         createdAtUtc: dto.createdAtUtc ?? null,
-        updatedAtUtc: dto.updatedAtUtc ?? null,
-        petsSummary: {
-            totalCount: pets?.totalCount ?? 0,
-            items: (pets?.items ?? []).map((p) => ({
-                id: p.id,
-                name: p.name?.trim() ? p.name! : EM
-            }))
-        },
-        appointmentsSummary: {
-            totalCount: appt?.totalCount ?? 0,
-            upcomingCount: appt?.upcomingCount ?? null
-        }
+        updatedAtUtc: dto.updatedAtUtc ?? null
     };
 }
 
@@ -160,18 +138,3 @@ export function clientsQueryToHttpParams(query: ClientsListQuery): HttpParams {
     return p;
 }
 
-/** Status filtresi: API desteklemediğinde istemci tarafında uygulanır. */
-export function filterClientListByStatus(items: ClientListItemVm[], status: string | null | undefined): ClientListItemVm[] {
-    const s = status?.trim();
-    if (!s) {
-        return items;
-    }
-    const target = normalizeFilterKey(s);
-    return items.filter((i) => {
-        const st = (i.status ?? '').trim();
-        if (!st) {
-            return false;
-        }
-        return normalizeFilterKey(st) === target;
-    });
-}

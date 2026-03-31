@@ -43,26 +43,22 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 @if (items().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
-                    <p-table [value]="items()" [tableStyle]="{ 'min-width': '70rem' }">
+                    <p-table [value]="items()" [tableStyle]="{ 'min-width': '56rem' }">
                         <ng-template #header>
                             <tr>
                                 <th>Ad</th>
-                                <th>Kod</th>
                                 <th>Tür</th>
                                 <th>Durum</th>
-                                <th>Sıra</th>
                                 <th style="width: 8rem">İşlemler</th>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
                             <tr>
                                 <td class="font-medium">{{ row.name }}</td>
-                                <td>{{ row.code }}</td>
                                 <td>{{ row.speciesName }}</td>
                                 <td>
                                     <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />
                                 </td>
-                                <td>{{ row.displayOrder }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
                                 </td>

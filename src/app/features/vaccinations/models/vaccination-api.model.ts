@@ -15,6 +15,8 @@ export interface VaccinationListItemDto {
     vaccineName?: string | null;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
+    /** Bazı list yanıtlarında sonraki doz tarihi bu adla gelir. */
+    nextDueAtUtc?: string | null;
     status?: number | null;
     notes?: string | null;
 }
@@ -46,7 +48,7 @@ export interface VaccinationDetailDto {
     dueAtUtc?: string | null;
     status: number;
     notes?: string | null;
-    createdAtUtc: string;
+    createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
 }
 

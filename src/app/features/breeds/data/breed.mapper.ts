@@ -1,7 +1,8 @@
 import type {
+    BreedCreateRequestDto,
     BreedDetailDto,
     BreedListItemDto,
-    BreedUpsertRequestDto
+    BreedUpdateRequestDto
 } from '@/app/features/breeds/models/breed-api.model';
 import type { BreedUpsertRequest } from '@/app/features/breeds/models/breed-upsert.model';
 import type { BreedDetailVm, BreedListItemVm } from '@/app/features/breeds/models/breed-vm.model';
@@ -21,10 +22,8 @@ export function mapBreedListItemDtoToVm(dto: BreedListItemDto): BreedListItemVm 
         id: dto.id,
         speciesId: dto.speciesId?.trim() ? dto.speciesId : null,
         speciesName: speciesName(dto.speciesName),
-        code: str(dto.code),
         name: str(dto.name),
-        isActive: dto.isActive ?? false,
-        displayOrder: dto.displayOrder ?? 0
+        isActive: dto.isActive ?? false
     };
 }
 
@@ -33,20 +32,24 @@ export function mapBreedDetailDtoToVm(dto: BreedDetailDto): BreedDetailVm {
         id: dto.id,
         speciesId: dto.speciesId?.trim() ? dto.speciesId : null,
         speciesName: speciesName(dto.speciesName),
-        code: str(dto.code),
+        speciesCode: str(dto.speciesCode),
         name: str(dto.name),
-        isActive: dto.isActive ?? false,
-        displayOrder: dto.displayOrder ?? 0
+        isActive: dto.isActive ?? false
     };
 }
 
-export function mapBreedUpsertToApiBody(req: BreedUpsertRequest): BreedUpsertRequestDto {
+export function mapBreedCreateToApiBody(req: BreedUpsertRequest): BreedCreateRequestDto {
     return {
         speciesId: req.speciesId.trim(),
-        code: req.code.trim(),
+        name: req.name.trim()
+    };
+}
+
+export function mapBreedUpdateToApiBody(id: string, req: BreedUpsertRequest): BreedUpdateRequestDto {
+    return {
+        id: id.trim(),
         name: req.name.trim(),
-        isActive: !!req.isActive,
-        displayOrder: Number.isFinite(req.displayOrder) ? req.displayOrder : 0
+        isActive: !!req.isActive
     };
 }
 
@@ -131,18 +134,14 @@ function normalizeBreedLike(v: BreedListItemDto): BreedListItemDto {
         Id?: string | null;
         SpeciesId?: string | null;
         SpeciesName?: string | null;
-        Code?: string | null;
         Name?: string | null;
         IsActive?: boolean | null;
-        DisplayOrder?: number | null;
     };
     return {
         id: o.id ?? o.Id ?? '',
         speciesId: o.speciesId ?? o.SpeciesId ?? null,
         speciesName: o.speciesName ?? o.SpeciesName ?? null,
-        code: o.code ?? o.Code ?? null,
         name: o.name ?? o.Name ?? null,
-        isActive: o.isActive ?? o.IsActive ?? null,
-        displayOrder: o.displayOrder ?? o.DisplayOrder ?? null
+        isActive: o.isActive ?? o.IsActive ?? null
     };
 }

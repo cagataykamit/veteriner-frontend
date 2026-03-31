@@ -25,7 +25,7 @@ import {
     petOptionsFromList,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { amountToFormString, parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -52,7 +52,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
             <app-loading-state message="Ödeme düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
             <div class="card">
-                <app-error-state [detail]="loadError()!" (retry)="reload()" />
+                <app-error-state [detail]="loadError()!" [showRetry]="paymentLoadRetryEnabled()" (retry)="reload()" />
             </div>
         } @else {
             <app-page-header title="Ödemeyi Düzenle" subtitle="Finans" description="Ödeme kaydını güncelleyin." />
@@ -198,6 +198,7 @@ export class PaymentEditPageComponent implements OnInit {
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
+    readonly paymentLoadRetryEnabled = signal(false);
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
@@ -233,9 +234,11 @@ export class PaymentEditPageComponent implements OnInit {
         if (!id) {
             this.loadError.set('Geçersiz ödeme kaydı.');
             this.loading.set(false);
+            this.paymentLoadRetryEnabled.set(false);
             return;
         }
         this.paymentId = id;
+        this.paymentLoadRetryEnabled.set(true);
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             const cid = (clientId ?? '').trim();
@@ -279,8 +282,8 @@ export class PaymentEditPageComponent implements OnInit {
                 }
                 this.loading.set(false);
             },
-            error: (e: Error) => {
-                this.loadError.set(e.message ?? 'Yükleme hatası');
+            error: (e: unknown) => {
+                this.loadError.set(panelHttpFailureMessage(e, 'Ödeme bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
         });
@@ -343,7 +346,7 @@ export class PaymentEditPageComponent implements OnInit {
                     this.submitError.set(parsed.summaryMessage);
                     return;
                 }
-                this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
+                this.submitError.set(panelHttpFailureMessage(e, 'Kayıt sırasında hata oluştu.'));
             }
         });
     }

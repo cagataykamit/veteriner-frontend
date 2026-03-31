@@ -14,23 +14,43 @@ import {
     parseBreedUpsertHttpError
 } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
+import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
 @Component({
     selector: 'app-breed-form-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        RouterLink,
+        ButtonModule,
+        InputTextModule,
+        SelectModule,
+        AppPageHeaderComponent,
+        AppLoadingStateComponent,
+        AppErrorStateComponent
+    ],
     template: `
         <a routerLink="/panel/breeds" class="text-primary font-medium no-underline inline-block mb-4">← Irk listesine dön</a>
 
-        <app-page-header
-            [title]="editing() ? 'Irk Düzenle' : 'Yeni Irk'"
-            subtitle="Referans yönetimi"
-            [description]="editing() ? 'Irk kaydını güncelleyin.' : 'Yeni ırk kaydı oluşturun.'"
-        />
+        @if (editing() && loading()) {
+            <app-loading-state message="Irk bilgileri yükleniyor…" />
+        } @else if (editing() && loadError()) {
+            <div class="card">
+                <app-error-state [detail]="loadError()!" [showRetry]="!!currentId()" (retry)="reloadBreedRecord()" />
+            </div>
+        } @else {
+            <app-page-header
+                [title]="editing() ? 'Irk Düzenle' : 'Yeni Irk'"
+                subtitle="Referans yönetimi"
+                [description]="editing() ? 'Irk kaydını güncelleyin.' : 'Yeni ırk kaydı oluşturun.'"
+            />
 
-        <div class="card">
+            <div class="card">
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -49,19 +69,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
                         } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
                             <small class="text-red-500">Tür seçimi zorunludur.</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="code" class="block text-sm font-medium text-muted-color mb-2">Kod *</label>
-                        <input id="code" pInputText class="w-full" formControlName="code" />
-                        @if (apiFieldErrors().code) {
-                            <small class="text-red-500">{{ apiFieldErrors().code }}</small>
-                        } @else if (form.controls.code.invalid && form.controls.code.touched) {
-                            @if (form.controls.code.hasError('required')) {
-                                <small class="text-red-500">Kod zorunludur.</small>
-                            } @else if (form.controls.code.hasError('maxlength')) {
-                                <small class="text-red-500">Kod en fazla 32 karakter olabilir.</small>
-                            }
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -91,19 +98,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="displayOrder" class="block text-sm font-medium text-muted-color mb-2">Sıra *</label>
-                        <input id="displayOrder" type="number" min="0" class="w-full p-inputtext p-component" formControlName="displayOrder" />
-                        @if (apiFieldErrors().displayOrder) {
-                            <small class="text-red-500">{{ apiFieldErrors().displayOrder }}</small>
-                        } @else if (form.controls.displayOrder.invalid && form.controls.displayOrder.touched) {
-                            @if (form.controls.displayOrder.hasError('required')) {
-                                <small class="text-red-500">Sıra zorunludur.</small>
-                            } @else if (form.controls.displayOrder.hasError('min')) {
-                                <small class="text-red-500">Sıra 0 veya daha büyük olmalıdır.</small>
-                            }
-                        }
-                    </div>
                 </div>
 
                 @if (submitError()) {
@@ -129,6 +123,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 </div>
             </form>
         </div>
+        }
     `
 })
 export class BreedFormPageComponent implements OnInit {
@@ -141,6 +136,7 @@ export class BreedFormPageComponent implements OnInit {
 
     readonly editing = signal(false);
     readonly loading = signal(false);
+    readonly loadError = signal<string | null>(null);
     readonly loadingSpecies = signal(false);
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -155,10 +151,8 @@ export class BreedFormPageComponent implements OnInit {
 
     readonly form = this.fb.nonNullable.group({
         speciesId: ['', Validators.required],
-        code: ['', [Validators.required, Validators.maxLength(32)]],
         name: ['', [Validators.required, Validators.maxLength(128)]],
-        isActive: [true, Validators.required],
-        displayOrder: [0, [Validators.required, Validators.min(0)]]
+        isActive: [true, Validators.required]
     });
 
     ngOnInit(): void {
@@ -169,20 +163,27 @@ export class BreedFormPageComponent implements OnInit {
         }
         this.editing.set(true);
         this.currentId.set(id);
+        this.reloadBreedRecord();
+    }
+
+    reloadBreedRecord(): void {
+        const id = this.currentId();
+        if (!id) {
+            return;
+        }
         this.loading.set(true);
+        this.loadError.set(null);
         this.breedsService.getBreedById(id).subscribe({
             next: (item) => {
                 this.form.patchValue({
                     speciesId: item.speciesId ?? '',
-                    code: item.code === '—' ? '' : item.code,
                     name: item.name === '—' ? '' : item.name,
-                    isActive: item.isActive,
-                    displayOrder: item.displayOrder
+                    isActive: item.isActive
                 });
                 this.loading.set(false);
             },
-            error: (e: Error) => {
-                this.submitError.set(e.message ?? 'Kayıt yüklenemedi.');
+            error: (e: unknown) => {
+                this.loadError.set(panelHttpFailureMessage(e, 'Irk bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
         });
@@ -198,10 +199,8 @@ export class BreedFormPageComponent implements OnInit {
         const v = this.form.getRawValue();
         const payload: BreedUpsertRequest = {
             speciesId: v.speciesId.trim(),
-            code: v.code.trim(),
             name: v.name.trim(),
-            isActive: !!v.isActive,
-            displayOrder: Number(v.displayOrder)
+            isActive: !!v.isActive
         };
 
         this.submitting.set(true);
@@ -241,8 +240,8 @@ export class BreedFormPageComponent implements OnInit {
                 );
                 this.loadingSpecies.set(false);
             },
-            error: (e: Error) => {
-                this.submitError.set(e.message ?? 'Tür listesi yüklenemedi.');
+            error: (e: unknown) => {
+                this.submitError.set(panelHttpFailureMessage(e, 'Tür listesi yüklenemedi.'));
                 this.loadingSpecies.set(false);
             }
         });
@@ -256,6 +255,6 @@ export class BreedFormPageComponent implements OnInit {
             this.submitError.set(parsed.summaryMessage);
             return;
         }
-        this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
+        this.submitError.set(panelHttpFailureMessage(e, 'Kayıt sırasında hata oluştu.'));
     }
 }

@@ -10,8 +10,6 @@ export interface ClientListItemDto {
     phone?: string | null;
     /** Swagger sonraki sürümlerde eklenebilir — opsiyonel */
     email?: string | null;
-    petCount?: number | null;
-    status?: string | null;
     createdAtUtc?: string | null;
 }
 
@@ -29,34 +27,18 @@ export interface ClientDetailDto {
     fullName?: string | null;
     phone?: string | null;
     email?: string | null;
-    notes?: string | null;
     address?: string | null;
-    status?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
-    petsSummary?: ClientPetsSummaryDto | null;
-    appointmentsSummary?: ClientAppointmentsSummaryDto | null;
-}
-
-export interface ClientPetsSummaryDto {
-    totalCount?: number;
-    items?: { id: string; name?: string | null }[] | null;
-}
-
-export interface ClientAppointmentsSummaryDto {
-    totalCount?: number;
-    upcomingCount?: number;
 }
 
 /**
  * POST /clients gövdesi — camelCase (Swagger ile doğrulanmalı).
  * Opsiyonel alanlar backend’de yoksa mapper’dan çıkarılabilir.
  */
-export interface ClientCreateRequestDto {
+export interface ClientUpsertRequestDto {
     fullName: string;
-    phone: string;
+    phone?: string | null;
     email?: string | null;
     address?: string | null;
-    notes?: string | null;
-    status?: string | null;
 }

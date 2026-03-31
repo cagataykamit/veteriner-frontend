@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { messageFromPetCreateHttpError } from '@/app/features/pets/utils/pet-create-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
 
@@ -63,10 +64,12 @@ function isLikelyMojibake(s: string): boolean {
 }
 
 function isGenericValidationTitle(s: string): boolean {
+    const t = s.trim();
     return (
+        /^İstek\s+işlenemedi\.?$/iu.test(t) ||
         /one or more validation errors occurred/i.test(s) ||
-        /^validation failed/i.test(s.trim()) ||
-        /^bad request$/i.test(s.trim())
+        /^validation failed/i.test(t) ||
+        /^bad request$/i.test(t)
     );
 }
 
@@ -98,7 +101,7 @@ function resolveNonFieldErrorMessage(err: HttpErrorResponse): string {
     }
 
     if (status === 400 || status === 422) {
-        return FALLBACK_GENERIC;
+        return messageFromHttpError(err, FALLBACK_GENERIC);
     }
 
     return messageFromPetCreateHttpError(err);
