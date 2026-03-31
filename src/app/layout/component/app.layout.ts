@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AppTopbar } from './app.topbar';
@@ -11,6 +11,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
     standalone: true,
     imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter],
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
+        <div #primePanelOverlayHost class="layout-prime-panel-overlay-host"></div>
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
@@ -24,6 +25,8 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 })
 export class AppLayout {
     layoutService = inject(LayoutService);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly primePanelOverlayHostEl = viewChild<ElementRef<HTMLElement>>('primePanelOverlayHost');
 
     constructor() {
         effect(() => {
@@ -33,6 +36,15 @@ export class AppLayout {
             } else {
                 document.body.classList.remove('blocked-scroll');
             }
+        });
+
+        afterNextRender(() => {
+            const el = this.primePanelOverlayHostEl()?.nativeElement ?? null;
+            this.layoutService.setPrimePanelOverlayHost(el);
+        });
+
+        this.destroyRef.onDestroy(() => {
+            this.layoutService.setPrimePanelOverlayHost(null);
         });
     }
 

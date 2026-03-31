@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -16,6 +16,7 @@ import {
     loginFailureMessage
 } from '@/app/core/auth/auth-error.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
+import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
 @Component({
     selector: 'app-login',
@@ -94,7 +95,7 @@ import type { ClinicSummary } from '@/app/core/auth/auth.models';
         </div>
     `
 })
-export class Login {
+export class Login implements OnInit {
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
@@ -108,6 +109,10 @@ export class Login {
     readonly signInLoading = signal(false);
 
     readonly loginError = signal<string | null>(null);
+
+    ngOnInit(): void {
+        removeOrphanedPrimeMenuPopupsFromBody(document);
+    }
 
     signIn(): void {
         if (this.signInLoading()) {

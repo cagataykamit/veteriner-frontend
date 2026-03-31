@@ -52,6 +52,16 @@ export class LayoutService {
 
     transitionComplete = signal<boolean>(false);
 
+    /**
+     * Panel shell içi PrimeNG overlay append hedefi (`p-menu` vb.).
+     * `document.body` yerine kullanıldığında layout destroy ile DOM birlikte temizlenir.
+     */
+    primePanelOverlayHost = signal<HTMLElement | null>(null);
+
+    setPrimePanelOverlayHost(el: HTMLElement | null): void {
+        this.primePanelOverlayHost.set(el);
+    }
+
     private initialized = false;
 
     constructor() {

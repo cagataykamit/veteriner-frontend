@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { MenuModule } from 'primeng/menu';
+import { Menu, MenuModule } from 'primeng/menu';
 import { StyleClassModule } from 'primeng/styleclass';
+import { finalize } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
@@ -79,7 +81,12 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                 >
                     <i class="pi pi-user"></i>
                 </button>
-                <p-menu #userMenu [popup]="true" [model]="userMenuItems" [appendTo]="'body'" />
+                <p-menu
+                    #userMenu
+                    [popup]="true"
+                    [model]="userMenuItems"
+                    [appendTo]="layoutService.primePanelOverlayHost() ?? undefined"
+                />
             </div>
 
             <button class="layout-topbar-menu-button layout-topbar-action" pStyleClass="@next" enterFromClass="hidden" enterActiveClass="animate-scalein" leaveToClass="hidden" leaveActiveClass="animate-fadeout" [hideOnOutsideClick]="true">
@@ -101,10 +108,11 @@ import { LayoutService } from '@/app/layout/service/layout.service';
         </div>
     </div>`
 })
-export class AppTopbar implements OnInit {
+export class AppTopbar implements OnInit, OnDestroy {
     readonly layoutService = inject(LayoutService);
     readonly auth = inject(AuthService);
     private readonly router = inject(Router);
+    private readonly userMenuRef = viewChild<Menu>('userMenu');
 
     userMenuItems: MenuItem[] = [];
 
@@ -115,6 +123,21 @@ export class AppTopbar implements OnInit {
         ];
     }
 
+    ngOnDestroy(): void {
+        // PrimeNG Menu destroy sırasında body’ye taşınan node bazen geri alınamıyor; sökümü garanti et.
+        this.purgeUserMenuOverlayFromDocument();
+    }
+
+    private closeUserMenu(): void {
+        this.userMenuRef()?.hide();
+    }
+
+    /** State + DOM: popup kapat ve body’de kalan `.p-menu.p-menu-overlay` orphan’ını kaldır. */
+    private purgeUserMenuOverlayFromDocument(): void {
+        this.closeUserMenu();
+        removeOrphanedPrimeMenuPopupsFromBody(document);
+    }
+
     toggleDarkMode() {
         this.layoutService.layoutConfig.update((state) => ({
             ...state,
@@ -123,29 +146,41 @@ export class AppTopbar implements OnInit {
     }
 
     private logoutCurrent(): void {
-        this.auth.logoutCurrentSession().subscribe({
-            next: () => {
-                void this.router.navigate(['/auth/login'], { replaceUrl: true });
-            },
-            error: () => {
-                this.auth.logout();
-                void this.router.navigate(['/auth/login'], { replaceUrl: true });
-            }
-        });
+        this.purgeUserMenuOverlayFromDocument();
+        this.auth
+            .logoutCurrentSession()
+            .pipe(finalize(() => this.purgeUserMenuOverlayFromDocument()))
+            .subscribe({
+                next: () => {
+                    removeOrphanedPrimeMenuPopupsFromBody(document);
+                    void this.router.navigate(['/auth/login'], { replaceUrl: true });
+                },
+                error: () => {
+                    this.auth.logout();
+                    removeOrphanedPrimeMenuPopupsFromBody(document);
+                    void this.router.navigate(['/auth/login'], { replaceUrl: true });
+                }
+            });
     }
 
     private logoutAll(): void {
         if (!window.confirm('Tüm cihazlardaki oturumlarınız sonlandırılacak. Devam edilsin mi?')) {
             return;
         }
-        this.auth.logoutAllSessions().subscribe({
-            next: () => {
-                void this.router.navigate(['/auth/login'], { replaceUrl: true });
-            },
-            error: () => {
-                this.auth.logout();
-                void this.router.navigate(['/auth/login'], { replaceUrl: true });
-            }
-        });
+        this.purgeUserMenuOverlayFromDocument();
+        this.auth
+            .logoutAllSessions()
+            .pipe(finalize(() => this.purgeUserMenuOverlayFromDocument()))
+            .subscribe({
+                next: () => {
+                    removeOrphanedPrimeMenuPopupsFromBody(document);
+                    void this.router.navigate(['/auth/login'], { replaceUrl: true });
+                },
+                error: () => {
+                    this.auth.logout();
+                    removeOrphanedPrimeMenuPopupsFromBody(document);
+                    void this.router.navigate(['/auth/login'], { replaceUrl: true });
+                }
+            });
     }
 }

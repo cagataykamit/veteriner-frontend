@@ -1,5 +1,27 @@
 @use 'mixins' as *;
 
+/**
+ * PrimeNG popup append hedefi — layout destroy ile gider.
+ * pointer-events: none → tıklama topbar’a düşer; yalnızca .p-menu paneli auto ile tıklanır.
+ */
+.layout-prime-panel-overlay-host {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.layout-prime-panel-overlay-host .p-menu.p-menu-overlay {
+    pointer-events: auto;
+}
+
 .layout-topbar {
     position: fixed;
     height: 4rem;
