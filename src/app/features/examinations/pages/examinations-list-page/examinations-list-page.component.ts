@@ -37,32 +37,33 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
         <div class="card mb-6">
             <div class="grid grid-cols-12 gap-4 items-end">
-                <div class="col-span-12 md:col-span-3">
+                <div class="col-span-12 md:col-span-4">
                     <label for="exSearch" class="block text-sm font-medium text-muted-color mb-2">Arama</label>
                     <input
                         pInputText
                         id="exSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Müşteri, hayvan, şikayet…"
-                        (keyup.enter)="applySearch()"
+                        placeholder="Müşteri, hayvan, ziyaret sebebi, bulgular…"
+                        (keyup.enter)="applyFilters()"
                     />
                 </div>
-                <div class="col-span-12 md:col-span-2">
+                <div class="col-span-12 md:col-span-3">
                     <label for="exFrom" class="block text-sm font-medium text-muted-color mb-2">Başlangıç</label>
                     <input id="exFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
                 </div>
-                <div class="col-span-12 md:col-span-2">
+                <div class="col-span-12 md:col-span-3">
                     <label for="exTo" class="block text-sm font-medium text-muted-color mb-2">Bitiş</label>
                     <input id="exTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
                 </div>
-                <div class="col-span-12 md:col-span-3 flex flex-wrap gap-2">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
+                <div class="col-span-12 md:col-span-2 flex flex-wrap gap-2">
+                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
-                Tarih aralığı <span class="font-medium">fromDate / toDate</span> parametreleriyle gönderilir (backend desteklemiyorsa yok sayılır).
+                Metin araması <span class="font-medium">search</span> ile gider. Tarih aralığı <span class="font-medium">fromDate</span> /
+                <span class="font-medium">toDate</span> ile birlikte kullanılabilir.
             </p>
         </div>
 
@@ -162,7 +163,7 @@ export class ExaminationsListPageComponent implements OnInit {
         this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
-    applySearch(): void {
+    applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
         if (from && to && from > to) {

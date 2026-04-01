@@ -7,7 +7,7 @@ import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/a
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
-import { paymentStatusLabel } from '@/app/features/payments/utils/payment-status.utils';
+import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -117,7 +117,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                             <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
                                         <div class="text-sm text-muted-color">
-                                            {{ formatDate(row.paidAtUtc ?? row.createdAtUtc) }} · {{ payStatusShort(row.status) }}
+                                            {{ formatDate(row.paidAtUtc) }} · {{ payMethodLabel(row.method) }}
                                         </div>
                                     </li>
                                 }
@@ -263,7 +263,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
     readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
-    readonly payStatusShort = (s: string | null) => paymentStatusLabel(s);
+    readonly payMethodLabel = paymentMethodLabel;
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {

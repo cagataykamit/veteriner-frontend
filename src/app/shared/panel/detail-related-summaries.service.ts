@@ -116,8 +116,8 @@ export class DetailRelatedSummariesService {
             map((r) => {
                 const rows = filterByClientId(r.items, clientId);
                 const sorted = [...rows].sort((a, b) => {
-                    const ta = new Date(a.paidAtUtc ?? a.createdAtUtc ?? 0).getTime();
-                    const tb = new Date(b.paidAtUtc ?? b.createdAtUtc ?? 0).getTime();
+                    const ta = new Date(a.paidAtUtc ?? 0).getTime();
+                    const tb = new Date(b.paidAtUtc ?? 0).getTime();
                     return tb - ta;
                 });
                 return sorted.slice(0, DETAIL_LIMIT);
@@ -207,8 +207,8 @@ export class DetailRelatedSummariesService {
 
 function sortPaymentsByRecent(items: PaymentListItemVm[]): PaymentListItemVm[] {
     return [...items].sort((a, b) => {
-        const ta = new Date(a.paidAtUtc ?? a.createdAtUtc ?? 0).getTime();
-        const tb = new Date(b.paidAtUtc ?? b.createdAtUtc ?? 0).getTime();
+        const ta = new Date(a.paidAtUtc ?? 0).getTime();
+        const tb = new Date(b.paidAtUtc ?? 0).getTime();
         return tb - ta;
     });
 }

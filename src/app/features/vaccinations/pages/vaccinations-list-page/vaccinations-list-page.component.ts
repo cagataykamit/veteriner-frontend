@@ -50,8 +50,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="vacSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Aşı, hayvan, müşteri, not…"
-                        (keyup.enter)="applySearch()"
+                        placeholder="Müşteri, hayvan, aşı adı, not…"
+                        (keyup.enter)="applyFilters()"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-2">
@@ -76,13 +76,13 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     <input id="vacTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
                 </div>
                 <div class="col-span-12 md:col-span-3 flex flex-wrap gap-2">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
+                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
-                Durum filtresi, API yanıtında <span class="font-medium">status</span> alanı varsa bu sayfadaki kayıtlar üzerinde de uygulanır (eşleşme normalize
-                edilir). Tarih aralığı <span class="font-medium">fromDate / toDate</span> parametreleriyle gönderilir (backend desteklemiyorsa yok sayılır).
+                Metin araması <span class="font-medium">search</span> ile gider. Durum ve tarih filtreleri birlikte uygulanır; durum ayrıca yanıtta
+                <span class="font-medium">status</span> alanı varsa bu sayfada da süzülür.
             </p>
         </div>
 
@@ -201,7 +201,7 @@ export class VaccinationsListPageComponent implements OnInit {
         this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
 
-    applySearch(): void {
+    applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
         if (from && to && from > to) {

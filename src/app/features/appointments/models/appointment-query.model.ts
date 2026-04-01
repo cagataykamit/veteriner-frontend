@@ -5,10 +5,12 @@
 export interface AppointmentsListQuery {
     page?: number;
     pageSize?: number;
+    /** Boşsa gönderilmez — not, müşteri/hayvan adı. */
+    search?: string;
+    clinicId?: string;
     /** İsteğe bağlı — backend `PetId` / `ClientId` desteklemiyorsa istemci tarafında filtre uygulanır. */
     petId?: string;
     clientId?: string;
-    search?: string;
     status?: string;
     /** yyyy-MM-dd */
     fromDate?: string;

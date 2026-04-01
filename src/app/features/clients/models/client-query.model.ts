@@ -1,4 +1,4 @@
-/** GET /api/v1/clients sorgu parametreleri (Swagger: Page, PageSize, Sort, Order, Search). */
+/** GET /api/v1/clients — `search`: fullName, email, phone, phoneNormalized (boşsa gönderilmez). */
 export interface ClientsListQuery {
     page?: number;
     pageSize?: number;

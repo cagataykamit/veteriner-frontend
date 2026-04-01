@@ -2,24 +2,20 @@
  * Ödeme — UI view modelleri.
  */
 
-/** Liste — ekstra GET gerekmez; API `clientName` / `petName`. */
+/** Liste — backend batch ile `clientName` / `petName`. */
 export interface PaymentListItemVm {
     id: string;
     clientId: string | null;
     clientName: string;
     petId: string | null;
     petName: string;
-    appointmentId: string | null;
     amount: number | null;
     currency: string;
-    status: string | null;
     method: string | null;
-    dueDateUtc: string | null;
     paidAtUtc: string | null;
-    createdAtUtc: string | null;
 }
 
-/** Detay — müşteri/hayvan adları DTO’dan. */
+/** Detay — GET /payments/{id} aggregate. */
 export interface PaymentDetailVm {
     id: string;
     clientId: string | null;
@@ -31,6 +27,8 @@ export interface PaymentDetailVm {
     method: string | null;
     note: string;
     paidAtUtc: string | null;
+    appointmentId: string | null;
+    examinationId: string | null;
 }
 
 export interface PaymentEditVm {

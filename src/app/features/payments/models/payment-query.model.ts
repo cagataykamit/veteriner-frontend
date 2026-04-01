@@ -1,23 +1,25 @@
 /**
- * Ödeme listesi sorgu parametreleri.
+ * Ödeme listesi sorgu parametreleri — backend GET list kontratı ile uyumlu.
+ * @see PaymentsService + paymentsQueryToHttpParams
  */
 
 export interface PaymentsListQuery {
     page?: number;
     pageSize?: number;
-    /** İsteğe bağlı — backend `ClientId` desteklemiyorsa istemci tarafında filtre uygulanır. */
-    clientId?: string;
-    /** İsteğe bağlı — backend `PetId` desteklemiyorsa istemci tarafında filtre uygulanır. */
-    petId?: string;
-    /** İsteğe bağlı — backend destekliyorsa ödeme-randevu ilişkisi için kullanılır. */
-    appointmentId?: string;
+    /**
+     * Backend `search` — müşteri adı / e-posta / telefon, hayvan, para birimi, not (tutar aranmaz).
+     * Boş veya yalnızca boşluksa istekte gönderilmez.
+     */
     search?: string;
-    status?: string;
+    clinicId?: string;
+    clientId?: string;
+    petId?: string;
+    /**
+     * Form canonical değeri (cash / card / transfer) — HTTP’de `method` sayısal enum olarak gönderilir.
+     */
     method?: string;
-    /** yyyy-MM-dd */
-    fromDate?: string;
-    /** yyyy-MM-dd */
-    toDate?: string;
-    sort?: string;
-    order?: string;
+    /** `type="date"` (yyyy-MM-dd); istekte `paidFromUtc` ISO UTC olarak gider. */
+    paidFromDate?: string;
+    /** `type="date"` (yyyy-MM-dd); istekte `paidToUtc` gün sonu ISO UTC olarak gider. */
+    paidToDate?: string;
 }

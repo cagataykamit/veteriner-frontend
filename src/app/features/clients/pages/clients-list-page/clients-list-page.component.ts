@@ -44,7 +44,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="clientSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Ad, telefon, e-posta…"
+                        placeholder="Ad, e-posta, telefon…"
                         (keyup.enter)="applySearch()"
                     />
                 </div>
@@ -53,6 +53,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
+            <p class="text-muted-color text-sm mt-3 mb-0">
+                Metin araması <span class="font-medium">search</span> parametresiyle gider (ad, e-posta, telefon). Boş bırakıldığında sunucu filtresi uygulanmaz.
+            </p>
         </div>
 
         @if (loading()) {
@@ -119,10 +122,9 @@ export class ClientsListPageComponent implements OnInit {
     readonly first = signal(0);
     readonly currentPage = signal(1);
 
-    /** Sunucuya giden arama (Ara ile uygulanır) */
     readonly activeSearch = signal('');
-
     searchInput = '';
+
     readonly displayedRows = computed(() => this.rawItems());
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);

@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
+import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
@@ -46,11 +47,25 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="petSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Ad, tür, cins…"
-                        (keyup.enter)="applySearch()"
+                        placeholder="Hayvan, tür, ırk, sahip…"
+                        (keyup.enter)="applyFilters()"
                     />
                 </div>
-                <div class="col-span-12 md:col-span-4">
+                <div class="col-span-12 md:col-span-3">
+                    <label for="petClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri</label>
+                    <p-select
+                        inputId="petClient"
+                        [options]="clientOptions()"
+                        [(ngModel)]="clientIdInput"
+                        optionLabel="label"
+                        optionValue="value"
+                        [placeholder]="copy.filterPlaceholderAll"
+                        styleClass="w-full"
+                        [showClear]="true"
+                        [loading]="loadingClients()"
+                    />
+                </div>
+                <div class="col-span-12 md:col-span-3">
                     <label for="petSpecies" class="block text-sm font-medium text-muted-color mb-2">Tür</label>
                     <p-select
                         inputId="petSpecies"
@@ -64,13 +79,14 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         [loading]="loadingSpecies()"
                     />
                 </div>
-                <div class="col-span-12 md:col-span-4 flex flex-wrap gap-2">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
+                <div class="col-span-12 md:col-span-2 flex flex-wrap gap-2">
+                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
-                Tür filtresi <span class="font-medium">speciesId</span> sorgu parametresi olarak gönderilir.
+                Metin araması <span class="font-medium">search</span> ile gider. İsteğe bağlı <span class="font-medium">clientId</span> ve
+                <span class="font-medium">speciesId</span> ile birlikte kullanılabilir.
             </p>
         </div>
 
@@ -131,9 +147,11 @@ export class PetsListPageComponent implements OnInit {
 
     private readonly petsService = inject(PetsService);
     private readonly speciesService = inject(SpeciesService);
+    private readonly clientsService = inject(ClientsService);
 
     readonly loading = signal(false);
     readonly loadingSpecies = signal(false);
+    readonly loadingClients = signal(false);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<PetListItemVm[]>([]);
@@ -144,10 +162,13 @@ export class PetsListPageComponent implements OnInit {
 
     readonly activeSearch = signal('');
     readonly activeSpeciesId = signal('');
+    readonly activeClientId = signal('');
 
     searchInput = '';
     speciesIdInput = '';
+    clientIdInput = '';
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
+    readonly clientOptions = signal<{ label: string; value: string }[]>([]);
 
     readonly displayedRows = computed(() => this.rawItems());
 
@@ -156,28 +177,39 @@ export class PetsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadSpeciesOptions();
+        this.loadClientOptions();
         this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId());
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
     }
 
-    applySearch(): void {
+    applyFilters(): void {
         this.activeSearch.set(this.searchInput.trim());
         this.activeSpeciesId.set(this.speciesIdInput.trim());
+        this.activeClientId.set(this.clientIdInput.trim());
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId());
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
     }
 
     resetFilters(): void {
         this.searchInput = '';
         this.speciesIdInput = '';
+        this.clientIdInput = '';
         this.activeSearch.set('');
         this.activeSpeciesId.set('');
+        this.activeClientId.set('');
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '', '');
+        this.loadFromServer(1, this.pageSize(), '', '', '');
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId(), true);
+        this.loadFromServer(
+            this.currentPage(),
+            this.pageSize(),
+            this.activeSearch(),
+            this.activeSpeciesId(),
+            this.activeClientId(),
+            true
+        );
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
@@ -188,11 +220,18 @@ export class PetsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId());
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
     }
 
-    private loadFromServer(page: number, pageSize: number, search: string, speciesId: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${speciesId.trim()}`;
+    private loadFromServer(
+        page: number,
+        pageSize: number,
+        search: string,
+        speciesId: string,
+        clientId: string,
+        force = false
+      ): void {
+        const key = `${page}|${pageSize}|${search.trim()}|${speciesId.trim()}|${clientId.trim()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -204,7 +243,8 @@ export class PetsListPageComponent implements OnInit {
                 page,
                 pageSize,
                 search: search || undefined,
-                speciesId: speciesId || undefined
+                speciesId: speciesId || undefined,
+                clientId: clientId || undefined
             })
             .subscribe({
                 next: (r) => {
@@ -236,6 +276,24 @@ export class PetsListPageComponent implements OnInit {
             },
             error: () => {
                 this.loadingSpecies.set(false);
+            }
+        });
+    }
+
+    private loadClientOptions(): void {
+        this.loadingClients.set(true);
+        this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
+            next: (r) => {
+                this.clientOptions.set(
+                    r.items.map((c) => ({
+                        label: c.fullName?.trim() ? c.fullName : c.id,
+                        value: c.id
+                    }))
+                );
+                this.loadingClients.set(false);
+            },
+            error: () => {
+                this.loadingClients.set(false);
             }
         });
     }

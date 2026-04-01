@@ -64,3 +64,15 @@ export function dateOnlyInputToUtcIso(dateStr: string): string {
     }
     return new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)).toISOString();
 }
+
+/** HTML `type="date"` (yyyy-MM-dd) → gün sonu UTC ISO (`paidToUtc` dahil aralık için). */
+export function dateOnlyInputToUtcIsoEndOfDay(dateStr: string): string {
+    if (!dateStr?.trim()) {
+        return '';
+    }
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!y || !m || !d) {
+        return '';
+    }
+    return new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999)).toISOString();
+}

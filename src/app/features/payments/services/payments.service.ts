@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
+import { AuthService } from '@/app/core/auth/auth.service';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     mapCreatePaymentToApiBody,
@@ -27,9 +28,15 @@ export interface PaymentsPagedVm {
 @Injectable({ providedIn: 'root' })
 export class PaymentsService {
     private readonly api = inject(ApiClient);
+    private readonly auth = inject(AuthService);
 
     getPayments(query: PaymentsListQuery): Observable<PaymentsPagedVm> {
-        const params = paymentsQueryToHttpParams(query);
+        const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+        const merged: PaymentsListQuery = {
+            ...query,
+            clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
+        };
+        const params = paymentsQueryToHttpParams(merged);
         return this.api.get<PaymentListItemDtoPagedResult>(ApiEndpoints.payments.list(), params).pipe(
             map((res) => mapPagedPaymentsToVm(res)),
             catchError((err: HttpErrorResponse) =>

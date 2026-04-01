@@ -95,6 +95,22 @@ import { EMPTY, switchMap } from 'rxjs';
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ methodLabel(payment()!.method) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Ödeme zamanı</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(payment()!.paidAtUtc) }}</dd>
+                            @if (payment()!.appointmentId) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">
+                                    <a [routerLink]="['/panel/appointments', payment()!.appointmentId]" class="text-primary font-medium no-underline"
+                                        >Randevu kaydına git →</a
+                                    >
+                                </dd>
+                            }
+                            @if (payment()!.examinationId) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">
+                                    <a [routerLink]="['/panel/examinations', payment()!.examinationId]" class="text-primary font-medium no-underline"
+                                        >Muayene kaydına git →</a
+                                    >
+                                </dd>
+                            }
                         </dl>
                     </div>
                 </div>

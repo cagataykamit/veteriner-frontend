@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
+import { AuthService } from '@/app/core/auth/auth.service';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     appointmentsQueryToHttpParams,
@@ -28,9 +29,15 @@ export interface AppointmentsPagedVm {
 @Injectable({ providedIn: 'root' })
 export class AppointmentsService {
     private readonly api = inject(ApiClient);
+    private readonly auth = inject(AuthService);
 
     getAppointments(query: AppointmentsListQuery): Observable<AppointmentsPagedVm> {
-        const params = appointmentsQueryToHttpParams(query);
+        const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+        const merged: AppointmentsListQuery = {
+            ...query,
+            clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
+        };
+        const params = appointmentsQueryToHttpParams(merged);
         return this.api.get<AppointmentListItemDtoPagedResult>(ApiEndpoints.appointments.list(), params).pipe(
             map((res) => mapPagedAppointmentsToVm(res)),
             catchError((err: HttpErrorResponse) =>

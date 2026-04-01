@@ -303,21 +303,24 @@ export function mapPagedAppointmentsToVm(result: AppointmentListItemDtoPagedResu
     };
 }
 
-/** Swagger / API parametre isimleri: Page, PageSize, Search, Sort, Order, Status, FromDate, ToDate */
+/** Page, PageSize, search, clinicId, PetId, ClientId, Status, FromDate, ToDate, Sort, Order */
 export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+    if (query.search?.trim()) {
+        p = p.set('search', query.search.trim());
+    }
+    if (query.clinicId?.trim()) {
+        p = p.set('clinicId', query.clinicId.trim());
+    }
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
     if (query.clientId?.trim()) {
         p = p.set('ClientId', query.clientId.trim());
-    }
-    if (query.search?.trim()) {
-        p = p.set('Search', query.search.trim());
     }
     if (query.status?.trim()) {
         p = p.set('Status', query.status.trim());

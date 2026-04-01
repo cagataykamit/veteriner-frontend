@@ -3,9 +3,6 @@ import type { DashboardSummaryNormalized } from '@/app/features/dashboard/models
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
-import { normalizePaymentStatusKey } from '@/app/features/payments/utils/payment-status.utils';
-
-const ATTENTION_PAYMENT_KEYS = new Set(['pending', 'overdue', 'scheduled', 'partial']);
 
 /**
  * Summary DTO’da liste alanları null olabilir — tabloya güvenli varsayılan.
@@ -51,7 +48,6 @@ export function pickUpcomingVaccinations(
         .slice(0, max);
 }
 
-/** Ödeme: bekleyen / vadesi geçmiş / planlı / kısmi — operasyonel öncelik. */
 /** Bugünkü randevu listesi — saate göre artan. */
 export function sortAppointmentsByScheduledAsc(items: AppointmentListItemVm[]): AppointmentListItemVm[] {
     return [...items].sort((a, b) => {
@@ -61,21 +57,15 @@ export function sortAppointmentsByScheduledAsc(items: AppointmentListItemVm[]): 
     });
 }
 
+/**
+ * Özet kartı: backend ödeme listesinde durum/vade yok; en güncel ödemeler `paidAtUtc` ile seçilir.
+ */
 export function pickAttentionPayments(items: PaymentListItemVm[], max: number): PaymentListItemVm[] {
-    const picked = items.filter((p) => {
-        const k = normalizePaymentStatusKey(p.status ?? '');
-        return ATTENTION_PAYMENT_KEYS.has(k);
-    });
-    return picked
+    return [...items]
         .sort((a, b) => {
-            const da = a.dueDateUtc ? new Date(a.dueDateUtc).getTime() : Number.MAX_SAFE_INTEGER;
-            const db = b.dueDateUtc ? new Date(b.dueDateUtc).getTime() : Number.MAX_SAFE_INTEGER;
-            if (da !== db) {
-                return da - db;
-            }
-            const ca = a.createdAtUtc ? new Date(a.createdAtUtc).getTime() : 0;
-            const cb = b.createdAtUtc ? new Date(b.createdAtUtc).getTime() : 0;
-            return cb - ca;
+            const ta = a.paidAtUtc ? new Date(a.paidAtUtc).getTime() : 0;
+            const tb = b.paidAtUtc ? new Date(b.paidAtUtc).getTime() : 0;
+            return tb - ta;
         })
         .slice(0, max);
 }

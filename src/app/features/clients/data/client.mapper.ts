@@ -119,7 +119,7 @@ export function mapPagedClientsToVm(result: ClientListItemDtoPagedResult): {
     };
 }
 
-/** Swagger parametre isimleri: Page, PageSize, Sort, Order, Search */
+/** Page, PageSize, search, Sort, Order */
 export function clientsQueryToHttpParams(query: ClientsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -127,7 +127,7 @@ export function clientsQueryToHttpParams(query: ClientsListQuery): HttpParams {
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('Search', query.search.trim());
+        p = p.set('search', query.search.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

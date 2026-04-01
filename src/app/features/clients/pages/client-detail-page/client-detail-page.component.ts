@@ -157,7 +157,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                             >
                                         </div>
                                         <div class="text-sm text-muted-color">
-                                            {{ formatDate(row.paidAtUtc ?? row.createdAtUtc) }} · {{ row.petName }}
+                                            {{ formatDate(row.paidAtUtc) }} · {{ row.petName }}
                                         </div>
                                     </li>
                                 }

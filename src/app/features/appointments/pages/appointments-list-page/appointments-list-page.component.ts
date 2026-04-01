@@ -12,6 +12,7 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -51,8 +52,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="apptSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Müşteri, hayvan…"
-                        (keyup.enter)="applySearch()"
+                        placeholder="Müşteri, hayvan, not…"
+                        (keyup.enter)="applyFilters()"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-2">
@@ -68,6 +69,20 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         [showClear]="true"
                     />
                 </div>
+                <div class="col-span-12 md:col-span-3">
+                    <label for="apptPet" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
+                    <p-select
+                        inputId="apptPet"
+                        [options]="petOptions()"
+                        [(ngModel)]="petIdInput"
+                        optionLabel="label"
+                        optionValue="value"
+                        [placeholder]="copy.filterPlaceholderAll"
+                        styleClass="w-full"
+                        [showClear]="true"
+                        [loading]="loadingPets()"
+                    />
+                </div>
                 <div class="col-span-12 md:col-span-2">
                     <label for="apptFrom" class="block text-sm font-medium text-muted-color mb-2">Başlangıç</label>
                     <input id="apptFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
@@ -76,14 +91,14 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     <label for="apptTo" class="block text-sm font-medium text-muted-color mb-2">Bitiş</label>
                     <input id="apptTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
                 </div>
-                <div class="col-span-12 md:col-span-3 flex flex-wrap gap-2">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
+                <div class="col-span-12 flex flex-wrap gap-2">
+                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
-                Durum filtresi, API yanıtında <span class="font-medium">status</span> alanı varsa bu sayfadaki kayıtlar üzerinde de uygulanır. Tarih aralığı
-                <span class="font-medium">fromDate / toDate</span> parametreleriyle gönderilir (backend desteklemiyorsa yok sayılır).
+                Metin araması <span class="font-medium">search</span> ile gider. <span class="font-medium">clinicId</span> aktif klinikten eklenir. Durum, hayvan ve
+                tarih diğer parametrelerle birlikte uygulanır.
             </p>
         </div>
 
@@ -159,8 +174,10 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly appointmentsService = inject(AppointmentsService);
+    private readonly petsService = inject(PetsService);
 
     readonly loading = signal(false);
+    readonly loadingPets = signal(false);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<AppointmentListItemVm[]>([]);
@@ -172,12 +189,15 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
     readonly activeToDate = signal('');
+    readonly activePetId = signal('');
 
     searchInput = '';
+    petIdInput = '';
     fromDateInput = '';
     toDateInput = '';
-    /** Tümü = '' */
     statusFilter = '';
+
+    readonly petOptions = signal<{ label: string; value: string }[]>([]);
 
     readonly statusOptions = [
         { label: 'Tümü', value: '' },
@@ -198,11 +218,20 @@ export class AppointmentsListPageComponent implements OnInit {
     private lastLoadKey = '';
 
     ngOnInit(): void {
+        this.loadPetOptions();
         this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+        this.loadFromServer(
+            1,
+            this.pageSize(),
+            this.activeSearch(),
+            this.activeFromDate(),
+            this.activeToDate(),
+            this.statusFilter,
+            this.activePetId()
+        );
     }
 
-    applySearch(): void {
+    applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
         if (from && to && from > to) {
@@ -216,20 +245,31 @@ export class AppointmentsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
+        this.activePetId.set(this.petIdInput.trim());
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+        this.loadFromServer(
+            1,
+            this.pageSize(),
+            this.activeSearch(),
+            this.activeFromDate(),
+            this.activeToDate(),
+            this.statusFilter,
+            this.activePetId()
+        );
     }
 
     resetFilters(): void {
         this.searchInput = '';
+        this.petIdInput = '';
         this.fromDateInput = '';
         this.toDateInput = '';
         this.activeSearch.set('');
         this.activeFromDate.set('');
         this.activeToDate.set('');
+        this.activePetId.set('');
         this.statusFilter = '';
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '', '', '', '');
+        this.loadFromServer(1, this.pageSize(), '', '', '', '', '');
     }
 
     reload(): void {
@@ -240,6 +280,7 @@ export class AppointmentsListPageComponent implements OnInit {
             this.activeFromDate(),
             this.activeToDate(),
             this.statusFilter,
+            this.activePetId(),
             true
         );
     }
@@ -252,7 +293,15 @@ export class AppointmentsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+        this.loadFromServer(
+            page,
+            rows,
+            this.activeSearch(),
+            this.activeFromDate(),
+            this.activeToDate(),
+            this.statusFilter,
+            this.activePetId()
+        );
     }
 
     private loadFromServer(
@@ -262,9 +311,10 @@ export class AppointmentsListPageComponent implements OnInit {
         fromDate: string,
         toDate: string,
         status: string,
+        petId: string,
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}|${petId.trim()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -278,7 +328,8 @@ export class AppointmentsListPageComponent implements OnInit {
                 search: search || undefined,
                 fromDate: fromDate || undefined,
                 toDate: toDate || undefined,
-                status: status || undefined
+                status: status || undefined,
+                petId: petId || undefined
             })
             .subscribe({
                 next: (r) => {
@@ -294,5 +345,25 @@ export class AppointmentsListPageComponent implements OnInit {
                     this.loading.set(false);
                 }
             });
+    }
+
+    private loadPetOptions(): void {
+        this.loadingPets.set(true);
+        this.petsService.getPets({ page: 1, pageSize: 200 }).subscribe({
+            next: (r) => {
+                this.petOptions.set(
+                    r.items.map((p) => ({
+                        label:
+                            (p.name?.trim() ? p.name : '—') +
+                            (p.speciesName?.trim() ? ` · ${p.speciesName}` : ''),
+                        value: p.id
+                    }))
+                );
+                this.loadingPets.set(false);
+            },
+            error: () => {
+                this.loadingPets.set(false);
+            }
+        });
     }
 }

@@ -12,7 +12,7 @@ import {
     paymentMethodCanonicalToApiEnum,
     resolvePaymentMethodFormValue
 } from '@/app/features/payments/utils/payment-method.utils';
-import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
+import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -54,40 +54,6 @@ function num(v: number | string | null | undefined): number | null {
         return null;
     }
     return Number(v);
-}
-
-function canonicalClientId(dto: PaymentListItemDto): string | null {
-    return firstTrimmed(dto.clientId, dto.ownerId, readDtoString(dto, ['ClientId', 'OwnerId', 'CustomerId']));
-}
-
-function canonicalClientName(dto: PaymentListItemDto): string {
-    return str(
-        firstTrimmed(
-            dto.clientName,
-            dto.ownerName,
-            readDtoString(dto, ['ClientName', 'OwnerName', 'CustomerName', 'customerName'])
-        )
-    );
-}
-
-function canonicalPetId(dto: PaymentListItemDto): string | null {
-    return firstTrimmed(dto.petId, dto.animalId, readDtoString(dto, ['PetId', 'AnimalId']));
-}
-
-function canonicalPetName(dto: PaymentListItemDto): string {
-    return str(firstTrimmed(dto.petName, dto.animalName, readDtoString(dto, ['PetName', 'AnimalName', 'PatientName'])));
-}
-
-function canonicalAmount(dto: PaymentListItemDto): number | null {
-    return num(dto.amount ?? dto.totalAmount ?? dto.paymentAmount);
-}
-
-function canonicalCurrency(dto: PaymentListItemDto): string {
-    return firstTrimmed(dto.currency, dto.currencyCode) ?? 'TRY';
-}
-
-function canonicalStatus(dto: PaymentListItemDto): string | null {
-    return firstTrimmed(dto.status, dto.paymentStatus, dto.lifecycleStatus, dto.lifecycle);
 }
 
 /** method / paymentMethod sayı veya string olabilir (backend enum 0/1/2). */
@@ -148,33 +114,31 @@ function detailNotes(dto: PaymentDetailDto): string {
     return str(firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])));
 }
 
-function canonicalDueDate(dto: PaymentListItemDto): string | null {
-    return firstTrimmed(dto.dueDateUtc, dto.dueAtUtc);
+function detailAppointmentId(dto: PaymentDetailDto): string | null {
+    return firstTrimmed(dto.appointmentId, readDtoString(dto, ['AppointmentId']));
 }
 
-function canonicalPaidAt(dto: PaymentListItemDto): string | null {
-    return firstTrimmed(dto.paidAtUtc, dto.paymentDateUtc, dto.paidOnUtc);
+function detailExaminationId(dto: PaymentDetailDto): string | null {
+    return firstTrimmed(dto.examinationId, readDtoString(dto, ['ExaminationId']));
 }
 
-function canonicalCreatedAt(dto: PaymentListItemDto): string | null {
-    return firstTrimmed(dto.createdAtUtc, dto.createdOnUtc);
+function canonicalPaidAtList(dto: PaymentListItemDto): string | null {
+    return dto.paidAtUtc?.trim() ? dto.paidAtUtc.trim() : null;
 }
 
 export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListItemVm {
+    const clientId = dto.clientId?.trim() ? dto.clientId.trim() : null;
+    const petId = dto.petId?.trim() ? dto.petId.trim() : null;
     return {
         id: dto.id,
-        clientId: canonicalClientId(dto),
-        clientName: canonicalClientName(dto),
-        petId: canonicalPetId(dto),
-        petName: canonicalPetName(dto),
-        appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
-        amount: canonicalAmount(dto),
-        currency: canonicalCurrency(dto),
-        status: canonicalStatus(dto),
+        clientId,
+        clientName: str(dto.clientName?.trim() ?? null),
+        petId,
+        petName: str(dto.petName?.trim() ?? null),
+        amount: num(dto.amount),
+        currency: dto.currency?.trim() ? dto.currency.trim() : 'TRY',
         method: canonicalMethodFromListDto(dto),
-        dueDateUtc: canonicalDueDate(dto),
-        paidAtUtc: canonicalPaidAt(dto),
-        createdAtUtc: canonicalCreatedAt(dto)
+        paidAtUtc: canonicalPaidAtList(dto)
     };
 }
 
@@ -189,7 +153,9 @@ export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm 
         currency: detailCurrency(dto),
         method: resolvePaymentMethodFormValue(readRawMethodFromUnknown(dto)),
         note: detailNotes(dto),
-        paidAtUtc: detailPaidAt(dto)
+        paidAtUtc: detailPaidAt(dto),
+        appointmentId: detailAppointmentId(dto),
+        examinationId: detailExaminationId(dto)
     };
 }
 
@@ -224,51 +190,46 @@ export function mapPagedPaymentsToVm(result: PaymentListItemDtoPagedResult): {
     };
 }
 
-/** Page, PageSize, Search, Status, Method, FromDate, ToDate, Sort, Order */
+/**
+ * GET /payments — page, pageSize, clinicId, clientId, petId, method, paidFromUtc, paidToUtc, search.
+ */
 export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
-    p = p.set('Page', String(page));
-    p = p.set('PageSize', String(pageSize));
+    p = p.set('page', String(page));
+    p = p.set('pageSize', String(pageSize));
+    if (query.search?.trim()) {
+        p = p.set('search', query.search.trim());
+    }
+    if (query.clinicId?.trim()) {
+        p = p.set('clinicId', query.clinicId.trim());
+    }
     if (query.clientId?.trim()) {
-        const clientId = query.clientId.trim();
-        p = p.set('ClientId', clientId);
-        p = p.set('OwnerId', clientId);
+        p = p.set('clientId', query.clientId.trim());
     }
     if (query.petId?.trim()) {
-        const petId = query.petId.trim();
-        p = p.set('PetId', petId);
-        p = p.set('AnimalId', petId);
-    }
-    if (query.appointmentId?.trim()) {
-        p = p.set('AppointmentId', query.appointmentId.trim());
-    }
-    if (query.search?.trim()) {
-        p = p.set('Search', query.search.trim());
-    }
-    if (query.status?.trim()) {
-        const status = query.status.trim();
-        p = p.set('Status', status);
-        p = p.set('PaymentStatus', status);
-        p = p.set('LifecycleStatus', status);
+        p = p.set('petId', query.petId.trim());
     }
     if (query.method?.trim()) {
-        const method = query.method.trim();
-        p = p.set('Method', method);
-        p = p.set('PaymentMethod', method);
+        try {
+            const enumVal = paymentMethodCanonicalToApiEnum(query.method.trim());
+            p = p.set('method', String(enumVal));
+        } catch {
+            /* bilinmeyen yöntem — parametre gönderme */
+        }
     }
-    if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+    if (query.paidFromDate?.trim()) {
+        const iso = dateOnlyInputToUtcIso(query.paidFromDate.trim());
+        if (iso) {
+            p = p.set('paidFromUtc', iso);
+        }
     }
-    if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
-    }
-    if (query.sort?.trim()) {
-        p = p.set('Sort', query.sort.trim());
-    }
-    if (query.order?.trim()) {
-        p = p.set('Order', query.order.trim());
+    if (query.paidToDate?.trim()) {
+        const iso = dateOnlyInputToUtcIsoEndOfDay(query.paidToDate.trim());
+        if (iso) {
+            p = p.set('paidToUtc', iso);
+        }
     }
     return p;
 }
@@ -321,48 +282,4 @@ export function mapPaymentUpsertFormToCreateRequest(input: PaymentUpsertFormAdap
         paidAtUtc: input.paidAtUtc.trim(),
         notes: input.note?.trim() ? input.note.trim() : null
     };
-}
-
-export function filterPaymentListByStatus(
-    items: PaymentListItemVm[],
-    status: string | null | undefined
-): PaymentListItemVm[] {
-    const s = status?.trim();
-    if (!s) {
-        return items;
-    }
-    const target = normalizeFilterKey(s);
-    return items.filter((i) => {
-        const st = (i.status ?? '').trim();
-        if (!st) {
-            return false;
-        }
-        return normalizeFilterKey(st) === target;
-    });
-}
-
-export function filterPaymentListByMethod(
-    items: PaymentListItemVm[],
-    method: string | null | undefined
-): PaymentListItemVm[] {
-    const m = method?.trim();
-    if (!m) {
-        return items;
-    }
-    const target = normalizeFilterKey(m);
-    return items.filter((i) => {
-        const mt = (i.method ?? '').trim();
-        if (!mt) {
-            return false;
-        }
-        return normalizeFilterKey(mt) === target;
-    });
-}
-
-export function filterPaymentList(
-    items: PaymentListItemVm[],
-    status: string | null | undefined,
-    method: string | null | undefined
-): PaymentListItemVm[] {
-    return filterPaymentListByMethod(filterPaymentListByStatus(items, status), method);
 }

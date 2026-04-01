@@ -206,22 +206,22 @@ export function mapPagedVaccinationsToVm(result: VaccinationListItemDtoPagedResu
     };
 }
 
-/** Page, PageSize, Search, Status, FromDate, ToDate, Sort, Order */
+/** Page, PageSize, search, Status, FromDate, ToDate, Sort, Order */
 export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+    if (query.search?.trim()) {
+        p = p.set('search', query.search.trim());
+    }
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
     if (query.clientId?.trim()) {
         const clientId = query.clientId.trim();
         p = p.set('ClientId', clientId);
-    }
-    if (query.search?.trim()) {
-        p = p.set('Search', query.search.trim());
     }
     if (query.status?.trim()) {
         const status = query.status.trim();

@@ -6,7 +6,7 @@ import { TableModule } from 'primeng/table';
 import type { DashboardOperationalVm } from '@/app/features/dashboard/models/dashboard-operational.model';
 import { DashboardService } from '@/app/features/dashboard/services/dashboard.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
-import { paymentStatusLabel, paymentStatusSeverity } from '@/app/features/payments/utils/payment-status.utils';
+import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -217,20 +217,20 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                 <div class="col-span-12">
                     <div class="card">
                         <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
-                            <h5 class="mt-0 mb-0">Bekleyen / yaklaşan ödemeler</h5>
+                            <h5 class="mt-0 mb-0">Son ödemeler</h5>
                             <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (d.attentionPayments.error) {
                             <p class="text-red-500 m-0" role="alert">{{ d.attentionPayments.error }}</p>
                         } @else if (d.attentionPayments.data.length === 0) {
-                            <app-empty-state message="Dikkat gerektiren ödeme yok (bekleyen / vadesi geçmiş / planlı / kısmi)." />
+                            <app-empty-state message="Ödeme kaydı yok." />
                         } @else {
                             <p-table [value]="d.attentionPayments.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
                                 <ng-template #header>
                                     <tr>
                                         <th>Tutar</th>
-                                        <th>Durum</th>
-                                        <th>Vade</th>
+                                        <th>Yöntem</th>
+                                        <th>Ödeme tarihi</th>
                                         <th>Hayvan</th>
                                         <th></th>
                                     </tr>
@@ -238,10 +238,8 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                                 <ng-template #body let-row>
                                     <tr>
                                         <td>{{ money(row.amount, row.currency) }}</td>
-                                        <td>
-                                            <app-status-tag [label]="payStatusLabel(row.status)" [severity]="payStatusSeverity(row.status)" />
-                                        </td>
-                                        <td>{{ formatDate(row.dueDateUtc) }}</td>
+                                        <td>{{ payMethodLabel(row.method) }}</td>
+                                        <td>{{ formatDateTime(row.paidAtUtc) }}</td>
                                         <td>{{ row.petName }}</td>
                                         <td>
                                             <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
@@ -340,8 +338,7 @@ export class DashboardPageComponent implements OnInit {
     readonly formatTime = (v: string | null) => formatTimeDisplay(v);
     readonly apptStatusLabel = appointmentStatusLabel;
     readonly apptStatusSeverity = appointmentStatusSeverity;
-    readonly payStatusLabel = paymentStatusLabel;
-    readonly payStatusSeverity = paymentStatusSeverity;
+    readonly payMethodLabel = paymentMethodLabel;
 
     ngOnInit(): void {
         this.reload();

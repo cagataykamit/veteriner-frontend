@@ -7,17 +7,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { filterPaymentList } from '@/app/features/payments/data/payment.mapper';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
-import { paymentStatusLabel, paymentStatusSeverity } from '@/app/features/payments/utils/payment-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
@@ -35,11 +32,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
-        <app-page-header title="Ödemeler" subtitle="Finans" description="Ödeme kayıtları ve takip.">
+        <app-page-header title="Ödemeler" subtitle="Finans" description="Ödeme kayıtları.">
             <a actions routerLink="/panel/payments/new" pButton type="button" label="Yeni Ödeme" icon="pi pi-plus" class="p-button-primary"></a>
         </app-page-header>
 
@@ -52,21 +48,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="paySearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Müşteri, hayvan, tutar…"
+                        placeholder="Müşteri, e-posta, telefon, hayvan, para birimi, not…"
                         (keyup.enter)="applySearch()"
-                    />
-                </div>
-                <div class="col-span-12 md:col-span-2">
-                    <label for="payStatus" class="block text-sm font-medium text-muted-color mb-2">Durum</label>
-                    <p-select
-                        inputId="payStatus"
-                        [options]="statusOptions"
-                        [(ngModel)]="statusFilter"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-2">
@@ -83,11 +66,11 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     />
                 </div>
                 <div class="col-span-12 md:col-span-2">
-                    <label for="payFrom" class="block text-sm font-medium text-muted-color mb-2">Başlangıç</label>
+                    <label for="payFrom" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi (başlangıç)</label>
                     <input id="payFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
                 </div>
                 <div class="col-span-12 md:col-span-2">
-                    <label for="payTo" class="block text-sm font-medium text-muted-color mb-2">Bitiş</label>
+                    <label for="payTo" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi (bitiş)</label>
                     <input id="payTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
                 </div>
                 <div class="col-span-12 flex flex-wrap gap-2">
@@ -96,8 +79,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 </div>
             </div>
             <p class="text-muted-color text-sm mt-3 mb-0">
-                Durum / yöntem filtreleri, API yanıtında ilgili alanlar varsa bu sayfadaki kayıtlar üzerinde de uygulanır (normalize edilir). Tarih aralığı
-                <span class="font-medium">fromDate / toDate</span> ile gönderilir (backend desteklemiyorsa yok sayılır).
+                Metin araması sunucuda <span class="font-medium">search</span> ile gider (müşteri adı / e-posta / telefon, hayvan, para birimi, not; tutar aranmaz). Tarih aralığı
+                <span class="font-medium">paidFromUtc</span> / <span class="font-medium">paidToUtc</span> (UTC).
             </p>
         </div>
 
@@ -121,7 +104,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         [lazy]="true"
                         [first]="first()"
                         (onLazyLoad)="onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '80rem' }"
+                        [tableStyle]="{ 'min-width': '56rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                     >
@@ -132,10 +115,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <th class="text-right">Tutar</th>
                                 <th>Para birimi</th>
                                 <th>Yöntem</th>
-                                <th>Durum</th>
-                                <th>Vade</th>
                                 <th>Ödeme tarihi</th>
-                                <th>Oluşturulma</th>
                                 <th style="width: 8rem">İşlemler</th>
                             </tr>
                         </ng-template>
@@ -160,12 +140,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <td class="text-right font-medium">{{ money(row.amount, row.currency) }}</td>
                                 <td>{{ row.currency }}</td>
                                 <td>{{ methodLabel(row.method) }}</td>
-                                <td>
-                                    <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                </td>
-                                <td>{{ formatDate(row.dueDateUtc) }}</td>
                                 <td>{{ formatDateTime(row.paidAtUtc) }}</td>
-                                <td>{{ formatDate(row.createdAtUtc) }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                 </td>
@@ -198,49 +173,26 @@ export class PaymentsListPageComponent implements OnInit {
     searchInput = '';
     fromDateInput = '';
     toDateInput = '';
-    statusFilter = '';
     methodFilter = '';
-
-    readonly statusOptions = [
-        { label: 'Tümü', value: '' },
-        { label: 'Ödendi', value: 'paid' },
-        { label: 'Tamamlandı', value: 'completed' },
-        { label: 'Mahsup', value: 'settled' },
-        { label: 'Bekliyor', value: 'pending' },
-        { label: 'Planlandı', value: 'scheduled' },
-        { label: 'Kısmi', value: 'partial' },
-        { label: 'Vadesi geçmiş', value: 'overdue' },
-        { label: 'Başarısız', value: 'failed' },
-        { label: 'İptal', value: 'cancelled' },
-        { label: 'İade', value: 'refunded' },
-        { label: 'Taslak', value: 'draft' }
-    ];
 
     readonly methodOptions = [
         { label: 'Tümü', value: '' },
         { label: 'Nakit', value: 'cash' },
         { label: 'Kart', value: 'card' },
-        { label: 'Havale / EFT', value: 'transfer' },
-        { label: 'Online', value: 'online' },
-        { label: 'Diğer', value: 'other' }
+        { label: 'Havale / EFT', value: 'transfer' }
     ];
 
-    readonly displayedRows = computed(() =>
-        filterPaymentList(this.rawItems(), this.statusFilter ? this.statusFilter : null, this.methodFilter ? this.methodFilter : null)
-    );
+    readonly displayedRows = computed(() => this.rawItems());
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
-    readonly statusLabel = paymentStatusLabel;
-    readonly statusSeverity = paymentStatusSeverity;
     readonly methodLabel = paymentMethodLabel;
     private suppressNextLazy = false;
     private lastLoadKey = '';
 
     ngOnInit(): void {
         this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter, this.methodFilter);
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
     }
 
     applySearch(): void {
@@ -258,7 +210,7 @@ export class PaymentsListPageComponent implements OnInit {
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter, this.methodFilter);
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
     }
 
     resetFilters(): void {
@@ -268,10 +220,9 @@ export class PaymentsListPageComponent implements OnInit {
         this.activeSearch.set('');
         this.activeFromDate.set('');
         this.activeToDate.set('');
-        this.statusFilter = '';
         this.methodFilter = '';
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '', '', '', '', '');
+        this.loadFromServer(1, this.pageSize(), '', '', '', '');
     }
 
     reload(): void {
@@ -281,7 +232,6 @@ export class PaymentsListPageComponent implements OnInit {
             this.activeSearch(),
             this.activeFromDate(),
             this.activeToDate(),
-            this.statusFilter,
             this.methodFilter,
             true
         );
@@ -295,7 +245,7 @@ export class PaymentsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter, this.methodFilter);
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
     }
 
     private loadFromServer(
@@ -304,11 +254,10 @@ export class PaymentsListPageComponent implements OnInit {
         search: string,
         fromDate: string,
         toDate: string,
-        status: string,
         method: string,
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}|${method.trim()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${method.trim()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -320,9 +269,8 @@ export class PaymentsListPageComponent implements OnInit {
                 page,
                 pageSize,
                 search: search || undefined,
-                fromDate: fromDate || undefined,
-                toDate: toDate || undefined,
-                status: status || undefined,
+                paidFromDate: fromDate || undefined,
+                paidToDate: toDate || undefined,
                 method: method || undefined
             })
             .subscribe({
