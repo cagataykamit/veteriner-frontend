@@ -1,6 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
-import { isUnhelpfulProblemText, messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import {
+    isUnhelpfulProblemText,
+    messageFromHttpError,
+    panelHttpFailureMessage,
+    rateLimitUserMessage
+} from '@/app/shared/utils/api-error.utils';
 
 /** `/me/clinics` boş veya kullanıcıya atanmış klinik yok. */
 export const AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE = 'Bu hesap için erişilebilir klinik bulunamadı.';
@@ -70,12 +75,7 @@ export function authFailureMessage(err: HttpErrorResponse, fallback = 'İşlem b
     }
 
     if (err.status === 429) {
-        const retryAfter = err.headers.get('Retry-After');
-        const sec = retryAfter ? Number.parseInt(retryAfter, 10) : NaN;
-        if (!Number.isNaN(sec) && sec > 0) {
-            return `Çok fazla istek gönderildi. Lütfen ${sec} saniye sonra tekrar deneyin.`;
-        }
-        return 'Çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin.';
+        return rateLimitUserMessage(err);
     }
 
     if (err.status === 401) {

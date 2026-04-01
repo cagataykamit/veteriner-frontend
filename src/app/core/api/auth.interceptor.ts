@@ -97,7 +97,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                     });
                     return next(retry);
                 }),
-                catchError(() => {
+                catchError((refreshErr: unknown) => {
+                    if (refreshErr instanceof HttpErrorResponse && refreshErr.status === 429) {
+                        return throwError(() => refreshErr);
+                    }
                     auth.clearSession();
                     router.navigate(['/auth/login'], {
                         queryParams: { returnUrl: router.url, reauth: '1' }

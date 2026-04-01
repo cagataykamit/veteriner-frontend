@@ -28,6 +28,16 @@ export function isUnhelpfulProblemText(s: string): boolean {
     return false;
 }
 
+/** 429 Too Many Requests — Retry-After varsa saniye ile, yoksa kısa genel metin. */
+export function rateLimitUserMessage(err: HttpErrorResponse): string {
+    const retryAfter = err.headers.get('Retry-After');
+    const sec = retryAfter ? Number.parseInt(retryAfter, 10) : NaN;
+    if (!Number.isNaN(sec) && sec > 0) {
+        return `Çok fazla istek gönderildi. Lütfen ${sec} saniye sonra tekrar deneyin.`;
+    }
+    return 'Çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin.';
+}
+
 /** Panel listeleri / formlar: ProblemDetails, düz metin ve HTTP durumuna göre anlamlı mesaj. */
 export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek başarısız.'): string {
     const body = err.error as ProblemDetails | string | null | undefined;
@@ -46,6 +56,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
         if (t && !isUnhelpfulProblemText(t)) {
             return t;
         }
+    }
+
+    if (err.status === 429) {
+        return rateLimitUserMessage(err);
     }
 
     const fromStatus = panelHttpStatusUserMessage(err.status);
