@@ -52,5 +52,9 @@ export const ApiEndpoints = {
     payments: {
         list: () => `/api/v1/payments`,
         byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`
+    },
+    treatments: {
+        list: () => `/api/v1/treatments`,
+        byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`
     }
 } as const;

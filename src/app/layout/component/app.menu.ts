@@ -36,6 +36,7 @@ export class AppMenu {
                     { label: 'Irklar', icon: 'pi pi-fw pi-sitemap', routerLink: ['/panel/breeds'] },
                     { label: 'Randevular', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] },
                     { label: 'Muayeneler', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/examinations'] },
+                    { label: 'Tedaviler', icon: 'pi pi-fw pi-briefcase', routerLink: ['/panel/treatments'] },
                     { label: 'Aşılar', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/vaccinations'] },
                     { label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }
                 ]

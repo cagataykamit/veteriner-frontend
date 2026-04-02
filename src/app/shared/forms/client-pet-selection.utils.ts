@@ -43,3 +43,11 @@ export function filterPetsByClientId(pets: PetListItemVm[], clientId: string | n
     }
     return pets.filter((p) => (p.clientId ?? '').trim() === id);
 }
+
+/**
+ * Edit ekranında `getPets(clientId)` cevabı geldiğinde formdaki müşteri artık bu isteğin `clientId`'si değilse
+ * yanıt geçersizdir (kullanıcı arada başka müşteri seçmiş; önceki isteğin cevabı pet/client state'ini bozar).
+ */
+export function isStalePetListResponse(formClientId: unknown, requestedClientId: string): boolean {
+    return trimClientIdControlValue(formClientId) !== requestedClientId.trim();
+}

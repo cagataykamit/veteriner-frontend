@@ -7,22 +7,20 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { mapAppointmentUpsertFormToUpdateRequest } from '@/app/features/appointments/data/appointment.mapper';
-import type { AppointmentEditVm } from '@/app/features/appointments/models/appointment-vm.model';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import {
-    type AppointmentUpsertFieldErrors,
-    type AppointmentUpsertFormFieldKey,
-    parseAppointmentUpsertHttpError
-} from '@/app/features/appointments/utils/appointment-upsert-validation-parse.utils';
+    followUpBeforeTreatmentMessage,
+    mapTreatmentUpsertFormToCreateRequest
+} from '@/app/features/treatments/data/treatment.mapper';
+import type { TreatmentEditVm } from '@/app/features/treatments/models/treatment-vm.model';
+import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import {
+    type TreatmentUpsertFieldErrors,
+    type TreatmentUpsertFormFieldKey,
+    parseTreatmentUpsertHttpError
+} from '@/app/features/treatments/utils/treatment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
-import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
-import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
-import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
 import {
     clientOptionsFromList,
     filterPetsByClientId,
@@ -31,15 +29,17 @@ import {
     trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
-import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
-import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { AuthService } from '@/app/core/auth/auth.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
+import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 
 @Component({
-    selector: 'app-appointment-edit-page',
+    selector: 'app-treatment-edit-page',
     standalone: true,
     imports: [
         CommonModule,
@@ -55,16 +55,16 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
         QuickPetDialogComponent
     ],
     template: `
-        <a routerLink="/panel/appointments" class="text-primary font-medium no-underline inline-block mb-4">← Randevu listesine dön</a>
+        <a routerLink="/panel/treatments" class="text-primary font-medium no-underline inline-block mb-4">← Tedavi listesine dön</a>
 
         @if (loading()) {
-            <app-loading-state message="Randevu düzenleme bilgileri yükleniyor…" />
+            <app-loading-state message="Tedavi düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
             <div class="card">
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Randevuyu Düzenle" subtitle="Operasyon" description="Randevu kaydını güncelleyin." />
+            <app-page-header title="Tedaviyi Düzenle" subtitle="Klinik" description="Tedavi kaydını güncelleyin." />
 
             <div class="card">
                 @if (selectionError()) {
@@ -137,53 +137,42 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                             </div>
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="scheduledAtLocal" class="block text-sm font-medium text-muted-color mb-2">Tarih / saat *</label>
+                            <label for="treatmentDateLocal" class="block text-sm font-medium text-muted-color mb-2">Tedavi tarihi / saati *</label>
                             <input
-                                id="scheduledAtLocal"
+                                id="treatmentDateLocal"
                                 type="datetime-local"
                                 class="w-full p-inputtext p-component"
-                                formControlName="scheduledAtLocal"
+                                formControlName="treatmentDateLocal"
                             />
-                            @if (apiFieldErrors().scheduledAtLocal) {
-                                <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                            } @else if (form.controls.scheduledAtLocal.invalid && form.controls.scheduledAtLocal.touched) {
-                                <small class="text-red-500">Tarih / saat zorunludur.</small>
+                            @if (apiFieldErrors().treatmentDateLocal) {
+                                <small class="text-red-500">{{ apiFieldErrors().treatmentDateLocal }}</small>
+                            } @else if (form.controls.treatmentDateLocal.invalid && form.controls.treatmentDateLocal.touched) {
+                                <small class="text-red-500">Tedavi tarihi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu Türü *</label>
-                            <p-select
-                                inputId="appointmentType"
-                                formControlName="appointmentType"
-                                [options]="typeOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Randevu Türü seçin"
-                                [showClear]="true"
-                                styleClass="w-full"
-                            />
-                            @if (apiFieldErrors().appointmentType) {
-                                <small class="text-red-500">{{ apiFieldErrors().appointmentType }}</small>
-                            } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
-                                <small class="text-red-500">Randevu Türü seçimi zorunludur.</small>
+                            <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
+                            <input id="followUpDate" type="date" class="w-full p-inputtext p-component" formControlName="followUpDate" />
+                            @if (apiFieldErrors().followUpDate) {
+                                <small class="text-red-500">{{ apiFieldErrors().followUpDate }}</small>
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                            <p-select
-                                inputId="status"
-                                formControlName="status"
-                                [options]="statusOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Durum seçin"
-                                [showClear]="false"
-                                styleClass="w-full"
-                            />
-                            @if (apiFieldErrors().status) {
-                                <small class="text-red-500">{{ apiFieldErrors().status }}</small>
-                            } @else if (form.controls.status.invalid && form.controls.status.touched) {
-                                <small class="text-red-500">Durum seçimi zorunludur.</small>
+                        <div class="col-span-12">
+                            <label for="title" class="block text-sm font-medium text-muted-color mb-2">Başlık *</label>
+                            <input id="title" type="text" class="w-full p-inputtext p-component" formControlName="title" />
+                            @if (apiFieldErrors().title) {
+                                <small class="text-red-500">{{ apiFieldErrors().title }}</small>
+                            } @else if (form.controls.title.invalid && form.controls.title.touched) {
+                                <small class="text-red-500">Başlık zorunludur.</small>
+                            }
+                        </div>
+                        <div class="col-span-12">
+                            <label for="description" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
+                            <textarea id="description" rows="4" class="w-full p-inputtext p-component" formControlName="description"></textarea>
+                            @if (apiFieldErrors().description) {
+                                <small class="text-red-500">{{ apiFieldErrors().description }}</small>
+                            } @else if (form.controls.description.invalid && form.controls.description.touched) {
+                                <small class="text-red-500">Açıklama zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12">
@@ -228,15 +217,15 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
         }
     `
 })
-export class AppointmentEditPageComponent implements OnInit {
+export class TreatmentEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly fb = inject(FormBuilder);
-    private readonly appointmentsService = inject(AppointmentsService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+    private readonly treatmentsService = inject(TreatmentsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
-    private readonly router = inject(Router);
-    private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
 
@@ -249,55 +238,57 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly loadingPets = signal(false);
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
-    readonly apiFieldErrors = signal<AppointmentUpsertFieldErrors>({});
+    readonly apiFieldErrors = signal<TreatmentUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
     readonly quickClientOpen = signal(false);
     readonly quickPetOpen = signal(false);
 
-    private appointmentId = '';
+    private treatmentId = '';
     private isInitializingClient = false;
-    private editVmCache: AppointmentEditVm | null = null;
+    private editVmCache: TreatmentEditVm | null = null;
 
-    readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
-
-    readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
-
-    readonly form = this.fb.group({
-        clientId: this.fb.nonNullable.control('', Validators.required),
-        petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
-        scheduledAtLocal: this.fb.nonNullable.control('', Validators.required),
-        appointmentType: this.fb.control<number | null>(null, Validators.required),
-        status: this.fb.control<number | null>(null, Validators.required),
-        notes: this.fb.nonNullable.control('')
+    readonly form = this.fb.nonNullable.group({
+        clientId: ['', Validators.required],
+        petId: [{ value: '', disabled: true }, Validators.required],
+        treatmentDateLocal: ['', Validators.required],
+        followUpDate: [''],
+        title: ['', Validators.required],
+        description: ['', Validators.required],
+        notes: ['']
     });
 
     constructor() {
-        const clearApiError = (f: AppointmentUpsertFormFieldKey): void => {
-            const cur = this.apiFieldErrors();
-            if (cur[f]) {
-                const next = { ...cur };
-                delete next[f];
-                this.apiFieldErrors.set(next);
-            }
-        };
-        this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('clientId'));
-        this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('petId'));
-        this.form.controls.scheduledAtLocal.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
-        this.form.controls.appointmentType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('appointmentType'));
-        this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('status'));
-        this.form.controls.notes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('notes'));
+        const fields: TreatmentUpsertFormFieldKey[] = [
+            'clientId',
+            'petId',
+            'treatmentDateLocal',
+            'followUpDate',
+            'title',
+            'description',
+            'notes'
+        ];
+        for (const f of fields) {
+            this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+                const cur = this.apiFieldErrors();
+                if (cur[f]) {
+                    const next = { ...cur };
+                    delete next[f];
+                    this.apiFieldErrors.set(next);
+                }
+            });
+        }
     }
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
         if (!id) {
-            this.loadError.set('Geçersiz randevu.');
+            this.loadError.set('Geçersiz tedavi.');
             this.loading.set(false);
             return;
         }
-        this.appointmentId = id;
+        this.treatmentId = id;
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
@@ -323,7 +314,7 @@ export class AppointmentEditPageComponent implements OnInit {
     reload(): void {
         this.loading.set(true);
         this.loadError.set(null);
-        this.appointmentsService.getAppointmentForEditById(this.appointmentId).subscribe({
+        this.treatmentsService.getTreatmentForEditById(this.treatmentId).subscribe({
             next: (x) => {
                 this.editVmCache = x;
                 this.isInitializingClient = true;
@@ -331,9 +322,10 @@ export class AppointmentEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        scheduledAtLocal: toDateTimeLocalInput(x.scheduledAtUtc),
-                        appointmentType: x.appointmentType,
-                        status: x.status,
+                        treatmentDateLocal: toDateTimeLocalInput(x.treatmentDateUtc),
+                        followUpDate: x.followUpDateInput ?? '',
+                        title: x.title,
+                        description: x.description,
                         notes: x.notes
                     },
                     { emitEvent: false }
@@ -349,7 +341,7 @@ export class AppointmentEditPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: unknown) => {
-                this.loadError.set(panelHttpFailureMessage(e, 'Randevu bilgileri yüklenemedi.'));
+                this.loadError.set(panelHttpFailureMessage(e, 'Tedavi bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
         });
@@ -363,53 +355,48 @@ export class AppointmentEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const scheduledAtUtc = dateTimeLocalInputToIsoUtc(v.scheduledAtLocal);
-        if (!scheduledAtUtc) {
-            this.submitError.set('Geçerli bir tarih ve saat seçin.');
+        const treatmentDateUtc = dateTimeLocalInputToIsoUtc(v.treatmentDateLocal);
+        if (!treatmentDateUtc) {
+            this.submitError.set('Geçerli bir tedavi tarihi ve saati seçin.');
             return;
         }
+        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToUtcIso(v.followUpDate.trim()) : null;
+        if (v.followUpDate?.trim() && !followUpDateUtc) {
+            this.submitError.set('Takip tarihi geçersiz.');
+            return;
+        }
+        const orderMsg = followUpBeforeTreatmentMessage(treatmentDateUtc, followUpDateUtc);
+        if (orderMsg) {
+            this.submitError.set(orderMsg);
+            return;
+        }
+
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
             return;
         }
-        const appointmentType = v.appointmentType;
-        if (appointmentType === null || appointmentType === undefined) {
-            this.form.markAllAsTouched();
-            this.submitError.set('Randevu Türü seçin.');
-            return;
-        }
-        const statusNum = v.status;
-        if (statusNum === null || statusNum === undefined || ![0, 1, 2].includes(statusNum)) {
-            this.form.markAllAsTouched();
-            this.submitError.set('Durum seçin.');
-            return;
-        }
 
-        const payload = mapAppointmentUpsertFormToUpdateRequest(this.appointmentId, {
+        const payload = mapTreatmentUpsertFormToCreateRequest({
             clinicId,
             petId: v.petId,
-            scheduledAtUtc,
-            appointmentType,
-            status: statusNum,
-            notes: v.notes
+            treatmentDateUtc,
+            title: v.title,
+            description: v.description,
+            notes: v.notes,
+            followUpDateUtc
         });
 
         this.submitting.set(true);
-        this.appointmentsService.updateAppointment(this.appointmentId, payload).subscribe({
+        this.treatmentsService.updateTreatment(this.treatmentId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/appointments', this.appointmentId], { queryParams: { saved: '1' } });
+                void this.router.navigate(['/panel/treatments', this.treatmentId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
                 if (e instanceof HttpErrorResponse) {
-                    const clinicMsg = messageFromClinicResolutionHttpError(e);
-                    if (clinicMsg) {
-                        this.submitError.set(clinicMsg);
-                        return;
-                    }
-                    const parsed = parseAppointmentUpsertHttpError(e);
+                    const parsed = parseTreatmentUpsertHttpError(e);
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
                     return;
@@ -420,7 +407,7 @@ export class AppointmentEditPageComponent implements OnInit {
     }
 
     goDetail(): void {
-        void this.router.navigate(['/panel/appointments', this.appointmentId]);
+        void this.router.navigate(['/panel/treatments', this.treatmentId]);
     }
 
     petQuickAddDisabled(): boolean {

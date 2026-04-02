@@ -23,6 +23,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import {
     clientOptionsFromList,
     filterPetsByClientId,
+    isStalePetListResponse,
     petOptionsFromList,
     trimClientIdControlValue,
     type SelectOption
@@ -454,19 +455,25 @@ export class ExaminationEditPageComponent implements OnInit {
     }
 
     private loadPetsForClient(clientId: string, selectedPetId = ''): void {
+        const cid = clientId.trim();
         this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
+        this.petsService.getPets({ page: 1, pageSize: 200, clientId: cid }).subscribe({
             next: (r) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, cid)) {
+                    return;
+                }
                 let items = r.items;
                 const anyClientId = items.some((p) => (p.clientId ?? '').trim());
                 if (anyClientId) {
-                    items = filterPetsByClientId(items, clientId);
+                    items = filterPetsByClientId(items, cid);
                 }
                 this.petOptions.set(petOptionsFromList(items));
-                this.mergePetOptionFromCache();
+                this.mergePetOptionFromCache(cid);
+                const vmClient = this.editVmCache?.clientId?.trim() ?? '';
                 if (selectedPetId) {
                     const exists = items.some((x) => x.id === selectedPetId);
                     const allowFromDetail =
+                        cid === vmClient &&
                         !!this.editVmCache?.petName?.trim() &&
                         (this.editVmCache?.petId ?? '').trim() === selectedPetId;
                     this.form.controls.petId.setValue(exists || allowFromDetail ? selectedPetId : '');
@@ -499,8 +506,13 @@ export class ExaminationEditPageComponent implements OnInit {
         this.clientOptions.set([{ value: cid, label }, ...opts]);
     }
 
-    private mergePetOptionFromCache(): void {
+    /** Yalnızca istek, kaydın orijinal müşterisine aitken: başka müşteriye geçildiyse eski hayvanı listeye ekleme. */
+    private mergePetOptionFromCache(forRequestClientId: string): void {
         const vm = this.editVmCache;
+        const vmClient = vm?.clientId?.trim();
+        if (!vmClient || forRequestClientId.trim() !== vmClient) {
+            return;
+        }
         const pid = vm?.petId?.trim();
         const label = vm?.petName?.trim();
         if (!pid || !label) {
