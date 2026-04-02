@@ -16,6 +16,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { EMPTY, switchMap } from 'rxjs';
 
 @Component({
@@ -90,7 +91,7 @@ import { EMPTY, switchMap } from 'rxjs';
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Ad</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.clientName }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Telefon</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.clientPhone }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatClientPhoneForDisplay(pet()!.clientPhone) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">E-posta</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.clientEmail }}</dd>
                         </dl>
@@ -201,6 +202,7 @@ export class PetDetailPageComponent implements OnInit {
     private readonly related = inject(DetailRelatedSummariesService);
 
     readonly copy = PANEL_COPY;
+    readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
 
     /** Yeni oluşturma sonrası kısa onay (query `saved=1`). */
     readonly showSavedBanner = signal(false);

@@ -61,10 +61,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
-            <p class="text-muted-color text-sm mt-3 mb-0">
-                Metin araması <span class="font-medium">search</span> ile gider. Tarih aralığı <span class="font-medium">fromDate</span> /
-                <span class="font-medium">toDate</span> ile birlikte kullanılabilir.
-            </p>
         </div>
 
         @if (loading()) {

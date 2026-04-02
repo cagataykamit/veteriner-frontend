@@ -13,6 +13,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, formatDateTimeDisplay, formatTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 
@@ -274,7 +275,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                                             <ng-template #body let-row>
                                                 <tr>
                                                     <td class="font-medium">{{ row.fullName ?? '—' }}</td>
-                                                    <td>{{ row.phone ?? '—' }}</td>
+                                                    <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
                                                     <td>
                                                         <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
                                                     </td>
@@ -329,6 +330,7 @@ export class DashboardPageComponent implements OnInit {
     private readonly dashboardService = inject(DashboardService);
 
     readonly copy = PANEL_COPY;
+    readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
 
     readonly loading = signal(true);
     readonly dash = signal<DashboardOperationalVm | null>(null);

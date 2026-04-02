@@ -21,6 +21,7 @@ import {
     clientOptionsFromList,
     filterPetsByClientId,
     petOptionsFromList,
+    trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -29,6 +30,8 @@ import { messageFromClinicResolutionHttpError } from '@/app/features/appointment
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
 import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 
 @Component({
     selector: 'app-appointment-new-page',
@@ -40,7 +43,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent
+        AppPageHeaderComponent,
+        QuickClientDialogComponent,
+        QuickPetDialogComponent
     ],
     template: `
         <a routerLink="/panel/appointments" class="text-primary font-medium no-underline inline-block mb-4">← Randevu listesine dön</a>
@@ -74,10 +79,16 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        <p class="text-muted-color text-sm mt-2 mb-0">
-                            Aradığınız kayıt yoksa
-                            <a routerLink="/panel/clients/new" class="text-primary font-medium no-underline">Yeni Müşteri</a>.
-                        </p>
+                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                            <p-button
+                                type="button"
+                                label="Yeni müşteri"
+                                icon="pi pi-user-plus"
+                                [text]="true"
+                                styleClass="p-0"
+                                (onClick)="quickClientOpen.set(true)"
+                            />
+                        </div>
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
@@ -99,10 +110,17 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        <p class="text-muted-color text-sm mt-2 mb-0">
-                            <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
-                            — bu müşteri için hayvan ekleyebilirsiniz.
-                        </p>
+                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                            <p-button
+                                type="button"
+                                label="Bu müşteri için yeni hayvan"
+                                icon="pi pi-plus"
+                                [text]="true"
+                                styleClass="p-0"
+                                [disabled]="petQuickAddDisabled()"
+                                (onClick)="quickPetOpen.set(true)"
+                            />
+                        </div>
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="scheduledAtLocal" class="block text-sm font-medium text-muted-color mb-2">Tarih / saat *</label>
@@ -177,6 +195,13 @@ import { AuthService } from '@/app/core/auth/auth.service';
                 </div>
             </form>
         </div>
+
+        <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
+        <app-quick-pet-dialog
+            [(visible)]="quickPetOpen"
+            [ownerClientId]="quickPetOwnerClientId()"
+            (petCreated)="onQuickPetCreated($event)"
+        />
     `
 })
 export class AppointmentNewPageComponent implements OnInit {
@@ -198,6 +223,9 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
+
+    readonly quickClientOpen = signal(false);
+    readonly quickPetOpen = signal(false);
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
@@ -235,7 +263,10 @@ export class AppointmentNewPageComponent implements OnInit {
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
-            const id = typeof clientId === 'string' ? clientId.trim() : '';
+            if (clientId === null || clientId === undefined) {
+                this.form.controls.clientId.setValue('', { emitEvent: false });
+            }
+            const id = trimClientIdControlValue(this.form.controls.clientId.value);
             if (!id) {
                 this.petOptions.set([]);
                 this.form.controls.petId.disable({ emitEvent: false });
@@ -248,6 +279,31 @@ export class AppointmentNewPageComponent implements OnInit {
 
     goList(): void {
         void this.router.navigate(['/panel/appointments']);
+    }
+
+    petQuickAddDisabled(): boolean {
+        return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
+    }
+
+    quickPetOwnerClientId(): string {
+        return trimClientIdControlValue(this.form.getRawValue().clientId);
+    }
+
+    onQuickClientCreated(clientId: string): void {
+        const id = clientId.trim();
+        if (!id) {
+            return;
+        }
+        this.reloadClientsAndSelectClient(id);
+    }
+
+    onQuickPetCreated(petId: string): void {
+        const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
+        const pid = petId.trim();
+        if (!cid || !pid) {
+            return;
+        }
+        this.loadPetsForClient(cid, pid);
     }
 
     onSubmit(): void {
@@ -325,7 +381,23 @@ export class AppointmentNewPageComponent implements OnInit {
         });
     }
 
-    private loadPetsForClient(clientId: string): void {
+    private reloadClientsAndSelectClient(clientId: string): void {
+        this.loadingClients.set(true);
+        this.selectionError.set(null);
+        this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
+            next: (r) => {
+                this.clientOptions.set(clientOptionsFromList(r.items));
+                this.loadingClients.set(false);
+                this.form.controls.clientId.setValue(clientId, { emitEvent: true });
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
+                this.loadingClients.set(false);
+            }
+        });
+    }
+
+    private loadPetsForClient(clientId: string, selectPetId?: string): void {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
             next: (r) => {
@@ -335,6 +407,13 @@ export class AppointmentNewPageComponent implements OnInit {
                     items = filterPetsByClientId(items, clientId);
                 }
                 this.petOptions.set(petOptionsFromList(items));
+                const want = selectPetId?.trim();
+                if (want) {
+                    const exists = items.some((p) => p.id === want);
+                    if (exists) {
+                        this.form.controls.petId.setValue(want, { emitEvent: true });
+                    }
+                }
                 this.loadingPets.set(false);
             },
             error: (e: unknown) => {

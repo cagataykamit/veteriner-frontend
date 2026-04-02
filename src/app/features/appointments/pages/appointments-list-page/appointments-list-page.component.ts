@@ -96,10 +96,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
-            <p class="text-muted-color text-sm mt-3 mb-0">
-                Metin araması <span class="font-medium">search</span> ile gider. <span class="font-medium">clinicId</span> aktif klinikten eklenir. Durum, hayvan ve
-                tarih diğer parametrelerle birlikte uygulanır.
-            </p>
         </div>
 
         @if (loading()) {

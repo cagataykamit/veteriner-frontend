@@ -21,7 +21,9 @@ import {
 } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { clientOptionsFromList, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
+import { clientOptionsFromList, trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
+import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick-breed-dialog.component';
+import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
@@ -35,7 +37,9 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent
+        AppPageHeaderComponent,
+        QuickSpeciesDialogComponent,
+        QuickBreedDialogComponent
     ],
     template: `
         <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
@@ -89,12 +93,23 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                             placeholder="Tür seçin"
                             styleClass="w-full"
                             [loading]="loadingSpecies()"
+                            [showClear]="true"
                         />
                         @if (apiFieldErrors().speciesId) {
                             <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
                         } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
                             <small class="text-red-500">Tür seçimi zorunludur.</small>
                         }
+                        <div class="mt-2">
+                            <p-button
+                                type="button"
+                                label="Yeni tür ekle"
+                                icon="pi pi-plus"
+                                [text]="true"
+                                styleClass="p-0"
+                                (onClick)="quickSpeciesOpen.set(true)"
+                            />
+                        </div>
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="breedId" class="block text-sm font-medium text-muted-color mb-2">Irk</label>
@@ -112,6 +127,18 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                         />
                         @if (apiFieldErrors().breedId) {
                             <small class="text-red-500">{{ apiFieldErrors().breedId }}</small>
+                        }
+                        @if (hasSpeciesForQuickBreed()) {
+                            <div class="mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Bu tür için yeni ırk"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickBreedOpen.set(true)"
+                                />
+                            </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -201,6 +228,14 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                 </div>
             </form>
         </div>
+
+        <app-quick-species-dialog [(visible)]="quickSpeciesOpen" (speciesCreated)="onQuickSpeciesCreated($event)" />
+        <app-quick-breed-dialog
+            [(visible)]="quickBreedOpen"
+            [speciesId]="quickBreedSpeciesId()"
+            [speciesLabel]="quickBreedSpeciesLabelForDialog()"
+            (breedCreated)="onQuickBreedCreated($event)"
+        />
     `
 })
 export class PetNewPageComponent implements OnInit {
@@ -227,6 +262,9 @@ export class PetNewPageComponent implements OnInit {
     readonly breedOptions = signal<SelectOption[]>([]);
     readonly colorOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<PetCreateFieldErrors>({});
+
+    readonly quickSpeciesOpen = signal(false);
+    readonly quickBreedOpen = signal(false);
 
     readonly genderOptions = [...PET_GENDER_FORM_OPTIONS];
 
@@ -261,11 +299,13 @@ export class PetNewPageComponent implements OnInit {
         this.loadClients();
         this.loadSpecies();
         this.loadPetColors();
-        this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId: string) => {
-            // Tür değiştiğinde yanlış eşleşmeyi önlemek için seçili ırk temizlenir.
+        this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId) => {
             this.form.controls.breedId.setValue('');
             this.breedOptions.set([]);
-            const sid = speciesId?.trim();
+            if (speciesId === null || speciesId === undefined) {
+                this.form.controls.speciesId.setValue('', { emitEvent: false });
+            }
+            const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
             if (!sid) {
                 return;
             }
@@ -275,6 +315,40 @@ export class PetNewPageComponent implements OnInit {
 
     goList(): void {
         void this.router.navigate(['/panel/pets']);
+    }
+
+    onQuickSpeciesCreated(speciesId: string): void {
+        const id = speciesId.trim();
+        if (!id) {
+            return;
+        }
+        this.reloadSpeciesAndSelect(id);
+    }
+
+    hasSpeciesForQuickBreed(): boolean {
+        return !!trimClientIdControlValue(this.form.controls.speciesId.value);
+    }
+
+    quickBreedSpeciesId(): string {
+        return trimClientIdControlValue(this.form.controls.speciesId.value);
+    }
+
+    quickBreedSpeciesLabelForDialog(): string {
+        const id = trimClientIdControlValue(this.form.controls.speciesId.value);
+        if (!id) {
+            return '';
+        }
+        const opt = this.speciesOptions().find((o) => o.value === id);
+        return opt ? `Tür: ${opt.label}` : '';
+    }
+
+    onQuickBreedCreated(breedId: string): void {
+        const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
+        const bid = breedId.trim();
+        if (!sid || !bid) {
+            return;
+        }
+        this.loadBreedsForSpecies(sid, bid);
     }
 
     onSubmit(): void {
@@ -341,6 +415,31 @@ export class PetNewPageComponent implements OnInit {
         });
     }
 
+    private reloadSpeciesAndSelect(speciesId: string): void {
+        const id = speciesId.trim();
+        if (!id) {
+            return;
+        }
+        this.loadingSpecies.set(true);
+        this.selectionError.set(null);
+        this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
+            next: (items) => {
+                this.speciesOptions.set(
+                    items.map((x) => ({
+                        value: x.id,
+                        label: x.name
+                    }))
+                );
+                this.loadingSpecies.set(false);
+                this.form.controls.speciesId.setValue(id, { emitEvent: true });
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Tür listesi yüklenemedi.'));
+                this.loadingSpecies.set(false);
+            }
+        });
+    }
+
     private loadPetColors(): void {
         this.loadingColors.set(true);
         this.selectionError.set(null);
@@ -356,7 +455,7 @@ export class PetNewPageComponent implements OnInit {
         });
     }
 
-    private loadBreedsForSpecies(speciesId: string): void {
+    private loadBreedsForSpecies(speciesId: string, selectBreedId?: string): void {
         this.loadingBreeds.set(true);
         this.selectionError.set(null);
         this.breedsService.getBreedList({ activeOnly: true, speciesId }).subscribe({
@@ -367,6 +466,13 @@ export class PetNewPageComponent implements OnInit {
                         label: x.name
                     }))
                 );
+                const want = selectBreedId?.trim();
+                if (want) {
+                    const exists = items.some((x) => x.id === want);
+                    if (exists) {
+                        this.form.controls.breedId.setValue(want, { emitEvent: true });
+                    }
+                }
                 this.loadingBreeds.set(false);
             },
             error: (e: unknown) => {

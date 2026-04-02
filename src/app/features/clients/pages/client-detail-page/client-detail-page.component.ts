@@ -15,6 +15,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { EMPTY, switchMap } from 'rxjs';
 
@@ -73,7 +74,7 @@ import { EMPTY, switchMap } from 'rxjs';
                         <h5 class="mt-0 mb-4">İletişim bilgileri</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Telefon</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ client()!.phone }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatClientPhoneForDisplay(client()!.phone) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">E-posta</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ client()!.email }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Adres</dt>
@@ -176,6 +177,7 @@ export class ClientDetailPageComponent implements OnInit {
     private readonly related = inject(DetailRelatedSummariesService);
 
     readonly copy = PANEL_COPY;
+    readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);

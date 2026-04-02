@@ -13,6 +13,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
 @Component({
@@ -53,9 +54,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                 </div>
             </div>
-            <p class="text-muted-color text-sm mt-3 mb-0">
-                Metin araması <span class="font-medium">search</span> parametresiyle gider (ad, e-posta, telefon). Boş bırakıldığında sunucu filtresi uygulanmaz.
-            </p>
         </div>
 
         @if (loading()) {
@@ -94,7 +92,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <ng-template #body let-row>
                             <tr>
                                 <td class="font-medium">{{ row.fullName }}</td>
-                                <td>{{ row.phone }}</td>
+                                <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
                                 <td>{{ row.email }}</td>
                                 <td>{{ formatDate(row.createdAtUtc) }}</td>
                                 <td>
@@ -110,6 +108,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 })
 export class ClientsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
 
     private readonly clientsService = inject(ClientsService);
 

@@ -24,12 +24,15 @@ import {
     clientOptionsFromList,
     filterPetsByClientId,
     petOptionsFromList,
+    trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 
 @Component({
     selector: 'app-examination-edit-page',
@@ -43,7 +46,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        QuickClientDialogComponent,
+        QuickPetDialogComponent
     ],
     template: `
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
@@ -84,6 +89,16 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                                 <small class="text-red-500">Müşteri seçimi zorunludur.</small>
                             }
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Yeni müşteri"
+                                    icon="pi pi-user-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickClientOpen.set(true)"
+                                />
+                            </div>
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
@@ -105,6 +120,17 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
                                 <small class="text-red-500">Hayvan seçimi zorunludur.</small>
                             }
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Bu müşteri için yeni hayvan"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    [disabled]="petQuickAddDisabled()"
+                                    (onClick)="quickPetOpen.set(true)"
+                                />
+                            </div>
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="examinationDateLocal" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi / saati *</label>
@@ -177,6 +203,13 @@ import { AuthService } from '@/app/core/auth/auth.service';
                     </div>
                 </form>
             </div>
+
+            <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
+            <app-quick-pet-dialog
+                [(visible)]="quickPetOpen"
+                [ownerClientId]="quickPetOwnerClientId()"
+                (petCreated)="onQuickPetCreated($event)"
+            />
         }
     `
 })
@@ -203,6 +236,9 @@ export class ExaminationEditPageComponent implements OnInit {
     readonly petOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<ExaminationUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
+
+    readonly quickClientOpen = signal(false);
+    readonly quickPetOpen = signal(false);
 
     private examinationId = '';
     private isInitializingClient = false;
@@ -251,10 +287,13 @@ export class ExaminationEditPageComponent implements OnInit {
         this.examinationId = id;
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
-            const cid = (clientId ?? '').trim();
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+            if (clientId === null || clientId === undefined) {
+                this.form.controls.clientId.setValue('', { emitEvent: false });
+            }
+            const cid = trimClientIdControlValue(this.form.controls.clientId.value);
             if (!cid) {
                 this.petOptions.set([]);
                 this.form.controls.petId.disable({ emitEvent: false });
@@ -356,6 +395,31 @@ export class ExaminationEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/examinations', this.examinationId]);
     }
 
+    petQuickAddDisabled(): boolean {
+        return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
+    }
+
+    quickPetOwnerClientId(): string {
+        return trimClientIdControlValue(this.form.getRawValue().clientId);
+    }
+
+    onQuickClientCreated(clientId: string): void {
+        const id = clientId.trim();
+        if (!id) {
+            return;
+        }
+        this.reloadClientsAndSelectClient(id);
+    }
+
+    onQuickPetCreated(petId: string): void {
+        const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
+        const pid = petId.trim();
+        if (!cid || !pid) {
+            return;
+        }
+        this.loadPetsForClient(cid, pid);
+    }
+
     private loadClients(): void {
         this.loadingClients.set(true);
         this.selectionError.set(null);
@@ -364,6 +428,23 @@ export class ExaminationEditPageComponent implements OnInit {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.mergeClientOptionFromCache();
                 this.loadingClients.set(false);
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
+                this.loadingClients.set(false);
+            }
+        });
+    }
+
+    private reloadClientsAndSelectClient(clientId: string): void {
+        this.loadingClients.set(true);
+        this.selectionError.set(null);
+        this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
+            next: (r) => {
+                this.clientOptions.set(clientOptionsFromList(r.items));
+                this.mergeClientOptionFromCache();
+                this.loadingClients.set(false);
+                this.form.controls.clientId.setValue(clientId, { emitEvent: true });
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
