@@ -21,8 +21,12 @@ import {
     clientOptionsFromList,
     filterPetsByClientId,
     petOptionsFromList,
+    trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
+import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -38,7 +42,9 @@ import { AuthService } from '@/app/core/auth/auth.service';
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent
+        AppPageHeaderComponent,
+        QuickClientDialogComponent,
+        QuickPetDialogComponent
     ],
     template: `
         <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
@@ -67,15 +73,21 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             styleClass="w-full"
                             [loading]="loadingClients()"
                         />
-                        @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
-                        } @else if (apiFieldErrors().clientId) {
+                        @if (apiFieldErrors().clientId) {
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                        } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
+                            <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        <p class="text-muted-color text-sm mt-2 mb-0">
-                            Aradığınız kayıt yoksa
-                            <a routerLink="/panel/clients/new" class="text-primary font-medium no-underline">Yeni Müşteri</a>.
-                        </p>
+                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                            <p-button
+                                type="button"
+                                label="Yeni müşteri"
+                                icon="pi pi-user-plus"
+                                [text]="true"
+                                styleClass="p-0"
+                                (onClick)="quickClientOpen.set(true)"
+                            />
+                        </div>
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
@@ -92,15 +104,20 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             styleClass="w-full"
                             [loading]="loadingPets()"
                         />
-                        @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
-                        } @else if (apiFieldErrors().petId) {
+                        @if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
-                        <p class="text-muted-color text-sm mt-2 mb-0">
-                            <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
-                            — bu müşteri için hayvan ekleyebilirsiniz.
-                        </p>
+                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                            <p-button
+                                type="button"
+                                label="Bu müşteri için yeni hayvan"
+                                icon="pi pi-plus"
+                                [text]="true"
+                                styleClass="p-0"
+                                [disabled]="petQuickAddDisabled()"
+                                (onClick)="quickPetOpen.set(true)"
+                            />
+                        </div>
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="amount" class="block text-sm font-medium text-muted-color mb-2">Tutar *</label>
@@ -173,6 +190,13 @@ import { AuthService } from '@/app/core/auth/auth.service';
                 </div>
             </form>
         </div>
+
+        <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
+        <app-quick-pet-dialog
+            [(visible)]="quickPetOpen"
+            [ownerClientId]="quickPetOwnerClientId()"
+            (petCreated)="onQuickPetCreated($event)"
+        />
     `
 })
 export class PaymentNewPageComponent implements OnInit {
@@ -196,6 +220,9 @@ export class PaymentNewPageComponent implements OnInit {
     readonly petOptions = signal<SelectOption[]>([]);
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
     readonly apiFieldErrors = signal<PaymentUpsertFieldErrors>({});
+
+    readonly quickClientOpen = signal(false);
+    readonly quickPetOpen = signal(false);
 
     readonly currencyOptions = [
         { label: 'TRY', value: 'TRY' },
@@ -222,7 +249,10 @@ export class PaymentNewPageComponent implements OnInit {
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
-            const id = typeof clientId === 'string' ? clientId.trim() : '';
+            if (clientId === null || clientId === undefined) {
+                this.form.controls.clientId.setValue('', { emitEvent: false });
+            }
+            const id = trimClientIdControlValue(this.form.controls.clientId.value);
             if (!id) {
                 this.petOptions.set([]);
                 this.form.controls.petId.disable({ emitEvent: false });
@@ -231,6 +261,31 @@ export class PaymentNewPageComponent implements OnInit {
             this.form.controls.petId.enable({ emitEvent: false });
             this.loadPetsForClient(id);
         });
+    }
+
+    petQuickAddDisabled(): boolean {
+        return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
+    }
+
+    quickPetOwnerClientId(): string {
+        return trimClientIdControlValue(this.form.getRawValue().clientId);
+    }
+
+    onQuickClientCreated(clientId: string): void {
+        const id = clientId.trim();
+        if (!id) {
+            return;
+        }
+        this.reloadClientsAndSelectClient(id);
+    }
+
+    onQuickPetCreated(petId: string): void {
+        const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
+        const pid = petId.trim();
+        if (!cid || !pid) {
+            return;
+        }
+        this.loadPetsForClient(cid, pid);
     }
 
     goList(): void {
@@ -309,7 +364,23 @@ export class PaymentNewPageComponent implements OnInit {
         });
     }
 
-    private loadPetsForClient(clientId: string): void {
+    private reloadClientsAndSelectClient(clientId: string): void {
+        this.loadingClients.set(true);
+        this.selectionError.set(null);
+        this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
+            next: (r) => {
+                this.clientOptions.set(clientOptionsFromList(r.items));
+                this.loadingClients.set(false);
+                this.form.controls.clientId.setValue(clientId, { emitEvent: true });
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
+                this.loadingClients.set(false);
+            }
+        });
+    }
+
+    private loadPetsForClient(clientId: string, selectPetId?: string): void {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
             next: (r) => {
@@ -319,6 +390,13 @@ export class PaymentNewPageComponent implements OnInit {
                     items = filterPetsByClientId(items, clientId);
                 }
                 this.petOptions.set(petOptionsFromList(items));
+                const want = selectPetId?.trim();
+                if (want) {
+                    const exists = items.some((p) => p.id === want);
+                    if (exists) {
+                        this.form.controls.petId.setValue(want, { emitEvent: true });
+                    }
+                }
                 this.loadingPets.set(false);
             },
             error: (e: unknown) => {
@@ -332,7 +410,10 @@ export class PaymentNewPageComponent implements OnInit {
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
             const parsed = parsePaymentUpsertHttpError(e);
-            return parsed.summaryMessage ?? fallback;
+            if (parsed.summaryMessage) {
+                return parsed.summaryMessage;
+            }
+            return messageFromHttpError(e, fallback);
         }
         return e instanceof Error ? e.message : fallback;
     }

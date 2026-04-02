@@ -1,6 +1,7 @@
 /**
  * Randevu listesi — GET `/api/v1/appointments`.
  * `search`: Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
+ * `petId`: Liste ekranında kullanılmaz; panel özet / ilişkili çağrılar için opsiyonel.
  */
 
 export interface AppointmentsListQuery {

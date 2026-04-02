@@ -134,7 +134,6 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 placeholder="Irk seçin"
                                 styleClass="w-full"
                                 [loading]="loadingBreeds()"
-                                [disabled]="!form.controls.speciesId.value || loadingBreeds()"
                                 [showClear]="true"
                             />
                             @if (apiFieldErrors().breedId) {
@@ -336,6 +335,7 @@ export class PetEditPageComponent implements OnInit {
             if (!sid) {
                 this.form.controls.breedId.setValue('');
                 this.breedOptions.set([]);
+                this.syncBreedIdControlDisabledState();
                 return;
             }
             if (!this.isInitializingSpecies) {
@@ -348,6 +348,7 @@ export class PetEditPageComponent implements OnInit {
         this.loadSpecies();
         this.loadPetColors();
         this.reload();
+        this.syncBreedIdControlDisabledState();
     }
 
     reload(): void {
@@ -377,6 +378,7 @@ export class PetEditPageComponent implements OnInit {
                     this.loadBreedsForSpecies(pet.speciesId, pet.breedId);
                 } else {
                     this.isInitializingSpecies = false;
+                    this.syncBreedIdControlDisabledState();
                 }
 
                 this.loading.set(false);
@@ -523,6 +525,7 @@ export class PetEditPageComponent implements OnInit {
 
     private loadBreedsForSpecies(speciesId: string, selectedBreedId = ''): void {
         this.loadingBreeds.set(true);
+        this.syncBreedIdControlDisabledState();
         this.selectionError.set(null);
         this.breedsService.getBreedList({ activeOnly: true, speciesId }).subscribe({
             next: (items) => {
@@ -537,13 +540,27 @@ export class PetEditPageComponent implements OnInit {
                 }
                 this.loadingBreeds.set(false);
                 this.isInitializingSpecies = false;
+                this.syncBreedIdControlDisabledState();
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Irk listesi yüklenemedi.'));
                 this.loadingBreeds.set(false);
                 this.isInitializingSpecies = false;
+                this.syncBreedIdControlDisabledState();
             }
         });
+    }
+
+    /** Tür yokken veya ırk listesi yüklenirken — template'te [disabled] kullanılmaz (reactive forms uyarısı). */
+    private syncBreedIdControlDisabledState(): void {
+        const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
+        const disable = !sid || this.loadingBreeds();
+        const c = this.form.controls.breedId;
+        if (disable) {
+            c.disable({ emitEvent: false });
+        } else {
+            c.enable({ emitEvent: false });
+        }
     }
 
     /** API’deki renk katalogda yoksa detaydan gelen etiketle seçenek ekle. */

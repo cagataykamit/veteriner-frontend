@@ -12,7 +12,6 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
-import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -45,7 +44,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
         <div class="card mb-6">
             <div class="grid grid-cols-12 gap-4 items-end">
-                <div class="col-span-12 md:col-span-3">
+                <div class="col-span-12 md:col-span-4">
                     <label for="apptSearch" class="block text-sm font-medium text-muted-color mb-2">Arama</label>
                     <input
                         pInputText
@@ -70,24 +69,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     />
                 </div>
                 <div class="col-span-12 md:col-span-3">
-                    <label for="apptPet" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
-                    <p-select
-                        inputId="apptPet"
-                        [options]="petOptions()"
-                        [(ngModel)]="petIdInput"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
-                        [loading]="loadingPets()"
-                    />
-                </div>
-                <div class="col-span-12 md:col-span-2">
                     <label for="apptFrom" class="block text-sm font-medium text-muted-color mb-2">Başlangıç</label>
                     <input id="apptFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
                 </div>
-                <div class="col-span-12 md:col-span-2">
+                <div class="col-span-12 md:col-span-3">
                     <label for="apptTo" class="block text-sm font-medium text-muted-color mb-2">Bitiş</label>
                     <input id="apptTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
                 </div>
@@ -170,10 +155,8 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly appointmentsService = inject(AppointmentsService);
-    private readonly petsService = inject(PetsService);
 
     readonly loading = signal(false);
-    readonly loadingPets = signal(false);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<AppointmentListItemVm[]>([]);
@@ -185,15 +168,11 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
     readonly activeToDate = signal('');
-    readonly activePetId = signal('');
 
     searchInput = '';
-    petIdInput = '';
     fromDateInput = '';
     toDateInput = '';
     statusFilter = '';
-
-    readonly petOptions = signal<{ label: string; value: string }[]>([]);
 
     readonly statusOptions = [
         { label: 'Tümü', value: '' },
@@ -214,17 +193,8 @@ export class AppointmentsListPageComponent implements OnInit {
     private lastLoadKey = '';
 
     ngOnInit(): void {
-        this.loadPetOptions();
         this.suppressNextLazy = true;
-        this.loadFromServer(
-            1,
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeFromDate(),
-            this.activeToDate(),
-            this.statusFilter,
-            this.activePetId()
-        );
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
 
     applyFilters(): void {
@@ -241,31 +211,20 @@ export class AppointmentsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
-        this.activePetId.set(this.petIdInput.trim());
         this.first.set(0);
-        this.loadFromServer(
-            1,
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeFromDate(),
-            this.activeToDate(),
-            this.statusFilter,
-            this.activePetId()
-        );
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
 
     resetFilters(): void {
         this.searchInput = '';
-        this.petIdInput = '';
         this.fromDateInput = '';
         this.toDateInput = '';
         this.activeSearch.set('');
         this.activeFromDate.set('');
         this.activeToDate.set('');
-        this.activePetId.set('');
         this.statusFilter = '';
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '', '', '', '', '');
+        this.loadFromServer(1, this.pageSize(), '', '', '', '');
     }
 
     reload(): void {
@@ -276,7 +235,6 @@ export class AppointmentsListPageComponent implements OnInit {
             this.activeFromDate(),
             this.activeToDate(),
             this.statusFilter,
-            this.activePetId(),
             true
         );
     }
@@ -289,15 +247,7 @@ export class AppointmentsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
-        this.loadFromServer(
-            page,
-            rows,
-            this.activeSearch(),
-            this.activeFromDate(),
-            this.activeToDate(),
-            this.statusFilter,
-            this.activePetId()
-        );
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
 
     private loadFromServer(
@@ -307,10 +257,9 @@ export class AppointmentsListPageComponent implements OnInit {
         fromDate: string,
         toDate: string,
         status: string,
-        petId: string,
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}|${petId.trim()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -324,8 +273,7 @@ export class AppointmentsListPageComponent implements OnInit {
                 search: search || undefined,
                 fromDate: fromDate || undefined,
                 toDate: toDate || undefined,
-                status: status || undefined,
-                petId: petId || undefined
+                status: status || undefined
             })
             .subscribe({
                 next: (r) => {
@@ -341,25 +289,5 @@ export class AppointmentsListPageComponent implements OnInit {
                     this.loading.set(false);
                 }
             });
-    }
-
-    private loadPetOptions(): void {
-        this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.petOptions.set(
-                    r.items.map((p) => ({
-                        label:
-                            (p.name?.trim() ? p.name : '—') +
-                            (p.speciesName?.trim() ? ` · ${p.speciesName}` : ''),
-                        value: p.id
-                    }))
-                );
-                this.loadingPets.set(false);
-            },
-            error: () => {
-                this.loadingPets.set(false);
-            }
-        });
     }
 }
