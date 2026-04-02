@@ -180,7 +180,8 @@ export class Login implements OnInit {
                     return;
                 }
                 void this.router.navigate(['/auth/select-clinic'], {
-                    queryParams: { returnUrl: this.safeReturnUrl() }
+                    queryParams: { returnUrl: this.safeReturnUrl() },
+                    state: { clinics }
                 });
             },
             error: (err: unknown) => {

@@ -94,8 +94,9 @@ function detailPetId(dto: PaymentDetailDto): string | null {
     return firstTrimmed(dto.petId, readDtoString(dto, ['PetId']));
 }
 
+/** Sunucu `petName` için null veya boş string dönebilir; `str()` ile birleştirilmez (EM yok). */
 function detailPetName(dto: PaymentDetailDto): string {
-    return str(firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])));
+    return firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])) ?? '';
 }
 
 function detailAmount(dto: PaymentDetailDto): number | null {
@@ -126,6 +127,10 @@ function canonicalPaidAtList(dto: PaymentListItemDto): string | null {
     return dto.paidAtUtc?.trim() ? dto.paidAtUtc.trim() : null;
 }
 
+function listPetNameFromDto(petName: string | null | undefined): string {
+    return petName == null ? '' : String(petName).trim();
+}
+
 export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListItemVm {
     const clientId = dto.clientId?.trim() ? dto.clientId.trim() : null;
     const petId = dto.petId?.trim() ? dto.petId.trim() : null;
@@ -134,7 +139,7 @@ export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListI
         clientId,
         clientName: str(dto.clientName?.trim() ?? null),
         petId,
-        petName: str(dto.petName?.trim() ?? null),
+        petName: listPetNameFromDto(dto.petName),
         amount: num(dto.amount),
         currency: dto.currency?.trim() ? dto.currency.trim() : 'TRY',
         method: canonicalMethodFromListDto(dto),
@@ -191,7 +196,7 @@ export function mapPagedPaymentsToVm(result: PaymentListItemDtoPagedResult): {
 }
 
 /**
- * GET /payments — page, pageSize, clinicId, clientId, petId, method, paidFromUtc, paidToUtc, search.
+ * GET `/api/v1/payments` — `search`, `clinicId`, `clientId`, `petId`, `method`, `paidFromUtc`, `paidToUtc`; sayfalama `page`/`pageSize`.
  */
 export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams {
     let p = new HttpParams();
@@ -237,7 +242,10 @@ export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams 
 export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCreateRequestDto {
     const clientId = req.clientId.trim();
     const petId = req.petId?.trim() ? req.petId.trim() : null;
-    const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : null;
+    const clinicId = req.clinicId.trim();
+    if (!clinicId) {
+        throw new Error('PAYMENT_WRITE_CLINIC_ID_REQUIRED');
+    }
     const appointmentId = req.appointmentId?.trim() ? req.appointmentId.trim() : null;
     const examinationId = req.examinationId?.trim() ? req.examinationId.trim() : null;
     const notes = req.notes?.trim() ? req.notes.trim() : null;
@@ -263,7 +271,8 @@ export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCre
 export interface PaymentUpsertFormAdapterInput {
     clinicId: string;
     clientId: string;
-    petId: string;
+    /** Boş veya atlanmış — API gövdesinde null. */
+    petId?: string | null;
     amount: number;
     currency: string;
     method: string;
@@ -272,10 +281,12 @@ export interface PaymentUpsertFormAdapterInput {
 }
 
 export function mapPaymentUpsertFormToCreateRequest(input: PaymentUpsertFormAdapterInput): CreatePaymentRequest {
+    const petRaw = input.petId;
+    const petId = typeof petRaw === 'string' && petRaw.trim() ? petRaw.trim() : null;
     return {
         clinicId: input.clinicId.trim(),
         clientId: input.clientId.trim(),
-        petId: input.petId.trim(),
+        petId,
         amount: input.amount,
         currency: input.currency.trim(),
         method: input.method.trim(),

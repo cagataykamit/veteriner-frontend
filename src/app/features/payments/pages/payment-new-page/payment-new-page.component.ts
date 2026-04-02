@@ -78,7 +78,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         </p>
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
+                        <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
                         <p-select
                             inputId="petId"
                             formControlName="petId"
@@ -140,9 +140,11 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         }
                     </div>
                     <div class="col-span-12 md:col-span-4">
-                        <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati</label>
+                        <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
                         <input id="paidAtLocal" type="datetime-local" class="w-full p-inputtext p-component" formControlName="paidAtLocal" />
-                        @if (apiFieldErrors().paidAtLocal) {
+                        @if (form.controls.paidAtLocal.invalid && form.controls.paidAtLocal.touched) {
+                            <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (apiFieldErrors().paidAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().paidAtLocal }}</small>
                         }
                     </div>
@@ -205,11 +207,11 @@ export class PaymentNewPageComponent implements OnInit {
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }, Validators.required],
+        petId: [{ value: '', disabled: true }],
         amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
         currency: ['TRY', Validators.required],
         method: ['cash', Validators.required],
-        paidAtLocal: [''],
+        paidAtLocal: ['', Validators.required],
         note: ['']
     });
 
@@ -256,10 +258,6 @@ export class PaymentNewPageComponent implements OnInit {
         }
 
         const paidAtLocal = v.paidAtLocal?.trim() ?? '';
-        if (!paidAtLocal) {
-            this.submitError.set('Ödeme tarihi / saati zorunludur.');
-            return;
-        }
         const paidAtUtc = dateTimeLocalInputToIsoUtc(paidAtLocal);
         if (!paidAtUtc) {
             this.submitError.set('Geçerli bir ödeme tarihi / saati seçin.');

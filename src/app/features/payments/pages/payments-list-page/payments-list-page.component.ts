@@ -48,7 +48,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="paySearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Müşteri, e-posta, telefon, hayvan, para birimi, not…"
+                        placeholder="Not, para birimi; müşteri, hayvan, tür veya ırk, e-posta, telefon…"
                         (keyup.enter)="applySearch()"
                     />
                 </div>

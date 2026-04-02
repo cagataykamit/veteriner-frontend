@@ -3,7 +3,7 @@
  */
 
 export interface CreatePaymentRequest {
-    clinicId?: string;
+    clinicId: string;
     clientId: string;
     petId?: string | null;
     appointmentId?: string | null;

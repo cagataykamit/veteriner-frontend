@@ -8,6 +8,7 @@ import type {
 import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
 import type { ExaminationDetailVm, ExaminationEditVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -110,7 +111,7 @@ function canonicalExaminedAt(dto: ExaminationListItemDto | ExaminationDetailDto)
 }
 
 function canonicalVisitReason(dto: ExaminationListItemDto | ExaminationDetailDto): string {
-    return str(firstTrimmed(dto.visitReason, dto.complaint, dto.complaintText));
+    return str(firstTrimmed(dto.visitReason));
 }
 
 function canonicalFindings(dto: ExaminationListItemDto | ExaminationDetailDto): string {
@@ -178,7 +179,7 @@ export function mapExaminationDetailDtoToEditVm(dto: ExaminationDetailDto): Exam
         clientName: rawClientName(dto),
         petName: rawPetName(dto),
         examinedAtUtc: canonicalExaminedAt(dto),
-        visitReason: firstTrimmed(dto.visitReason, dto.complaint, dto.complaintText) ?? '',
+        visitReason: firstTrimmed(dto.visitReason) ?? '',
         notes: firstTrimmed(dto.notes, dto.note) ?? '',
         findings: firstTrimmed(dto.findings, dto.finding) ?? '',
         assessment: firstTrimmed(dto.assessment, dto.diagnosis) ?? ''
@@ -202,7 +203,7 @@ export function mapPagedExaminationsToVm(result: ExaminationListItemDtoPagedResu
     };
 }
 
-/** Page, PageSize, search, FromDate, ToDate, Sort, Order */
+/** Page, PageSize, search, clinicId, PetId, ClientId, dateFromUtc, dateToUtc, Sort, Order */
 export function examinationsQueryToHttpParams(query: ExaminationsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -212,6 +213,9 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     if (query.search?.trim()) {
         p = p.set('search', query.search.trim());
     }
+    if (query.clinicId?.trim()) {
+        p = p.set('clinicId', query.clinicId.trim());
+    }
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
@@ -219,10 +223,16 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
         p = p.set('ClientId', query.clientId.trim());
     }
     if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
+        if (iso) {
+            p = p.set('dateFromUtc', iso);
+        }
     }
     if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
+        if (iso) {
+            p = p.set('dateToUtc', iso);
+        }
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

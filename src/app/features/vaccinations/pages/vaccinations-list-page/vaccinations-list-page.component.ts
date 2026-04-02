@@ -50,7 +50,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="vacSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Müşteri, hayvan, aşı adı, not…"
+                        placeholder="Aşı adı, not; müşteri, hayvan, tür veya ırk…"
                         (keyup.enter)="applyFilters()"
                     />
                 </div>

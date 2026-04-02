@@ -74,6 +74,9 @@ export class PaymentsService {
             if (e instanceof Error && e.message === 'PAYMENT_WRITE_PAID_AT_REQUIRED') {
                 return throwError(() => new Error('Ödeme tarihi / saati zorunludur.'));
             }
+            if (e instanceof Error && e.message === 'PAYMENT_WRITE_CLINIC_ID_REQUIRED') {
+                return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
+            }
             return throwError(() => (e instanceof Error ? e : new Error('Ödeme oluşturulamadı.')));
         }
         return this.api.post<unknown>(ApiEndpoints.payments.list(), body).pipe(
@@ -109,6 +112,9 @@ export class PaymentsService {
             }
             if (e instanceof Error && e.message === 'PAYMENT_WRITE_PAID_AT_REQUIRED') {
                 return throwError(() => new Error('Ödeme tarihi / saati zorunludur.'));
+            }
+            if (e instanceof Error && e.message === 'PAYMENT_WRITE_CLINIC_ID_REQUIRED') {
+                return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
             return throwError(() => (e instanceof Error ? e : new Error('Ödeme güncellenemedi.')));
         }

@@ -10,6 +10,7 @@ import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/f
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
 import type { VaccinationDetailVm, VaccinationEditVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { parseVaccinationStatusRawToEnum } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -206,7 +207,7 @@ export function mapPagedVaccinationsToVm(result: VaccinationListItemDtoPagedResu
     };
 }
 
-/** Page, PageSize, search, Status, FromDate, ToDate, Sort, Order */
+/** Page, PageSize, search, clinicId, PetId, ClientId, Status, dateFromUtc, dateToUtc, Sort, Order */
 export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -215,6 +216,9 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
         p = p.set('search', query.search.trim());
+    }
+    if (query.clinicId?.trim()) {
+        p = p.set('clinicId', query.clinicId.trim());
     }
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
@@ -228,10 +232,16 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
         p = p.set('Status', status);
     }
     if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
+        if (iso) {
+            p = p.set('dateFromUtc', iso);
+        }
     }
     if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
+        if (iso) {
+            p = p.set('dateToUtc', iso);
+        }
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

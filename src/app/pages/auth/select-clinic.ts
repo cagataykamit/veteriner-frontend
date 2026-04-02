@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Navigation, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
@@ -65,6 +65,12 @@ export class SelectClinicPage implements OnInit {
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
 
+    /**
+     * Login çoklu klinik dalında `navigate(..., { state: { clinics } })` ile taşınır;
+     * geçerliyse `/me/clinics` ikinci kez çağrılmaz.
+     */
+    private readonly clinicsFromLogin = clinicsFromNavigationState(this.router.getCurrentNavigation());
+
     readonly noClinicsMessage = AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE;
 
     readonly loading = signal(true);
@@ -99,6 +105,13 @@ export class SelectClinicPage implements OnInit {
     }
 
     private loadClinicsAndBranch(): void {
+        const fromLogin = this.clinicsFromLogin;
+        if (fromLogin) {
+            this.error.set(null);
+            this.applyClinicsList(fromLogin);
+            return;
+        }
+
         this.loading.set(true);
         this.error.set(null);
         this.auth
@@ -106,23 +119,28 @@ export class SelectClinicPage implements OnInit {
             .pipe(finalize(() => this.loading.set(false)))
             .subscribe({
                 next: (items) => {
-                    this.clinics.set(items);
-                    if (items.length === 0) {
-                        this.error.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
-                        return;
-                    }
-                    if (items.length === 1) {
-                        const single = items[0];
-                        this.selectedClinicId = single.id;
-                        this.onContinue();
-                        return;
-                    }
-                    this.selectedClinicId = items[0]?.id ?? null;
+                    this.applyClinicsList(items);
                 },
                 error: (e: unknown) => {
                     this.error.set(this.resolveError(e, 'Klinikler yüklenemedi.'));
                 }
             });
+    }
+
+    private applyClinicsList(items: ClinicSummary[]): void {
+        this.clinics.set(items);
+        this.loading.set(false);
+        if (items.length === 0) {
+            this.error.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
+            return;
+        }
+        if (items.length === 1) {
+            const single = items[0];
+            this.selectedClinicId = single.id;
+            this.onContinue();
+            return;
+        }
+        this.selectedClinicId = items[0]?.id ?? null;
     }
 
     private safeReturnUrl(): string {
@@ -139,5 +157,26 @@ export class SelectClinicPage implements OnInit {
         }
         return e instanceof Error ? e.message : fallback;
     }
+}
+
+function clinicsFromNavigationState(nav: Navigation | null): ClinicSummary[] | null {
+    const raw = nav?.extras?.state?.['clinics'];
+    if (!Array.isArray(raw) || raw.length === 0) {
+        return null;
+    }
+    const out: ClinicSummary[] = [];
+    for (const item of raw) {
+        if (!item || typeof item !== 'object') {
+            return null;
+        }
+        const o = item as Record<string, unknown>;
+        const id = o['id'];
+        const name = o['name'];
+        if (typeof id !== 'string' || typeof name !== 'string' || !id.trim() || !name.trim()) {
+            return null;
+        }
+        out.push({ id: id.trim(), name: name.trim() });
+    }
+    return out;
 }
 

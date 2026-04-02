@@ -19,9 +19,8 @@ export interface ExaminationListItemDto {
     petName?: string | null;
     animalName?: string | null;
     appointmentId?: string | null;
+    /** Yanıtta canonical alan; `complaint` sunucu yanıtında dönmez. */
     visitReason?: string | null;
-    complaint?: string | null;
-    complaintText?: string | null;
     findings?: string | null;
     finding?: string | null;
     assessment?: string | null;
@@ -40,9 +39,8 @@ export interface ExaminationListItemDtoPagedResult {
 
 /**
  * GET /examinations/{id}
- * Çekirdek: id, clinicId?, clientId?, clientName?, petId?, petName?, examinedAtUtc, visitReason, findings, assessment, notes,
- * appointmentId?
- * Audit: createdAtUtc (non-null), updatedAtUtc (nullable)
+ * Çekirdek: … examinedAtUtc, visitReason (canonical), findings, assessment, notes, appointmentId?
+ * Audit: createdAtUtc, updatedAtUtc
  */
 export interface ExaminationDetailDto {
     id: string;
@@ -62,8 +60,6 @@ export interface ExaminationDetailDto {
     animalName?: string | null;
     appointmentId?: string | null;
     visitReason?: string | null;
-    complaint?: string | null;
-    complaintText?: string | null;
     notes?: string | null;
     note?: string | null;
     findings?: string | null;
@@ -75,7 +71,10 @@ export interface ExaminationDetailDto {
     updatedAtUtc?: string | null;
 }
 
-/** POST body — alan adları API ile uyumlu. */
+/**
+ * POST/PUT body — `visitReason` zorunlu (max 2000, sunucu doğrulaması).
+ * Eski `complaint` alias yalnızca backend isteğinde; istemci göndermez.
+ */
 export interface ExaminationCreateRequestDto {
     appointmentId?: string | null;
     clinicId?: string | null;

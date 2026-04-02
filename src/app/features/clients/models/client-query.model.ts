@@ -1,4 +1,4 @@
-/** GET /api/v1/clients — `search`: fullName, email, phone, phoneNormalized (boşsa gönderilmez). */
+/** GET /api/v1/clients — `search`: FullName, Email, Phone, PhoneNormalized (boşsa gönderilmez). */
 export interface ClientsListQuery {
     page?: number;
     pageSize?: number;

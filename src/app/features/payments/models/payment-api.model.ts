@@ -1,5 +1,11 @@
 /**
  * Backend Veteriner API — ödeme DTO’ları.
+ *
+ * Okuma: listede `petId` null olabilir; `petName` boş string dönebilir (null varsayılmaz).
+ * Detay: `petId`, `appointmentId`, `examinationId`, `notes` null olabilir.
+ *
+ * POST/PUT çekirdek zorunlu alanlar: clinicId, clientId, amount, currency, method, paidAtUtc.
+ * Opsiyonel: petId, appointmentId, examinationId, notes.
  */
 
 /** Liste satırı — GET /payments */
@@ -8,7 +14,9 @@ export interface PaymentListItemDto {
     clinicId?: string;
     clientId?: string | null;
     clientName?: string | null;
+    /** Null olabilir. */
     petId?: string | null;
+    /** Boş string olabilir; null da gelebilir. */
     petName?: string | null;
     amount?: number | string | null;
     currency?: string | null;
@@ -33,6 +41,7 @@ export interface PaymentDetailDto {
     clientId?: string | null;
     clientName?: string | null;
     petId?: string | null;
+    /** Boş string olabilir. */
     petName?: string | null;
     appointmentId?: string | null;
     examinationId?: string | null;
@@ -44,7 +53,7 @@ export interface PaymentDetailDto {
 }
 
 export interface PaymentCreateRequestDto {
-    clinicId?: string | null;
+    clinicId: string;
     clientId: string;
     petId?: string | null;
     appointmentId?: string | null;

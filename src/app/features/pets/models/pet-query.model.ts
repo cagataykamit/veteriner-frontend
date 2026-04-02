@@ -1,8 +1,7 @@
-/** GET /api/v1/pets — Page, PageSize, search, Sort, Order, SpeciesId, ClientId. */
+/** GET /api/v1/pets — `search`: hayvan adı, serbest ırk, tür adı, katalog ırk adı; müşteri metnine göre pet eşleşmesi (boşsa gönderilmez). */
 export interface PetsListQuery {
     page?: number;
     pageSize?: number;
-    /** İsim, ırk, tür, referans; müşteri eşleşmesiyle petler (boşsa gönderilmez). */
     search?: string;
     sort?: string;
     order?: string;

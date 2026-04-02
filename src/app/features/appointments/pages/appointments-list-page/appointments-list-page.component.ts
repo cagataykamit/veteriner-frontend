@@ -52,7 +52,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="apptSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Müşteri, hayvan, not…"
+                        placeholder="Not; müşteri, hayvan, tür veya ırk metni…"
                         (keyup.enter)="applyFilters()"
                     />
                 </div>

@@ -1,15 +1,15 @@
 /**
- * Aşı listesi sorgu parametreleri.
+ * Aşı listesi — GET `/api/v1/vaccinations`.
+ * `search`: VaccineName, Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
  */
 
 export interface VaccinationsListQuery {
     page?: number;
     pageSize?: number;
-    /** Aşı adı, not; müşteri/hayvan adı (boşsa gönderilmez). */
     search?: string;
-    /** İsteğe bağlı — backend `PetId` desteklemiyorsa istemci tarafında filtre uygulanır. */
+    /** Aktif klinik; gönderilmezse `AuthService` klinik kimliği kullanılır. */
+    clinicId?: string;
     petId?: string;
-    /** İsteğe bağlı — backend `ClientId`/`OwnerId` desteklemiyorsa yok sayılır. */
     clientId?: string;
     status?: string;
     /** yyyy-MM-dd */

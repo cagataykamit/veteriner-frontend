@@ -1,5 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, finalize, map, share, tap } from 'rxjs/operators';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
@@ -171,7 +171,13 @@ export class AuthService {
 
     /** Backend logout endpoint'i + typed response normalize + local session clear. */
     logoutCurrentSession(): Observable<AuthOperationResponse> {
-        return this.api.post<unknown>(ApiEndpoints.auth.logout(), {}).pipe(
+        const rt = this.getRefreshToken()?.trim() ?? '';
+        if (!rt) {
+            this.clearSession();
+            return of({ success: true });
+        }
+        const body: RefreshTokenRequest = { refreshToken: rt };
+        return this.api.post<unknown>(ApiEndpoints.auth.logout(), body).pipe(
             map((raw) => this.mapAuthOperationResponse(raw)),
             tap(() => this.clearSession())
         );
@@ -179,7 +185,13 @@ export class AuthService {
 
     /** Backend logout-all endpoint'i + typed response normalize + local session clear. */
     logoutAllSessions(): Observable<AuthOperationResponse> {
-        return this.api.post<unknown>(ApiEndpoints.auth.logoutAll(), {}).pipe(
+        const rt = this.getRefreshToken()?.trim() ?? '';
+        if (!rt) {
+            this.clearSession();
+            return of({ success: true });
+        }
+        const body: RefreshTokenRequest = { refreshToken: rt };
+        return this.api.post<unknown>(ApiEndpoints.auth.logoutAll(), body).pipe(
             map((raw) => this.mapAuthOperationResponse(raw)),
             tap(() => this.clearSession())
         );

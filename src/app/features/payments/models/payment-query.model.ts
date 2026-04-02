@@ -1,15 +1,11 @@
 /**
- * Ödeme listesi sorgu parametreleri — backend GET list kontratı ile uyumlu.
- * @see PaymentsService + paymentsQueryToHttpParams
+ * Ödeme listesi — GET `/api/v1/payments`.
+ * `search`: Notes, Currency veya müşteri/hayvan metin eşleşmesiyle Client/Pet (tutar aranmaz; boşsa gönderilmez).
  */
 
 export interface PaymentsListQuery {
     page?: number;
     pageSize?: number;
-    /**
-     * Backend `search` — müşteri adı / e-posta / telefon, hayvan, para birimi, not (tutar aranmaz).
-     * Boş veya yalnızca boşluksa istekte gönderilmez.
-     */
     search?: string;
     clinicId?: string;
     clientId?: string;

@@ -10,7 +10,10 @@ export interface LoginRequest {
     tenantId?: string | null;
 }
 
-/** İstemci gövdesi: yalnızca refreshToken (backend kontratı). */
+/**
+ * İstemci gövdesi: yalnızca refreshToken (backend kontratı).
+ * Aynı şekil `POST /Auth/logout` ve `POST /Auth/logout-all` isteklerinde kullanılır.
+ */
 export interface RefreshTokenRequest {
     refreshToken: string;
 }

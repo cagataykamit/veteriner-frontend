@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
+import { AuthService } from '@/app/core/auth/auth.service';
 import {
     mapCreateExaminationToApiBody,
     mapExaminationDetailDtoToVm,
@@ -27,9 +28,15 @@ export interface ExaminationsPagedVm {
 @Injectable({ providedIn: 'root' })
 export class ExaminationsService {
     private readonly api = inject(ApiClient);
+    private readonly auth = inject(AuthService);
 
     getExaminations(query: ExaminationsListQuery): Observable<ExaminationsPagedVm> {
-        const params = examinationsQueryToHttpParams(query);
+        const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+        const merged: ExaminationsListQuery = {
+            ...query,
+            clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
+        };
+        const params = examinationsQueryToHttpParams(merged);
         return this.api.get<ExaminationListItemDtoPagedResult>(ApiEndpoints.examinations.list(), params).pipe(
             map((res) => mapPagedExaminationsToVm(res)),
             catchError((err: HttpErrorResponse) =>

@@ -44,7 +44,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         id="exSearch"
                         class="w-full"
                         [(ngModel)]="searchInput"
-                        placeholder="Müşteri, hayvan, ziyaret sebebi, bulgular…"
+                        placeholder="Sebep, bulgu, değerlendirme, not; müşteri, hayvan, tür veya ırk…"
                         (keyup.enter)="applyFilters()"
                     />
                 </div>

@@ -1,6 +1,6 @@
 const DEFAULT_LOCALE = 'tr-TR';
 
-/** Yerel takvim günü `yyyy-MM-dd` (liste API FromDate/ToDate ile uyumlu). */
+/** Yerel takvim günü `yyyy-MM-dd` (form `type="date"`; liste API `dateFromUtc`/`dateToUtc` dönüşümü mapper’da). */
 export function localDateYyyyMmDd(d: Date = new Date()): string {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');

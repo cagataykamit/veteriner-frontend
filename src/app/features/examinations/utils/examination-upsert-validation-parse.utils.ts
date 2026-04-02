@@ -21,6 +21,7 @@ export interface ParsedExaminationUpsertHttpError {
     summaryMessage: string | null;
 }
 
+/** Sunucu validation hata anahtarları (camelCase normalize edilir); form alanı `visitReason`. */
 const FIELD_MAP: Record<string, ExaminationUpsertFormFieldKey> = {
     clientid: 'clientId',
     ownerid: 'clientId',
@@ -30,6 +31,7 @@ const FIELD_MAP: Record<string, ExaminationUpsertFormFieldKey> = {
     examinationdateutc: 'examinationDateLocal',
     scheduledatutc: 'examinationDateLocal',
     visitreason: 'visitReason',
+    /** Eski/alias hata kodları — gövdeye `complaint` gönderilmiyor. */
     complaint: 'visitReason',
     complainttext: 'visitReason',
     notes: 'notes',

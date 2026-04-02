@@ -1,14 +1,14 @@
 /**
- * Randevu listesi sorgu parametreleri (UI + service).
+ * Randevu listesi — GET `/api/v1/appointments`.
+ * `search`: Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
  */
 
 export interface AppointmentsListQuery {
     page?: number;
     pageSize?: number;
-    /** Boşsa gönderilmez — not, müşteri/hayvan adı. */
     search?: string;
+    /** Gönderilmezse `AuthService` klinik kimliği kullanılır. */
     clinicId?: string;
-    /** İsteğe bağlı — backend `PetId` / `ClientId` desteklemiyorsa istemci tarafında filtre uygulanır. */
     petId?: string;
     clientId?: string;
     status?: string;

@@ -2,7 +2,7 @@
  * Ödeme — UI view modelleri.
  */
 
-/** Liste — backend batch ile `clientName` / `petName`. */
+/** Liste — backend batch ile `clientName` / `petName`. `petName` boş string olabilir. */
 export interface PaymentListItemVm {
     id: string;
     clientId: string | null;
@@ -15,7 +15,7 @@ export interface PaymentListItemVm {
     paidAtUtc: string | null;
 }
 
-/** Detay — GET /payments/{id} aggregate. */
+/** Detay — GET /payments/{id}. İsteğe bağlı bağlantılar null; `petName` boş string olabilir. */
 export interface PaymentDetailVm {
     id: string;
     clientId: string | null;

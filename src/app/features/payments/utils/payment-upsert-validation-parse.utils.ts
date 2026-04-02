@@ -21,6 +21,7 @@ export interface ParsedPaymentUpsertHttpError {
     summaryMessage: string | null;
 }
 
+/** ValidationProblemDetails property adları (normalize edilir); `notes` sunucuda null olabilir. */
 const FIELD_MAP: Record<string, PaymentUpsertFormFieldKey> = {
     clientid: 'clientId',
     ownerid: 'clientId',

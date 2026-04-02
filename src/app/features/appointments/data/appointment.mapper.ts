@@ -14,6 +14,7 @@ import {
     resolveAppointmentWriteTypeFormValue
 } from '@/app/features/appointments/utils/appointment-type.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
+import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -303,7 +304,7 @@ export function mapPagedAppointmentsToVm(result: AppointmentListItemDtoPagedResu
     };
 }
 
-/** Page, PageSize, search, clinicId, PetId, ClientId, Status, FromDate, ToDate, Sort, Order */
+/** Page, PageSize, search, clinicId, PetId, ClientId, Status, dateFromUtc, dateToUtc, Sort, Order */
 export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -326,10 +327,16 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
         p = p.set('Status', query.status.trim());
     }
     if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
+        if (iso) {
+            p = p.set('dateFromUtc', iso);
+        }
     }
     if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
+        if (iso) {
+            p = p.set('dateToUtc', iso);
+        }
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
