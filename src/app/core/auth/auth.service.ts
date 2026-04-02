@@ -17,8 +17,8 @@ const REFRESH_TOKEN_KEY = 'veteriner.refresh_token';
 const ACTIVE_CLINIC_ID_KEY = 'veteriner.active_clinic_id';
 const ACTIVE_CLINIC_NAME_KEY = 'veteriner.active_clinic_name';
 
-/** Ham API gövdesi — PascalCase / snake_case varyantları serviste normalize edilir. */
-type TokenResponseRaw = Record<string, unknown>;
+/** Ham API gövdesi — `LoginResultDto` + PascalCase / snake_case varyantları serviste normalize edilir. */
+type LoginResultRaw = Record<string, unknown>;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -88,7 +88,7 @@ export class AuthService {
     }
 
     login(body: LoginRequest): Observable<SessionTokens> {
-        return this.api.post<TokenResponseRaw>(ApiEndpoints.auth.login(), body).pipe(
+        return this.api.post<LoginResultRaw>(ApiEndpoints.auth.login(), body).pipe(
             map((raw) => this.mapTokenResponse(raw)),
             tap((tokens) => {
                 // Yeni oturumda eski clinic bağlamını taşımayalım.
@@ -100,16 +100,7 @@ export class AuthService {
     }
 
     getMyClinics(): Observable<ClinicSummary[]> {
-        return this.api.get<unknown>(ApiEndpoints.me.clinics()).pipe(
-            catchError((err) => {
-                // Bazı backend sürümlerinde endpoint /me/clinics (api/v1 prefix olmadan) publish edilebilir.
-                if (err?.status === 404) {
-                    return this.api.get<unknown>('/me/clinics');
-                }
-                return throwError(() => err);
-            }),
-            map((raw) => this.mapClinicsResponse(raw))
-        );
+        return this.api.get<unknown>(ApiEndpoints.me.clinics()).pipe(map((raw) => this.mapClinicsResponse(raw)));
     }
 
     selectClinic(clinicId: string, clinicName?: string | null): Observable<SessionTokens> {
@@ -121,7 +112,7 @@ export class AuthService {
             refreshToken,
             clinicId: clinicId.trim()
         };
-        return this.api.post<TokenResponseRaw>(ApiEndpoints.auth.selectClinic(), body).pipe(
+        return this.api.post<LoginResultRaw>(ApiEndpoints.auth.selectClinic(), body).pipe(
             map((raw) => this.mapTokenResponse(raw)),
             tap((tokens) => {
                 this.persistFromTokens(tokens);
@@ -143,7 +134,7 @@ export class AuthService {
             return throwError(() => new Error('Yenileme anahtarı yok.'));
         }
         const body: RefreshTokenRequest = { refreshToken: rt };
-        this.refreshShare = this.api.post<TokenResponseRaw>(ApiEndpoints.auth.refresh(), body).pipe(
+        this.refreshShare = this.api.post<LoginResultRaw>(ApiEndpoints.auth.refresh(), body).pipe(
             map((raw) => this.mapTokenResponse(raw)),
             tap((tokens) => this.persistFromTokens(tokens)),
             catchError((err) => {
@@ -210,45 +201,55 @@ export class AuthService {
     }
 
     /**
-     * Backend JSON şeklini izole eder — bileşenler ham yanıt görmez.
+     * `LoginResultDto` (ve eski ad varyantları) → `SessionTokens`.
+     * Kiracı alanları yalnız bellekte taşınır; localStorage’a yazılmaz.
      */
     private mapTokenResponse(raw: unknown): SessionTokens {
         if (!raw || typeof raw !== 'object') {
             return { accessToken: null, refreshToken: null, expiresAt: null };
         }
-        const r = raw as TokenResponseRaw;
+        const r = raw as LoginResultRaw;
         const access =
             (r['accessToken'] ?? r['access_token'] ?? r['AccessToken']) as string | null | undefined;
         const refresh =
             (r['refreshToken'] ?? r['refresh_token'] ?? r['RefreshToken']) as string | null | undefined;
         const exp = (r['expiresAt'] ?? r['expires_at'] ?? r['ExpiresAt']) as string | null | undefined;
+        const resolvedTenantIdRaw = (r['resolvedTenantId'] ?? r['ResolvedTenantId']) as string | null | undefined;
+        const tmc = r['tenantMembershipCount'] ?? r['TenantMembershipCount'];
+        let tenantCount: number | null = null;
+        if (typeof tmc === 'number' && !Number.isNaN(tmc)) {
+            tenantCount = tmc;
+        } else if (typeof tmc === 'string') {
+            const n = Number.parseInt(tmc, 10);
+            if (!Number.isNaN(n)) {
+                tenantCount = n;
+            }
+        }
         return {
             accessToken: typeof access === 'string' && access.trim() ? access.trim() : null,
             refreshToken: typeof refresh === 'string' && refresh.trim() ? refresh.trim() : null,
-            expiresAt: typeof exp === 'string' ? exp : null
+            expiresAt: typeof exp === 'string' ? exp : null,
+            resolvedTenantId:
+                typeof resolvedTenantIdRaw === 'string' && resolvedTenantIdRaw.trim()
+                    ? resolvedTenantIdRaw.trim()
+                    : null,
+            tenantMembershipCount: tenantCount
         };
     }
 
+    /** `AuthActionResultDto` — başarı alanı `success` (eski `ok` ile uyum). */
     private mapAuthOperationResponse(raw: unknown): AuthOperationResponse {
         if (!raw || typeof raw !== 'object') {
-            return { ok: false };
+            return { success: false };
         }
         const r = raw as Record<string, unknown>;
-        const okRaw = r['ok'] ?? r['Ok'] ?? r['success'] ?? r['Success'] ?? r['succeeded'] ?? r['Succeeded'];
-        const ok = okRaw === true;
+        const successRaw = r['success'] ?? r['Success'] ?? r['ok'] ?? r['Ok'];
+        const success = successRaw === true;
         const message =
             typeof (r['message'] ?? r['Message']) === 'string'
                 ? String(r['message'] ?? r['Message'])
                 : null;
-        const code =
-            typeof (r['code'] ?? r['Code']) === 'string'
-                ? String(r['code'] ?? r['Code'])
-                : null;
-        const timestampUtc =
-            typeof (r['timestampUtc'] ?? r['TimestampUtc']) === 'string'
-                ? String(r['timestampUtc'] ?? r['TimestampUtc'])
-                : null;
-        return { ok, message, code, timestampUtc };
+        return { success, message };
     }
 
     private mapClinicsResponse(raw: unknown): ClinicSummary[] {

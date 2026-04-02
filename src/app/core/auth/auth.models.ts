@@ -15,11 +15,26 @@ export interface RefreshTokenRequest {
     refreshToken: string;
 }
 
-/** Normalize edilmiş oturum jetonları (storage + signal). */
+/**
+ * Backend başarı gövdesi: `LoginResultDto` (login / refresh / select-clinic).
+ * İstemci depolama ve sinyaller için `SessionTokens`’a indirgenir.
+ */
+export interface LoginResultDto {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt?: string | null;
+    resolvedTenantId?: string | null;
+    tenantMembershipCount?: number | null;
+}
+
+/** Normalize edilmiş oturum (storage + bileşenler). */
 export interface SessionTokens {
     accessToken: string | null;
     refreshToken: string | null;
     expiresAt?: string | null;
+    /** JWT / backend yanıtından — isteğe bağlı, localStorage’a yazılmaz. */
+    resolvedTenantId?: string | null;
+    tenantMembershipCount?: number | null;
 }
 
 export interface ClinicSummary {
@@ -32,10 +47,8 @@ export interface SelectClinicRequest {
     clinicId: string;
 }
 
-/** Auth mutate endpointleri (logout/logout-all) için typed başarı yanıtı. */
+/** Logout / logout-all başarı gövdesi: `AuthActionResultDto`. */
 export interface AuthOperationResponse {
-    ok: boolean;
+    success: boolean;
     message?: string | null;
-    code?: string | null;
-    timestampUtc?: string | null;
 }
