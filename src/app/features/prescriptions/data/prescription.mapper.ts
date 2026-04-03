@@ -1,13 +1,13 @@
 import { HttpParams } from '@angular/common/http';
 import type {
-    TreatmentDetailDto,
-    TreatmentListItemDto,
-    TreatmentListItemDtoPagedResult,
-    TreatmentWriteRequestDto
-} from '@/app/features/treatments/models/treatment-api.model';
-import type { CreateTreatmentRequest } from '@/app/features/treatments/models/treatment-create.model';
-import type { TreatmentsListQuery } from '@/app/features/treatments/models/treatment-query.model';
-import type { TreatmentDetailVm, TreatmentEditVm, TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
+    PrescriptionDetailDto,
+    PrescriptionListItemDto,
+    PrescriptionListItemDtoPagedResult,
+    PrescriptionWriteRequestDto
+} from '@/app/features/prescriptions/models/prescription-api.model';
+import type { CreatePrescriptionRequest } from '@/app/features/prescriptions/models/prescription-create.model';
+import type { PrescriptionsListQuery } from '@/app/features/prescriptions/models/prescription-query.model';
+import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
 import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
@@ -25,7 +25,7 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
     return null;
 }
 
-function readDtoString(dto: TreatmentListItemDto | TreatmentDetailDto, keys: string[]): string | null {
+function readDtoString(dto: PrescriptionListItemDto | PrescriptionDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
     for (const k of keys) {
         const v = o[k];
@@ -36,60 +36,64 @@ function readDtoString(dto: TreatmentListItemDto | TreatmentDetailDto, keys: str
     return null;
 }
 
-function canonicalClinicId(dto: TreatmentListItemDto | TreatmentDetailDto): string | null {
+function canonicalClinicId(dto: PrescriptionListItemDto | PrescriptionDetailDto): string | null {
     return firstTrimmed(dto.clinicId, readDtoString(dto, ['ClinicId']));
 }
 
-function canonicalClientId(dto: TreatmentListItemDto | TreatmentDetailDto): string | null {
+function canonicalClientId(dto: PrescriptionListItemDto | PrescriptionDetailDto): string | null {
     return firstTrimmed(dto.clientId, readDtoString(dto, ['ClientId', 'OwnerId']));
 }
 
-function canonicalClientName(dto: TreatmentListItemDto | TreatmentDetailDto): string {
+function canonicalClientName(dto: PrescriptionListItemDto | PrescriptionDetailDto): string {
     return str(firstTrimmed(dto.clientName, readDtoString(dto, ['ClientName', 'OwnerName'])));
 }
 
-function canonicalPetId(dto: TreatmentListItemDto | TreatmentDetailDto): string | null {
+function canonicalPetId(dto: PrescriptionListItemDto | PrescriptionDetailDto): string | null {
     return firstTrimmed(dto.petId, readDtoString(dto, ['PetId', 'AnimalId']));
 }
 
-function canonicalPetName(dto: TreatmentListItemDto | TreatmentDetailDto): string {
+function canonicalPetName(dto: PrescriptionListItemDto | PrescriptionDetailDto): string {
     const raw = firstTrimmed(dto.petName, readDtoString(dto, ['PetName', 'AnimalName']));
     return raw ?? '';
 }
 
-function canonicalTreatmentDate(dto: TreatmentListItemDto | TreatmentDetailDto): string | null {
-    return firstTrimmed(dto.treatmentDateUtc, readDtoString(dto, ['TreatmentDateUtc', 'treatmentDateUtc']));
+function canonicalPrescribedAt(dto: PrescriptionListItemDto | PrescriptionDetailDto): string | null {
+    return firstTrimmed(dto.prescribedAtUtc, readDtoString(dto, ['PrescribedAtUtc', 'prescribedAtUtc']));
 }
 
-function canonicalTitle(dto: TreatmentListItemDto | TreatmentDetailDto): string {
+function canonicalTitle(dto: PrescriptionListItemDto | PrescriptionDetailDto): string {
     return str(firstTrimmed(dto.title, readDtoString(dto, ['Title'])));
 }
 
-function canonicalDescription(dto: TreatmentDetailDto): string {
-    return str(firstTrimmed(dto.description, readDtoString(dto, ['Description'])));
+function canonicalContent(dto: PrescriptionDetailDto): string {
+    return str(firstTrimmed(dto.content, readDtoString(dto, ['Content'])));
 }
 
-function canonicalNotes(dto: TreatmentDetailDto): string {
+function canonicalNotes(dto: PrescriptionDetailDto): string {
     return str(firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])));
 }
 
-function canonicalExaminationId(dto: TreatmentListItemDto | TreatmentDetailDto): string | null {
+function canonicalExaminationId(dto: PrescriptionListItemDto | PrescriptionDetailDto): string | null {
     return firstTrimmed(dto.examinationId, readDtoString(dto, ['ExaminationId']));
 }
 
-function canonicalFollowUp(dto: TreatmentListItemDto | TreatmentDetailDto): string | null {
+function canonicalTreatmentId(dto: PrescriptionListItemDto | PrescriptionDetailDto): string | null {
+    return firstTrimmed(dto.treatmentId, readDtoString(dto, ['TreatmentId']));
+}
+
+function canonicalFollowUp(dto: PrescriptionListItemDto | PrescriptionDetailDto): string | null {
     return firstTrimmed(dto.followUpDateUtc, readDtoString(dto, ['FollowUpDateUtc']));
 }
 
-function canonicalCreatedAt(dto: TreatmentDetailDto): string | null {
+function canonicalCreatedAt(dto: PrescriptionDetailDto): string | null {
     return firstTrimmed(dto.createdAtUtc, readDtoString(dto, ['CreatedAtUtc']));
 }
 
-function canonicalUpdatedAt(dto: TreatmentDetailDto): string | null {
+function canonicalUpdatedAt(dto: PrescriptionDetailDto): string | null {
     return firstTrimmed(dto.updatedAtUtc, readDtoString(dto, ['UpdatedAtUtc']));
 }
 
-export function mapTreatmentListItemDtoToVm(dto: TreatmentListItemDto): TreatmentListItemVm {
+export function mapPrescriptionListItemDtoToVm(dto: PrescriptionListItemDto): PrescriptionListItemVm {
     return {
         id: dto.id,
         clinicId: canonicalClinicId(dto),
@@ -97,14 +101,15 @@ export function mapTreatmentListItemDtoToVm(dto: TreatmentListItemDto): Treatmen
         petName: canonicalPetName(dto),
         clientId: canonicalClientId(dto),
         clientName: canonicalClientName(dto),
-        treatmentDateUtc: canonicalTreatmentDate(dto),
+        prescribedAtUtc: canonicalPrescribedAt(dto),
         title: canonicalTitle(dto),
         examinationId: canonicalExaminationId(dto),
+        treatmentId: canonicalTreatmentId(dto),
         followUpDateUtc: canonicalFollowUp(dto)
     };
 }
 
-export function mapTreatmentDetailDtoToVm(dto: TreatmentDetailDto): TreatmentDetailVm {
+export function mapPrescriptionDetailDtoToVm(dto: PrescriptionDetailDto): PrescriptionDetailVm {
     return {
         id: dto.id,
         clinicId: canonicalClinicId(dto),
@@ -113,9 +118,10 @@ export function mapTreatmentDetailDtoToVm(dto: TreatmentDetailDto): TreatmentDet
         clientId: canonicalClientId(dto),
         clientName: canonicalClientName(dto),
         examinationId: canonicalExaminationId(dto),
-        treatmentDateUtc: canonicalTreatmentDate(dto),
+        treatmentId: canonicalTreatmentId(dto),
+        prescribedAtUtc: canonicalPrescribedAt(dto),
         title: canonicalTitle(dto),
-        description: canonicalDescription(dto),
+        content: canonicalContent(dto),
         notes: canonicalNotes(dto),
         followUpDateUtc: canonicalFollowUp(dto),
         createdAtUtc: canonicalCreatedAt(dto),
@@ -123,7 +129,6 @@ export function mapTreatmentDetailDtoToVm(dto: TreatmentDetailDto): TreatmentDet
     };
 }
 
-/** yyyy-MM-dd UTC günü — detaydan takip tarihi için. */
 function followUpDateToInput(isoUtc: string | null): string {
     if (!isoUtc?.trim()) {
         return '';
@@ -138,7 +143,7 @@ function followUpDateToInput(isoUtc: string | null): string {
     return `${y}-${m}-${day}`;
 }
 
-export function mapTreatmentDetailDtoToEditVm(dto: TreatmentDetailDto): TreatmentEditVm {
+export function mapPrescriptionDetailDtoToEditVm(dto: PrescriptionDetailDto): PrescriptionEditVm {
     return {
         id: dto.id,
         clinicId: canonicalClinicId(dto) ?? '',
@@ -147,22 +152,23 @@ export function mapTreatmentDetailDtoToEditVm(dto: TreatmentDetailDto): Treatmen
         clientName: firstTrimmed(dto.clientName, readDtoString(dto, ['ClientName'])),
         petName: firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])),
         examinationId: canonicalExaminationId(dto) ?? '',
-        treatmentDateUtc: canonicalTreatmentDate(dto),
+        treatmentId: canonicalTreatmentId(dto) ?? '',
+        prescribedAtUtc: canonicalPrescribedAt(dto),
         title: firstTrimmed(dto.title, readDtoString(dto, ['Title'])) ?? '',
-        description: firstTrimmed(dto.description, readDtoString(dto, ['Description'])) ?? '',
+        content: firstTrimmed(dto.content, readDtoString(dto, ['Content'])) ?? '',
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
         followUpDateInput: followUpDateToInput(canonicalFollowUp(dto))
     };
 }
 
-export function mapPagedTreatmentsToVm(result: TreatmentListItemDtoPagedResult): {
-    items: TreatmentListItemVm[];
+export function mapPagedPrescriptionsToVm(result: PrescriptionListItemDtoPagedResult): {
+    items: PrescriptionListItemVm[];
     page: number;
     pageSize: number;
     totalItems: number;
     totalPages: number;
 } {
-    const items = (result.items ?? []).map(mapTreatmentListItemDtoToVm);
+    const items = (result.items ?? []).map(mapPrescriptionListItemDtoToVm);
     return {
         items,
         page: result.page,
@@ -172,7 +178,7 @@ export function mapPagedTreatmentsToVm(result: TreatmentListItemDtoPagedResult):
     };
 }
 
-export function treatmentsQueryToHttpParams(query: TreatmentsListQuery): HttpParams {
+export function prescriptionsQueryToHttpParams(query: PrescriptionsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
@@ -183,9 +189,6 @@ export function treatmentsQueryToHttpParams(query: TreatmentsListQuery): HttpPar
     }
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
-    }
-    if (query.petId?.trim()) {
-        p = p.set('PetId', query.petId.trim());
     }
     if (query.fromDate?.trim()) {
         const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
@@ -208,33 +211,33 @@ export function treatmentsQueryToHttpParams(query: TreatmentsListQuery): HttpPar
     return p;
 }
 
-export function mapCreateTreatmentToApiBody(req: CreateTreatmentRequest): TreatmentWriteRequestDto {
+export function mapCreatePrescriptionToApiBody(req: CreatePrescriptionRequest): PrescriptionWriteRequestDto {
     const clinicId = req.clinicId.trim();
     const petId = req.petId.trim();
     if (!clinicId) {
-        throw new Error('TREATMENT_WRITE_CLINIC_ID_REQUIRED');
+        throw new Error('PRESCRIPTION_WRITE_CLINIC_ID_REQUIRED');
     }
     if (!petId) {
-        throw new Error('TREATMENT_WRITE_PET_ID_REQUIRED');
+        throw new Error('PRESCRIPTION_WRITE_PET_ID_REQUIRED');
     }
-    const treatmentDateUtc = req.treatmentDateUtc?.trim() ?? '';
-    if (!treatmentDateUtc) {
-        throw new Error('TREATMENT_WRITE_DATE_REQUIRED');
+    const prescribedAtUtc = req.prescribedAtUtc?.trim() ?? '';
+    if (!prescribedAtUtc) {
+        throw new Error('PRESCRIPTION_WRITE_DATE_REQUIRED');
     }
     const title = req.title.trim();
-    const description = req.description.trim();
+    const content = req.content.trim();
     if (!title) {
-        throw new Error('TREATMENT_WRITE_TITLE_REQUIRED');
+        throw new Error('PRESCRIPTION_WRITE_TITLE_REQUIRED');
     }
-    if (!description) {
-        throw new Error('TREATMENT_WRITE_DESCRIPTION_REQUIRED');
+    if (!content) {
+        throw new Error('PRESCRIPTION_WRITE_CONTENT_REQUIRED');
     }
-    const dto: TreatmentWriteRequestDto = {
+    const dto: PrescriptionWriteRequestDto = {
         clinicId,
         petId,
-        treatmentDateUtc,
+        prescribedAtUtc,
         title,
-        description,
+        content,
         notes: req.notes?.trim() ? req.notes.trim() : null,
         followUpDateUtc: req.followUpDateUtc?.trim() ? req.followUpDateUtc.trim() : null
     };
@@ -242,47 +245,51 @@ export function mapCreateTreatmentToApiBody(req: CreateTreatmentRequest): Treatm
     if (ex) {
         dto.examinationId = ex;
     }
+    const tr = req.treatmentId?.trim();
+    if (tr) {
+        dto.treatmentId = tr;
+    }
     return dto;
 }
 
-export interface TreatmentUpsertFormAdapterInput {
+export interface PrescriptionUpsertFormAdapterInput {
     clinicId: string;
     petId: string;
-    treatmentDateUtc: string;
+    examinationId?: string | null;
+    treatmentId?: string | null;
+    prescribedAtUtc: string;
     title: string;
-    description: string;
+    content: string;
     notes?: string | null;
     followUpDateUtc?: string | null;
-    /** Opsiyonel; boş veya yalnızca boşluk ise gövdeye yazılmaz. */
-    examinationId?: string | null;
 }
 
-/** Create/edit formlarından gelen istek. */
-export function mapTreatmentUpsertFormToCreateRequest(input: TreatmentUpsertFormAdapterInput): CreateTreatmentRequest {
+export function mapPrescriptionUpsertFormToCreateRequest(input: PrescriptionUpsertFormAdapterInput): CreatePrescriptionRequest {
     return {
         clinicId: input.clinicId.trim(),
         petId: input.petId.trim(),
-        treatmentDateUtc: input.treatmentDateUtc.trim(),
+        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null,
+        treatmentId: input.treatmentId?.trim() ? input.treatmentId.trim() : null,
+        prescribedAtUtc: input.prescribedAtUtc.trim(),
         title: input.title.trim(),
-        description: input.description.trim(),
+        content: input.content.trim(),
         notes: input.notes?.trim() ? input.notes.trim() : null,
-        followUpDateUtc: input.followUpDateUtc?.trim() ? input.followUpDateUtc.trim() : null,
-        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null
+        followUpDateUtc: input.followUpDateUtc?.trim() ? input.followUpDateUtc.trim() : null
     };
 }
 
-/** Takip tarihi (UTC anı) tedavi anından önce olamaz; boş follow-up için `null`. */
-export function followUpBeforeTreatmentMessage(treatmentDateUtc: string, followUpDateUtc: string | null | undefined): string | null {
+/** Takip tarihi reçete anından önce olamaz. */
+export function followUpBeforePrescribedMessage(prescribedAtUtc: string, followUpDateUtc: string | null | undefined): string | null {
     if (!followUpDateUtc?.trim()) {
         return null;
     }
-    const t = new Date(treatmentDateUtc.trim());
+    const t = new Date(prescribedAtUtc.trim());
     const f = new Date(followUpDateUtc.trim());
     if (Number.isNaN(t.getTime()) || Number.isNaN(f.getTime())) {
         return null;
     }
     if (f.getTime() < t.getTime()) {
-        return 'Takip tarihi tedavi tarihinden önce olamaz.';
+        return 'Takip tarihi reçete tarihinden önce olamaz.';
     }
     return null;
 }

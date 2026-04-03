@@ -56,5 +56,9 @@ export const ApiEndpoints = {
     treatments: {
         list: () => `/api/v1/treatments`,
         byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`
+    },
+    prescriptions: {
+        list: () => `/api/v1/prescriptions`,
+        byId: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}`
     }
 } as const;

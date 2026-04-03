@@ -7,23 +7,29 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import {
+    followUpBeforePrescribedMessage,
+    mapPrescriptionUpsertFormToCreateRequest
+} from '@/app/features/prescriptions/data/prescription.mapper';
+import { PrescriptionsService } from '@/app/features/prescriptions/services/prescriptions.service';
+import {
+    type PrescriptionUpsertFieldErrors,
+    parsePrescriptionUpsertHttpError
+} from '@/app/features/prescriptions/utils/prescription-upsert-validation-parse.utils';
+import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import {
     examinationListItemFromDetail,
-    prescriptionExaminationSelectOption
+    filterTreatmentsByExamination,
+    prescriptionExaminationSelectOption,
+    prescriptionTreatmentSelectOption
 } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
-import {
-    followUpBeforeTreatmentMessage,
-    mapTreatmentUpsertFormToCreateRequest
-} from '@/app/features/treatments/data/treatment.mapper';
-import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
-import {
-    type TreatmentUpsertFieldErrors,
-    parseTreatmentUpsertHttpError
-} from '@/app/features/treatments/utils/treatment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
+import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import {
     clientOptionsFromList,
     filterPetsByClientId,
@@ -39,7 +45,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 
 @Component({
-    selector: 'app-treatment-new-page',
+    selector: 'app-prescription-new-page',
     standalone: true,
     imports: [
         CommonModule,
@@ -53,9 +59,9 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
         QuickPetDialogComponent
     ],
     template: `
-        <a routerLink="/panel/treatments" class="text-primary font-medium no-underline inline-block mb-4">← Tedavi listesine dön</a>
+        <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline inline-block mb-4">← Reçete listesine dön</a>
 
-        <app-page-header title="Yeni Tedavi" subtitle="Klinik" description="Tedavi kaydı oluşturun." />
+        <app-page-header title="Yeni Reçete" subtitle="Klinik" description="Reçete kaydı oluşturun." />
 
         <div class="card">
             @if (selectionError()) {
@@ -137,17 +143,24 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="treatmentDateLocal" class="block text-sm font-medium text-muted-color mb-2">Tedavi tarihi / saati *</label>
+                        <label for="prescribedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Reçete tarihi / saati *</label>
                         <input
-                            id="treatmentDateLocal"
+                            id="prescribedAtLocal"
                             type="datetime-local"
                             class="w-full p-inputtext p-component"
-                            formControlName="treatmentDateLocal"
+                            formControlName="prescribedAtLocal"
                         />
-                        @if (form.controls.treatmentDateLocal.invalid && form.controls.treatmentDateLocal.touched) {
+                        @if (form.controls.prescribedAtLocal.invalid && form.controls.prescribedAtLocal.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
-                        } @else if (apiFieldErrors().treatmentDateLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().treatmentDateLocal }}</small>
+                        } @else if (apiFieldErrors().prescribedAtLocal) {
+                            <small class="text-red-500">{{ apiFieldErrors().prescribedAtLocal }}</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
+                        <input id="followUpDate" type="date" class="w-full p-inputtext p-component" formControlName="followUpDate" />
+                        @if (apiFieldErrors().followUpDate) {
+                            <small class="text-red-500">{{ apiFieldErrors().followUpDate }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -169,6 +182,25 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                             <small class="text-red-500">{{ apiFieldErrors().examinationId }}</small>
                         }
                     </div>
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="treatmentId" class="block text-sm font-medium text-muted-color mb-2">Bağlı tedavi</label>
+                        <p-select
+                            inputId="treatmentId"
+                            formControlName="treatmentId"
+                            [options]="treatmentOptions()"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Hayvan seçin"
+                            [filter]="true"
+                            filterBy="label"
+                            [showClear]="true"
+                            styleClass="w-full"
+                            [loading]="loadingTreatments()"
+                        />
+                        @if (apiFieldErrors().treatmentId) {
+                            <small class="text-red-500">{{ apiFieldErrors().treatmentId }}</small>
+                        }
+                    </div>
                     <div class="col-span-12">
                         <label for="title" class="block text-sm font-medium text-muted-color mb-2">Başlık *</label>
                         <input id="title" type="text" class="w-full p-inputtext p-component" formControlName="title" />
@@ -179,12 +211,12 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                         }
                     </div>
                     <div class="col-span-12">
-                        <label for="description" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
-                        <textarea id="description" rows="4" class="w-full p-inputtext p-component" formControlName="description"></textarea>
-                        @if (form.controls.description.invalid && form.controls.description.touched) {
+                        <label for="content" class="block text-sm font-medium text-muted-color mb-2">İçerik *</label>
+                        <textarea id="content" rows="4" class="w-full p-inputtext p-component" formControlName="content"></textarea>
+                        @if (form.controls.content.invalid && form.controls.content.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
-                        } @else if (apiFieldErrors().description) {
-                            <small class="text-red-500">{{ apiFieldErrors().description }}</small>
+                        } @else if (apiFieldErrors().content) {
+                            <small class="text-red-500">{{ apiFieldErrors().content }}</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -192,13 +224,6 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                         @if (apiFieldErrors().notes) {
                             <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
-                        <input id="followUpDate" type="date" class="w-full p-inputtext p-component" formControlName="followUpDate" />
-                        @if (apiFieldErrors().followUpDate) {
-                            <small class="text-red-500">{{ apiFieldErrors().followUpDate }}</small>
                         }
                     </div>
                 </div>
@@ -228,14 +253,15 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
         />
     `
 })
-export class TreatmentNewPageComponent implements OnInit {
+export class PrescriptionNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly fb = inject(FormBuilder);
-    private readonly treatmentsService = inject(TreatmentsService);
-    private readonly examinationsService = inject(ExaminationsService);
+    private readonly prescriptionsService = inject(PrescriptionsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
+    private readonly examinationsService = inject(ExaminationsService);
+    private readonly treatmentsService = inject(TreatmentsService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
@@ -251,20 +277,25 @@ export class TreatmentNewPageComponent implements OnInit {
     readonly loadingClients = signal(false);
     readonly loadingPets = signal(false);
     readonly loadingExaminations = signal(false);
+    readonly loadingTreatments = signal(false);
     readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
     readonly examinationOptions = signal<SelectOption[]>([]);
+    readonly treatmentOptions = signal<SelectOption[]>([]);
+    readonly apiFieldErrors = signal<PrescriptionUpsertFieldErrors>({});
+
+    private allTreatmentsForPet: TreatmentListItemVm[] = [];
     private relationLoadSeq = 0;
-    readonly apiFieldErrors = signal<TreatmentUpsertFieldErrors>({});
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        treatmentDateLocal: ['', Validators.required],
-        examinationId: [''],
+        prescribedAtLocal: ['', Validators.required],
         followUpDate: [''],
+        examinationId: [''],
+        treatmentId: [''],
         title: ['', Validators.required],
-        description: ['', Validators.required],
+        content: ['', Validators.required],
         notes: ['']
     });
 
@@ -276,7 +307,9 @@ export class TreatmentNewPageComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.form.controls.examinationId.disable({ emitEvent: false });
+        this.form.controls.treatmentId.disable({ emitEvent: false });
         this.loadClients();
+
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             if (this.contextFromExamination()) {
                 return;
@@ -291,7 +324,7 @@ export class TreatmentNewPageComponent implements OnInit {
             if (!id) {
                 this.petOptions.set([]);
                 this.form.controls.petId.disable({ emitEvent: false });
-                this.syncExaminationSelectState();
+                this.syncPrescriptionRelationSelects();
                 return;
             }
             this.form.controls.petId.enable({ emitEvent: false });
@@ -303,33 +336,59 @@ export class TreatmentNewPageComponent implements OnInit {
                 return;
             }
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
-            this.form.patchValue({ examinationId: '' }, { emitEvent: false });
+            this.form.patchValue({ examinationId: '', treatmentId: '' }, { emitEvent: false });
             if (!pid) {
                 this.relationLoadSeq += 1;
                 this.examinationOptions.set([]);
+                this.treatmentOptions.set([]);
+                this.allTreatmentsForPet = [];
                 this.loadingExaminations.set(false);
-                this.syncExaminationSelectState();
+                this.loadingTreatments.set(false);
+                this.syncPrescriptionRelationSelects();
                 return;
             }
-            this.loadExaminationsForPet(pid);
+            this.loadRelationsForPet(pid);
+        });
+
+        this.form.controls.examinationId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            this.applyTreatmentFilter();
+        });
+
+        this.form.controls.treatmentId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((tid) => {
+            if (this.contextFromExamination()) {
+                return;
+            }
+            const id = String(tid ?? '').trim();
+            if (!id) {
+                return;
+            }
+            const t = this.allTreatmentsForPet.find((x) => x.id === id);
+            const ex = t?.examinationId?.trim();
+            if (ex && this.form.controls.examinationId.value?.trim() !== ex) {
+                this.form.controls.examinationId.setValue(ex, { emitEvent: true });
+            }
         });
     }
 
-    private syncExaminationSelectState(): void {
+    private syncPrescriptionRelationSelects(): void {
         if (this.contextFromExamination()) {
+            this.form.controls.examinationId.disable({ emitEvent: false });
+            this.form.controls.treatmentId.enable({ emitEvent: false });
             return;
         }
         const hasPet =
             !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
+            this.form.controls.treatmentId.disable({ emitEvent: false });
         } else {
             this.form.controls.examinationId.enable({ emitEvent: false });
+            this.form.controls.treatmentId.enable({ emitEvent: false });
         }
     }
 
     goList(): void {
-        void this.router.navigate(['/panel/treatments']);
+        void this.router.navigate(['/panel/prescriptions']);
     }
 
     petQuickAddDisabled(): boolean {
@@ -375,9 +434,9 @@ export class TreatmentNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const treatmentDateUtc = dateTimeLocalInputToIsoUtc(v.treatmentDateLocal);
-        if (!treatmentDateUtc) {
-            this.submitError.set('Geçerli bir tedavi tarihi ve saati seçin.');
+        const prescribedAtUtc = dateTimeLocalInputToIsoUtc(v.prescribedAtLocal);
+        if (!prescribedAtUtc) {
+            this.submitError.set('Geçerli bir reçete tarihi ve saati seçin.');
             return;
         }
         const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToUtcIso(v.followUpDate.trim()) : null;
@@ -385,7 +444,7 @@ export class TreatmentNewPageComponent implements OnInit {
             this.submitError.set('Takip tarihi geçersiz.');
             return;
         }
-        const orderMsg = followUpBeforeTreatmentMessage(treatmentDateUtc, followUpDateUtc);
+        const orderMsg = followUpBeforePrescribedMessage(prescribedAtUtc, followUpDateUtc);
         if (orderMsg) {
             this.submitError.set(orderMsg);
             return;
@@ -397,27 +456,28 @@ export class TreatmentNewPageComponent implements OnInit {
             return;
         }
 
-        const payload = mapTreatmentUpsertFormToCreateRequest({
+        const payload = mapPrescriptionUpsertFormToCreateRequest({
             clinicId,
             petId: v.petId,
-            treatmentDateUtc,
+            examinationId: v.examinationId,
+            treatmentId: v.treatmentId,
+            prescribedAtUtc,
             title: v.title,
-            description: v.description,
+            content: v.content,
             notes: v.notes,
-            followUpDateUtc,
-            examinationId: v.examinationId
+            followUpDateUtc
         });
 
         this.submitting.set(true);
-        this.treatmentsService.createTreatment(payload).subscribe({
+        this.prescriptionsService.createPrescription(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/treatments', id]);
+                void this.router.navigate(['/panel/prescriptions', id]);
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
                 if (e instanceof HttpErrorResponse) {
-                    const parsed = parseTreatmentUpsertHttpError(e);
+                    const parsed = parsePrescriptionUpsertHttpError(e);
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
                     return;
@@ -425,6 +485,126 @@ export class TreatmentNewPageComponent implements OnInit {
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
+    }
+
+    private loadRelationsForPet(petId: string, lockExamination?: ExaminationDetailVm): void {
+        const seq = ++this.relationLoadSeq;
+        const pid = petId.trim();
+        this.loadingExaminations.set(true);
+        this.loadingTreatments.set(true);
+        this.selectionError.set(null);
+        forkJoin({
+            ex: this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }),
+            tr: this.treatmentsService.getTreatments({ page: 1, pageSize: 200, petId: pid })
+        }).subscribe({
+            next: ({ ex, tr }) => {
+                if (seq !== this.relationLoadSeq) {
+                    if (lockExamination) {
+                        this.applyingRouteContext.set(false);
+                    }
+                    return;
+                }
+                if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
+                    if (lockExamination) {
+                        this.applyingRouteContext.set(false);
+                    }
+                    return;
+                }
+                let examItems = [...ex.items];
+                if (lockExamination) {
+                    const lid = lockExamination.id.trim();
+                    if (!examItems.some((item) => item.id === lid)) {
+                        examItems = [examinationListItemFromDetail(lockExamination), ...examItems];
+                    }
+                    this.examinationOptions.set(examItems.map(prescriptionExaminationSelectOption));
+                    this.allTreatmentsForPet = tr.items;
+                    this.form.patchValue({ examinationId: lid }, { emitEvent: false });
+                    this.applyTreatmentFilter();
+                    this.form.controls.examinationId.disable({ emitEvent: false });
+                    this.syncPrescriptionRelationSelects();
+                    this.applyingRouteContext.set(false);
+                } else {
+                    this.examinationOptions.set(examItems.map(prescriptionExaminationSelectOption));
+                    this.allTreatmentsForPet = tr.items;
+                    this.applyTreatmentFilter();
+                    this.syncPrescriptionRelationSelects();
+                }
+                this.loadingExaminations.set(false);
+                this.loadingTreatments.set(false);
+            },
+            error: (e: unknown) => {
+                if (seq !== this.relationLoadSeq) {
+                    return;
+                }
+                this.selectionError.set(this.mapLoadError(e, 'Muayene veya tedavi listesi yüklenemedi.'));
+                this.examinationOptions.set([]);
+                this.treatmentOptions.set([]);
+                this.allTreatmentsForPet = [];
+                this.loadingExaminations.set(false);
+                this.loadingTreatments.set(false);
+                this.syncPrescriptionRelationSelects();
+                if (lockExamination) {
+                    this.applyingRouteContext.set(false);
+                }
+            }
+        });
+    }
+
+    private tryApplyExaminationRouteContext(): void {
+        const ctx = parseExaminationCreateRouteContext(this.route.snapshot.queryParamMap);
+        if (!ctx) {
+            return;
+        }
+        this.applyingRouteContext.set(true);
+        this.selectionError.set(null);
+        this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
+            next: (ex) => {
+                const cId = ex.clientId?.trim() ?? '';
+                const pId = ex.petId?.trim() ?? '';
+                if (cId !== ctx.clientId || pId !== ctx.petId) {
+                    this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
+                this.mergeClientOptionIfMissing(cId, (ex.clientName ?? '').trim() || '—');
+                this.mergePetOptionIfMissing(pId, (ex.petName ?? '').trim() || '—');
+                this.form.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
+                this.form.controls.clientId.disable({ emitEvent: false });
+                this.form.controls.petId.disable({ emitEvent: false });
+                this.contextFromExamination.set(true);
+                this.loadRelationsForPet(pId, ex);
+            },
+            error: () => {
+                this.selectionError.set('Muayene bağlamı yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private mergeClientOptionIfMissing(id: string, label: string): void {
+        const opts = this.clientOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.clientOptions.set([{ value: id, label }, ...opts]);
+    }
+
+    private mergePetOptionIfMissing(id: string, label: string): void {
+        const opts = this.petOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.petOptions.set([{ value: id, label }, ...opts]);
+    }
+
+    private applyTreatmentFilter(): void {
+        const examId = this.form.controls.examinationId.value?.trim() ?? '';
+        const filtered = filterTreatmentsByExamination(this.allTreatmentsForPet, examId || null);
+        this.treatmentOptions.set(filtered.map(prescriptionTreatmentSelectOption));
+        const cur = this.form.controls.treatmentId.value?.trim() ?? '';
+        if (cur && !filtered.some((t) => t.id === cur)) {
+            this.form.controls.treatmentId.setValue('', { emitEvent: false });
+        }
     }
 
     private loadClients(): void {
@@ -459,94 +639,6 @@ export class TreatmentNewPageComponent implements OnInit {
         });
     }
 
-    private tryApplyExaminationRouteContext(): void {
-        const ctx = parseExaminationCreateRouteContext(this.route.snapshot.queryParamMap);
-        if (!ctx) {
-            return;
-        }
-        this.applyingRouteContext.set(true);
-        this.selectionError.set(null);
-        this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
-            next: (ex) => {
-                const cId = ex.clientId?.trim() ?? '';
-                const pId = ex.petId?.trim() ?? '';
-                if (cId !== ctx.clientId || pId !== ctx.petId) {
-                    this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
-                    this.applyingRouteContext.set(false);
-                    return;
-                }
-                this.mergeClientOptionIfMissing(cId, (ex.clientName ?? '').trim() || '—');
-                this.mergePetOptionIfMissing(pId, (ex.petName ?? '').trim() || '—');
-                const listItem = examinationListItemFromDetail(ex);
-                this.examinationOptions.set([prescriptionExaminationSelectOption(listItem)]);
-                this.relationLoadSeq += 1;
-                this.form.patchValue(
-                    {
-                        clientId: cId,
-                        petId: pId,
-                        examinationId: ex.id
-                    },
-                    { emitEvent: false }
-                );
-                this.form.controls.clientId.disable({ emitEvent: false });
-                this.form.controls.petId.disable({ emitEvent: false });
-                this.form.controls.examinationId.disable({ emitEvent: false });
-                this.contextFromExamination.set(true);
-                this.loadingExaminations.set(false);
-                this.applyingRouteContext.set(false);
-            },
-            error: () => {
-                this.selectionError.set('Muayene bağlamı yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
-                this.applyingRouteContext.set(false);
-            }
-        });
-    }
-
-    private mergeClientOptionIfMissing(id: string, label: string): void {
-        const opts = this.clientOptions();
-        if (opts.some((o) => o.value === id)) {
-            return;
-        }
-        this.clientOptions.set([{ value: id, label }, ...opts]);
-    }
-
-    private mergePetOptionIfMissing(id: string, label: string): void {
-        const opts = this.petOptions();
-        if (opts.some((o) => o.value === id)) {
-            return;
-        }
-        this.petOptions.set([{ value: id, label }, ...opts]);
-    }
-
-    private loadExaminationsForPet(petId: string): void {
-        const seq = ++this.relationLoadSeq;
-        const pid = petId.trim();
-        this.loadingExaminations.set(true);
-        this.selectionError.set(null);
-        this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }).subscribe({
-            next: (ex) => {
-                if (seq !== this.relationLoadSeq) {
-                    return;
-                }
-                if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
-                    return;
-                }
-                this.examinationOptions.set(ex.items.map(prescriptionExaminationSelectOption));
-                this.loadingExaminations.set(false);
-                this.syncExaminationSelectState();
-            },
-            error: (e: unknown) => {
-                if (seq !== this.relationLoadSeq) {
-                    return;
-                }
-                this.selectionError.set(this.mapLoadError(e, 'Muayene listesi yüklenemedi.'));
-                this.examinationOptions.set([]);
-                this.loadingExaminations.set(false);
-                this.syncExaminationSelectState();
-            }
-        });
-    }
-
     private loadPetsForClient(clientId: string, selectPetId?: string): void {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
@@ -565,24 +657,20 @@ export class TreatmentNewPageComponent implements OnInit {
                     }
                 }
                 this.loadingPets.set(false);
-                if (!this.contextFromExamination()) {
-                    this.syncExaminationSelectState();
-                }
+                this.syncPrescriptionRelationSelects();
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
                 this.petOptions.set([]);
                 this.loadingPets.set(false);
-                if (!this.contextFromExamination()) {
-                    this.syncExaminationSelectState();
-                }
+                this.syncPrescriptionRelationSelects();
             }
         });
     }
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
-            const parsed = parseTreatmentUpsertHttpError(e);
+            const parsed = parsePrescriptionUpsertHttpError(e);
             return parsed.summaryMessage ?? fallback;
         }
         return e instanceof Error ? e.message : fallback;

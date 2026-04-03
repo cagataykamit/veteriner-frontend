@@ -58,6 +58,36 @@ import { EMPTY, switchMap } from 'rxjs';
                     icon="pi pi-pencil"
                     class="p-button-secondary"
                 ></a>
+                @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
+                    <div actions class="flex flex-wrap gap-2">
+                        <a
+                            [routerLink]="['/panel/treatments/new']"
+                            [queryParams]="{
+                                clientId: exam()!.clientId,
+                                petId: exam()!.petId,
+                                examinationId: exam()!.id
+                            }"
+                            pButton
+                            type="button"
+                            label="Tedavi Oluştur"
+                            icon="pi pi-plus"
+                            class="p-button-secondary"
+                        ></a>
+                        <a
+                            [routerLink]="['/panel/prescriptions/new']"
+                            [queryParams]="{
+                                clientId: exam()!.clientId,
+                                petId: exam()!.petId,
+                                examinationId: exam()!.id
+                            }"
+                            pButton
+                            type="button"
+                            label="Reçete Oluştur"
+                            icon="pi pi-file-edit"
+                            class="p-button-secondary"
+                        ></a>
+                    </div>
+                }
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">

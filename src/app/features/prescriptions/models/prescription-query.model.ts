@@ -1,16 +1,13 @@
 /**
- * Tedavi listesi — GET `/api/v1/treatments`.
- * `search`: başlık, açıklama, not ve pet/müşteri metin kümesi (backend contract).
+ * Reçete listesi — GET `/api/v1/prescriptions`.
  */
 
-export interface TreatmentsListQuery {
+export interface PrescriptionsListQuery {
     page?: number;
     pageSize?: number;
     search?: string;
     /** Gönderilmezse `AuthService` klinik kimliği kullanılır. */
     clinicId?: string;
-    /** Muayene/tedavi seçicileri için hayvana göre daraltma (backend `PetId`). */
-    petId?: string;
     /** yyyy-MM-dd */
     fromDate?: string;
     /** yyyy-MM-dd */
