@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -19,7 +19,10 @@ import {
     parseHospitalizationUpsertHttpError
 } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import {
+    examinationListItemFromDetail,
+    prescriptionExaminationSelectOption
+} from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import {
     clientOptionsFromList,
@@ -31,6 +34,7 @@ import {
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 
 @Component({
     selector: 'app-hospitalization-new-page',
@@ -54,6 +58,11 @@ import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            @if (contextFromExamination()) {
+                <p class="text-sm text-muted-color mt-0 mb-4">
+                    Bu muayene kaydından bağlam taşındı; müşteri, hayvan ve bağlı muayene alanları kilitlidir.
+                </p>
+            }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -171,7 +180,7 @@ import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext()"
                     />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -188,9 +197,12 @@ export class HospitalizationNewPageComponent implements OnInit {
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
 
+    readonly contextFromExamination = signal(false);
+    readonly applyingRouteContext = signal(false);
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
@@ -221,6 +233,9 @@ export class HospitalizationNewPageComponent implements OnInit {
         this.form.controls.examinationId.disable({ emitEvent: false });
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            if (this.contextFromExamination()) {
+                return;
+            }
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
@@ -236,6 +251,9 @@ export class HospitalizationNewPageComponent implements OnInit {
         });
 
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            if (this.contextFromExamination()) {
+                return;
+            }
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
             this.form.patchValue({ examinationId: '' }, { emitEvent: false });
             if (!pid) {
@@ -250,6 +268,9 @@ export class HospitalizationNewPageComponent implements OnInit {
     }
 
     private syncExaminationSelectState(): void {
+        if (this.contextFromExamination()) {
+            return;
+        }
         const hasPet =
             !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
         if (!hasPet) {
@@ -326,6 +347,7 @@ export class HospitalizationNewPageComponent implements OnInit {
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.loadingClients.set(false);
+                this.tryApplyExaminationRouteContext();
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
@@ -361,6 +383,65 @@ export class HospitalizationNewPageComponent implements OnInit {
                 this.syncExaminationSelectState();
             }
         });
+    }
+
+    private tryApplyExaminationRouteContext(): void {
+        const ctx = parseExaminationCreateRouteContext(this.route.snapshot.queryParamMap);
+        if (!ctx) {
+            return;
+        }
+        this.applyingRouteContext.set(true);
+        this.selectionError.set(null);
+        this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
+            next: (ex) => {
+                const cId = ex.clientId?.trim() ?? '';
+                const pId = ex.petId?.trim() ?? '';
+                if (cId !== ctx.clientId || pId !== ctx.petId) {
+                    this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
+                this.mergeClientOptionIfMissing(cId, (ex.clientName ?? '').trim() || '—');
+                this.mergePetOptionIfMissing(pId, (ex.petName ?? '').trim() || '—');
+                const listItem = examinationListItemFromDetail(ex);
+                this.examinationOptions.set([prescriptionExaminationSelectOption(listItem)]);
+                this.relationLoadSeq += 1;
+                this.form.patchValue(
+                    {
+                        clientId: cId,
+                        petId: pId,
+                        examinationId: ex.id
+                    },
+                    { emitEvent: false }
+                );
+                this.form.controls.clientId.disable({ emitEvent: false });
+                this.form.controls.petId.disable({ emitEvent: false });
+                this.form.controls.examinationId.disable({ emitEvent: false });
+                this.contextFromExamination.set(true);
+                this.loadingExaminations.set(false);
+                this.applyingRouteContext.set(false);
+            },
+            error: () => {
+                this.selectionError.set('Muayene bağlamı yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private mergeClientOptionIfMissing(id: string, label: string): void {
+        const opts = this.clientOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.clientOptions.set([{ value: id, label }, ...opts]);
+    }
+
+    private mergePetOptionIfMissing(id: string, label: string): void {
+        const opts = this.petOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.petOptions.set([{ value: id, label }, ...opts]);
     }
 
     private loadPetsForClient(clientId: string, selectPetId?: string): void {

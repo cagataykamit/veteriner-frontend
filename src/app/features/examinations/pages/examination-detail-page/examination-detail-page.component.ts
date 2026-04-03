@@ -101,6 +101,32 @@ import { EMPTY, switchMap } from 'rxjs';
                             icon="pi pi-wallet"
                             class="p-button-secondary"
                         ></a>
+                        <a
+                            [routerLink]="['/panel/lab-results/new']"
+                            [queryParams]="{
+                                clientId: exam()!.clientId,
+                                petId: exam()!.petId,
+                                examinationId: exam()!.id
+                            }"
+                            pButton
+                            type="button"
+                            label="Lab Sonucu Oluştur"
+                            icon="pi pi-chart-bar"
+                            class="p-button-secondary"
+                        ></a>
+                        <a
+                            [routerLink]="['/panel/hospitalizations/new']"
+                            [queryParams]="{
+                                clientId: exam()!.clientId,
+                                petId: exam()!.petId,
+                                examinationId: exam()!.id
+                            }"
+                            pButton
+                            type="button"
+                            label="Yatış Başlat"
+                            icon="pi pi-building"
+                            class="p-button-secondary"
+                        ></a>
                     </div>
                 }
             </app-page-header>
