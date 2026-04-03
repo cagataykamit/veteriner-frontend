@@ -72,6 +72,15 @@ function canonicalClientIdDetail(dto: AppointmentDetailDto): string | null {
     return firstTrimmed(dto.clientId, dto.ownerId, readDtoString(dto, ['ClientId', 'OwnerId', 'CustomerId']));
 }
 
+/** Liste satırı — detay ile aynı `ownerId` / alias çözümü (clientId filtre sonrası satırlarda sık düşer). */
+function canonicalClientIdList(dto: AppointmentListItemDto): string | null {
+    return firstTrimmed(
+        dto.clientId,
+        (dto as AppointmentListItemDto & { ownerId?: string | null }).ownerId,
+        readDtoString(dto as unknown as AppointmentDetailDto, ['ClientId', 'OwnerId', 'CustomerId'])
+    );
+}
+
 function canonicalPetIdDetail(dto: AppointmentDetailDto): string | null {
     return firstTrimmed(dto.petId, dto.animalId, readDtoString(dto, ['PetId', 'AnimalId']));
 }
@@ -162,10 +171,11 @@ function readAppointmentLifecycleEnumFromDto(dto: AppointmentListItemDto | Appoi
 export function mapAppointmentListItemDtoToVm(dto: AppointmentListItemDto): AppointmentListItemVm {
     const typeNum = readAppointmentTypeNumericFromDto(dto);
     const typeName = readAppointmentTypeNameFromDto(dto);
+    const clientId = canonicalClientIdList(dto);
     return {
         id: dto.id,
         scheduledAtUtc: dto.scheduledAtUtc ?? null,
-        clientId: dto.clientId?.trim() ? dto.clientId : null,
+        clientId: clientId?.trim() ? clientId : null,
         clientName: str(dto.clientName),
         petId: dto.petId?.trim() ? dto.petId : null,
         petName: str(dto.petName),

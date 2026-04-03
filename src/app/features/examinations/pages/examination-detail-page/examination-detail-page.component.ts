@@ -7,6 +7,8 @@ import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/a
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+import type { PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
+import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -86,6 +88,19 @@ import { EMPTY, switchMap } from 'rxjs';
                             icon="pi pi-file-edit"
                             class="p-button-secondary"
                         ></a>
+                        <a
+                            [routerLink]="['/panel/payments/new']"
+                            [queryParams]="{
+                                clientId: exam()!.clientId,
+                                petId: exam()!.petId,
+                                examinationId: exam()!.id
+                            }"
+                            pButton
+                            type="button"
+                            label="Ödeme Oluştur"
+                            icon="pi pi-wallet"
+                            class="p-button-secondary"
+                        ></a>
                     </div>
                 }
             </app-page-header>
@@ -129,9 +144,70 @@ import { EMPTY, switchMap } from 'rxjs';
                 <div class="col-span-12 lg:col-span-4">
                     <div class="card">
                         <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
-                            <h5 class="mt-0 mb-0">İlgili ödemeler</h5>
+                            <h5 class="mt-0 mb-0">Bağlı tedaviler</h5>
+                            <a routerLink="/panel/treatments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (!exam()!.petId?.trim()) {
+                            <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
+                        } @else if (trLoading()) {
+                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                        } @else if (trError()) {
+                            <p class="text-muted-color m-0">{{ trError() }}</p>
+                        } @else if (trItems().length === 0) {
+                            <app-empty-state message="Bu muayeneye bağlı tedavi yok." />
+                        } @else {
+                            <ul class="list-none m-0 p-0">
+                                @for (row of trItems(); track row.id) {
+                                    <li class="mb-3 last:mb-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <span class="text-muted-color text-sm">{{ formatDt(row.treatmentDateUtc) }}</span>
+                                            <a [routerLink]="['/panel/treatments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                        </div>
+                                        <div class="font-medium">{{ row.title }}</div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div class="col-span-12 lg:col-span-4">
+                    <div class="card">
+                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <h5 class="mt-0 mb-0">Bağlı reçeteler</h5>
+                            <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (!exam()!.petId?.trim()) {
+                            <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
+                        } @else if (rxLoading()) {
+                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                        } @else if (rxError()) {
+                            <p class="text-muted-color m-0">{{ rxError() }}</p>
+                        } @else if (rxItems().length === 0) {
+                            <app-empty-state message="Bu muayeneye bağlı reçete yok." />
+                        } @else {
+                            <ul class="list-none m-0 p-0">
+                                @for (row of rxItems(); track row.id) {
+                                    <li class="mb-3 last:mb-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <span class="text-muted-color text-sm">{{ formatDt(row.prescribedAtUtc) }}</span>
+                                            <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                        </div>
+                                        <div class="font-medium">{{ row.title }}</div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div class="col-span-12 lg:col-span-4">
+                    <div class="card">
+                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <h5 class="mt-0 mb-0">Bağlı ödemeler</h5>
                             <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
+                        <p class="text-xs text-muted-color mt-0 mb-3">
+                            Liste yanıtında muayene kimliği yok; aynı hayvan/müşteri kapsamındaki son ödemeler gösterilir (tam FK eşlemesi değil).
+                        </p>
                         @if (payLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (payError()) {
@@ -155,7 +231,7 @@ import { EMPTY, switchMap } from 'rxjs';
                         }
                     </div>
                 </div>
-                <div class="col-span-12 lg:col-span-4">
+                <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
                             <h5 class="mt-0 mb-0">Aynı hayvana ait muayeneler</h5>
@@ -184,7 +260,7 @@ import { EMPTY, switchMap } from 'rxjs';
                         }
                     </div>
                 </div>
-                <div class="col-span-12 lg:col-span-4">
+                <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
                             <h5 class="mt-0 mb-0">Randevular (aynı hayvan)</h5>
@@ -278,6 +354,14 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly payError = signal<string | null>(null);
     readonly payItems = signal<PaymentListItemVm[]>([]);
 
+    readonly trLoading = signal(false);
+    readonly trError = signal<string | null>(null);
+    readonly trItems = signal<TreatmentListItemVm[]>([]);
+
+    readonly rxLoading = signal(false);
+    readonly rxError = signal<string | null>(null);
+    readonly rxItems = signal<PrescriptionListItemVm[]>([]);
+
     readonly sibLoading = signal(false);
     readonly sibError = signal<string | null>(null);
     readonly sibItems = signal<ExaminationListItemVm[]>([]);
@@ -366,6 +450,42 @@ export class ExaminationDetailPageComponent implements OnInit {
                 this.payLoading.set(false);
             }
         });
+
+        const petOk = !!x.petId?.trim();
+        if (petOk) {
+            const petId = x.petId!.trim();
+            this.trLoading.set(true);
+            this.trError.set(null);
+            this.related.loadTreatmentsLinkedToExamination(petId, x.id).subscribe({
+                next: (items) => {
+                    this.trItems.set(items);
+                    this.trLoading.set(false);
+                },
+                error: (e: Error) => {
+                    this.trError.set(e.message ?? 'Tedaviler yüklenemedi.');
+                    this.trLoading.set(false);
+                }
+            });
+            this.rxLoading.set(true);
+            this.rxError.set(null);
+            this.related.loadPrescriptionsLinkedToExamination(petId, x.id).subscribe({
+                next: (items) => {
+                    this.rxItems.set(items);
+                    this.rxLoading.set(false);
+                },
+                error: (e: Error) => {
+                    this.rxError.set(e.message ?? 'Reçeteler yüklenemedi.');
+                    this.rxLoading.set(false);
+                }
+            });
+        } else {
+            this.trItems.set([]);
+            this.trLoading.set(false);
+            this.trError.set(null);
+            this.rxItems.set([]);
+            this.rxLoading.set(false);
+            this.rxError.set(null);
+        }
 
         if (!x.petId?.trim()) {
             this.sibItems.set([]);

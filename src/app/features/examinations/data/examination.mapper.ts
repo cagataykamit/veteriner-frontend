@@ -203,7 +203,7 @@ export function mapPagedExaminationsToVm(result: ExaminationListItemDtoPagedResu
     };
 }
 
-/** Page, PageSize, search, clinicId, PetId, ClientId, dateFromUtc, dateToUtc, Sort, Order */
+/** Page, PageSize, search, clinicId, PetId, ClientId, appointmentId, dateFromUtc, dateToUtc, Sort, Order */
 export function examinationsQueryToHttpParams(query: ExaminationsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -221,6 +221,9 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     }
     if (query.clientId?.trim()) {
         p = p.set('ClientId', query.clientId.trim());
+    }
+    if (query.appointmentId?.trim()) {
+        p = p.set('appointmentId', query.appointmentId.trim());
     }
     if (query.fromDate?.trim()) {
         const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
@@ -264,10 +267,14 @@ export interface ExaminationUpsertFormAdapterInput {
     findings: string;
     assessment?: string | null;
     notes?: string | null;
+    /** Randevu bağlamından oluşturmada dolu olabilir. */
+    appointmentId?: string | null;
 }
 
 export function mapExaminationUpsertFormToCreateRequest(input: ExaminationUpsertFormAdapterInput): CreateExaminationRequest {
+    const appt = input.appointmentId?.trim() ? input.appointmentId.trim() : undefined;
     return {
+        appointmentId: appt,
         clinicId: input.clinicId.trim(),
         petId: input.petId.trim() || undefined,
         examinedAtUtc: input.examinedAtUtc,

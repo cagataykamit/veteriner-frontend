@@ -273,6 +273,8 @@ export interface PaymentUpsertFormAdapterInput {
     clientId: string;
     /** Boş veya atlanmış — API gövdesinde null. */
     petId?: string | null;
+    appointmentId?: string | null;
+    examinationId?: string | null;
     amount: number;
     currency: string;
     method: string;
@@ -287,6 +289,8 @@ export function mapPaymentUpsertFormToCreateRequest(input: PaymentUpsertFormAdap
         clinicId: input.clinicId.trim(),
         clientId: input.clientId.trim(),
         petId,
+        appointmentId: input.appointmentId?.trim() ? input.appointmentId.trim() : null,
+        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null,
         amount: input.amount,
         currency: input.currency.trim(),
         method: input.method.trim(),

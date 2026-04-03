@@ -9,6 +9,8 @@ export interface AppointmentListItemDto {
     tenantId?: string;
     scheduledAtUtc?: string | null;
     clientId?: string | null;
+    /** Batch listelerde müşteri kimliği bu alias ile gelebilir. */
+    ownerId?: string | null;
     clientName?: string | null;
     petId?: string | null;
     petName?: string | null;

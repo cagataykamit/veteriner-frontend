@@ -11,6 +11,8 @@ export interface ExaminationsListQuery {
     clinicId?: string;
     petId?: string;
     clientId?: string;
+    /** Randevuya bağlı muayeneler; backend `Examination.AppointmentId` ile eşleştirir. */
+    appointmentId?: string;
     /** yyyy-MM-dd */
     fromDate?: string;
     /** yyyy-MM-dd */

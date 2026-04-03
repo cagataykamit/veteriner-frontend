@@ -3,12 +3,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { mapPaymentUpsertFormToCreateRequest } from '@/app/features/payments/data/payment.mapper';
+import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/features/payments/utils/payment-method.utils';
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
+import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
@@ -56,6 +58,11 @@ import { AuthService } from '@/app/core/auth/auth.service';
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            @if (contextFromExamination()) {
+                <p class="text-sm text-muted-color mt-0 mb-4">
+                    Bu muayene kaydından bağlam taşındı; müşteri ve hayvan kilitlidir; ödeme ilgili muayeneye bağlanır.
+                </p>
+            }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -78,16 +85,18 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                            <p-button
-                                type="button"
-                                label="Yeni müşteri"
-                                icon="pi pi-user-plus"
-                                [text]="true"
-                                styleClass="p-0"
-                                (onClick)="quickClientOpen.set(true)"
-                            />
-                        </div>
+                        @if (!contextFromExamination()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Yeni müşteri"
+                                    icon="pi pi-user-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickClientOpen.set(true)"
+                                />
+                            </div>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
@@ -107,17 +116,19 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         @if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
-                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                            <p-button
-                                type="button"
-                                label="Bu müşteri için yeni hayvan"
-                                icon="pi pi-plus"
-                                [text]="true"
-                                styleClass="p-0"
-                                [disabled]="petQuickAddDisabled()"
-                                (onClick)="quickPetOpen.set(true)"
-                            />
-                        </div>
+                        @if (!contextFromExamination()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Bu müşteri için yeni hayvan"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    [disabled]="petQuickAddDisabled()"
+                                    (onClick)="quickPetOpen.set(true)"
+                                />
+                            </div>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="amount" class="block text-sm font-medium text-muted-color mb-2">Tutar *</label>
@@ -184,7 +195,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext()"
                     />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -204,11 +215,17 @@ export class PaymentNewPageComponent implements OnInit {
 
     private readonly fb = inject(FormBuilder);
     private readonly paymentsService = inject(PaymentsService);
+    private readonly examinationsService = inject(ExaminationsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+
+    readonly contextFromExamination = signal(false);
+    readonly applyingRouteContext = signal(false);
+    readonly examinationRouteContextId = signal<string | null>(null);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -246,6 +263,9 @@ export class PaymentNewPageComponent implements OnInit {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
+            if (this.contextFromExamination()) {
+                return;
+            }
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
@@ -264,6 +284,9 @@ export class PaymentNewPageComponent implements OnInit {
     }
 
     petQuickAddDisabled(): boolean {
+        if (this.contextFromExamination()) {
+            return true;
+        }
         return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
     }
 
@@ -272,6 +295,9 @@ export class PaymentNewPageComponent implements OnInit {
     }
 
     onQuickClientCreated(clientId: string): void {
+        if (this.contextFromExamination()) {
+            return;
+        }
         const id = clientId.trim();
         if (!id) {
             return;
@@ -280,6 +306,9 @@ export class PaymentNewPageComponent implements OnInit {
     }
 
     onQuickPetCreated(petId: string): void {
+        if (this.contextFromExamination()) {
+            return;
+        }
         const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
         const pid = petId.trim();
         if (!cid || !pid) {
@@ -323,6 +352,7 @@ export class PaymentNewPageComponent implements OnInit {
             clinicId,
             clientId: v.clientId,
             petId: v.petId,
+            examinationId: this.examinationRouteContextId(),
             amount,
             currency: v.currency,
             method: v.method,
@@ -356,12 +386,62 @@ export class PaymentNewPageComponent implements OnInit {
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.loadingClients.set(false);
+                this.tryApplyExaminationRouteContext();
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
                 this.loadingClients.set(false);
             }
         });
+    }
+
+    private tryApplyExaminationRouteContext(): void {
+        const ctx = parseExaminationCreateRouteContext(this.route.snapshot.queryParamMap);
+        if (!ctx) {
+            return;
+        }
+        this.applyingRouteContext.set(true);
+        this.selectionError.set(null);
+        this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
+            next: (ex) => {
+                const cId = ex.clientId?.trim() ?? '';
+                const pId = ex.petId?.trim() ?? '';
+                if (cId !== ctx.clientId || pId !== ctx.petId) {
+                    this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
+                this.mergeClientOptionIfMissing(cId, (ex.clientName ?? '').trim() || '—');
+                this.mergePetOptionIfMissing(pId, (ex.petName ?? '').trim() || '—');
+                this.examinationRouteContextId.set(ctx.examinationId);
+                this.form.controls.petId.enable({ emitEvent: false });
+                this.form.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
+                this.form.controls.clientId.disable({ emitEvent: false });
+                this.form.controls.petId.disable({ emitEvent: false });
+                this.contextFromExamination.set(true);
+                this.applyingRouteContext.set(false);
+            },
+            error: () => {
+                this.selectionError.set('Muayene bağlamı yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private mergeClientOptionIfMissing(id: string, label: string): void {
+        const opts = this.clientOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.clientOptions.set([{ value: id, label }, ...opts]);
+    }
+
+    private mergePetOptionIfMissing(id: string, label: string): void {
+        const opts = this.petOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.petOptions.set([{ value: id, label }, ...opts]);
     }
 
     private reloadClientsAndSelectClient(clientId: string): void {

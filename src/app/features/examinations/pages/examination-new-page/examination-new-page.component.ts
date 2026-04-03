@@ -2,12 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { mapExaminationUpsertFormToCreateRequest } from '@/app/features/examinations/data/examination.mapper';
+import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import {
     type ExaminationUpsertFieldErrors,
@@ -28,6 +29,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
+import { parseAppointmentExaminationRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 
 @Component({
     selector: 'app-examination-new-page',
@@ -53,6 +55,11 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            @if (contextFromAppointment()) {
+                <p class="text-sm text-muted-color mt-0 mb-4">
+                    Bu randevu kaydından bağlam taşındı; müşteri ve hayvan kilitlidir; kayıt ilgili randevuya bağlanır.
+                </p>
+            }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -75,16 +82,18 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         } @else if (apiFieldErrors().clientId) {
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         }
-                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                            <p-button
-                                type="button"
-                                label="Yeni müşteri"
-                                icon="pi pi-user-plus"
-                                [text]="true"
-                                styleClass="p-0"
-                                (onClick)="quickClientOpen.set(true)"
-                            />
-                        </div>
+                        @if (!contextFromAppointment()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Yeni müşteri"
+                                    icon="pi pi-user-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickClientOpen.set(true)"
+                                />
+                            </div>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
@@ -106,17 +115,19 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         } @else if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
-                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                            <p-button
-                                type="button"
-                                label="Bu müşteri için yeni hayvan"
-                                icon="pi pi-plus"
-                                [text]="true"
-                                styleClass="p-0"
-                                [disabled]="petQuickAddDisabled()"
-                                (onClick)="quickPetOpen.set(true)"
-                            />
-                        </div>
+                        @if (!contextFromAppointment()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Bu müşteri için yeni hayvan"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    [disabled]="petQuickAddDisabled()"
+                                    (onClick)="quickPetOpen.set(true)"
+                                />
+                            </div>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="examinationDateLocal" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi / saati *</label>
@@ -176,7 +187,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext()"
                     />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -196,11 +207,18 @@ export class ExaminationNewPageComponent implements OnInit {
 
     private readonly fb = inject(FormBuilder);
     private readonly examinationsService = inject(ExaminationsService);
+    private readonly appointmentsService = inject(AppointmentsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+
+    readonly contextFromAppointment = signal(false);
+    readonly applyingRouteContext = signal(false);
+    /** Randevu bağlamından gelirse create body’de `appointmentId` olarak gider. */
+    readonly appointmentContextId = signal<string | null>(null);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -231,6 +249,9 @@ export class ExaminationNewPageComponent implements OnInit {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
+            if (this.contextFromAppointment()) {
+                return;
+            }
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
@@ -253,6 +274,9 @@ export class ExaminationNewPageComponent implements OnInit {
     }
 
     petQuickAddDisabled(): boolean {
+        if (this.contextFromAppointment()) {
+            return true;
+        }
         return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
     }
 
@@ -261,6 +285,9 @@ export class ExaminationNewPageComponent implements OnInit {
     }
 
     onQuickClientCreated(clientId: string): void {
+        if (this.contextFromAppointment()) {
+            return;
+        }
         const id = clientId.trim();
         if (!id) {
             return;
@@ -269,6 +296,9 @@ export class ExaminationNewPageComponent implements OnInit {
     }
 
     onQuickPetCreated(petId: string): void {
+        if (this.contextFromAppointment()) {
+            return;
+        }
         const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
         const pid = petId.trim();
         if (!cid || !pid) {
@@ -304,7 +334,8 @@ export class ExaminationNewPageComponent implements OnInit {
             visitReason: v.visitReason,
             findings: v.findings,
             assessment: v.assessment,
-            notes: v.notes
+            notes: v.notes,
+            appointmentId: this.appointmentContextId()
         });
 
         this.submitting.set(true);
@@ -333,6 +364,7 @@ export class ExaminationNewPageComponent implements OnInit {
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.loadingClients.set(false);
+                this.tryApplyAppointmentRouteContext();
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
@@ -390,5 +422,54 @@ export class ExaminationNewPageComponent implements OnInit {
             return parsed.summaryMessage ?? fallback;
         }
         return e instanceof Error ? e.message : fallback;
+    }
+
+    private tryApplyAppointmentRouteContext(): void {
+        const ctx = parseAppointmentExaminationRouteContext(this.route.snapshot.queryParamMap);
+        if (!ctx) {
+            return;
+        }
+        this.applyingRouteContext.set(true);
+        this.selectionError.set(null);
+        this.appointmentsService.getAppointmentById(ctx.appointmentId).subscribe({
+            next: (ap) => {
+                const cId = ap.clientId?.trim() ?? '';
+                const pId = ap.petId?.trim() ?? '';
+                if (cId !== ctx.clientId || pId !== ctx.petId) {
+                    this.selectionError.set('Randevu bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
+                this.mergeClientOptionIfMissing(cId, (ap.clientName ?? '').trim() || '—');
+                this.mergePetOptionIfMissing(pId, (ap.petName ?? '').trim() || '—');
+                this.appointmentContextId.set(ctx.appointmentId);
+                this.form.controls.petId.enable({ emitEvent: false });
+                this.form.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
+                this.form.controls.clientId.disable({ emitEvent: false });
+                this.form.controls.petId.disable({ emitEvent: false });
+                this.contextFromAppointment.set(true);
+                this.applyingRouteContext.set(false);
+            },
+            error: () => {
+                this.selectionError.set('Randevu bağlamı yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private mergeClientOptionIfMissing(id: string, label: string): void {
+        const opts = this.clientOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.clientOptions.set([{ value: id, label }, ...opts]);
+    }
+
+    private mergePetOptionIfMissing(id: string, label: string): void {
+        const opts = this.petOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.petOptions.set([{ value: id, label }, ...opts]);
     }
 }

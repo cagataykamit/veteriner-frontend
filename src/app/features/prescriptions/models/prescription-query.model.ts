@@ -8,6 +8,8 @@ export interface PrescriptionsListQuery {
     search?: string;
     /** Gönderilmezse `AuthService` klinik kimliği kullanılır. */
     clinicId?: string;
+    /** Hayvana göre daraltma (backend `PetId`). */
+    petId?: string;
     /** yyyy-MM-dd */
     fromDate?: string;
     /** yyyy-MM-dd */

@@ -44,6 +44,19 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
                     icon="pi pi-pencil"
                     class="p-button-secondary"
                 ></a>
+                @if (row()!.clientId?.trim() && row()!.petId?.trim()) {
+                    <div actions class="flex flex-wrap gap-2">
+                        <a
+                            [routerLink]="['/panel/prescriptions/new']"
+                            [queryParams]="prescriptionCreateQueryParams()"
+                            pButton
+                            type="button"
+                            label="Reçete Oluştur"
+                            icon="pi pi-file-edit"
+                            class="p-button-secondary"
+                        ></a>
+                    </div>
+                }
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -118,6 +131,24 @@ export class TreatmentDetailPageComponent implements OnInit {
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+
+    /** Reçete oluştur sayfasına taşınan tedavi bağlamı (treatmentId öncelikli parse). */
+    prescriptionCreateQueryParams(): Record<string, string> {
+        const r = this.row();
+        if (!r?.clientId?.trim() || !r?.petId?.trim()) {
+            return {};
+        }
+        const q: Record<string, string> = {
+            clientId: r.clientId.trim(),
+            petId: r.petId.trim(),
+            treatmentId: r.id
+        };
+        const ex = r.examinationId?.trim();
+        if (ex) {
+            q['examinationId'] = ex;
+        }
+        return q;
+    }
 
     private treatmentId = '';
 

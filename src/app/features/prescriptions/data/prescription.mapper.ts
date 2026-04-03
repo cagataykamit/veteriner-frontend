@@ -190,6 +190,9 @@ export function prescriptionsQueryToHttpParams(query: PrescriptionsListQuery): H
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+    if (query.petId?.trim()) {
+        p = p.set('PetId', query.petId.trim());
+    }
     if (query.fromDate?.trim()) {
         const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
         if (iso) {

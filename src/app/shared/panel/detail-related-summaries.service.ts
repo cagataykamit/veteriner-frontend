@@ -1,18 +1,24 @@
 import { inject, Injectable } from '@angular/core';
-import { map, type Observable, of } from 'rxjs';
+import { catchError, forkJoin, map, type Observable, of } from 'rxjs';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+import { PrescriptionsService } from '@/app/features/prescriptions/services/prescriptions.service';
+import type { PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 
 const DETAIL_FETCH_SIZE = 24;
 const DETAIL_LIMIT = 5;
+/** Müşteri kapsamı pet kimlik seti — randevu/muayene satırı doğrulaması için (ClientId ile paralel çekilir). */
+const CLIENT_DETAIL_SCOPE_PET_FETCH = 100;
 
 function sortIsoDesc<T>(items: T[], get: (x: T) => string | null): T[] {
     return [...items].sort((a, b) => {
@@ -31,6 +37,30 @@ function filterByClientId<T extends { clientId: string | null }>(items: T[], cli
 }
 
 /**
+ * Müşteri detay özeti: satır bu müşteriye ait sayılır iff liste VM `clientId` eşleşir
+ * veya (DTO’da müşteri boş gelebilir) `petId` bu müşterinin hayvan listesinde yer alır.
+ * Başka müşterinin açık `clientId`’si olan satır, pet hariç tutularak dışlanır.
+ */
+function filterRowsBelongingToClient<T extends { clientId: string | null; petId: string | null }>(
+    items: T[],
+    clientId: string,
+    petIdsOwnedByClient: ReadonlySet<string>
+): T[] {
+    const cid = clientId.trim();
+    return items.filter((row) => {
+        const rowCid = (row.clientId ?? '').trim();
+        if (rowCid === cid) {
+            return true;
+        }
+        if (rowCid !== '') {
+            return false;
+        }
+        const pid = (row.petId ?? '').trim();
+        return pid !== '' && petIdsOwnedByClient.has(pid);
+    });
+}
+
+/**
  * Detay sayfaları için ilişkili kısa listeler — mevcut liste endpoint’leri üzerinden.
  * Backend filtre parametrelerini yok sayarsa istemci tarafında daraltma yapılır.
  */
@@ -41,6 +71,8 @@ export class DetailRelatedSummariesService {
     private readonly appointments = inject(AppointmentsService);
     private readonly pets = inject(PetsService);
     private readonly payments = inject(PaymentsService);
+    private readonly treatments = inject(TreatmentsService);
+    private readonly prescriptions = inject(PrescriptionsService);
 
     /** Son aşılar (uygulama tarihine göre, en yeni önce). */
     loadRecentVaccinationsForPet(petId: string): Observable<VaccinationListItemVm[]> {
@@ -64,6 +96,19 @@ export class DetailRelatedSummariesService {
                     return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
                 })
             );
+    }
+
+    /**
+     * Bu randevu kaydına bağlı muayeneler — GET examinations `appointmentId` filtresi (backend AND birleşimi).
+     */
+    loadExaminationsLinkedToAppointment(appointmentId: string): Observable<ExaminationListItemVm[]> {
+        const aid = appointmentId.trim();
+        if (!aid) {
+            return of([]);
+        }
+        return this.examinations
+            .getExaminations({ page: 1, pageSize: DETAIL_FETCH_SIZE, appointmentId: aid })
+            .pipe(map((r) => sortIsoDesc(r.items, (x) => x.examinedAtUtc)));
     }
 
     /** Yaklaşan randevular (şimdiden sonraki, en yakın önce). */
@@ -98,16 +143,52 @@ export class DetailRelatedSummariesService {
         );
     }
 
-    /** Son randevular (planlanan zamana göre, en yeni önce). */
+    /**
+     * Son randevular — `ClientId` API filtresi + pet kimlik seti ile sahiplik doğrulaması (çapraz müşteri sızıntısına karşı).
+     */
     loadRecentAppointmentsForClient(clientId: string): Observable<AppointmentListItemVm[]> {
-        return this.appointments
-            .getAppointments({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId })
-            .pipe(
-                map((r) => {
-                    const rows = filterByClientId(r.items, clientId);
-                    return sortIsoDesc(rows, (x) => x.scheduledAtUtc).slice(0, DETAIL_LIMIT);
-                })
-            );
+        const cid = clientId.trim();
+        if (!cid) {
+            return of([]);
+        }
+        const pets$ = this.pets.getPets({ page: 1, pageSize: CLIENT_DETAIL_SCOPE_PET_FETCH, clientId: cid }).pipe(
+            catchError(() => of({ items: [] as PetListItemVm[], page: 1, pageSize: 0, totalItems: 0, totalPages: 0 }))
+        );
+        return forkJoin({
+            list: this.appointments.getAppointments({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId: cid }),
+            pets: pets$
+        }).pipe(
+            map(({ list, pets }) => {
+                const petRows = filterByClientId(pets.items, cid);
+                const petIds = new Set(petRows.map((p) => p.id.trim()).filter((id) => id !== ''));
+                const rows = filterRowsBelongingToClient(list.items, cid, petIds);
+                return sortIsoDesc(rows, (x) => x.scheduledAtUtc).slice(0, DETAIL_LIMIT);
+            })
+        );
+    }
+
+    /**
+     * Son muayeneler — aynı sahiplik kuralı (`ClientId` API + pet seti doğrulaması).
+     */
+    loadRecentExaminationsForClient(clientId: string): Observable<ExaminationListItemVm[]> {
+        const cid = clientId.trim();
+        if (!cid) {
+            return of([]);
+        }
+        const pets$ = this.pets.getPets({ page: 1, pageSize: CLIENT_DETAIL_SCOPE_PET_FETCH, clientId: cid }).pipe(
+            catchError(() => of({ items: [] as PetListItemVm[], page: 1, pageSize: 0, totalItems: 0, totalPages: 0 }))
+        );
+        return forkJoin({
+            list: this.examinations.getExaminations({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId: cid }),
+            pets: pets$
+        }).pipe(
+            map(({ list, pets }) => {
+                const petRows = filterByClientId(pets.items, cid);
+                const petIds = new Set(petRows.map((p) => p.id.trim()).filter((id) => id !== ''));
+                const rows = filterRowsBelongingToClient(list.items, cid, petIds);
+                return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
+            })
+        );
     }
 
     /** Son ödemeler (ödeme / oluşturma zamanına göre, en yeni önce). */
@@ -121,6 +202,34 @@ export class DetailRelatedSummariesService {
                     return tb - ta;
                 });
                 return sorted.slice(0, DETAIL_LIMIT);
+            })
+        );
+    }
+
+    /**
+     * Bu muayene kaydına `examinationId` ile bağlı tedaviler (hayvan listesi + istemci tarafı filtre).
+     */
+    loadTreatmentsLinkedToExamination(petId: string, examinationId: string): Observable<TreatmentListItemVm[]> {
+        const pid = petId.trim();
+        const eid = examinationId.trim();
+        return this.treatments.getTreatments({ page: 1, pageSize: DETAIL_FETCH_SIZE, petId: pid }).pipe(
+            map((r) => {
+                const rows = filterByPetId(r.items, pid).filter((t) => (t.examinationId ?? '').trim() === eid);
+                return sortIsoDesc(rows, (x) => x.treatmentDateUtc).slice(0, DETAIL_LIMIT);
+            })
+        );
+    }
+
+    /**
+     * Bu muayene kaydına `examinationId` ile bağlı reçeteler (hayvan listesi + istemci tarafı filtre).
+     */
+    loadPrescriptionsLinkedToExamination(petId: string, examinationId: string): Observable<PrescriptionListItemVm[]> {
+        const pid = petId.trim();
+        const eid = examinationId.trim();
+        return this.prescriptions.getPrescriptions({ page: 1, pageSize: DETAIL_FETCH_SIZE, petId: pid }).pipe(
+            map((r) => {
+                const rows = filterByPetId(r.items, pid).filter((x) => (x.examinationId ?? '').trim() === eid);
+                return sortIsoDesc(rows, (x) => x.prescribedAtUtc).slice(0, DETAIL_LIMIT);
             })
         );
     }
@@ -185,12 +294,7 @@ export class DetailRelatedSummariesService {
             return this.loadRecentExaminationsForPet(pid);
         }
         if (cid) {
-            return this.examinations.getExaminations({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId: cid }).pipe(
-                map((r) => {
-                    const rows = filterByClientId(r.items, cid);
-                    return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
-                })
-            );
+            return this.loadRecentExaminationsForClient(cid);
         }
         return of([]);
     }

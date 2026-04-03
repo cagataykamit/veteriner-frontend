@@ -20,15 +20,16 @@ import {
     type PrescriptionUpsertFieldErrors,
     parsePrescriptionUpsertHttpError
 } from '@/app/features/prescriptions/utils/prescription-upsert-validation-parse.utils';
-import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import {
     examinationListItemFromDetail,
     filterTreatmentsByExamination,
     prescriptionExaminationSelectOption,
-    prescriptionTreatmentSelectOption
+    prescriptionTreatmentSelectOption,
+    treatmentListItemFromDetail
 } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
+import type { TreatmentDetailVm, TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import {
     clientOptionsFromList,
@@ -39,7 +40,11 @@ import {
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
-import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
+import {
+    parseExaminationCreateRouteContext,
+    parseTreatmentPrescriptionRouteContext,
+    type TreatmentPrescriptionRouteContext
+} from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
@@ -68,7 +73,11 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
-            @if (contextFromExamination()) {
+            @if (contextFromTreatment()) {
+                <p class="text-sm text-muted-color mt-0 mb-4">
+                    Bu tedavi kaydından bağlam taşındı; müşteri, hayvan, bağlı muayene ve bağlı tedavi alanları kilitlidir.
+                </p>
+            } @else if (contextFromExamination()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">
                     Bu muayene kaydından bağlam taşındı; müşteri, hayvan ve bağlı muayene alanları kilitlidir.
                 </p>
@@ -95,7 +104,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                         } @else if (apiFieldErrors().clientId) {
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         }
-                        @if (!contextFromExamination()) {
+                        @if (!prescriptionContextLocked()) {
                             <div class="flex flex-wrap gap-2 align-items-center mt-2">
                                 <p-button
                                     type="button"
@@ -128,7 +137,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                         } @else if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
-                        @if (!contextFromExamination()) {
+                        @if (!prescriptionContextLocked()) {
                             <div class="flex flex-wrap gap-2 align-items-center mt-2">
                                 <p-button
                                     type="button"
@@ -268,6 +277,7 @@ export class PrescriptionNewPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     readonly contextFromExamination = signal(false);
+    readonly contextFromTreatment = signal(false);
     readonly applyingRouteContext = signal(false);
 
     readonly submitting = signal(false);
@@ -311,7 +321,7 @@ export class PrescriptionNewPageComponent implements OnInit {
         this.loadClients();
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
-            if (this.contextFromExamination()) {
+            if (this.prescriptionContextLocked()) {
                 return;
             }
             this.form.controls.petId.setValue('');
@@ -332,7 +342,7 @@ export class PrescriptionNewPageComponent implements OnInit {
         });
 
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-            if (this.contextFromExamination()) {
+            if (this.prescriptionContextLocked()) {
                 return;
             }
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
@@ -355,7 +365,7 @@ export class PrescriptionNewPageComponent implements OnInit {
         });
 
         this.form.controls.treatmentId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((tid) => {
-            if (this.contextFromExamination()) {
+            if (this.prescriptionContextLocked()) {
                 return;
             }
             const id = String(tid ?? '').trim();
@@ -371,6 +381,11 @@ export class PrescriptionNewPageComponent implements OnInit {
     }
 
     private syncPrescriptionRelationSelects(): void {
+        if (this.contextFromTreatment()) {
+            this.form.controls.examinationId.disable({ emitEvent: false });
+            this.form.controls.treatmentId.disable({ emitEvent: false });
+            return;
+        }
         if (this.contextFromExamination()) {
             this.form.controls.examinationId.disable({ emitEvent: false });
             this.form.controls.treatmentId.enable({ emitEvent: false });
@@ -391,8 +406,13 @@ export class PrescriptionNewPageComponent implements OnInit {
         void this.router.navigate(['/panel/prescriptions']);
     }
 
+    /** Muayene veya tedavi detayından gelen kilitli bağlam. */
+    prescriptionContextLocked(): boolean {
+        return this.contextFromExamination() || this.contextFromTreatment();
+    }
+
     petQuickAddDisabled(): boolean {
-        if (this.contextFromExamination()) {
+        if (this.prescriptionContextLocked()) {
             return true;
         }
         return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
@@ -403,7 +423,7 @@ export class PrescriptionNewPageComponent implements OnInit {
     }
 
     onQuickClientCreated(clientId: string): void {
-        if (this.contextFromExamination()) {
+        if (this.prescriptionContextLocked()) {
             return;
         }
         const id = clientId.trim();
@@ -414,7 +434,7 @@ export class PrescriptionNewPageComponent implements OnInit {
     }
 
     onQuickPetCreated(petId: string): void {
-        if (this.contextFromExamination()) {
+        if (this.prescriptionContextLocked()) {
             return;
         }
         const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
@@ -550,6 +570,150 @@ export class PrescriptionNewPageComponent implements OnInit {
         });
     }
 
+    private tryApplyRouteContexts(): void {
+        const tCtx = parseTreatmentPrescriptionRouteContext(this.route.snapshot.queryParamMap);
+        if (tCtx) {
+            this.tryApplyTreatmentRouteContext(tCtx);
+            return;
+        }
+        this.tryApplyExaminationRouteContext();
+    }
+
+    private tryApplyTreatmentRouteContext(ctx: TreatmentPrescriptionRouteContext): void {
+        this.applyingRouteContext.set(true);
+        this.selectionError.set(null);
+        this.treatmentsService.getTreatmentById(ctx.treatmentId).subscribe({
+            next: (t) => {
+                const cId = t.clientId?.trim() ?? '';
+                const pId = t.petId?.trim() ?? '';
+                if (cId !== ctx.clientId || pId !== ctx.petId) {
+                    this.selectionError.set('Tedavi bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
+                const tEx = t.examinationId?.trim() ?? '';
+                const qEx = ctx.examinationId?.trim() ?? '';
+                if (qEx && tEx && qEx !== tEx) {
+                    this.selectionError.set('Muayene bilgisi tedavi kaydı ile uyuşmuyor.');
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
+                this.mergeClientOptionIfMissing(cId, (t.clientName ?? '').trim() || '—');
+                this.mergePetOptionIfMissing(pId, (t.petName ?? '').trim() || '—');
+                this.form.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
+                this.form.controls.clientId.disable({ emitEvent: false });
+                this.form.controls.petId.disable({ emitEvent: false });
+                this.contextFromTreatment.set(true);
+                this.loadRelationsForPetForTreatmentContext(t);
+            },
+            error: () => {
+                this.selectionError.set('Tedavi bağlamı yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private loadRelationsForPetForTreatmentContext(t: TreatmentDetailVm): void {
+        const seq = ++this.relationLoadSeq;
+        const pid = (t.petId ?? '').trim();
+        if (!pid) {
+            this.selectionError.set('Tedavi kaydında hayvan bilgisi yok.');
+            this.applyingRouteContext.set(false);
+            return;
+        }
+        this.loadingExaminations.set(true);
+        this.loadingTreatments.set(true);
+        this.selectionError.set(null);
+        forkJoin({
+            ex: this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }),
+            tr: this.treatmentsService.getTreatments({ page: 1, pageSize: 200, petId: pid })
+        }).subscribe({
+            next: ({ ex, tr }) => {
+                if (seq !== this.relationLoadSeq) {
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
+                if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
+                let examItems: ExaminationListItemVm[] = [...ex.items];
+                let trItems: TreatmentListItemVm[] = [...tr.items];
+                if (!trItems.some((x) => x.id === t.id)) {
+                    trItems = [treatmentListItemFromDetail(t), ...trItems];
+                }
+                const exId = t.examinationId?.trim() ?? '';
+                if (exId && !examItems.some((e) => e.id === exId)) {
+                    this.examinationsService.getExaminationById(exId).subscribe({
+                        next: (exD) => {
+                            if (seq !== this.relationLoadSeq) {
+                                this.applyingRouteContext.set(false);
+                                return;
+                            }
+                            examItems = [examinationListItemFromDetail(exD), ...examItems];
+                            this.finalizeTreatmentContextPrescription(seq, examItems, trItems, t, exId);
+                        },
+                        error: () => {
+                            this.selectionError.set('Bağlı muayene yüklenemedi.');
+                            this.examinationOptions.set([]);
+                            this.treatmentOptions.set([]);
+                            this.allTreatmentsForPet = [];
+                            this.loadingExaminations.set(false);
+                            this.loadingTreatments.set(false);
+                            this.syncPrescriptionRelationSelects();
+                            this.applyingRouteContext.set(false);
+                        }
+                    });
+                    return;
+                }
+                this.finalizeTreatmentContextPrescription(seq, examItems, trItems, t, exId);
+            },
+            error: (e: unknown) => {
+                if (seq !== this.relationLoadSeq) {
+                    return;
+                }
+                this.selectionError.set(this.mapLoadError(e, 'Muayene veya tedavi listesi yüklenemedi.'));
+                this.examinationOptions.set([]);
+                this.treatmentOptions.set([]);
+                this.allTreatmentsForPet = [];
+                this.loadingExaminations.set(false);
+                this.loadingTreatments.set(false);
+                this.syncPrescriptionRelationSelects();
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private finalizeTreatmentContextPrescription(
+        seq: number,
+        examItems: ExaminationListItemVm[],
+        trItems: TreatmentListItemVm[],
+        t: TreatmentDetailVm,
+        examinationIdValue: string
+    ): void {
+        const pid = (t.petId ?? '').trim();
+        if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
+            this.applyingRouteContext.set(false);
+            return;
+        }
+        this.examinationOptions.set(examItems.map(prescriptionExaminationSelectOption));
+        this.allTreatmentsForPet = trItems;
+        this.form.patchValue(
+            {
+                examinationId: examinationIdValue,
+                treatmentId: t.id
+            },
+            { emitEvent: false }
+        );
+        this.applyTreatmentFilter();
+        this.form.controls.examinationId.disable({ emitEvent: false });
+        this.form.controls.treatmentId.disable({ emitEvent: false });
+        this.syncPrescriptionRelationSelects();
+        this.loadingExaminations.set(false);
+        this.loadingTreatments.set(false);
+        this.applyingRouteContext.set(false);
+    }
+
     private tryApplyExaminationRouteContext(): void {
         const ctx = parseExaminationCreateRouteContext(this.route.snapshot.queryParamMap);
         if (!ctx) {
@@ -614,7 +778,7 @@ export class PrescriptionNewPageComponent implements OnInit {
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.loadingClients.set(false);
-                this.tryApplyExaminationRouteContext();
+                this.tryApplyRouteContexts();
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
