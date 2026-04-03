@@ -6,14 +6,15 @@ import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     extractCreatedClientIdFromPostResponse,
     mapClientDetailDtoToVm,
+    mapClientRecentSummaryDtoToVm,
     mapCreateClientToApiBody,
     mapPagedClientsToVm,
     clientsQueryToHttpParams
 } from '@/app/features/clients/data/client.mapper';
-import type { ClientDetailDto, ClientListItemDtoPagedResult } from '@/app/features/clients/models/client-api.model';
+import type { ClientDetailDto, ClientListItemDtoPagedResult, ClientRecentSummaryDto } from '@/app/features/clients/models/client-api.model';
 import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
-import type { ClientDetailVm, ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
+import type { ClientDetailVm, ClientListItemVm, ClientRecentSummaryVm } from '@/app/features/clients/models/client-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface ClientsPagedVm {
@@ -43,6 +44,16 @@ export class ClientsService {
             map((dto) => mapClientDetailDtoToVm(dto)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Müşteri bulunamadı veya yüklenemedi.')))
+            )
+        );
+    }
+
+    /** Panel müşteri detay — son randevular + son muayeneler (tek istek). */
+    getClientRecentSummary(clientId: string): Observable<ClientRecentSummaryVm> {
+        return this.api.get<ClientRecentSummaryDto>(ApiEndpoints.clients.recentSummary(clientId)).pipe(
+            map((dto) => mapClientRecentSummaryDtoToVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Müşteri özeti yüklenemedi.')))
             )
         );
     }

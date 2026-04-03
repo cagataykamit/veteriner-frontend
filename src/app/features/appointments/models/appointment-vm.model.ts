@@ -18,6 +18,8 @@ export interface AppointmentListItemVm {
     /** Backend `AppointmentStatus` 0/1/2; bilinmeyen API değeri `null`. */
     status: number | null;
     lifecycleStatus: number | null;
+    /** `recent-summary` gibi kısa listelerde; aksi halde yok. */
+    notes?: string | null;
 }
 
 /** Randevu detay — liste VM’sinden ayrı; ek alanlar (notes, updatedAtUtc). */

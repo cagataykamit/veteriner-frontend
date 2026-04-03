@@ -19,7 +19,8 @@ export const ApiEndpoints = {
     },
     clients: {
         list: () => `/api/v1/clients`,
-        byId: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}`,
+        recentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/recent-summary`
     },
     pets: {
         list: () => `/api/v1/pets`,

@@ -1,12 +1,18 @@
 import { HttpParams } from '@angular/common/http';
+import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
+import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type {
     ClientUpsertRequestDto,
     ClientDetailDto,
     ClientListItemDto,
-    ClientListItemDtoPagedResult
+    ClientListItemDtoPagedResult,
+    ClientRecentAppointmentSummaryItemDto,
+    ClientRecentExaminationSummaryItemDto,
+    ClientRecentSummaryDto
 } from '@/app/features/clients/models/client-api.model';
 import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
-import type { ClientDetailVm, ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
+import type { ClientDetailVm, ClientListItemVm, ClientRecentSummaryVm } from '@/app/features/clients/models/client-vm.model';
+import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 
 const EM = '—';
@@ -87,6 +93,48 @@ export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsert
         phone,
         email,
         address
+    };
+}
+
+function mapClientRecentAppointmentItemToVm(dto: ClientRecentAppointmentSummaryItemDto): AppointmentListItemVm {
+    const notesRaw = dto.notes?.trim() ? dto.notes.trim() : null;
+    const status = parseAppointmentStatusRawToEnum(dto.status);
+    return {
+        id: dto.id,
+        scheduledAtUtc: dto.scheduledAtUtc ?? null,
+        clientId: null,
+        clientName: EM,
+        petId: dto.petId?.trim() ? dto.petId.trim() : null,
+        petName: str(dto.petName),
+        speciesName: null,
+        appointmentType: null,
+        appointmentTypeName: null,
+        status,
+        lifecycleStatus: null,
+        notes: notesRaw
+    };
+}
+
+function mapClientRecentExaminationItemToVm(dto: ClientRecentExaminationSummaryItemDto): ExaminationListItemVm {
+    return {
+        id: dto.id,
+        clinicId: null,
+        clinicName: EM,
+        examinedAtUtc: dto.examinedAtUtc ?? null,
+        clientId: null,
+        clientName: EM,
+        petId: dto.petId?.trim() ? dto.petId.trim() : null,
+        petName: str(dto.petName),
+        appointmentId: null,
+        visitReason: str(dto.visitReason)
+    };
+}
+
+export function mapClientRecentSummaryDtoToVm(dto: ClientRecentSummaryDto): ClientRecentSummaryVm {
+    return {
+        clientId: dto.clientId?.trim() ?? '',
+        appointments: (dto.recentAppointments ?? []).map(mapClientRecentAppointmentItemToVm),
+        examinations: (dto.recentExaminations ?? []).map(mapClientRecentExaminationItemToVm)
     };
 }
 

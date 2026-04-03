@@ -1,3 +1,6 @@
+import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+
 export interface ClientListItemVm {
     id: string;
     fullName: string;
@@ -24,4 +27,12 @@ export interface ClientDetailVm {
     address: string;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
+}
+
+/** `GET .../clients/{id}/recent-summary` eşlemesi. */
+export interface ClientRecentSummaryVm {
+    clientId: string;
+    /** Sıra backend’de (tarih desc, id desc). */
+    appointments: AppointmentListItemVm[];
+    examinations: ExaminationListItemVm[];
 }

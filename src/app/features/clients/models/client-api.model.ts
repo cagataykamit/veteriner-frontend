@@ -42,3 +42,27 @@ export interface ClientUpsertRequestDto {
     email?: string | null;
     address?: string | null;
 }
+
+/** GET /clients/{id}/recent-summary — panel müşteri detay özeti. */
+export interface ClientRecentAppointmentSummaryItemDto {
+    id: string;
+    scheduledAtUtc?: string | null;
+    petId?: string | null;
+    petName?: string | null;
+    status?: string | number | null;
+    notes?: string | null;
+}
+
+export interface ClientRecentExaminationSummaryItemDto {
+    id: string;
+    examinedAtUtc?: string | null;
+    petId?: string | null;
+    petName?: string | null;
+    visitReason?: string | null;
+}
+
+export interface ClientRecentSummaryDto {
+    clientId: string;
+    recentAppointments?: ClientRecentAppointmentSummaryItemDto[] | null;
+    recentExaminations?: ClientRecentExaminationSummaryItemDto[] | null;
+}

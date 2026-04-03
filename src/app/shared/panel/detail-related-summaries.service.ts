@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import { catchError, forkJoin, map, type Observable, of } from 'rxjs';
+import { map, type Observable, of } from 'rxjs';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -17,8 +18,6 @@ import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/v
 
 const DETAIL_FETCH_SIZE = 24;
 const DETAIL_LIMIT = 5;
-/** Müşteri kapsamı pet kimlik seti — randevu/muayene satırı doğrulaması için (ClientId ile paralel çekilir). */
-const CLIENT_DETAIL_SCOPE_PET_FETCH = 100;
 
 function sortIsoDesc<T>(items: T[], get: (x: T) => string | null): T[] {
     return [...items].sort((a, b) => {
@@ -37,30 +36,6 @@ function filterByClientId<T extends { clientId: string | null }>(items: T[], cli
 }
 
 /**
- * Müşteri detay özeti: satır bu müşteriye ait sayılır iff liste VM `clientId` eşleşir
- * veya (DTO’da müşteri boş gelebilir) `petId` bu müşterinin hayvan listesinde yer alır.
- * Başka müşterinin açık `clientId`’si olan satır, pet hariç tutularak dışlanır.
- */
-function filterRowsBelongingToClient<T extends { clientId: string | null; petId: string | null }>(
-    items: T[],
-    clientId: string,
-    petIdsOwnedByClient: ReadonlySet<string>
-): T[] {
-    const cid = clientId.trim();
-    return items.filter((row) => {
-        const rowCid = (row.clientId ?? '').trim();
-        if (rowCid === cid) {
-            return true;
-        }
-        if (rowCid !== '') {
-            return false;
-        }
-        const pid = (row.petId ?? '').trim();
-        return pid !== '' && petIdsOwnedByClient.has(pid);
-    });
-}
-
-/**
  * Detay sayfaları için ilişkili kısa listeler — mevcut liste endpoint’leri üzerinden.
  * Backend filtre parametrelerini yok sayarsa istemci tarafında daraltma yapılır.
  */
@@ -69,6 +44,7 @@ export class DetailRelatedSummariesService {
     private readonly vaccinations = inject(VaccinationsService);
     private readonly examinations = inject(ExaminationsService);
     private readonly appointments = inject(AppointmentsService);
+    private readonly clients = inject(ClientsService);
     private readonly pets = inject(PetsService);
     private readonly payments = inject(PaymentsService);
     private readonly treatments = inject(TreatmentsService);
@@ -139,54 +115,6 @@ export class DetailRelatedSummariesService {
             map((r) => {
                 const rows = filterByClientId(r.items, clientId);
                 return rows.slice(0, DETAIL_LIMIT);
-            })
-        );
-    }
-
-    /**
-     * Son randevular — `ClientId` API filtresi + pet kimlik seti ile sahiplik doğrulaması (çapraz müşteri sızıntısına karşı).
-     */
-    loadRecentAppointmentsForClient(clientId: string): Observable<AppointmentListItemVm[]> {
-        const cid = clientId.trim();
-        if (!cid) {
-            return of([]);
-        }
-        const pets$ = this.pets.getPets({ page: 1, pageSize: CLIENT_DETAIL_SCOPE_PET_FETCH, clientId: cid }).pipe(
-            catchError(() => of({ items: [] as PetListItemVm[], page: 1, pageSize: 0, totalItems: 0, totalPages: 0 }))
-        );
-        return forkJoin({
-            list: this.appointments.getAppointments({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId: cid }),
-            pets: pets$
-        }).pipe(
-            map(({ list, pets }) => {
-                const petRows = filterByClientId(pets.items, cid);
-                const petIds = new Set(petRows.map((p) => p.id.trim()).filter((id) => id !== ''));
-                const rows = filterRowsBelongingToClient(list.items, cid, petIds);
-                return sortIsoDesc(rows, (x) => x.scheduledAtUtc).slice(0, DETAIL_LIMIT);
-            })
-        );
-    }
-
-    /**
-     * Son muayeneler — aynı sahiplik kuralı (`ClientId` API + pet seti doğrulaması).
-     */
-    loadRecentExaminationsForClient(clientId: string): Observable<ExaminationListItemVm[]> {
-        const cid = clientId.trim();
-        if (!cid) {
-            return of([]);
-        }
-        const pets$ = this.pets.getPets({ page: 1, pageSize: CLIENT_DETAIL_SCOPE_PET_FETCH, clientId: cid }).pipe(
-            catchError(() => of({ items: [] as PetListItemVm[], page: 1, pageSize: 0, totalItems: 0, totalPages: 0 }))
-        );
-        return forkJoin({
-            list: this.examinations.getExaminations({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId: cid }),
-            pets: pets$
-        }).pipe(
-            map(({ list, pets }) => {
-                const petRows = filterByClientId(pets.items, cid);
-                const petIds = new Set(petRows.map((p) => p.id.trim()).filter((id) => id !== ''));
-                const rows = filterRowsBelongingToClient(list.items, cid, petIds);
-                return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
             })
         );
     }
@@ -294,7 +222,7 @@ export class DetailRelatedSummariesService {
             return this.loadRecentExaminationsForPet(pid);
         }
         if (cid) {
-            return this.loadRecentExaminationsForClient(cid);
+            return this.clients.getClientRecentSummary(cid).pipe(map((s) => s.examinations));
         }
         return of([]);
     }

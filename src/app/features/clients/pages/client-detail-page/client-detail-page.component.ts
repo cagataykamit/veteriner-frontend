@@ -4,7 +4,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentStatusLabel } from '@/app/features/appointments/utils/appointment-status.utils';
-import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
@@ -114,10 +113,10 @@ import { EMPTY, switchMap } from 'rxjs';
                             <h5 class="mt-0 mb-0">Son randevular</h5>
                             <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
-                        @if (apptLoading()) {
+                        @if (recentSummaryLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (apptError()) {
-                            <p class="text-muted-color m-0">{{ apptError() }}</p>
+                        } @else if (recentSummaryError()) {
+                            <p class="text-muted-color m-0">{{ recentSummaryError() }}</p>
                         } @else if (apptItems().length === 0) {
                             <app-empty-state message="Bu müşteriye ait randevu kaydı yok." />
                         } @else {
@@ -132,7 +131,10 @@ import { EMPTY, switchMap } from 'rxjs';
                                         </div>
                                         <div class="font-medium">{{ row.petName }}</div>
                                         <div class="text-sm text-muted-color">
-                                            {{ statusLabel(row.status) }} · {{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}
+                                            {{ statusLabel(row.status) }}
+                                            @if (row.notes?.trim()) {
+                                                <span> · {{ row.notes }}</span>
+                                            }
                                         </div>
                                     </li>
                                 }
@@ -146,10 +148,10 @@ import { EMPTY, switchMap } from 'rxjs';
                             <h5 class="mt-0 mb-0">Son muayeneler</h5>
                             <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
-                        @if (examLoading()) {
+                        @if (recentSummaryLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (examError()) {
-                            <p class="text-muted-color m-0">{{ examError() }}</p>
+                        } @else if (recentSummaryError()) {
+                            <p class="text-muted-color m-0">{{ recentSummaryError() }}</p>
                         } @else if (examItems().length === 0) {
                             <app-empty-state message="Bu müşteriye ait muayene kaydı yok." />
                         } @else {
@@ -224,12 +226,9 @@ export class ClientDetailPageComponent implements OnInit {
     readonly petsError = signal<string | null>(null);
     readonly petsItems = signal<PetListItemVm[]>([]);
 
-    readonly apptLoading = signal(false);
-    readonly apptError = signal<string | null>(null);
+    readonly recentSummaryLoading = signal(false);
+    readonly recentSummaryError = signal<string | null>(null);
     readonly apptItems = signal<AppointmentListItemVm[]>([]);
-
-    readonly examLoading = signal(false);
-    readonly examError = signal<string | null>(null);
     readonly examItems = signal<ExaminationListItemVm[]>([]);
 
     readonly payLoading = signal(false);
@@ -241,7 +240,6 @@ export class ClientDetailPageComponent implements OnInit {
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
-    readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly statusLabel = appointmentStatusLabel;
 
     ngOnInit(): void {
@@ -316,29 +314,19 @@ export class ClientDetailPageComponent implements OnInit {
             }
         });
 
-        this.apptLoading.set(true);
-        this.apptError.set(null);
-        this.related.loadRecentAppointmentsForClient(clientId).subscribe({
-            next: (items) => {
-                this.apptItems.set(items);
-                this.apptLoading.set(false);
+        this.recentSummaryLoading.set(true);
+        this.recentSummaryError.set(null);
+        this.clientsService.getClientRecentSummary(clientId).subscribe({
+            next: (s) => {
+                this.apptItems.set(s.appointments);
+                this.examItems.set(s.examinations);
+                this.recentSummaryLoading.set(false);
             },
             error: (e: Error) => {
-                this.apptError.set(e.message ?? 'Randevu listesi yüklenemedi.');
-                this.apptLoading.set(false);
-            }
-        });
-
-        this.examLoading.set(true);
-        this.examError.set(null);
-        this.related.loadRecentExaminationsForClient(clientId).subscribe({
-            next: (items) => {
-                this.examItems.set(items);
-                this.examLoading.set(false);
-            },
-            error: (e: Error) => {
-                this.examError.set(e.message ?? 'Muayene listesi yüklenemedi.');
-                this.examLoading.set(false);
+                this.apptItems.set([]);
+                this.examItems.set([]);
+                this.recentSummaryError.set(e.message ?? 'Müşteri özeti yüklenemedi.');
+                this.recentSummaryLoading.set(false);
             }
         });
 
