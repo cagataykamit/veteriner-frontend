@@ -1,7 +1,11 @@
 import { HttpParams } from '@angular/common/http';
+import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
+import { parseAppointmentTypeEnumValue } from '@/app/features/appointments/utils/appointment-type.utils';
 import type {
     PetCreateRequestDto,
     PetDetailDto,
+    PetHistoryHospitalizationItemDto,
+    PetHistorySummaryDto,
     PetListItemDto,
     PetListItemDtoPagedResult
 } from '@/app/features/pets/models/pet-api.model';
@@ -9,7 +13,12 @@ import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-fo
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
-import type { PetDetailVm, PetEditVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type {
+    PetDetailVm,
+    PetEditVm,
+    PetHistorySummaryVm,
+    PetListItemVm
+} from '@/app/features/pets/models/pet-vm.model';
 import { normalizePetGender, resolvePetGenderFormValue } from '@/app/features/pets/utils/pet-status.utils';
 
 const EM = '—';
@@ -400,6 +409,144 @@ export function mapPagedPetsToVm(result: PetListItemDtoPagedResult): {
         totalItems: result.totalItems,
         totalPages: result.totalPages
     };
+}
+
+function historyHospitalizationIsActive(dto: PetHistoryHospitalizationItemDto, discharged: string | null): boolean {
+    if (dto.isActive === true) {
+        return true;
+    }
+    if (dto.isActive === false) {
+        return false;
+    }
+    return discharged == null;
+}
+
+/** GET /pets/{id}/history-summary → VM (bloklar backend’de sıralı; boş dizi güvenli). */
+export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHistorySummaryVm {
+    const petId = dto.petId?.trim() ?? '';
+    return {
+        petId,
+        petName: str(dto.petName),
+        clientId: dto.clientId?.trim() ? dto.clientId.trim() : null,
+        clientName: str(dto.clientName),
+        recentAppointments: (dto.recentAppointments ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                const status = parseAppointmentStatusRawToEnum(x.status);
+                const appointmentType = parseAppointmentTypeEnumValue(x.appointmentType);
+                return {
+                    id,
+                    scheduledAtUtc: safeTrim(x.scheduledAtUtc),
+                    status,
+                    appointmentType,
+                    appointmentTypeName: x.appointmentTypeName?.trim() ? x.appointmentTypeName.trim() : null,
+                    notes: x.notes?.trim() ? x.notes.trim() : null,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        recentExaminations: (dto.recentExaminations ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                return {
+                    id,
+                    examinedAtUtc: safeTrim(x.examinedAtUtc),
+                    visitReason: str(x.visitReason),
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        recentTreatments: (dto.recentTreatments ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                return {
+                    id,
+                    treatmentDateUtc: safeTrim(x.treatmentDateUtc),
+                    title: str(x.title),
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        recentPrescriptions: (dto.recentPrescriptions ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                return {
+                    id,
+                    prescribedAtUtc: safeTrim(x.prescribedAtUtc),
+                    title: str(x.title),
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        recentLabResults: (dto.recentLabResults ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                return {
+                    id,
+                    resultDateUtc: safeTrim(x.resultDateUtc),
+                    testName: str(x.testName),
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        recentHospitalizations: (dto.recentHospitalizations ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                const dischargedAtUtc = safeTrim(x.dischargedAtUtc);
+                const isActive = historyHospitalizationIsActive(x, dischargedAtUtc);
+                return {
+                    id,
+                    admittedAtUtc: safeTrim(x.admittedAtUtc),
+                    reason: str(x.reason),
+                    dischargedAtUtc,
+                    isActive,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        recentPayments: (dto.recentPayments ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                const amount = x.amount;
+                const num =
+                    amount != null && typeof amount === 'number' && !Number.isNaN(amount) ? amount : null;
+                return {
+                    id,
+                    paidAtUtc: safeTrim(x.paidAtUtc),
+                    amount: num,
+                    currency: x.currency?.trim() ? x.currency.trim() : null,
+                    method: x.method,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null)
+    };
+}
+
+function safeTrim(v: string | null | undefined): string | null {
+    const t = v?.trim();
+    return t ? t : null;
 }
 
 export function petsQueryToHttpParams(query: PetsListQuery): HttpParams {

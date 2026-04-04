@@ -39,6 +39,77 @@ export interface PetDetailVm {
     };
 }
 
+/** GET /pets/{id}/history-summary — pet detay hasta geçmişi. */
+export interface PetHistoryAppointmentItemVm {
+    id: string;
+    scheduledAtUtc: string | null;
+    status: number | null;
+    appointmentType: number | null;
+    appointmentTypeName: string | null;
+    notes: string | null;
+    clinicName: string | null;
+}
+
+export interface PetHistoryExaminationItemVm {
+    id: string;
+    examinedAtUtc: string | null;
+    visitReason: string;
+    clinicName: string | null;
+}
+
+export interface PetHistoryTreatmentItemVm {
+    id: string;
+    treatmentDateUtc: string | null;
+    title: string;
+    clinicName: string | null;
+}
+
+export interface PetHistoryPrescriptionItemVm {
+    id: string;
+    prescribedAtUtc: string | null;
+    title: string;
+    clinicName: string | null;
+}
+
+export interface PetHistoryLabResultItemVm {
+    id: string;
+    resultDateUtc: string | null;
+    testName: string;
+    clinicName: string | null;
+}
+
+export interface PetHistoryHospitalizationItemVm {
+    id: string;
+    admittedAtUtc: string | null;
+    reason: string;
+    dischargedAtUtc: string | null;
+    isActive: boolean;
+    clinicName: string | null;
+}
+
+export interface PetHistoryPaymentItemVm {
+    id: string;
+    paidAtUtc: string | null;
+    amount: number | null;
+    currency: string | null;
+    method: unknown;
+    clinicName: string | null;
+}
+
+export interface PetHistorySummaryVm {
+    petId: string;
+    petName: string;
+    clientId: string | null;
+    clientName: string;
+    recentAppointments: PetHistoryAppointmentItemVm[];
+    recentExaminations: PetHistoryExaminationItemVm[];
+    recentTreatments: PetHistoryTreatmentItemVm[];
+    recentPrescriptions: PetHistoryPrescriptionItemVm[];
+    recentLabResults: PetHistoryLabResultItemVm[];
+    recentHospitalizations: PetHistoryHospitalizationItemVm[];
+    recentPayments: PetHistoryPaymentItemVm[];
+}
+
 /** Edit form için ham değerlere yakın, canonical alanlar. */
 export interface PetEditVm {
     id: string;

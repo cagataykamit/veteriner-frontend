@@ -75,6 +75,77 @@ export interface PetAppointmentsSummaryDto {
     upcomingCount?: number | null;
 }
 
+/** GET /pets/{id}/history-summary — hasta geçmişi özeti (blok başına en fazla 10 kayıt). */
+export interface PetHistorySummaryDto {
+    petId: string;
+    petName?: string | null;
+    clientId?: string | null;
+    clientName?: string | null;
+    recentAppointments?: PetHistoryAppointmentItemDto[] | null;
+    recentExaminations?: PetHistoryExaminationItemDto[] | null;
+    recentTreatments?: PetHistoryTreatmentItemDto[] | null;
+    recentPrescriptions?: PetHistoryPrescriptionItemDto[] | null;
+    recentLabResults?: PetHistoryLabResultItemDto[] | null;
+    recentHospitalizations?: PetHistoryHospitalizationItemDto[] | null;
+    recentPayments?: PetHistoryPaymentItemDto[] | null;
+}
+
+export interface PetHistoryAppointmentItemDto {
+    id: string;
+    scheduledAtUtc?: string | null;
+    status?: number | string | null;
+    appointmentType?: number | string | null;
+    appointmentTypeName?: string | null;
+    notes?: string | null;
+    clinicName?: string | null;
+}
+
+export interface PetHistoryExaminationItemDto {
+    id: string;
+    examinedAtUtc?: string | null;
+    visitReason?: string | null;
+    clinicName?: string | null;
+}
+
+export interface PetHistoryTreatmentItemDto {
+    id: string;
+    treatmentDateUtc?: string | null;
+    title?: string | null;
+    clinicName?: string | null;
+}
+
+export interface PetHistoryPrescriptionItemDto {
+    id: string;
+    prescribedAtUtc?: string | null;
+    title?: string | null;
+    clinicName?: string | null;
+}
+
+export interface PetHistoryLabResultItemDto {
+    id: string;
+    resultDateUtc?: string | null;
+    testName?: string | null;
+    clinicName?: string | null;
+}
+
+export interface PetHistoryHospitalizationItemDto {
+    id: string;
+    admittedAtUtc?: string | null;
+    reason?: string | null;
+    dischargedAtUtc?: string | null;
+    isActive?: boolean | null;
+    clinicName?: string | null;
+}
+
+export interface PetHistoryPaymentItemDto {
+    id: string;
+    paidAtUtc?: string | null;
+    amount?: number | null;
+    currency?: string | null;
+    method?: number | string | null;
+    clinicName?: string | null;
+}
+
 /**
  * POST /pets gövdesi — camelCase (Swagger ile doğrulanmalı).
  * Opsiyonel alanlar backend’de yoksa mapper’da çıkarılabilir.

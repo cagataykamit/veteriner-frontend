@@ -9,12 +9,13 @@ import {
     mapPetDetailDtoToVm,
     mapPetDetailDtoToEditVm,
     mapPagedPetsToVm,
+    mapPetHistorySummaryDtoToVm,
     petsQueryToHttpParams
 } from '@/app/features/pets/data/pet.mapper';
-import type { PetDetailDto, PetListItemDtoPagedResult } from '@/app/features/pets/models/pet-api.model';
+import type { PetDetailDto, PetHistorySummaryDto, PetListItemDtoPagedResult } from '@/app/features/pets/models/pet-api.model';
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
 import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
-import type { PetDetailVm, PetEditVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetDetailVm, PetEditVm, PetHistorySummaryVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface PetsPagedVm {
@@ -44,6 +45,16 @@ export class PetsService {
             map((dto) => mapPetDetailDtoToVm(dto)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Hayvan bulunamadı veya yüklenemedi.')))
+            )
+        );
+    }
+
+    /** Tek çağrı: pet detay hasta geçmişi (randevu, muayene, tedavi, …). */
+    getPetHistorySummary(petId: string): Observable<PetHistorySummaryVm> {
+        return this.api.get<PetHistorySummaryDto>(ApiEndpoints.pets.historySummary(petId)).pipe(
+            map((dto) => mapPetHistorySummaryDtoToVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Hasta geçmişi yüklenemedi.')))
             )
         );
     }

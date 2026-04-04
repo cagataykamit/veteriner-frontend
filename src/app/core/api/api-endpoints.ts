@@ -24,7 +24,8 @@ export const ApiEndpoints = {
     },
     pets: {
         list: () => `/api/v1/pets`,
-        byId: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}`,
+        historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`
     },
     species: {
         list: () => `/api/v1/species`,
