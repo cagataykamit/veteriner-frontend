@@ -8,13 +8,23 @@ import {
     mapCreateExaminationToApiBody,
     mapExaminationDetailDtoToVm,
     mapExaminationDetailDtoToEditVm,
+    mapExaminationRelatedSummaryDtoToVm,
     mapPagedExaminationsToVm,
     examinationsQueryToHttpParams
 } from '@/app/features/examinations/data/examination.mapper';
-import type { ExaminationDetailDto, ExaminationListItemDtoPagedResult } from '@/app/features/examinations/models/examination-api.model';
+import type {
+    ExaminationDetailDto,
+    ExaminationListItemDtoPagedResult,
+    ExaminationRelatedSummaryDto
+} from '@/app/features/examinations/models/examination-api.model';
 import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
-import type { ExaminationDetailVm, ExaminationEditVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type {
+    ExaminationDetailVm,
+    ExaminationEditVm,
+    ExaminationListItemVm,
+    ExaminationRelatedSummaryVm
+} from '@/app/features/examinations/models/examination-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface ExaminationsPagedVm {
@@ -50,6 +60,16 @@ export class ExaminationsService {
             map((dto) => mapExaminationDetailDtoToVm(dto)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Muayene bulunamadı veya yüklenemedi.')))
+            )
+        );
+    }
+
+    /** Tek çağrı: muayeneye bağlı tedavi, reçete, lab, yatış, ödeme özeti. */
+    getExaminationRelatedSummary(examinationId: string): Observable<ExaminationRelatedSummaryVm> {
+        return this.api.get<ExaminationRelatedSummaryDto>(ApiEndpoints.examinations.relatedSummary(examinationId)).pipe(
+            map((dto) => mapExaminationRelatedSummaryDtoToVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'İlgili kayıtlar yüklenemedi.')))
             )
         );
     }

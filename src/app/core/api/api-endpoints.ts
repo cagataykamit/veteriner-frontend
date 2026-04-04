@@ -45,7 +45,8 @@ export const ApiEndpoints = {
     },
     examinations: {
         list: () => `/api/v1/examinations`,
-        byId: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}`,
+        relatedSummary: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/related-summary`
     },
     vaccinations: {
         list: () => `/api/v1/vaccinations`,

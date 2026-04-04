@@ -4,11 +4,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
-import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type {
+    ExaminationDetailVm,
+    ExaminationListItemVm,
+    ExaminationRelatedHospitalizationItemVm,
+    ExaminationRelatedSummaryVm
+} from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
-import type { PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -167,96 +169,190 @@ import { EMPTY, switchMap } from 'rxjs';
                     </div>
                 </div>
 
-                <div class="col-span-12 lg:col-span-4">
+                <div class="col-span-12">
                     <div class="card">
-                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
-                            <h5 class="mt-0 mb-0">Bağlı tedaviler</h5>
-                            <a routerLink="/panel/treatments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        <h4 class="mt-0 mb-6 text-xl font-semibold">Muayene özeti</h4>
+                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
+                            <h5 class="mt-0 mb-4">Ziyaret sebebi</h5>
+                            @if (exam()!.visitReason === emptyMark) {
+                                <app-empty-state message="Ziyaret sebebi girilmemiş." />
+                            } @else {
+                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.visitReason }}</p>
+                            }
                         </div>
-                        @if (!exam()!.petId?.trim()) {
-                            <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
-                        } @else if (trLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (trError()) {
-                            <p class="text-muted-color m-0">{{ trError() }}</p>
-                        } @else if (trItems().length === 0) {
-                            <app-empty-state message="Bu muayeneye bağlı tedavi yok." />
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of trItems(); track row.id) {
-                                    <li class="mb-3 last:mb-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDt(row.treatmentDateUtc) }}</span>
-                                            <a [routerLink]="['/panel/treatments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                        </div>
-                                        <div class="font-medium">{{ row.title }}</div>
-                                    </li>
-                                }
-                            </ul>
-                        }
+                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
+                            <h5 class="mt-0 mb-4">Bulgular</h5>
+                            @if (exam()!.findings === emptyMark) {
+                                <app-empty-state message="Bulgu kaydı yok." />
+                            } @else {
+                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.findings }}</p>
+                            }
+                        </div>
+                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
+                            <h5 class="mt-0 mb-4">Değerlendirme</h5>
+                            @if (exam()!.assessment === emptyMark) {
+                                <app-empty-state message="Değerlendirme girilmemiş." />
+                            } @else {
+                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.assessment }}</p>
+                            }
+                        </div>
+                        <div>
+                            <h5 class="mt-0 mb-4">Notlar</h5>
+                            @if (exam()!.notes === emptyMark) {
+                                <app-empty-state message="Not yok." />
+                            } @else {
+                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.notes }}</p>
+                            }
+                        </div>
                     </div>
                 </div>
-                <div class="col-span-12 lg:col-span-4">
-                    <div class="card">
-                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
-                            <h5 class="mt-0 mb-0">Bağlı reçeteler</h5>
-                            <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
-                        @if (!exam()!.petId?.trim()) {
-                            <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
-                        } @else if (rxLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (rxError()) {
-                            <p class="text-muted-color m-0">{{ rxError() }}</p>
-                        } @else if (rxItems().length === 0) {
-                            <app-empty-state message="Bu muayeneye bağlı reçete yok." />
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of rxItems(); track row.id) {
-                                    <li class="mb-3 last:mb-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDt(row.prescribedAtUtc) }}</span>
-                                            <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                        </div>
-                                        <div class="font-medium">{{ row.title }}</div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
+
+                <div class="col-span-12">
+                    <h4 class="mt-0 mb-4 text-xl font-semibold">İlgili kayıtlar</h4>
                 </div>
-                <div class="col-span-12 lg:col-span-4">
-                    <div class="card">
-                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
-                            <h5 class="mt-0 mb-0">Bağlı ödemeler</h5>
-                            <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
-                        <p class="text-xs text-muted-color mt-0 mb-3">
-                            Liste yanıtında muayene kimliği yok; aynı hayvan/müşteri kapsamındaki son ödemeler gösterilir (tam FK eşlemesi değil).
-                        </p>
-                        @if (payLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (payError()) {
-                            <p class="text-muted-color m-0">{{ payError() }}</p>
-                        } @else if (payItems().length === 0) {
-                            <app-empty-state message="Özet için uygun ödeme bulunamadı." />
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of payItems(); track row.id) {
-                                    <li class="mb-3 last:mb-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="font-medium">{{ money(row.amount, row.currency) }}</span>
-                                            <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                        </div>
-                                        <div class="text-sm text-muted-color">
-                                            {{ formatDate(row.paidAtUtc) }} · {{ payMethodLabel(row.method) }}
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                        }
+                @if (relatedSummaryLoading()) {
+                    <div class="col-span-12">
+                        <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                     </div>
-                </div>
+                } @else if (relatedSummaryError()) {
+                    <div class="col-span-12">
+                        <div class="card">
+                            <app-error-state [detail]="relatedSummaryError()!" (retry)="retryRelatedSummary()" />
+                        </div>
+                    </div>
+                } @else if (relatedSummary()) {
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card">
+                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                                <h5 class="mt-0 mb-0">Bağlı tedaviler</h5>
+                                <a routerLink="/panel/treatments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (relatedSummary()!.treatments.length === 0) {
+                                <app-empty-state [message]="copy.listEmptyMessage" />
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of relatedSummary()!.treatments; track row.id) {
+                                        <li class="mb-3 last:mb-0">
+                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                <span class="text-muted-color text-sm">{{ formatDt(row.treatmentDateUtc) }}</span>
+                                                <a [routerLink]="['/panel/treatments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            </div>
+                                            <div class="font-medium">{{ row.title }}</div>
+                                            @if (row.clinicName) {
+                                                <div class="text-muted-color text-sm">{{ row.clinicName }}</div>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card">
+                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                                <h5 class="mt-0 mb-0">Bağlı reçeteler</h5>
+                                <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (relatedSummary()!.prescriptions.length === 0) {
+                                <app-empty-state [message]="copy.listEmptyMessage" />
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of relatedSummary()!.prescriptions; track row.id) {
+                                        <li class="mb-3 last:mb-0">
+                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                <span class="text-muted-color text-sm">{{ formatDt(row.prescribedAtUtc) }}</span>
+                                                <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            </div>
+                                            <div class="font-medium">{{ row.title }}</div>
+                                            @if (row.clinicName) {
+                                                <div class="text-muted-color text-sm">{{ row.clinicName }}</div>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card">
+                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                                <h5 class="mt-0 mb-0">Bağlı lab sonuçları</h5>
+                                <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (relatedSummary()!.labResults.length === 0) {
+                                <app-empty-state [message]="copy.listEmptyMessage" />
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of relatedSummary()!.labResults; track row.id) {
+                                        <li class="mb-3 last:mb-0">
+                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                <span class="text-muted-color text-sm">{{ formatDt(row.resultDateUtc) }}</span>
+                                                <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            </div>
+                                            <div class="font-medium">{{ row.testName }}</div>
+                                            @if (row.clinicName) {
+                                                <div class="text-muted-color text-sm">{{ row.clinicName }}</div>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card">
+                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                                <h5 class="mt-0 mb-0">Bağlı yatışlar</h5>
+                                <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (relatedSummary()!.hospitalizations.length === 0) {
+                                <app-empty-state [message]="copy.listEmptyMessage" />
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of relatedSummary()!.hospitalizations; track row.id) {
+                                        <li class="mb-3 last:mb-0">
+                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                <span class="text-muted-color text-sm">{{ formatDt(row.admittedAtUtc) }}</span>
+                                                <a [routerLink]="['/panel/hospitalizations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            </div>
+                                            <div class="font-medium">{{ row.reason }}</div>
+                                            <div class="text-muted-color text-sm">{{ hospitalizationStatusLine(row) }}</div>
+                                            @if (row.clinicName) {
+                                                <div class="text-muted-color text-sm">{{ row.clinicName }}</div>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card">
+                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                                <h5 class="mt-0 mb-0">Bağlı ödemeler</h5>
+                                <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (relatedSummary()!.payments.length === 0) {
+                                <app-empty-state [message]="copy.listEmptyMessage" />
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of relatedSummary()!.payments; track row.id) {
+                                        <li class="mb-3 last:mb-0">
+                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                <span class="text-muted-color text-sm">{{ formatDt(row.paidAtUtc) }}</span>
+                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            </div>
+                                            <div class="font-medium">{{ money(row.amount, row.currency) }} · {{ payMethodLabel(row.method) }}</div>
+                                            @if (row.clinicName) {
+                                                <div class="text-muted-color text-sm">{{ row.clinicName }}</div>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                }
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
@@ -315,47 +411,6 @@ import { EMPTY, switchMap } from 'rxjs';
                         }
                     </div>
                 </div>
-
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Ziyaret sebebi</h5>
-                        @if (exam()!.visitReason === emptyMark) {
-                            <app-empty-state message="Ziyaret sebebi girilmemiş." />
-                        } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ exam()!.visitReason }}</p>
-                        }
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Bulgular</h5>
-                        @if (exam()!.findings === emptyMark) {
-                            <app-empty-state message="Bulgu kaydı yok." />
-                        } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ exam()!.findings }}</p>
-                        }
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Değerlendirme</h5>
-                        @if (exam()!.assessment === emptyMark) {
-                            <app-empty-state message="Değerlendirme girilmemiş." />
-                        } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ exam()!.assessment }}</p>
-                        }
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Notlar</h5>
-                        @if (exam()!.notes === emptyMark) {
-                            <app-empty-state message="Not yok." />
-                        } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ exam()!.notes }}</p>
-                        }
-                    </div>
-                </div>
             </div>
         }
     `
@@ -376,17 +431,9 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly error = signal<string | null>(null);
     readonly exam = signal<ExaminationDetailVm | null>(null);
 
-    readonly payLoading = signal(false);
-    readonly payError = signal<string | null>(null);
-    readonly payItems = signal<PaymentListItemVm[]>([]);
-
-    readonly trLoading = signal(false);
-    readonly trError = signal<string | null>(null);
-    readonly trItems = signal<TreatmentListItemVm[]>([]);
-
-    readonly rxLoading = signal(false);
-    readonly rxError = signal<string | null>(null);
-    readonly rxItems = signal<PrescriptionListItemVm[]>([]);
+    readonly relatedSummaryLoading = signal(false);
+    readonly relatedSummaryError = signal<string | null>(null);
+    readonly relatedSummary = signal<ExaminationRelatedSummaryVm | null>(null);
 
     readonly sibLoading = signal(false);
     readonly sibError = signal<string | null>(null);
@@ -402,8 +449,19 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
     readonly typeDisplay = appointmentTypeDisplayLabel;
-    readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
+    readonly money = (amount: number | null, currency: string | null | undefined) =>
+        formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
     readonly payMethodLabel = paymentMethodLabel;
+
+    hospitalizationStatusLine(row: ExaminationRelatedHospitalizationItemVm): string {
+        if (row.dischargedAtUtc) {
+            return `Çıkış: ${this.formatDt(row.dischargedAtUtc)}`;
+        }
+        if (row.isActive) {
+            return 'Aktif yatış';
+        }
+        return 'Taburcu';
+    }
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
@@ -423,11 +481,13 @@ export class ExaminationDetailPageComponent implements OnInit {
                     if (!id) {
                         this.error.set('Geçersiz muayene.');
                         this.loading.set(false);
+                        this.resetRelatedSummary();
                         return EMPTY;
                     }
                     this.lastId = id;
                     this.loading.set(true);
                     this.error.set(null);
+                    this.resetRelatedSummary();
                     return this.examinationsService.getExaminationById(id);
                 })
             )
@@ -440,6 +500,7 @@ export class ExaminationDetailPageComponent implements OnInit {
                 error: (e: Error) => {
                     this.error.set(e.message ?? 'Yükleme hatası');
                     this.loading.set(false);
+                    this.resetRelatedSummary();
                 }
             });
     }
@@ -450,6 +511,7 @@ export class ExaminationDetailPageComponent implements OnInit {
         }
         this.loading.set(true);
         this.error.set(null);
+        this.resetRelatedSummary();
         this.examinationsService.getExaminationById(this.lastId).subscribe({
             next: (x) => {
                 this.exam.set(x);
@@ -459,59 +521,41 @@ export class ExaminationDetailPageComponent implements OnInit {
             error: (e: Error) => {
                 this.error.set(e.message ?? 'Yükleme hatası');
                 this.loading.set(false);
+                this.resetRelatedSummary();
+            }
+        });
+    }
+
+    retryRelatedSummary(): void {
+        if (!this.lastId) {
+            return;
+        }
+        this.loadRelatedSummary(this.lastId);
+    }
+
+    private resetRelatedSummary(): void {
+        this.relatedSummary.set(null);
+        this.relatedSummaryLoading.set(false);
+        this.relatedSummaryError.set(null);
+    }
+
+    private loadRelatedSummary(examinationId: string): void {
+        this.relatedSummaryLoading.set(true);
+        this.relatedSummaryError.set(null);
+        this.examinationsService.getExaminationRelatedSummary(examinationId).subscribe({
+            next: (s) => {
+                this.relatedSummary.set(s);
+                this.relatedSummaryLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.relatedSummaryError.set(e.message ?? 'İlgili kayıtlar yüklenemedi.');
+                this.relatedSummaryLoading.set(false);
             }
         });
     }
 
     private loadRelatedBlocks(x: ExaminationDetailVm): void {
-        this.payLoading.set(true);
-        this.payError.set(null);
-        this.related.loadRelatedPaymentsForExaminationContext(x.petId, x.clientId).subscribe({
-            next: (items) => {
-                this.payItems.set(items);
-                this.payLoading.set(false);
-            },
-            error: (e: Error) => {
-                this.payError.set(e.message ?? 'Ödemeler yüklenemedi.');
-                this.payLoading.set(false);
-            }
-        });
-
-        const petOk = !!x.petId?.trim();
-        if (petOk) {
-            const petId = x.petId!.trim();
-            this.trLoading.set(true);
-            this.trError.set(null);
-            this.related.loadTreatmentsLinkedToExamination(petId, x.id).subscribe({
-                next: (items) => {
-                    this.trItems.set(items);
-                    this.trLoading.set(false);
-                },
-                error: (e: Error) => {
-                    this.trError.set(e.message ?? 'Tedaviler yüklenemedi.');
-                    this.trLoading.set(false);
-                }
-            });
-            this.rxLoading.set(true);
-            this.rxError.set(null);
-            this.related.loadPrescriptionsLinkedToExamination(petId, x.id).subscribe({
-                next: (items) => {
-                    this.rxItems.set(items);
-                    this.rxLoading.set(false);
-                },
-                error: (e: Error) => {
-                    this.rxError.set(e.message ?? 'Reçeteler yüklenemedi.');
-                    this.rxLoading.set(false);
-                }
-            });
-        } else {
-            this.trItems.set([]);
-            this.trLoading.set(false);
-            this.trError.set(null);
-            this.rxItems.set([]);
-            this.rxLoading.set(false);
-            this.rxError.set(null);
-        }
+        this.loadRelatedSummary(x.id);
 
         if (!x.petId?.trim()) {
             this.sibItems.set([]);

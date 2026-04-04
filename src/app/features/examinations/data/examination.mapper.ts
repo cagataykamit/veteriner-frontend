@@ -3,11 +3,18 @@ import type {
     ExaminationCreateRequestDto,
     ExaminationDetailDto,
     ExaminationListItemDto,
-    ExaminationListItemDtoPagedResult
+    ExaminationListItemDtoPagedResult,
+    ExaminationRelatedHospitalizationItemDto,
+    ExaminationRelatedSummaryDto
 } from '@/app/features/examinations/models/examination-api.model';
 import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
-import type { ExaminationDetailVm, ExaminationEditVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type {
+    ExaminationDetailVm,
+    ExaminationEditVm,
+    ExaminationListItemVm,
+    ExaminationRelatedSummaryVm
+} from '@/app/features/examinations/models/examination-vm.model';
 import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
@@ -200,6 +207,118 @@ export function mapPagedExaminationsToVm(result: ExaminationListItemDtoPagedResu
         pageSize: result.pageSize,
         totalItems: result.totalItems,
         totalPages: result.totalPages
+    };
+}
+
+function relatedSafeTrim(v: string | null | undefined): string | null {
+    const t = v?.trim();
+    return t ? t : null;
+}
+
+function relatedHospitalizationIsActive(dto: ExaminationRelatedHospitalizationItemDto, discharged: string | null): boolean {
+    if (dto.isActive === true) {
+        return true;
+    }
+    if (dto.isActive === false) {
+        return false;
+    }
+    return discharged == null;
+}
+
+/** GET /examinations/{id}/related-summary → VM. */
+export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSummaryDto): ExaminationRelatedSummaryVm {
+    const examinationId = dto.examinationId?.trim() ?? '';
+    return {
+        examinationId,
+        petId: dto.petId?.trim() ? dto.petId.trim() : null,
+        petName: str(dto.petName),
+        clientId: dto.clientId?.trim() ? dto.clientId.trim() : null,
+        clientName: str(dto.clientName),
+        treatments: (dto.treatments ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                return {
+                    id,
+                    treatmentDateUtc: relatedSafeTrim(x.treatmentDateUtc),
+                    clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
+                    title: str(x.title)
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        prescriptions: (dto.prescriptions ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                return {
+                    id,
+                    prescribedAtUtc: relatedSafeTrim(x.prescribedAtUtc),
+                    clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
+                    title: str(x.title),
+                    treatmentId: x.treatmentId?.trim() ? x.treatmentId.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        labResults: (dto.labResults ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                return {
+                    id,
+                    resultDateUtc: relatedSafeTrim(x.resultDateUtc),
+                    clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
+                    testName: str(x.testName)
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        hospitalizations: (dto.hospitalizations ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                const dischargedAtUtc = relatedSafeTrim(x.dischargedAtUtc);
+                const isActive = relatedHospitalizationIsActive(x, dischargedAtUtc);
+                return {
+                    id,
+                    admittedAtUtc: relatedSafeTrim(x.admittedAtUtc),
+                    clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
+                    reason: str(x.reason),
+                    dischargedAtUtc,
+                    isActive
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        payments: (dto.payments ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                const amount = x.amount;
+                const num =
+                    amount != null && typeof amount === 'number' && !Number.isNaN(amount) ? amount : null;
+                return {
+                    id,
+                    paidAtUtc: relatedSafeTrim(x.paidAtUtc),
+                    clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
+                    amount: num,
+                    currency: x.currency?.trim() ? x.currency.trim() : null,
+                    method: x.method
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null)
     };
 }
 

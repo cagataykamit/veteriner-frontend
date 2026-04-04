@@ -42,6 +42,65 @@ export interface ExaminationListItemDtoPagedResult {
  * Çekirdek: … examinedAtUtc, visitReason (canonical), findings, assessment, notes, appointmentId?
  * Audit: createdAtUtc, updatedAtUtc
  */
+/** GET /examinations/{id}/related-summary — muayeneye bağlı tedavi, reçete, lab, yatış, ödeme özeti. */
+export interface ExaminationRelatedSummaryDto {
+    examinationId: string;
+    petId?: string | null;
+    petName?: string | null;
+    clientId?: string | null;
+    clientName?: string | null;
+    treatments?: ExaminationRelatedTreatmentItemDto[] | null;
+    prescriptions?: ExaminationRelatedPrescriptionItemDto[] | null;
+    labResults?: ExaminationRelatedLabResultItemDto[] | null;
+    hospitalizations?: ExaminationRelatedHospitalizationItemDto[] | null;
+    payments?: ExaminationRelatedPaymentItemDto[] | null;
+}
+
+export interface ExaminationRelatedTreatmentItemDto {
+    id: string;
+    treatmentDateUtc?: string | null;
+    clinicId?: string | null;
+    clinicName?: string | null;
+    title?: string | null;
+}
+
+export interface ExaminationRelatedPrescriptionItemDto {
+    id: string;
+    prescribedAtUtc?: string | null;
+    clinicId?: string | null;
+    clinicName?: string | null;
+    title?: string | null;
+    treatmentId?: string | null;
+}
+
+export interface ExaminationRelatedLabResultItemDto {
+    id: string;
+    resultDateUtc?: string | null;
+    clinicId?: string | null;
+    clinicName?: string | null;
+    testName?: string | null;
+}
+
+export interface ExaminationRelatedHospitalizationItemDto {
+    id: string;
+    admittedAtUtc?: string | null;
+    clinicId?: string | null;
+    clinicName?: string | null;
+    reason?: string | null;
+    dischargedAtUtc?: string | null;
+    isActive?: boolean | null;
+}
+
+export interface ExaminationRelatedPaymentItemDto {
+    id: string;
+    paidAtUtc?: string | null;
+    clinicId?: string | null;
+    clinicName?: string | null;
+    amount?: number | null;
+    currency?: string | null;
+    method?: number | string | null;
+}
+
 export interface ExaminationDetailDto {
     id: string;
     tenantId?: string;
