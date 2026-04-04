@@ -6,15 +6,26 @@ import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     extractCreatedClientIdFromPostResponse,
     mapClientDetailDtoToVm,
+    mapClientPaymentSummaryDtoToVm,
     mapClientRecentSummaryDtoToVm,
     mapCreateClientToApiBody,
     mapPagedClientsToVm,
     clientsQueryToHttpParams
 } from '@/app/features/clients/data/client.mapper';
-import type { ClientDetailDto, ClientListItemDtoPagedResult, ClientRecentSummaryDto } from '@/app/features/clients/models/client-api.model';
+import type {
+    ClientDetailDto,
+    ClientListItemDtoPagedResult,
+    ClientPaymentSummaryDto,
+    ClientRecentSummaryDto
+} from '@/app/features/clients/models/client-api.model';
 import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
-import type { ClientDetailVm, ClientListItemVm, ClientRecentSummaryVm } from '@/app/features/clients/models/client-vm.model';
+import type {
+    ClientDetailVm,
+    ClientListItemVm,
+    ClientPaymentSummaryVm,
+    ClientRecentSummaryVm
+} from '@/app/features/clients/models/client-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface ClientsPagedVm {
@@ -54,6 +65,16 @@ export class ClientsService {
             map((dto) => mapClientRecentSummaryDtoToVm(dto)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Müşteri özeti yüklenemedi.')))
+            )
+        );
+    }
+
+    /** Finance+ — ödeme sayıları, para birimi toplamları ve son ödemeler (tek istek). */
+    getClientPaymentSummary(clientId: string): Observable<ClientPaymentSummaryVm> {
+        return this.api.get<ClientPaymentSummaryDto>(ApiEndpoints.clients.paymentSummary(clientId)).pipe(
+            map((dto) => mapClientPaymentSummaryDtoToVm(dto)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Ödeme özeti yüklenemedi.')))
             )
         );
     }

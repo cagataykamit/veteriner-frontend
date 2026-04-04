@@ -36,3 +36,33 @@ export interface ClientRecentSummaryVm {
     appointments: AppointmentListItemVm[];
     examinations: ExaminationListItemVm[];
 }
+
+/** GET /clients/{id}/payment-summary */
+export interface ClientPaymentSummaryCurrencyTotalVm {
+    currency: string;
+    totalAmount: number | null;
+}
+
+export interface ClientPaymentSummaryRecentPaymentVm {
+    id: string;
+    paidAtUtc: string | null;
+    clinicId: string | null;
+    clinicName: string | null;
+    petId: string | null;
+    petName: string | null;
+    amount: number | null;
+    currency: string | null;
+    method: unknown;
+    notes: string | null;
+}
+
+export interface ClientPaymentSummaryVm {
+    clientId: string;
+    clientName: string;
+    totalPaymentsCount: number;
+    /** Çoklu para biriminde 0 olabilir; asıl doğruluk `currencyTotals`. */
+    totalPaidAmount: number | null;
+    currencyTotals: ClientPaymentSummaryCurrencyTotalVm[];
+    lastPaymentAtUtc: string | null;
+    recentPayments: ClientPaymentSummaryRecentPaymentVm[];
+}

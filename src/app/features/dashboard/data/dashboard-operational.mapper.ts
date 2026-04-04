@@ -1,7 +1,6 @@
 import type { DashboardSummaryDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 import type { DashboardSummaryNormalized } from '@/app/features/dashboard/models/dashboard-operational.model';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 
 /**
@@ -55,17 +54,4 @@ export function sortAppointmentsByScheduledAsc(items: AppointmentListItemVm[]): 
         const tb = b.scheduledAtUtc ? new Date(b.scheduledAtUtc).getTime() : 0;
         return ta - tb;
     });
-}
-
-/**
- * Özet kartı: backend ödeme listesinde durum/vade yok; en güncel ödemeler `paidAtUtc` ile seçilir.
- */
-export function pickAttentionPayments(items: PaymentListItemVm[], max: number): PaymentListItemVm[] {
-    return [...items]
-        .sort((a, b) => {
-            const ta = a.paidAtUtc ? new Date(a.paidAtUtc).getTime() : 0;
-            const tb = b.paidAtUtc ? new Date(b.paidAtUtc).getTime() : 0;
-            return tb - ta;
-        })
-        .slice(0, max);
 }

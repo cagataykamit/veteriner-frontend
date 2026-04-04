@@ -127,7 +127,7 @@ const EM = '—';
                 } @else if (history()) {
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card">
-                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son randevular</h5>
                                 <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
@@ -156,7 +156,7 @@ const EM = '—';
                     </div>
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card">
-                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son muayeneler</h5>
                                 <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
@@ -182,7 +182,7 @@ const EM = '—';
                     </div>
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card">
-                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son tedaviler</h5>
                                 <a routerLink="/panel/treatments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
@@ -208,7 +208,7 @@ const EM = '—';
                     </div>
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card">
-                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son reçeteler</h5>
                                 <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
@@ -234,7 +234,7 @@ const EM = '—';
                     </div>
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card">
-                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son lab sonuçları</h5>
                                 <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
@@ -260,7 +260,7 @@ const EM = '—';
                     </div>
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card">
-                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son yatışlar</h5>
                                 <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
@@ -287,7 +287,7 @@ const EM = '—';
                     </div>
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card">
-                            <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son ödemeler</h5>
                                 <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>

@@ -6,12 +6,18 @@ import type {
     ClientDetailDto,
     ClientListItemDto,
     ClientListItemDtoPagedResult,
+    ClientPaymentSummaryDto,
     ClientRecentAppointmentSummaryItemDto,
     ClientRecentExaminationSummaryItemDto,
     ClientRecentSummaryDto
 } from '@/app/features/clients/models/client-api.model';
 import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
-import type { ClientDetailVm, ClientListItemVm, ClientRecentSummaryVm } from '@/app/features/clients/models/client-vm.model';
+import type {
+    ClientDetailVm,
+    ClientListItemVm,
+    ClientPaymentSummaryVm,
+    ClientRecentSummaryVm
+} from '@/app/features/clients/models/client-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 
@@ -135,6 +141,63 @@ export function mapClientRecentSummaryDtoToVm(dto: ClientRecentSummaryDto): Clie
         clientId: dto.clientId?.trim() ?? '',
         appointments: (dto.recentAppointments ?? []).map(mapClientRecentAppointmentItemToVm),
         examinations: (dto.recentExaminations ?? []).map(mapClientRecentExaminationItemToVm)
+    };
+}
+
+function safeNum(v: unknown): number | null {
+    if (v == null) {
+        return null;
+    }
+    if (typeof v === 'number' && !Number.isNaN(v)) {
+        return v;
+    }
+    return null;
+}
+
+/** GET /clients/{id}/payment-summary → VM. */
+export function mapClientPaymentSummaryDtoToVm(dto: ClientPaymentSummaryDto): ClientPaymentSummaryVm {
+    const currencyTotals = (dto.currencyTotals ?? [])
+        .map((x) => {
+            const c = x.currency?.trim();
+            if (!c) {
+                return null;
+            }
+            return {
+                currency: c,
+                totalAmount: safeNum(x.totalAmount)
+            };
+        })
+        .filter((x): x is NonNullable<typeof x> => x != null);
+
+    const recentPayments = (dto.recentPayments ?? [])
+        .map((x) => {
+            const id = x.id?.trim();
+            if (!id) {
+                return null;
+            }
+            return {
+                id,
+                paidAtUtc: x.paidAtUtc?.trim() ? x.paidAtUtc.trim() : null,
+                clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
+                clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
+                petId: x.petId?.trim() ? x.petId.trim() : null,
+                petName: x.petName?.trim() ? x.petName.trim() : null,
+                amount: safeNum(x.amount),
+                currency: x.currency?.trim() ? x.currency.trim() : null,
+                method: x.method,
+                notes: x.notes?.trim() ? x.notes.trim() : null
+            };
+        })
+        .filter((x): x is NonNullable<typeof x> => x != null);
+
+    return {
+        clientId: dto.clientId?.trim() ?? '',
+        clientName: str(dto.clientName),
+        totalPaymentsCount: dto.totalPaymentsCount ?? 0,
+        totalPaidAmount: safeNum(dto.totalPaidAmount),
+        currencyTotals,
+        lastPaymentAtUtc: dto.lastPaymentAtUtc?.trim() ? dto.lastPaymentAtUtc.trim() : null,
+        recentPayments
     };
 }
 

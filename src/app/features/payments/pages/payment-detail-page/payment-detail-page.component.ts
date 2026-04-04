@@ -117,7 +117,7 @@ import { EMPTY, switchMap } from 'rxjs';
 
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
-                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">İlgili muayeneler</h5>
                             <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
@@ -144,7 +144,7 @@ import { EMPTY, switchMap } from 'rxjs';
                 </div>
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
-                        <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Son randevular (hayvan)</h5>
                             <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>

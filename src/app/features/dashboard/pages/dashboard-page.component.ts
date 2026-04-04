@@ -74,6 +74,52 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                     </div>
                 </div>
 
+                @if (d.finance.error) {
+                    <div class="col-span-12">
+                        <div class="card mb-0">
+                            <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
+                            <p class="text-muted-color text-sm mt-2 mb-0">Finans kartları ve son ödemeler bu yüzden eksik olabilir.</p>
+                        </div>
+                    </div>
+                } @else if (d.finance.data) {
+                    <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                        <div class="card mb-0">
+                            <span class="block text-muted-color font-medium mb-4">Bugün alınan ödeme</span>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ financeMoney(d.finance.data.todayTotalPaid) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                        <div class="card mb-0">
+                            <span class="block text-muted-color font-medium mb-4">Bu hafta alınan ödeme</span>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ financeMoney(d.finance.data.weekTotalPaid) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                        <div class="card mb-0">
+                            <span class="block text-muted-color font-medium mb-4">Bu ay alınan ödeme</span>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ financeMoney(d.finance.data.monthTotalPaid) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                        <div class="card mb-0">
+                            <span class="block text-muted-color font-medium mb-4">Bugün ödeme sayısı</span>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ metricCount(d.finance.data.todayPaymentsCount) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                        <div class="card mb-0">
+                            <span class="block text-muted-color font-medium mb-4">Bu hafta ödeme sayısı</span>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ metricCount(d.finance.data.weekPaymentsCount) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                        <div class="card mb-0">
+                            <span class="block text-muted-color font-medium mb-4">Bu ay ödeme sayısı</span>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ metricCount(d.finance.data.monthPaymentsCount) }}</div>
+                        </div>
+                    </div>
+                }
+
                 @if (d.summary.error) {
                     <div class="col-span-12">
                         <div class="card mb-0">
@@ -92,7 +138,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
 
                 <div class="col-span-12">
                     <div class="card">
-                        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Bugünkü randevular</h5>
                             <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
@@ -145,7 +191,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
 
                 <div class="col-span-12 xl:col-span-6">
                     <div class="card h-full">
-                        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Yaklaşan aşılar</h5>
                             <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
@@ -182,7 +228,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
 
                 <div class="col-span-12 xl:col-span-6">
                     <div class="card h-full">
-                        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Son muayeneler</h5>
                             <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
@@ -217,31 +263,45 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
 
                 <div class="col-span-12">
                     <div class="card">
-                        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Son ödemeler</h5>
                             <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
-                        @if (d.attentionPayments.error) {
-                            <p class="text-red-500 m-0" role="alert">{{ d.attentionPayments.error }}</p>
-                        } @else if (d.attentionPayments.data.length === 0) {
+                        @if (d.finance.error) {
+                            <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
+                        } @else if (!d.finance.data || d.finance.data.recentPayments.length === 0) {
                             <app-empty-state message="Ödeme kaydı yok." />
                         } @else {
-                            <p-table [value]="d.attentionPayments.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                            <p-table [value]="d.finance.data.recentPayments" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
                                 <ng-template #header>
                                     <tr>
+                                        <th>Tarih</th>
+                                        <th>Müşteri</th>
+                                        <th>Hayvan</th>
                                         <th>Tutar</th>
                                         <th>Yöntem</th>
-                                        <th>Ödeme tarihi</th>
-                                        <th>Hayvan</th>
                                         <th></th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
                                     <tr>
+                                        <td>{{ formatDateTime(row.paidAtUtc) }}</td>
+                                        <td>
+                                            @if (row.clientId) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                            } @else {
+                                                {{ row.clientName }}
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                            } @else {
+                                                {{ row.petName }}
+                                            }
+                                        </td>
                                         <td>{{ money(row.amount, row.currency) }}</td>
                                         <td>{{ payMethodLabel(row.method) }}</td>
-                                        <td>{{ formatDateTime(row.paidAtUtc) }}</td>
-                                        <td>{{ row.petName }}</td>
                                         <td>
                                             <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
                                         </td>
@@ -376,8 +436,13 @@ export class DashboardPageComponent implements OnInit {
         return d.summary.data?.todayAppointmentsCount ?? null;
     }
 
-    money(amount: number | null, currency: string): string {
-        return formatMoney(amount, currency);
+    money(amount: number | null, currency: string | null | undefined): string {
+        return formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
+    }
+
+    /** Dashboard finans kartları — backend toplamları TRY (İstanbul) varsayımı. */
+    financeMoney(amount: number | null): string {
+        return formatMoney(amount, 'TRY');
     }
 
     petSpeciesText(row: DashboardRecentPetDto): string {

@@ -15,6 +15,7 @@ import {
     authFailureMessage,
     loginFailureMessage
 } from '@/app/core/auth/auth-error.utils';
+import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
@@ -208,7 +209,6 @@ export class Login implements OnInit {
     }
 
     private safeReturnUrl(): string {
-        const raw = this.route.snapshot.queryParamMap.get('returnUrl');
-        return raw && raw.startsWith('/panel') && !raw.startsWith('//') ? raw : '/panel/dashboard';
+        return panelReturnUrlOrDefault(this.route.snapshot.queryParamMap.get('returnUrl'));
     }
 }

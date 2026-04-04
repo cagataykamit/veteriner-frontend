@@ -66,3 +66,32 @@ export interface ClientRecentSummaryDto {
     recentAppointments?: ClientRecentAppointmentSummaryItemDto[] | null;
     recentExaminations?: ClientRecentExaminationSummaryItemDto[] | null;
 }
+
+/** GET /clients/{id}/payment-summary — Finance+ müşteri ödeme özeti. */
+export interface ClientPaymentSummaryCurrencyTotalDto {
+    currency?: string | null;
+    totalAmount?: number | null;
+}
+
+export interface ClientPaymentSummaryRecentPaymentDto {
+    id: string;
+    paidAtUtc?: string | null;
+    clinicId?: string | null;
+    clinicName?: string | null;
+    petId?: string | null;
+    petName?: string | null;
+    amount?: number | null;
+    currency?: string | null;
+    method?: number | string | null;
+    notes?: string | null;
+}
+
+export interface ClientPaymentSummaryDto {
+    clientId: string;
+    clientName?: string | null;
+    totalPaymentsCount?: number | null;
+    totalPaidAmount?: number | null;
+    currencyTotals?: ClientPaymentSummaryCurrencyTotalDto[] | null;
+    lastPaymentAtUtc?: string | null;
+    recentPayments?: ClientPaymentSummaryRecentPaymentDto[] | null;
+}

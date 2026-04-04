@@ -10,6 +10,7 @@ import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconf
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE, authFailureMessage } from '@/app/core/auth/auth-error.utils';
+import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 
 @Component({
     selector: 'app-select-clinic-page',
@@ -144,11 +145,7 @@ export class SelectClinicPage implements OnInit {
     }
 
     private safeReturnUrl(): string {
-        const raw = this.route.snapshot.queryParamMap.get('returnUrl');
-        if (raw && raw.startsWith('/panel') && !raw.startsWith('//')) {
-            return raw;
-        }
-        return '/panel/dashboard';
+        return panelReturnUrlOrDefault(this.route.snapshot.queryParamMap.get('returnUrl'));
     }
 
     private resolveError(e: unknown, fallback: string): string {

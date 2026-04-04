@@ -15,12 +15,14 @@ export const ApiEndpoints = {
         clinics: () => `/api/v1/me/clinics`
     },
     dashboard: {
-        summary: () => `/api/v1/dashboard/summary`
+        summary: () => `/api/v1/dashboard/summary`,
+        financeSummary: () => `/api/v1/dashboard/finance-summary`
     },
     clients: {
         list: () => `/api/v1/clients`,
         byId: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}`,
-        recentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/recent-summary`
+        recentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/recent-summary`,
+        paymentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/payment-summary`
     },
     pets: {
         list: () => `/api/v1/pets`,

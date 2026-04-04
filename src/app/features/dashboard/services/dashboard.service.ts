@@ -4,9 +4,9 @@ import { forkJoin, Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
+import { mapDashboardFinanceSummaryDtoToVm } from '@/app/features/dashboard/data/dashboard-finance.mapper';
 import {
     normalizeDashboardSummaryDto,
-    pickAttentionPayments,
     pickUpcomingVaccinations,
     sortAppointmentsByScheduledAsc
 } from '@/app/features/dashboard/data/dashboard-operational.mapper';
@@ -15,10 +15,10 @@ import type {
     DashboardSection,
     DashboardSummaryNormalized
 } from '@/app/features/dashboard/models/dashboard-operational.model';
+import type { DashboardFinanceSummaryDto } from '@/app/features/dashboard/models/dashboard-finance.model';
 import type { DashboardSummaryDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
@@ -30,7 +30,6 @@ export class DashboardService {
     private readonly appointments = inject(AppointmentsService);
     private readonly vaccinations = inject(VaccinationsService);
     private readonly examinations = inject(ExaminationsService);
-    private readonly payments = inject(PaymentsService);
 
     getSummary(): Observable<DashboardSummaryDto> {
         return this.api.get<DashboardSummaryDto>(ApiEndpoints.dashboard.summary()).pipe(
@@ -96,10 +95,12 @@ export class DashboardService {
                 [],
                 'Muayene listesi yüklenemedi.'
             ),
-            paymentItems: section(
-                this.payments.getPayments({ page: 1, pageSize: 40 }).pipe(map((r) => r.items)),
-                [],
-                'Ödeme listesi yüklenemedi.'
+            finance: section(
+                this.api
+                    .get<DashboardFinanceSummaryDto>(ApiEndpoints.dashboard.financeSummary())
+                    .pipe(map(mapDashboardFinanceSummaryDtoToVm)),
+                null,
+                'Finans özeti yüklenemedi.'
             )
         }).pipe(
             map(
@@ -117,10 +118,7 @@ export class DashboardService {
                         data: x.examinationItems.data.slice(0, 6),
                         error: x.examinationItems.error
                     },
-                    attentionPayments: {
-                        data: pickAttentionPayments(x.paymentItems.data, 8),
-                        error: x.paymentItems.error
-                    }
+                    finance: x.finance
                 })
             )
         );
