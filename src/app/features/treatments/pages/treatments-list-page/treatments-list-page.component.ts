@@ -74,7 +74,12 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             </div>
         } @else {
             <div class="card">
-                <h5 class="mb-4">{{ copy.recordsHeading }}</h5>
+                <div class="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <h5 class="m-0">Tedaviler</h5>
+                    @if (totalItems() > 0) {
+                        <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
+                    }
+                </div>
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {

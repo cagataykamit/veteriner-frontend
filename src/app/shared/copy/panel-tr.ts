@@ -13,8 +13,6 @@ export const PANEL_COPY = {
     buttonCancel: 'İptal',
     buttonDetail: 'Detay',
     buttonRefresh: 'Yenile',
-    /** Liste kartı alt başlığı (tüm modül listeleri). */
-    recordsHeading: 'Kayıtlar',
     labelClient: 'Müşteri',
     labelPet: 'Hayvan'
 } as const;

@@ -17,6 +17,8 @@ export interface AppointmentsListQuery {
     fromDate?: string;
     /** yyyy-MM-dd */
     toDate?: string;
+    /** Örn. `ScheduledAtUtc` — backend liste uçlarında `Sort` query ile eşlenir. */
     sort?: string;
+    /** Örn. `desc` / `asc` — `Order` query. */
     order?: string;
 }

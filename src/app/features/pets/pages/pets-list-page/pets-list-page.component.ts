@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { Paginator } from 'primeng/paginator';
+import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
@@ -25,6 +27,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         FormsModule,
         RouterLink,
         TableModule,
+        Paginator,
         ButtonModule,
         InputTextModule,
         SelectModule,
@@ -94,45 +97,112 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             </div>
         } @else {
             <div class="card">
-                <h5 class="mb-4">{{ copy.recordsHeading }}</h5>
+                <div class="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <h5 class="m-0">Hayvanlar</h5>
+                    @if (totalItems() > 0) {
+                        <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
+                    }
+                </div>
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
-                    <p-table
-                        [value]="displayedRows()"
-                        [paginator]="true"
+                    <div class="hidden lg:block overflow-x-auto">
+                        <p-table
+                            [value]="displayedRows()"
+                            [paginator]="true"
+                            [rows]="pageSize()"
+                            [totalRecords]="totalItems()"
+                            [lazy]="true"
+                            [first]="first()"
+                            (onLazyLoad)="onTableLazyLoad($event)"
+                            [tableStyle]="{ 'min-width': '64rem' }"
+                            [showCurrentPageReport]="true"
+                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                        >
+                            <ng-template #header>
+                                <tr>
+                                    <th>Ad</th>
+                                    <th>Tür</th>
+                                    <th>Cins</th>
+                                    <th>Renk</th>
+                                    <th>Kilo (kg)</th>
+                                    <th style="width: 8rem">İşlemler</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template #body let-row>
+                                <tr>
+                                    <td class="font-medium">{{ row.name }}</td>
+                                    <td>{{ row.speciesName }}</td>
+                                    <td>{{ row.breed }}</td>
+                                    <td>{{ row.colorName }}</td>
+                                    <td>{{ row.weight }}</td>
+                                    <td>
+                                        <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                    </div>
+
+                    <div class="lg:hidden space-y-3">
+                        @for (row of displayedRows(); track row.id) {
+                            <div
+                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
+                            >
+                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
+                                    <a [routerLink]="['/panel/pets', row.id]" class="text-primary no-underline break-words">{{ row.name }}</a>
+                                </div>
+                                <div class="space-y-2 mb-3 min-w-0 text-sm">
+                                    @if (row.clientId) {
+                                        <div>
+                                            <span class="text-muted-color font-medium">Sahip: </span>
+                                            <a
+                                                [routerLink]="['/panel/clients', row.clientId]"
+                                                class="text-primary font-medium no-underline break-words"
+                                            >
+                                                Müşteri
+                                            </a>
+                                        </div>
+                                    }
+                                    <div>
+                                        <span class="text-muted-color font-medium">Tür: </span>
+                                        <span class="break-words">{{ row.speciesName }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted-color font-medium">Irk: </span>
+                                        <span class="break-words">{{ row.breed }}</span>
+                                    </div>
+                                </div>
+                                @if (row.colorName || row.weight) {
+                                    <div class="text-xs text-muted-color mb-3 min-w-0 break-words">
+                                        @if (row.colorName) {
+                                            <span>Renk: {{ row.colorName }}</span>
+                                        }
+                                        @if (row.colorName && row.weight) {
+                                            <span> · </span>
+                                        }
+                                        @if (row.weight) {
+                                            <span>{{ row.weight }} kg</span>
+                                        }
+                                    </div>
+                                }
+                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                    <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <p-paginator
+                        class="lg:hidden mt-4"
                         [rows]="pageSize()"
                         [totalRecords]="totalItems()"
-                        [lazy]="true"
                         [first]="first()"
-                        (onLazyLoad)="onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '64rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                    >
-                        <ng-template #header>
-                            <tr>
-                                <th>Ad</th>
-                                <th>Tür</th>
-                                <th>Cins</th>
-                                <th>Renk</th>
-                                <th>Kilo (kg)</th>
-                                <th style="width: 8rem">İşlemler</th>
-                            </tr>
-                        </ng-template>
-                        <ng-template #body let-row>
-                            <tr>
-                                <td class="font-medium">{{ row.name }}</td>
-                                <td>{{ row.speciesName }}</td>
-                                <td>{{ row.breed }}</td>
-                                <td>{{ row.colorName }}</td>
-                                <td>{{ row.weight }}</td>
-                                <td>
-                                    <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">Detay</a>
-                                </td>
-                            </tr>
-                        </ng-template>
-                    </p-table>
+                        [rowsPerPageOptions]="[10, 25, 50]"
+                        (onPageChange)="onMobilePageChange($event)"
+                    />
                 }
             </div>
         }
@@ -216,6 +286,14 @@ export class PetsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
+    }
+
+    onMobilePageChange(state: PaginatorState): void {
+        const rows = state.rows ?? this.pageSize();
+        const first = state.first ?? 0;
+        const page = Math.floor(first / rows) + 1;
+        this.suppressNextLazy = true;
         this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
     }
 
