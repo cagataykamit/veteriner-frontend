@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { Paginator } from 'primeng/paginator';
+import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
@@ -24,6 +26,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         FormsModule,
         RouterLink,
         TableModule,
+        Paginator,
         ButtonModule,
         InputTextModule,
         AppPageHeaderComponent,
@@ -68,39 +71,80 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
-                    <p-table
-                        [value]="displayedRows()"
-                        [paginator]="true"
+                    <div class="hidden lg:block overflow-x-auto">
+                        <p-table
+                            [value]="displayedRows()"
+                            [paginator]="true"
+                            [rows]="pageSize()"
+                            [totalRecords]="totalItems()"
+                            [lazy]="true"
+                            [first]="first()"
+                            (onLazyLoad)="onTableLazyLoad($event)"
+                            [tableStyle]="{ 'min-width': '50rem' }"
+                            [showCurrentPageReport]="true"
+                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                        >
+                            <ng-template #header>
+                                <tr>
+                                    <th>Ad Soyad</th>
+                                    <th>Telefon</th>
+                                    <th>E-posta</th>
+                                    <th>Kayıt Tarihi</th>
+                                    <th style="width: 8rem">İşlemler</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template #body let-row>
+                                <tr>
+                                    <td class="font-medium">{{ row.fullName }}</td>
+                                    <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
+                                    <td>{{ row.email }}</td>
+                                    <td>{{ formatDate(row.createdAtUtc) }}</td>
+                                    <td>
+                                        <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                    </div>
+
+                    <div class="lg:hidden space-y-3">
+                        @for (row of displayedRows(); track row.id) {
+                            <div
+                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
+                            >
+                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
+                                    <a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline break-words">{{ row.fullName }}</a>
+                                </div>
+                                <div class="space-y-2 mb-3 min-w-0 text-sm">
+                                    <div>
+                                        <span class="text-muted-color font-medium">Telefon: </span>
+                                        <span class="break-words">{{ formatClientPhoneForDisplay(row.phone) }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted-color font-medium">E-posta: </span>
+                                        <span class="break-all">{{ row.email }}</span>
+                                    </div>
+                                </div>
+                                @if (row.createdAtUtc) {
+                                    <div class="text-xs text-muted-color mb-3 min-w-0">Kayıt: {{ formatDate(row.createdAtUtc) }}</div>
+                                }
+                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                    <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <p-paginator
+                        class="lg:hidden mt-4"
                         [rows]="pageSize()"
                         [totalRecords]="totalItems()"
-                        [lazy]="true"
                         [first]="first()"
-                        (onLazyLoad)="onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '50rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                    >
-                        <ng-template #header>
-                            <tr>
-                                <th>Ad Soyad</th>
-                                <th>Telefon</th>
-                                <th>E-posta</th>
-                                <th>Kayıt Tarihi</th>
-                                <th style="width: 8rem">İşlemler</th>
-                            </tr>
-                        </ng-template>
-                        <ng-template #body let-row>
-                            <tr>
-                                <td class="font-medium">{{ row.fullName }}</td>
-                                <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
-                                <td>{{ row.email }}</td>
-                                <td>{{ formatDate(row.createdAtUtc) }}</td>
-                                <td>
-                                    <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline">Detay</a>
-                                </td>
-                            </tr>
-                        </ng-template>
-                    </p-table>
+                        [rowsPerPageOptions]="[10, 25, 50]"
+                        (onPageChange)="onMobilePageChange($event)"
+                    />
                 }
             </div>
         }
@@ -160,6 +204,14 @@ export class ClientsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+        this.loadFromServer(page, rows, this.activeSearch());
+    }
+
+    onMobilePageChange(state: PaginatorState): void {
+        const rows = state.rows ?? this.pageSize();
+        const first = state.first ?? 0;
+        const page = Math.floor(first / rows) + 1;
+        this.suppressNextLazy = true;
         this.loadFromServer(page, rows, this.activeSearch());
     }
 

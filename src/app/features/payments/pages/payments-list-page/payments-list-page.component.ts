@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { Paginator } from 'primeng/paginator';
+import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
@@ -26,6 +28,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         FormsModule,
         RouterLink,
         TableModule,
+        Paginator,
         ButtonModule,
         InputTextModule,
         SelectModule,
@@ -92,57 +95,114 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
-                    <p-table
-                        [value]="displayedRows()"
-                        [paginator]="true"
+                    <div class="hidden lg:block overflow-x-auto">
+                        <p-table
+                            [value]="displayedRows()"
+                            [paginator]="true"
+                            [rows]="pageSize()"
+                            [totalRecords]="totalItems()"
+                            [lazy]="true"
+                            [first]="first()"
+                            (onLazyLoad)="onTableLazyLoad($event)"
+                            [tableStyle]="{ 'min-width': '56rem' }"
+                            [showCurrentPageReport]="true"
+                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                        >
+                            <ng-template #header>
+                                <tr>
+                                    <th>Müşteri</th>
+                                    <th>Hayvan</th>
+                                    <th class="text-right">Tutar</th>
+                                    <th>Para birimi</th>
+                                    <th>Yöntem</th>
+                                    <th>Ödeme tarihi</th>
+                                    <th style="width: 8rem">İşlemler</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template #body let-row>
+                                <tr>
+                                    <td>
+                                        @if (row.clientId) {
+                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
+                                                row.clientName
+                                            }}</a>
+                                        } @else {
+                                            {{ row.clientName }}
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (row.petId) {
+                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                        } @else {
+                                            {{ row.petName }}
+                                        }
+                                    </td>
+                                    <td class="text-right font-medium">{{ money(row.amount, row.currency) }}</td>
+                                    <td>{{ row.currency }}</td>
+                                    <td>{{ methodLabel(row.method) }}</td>
+                                    <td>{{ formatDateTime(row.paidAtUtc) }}</td>
+                                    <td>
+                                        <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                    </div>
+
+                    <div class="lg:hidden space-y-3">
+                        @for (row of displayedRows(); track row.id) {
+                            <div
+                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
+                            >
+                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
+                                    {{ formatDateTime(row.paidAtUtc) }}
+                                </div>
+                                <div class="space-y-2 mb-3 min-w-0">
+                                    <div class="text-sm">
+                                        <span class="text-muted-color font-medium">Müşteri: </span>
+                                        @if (row.clientId) {
+                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{
+                                                row.clientName
+                                            }}</a>
+                                        } @else {
+                                            <span class="break-words">{{ row.clientName }}</span>
+                                        }
+                                    </div>
+                                    <div class="text-sm">
+                                        <span class="text-muted-color font-medium">Hayvan: </span>
+                                        @if (row.petId) {
+                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
+                                                row.petName
+                                            }}</a>
+                                        } @else {
+                                            <span class="break-words">{{ row.petName }}</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="text-sm font-medium mb-2 min-w-0 break-words">
+                                    {{ money(row.amount, row.currency) }}
+                                    <span class="text-muted-color font-normal"> {{ row.currency }}</span>
+                                </div>
+                                <div class="text-sm text-muted-color mb-3 min-w-0">
+                                    <span class="font-medium">Yöntem: </span>{{ methodLabel(row.method) }}
+                                </div>
+                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <p-paginator
+                        class="lg:hidden mt-4"
                         [rows]="pageSize()"
                         [totalRecords]="totalItems()"
-                        [lazy]="true"
                         [first]="first()"
-                        (onLazyLoad)="onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '56rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                    >
-                        <ng-template #header>
-                            <tr>
-                                <th>Müşteri</th>
-                                <th>Hayvan</th>
-                                <th class="text-right">Tutar</th>
-                                <th>Para birimi</th>
-                                <th>Yöntem</th>
-                                <th>Ödeme tarihi</th>
-                                <th style="width: 8rem">İşlemler</th>
-                            </tr>
-                        </ng-template>
-                        <ng-template #body let-row>
-                            <tr>
-                                <td>
-                                    @if (row.clientId) {
-                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
-                                            row.clientName
-                                        }}</a>
-                                    } @else {
-                                        {{ row.clientName }}
-                                    }
-                                </td>
-                                <td>
-                                    @if (row.petId) {
-                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                    } @else {
-                                        {{ row.petName }}
-                                    }
-                                </td>
-                                <td class="text-right font-medium">{{ money(row.amount, row.currency) }}</td>
-                                <td>{{ row.currency }}</td>
-                                <td>{{ methodLabel(row.method) }}</td>
-                                <td>{{ formatDateTime(row.paidAtUtc) }}</td>
-                                <td>
-                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay</a>
-                                </td>
-                            </tr>
-                        </ng-template>
-                    </p-table>
+                        [rowsPerPageOptions]="[10, 25, 50]"
+                        (onPageChange)="onMobilePageChange($event)"
+                    />
                 }
             </div>
         }
@@ -241,6 +301,14 @@ export class PaymentsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
+    }
+
+    onMobilePageChange(state: PaginatorState): void {
+        const rows = state.rows ?? this.pageSize();
+        const first = state.first ?? 0;
+        const page = Math.floor(first / rows) + 1;
+        this.suppressNextLazy = true;
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
     }
 
