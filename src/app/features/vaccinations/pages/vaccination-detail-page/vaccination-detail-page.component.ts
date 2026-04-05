@@ -74,21 +74,23 @@ import { EMPTY, switchMap } from 'rxjs';
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Müşteri / hayvan bilgileri</h5>
-                        @if (vac()!.clientId) {
-                            <p class="mt-0 mb-2">
-                                <a [routerLink]="['/panel/clients', vac()!.clientId]" class="text-primary font-medium no-underline">Müşteri detayı →</a>
-                            </p>
-                        }
-                        @if (vac()!.petId) {
-                            <p class="mt-0 mb-3">
-                                <a [routerLink]="['/panel/pets', vac()!.petId]" class="text-primary font-medium no-underline">Hayvan detayı →</a>
-                            </p>
-                        }
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.clientName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (vac()!.clientId) {
+                                    <a [routerLink]="['/panel/clients', vac()!.clientId]" class="text-primary font-medium no-underline">{{ vac()!.clientName }}</a>
+                                } @else {
+                                    {{ vac()!.clientName }}
+                                }
+                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.petName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (vac()!.petId) {
+                                    <a [routerLink]="['/panel/pets', vac()!.petId]" class="text-primary font-medium no-underline">{{ vac()!.petName }}</a>
+                                } @else {
+                                    {{ vac()!.petName }}
+                                }
+                            </dd>
                         </dl>
                     </div>
                 </div>

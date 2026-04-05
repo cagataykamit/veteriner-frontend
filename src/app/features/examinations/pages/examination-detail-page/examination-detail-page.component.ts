@@ -150,21 +150,23 @@ import { EMPTY, switchMap } from 'rxjs';
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Müşteri / hayvan</h5>
-                        @if (exam()!.clientId) {
-                            <p class="mt-0 mb-2">
-                                <a [routerLink]="['/panel/clients', exam()!.clientId]" class="text-primary font-medium no-underline">Müşteri detayı →</a>
-                            </p>
-                        }
-                        @if (exam()!.petId) {
-                            <p class="mt-0 mb-3">
-                                <a [routerLink]="['/panel/pets', exam()!.petId]" class="text-primary font-medium no-underline">Hayvan detayı →</a>
-                            </p>
-                        }
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.clientName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (exam()!.clientId) {
+                                    <a [routerLink]="['/panel/clients', exam()!.clientId]" class="text-primary font-medium no-underline">{{ exam()!.clientName }}</a>
+                                } @else {
+                                    {{ exam()!.clientName }}
+                                }
+                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.petName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (exam()!.petId) {
+                                    <a [routerLink]="['/panel/pets', exam()!.petId]" class="text-primary font-medium no-underline">{{ exam()!.petName }}</a>
+                                } @else {
+                                    {{ exam()!.petName }}
+                                }
+                            </dd>
                         </dl>
                     </div>
                 </div>

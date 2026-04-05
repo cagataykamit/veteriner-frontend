@@ -109,21 +109,23 @@ import { EMPTY, switchMap } from 'rxjs';
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Müşteri / hayvan bilgileri</h5>
-                        @if (appt()!.clientId) {
-                            <p class="mt-0 mb-2">
-                                <a [routerLink]="['/panel/clients', appt()!.clientId]" class="text-primary font-medium no-underline">Müşteri detayı →</a>
-                            </p>
-                        }
-                        @if (appt()!.petId) {
-                            <p class="mt-0 mb-3">
-                                <a [routerLink]="['/panel/pets', appt()!.petId]" class="text-primary font-medium no-underline">Hayvan detayı →</a>
-                            </p>
-                        }
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.clientName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (appt()!.clientId) {
+                                    <a [routerLink]="['/panel/clients', appt()!.clientId]" class="text-primary font-medium no-underline">{{ appt()!.clientName }}</a>
+                                } @else {
+                                    {{ appt()!.clientName }}
+                                }
+                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.petName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (appt()!.petId) {
+                                    <a [routerLink]="['/panel/pets', appt()!.petId]" class="text-primary font-medium no-underline">{{ appt()!.petName }}</a>
+                                } @else {
+                                    {{ appt()!.petName }}
+                                }
+                            </dd>
                         </dl>
                     </div>
                 </div>

@@ -73,21 +73,23 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Müşteri / hayvan</h5>
-                        @if (row()!.clientId) {
-                            <p class="mt-0 mb-2">
-                                <a [routerLink]="['/panel/clients', row()!.clientId]" class="text-primary font-medium no-underline">Müşteri detayı →</a>
-                            </p>
-                        }
-                        @if (row()!.petId) {
-                            <p class="mt-0 mb-3">
-                                <a [routerLink]="['/panel/pets', row()!.petId]" class="text-primary font-medium no-underline">Hayvan detayı →</a>
-                            </p>
-                        }
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.clientName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (row()!.clientId) {
+                                    <a [routerLink]="['/panel/clients', row()!.clientId]" class="text-primary font-medium no-underline">{{ row()!.clientName }}</a>
+                                } @else {
+                                    {{ row()!.clientName }}
+                                }
+                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.petName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (row()!.petId) {
+                                    <a [routerLink]="['/panel/pets', row()!.petId]" class="text-primary font-medium no-underline">{{ row()!.petName }}</a>
+                                } @else {
+                                    {{ row()!.petName }}
+                                }
+                            </dd>
                         </dl>
                     </div>
                 </div>

@@ -47,23 +47,43 @@ import { dateTimeLocalInputToIsoUtc, formatDateDisplay, formatDateTimeDisplay } 
             </div>
         } @else if (row()) {
             <app-page-header title="Yatış" subtitle="Klinik" [description]="row()!.reason">
-                @if (row()!.isActive) {
+                @if (
+                    row()!.isActive ||
+                    (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim())
+                ) {
                     <div actions class="flex flex-wrap gap-2">
-                        <a
-                            [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']"
-                            pButton
-                            type="button"
-                            label="Düzenle"
-                            icon="pi pi-pencil"
-                            class="p-button-secondary"
-                        ></a>
-                        <p-button
-                            type="button"
-                            label="Taburcu et"
-                            icon="pi pi-sign-out"
-                            severity="warn"
-                            (onClick)="openDischargeDialog()"
-                        />
+                        @if (row()!.isActive) {
+                            <a
+                                [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']"
+                                pButton
+                                type="button"
+                                label="Düzenle"
+                                icon="pi pi-pencil"
+                                class="p-button-secondary"
+                            ></a>
+                            <p-button
+                                type="button"
+                                label="Taburcu et"
+                                icon="pi pi-sign-out"
+                                severity="warn"
+                                (onClick)="openDischargeDialog()"
+                            />
+                        }
+                        @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
+                            <a
+                                [routerLink]="['/panel/payments/new']"
+                                [queryParams]="{
+                                    clientId: row()!.clientId,
+                                    petId: row()!.petId,
+                                    examinationId: row()!.examinationId
+                                }"
+                                pButton
+                                type="button"
+                                label="Ödeme Oluştur"
+                                icon="pi pi-wallet"
+                                class="p-button-secondary"
+                            ></a>
+                        }
                     </div>
                 }
             </app-page-header>
@@ -107,21 +127,23 @@ import { dateTimeLocalInputToIsoUtc, formatDateDisplay, formatDateTimeDisplay } 
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Müşteri / hayvan</h5>
-                        @if (row()!.clientId) {
-                            <p class="mt-0 mb-2">
-                                <a [routerLink]="['/panel/clients', row()!.clientId]" class="text-primary font-medium no-underline">Müşteri detayı →</a>
-                            </p>
-                        }
-                        @if (row()!.petId) {
-                            <p class="mt-0 mb-3">
-                                <a [routerLink]="['/panel/pets', row()!.petId]" class="text-primary font-medium no-underline">Hayvan detayı →</a>
-                            </p>
-                        }
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.clientName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (row()!.clientId) {
+                                    <a [routerLink]="['/panel/clients', row()!.clientId]" class="text-primary font-medium no-underline">{{ row()!.clientName }}</a>
+                                } @else {
+                                    {{ row()!.clientName }}
+                                }
+                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.petName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (row()!.petId) {
+                                    <a [routerLink]="['/panel/pets', row()!.petId]" class="text-primary font-medium no-underline">{{ row()!.petName }}</a>
+                                } @else {
+                                    {{ row()!.petName }}
+                                }
+                            </dd>
                         </dl>
                     </div>
                 </div>

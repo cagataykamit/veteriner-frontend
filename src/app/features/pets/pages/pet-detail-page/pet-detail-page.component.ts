@@ -88,14 +88,15 @@ const EM = '—';
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Sahip bilgileri</h5>
-                        @if (pet()!.ownerId) {
-                            <p class="mt-0 mb-3">
-                                <a [routerLink]="['/panel/clients', pet()!.ownerId]" class="text-primary font-medium no-underline">Müşteri detayına git →</a>
-                            </p>
-                        }
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Ad</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.clientName }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                @if (pet()!.ownerId) {
+                                    <a [routerLink]="['/panel/clients', pet()!.ownerId]" class="text-primary font-medium no-underline">{{ pet()!.clientName }}</a>
+                                } @else {
+                                    {{ pet()!.clientName }}
+                                }
+                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Telefon</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatClientPhoneForDisplay(pet()!.clientPhone) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">E-posta</dt>
