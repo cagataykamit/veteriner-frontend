@@ -248,11 +248,11 @@ import { EMPTY, switchMap } from 'rxjs';
                                 <ul class="list-none m-0 p-0">
                                     @for (row of relatedSummary()!.treatments; track row.id) {
                                         <li
-                                            class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
                                             <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.treatmentDateUtc) }}</div>
                                             <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm">{{ formatDt(row.treatmentDateUtc) }}</span>
+                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.treatmentDateUtc) }}</span>
                                                 <a [routerLink]="['/panel/treatments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                             </div>
                                             <div class="font-medium min-w-0 break-words">{{ row.title }}</div>
@@ -260,7 +260,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                                 <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
                                             }
                                             <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/treatments', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                                <a [routerLink]="['/panel/treatments', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
                                             </div>
                                         </li>
                                     }
@@ -280,11 +280,11 @@ import { EMPTY, switchMap } from 'rxjs';
                                 <ul class="list-none m-0 p-0">
                                     @for (row of relatedSummary()!.prescriptions; track row.id) {
                                         <li
-                                            class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
                                             <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.prescribedAtUtc) }}</div>
                                             <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm">{{ formatDt(row.prescribedAtUtc) }}</span>
+                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.prescribedAtUtc) }}</span>
                                                 <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                             </div>
                                             <div class="font-medium min-w-0 break-words">{{ row.title }}</div>
@@ -292,7 +292,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                                 <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
                                             }
                                             <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                                <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
                                             </div>
                                         </li>
                                     }
@@ -312,11 +312,11 @@ import { EMPTY, switchMap } from 'rxjs';
                                 <ul class="list-none m-0 p-0">
                                     @for (row of relatedSummary()!.labResults; track row.id) {
                                         <li
-                                            class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
                                             <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.resultDateUtc) }}</div>
                                             <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm">{{ formatDt(row.resultDateUtc) }}</span>
+                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.resultDateUtc) }}</span>
                                                 <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                             </div>
                                             <div class="font-medium min-w-0 break-words">{{ row.testName }}</div>
@@ -324,7 +324,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                                 <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
                                             }
                                             <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                                <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
                                             </div>
                                         </li>
                                     }
@@ -344,11 +344,11 @@ import { EMPTY, switchMap } from 'rxjs';
                                 <ul class="list-none m-0 p-0">
                                     @for (row of relatedSummary()!.hospitalizations; track row.id) {
                                         <li
-                                            class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
                                             <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.admittedAtUtc) }}</div>
                                             <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm">{{ formatDt(row.admittedAtUtc) }}</span>
+                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.admittedAtUtc) }}</span>
                                                 <a [routerLink]="['/panel/hospitalizations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                             </div>
                                             <div class="font-medium min-w-0 break-words">{{ row.reason }}</div>
@@ -357,7 +357,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                                 <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
                                             }
                                             <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/hospitalizations', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                                <a [routerLink]="['/panel/hospitalizations', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
                                             </div>
                                         </li>
                                     }
@@ -377,19 +377,30 @@ import { EMPTY, switchMap } from 'rxjs';
                                 <ul class="list-none m-0 p-0">
                                     @for (row of relatedSummary()!.payments; track row.id) {
                                         <li
-                                            class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
-                                            <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.paidAtUtc) }}</div>
-                                            <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm">{{ formatDt(row.paidAtUtc) }}</span>
-                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            <div class="lg:hidden space-y-2 min-w-0">
+                                                <div class="text-muted-color text-sm">{{ formatDt(row.paidAtUtc) }}</div>
+                                                <div class="font-semibold text-base tabular-nums text-surface-900 dark:text-surface-0 min-w-0 break-words">
+                                                    {{ money(row.amount, row.currency) }}
+                                                </div>
+                                                <div class="text-sm text-muted-color min-w-0 break-words">{{ payMethodLabel(row.method) }}</div>
+                                                @if (row.clinicName) {
+                                                    <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
+                                                }
+                                                <div class="flex justify-end pt-2 mt-1 border-t border-surface-200 dark:border-surface-700">
+                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
+                                                </div>
                                             </div>
-                                            <div class="font-medium min-w-0 break-words">{{ money(row.amount, row.currency) }} · {{ payMethodLabel(row.method) }}</div>
-                                            @if (row.clinicName) {
-                                                <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
-                                            }
-                                            <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                            <div class="hidden lg:block space-y-1 min-w-0">
+                                                <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                    <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.paidAtUtc) }}</span>
+                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                                </div>
+                                                <div class="font-medium min-w-0 break-words">{{ money(row.amount, row.currency) }} · {{ payMethodLabel(row.method) }}</div>
+                                                @if (row.clinicName) {
+                                                    <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
+                                                }
                                             </div>
                                         </li>
                                     }
@@ -416,16 +427,16 @@ import { EMPTY, switchMap } from 'rxjs';
                             <ul class="list-none m-0 p-0">
                                 @for (row of sibItems(); track row.id) {
                                     <li
-                                        class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                        class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
                                         <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.examinedAtUtc) }}</div>
                                         <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDt(row.examinedAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.examinedAtUtc) }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ row.visitReason }}</div>
                                         <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
                                         </div>
                                     </li>
                                 }
@@ -451,16 +462,16 @@ import { EMPTY, switchMap } from 'rxjs';
                             <ul class="list-none m-0 p-0">
                                 @for (row of apptItems(); track row.id) {
                                     <li
-                                        class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                        class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
                                         <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.scheduledAtUtc) }}</div>
                                         <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDt(row.scheduledAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.scheduledAtUtc) }}</span>
                                             <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
                                         <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
                                         </div>
                                     </li>
                                 }

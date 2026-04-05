@@ -145,16 +145,16 @@ import { EMPTY, switchMap } from 'rxjs';
                             <ul class="list-none m-0 p-0">
                                 @for (row of linkedExams(); track row.id) {
                                     <li
-                                        class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                        class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
                                         <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDateTime(row.examinedAtUtc) }}</div>
                                         <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDateTime(row.examinedAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm min-w-0">{{ formatDateTime(row.examinedAtUtc) }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Muayene detayı →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ row.visitReason }}</div>
                                         <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm">Muayene detayı →</a>
+                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm py-1">Muayene detayı →</a>
                                         </div>
                                     </li>
                                 }

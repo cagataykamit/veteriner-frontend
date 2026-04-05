@@ -147,20 +147,13 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                         } @else if (d.todayAppointments.data.length === 0) {
                             <app-empty-state message="Bugün için randevu yok." hint="Tarih filtresi yerel güne göredir." />
                         } @else {
-                            <p-table [value]="d.todayAppointments.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
-                                <ng-template #header>
-                                    <tr>
-                                        <th>Saat</th>
-                                        <th>Müşteri</th>
-                                        <th>Hayvan</th>
-                                        <th>Durum</th>
-                                        <th></th>
-                                    </tr>
-                                </ng-template>
-                                <ng-template #body let-row>
-                                    <tr>
-                                        <td>{{ formatTime(row.scheduledAtUtc) }}</td>
-                                        <td>
+                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                @for (row of d.todayAppointments.data; track row.id) {
+                                    <li
+                                        class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3"
+                                    >
+                                        <div class="text-muted-color text-sm">{{ formatTime(row.scheduledAtUtc) }}</div>
+                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
                                             @if (row.clientId) {
                                                 <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
                                                     row.clientName
@@ -168,23 +161,67 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                                             } @else {
                                                 {{ row.clientName }}
                                             }
-                                        </td>
-                                        <td>
+                                        </div>
+                                        <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">
                                             @if (row.petId) {
                                                 <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
                                             } @else {
                                                 {{ row.petName }}
                                             }
-                                        </td>
-                                        <td>
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-2">
                                             <app-status-tag [label]="apptStatusLabel(row.status)" [severity]="apptStatusSeverity(row.status)" />
-                                        </td>
-                                        <td>
-                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
-                                        </td>
-                                    </tr>
-                                </ng-template>
-                            </p-table>
+                                        </div>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                            <a
+                                                [routerLink]="['/panel/appointments', row.id]"
+                                                class="text-primary font-medium no-underline text-sm inline-flex py-1"
+                                                >Detay →</a
+                                            >
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="hidden lg:block">
+                                <p-table [value]="d.todayAppointments.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Saat</th>
+                                            <th>Müşteri</th>
+                                            <th>Hayvan</th>
+                                            <th>Durum</th>
+                                            <th></th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td>{{ formatTime(row.scheduledAtUtc) }}</td>
+                                            <td>
+                                                @if (row.clientId) {
+                                                    <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
+                                                        row.clientName
+                                                    }}</a>
+                                                } @else {
+                                                    {{ row.clientName }}
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (row.petId) {
+                                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                } @else {
+                                                    {{ row.petName }}
+                                                }
+                                            </td>
+                                            <td>
+                                                <app-status-tag [label]="apptStatusLabel(row.status)" [severity]="apptStatusSeverity(row.status)" />
+                                            </td>
+                                            <td>
+                                                <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
                         }
                     </div>
                 </div>
@@ -200,28 +237,54 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                         } @else if (d.upcomingVaccinations.data.length === 0) {
                             <app-empty-state message="Önümüzdeki dönem için uygun aşı kaydı yok." />
                         } @else {
-                            <p-table [value]="d.upcomingVaccinations.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
-                                <ng-template #header>
-                                    <tr>
-                                        <th>Sonraki tarih</th>
-                                        <th>Aşı</th>
-                                        <th>Hayvan</th>
-                                    </tr>
-                                </ng-template>
-                                <ng-template #body let-row>
-                                    <tr>
-                                        <td>{{ formatDate(row.dueAtUtc) }}</td>
-                                        <td>{{ row.vaccineName }}</td>
-                                        <td>
+                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                @for (row of d.upcomingVaccinations.data; track row.id) {
+                                    <li
+                                        class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3"
+                                    >
+                                        <div class="text-muted-color text-sm">{{ formatDate(row.dueAtUtc) }}</div>
+                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">{{ row.vaccineName }}</div>
+                                        <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">
                                             @if (row.petId) {
                                                 <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
                                             } @else {
                                                 {{ row.petName }}
                                             }
-                                        </td>
-                                    </tr>
-                                </ng-template>
-                            </p-table>
+                                        </div>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                            <a
+                                                [routerLink]="['/panel/vaccinations', row.id]"
+                                                class="text-primary font-medium no-underline text-sm inline-flex py-1"
+                                                >Detay →</a
+                                            >
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="hidden lg:block">
+                                <p-table [value]="d.upcomingVaccinations.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Sonraki tarih</th>
+                                            <th>Aşı</th>
+                                            <th>Hayvan</th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td>{{ formatDate(row.dueAtUtc) }}</td>
+                                            <td>{{ row.vaccineName }}</td>
+                                            <td>
+                                                @if (row.petId) {
+                                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                } @else {
+                                                    {{ row.petName }}
+                                                }
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
                         }
                     </div>
                 </div>
@@ -237,26 +300,46 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                         } @else if (d.recentExaminations.data.length === 0) {
                             <app-empty-state message="Muayene kaydı yok." />
                         } @else {
-                            <p-table [value]="d.recentExaminations.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
-                                <ng-template #header>
-                                    <tr>
-                                        <th>Tarih</th>
-                                        <th>Hayvan</th>
-                                        <th>Müşteri</th>
-                                        <th></th>
-                                    </tr>
-                                </ng-template>
-                                <ng-template #body let-row>
-                                    <tr>
-                                        <td>{{ formatDateTime(row.examinedAtUtc) }}</td>
-                                        <td>{{ row.petName }}</td>
-                                        <td>{{ row.clientName }}</td>
-                                        <td>
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
-                                        </td>
-                                    </tr>
-                                </ng-template>
-                            </p-table>
+                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                @for (row of d.recentExaminations.data; track row.id) {
+                                    <li
+                                        class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3"
+                                    >
+                                        <div class="text-muted-color text-sm break-words">{{ formatDateTime(row.examinedAtUtc) }}</div>
+                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">{{ row.petName }}</div>
+                                        <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">{{ row.clientName }}</div>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                            <a
+                                                [routerLink]="['/panel/examinations', row.id]"
+                                                class="text-primary font-medium no-underline text-sm inline-flex py-1"
+                                                >Detay →</a
+                                            >
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="hidden lg:block">
+                                <p-table [value]="d.recentExaminations.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Hayvan</th>
+                                            <th>Müşteri</th>
+                                            <th></th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td>{{ formatDateTime(row.examinedAtUtc) }}</td>
+                                            <td>{{ row.petName }}</td>
+                                            <td>{{ row.clientName }}</td>
+                                            <td>
+                                                <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
                         }
                     </div>
                 </div>
@@ -272,106 +355,142 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                         } @else if (!d.finance.data || d.finance.data.recentPayments.length === 0) {
                             <app-empty-state message="Ödeme kaydı yok." />
                         } @else {
-                            <p-table [value]="d.finance.data.recentPayments" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
-                                <ng-template #header>
-                                    <tr>
-                                        <th>Tarih</th>
-                                        <th>Müşteri</th>
-                                        <th>Hayvan</th>
-                                        <th>Tutar</th>
-                                        <th>Yöntem</th>
-                                        <th></th>
-                                    </tr>
-                                </ng-template>
-                                <ng-template #body let-row>
-                                    <tr>
-                                        <td>{{ formatDateTime(row.paidAtUtc) }}</td>
-                                        <td>
+                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                @for (row of d.finance.data.recentPayments; track row.id) {
+                                    <li
+                                        class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3"
+                                    >
+                                        <div class="text-muted-color text-sm break-words">{{ formatDateTime(row.paidAtUtc) }}</div>
+                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
                                             @if (row.clientId) {
                                                 <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
                                             } @else {
                                                 {{ row.clientName }}
                                             }
-                                        </td>
-                                        <td>
-                                            @if (row.petId) {
-                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                            } @else {
-                                                {{ row.petName }}
-                                            }
-                                        </td>
-                                        <td>{{ money(row.amount, row.currency) }}</td>
-                                        <td>{{ payMethodLabel(row.method) }}</td>
-                                        <td>
-                                            <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
-                                        </td>
-                                    </tr>
-                                </ng-template>
-                            </p-table>
+                                        </div>
+                                        @if (row.petId || (row.petName && row.petName.trim())) {
+                                            <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">
+                                                @if (row.petId) {
+                                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                } @else {
+                                                    {{ row.petName }}
+                                                }
+                                            </div>
+                                        }
+                                        <div class="min-w-0 break-words text-surface-900 dark:text-surface-0 font-medium">{{ money(row.amount, row.currency) }}</div>
+                                        <div class="text-sm text-muted-color break-words">{{ payMethodLabel(row.method) }}</div>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                            <a
+                                                [routerLink]="['/panel/payments', row.id]"
+                                                class="text-primary font-medium no-underline text-sm inline-flex py-1"
+                                                >Detay →</a
+                                            >
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="hidden lg:block">
+                                <p-table [value]="d.finance.data.recentPayments" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Müşteri</th>
+                                            <th>Hayvan</th>
+                                            <th>Tutar</th>
+                                            <th>Yöntem</th>
+                                            <th></th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td>{{ formatDateTime(row.paidAtUtc) }}</td>
+                                            <td>
+                                                @if (row.clientId) {
+                                                    <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                                } @else {
+                                                    {{ row.clientName }}
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (row.petId) {
+                                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                } @else {
+                                                    {{ row.petName }}
+                                                }
+                                            </td>
+                                            <td>{{ money(row.amount, row.currency) }}</td>
+                                            <td>{{ payMethodLabel(row.method) }}</td>
+                                            <td>
+                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
                         }
                     </div>
                 </div>
 
                 <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Son müşteri / hayvan</h5>
-                        @if (d.summary.error || !d.summary.data) {
+                    @if (d.summary.error || !d.summary.data) {
+                        <div class="card">
+                            <h5 class="mt-0 mb-4">Son müşteri / hayvan</h5>
                             <app-empty-state message="Özet yüklenemediği için son kayıtlar gösterilemiyor." />
-                        } @else {
-                            <div class="grid grid-cols-12 gap-6">
-                                <div class="col-span-12 lg:col-span-6">
-                                    <h6 class="mt-0 mb-3 text-muted-color font-medium">Son müşteriler</h6>
-                                    @if (d.summary.data.recentClients.length === 0) {
-                                        <app-empty-state message="Kayıt yok." />
-                                    } @else {
-                                        <p-table [value]="d.summary.data.recentClients" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
-                                            <ng-template #header>
-                                                <tr>
-                                                    <th>Ad</th>
-                                                    <th>Telefon</th>
-                                                    <th></th>
-                                                </tr>
-                                            </ng-template>
-                                            <ng-template #body let-row>
-                                                <tr>
-                                                    <td class="font-medium">{{ row.fullName ?? '—' }}</td>
-                                                    <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
-                                                    <td>
-                                                        <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
-                                                    </td>
-                                                </tr>
-                                            </ng-template>
-                                        </p-table>
-                                    }
-                                </div>
-                                <div class="col-span-12 lg:col-span-6">
-                                    <h6 class="mt-0 mb-3 text-muted-color font-medium">Son hayvanlar</h6>
-                                    @if (d.summary.data.recentPets.length === 0) {
-                                        <app-empty-state message="Kayıt yok." />
-                                    } @else {
-                                        <p-table [value]="d.summary.data.recentPets" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
-                                            <ng-template #header>
-                                                <tr>
-                                                    <th>Ad</th>
-                                                    <th>Tür</th>
-                                                    <th></th>
-                                                </tr>
-                                            </ng-template>
-                                            <ng-template #body let-row>
-                                                <tr>
-                                                    <td class="font-medium">{{ row.name ?? '—' }}</td>
-                                                    <td>{{ petSpeciesText(row) }}</td>
-                                                    <td>
-                                                        <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
-                                                    </td>
-                                                </tr>
-                                            </ng-template>
-                                        </p-table>
-                                    }
-                                </div>
+                        </div>
+                    } @else {
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="card mb-0 h-full">
+                                <h5 class="mt-0 mb-4">Son müşteriler</h5>
+                                @if (d.summary.data.recentClients.length === 0) {
+                                    <app-empty-state message="Kayıt yok." />
+                                } @else {
+                                    <p-table [value]="d.summary.data.recentClients" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                        <ng-template #header>
+                                            <tr>
+                                                <th>Ad</th>
+                                                <th>Telefon</th>
+                                                <th></th>
+                                            </tr>
+                                        </ng-template>
+                                        <ng-template #body let-row>
+                                            <tr>
+                                                <td class="font-medium">{{ row.fullName ?? '—' }}</td>
+                                                <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
+                                                <td>
+                                                    <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                </td>
+                                            </tr>
+                                        </ng-template>
+                                    </p-table>
+                                }
                             </div>
-                        }
-                    </div>
+                            <div class="card mb-0 h-full">
+                                <h5 class="mt-0 mb-4">Son hayvanlar</h5>
+                                @if (d.summary.data.recentPets.length === 0) {
+                                    <app-empty-state message="Kayıt yok." />
+                                } @else {
+                                    <p-table [value]="d.summary.data.recentPets" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                        <ng-template #header>
+                                            <tr>
+                                                <th>Ad</th>
+                                                <th>Tür</th>
+                                                <th></th>
+                                            </tr>
+                                        </ng-template>
+                                        <ng-template #body let-row>
+                                            <tr>
+                                                <td class="font-medium">{{ row.name ?? '—' }}</td>
+                                                <td>{{ petSpeciesText(row) }}</td>
+                                                <td>
+                                                    <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                </td>
+                                            </tr>
+                                        </ng-template>
+                                    </p-table>
+                                }
+                            </div>
+                        </div>
+                    }
                 </div>
 
                 <div class="col-span-12">
