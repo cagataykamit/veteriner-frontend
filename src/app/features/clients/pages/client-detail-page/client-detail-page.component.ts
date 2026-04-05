@@ -98,9 +98,11 @@ import { EMPTY, switchMap } from 'rxjs';
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of petsItems(); track row.id) {
-                                    <li class="mb-3 last:mb-0">
-                                        <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">{{ row.name }}</a>
-                                        <div class="text-sm text-muted-color">{{ row.speciesName }} · {{ row.breed }}</div>
+                                    <li
+                                        class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                    >
+                                        <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline break-words">{{ row.name }}</a>
+                                        <div class="text-sm text-muted-color mt-1 min-w-0 break-words">{{ row.speciesName }} · {{ row.breed }}</div>
                                     </li>
                                 }
                             </ul>
@@ -122,19 +124,23 @@ import { EMPTY, switchMap } from 'rxjs';
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of apptItems(); track row.id) {
-                                    <li class="mb-3 last:mb-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                    <li
+                                        class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                    >
+                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.scheduledAtUtc) }}</div>
+                                        <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
                                             <span class="text-muted-color text-sm">{{ formatDt(row.scheduledAtUtc) }}</span>
-                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0"
-                                                >Detay →</a
-                                            >
+                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
-                                        <div class="font-medium">{{ row.petName }}</div>
-                                        <div class="text-sm text-muted-color">
+                                        <div class="font-medium min-w-0 break-words">{{ row.petName }}</div>
+                                        <div class="text-sm text-muted-color min-w-0 break-words">
                                             {{ statusLabel(row.status) }}
                                             @if (row.notes?.trim()) {
                                                 <span> · {{ row.notes }}</span>
                                             }
+                                        </div>
+                                        <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
+                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
                                         </div>
                                     </li>
                                 }
@@ -157,15 +163,19 @@ import { EMPTY, switchMap } from 'rxjs';
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of examItems(); track row.id) {
-                                    <li class="mb-3 last:mb-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                    <li
+                                        class="mb-3 last:mb-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
+                                    >
+                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.examinedAtUtc) }}</div>
+                                        <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
                                             <span class="text-muted-color text-sm">{{ formatDt(row.examinedAtUtc) }}</span>
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0"
-                                                >Detay →</a
-                                            >
+                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
-                                        <div class="font-medium">{{ row.petName }}</div>
-                                        <div class="text-sm text-muted-color">{{ row.visitReason }}</div>
+                                        <div class="font-medium min-w-0 break-words">{{ row.petName }}</div>
+                                        <div class="text-sm text-muted-color min-w-0 break-words">{{ row.visitReason }}</div>
+                                        <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
+                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                        </div>
                                     </li>
                                 }
                             </ul>
@@ -228,10 +238,10 @@ import { EMPTY, switchMap } from 'rxjs';
                                 @if (paymentSummary()!.recentPayments.length === 0) {
                                     <app-empty-state [message]="copy.listEmptyMessage" />
                                 } @else {
-                                    <div class="overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0">
-                                        <div class="min-w-[18rem] sm:min-w-0">
+                                    <div class="overflow-x-auto -mx-1 px-1 lg:mx-0 lg:px-0">
+                                        <div class="min-w-[18rem] lg:min-w-0">
                                             <div
-                                                class="hidden sm:grid grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 px-0.5 pb-2 text-xs font-medium text-muted-color border-b border-surface-200 dark:border-surface-700"
+                                                class="hidden lg:grid grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 px-0.5 pb-2 text-xs font-medium text-muted-color border-b border-surface-200 dark:border-surface-700"
                                             >
                                                 <span>Tarih</span>
                                                 <span>Hayvan / Klinik / Yöntem</span>
@@ -240,8 +250,10 @@ import { EMPTY, switchMap } from 'rxjs';
                                             </div>
                                             <ul class="list-none m-0 p-0">
                                                 @for (row of paymentSummary()!.recentPayments; track row.id) {
-                                                    <li class="border-b border-surface-200 dark:border-surface-700 last:border-0">
-                                                        <div class="sm:hidden py-2.5 space-y-2">
+                                                    <li
+                                                        class="max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:mb-3 max-lg:last:mb-0 max-lg:shadow-sm lg:border-b lg:border-surface-200 lg:dark:border-surface-700 lg:last:border-0"
+                                                    >
+                                                        <div class="lg:hidden space-y-2">
                                                             <div class="flex justify-between items-baseline gap-2">
                                                                 <span class="text-muted-color text-xs shrink-0">{{ formatDt(row.paidAtUtc) }}</span>
                                                                 <span class="font-semibold text-sm tabular-nums text-surface-900 dark:text-surface-0">{{
@@ -257,7 +269,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                                                 }
                                                                 <div class="text-muted-color">{{ payMethodLabel(row.method) }}</div>
                                                             </div>
-                                                            <div class="flex justify-end">
+                                                            <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                                                 <a
                                                                     [routerLink]="['/panel/payments', row.id]"
                                                                     class="text-primary font-medium no-underline text-sm"
@@ -266,7 +278,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                                             </div>
                                                         </div>
                                                         <div
-                                                            class="hidden sm:grid sm:grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 items-center py-1.5 text-sm"
+                                                            class="hidden lg:grid lg:grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 items-center py-1.5 text-sm"
                                                         >
                                                             <div class="text-muted-color">{{ formatDt(row.paidAtUtc) }}</div>
                                                             <div class="min-w-0 space-y-0.5">
