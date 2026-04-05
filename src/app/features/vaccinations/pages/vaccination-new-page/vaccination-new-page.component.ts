@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -18,6 +18,11 @@ import {
     petOptionsFromList,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
+import {
+    parseVaccinationCreateRouteContext,
+    type VaccinationCreateRouteContext
+} from '@/app/shared/panel/examination-create-route-context.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
@@ -48,6 +53,11 @@ import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/ut
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            @if (contextFromRoute()) {
+                <p class="text-sm text-muted-color mt-0 mb-4">
+                    Muayene bağlamı taşındı; müşteri ve hayvan seçimi kilitlidir. Aşı bilgilerini doldurun.
+                </p>
+            }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -70,10 +80,12 @@ import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/ut
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        <p class="text-muted-color text-sm mt-2 mb-0">
-                            Aradığınız kayıt yoksa
-                            <a routerLink="/panel/clients/new" class="text-primary font-medium no-underline">Yeni Müşteri</a>.
-                        </p>
+                        @if (!contextFromRoute()) {
+                            <p class="text-muted-color text-sm mt-2 mb-0">
+                                Aradığınız kayıt yoksa
+                                <a routerLink="/panel/clients/new" class="text-primary font-medium no-underline">Yeni Müşteri</a>.
+                            </p>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
@@ -95,10 +107,12 @@ import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/ut
                         } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        <p class="text-muted-color text-sm mt-2 mb-0">
-                            <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
-                            — bu müşteri için hayvan ekleyebilirsiniz.
-                        </p>
+                        @if (!contextFromRoute()) {
+                            <p class="text-muted-color text-sm mt-2 mb-0">
+                                <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
+                                — bu müşteri için hayvan ekleyebilirsiniz.
+                            </p>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="vaccineName" class="block text-sm font-medium text-muted-color mb-2">Aşı adı *</label>
@@ -168,7 +182,7 @@ import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/ut
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext()"
                     />
                     <p-button
                         type="button"
@@ -191,8 +205,15 @@ export class VaccinationNewPageComponent implements OnInit {
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+
+    /** Bağlam başarıyla uygulandıysa API’ye iletilir; serbest oluşturmada null kalır. */
+    private routeExaminationId: string | null = null;
+
+    readonly contextFromRoute = signal(false);
+    readonly applyingRouteContext = signal(false);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -225,6 +246,9 @@ export class VaccinationNewPageComponent implements OnInit {
         });
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
+            if (this.contextFromRoute()) {
+                return;
+            }
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
@@ -299,6 +323,7 @@ export class VaccinationNewPageComponent implements OnInit {
         const payload: CreateVaccinationRequest = {
             clinicId,
             petId: v.petId.trim(),
+            examinationId: this.routeExaminationId,
             vaccineName: v.vaccineName.trim(),
             appliedAtUtc: appliedAtUtc ?? null,
             dueAtUtc: dueAtUtc ?? null,
@@ -332,12 +357,113 @@ export class VaccinationNewPageComponent implements OnInit {
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.loadingClients.set(false);
+                this.tryApplyVaccinationRouteContext();
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
                 this.loadingClients.set(false);
             }
         });
+    }
+
+    private tryApplyVaccinationRouteContext(): void {
+        const ctx = parseVaccinationCreateRouteContext(this.route.snapshot.queryParamMap);
+        if (!ctx) {
+            return;
+        }
+        this.applyingRouteContext.set(true);
+        this.selectionError.set(null);
+        const opts = this.clientOptions();
+        if (opts.some((o) => o.value === ctx.clientId)) {
+            this.applyContextAfterClientMerge(ctx);
+            return;
+        }
+        this.clientsService.getClientById(ctx.clientId).subscribe({
+            next: (c) => {
+                this.mergeClientOptionIfMissing(c.id, `${c.fullName} — ${formatClientPhoneForDisplay(c.phone)}`);
+                this.applyContextAfterClientMerge(ctx);
+            },
+            error: () => {
+                this.selectionError.set('Bağlam müşterisi yüklenemedi.');
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private applyContextAfterClientMerge(ctx: VaccinationCreateRouteContext): void {
+        this.form.patchValue({ clientId: ctx.clientId }, { emitEvent: false });
+        this.form.controls.clientId.disable({ emitEvent: false });
+        this.form.controls.petId.enable({ emitEvent: false });
+        this.loadPetsForContextLock(ctx);
+    }
+
+    private mergeClientOptionIfMissing(id: string, label: string): void {
+        const opts = this.clientOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.clientOptions.set([{ value: id, label }, ...opts]);
+    }
+
+    private mergePetOptionIfMissing(id: string, label: string): void {
+        const opts = this.petOptions();
+        if (opts.some((o) => o.value === id)) {
+            return;
+        }
+        this.petOptions.set([{ value: id, label }, ...opts]);
+    }
+
+    private loadPetsForContextLock(ctx: VaccinationCreateRouteContext): void {
+        this.loadingPets.set(true);
+        this.selectionError.set(null);
+        this.petsService.getPets({ page: 1, pageSize: 200, clientId: ctx.clientId }).subscribe({
+            next: (r) => {
+                let items = r.items;
+                const anyClientId = items.some((p) => (p.clientId ?? '').trim());
+                if (anyClientId) {
+                    items = filterPetsByClientId(items, ctx.clientId);
+                }
+                this.petOptions.set(petOptionsFromList(items));
+                const inList = items.some((p) => p.id === ctx.petId);
+                if (inList) {
+                    this.finalizeContextLock(ctx);
+                    return;
+                }
+                this.petsService.getPetById(ctx.petId).subscribe({
+                    next: (pet) => {
+                        const owner = (pet.ownerId ?? '').trim();
+                        if (owner !== ctx.clientId.trim()) {
+                            this.selectionError.set('Hayvan bu müşteri için geçerli değil.');
+                            this.loadingPets.set(false);
+                            this.applyingRouteContext.set(false);
+                            return;
+                        }
+                        this.mergePetOptionIfMissing(pet.id, `${pet.name} — ${pet.speciesName}`);
+                        this.finalizeContextLock(ctx);
+                    },
+                    error: () => {
+                        this.selectionError.set('Bağlam hayvanı yüklenemedi.');
+                        this.loadingPets.set(false);
+                        this.applyingRouteContext.set(false);
+                    }
+                });
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
+                this.petOptions.set([]);
+                this.loadingPets.set(false);
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private finalizeContextLock(ctx: VaccinationCreateRouteContext): void {
+        this.routeExaminationId = ctx.examinationId;
+        this.form.patchValue({ petId: ctx.petId }, { emitEvent: false });
+        this.form.controls.petId.disable({ emitEvent: false });
+        this.contextFromRoute.set(true);
+        this.loadingPets.set(false);
+        this.applyingRouteContext.set(false);
     }
 
     private loadPetsForClient(clientId: string): void {

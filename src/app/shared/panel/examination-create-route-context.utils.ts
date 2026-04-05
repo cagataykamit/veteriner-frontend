@@ -54,3 +54,20 @@ export function parseAppointmentExaminationRouteContext(params: ParamMap): Appoi
     }
     return { clientId, petId, appointmentId };
 }
+
+/** Aşı create: zorunlu `clientId` + `petId`; `examinationId` opsiyonel (API gövdesine iletilebilir). */
+export interface VaccinationCreateRouteContext {
+    clientId: string;
+    petId: string;
+    examinationId: string | null;
+}
+
+export function parseVaccinationCreateRouteContext(params: ParamMap): VaccinationCreateRouteContext | null {
+    const clientId = params.get('clientId')?.trim() ?? '';
+    const petId = params.get('petId')?.trim() ?? '';
+    if (!clientId || !petId) {
+        return null;
+    }
+    const examinationId = params.get('examinationId')?.trim() ?? '';
+    return { clientId, petId, examinationId: examinationId || null };
+}

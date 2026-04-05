@@ -91,7 +91,7 @@ import { EMPTY, switchMap } from 'rxjs';
                             class="p-button-secondary"
                         ></a>
                         <a
-                            [routerLink]="['/panel/payments/new']"
+                            [routerLink]="['/panel/vaccinations/new']"
                             [queryParams]="{
                                 clientId: exam()!.clientId,
                                 petId: exam()!.petId,
@@ -99,8 +99,8 @@ import { EMPTY, switchMap } from 'rxjs';
                             }"
                             pButton
                             type="button"
-                            label="Ödeme Oluştur"
-                            icon="pi pi-wallet"
+                            label="Aşı Oluştur"
+                            icon="pi pi-shield"
                             class="p-button-secondary"
                         ></a>
                         <a
@@ -127,6 +127,19 @@ import { EMPTY, switchMap } from 'rxjs';
                             type="button"
                             label="Yatış Başlat"
                             icon="pi pi-building"
+                            class="p-button-secondary"
+                        ></a>
+                        <a
+                            [routerLink]="['/panel/payments/new']"
+                            [queryParams]="{
+                                clientId: exam()!.clientId,
+                                petId: exam()!.petId,
+                                examinationId: exam()!.id
+                            }"
+                            pButton
+                            type="button"
+                            label="Ödeme Oluştur"
+                            icon="pi pi-wallet"
                             class="p-button-secondary"
                         ></a>
                     </div>
