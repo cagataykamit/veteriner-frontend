@@ -46,7 +46,10 @@ export class AppMenu {
             },
             {
                 label: 'Hesap',
-                items: [{ label: 'Giriş', icon: 'pi pi-fw pi-sign-in', routerLink: ['/auth/login'] }]
+                items: [
+                    { label: 'Abonelik', icon: 'pi pi-fw pi-wallet', routerLink: ['/panel/settings/subscription'] },
+                    { label: 'Giriş', icon: 'pi pi-fw pi-sign-in', routerLink: ['/auth/login'] }
+                ]
             }
         ];
     }

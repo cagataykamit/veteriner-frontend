@@ -74,5 +74,8 @@ export const ApiEndpoints = {
         list: () => `/api/v1/hospitalizations`,
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
+    },
+    tenants: {
+        subscriptionSummary: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-summary`
     }
 } as const;

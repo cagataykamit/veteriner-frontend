@@ -10,6 +10,7 @@ export default [
     { path: 'examinations', loadChildren: () => import('../examinations/routes/examinations.routes') },
     { path: 'vaccinations', loadChildren: () => import('../vaccinations/routes/vaccinations.routes') },
     { path: 'payments', loadChildren: () => import('../payments/routes/payments.routes') },
+    { path: 'settings/subscription', loadChildren: () => import('../subscriptions/routes/subscriptions.routes') },
     { path: 'treatments', loadChildren: () => import('../treatments/routes/treatments.routes') },
     { path: 'prescriptions', loadChildren: () => import('../prescriptions/routes/prescriptions.routes') },
     { path: 'lab-results', loadChildren: () => import('../lab-results/routes/lab-results.routes') },
