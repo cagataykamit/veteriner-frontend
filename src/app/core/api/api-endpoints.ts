@@ -77,5 +77,8 @@ export const ApiEndpoints = {
     },
     tenants: {
         subscriptionSummary: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-summary`
+    },
+    public: {
+        ownerSignup: () => `/api/v1/public/owner-signup`
     }
 } as const;

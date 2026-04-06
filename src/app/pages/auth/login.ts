@@ -8,6 +8,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
+import { RouterLink } from '@angular/router';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
@@ -22,7 +23,16 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RippleModule, AppFloatingConfigurator],
+    imports: [
+        ButtonModule,
+        CheckboxModule,
+        InputTextModule,
+        PasswordModule,
+        FormsModule,
+        RippleModule,
+        RouterLink,
+        AppFloatingConfigurator
+    ],
     template: `
         <app-floating-configurator />
         <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
@@ -54,6 +64,11 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                     {{ sessionRenewHint() }}
                                 </p>
                             }
+                            @if (registeredHint()) {
+                                <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium text-primary" role="status">
+                                    {{ registeredHint() }}
+                                </p>
+                            }
                         </div>
 
                         <div>
@@ -77,6 +92,9 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 [disabled]="signInLoading()"
                                 (onClick)="signIn()"
                             ></p-button>
+                            <div class="text-center mt-4">
+                                <a routerLink="/pricing" class="text-primary font-medium no-underline text-sm">Hesap oluştur</a>
+                            </div>
                             @if (loginError()) {
                                 <div class="flex justify-center w-full mt-3 mb-0">
                                     <div
@@ -119,13 +137,30 @@ export class Login implements OnInit {
     /** Yenileme başarısız / ikinci 401 sonrası interceptor `reauth=1` ile yönlendirir. */
     readonly sessionRenewHint = signal<string | null>(null);
 
+    /** Public owner-signup sonrası `registered=1` ile gösterilir. */
+    readonly registeredHint = signal<string | null>(null);
+
     ngOnInit(): void {
         removeOrphanedPrimeMenuPopupsFromBody(document);
-        if (this.route.snapshot.queryParamMap.get('reauth') === '1') {
+        const q = this.route.snapshot.queryParamMap;
+        if (q.get('reauth') === '1') {
             this.sessionRenewHint.set('Oturum süresi doldu veya oturum yenilenemedi. Lütfen tekrar giriş yapın.');
             void this.router.navigate([], {
                 relativeTo: this.route,
                 queryParams: { reauth: null },
+                queryParamsHandling: 'merge',
+                replaceUrl: true
+            });
+        }
+        if (q.get('registered') === '1') {
+            this.registeredHint.set('Kayıt tamamlandı. E-posta ve şifrenizle giriş yapabilirsiniz.');
+            const prefillEmail = q.get('email')?.trim();
+            if (prefillEmail) {
+                this.email = prefillEmail;
+            }
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { registered: null, email: null },
                 queryParamsHandling: 'merge',
                 replaceUrl: true
             });

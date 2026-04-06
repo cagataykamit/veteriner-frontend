@@ -4,11 +4,13 @@ import { Router } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { guestGuard } from '@/app/core/auth/guest.guard';
 import { Login } from '@/app/pages/auth/login';
+import { OwnerSignupPageComponent } from '@/app/pages/auth/owner-signup-page.component';
 import { SelectClinicPage } from '@/app/pages/auth/select-clinic';
 
 export default [
     { path: '', pathMatch: 'full', redirectTo: 'login' },
     { path: 'login', canActivate: [guestGuard], component: Login },
+    { path: 'signup', canActivate: [guestGuard], component: OwnerSignupPageComponent },
     {
         path: 'select-clinic',
         canActivate: [() => {
