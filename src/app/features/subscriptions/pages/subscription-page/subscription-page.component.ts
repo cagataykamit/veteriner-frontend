@@ -9,6 +9,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import type { SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
 import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/features/subscriptions/utils/subscription-status.utils';
 
 @Component({
@@ -145,6 +146,7 @@ import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/featu
 })
 export class SubscriptionPageComponent implements OnInit {
     private readonly subscriptions = inject(SubscriptionsService);
+    private readonly tenantReadOnlyContext = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -161,6 +163,7 @@ export class SubscriptionPageComponent implements OnInit {
         this.subscriptions.getSubscriptionSummary().subscribe({
             next: (data) => {
                 this.summary.set(data);
+                this.tenantReadOnlyContext.applySummary(data);
                 this.loading.set(false);
             },
             error: (e: unknown) => {

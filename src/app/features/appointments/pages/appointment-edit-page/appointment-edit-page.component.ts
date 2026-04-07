@@ -35,6 +35,7 @@ import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/util
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 
@@ -67,6 +68,11 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
             <app-page-header title="Randevuyu Düzenle" subtitle="Operasyon" description="Randevu kaydını güncelleyin." />
 
             <div class="card">
+                @if (ro.mutationBlocked()) {
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
+                    </p>
+                }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
@@ -100,6 +106,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                                     icon="pi pi-user-plus"
                                     [text]="true"
                                     styleClass="p-0"
+                                    [disabled]="ro.mutationBlocked()"
                                     (onClick)="quickClientOpen.set(true)"
                                 />
                             </div>
@@ -205,7 +212,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets()"
+                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -239,6 +246,7 @@ export class AppointmentEditPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -424,7 +432,11 @@ export class AppointmentEditPageComponent implements OnInit {
     }
 
     petQuickAddDisabled(): boolean {
-        return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
+        return (
+            this.ro.mutationBlocked() ||
+            !trimClientIdControlValue(this.form.getRawValue().clientId) ||
+            this.form.controls.petId.disabled
+        );
     }
 
     quickPetOwnerClientId(): string {

@@ -17,6 +17,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 type ActiveFilterUi = 'all' | 'active' | 'discharged';
 
@@ -39,7 +40,19 @@ type ActiveFilterUi = 'all' | 'active' | 'discharged';
     ],
     template: `
         <app-page-header title="Yatışlar" subtitle="Klinik" description="Yatış ve gözlem kayıtları.">
-            <a actions routerLink="/panel/hospitalizations/new" pButton type="button" label="Yeni yatış" icon="pi pi-plus" class="p-button-primary"></a>
+            @if (!ro.mutationBlocked()) {
+                <a actions routerLink="/panel/hospitalizations/new" pButton type="button" label="Yeni yatış" icon="pi pi-plus" class="p-button-primary"></a>
+            } @else {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni yatış (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
         </app-page-header>
 
         <div class="card mb-6">
@@ -225,6 +238,7 @@ type ActiveFilterUi = 'all' | 'active' | 'discharged';
 })
 export class HospitalizationsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
 
     private readonly hospitalizationsService = inject(HospitalizationsService);
 

@@ -16,6 +16,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-lab-results-list-page',
@@ -35,7 +36,19 @@ import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
     ],
     template: `
         <app-page-header title="Lab sonuçları" subtitle="Klinik" description="Laboratuvar sonuç kayıtları.">
-            <a actions routerLink="/panel/lab-results/new" pButton type="button" label="Yeni kayıt" icon="pi pi-plus" class="p-button-primary"></a>
+            @if (!ro.mutationBlocked()) {
+                <a actions routerLink="/panel/lab-results/new" pButton type="button" label="Yeni kayıt" icon="pi pi-plus" class="p-button-primary"></a>
+            } @else {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni kayıt (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
         </app-page-header>
 
         <div class="card mb-6">
@@ -188,6 +201,7 @@ import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 })
 export class LabResultsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
 
     private readonly labResultsService = inject(LabResultsService);
 

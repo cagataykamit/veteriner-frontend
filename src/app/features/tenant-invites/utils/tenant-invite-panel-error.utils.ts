@@ -68,7 +68,7 @@ export function tenantInvitePanelFailureMessage(err: unknown, fallback: string):
         if (code && PANEL_INVITE_CODE_MESSAGES[code]) {
             return PANEL_INVITE_CODE_MESSAGES[code];
         }
-        return 'Bu işlem için yetkiniz yok.';
+        return messageFromHttpError(err, 'Bu işlem için yetkiniz yok.');
     }
     const p = readProblemFromHttp(err);
     const code = p?.code?.trim() ?? '';

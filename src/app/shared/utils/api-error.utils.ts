@@ -38,8 +38,52 @@ export function rateLimitUserMessage(err: HttpErrorResponse): string {
     return 'Çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin.';
 }
 
+/** Abonelik / tenant yazma kilidi — backend `ProblemDetails` + `extensions.code`. */
+const SUBSCRIPTION_WRITE_USER_MESSAGES: Record<string, string> = {
+    'Subscriptions.TenantReadOnly':
+        'Bu işletme salt okunur moddadır; yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik üzerinden devam edebilirsiniz.',
+    'Subscriptions.NotFound': 'Abonelik kaydı bulunamadı; bu işlem şu an yapılamıyor.'
+};
+
+function readProblemCodeFromHttp(err: HttpErrorResponse): string | null {
+    const body = err.error as unknown;
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return null;
+    }
+    const o = body as Record<string, unknown>;
+    const ext =
+        o['extensions'] && typeof o['extensions'] === 'object' && !Array.isArray(o['extensions'])
+            ? (o['extensions'] as Record<string, unknown>)
+            : null;
+    const pickExt = (key: string): string | null => {
+        if (!ext) {
+            return null;
+        }
+        const v = ext[key];
+        return typeof v === 'string' && v.trim() ? v.trim() : null;
+    };
+    const code =
+        (typeof o['code'] === 'string' && o['code'].trim() ? o['code'].trim() : null) ||
+        (typeof o['Code'] === 'string' && o['Code'].trim() ? o['Code'].trim() : null) ||
+        pickExt('code');
+    return code ?? null;
+}
+
+function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    if (!code) {
+        return null;
+    }
+    return SUBSCRIPTION_WRITE_USER_MESSAGES[code] ?? null;
+}
+
 /** Panel listeleri / formlar: ProblemDetails, düz metin ve HTTP durumuna göre anlamlı mesaj. */
 export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek başarısız.'): string {
+    const subscriptionMsg = subscriptionWriteUserMessage(err);
+    if (subscriptionMsg) {
+        return subscriptionMsg;
+    }
+
     const body = err.error as ProblemDetails | string | null | undefined;
     if (body && typeof body === 'object') {
         const detail = typeof body.detail === 'string' ? body.detail.trim() : '';

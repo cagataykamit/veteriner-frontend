@@ -20,6 +20,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 
 @Component({
@@ -53,97 +54,157 @@ import { EMPTY, switchMap } from 'rxjs';
                 subtitle="Klinik"
                 [description]="formatDateTime(exam()!.examinedAtUtc)"
             >
-                <a
-                    actions
-                    [routerLink]="['/panel/examinations', exam()!.id, 'edit']"
-                    pButton
-                    type="button"
-                    label="Düzenle"
-                    icon="pi pi-pencil"
-                    class="p-button-secondary"
-                ></a>
-                @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
-                    <div actions class="flex flex-wrap gap-2">
+                <div actions class="flex flex-wrap gap-2">
+                    @if (!ro.mutationBlocked()) {
                         <a
-                            [routerLink]="['/panel/treatments/new']"
-                            [queryParams]="{
-                                clientId: exam()!.clientId,
-                                petId: exam()!.petId,
-                                examinationId: exam()!.id
-                            }"
+                            [routerLink]="['/panel/examinations', exam()!.id, 'edit']"
                             pButton
                             type="button"
-                            label="Tedavi Oluştur"
-                            icon="pi pi-plus"
+                            label="Düzenle"
+                            icon="pi pi-pencil"
                             class="p-button-secondary"
                         ></a>
-                        <a
-                            [routerLink]="['/panel/prescriptions/new']"
-                            [queryParams]="{
-                                clientId: exam()!.clientId,
-                                petId: exam()!.petId,
-                                examinationId: exam()!.id
-                            }"
+                        @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
+                            <a
+                                [routerLink]="['/panel/treatments/new']"
+                                [queryParams]="{
+                                    clientId: exam()!.clientId,
+                                    petId: exam()!.petId,
+                                    examinationId: exam()!.id
+                                }"
+                                pButton
+                                type="button"
+                                label="Tedavi Oluştur"
+                                icon="pi pi-plus"
+                                class="p-button-secondary"
+                            ></a>
+                            <a
+                                [routerLink]="['/panel/prescriptions/new']"
+                                [queryParams]="{
+                                    clientId: exam()!.clientId,
+                                    petId: exam()!.petId,
+                                    examinationId: exam()!.id
+                                }"
+                                pButton
+                                type="button"
+                                label="Reçete Oluştur"
+                                icon="pi pi-file-edit"
+                                class="p-button-secondary"
+                            ></a>
+                            <a
+                                [routerLink]="['/panel/vaccinations/new']"
+                                [queryParams]="{
+                                    clientId: exam()!.clientId,
+                                    petId: exam()!.petId,
+                                    examinationId: exam()!.id
+                                }"
+                                pButton
+                                type="button"
+                                label="Aşı Oluştur"
+                                icon="pi pi-shield"
+                                class="p-button-secondary"
+                            ></a>
+                            <a
+                                [routerLink]="['/panel/lab-results/new']"
+                                [queryParams]="{
+                                    clientId: exam()!.clientId,
+                                    petId: exam()!.petId,
+                                    examinationId: exam()!.id
+                                }"
+                                pButton
+                                type="button"
+                                label="Lab Sonucu Oluştur"
+                                icon="pi pi-chart-bar"
+                                class="p-button-secondary"
+                            ></a>
+                            <a
+                                [routerLink]="['/panel/hospitalizations/new']"
+                                [queryParams]="{
+                                    clientId: exam()!.clientId,
+                                    petId: exam()!.petId,
+                                    examinationId: exam()!.id
+                                }"
+                                pButton
+                                type="button"
+                                label="Yatış Başlat"
+                                icon="pi pi-building"
+                                class="p-button-secondary"
+                            ></a>
+                            <a
+                                [routerLink]="['/panel/payments/new']"
+                                [queryParams]="{
+                                    clientId: exam()!.clientId,
+                                    petId: exam()!.petId,
+                                    examinationId: exam()!.id
+                                }"
+                                pButton
+                                type="button"
+                                label="Ödeme Oluştur"
+                                icon="pi pi-wallet"
+                                class="p-button-secondary"
+                            ></a>
+                        }
+                    } @else {
+                        <button
                             pButton
                             type="button"
-                            label="Reçete Oluştur"
-                            icon="pi pi-file-edit"
+                            label="Düzenle (salt okunur)"
+                            icon="pi pi-lock"
+                            [disabled]="true"
                             class="p-button-secondary"
-                        ></a>
-                        <a
-                            [routerLink]="['/panel/vaccinations/new']"
-                            [queryParams]="{
-                                clientId: exam()!.clientId,
-                                petId: exam()!.petId,
-                                examinationId: exam()!.id
-                            }"
-                            pButton
-                            type="button"
-                            label="Aşı Oluştur"
-                            icon="pi pi-shield"
-                            class="p-button-secondary"
-                        ></a>
-                        <a
-                            [routerLink]="['/panel/lab-results/new']"
-                            [queryParams]="{
-                                clientId: exam()!.clientId,
-                                petId: exam()!.petId,
-                                examinationId: exam()!.id
-                            }"
-                            pButton
-                            type="button"
-                            label="Lab Sonucu Oluştur"
-                            icon="pi pi-chart-bar"
-                            class="p-button-secondary"
-                        ></a>
-                        <a
-                            [routerLink]="['/panel/hospitalizations/new']"
-                            [queryParams]="{
-                                clientId: exam()!.clientId,
-                                petId: exam()!.petId,
-                                examinationId: exam()!.id
-                            }"
-                            pButton
-                            type="button"
-                            label="Yatış Başlat"
-                            icon="pi pi-building"
-                            class="p-button-secondary"
-                        ></a>
-                        <a
-                            [routerLink]="['/panel/payments/new']"
-                            [queryParams]="{
-                                clientId: exam()!.clientId,
-                                petId: exam()!.petId,
-                                examinationId: exam()!.id
-                            }"
-                            pButton
-                            type="button"
-                            label="Ödeme Oluştur"
-                            icon="pi pi-wallet"
-                            class="p-button-secondary"
-                        ></a>
-                    </div>
-                }
+                        ></button>
+                        @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Tedavi (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                            <button
+                                pButton
+                                type="button"
+                                label="Reçete (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                            <button
+                                pButton
+                                type="button"
+                                label="Aşı (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                            <button
+                                pButton
+                                type="button"
+                                label="Lab (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                            <button
+                                pButton
+                                type="button"
+                                label="Yatış (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                            <button
+                                pButton
+                                type="button"
+                                label="Ödeme (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                        }
+                    }
+                </div>
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -488,6 +549,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly examinationsService = inject(ExaminationsService);
     private readonly related = inject(DetailRelatedSummariesService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
     readonly showSavedBanner = signal(false);

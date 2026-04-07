@@ -19,6 +19,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-payments-list-page',
@@ -39,7 +40,19 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     ],
     template: `
         <app-page-header title="Ödemeler" subtitle="Finans" description="Ödeme kayıtları.">
-            <a actions routerLink="/panel/payments/new" pButton type="button" label="Yeni Ödeme" icon="pi pi-plus" class="p-button-primary"></a>
+            @if (!ro.mutationBlocked()) {
+                <a actions routerLink="/panel/payments/new" pButton type="button" label="Yeni Ödeme" icon="pi pi-plus" class="p-button-primary"></a>
+            } @else {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni Ödeme (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
         </app-page-header>
 
         <div class="card mb-6">
@@ -215,6 +228,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 })
 export class PaymentsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
 
     private readonly paymentsService = inject(PaymentsService);
 

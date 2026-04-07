@@ -43,6 +43,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-treatment-edit-page',
@@ -73,6 +74,11 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
             <app-page-header title="Tedaviyi Düzenle" subtitle="Klinik" description="Tedavi kaydını güncelleyin." />
 
             <div class="card">
+                @if (ro.mutationBlocked()) {
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
+                    </p>
+                }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
@@ -104,6 +110,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                                     type="button"
                                     label="Yeni müşteri"
                                     icon="pi pi-user-plus"
+                                    [disabled]="ro.mutationBlocked()"
                                     [text]="true"
                                     styleClass="p-0"
                                     (onClick)="quickClientOpen.set(true)"
@@ -220,7 +227,7 @@ import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets()"
+                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -255,6 +262,7 @@ export class TreatmentEditPageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -471,6 +479,9 @@ export class TreatmentEditPageComponent implements OnInit {
     }
 
     petQuickAddDisabled(): boolean {
+        if (this.ro.mutationBlocked()) {
+            return true;
+        }
         return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
     }
 

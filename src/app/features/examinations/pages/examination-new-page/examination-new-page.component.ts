@@ -30,6 +30,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import { parseAppointmentExaminationRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-examination-new-page',
@@ -51,6 +52,11 @@ import { parseAppointmentExaminationRouteContext } from '@/app/shared/panel/exam
         <app-page-header title="Yeni Muayene" subtitle="Klinik" description="Muayene kaydı oluşturun." />
 
         <div class="card">
+            @if (ro.mutationBlocked()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                    İşletme salt okunur moddadır; kayıt oluşturulamaz.
+                </p>
+            }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
@@ -88,6 +94,7 @@ import { parseAppointmentExaminationRouteContext } from '@/app/shared/panel/exam
                                     type="button"
                                     label="Yeni müşteri"
                                     icon="pi pi-user-plus"
+                                    [disabled]="ro.mutationBlocked()"
                                     [text]="true"
                                     styleClass="p-0"
                                     (onClick)="quickClientOpen.set(true)"
@@ -187,7 +194,7 @@ import { parseAppointmentExaminationRouteContext } from '@/app/shared/panel/exam
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext() || ro.mutationBlocked()"
                     />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -214,6 +221,7 @@ export class ExaminationNewPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly contextFromAppointment = signal(false);
     readonly applyingRouteContext = signal(false);
@@ -274,6 +282,9 @@ export class ExaminationNewPageComponent implements OnInit {
     }
 
     petQuickAddDisabled(): boolean {
+        if (this.ro.mutationBlocked()) {
+            return true;
+        }
         if (this.contextFromAppointment()) {
             return true;
         }

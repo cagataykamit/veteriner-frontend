@@ -21,6 +21,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-appointments-list-page',
@@ -42,7 +43,19 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     ],
     template: `
         <app-page-header title="Randevular" subtitle="Operasyon" description="Randevu listesi ve durum takibi.">
-            <a actions routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary"></a>
+            @if (!ro.mutationBlocked()) {
+                <a actions routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary"></a>
+            } @else {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni Randevu (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
         </app-page-header>
 
         <div class="card mb-6">
@@ -217,6 +230,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 })
 export class AppointmentsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
 
     private readonly appointmentsService = inject(AppointmentsService);
 

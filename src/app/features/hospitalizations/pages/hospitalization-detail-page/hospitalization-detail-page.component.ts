@@ -15,6 +15,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateTimeLocalInputToIsoUtc, formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-hospitalization-detail-page',
@@ -53,36 +54,65 @@ import { dateTimeLocalInputToIsoUtc, formatDateDisplay, formatDateTimeDisplay } 
                 ) {
                     <div actions class="flex flex-wrap gap-2">
                         @if (row()!.isActive) {
-                            <a
-                                [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']"
-                                pButton
-                                type="button"
-                                label="Düzenle"
-                                icon="pi pi-pencil"
-                                class="p-button-secondary"
-                            ></a>
-                            <p-button
-                                type="button"
-                                label="Taburcu et"
-                                icon="pi pi-sign-out"
-                                severity="warn"
-                                (onClick)="openDischargeDialog()"
-                            />
+                            @if (!ro.mutationBlocked()) {
+                                <a
+                                    [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']"
+                                    pButton
+                                    type="button"
+                                    label="Düzenle"
+                                    icon="pi pi-pencil"
+                                    class="p-button-secondary"
+                                ></a>
+                                <p-button
+                                    type="button"
+                                    label="Taburcu et"
+                                    icon="pi pi-sign-out"
+                                    severity="warn"
+                                    (onClick)="openDischargeDialog()"
+                                />
+                            } @else {
+                                <button
+                                    pButton
+                                    type="button"
+                                    label="Düzenle (salt okunur)"
+                                    icon="pi pi-lock"
+                                    [disabled]="true"
+                                    class="p-button-secondary"
+                                ></button>
+                                <p-button
+                                    type="button"
+                                    label="Taburcu et (salt okunur)"
+                                    icon="pi pi-lock"
+                                    severity="secondary"
+                                    [disabled]="true"
+                                />
+                            }
                         }
                         @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <a
-                                [routerLink]="['/panel/payments/new']"
-                                [queryParams]="{
-                                    clientId: row()!.clientId,
-                                    petId: row()!.petId,
-                                    examinationId: row()!.examinationId
-                                }"
-                                pButton
-                                type="button"
-                                label="Ödeme Oluştur"
-                                icon="pi pi-wallet"
-                                class="p-button-secondary"
-                            ></a>
+                            @if (!ro.mutationBlocked()) {
+                                <a
+                                    [routerLink]="['/panel/payments/new']"
+                                    [queryParams]="{
+                                        clientId: row()!.clientId,
+                                        petId: row()!.petId,
+                                        examinationId: row()!.examinationId
+                                    }"
+                                    pButton
+                                    type="button"
+                                    label="Ödeme Oluştur"
+                                    icon="pi pi-wallet"
+                                    class="p-button-secondary"
+                                ></a>
+                            } @else {
+                                <button
+                                    pButton
+                                    type="button"
+                                    label="Ödeme Oluştur (salt okunur)"
+                                    icon="pi pi-lock"
+                                    [disabled]="true"
+                                    class="p-button-secondary"
+                                ></button>
+                            }
                         }
                     </div>
                 }
@@ -195,7 +225,13 @@ import { dateTimeLocalInputToIsoUtc, formatDateDisplay, formatDateTimeDisplay } 
                 }
                 <div class="flex flex-wrap justify-end gap-2 mt-4">
                     <p-button type="button" label="Vazgeç" severity="secondary" (onClick)="dischargeDialogVisible = false" [disabled]="dischargeSubmitting()" />
-                    <p-button type="submit" label="Taburcu et" icon="pi pi-check" [loading]="dischargeSubmitting()" />
+                    <p-button
+                        type="submit"
+                        label="Taburcu et"
+                        icon="pi pi-check"
+                        [loading]="dischargeSubmitting()"
+                        [disabled]="ro.mutationBlocked()"
+                    />
                 </div>
             </form>
         </p-dialog>
@@ -205,6 +241,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly hospitalizationsService = inject(HospitalizationsService);
     private readonly fb = inject(FormBuilder);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -240,6 +277,9 @@ export class HospitalizationDetailPageComponent implements OnInit {
     }
 
     openDischargeDialog(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
         this.dischargeForm.reset({ dischargedAtLocal: '', notes: '' });
         this.dischargeSubmitError.set(null);
         this.dischargeFieldErrors.set({});
@@ -252,6 +292,9 @@ export class HospitalizationDetailPageComponent implements OnInit {
     }
 
     onDischargeSubmit(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
         this.dischargeSubmitError.set(null);
         this.dischargeFieldErrors.set({});
         if (this.dischargeForm.invalid) {

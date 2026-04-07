@@ -33,6 +33,7 @@ import { amountToFormString, parseAmountFormValue } from '@/app/shared/utils/dec
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-payment-edit-page',
@@ -63,6 +64,11 @@ import { AuthService } from '@/app/core/auth/auth.service';
             <app-page-header title="Ödemeyi Düzenle" subtitle="Finans" description="Ödeme kaydını güncelleyin." />
 
             <div class="card">
+                @if (ro.mutationBlocked()) {
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
+                    </p>
+                }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
@@ -94,6 +100,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                                     type="button"
                                     label="Yeni müşteri"
                                     icon="pi pi-user-plus"
+                                    [disabled]="ro.mutationBlocked()"
                                     [text]="true"
                                     styleClass="p-0"
                                     (onClick)="quickClientOpen.set(true)"
@@ -195,7 +202,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets()"
+                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -229,6 +236,7 @@ export class PaymentEditPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -393,6 +401,9 @@ export class PaymentEditPageComponent implements OnInit {
     }
 
     petQuickAddDisabled(): boolean {
+        if (this.ro.mutationBlocked()) {
+            return true;
+        }
         return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
     }
 

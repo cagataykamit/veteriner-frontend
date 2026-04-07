@@ -38,6 +38,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-hospitalization-edit-page',
@@ -71,6 +72,11 @@ import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
             <app-page-header title="Yatışı düzenle" subtitle="Klinik" description="Kaydı güncelleyin." />
 
             <div class="card">
+                @if (ro.mutationBlocked()) {
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
+                    </p>
+                }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
@@ -193,7 +199,7 @@ import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets()"
+                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -221,6 +227,7 @@ export class HospitalizationEditPageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     hospitalizationId = '';
 

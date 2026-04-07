@@ -14,6 +14,7 @@ import { tenantInvitePanelFailureMessage } from '@/app/features/tenant-invites/u
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateTimeLocalInputToIsoUtc, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-tenant-invite-panel-page',
@@ -118,7 +119,13 @@ import { dateTimeLocalInputToIsoUtc, formatDateTimeDisplay } from '@/app/shared/
                             label="Davet oluştur"
                             icon="pi pi-send"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || clinics().length === 0 || operationClaims().length === 0"
+                            [disabled]="
+                                form.invalid ||
+                                submitting() ||
+                                clinics().length === 0 ||
+                                operationClaims().length === 0 ||
+                                ro.mutationBlocked()
+                            "
                         />
                     </div>
                 </form>
@@ -188,6 +195,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
     private readonly fb = inject(FormBuilder);
     private readonly auth = inject(AuthService);
     private readonly tenantInvites = inject(TenantInvitesService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly pageLoading = signal(true);
     readonly pageError = signal<string | null>(null);
@@ -256,6 +264,9 @@ export class TenantInvitePanelPageComponent implements OnInit {
     }
 
     onSubmit(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
         this.submitError.set(null);
         this.copyFeedback.set(null);
         if (this.form.invalid) {

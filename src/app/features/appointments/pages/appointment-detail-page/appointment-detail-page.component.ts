@@ -18,6 +18,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 
 @Component({
@@ -55,28 +56,49 @@ import { EMPTY, switchMap } from 'rxjs';
                 "
             >
                 <div actions class="flex flex-wrap gap-2">
-                    <a
-                        [routerLink]="['/panel/appointments', appt()!.id, 'edit']"
-                        pButton
-                        type="button"
-                        label="Düzenle"
-                        icon="pi pi-pencil"
-                        class="p-button-secondary"
-                    ></a>
-                    @if (appt()!.clientId?.trim() && appt()!.petId?.trim()) {
+                    @if (!ro.mutationBlocked()) {
                         <a
-                            [routerLink]="['/panel/examinations/new']"
-                            [queryParams]="{
-                                clientId: appt()!.clientId,
-                                petId: appt()!.petId,
-                                appointmentId: appt()!.id
-                            }"
+                            [routerLink]="['/panel/appointments', appt()!.id, 'edit']"
                             pButton
                             type="button"
-                            label="Muayene Oluştur"
-                            icon="pi pi-plus"
+                            label="Düzenle"
+                            icon="pi pi-pencil"
                             class="p-button-secondary"
                         ></a>
+                        @if (appt()!.clientId?.trim() && appt()!.petId?.trim()) {
+                            <a
+                                [routerLink]="['/panel/examinations/new']"
+                                [queryParams]="{
+                                    clientId: appt()!.clientId,
+                                    petId: appt()!.petId,
+                                    appointmentId: appt()!.id
+                                }"
+                                pButton
+                                type="button"
+                                label="Muayene Oluştur"
+                                icon="pi pi-plus"
+                                class="p-button-secondary"
+                            ></a>
+                        }
+                    } @else {
+                        <button
+                            pButton
+                            type="button"
+                            label="Düzenle (salt okunur)"
+                            icon="pi pi-lock"
+                            [disabled]="true"
+                            class="p-button-secondary"
+                        ></button>
+                        @if (appt()!.clientId?.trim() && appt()!.petId?.trim()) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Muayene Oluştur (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                        }
                     }
                 </div>
             </app-page-header>
@@ -192,6 +214,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly appointmentsService = inject(AppointmentsService);
     private readonly related = inject(DetailRelatedSummariesService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
     readonly emptyMark = '—';

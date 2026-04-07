@@ -35,6 +35,7 @@ import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examinati
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-lab-result-new-page',
@@ -56,6 +57,11 @@ import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
         <app-page-header title="Yeni lab sonucu" subtitle="Klinik" description="Laboratuvar sonuç kaydı oluşturun." />
 
         <div class="card">
+            @if (ro.mutationBlocked()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                    İşletme salt okunur moddadır; kayıt oluşturulamaz.
+                </p>
+            }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
@@ -93,6 +99,7 @@ import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
                                     type="button"
                                     label="Yeni müşteri"
                                     icon="pi pi-user-plus"
+                                    [disabled]="ro.mutationBlocked()"
                                     [text]="true"
                                     styleClass="p-0"
                                     (onClick)="quickClientOpen.set(true)"
@@ -211,7 +218,7 @@ import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext() || ro.mutationBlocked()"
                     />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -238,6 +245,7 @@ export class LabResultNewPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly contextFromExamination = signal(false);
     readonly applyingRouteContext = signal(false);
@@ -331,6 +339,9 @@ export class LabResultNewPageComponent implements OnInit {
     }
 
     petQuickAddDisabled(): boolean {
+        if (this.ro.mutationBlocked()) {
+            return true;
+        }
         return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
     }
 

@@ -30,6 +30,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import type { VaccinationUpsertFieldErrors, VaccinationUpsertFormFieldKey } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-vaccination-new-page',
@@ -49,6 +50,11 @@ import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/ut
         <app-page-header title="Yeni Aşı" subtitle="Klinik" description="Aşı kaydı oluşturun." />
 
         <div class="card">
+            @if (ro.mutationBlocked()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                    İşletme salt okunur moddadır; kayıt oluşturulamaz.
+                </p>
+            }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
@@ -182,7 +188,7 @@ import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/ut
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || applyingRouteContext() || ro.mutationBlocked()"
                     />
                     <p-button
                         type="button"
@@ -208,6 +214,7 @@ export class VaccinationNewPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     /** Bağlam başarıyla uygulandıysa API’ye iletilir; serbest oluşturmada null kalır. */
     private routeExaminationId: string | null = null;
