@@ -97,6 +97,11 @@ export class SelectClinicPage implements OnInit {
             .pipe(finalize(() => this.submitting.set(false)))
             .subscribe({
                 next: () => {
+                    const inviteToken = this.inviteTokenQuery();
+                    if (inviteToken) {
+                        void this.router.navigate(['/join', inviteToken]);
+                        return;
+                    }
                     void this.router.navigateByUrl(this.safeReturnUrl());
                 },
                 error: (e: unknown) => {
@@ -146,6 +151,11 @@ export class SelectClinicPage implements OnInit {
 
     private safeReturnUrl(): string {
         return panelReturnUrlOrDefault(this.route.snapshot.queryParamMap.get('returnUrl'));
+    }
+
+    /** Davet akışı: `inviteToken` varken panel `returnUrl` kullanılmaz. */
+    private inviteTokenQuery(): string {
+        return this.route.snapshot.queryParamMap.get('inviteToken')?.trim() ?? '';
     }
 
     private resolveError(e: unknown, fallback: string): string {

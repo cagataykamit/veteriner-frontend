@@ -23,6 +23,10 @@ export const appRoutes: Routes = [
         path: 'pricing',
         loadComponent: () => import('./app/pages/public/pricing-page.component').then((m) => m.PricingPageComponent)
     },
+    {
+        path: 'join/:token',
+        loadComponent: () => import('./app/pages/public/join-invite-page.component').then((m) => m.JoinInvitePageComponent)
+    },
     { path: 'auth', loadChildren: () => import('./app/features/auth/auth.routes') },
     { path: '**', redirectTo: '/notfound' }
 ];

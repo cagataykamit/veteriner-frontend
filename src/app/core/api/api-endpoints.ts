@@ -76,9 +76,16 @@ export const ApiEndpoints = {
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
     },
     tenants: {
-        subscriptionSummary: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-summary`
+        subscriptionSummary: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-summary`,
+        invites: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites`,
+        /** Davet formu: atanabilir operation claim listesi (`operationClaimId`, `operationClaimName`). */
+        assignableOperationClaims: (tenantId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-operation-claims`
     },
     public: {
-        ownerSignup: () => `/api/v1/public/owner-signup`
+        ownerSignup: () => `/api/v1/public/owner-signup`,
+        inviteByToken: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}`,
+        inviteAccept: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}/accept`,
+        inviteSignupAndAccept: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}/signup-and-accept`
     }
 } as const;

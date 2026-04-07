@@ -69,6 +69,16 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                     {{ registeredHint() }}
                                 </p>
                             }
+                            @if (inviteAcceptedHint()) {
+                                <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium text-primary" role="status">
+                                    {{ inviteAcceptedHint() }}
+                                </p>
+                            }
+                            @if (inviteLoginHint()) {
+                                <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium text-primary" role="status">
+                                    {{ inviteLoginHint() }}
+                                </p>
+                            }
                         </div>
 
                         <div>
@@ -140,6 +150,12 @@ export class Login implements OnInit {
     /** Public owner-signup sonrası `registered=1` ile gösterilir. */
     readonly registeredHint = signal<string | null>(null);
 
+    /** Invite signup-and-accept sonrası `inviteAccepted=1`. */
+    readonly inviteAcceptedHint = signal<string | null>(null);
+
+    /** `inviteToken` query ile gelen davet akışı. */
+    readonly inviteLoginHint = signal<string | null>(null);
+
     ngOnInit(): void {
         removeOrphanedPrimeMenuPopupsFromBody(document);
         const q = this.route.snapshot.queryParamMap;
@@ -165,6 +181,26 @@ export class Login implements OnInit {
                 replaceUrl: true
             });
         }
+        if (q.get('inviteAccepted') === '1') {
+            this.inviteAcceptedHint.set('Davet için hesabınız hazır. Giriş yaparak devam edebilirsiniz.');
+            const prefillEmail = q.get('email')?.trim();
+            if (prefillEmail) {
+                this.email = prefillEmail;
+            }
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { inviteAccepted: null, email: null },
+                queryParamsHandling: 'merge',
+                replaceUrl: true
+            });
+        }
+        if (q.get('inviteToken')?.trim()) {
+            this.inviteLoginHint.set('Daveti tamamlamak için davet edilen e-posta adresiyle giriş yapın.');
+            const prefillEmail = q.get('email')?.trim();
+            if (prefillEmail) {
+                this.email = prefillEmail;
+            }
+        }
     }
 
     signIn(): void {
@@ -173,6 +209,7 @@ export class Login implements OnInit {
         }
         this.loginError.set(null);
         this.sessionRenewHint.set(null);
+        this.inviteLoginHint.set(null);
         const email = this.email?.trim() ?? '';
         if (!email || !this.password) {
             this.loginError.set('E-posta ve şifre zorunludur.');
@@ -215,8 +252,12 @@ export class Login implements OnInit {
                     this.autoSelectSingleClinic(clinics[0]);
                     return;
                 }
+                const inviteTok = this.inviteTokenFromRoute();
                 void this.router.navigate(['/auth/select-clinic'], {
-                    queryParams: { returnUrl: this.safeReturnUrl() },
+                    queryParams: {
+                        returnUrl: this.safeReturnUrl(),
+                        ...(inviteTok ? { inviteToken: inviteTok } : {})
+                    },
                     state: { clinics }
                 });
             },
@@ -234,6 +275,11 @@ export class Login implements OnInit {
             .pipe(finalize(() => this.signInLoading.set(false)))
             .subscribe({
                 next: () => {
+                    const it = this.inviteTokenFromRoute();
+                    if (it) {
+                        void this.router.navigate(['/join', it]);
+                        return;
+                    }
                     void this.router.navigateByUrl(this.safeReturnUrl());
                 },
                 error: (err: unknown) => {
@@ -245,5 +291,10 @@ export class Login implements OnInit {
 
     private safeReturnUrl(): string {
         return panelReturnUrlOrDefault(this.route.snapshot.queryParamMap.get('returnUrl'));
+    }
+
+    private inviteTokenFromRoute(): string | null {
+        const t = this.route.snapshot.queryParamMap.get('inviteToken')?.trim();
+        return t || null;
     }
 }
