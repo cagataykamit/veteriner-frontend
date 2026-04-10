@@ -10,10 +10,10 @@ interface SubscriptionStatusDef {
 }
 
 const STATUS_DEFS: readonly SubscriptionStatusDef[] = [
-    { key: 'trialing', label: 'Trialing', severity: 'info', numeric: 0, aliases: ['trial', 'deneme'] },
-    { key: 'active', label: 'Active', severity: 'success', numeric: 1, aliases: ['aktif'] },
-    { key: 'readonly', label: 'ReadOnly', severity: 'warn', numeric: 2, aliases: ['read-only', 'read_only', 'saltokunur'] },
-    { key: 'cancelled', label: 'Cancelled', severity: 'danger', numeric: 3, aliases: ['canceled', 'iptal'] },
+    { key: 'trialing', label: 'Deneme', severity: 'info', numeric: 0, aliases: ['trial', 'deneme'] },
+    { key: 'active', label: 'Aktif', severity: 'success', numeric: 1, aliases: ['aktif'] },
+    { key: 'readonly', label: 'Salt okunur', severity: 'warn', numeric: 2, aliases: ['read-only', 'read_only', 'saltokunur'] },
+    { key: 'cancelled', label: 'İptal', severity: 'danger', numeric: 3, aliases: ['canceled', 'iptal'] },
     { key: 'unknown', label: 'Bilinmiyor', severity: 'secondary', aliases: ['unknown'] }
 ];
 

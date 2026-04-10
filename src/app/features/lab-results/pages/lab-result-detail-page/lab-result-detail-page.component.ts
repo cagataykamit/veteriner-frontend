@@ -8,6 +8,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-lab-result-detail-page',
@@ -35,15 +36,27 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
             </div>
         } @else if (row()) {
             <app-page-header title="Lab sonucu" subtitle="Klinik" [description]="row()!.testName">
-                <a
-                    actions
-                    [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
-                    pButton
-                    type="button"
-                    label="Düzenle"
-                    icon="pi pi-pencil"
-                    class="p-button-secondary"
-                ></a>
+                @if (!ro.mutationBlocked()) {
+                    <a
+                        actions
+                        [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
+                        pButton
+                        type="button"
+                        label="Düzenle"
+                        icon="pi pi-pencil"
+                        class="p-button-secondary"
+                    ></a>
+                } @else {
+                    <button
+                        actions
+                        pButton
+                        type="button"
+                        label="Düzenle (salt okunur)"
+                        icon="pi pi-lock"
+                        [disabled]="true"
+                        class="p-button-secondary"
+                    ></button>
+                }
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -111,6 +124,7 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
 export class LabResultDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly labResultsService = inject(LabResultsService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);

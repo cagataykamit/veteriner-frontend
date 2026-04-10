@@ -12,6 +12,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 
 @Component({
@@ -46,15 +47,27 @@ import { EMPTY, switchMap } from 'rxjs';
                 subtitle="Klinik"
                 [description]="formatDateTime(vac()!.appliedAtUtc) + ' · ' + statusLabel(vac()!.status) + ' · ' + vac()!.vaccineName"
             >
-                <a
-                    actions
-                    [routerLink]="['/panel/vaccinations', vac()!.id, 'edit']"
-                    pButton
-                    type="button"
-                    label="Düzenle"
-                    icon="pi pi-pencil"
-                    class="p-button-secondary"
-                ></a>
+                @if (!ro.mutationBlocked()) {
+                    <a
+                        actions
+                        [routerLink]="['/panel/vaccinations', vac()!.id, 'edit']"
+                        pButton
+                        type="button"
+                        label="Düzenle"
+                        icon="pi pi-pencil"
+                        class="p-button-secondary"
+                    ></a>
+                } @else {
+                    <button
+                        actions
+                        pButton
+                        type="button"
+                        label="Düzenle (salt okunur)"
+                        icon="pi pi-lock"
+                        [disabled]="true"
+                        class="p-button-secondary"
+                    ></button>
+                }
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -134,6 +147,7 @@ export class VaccinationDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly vaccinationsService = inject(VaccinationsService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly emptyMark = '—';
     readonly showSavedBanner = signal(false);

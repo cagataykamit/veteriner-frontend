@@ -19,6 +19,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-client-edit-page',
@@ -46,6 +47,11 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
             <app-page-header title="Müşteri Düzenle" subtitle="Hasta yönetimi" description="Müşteri kaydını güncelleyin." />
 
             <div class="card">
+                @if (ro.mutationBlocked()) {
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                        İşletme salt okunur moddadır; müşteri kaydı güncellenemez.
+                    </p>
+                }
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
@@ -96,7 +102,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             label="Güncelle"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting()"
+                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -121,6 +127,7 @@ export class ClientEditPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(false);
     readonly loadError = signal<string | null>(null);
@@ -185,6 +192,9 @@ export class ClientEditPageComponent implements OnInit {
     }
 
     onSubmit(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         if (this.form.invalid || !this.currentId()) {

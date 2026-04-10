@@ -4,9 +4,14 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { mapSubscriptionSummaryDtoToVm } from '@/app/features/subscriptions/data/subscription.mapper';
-import type { SubscriptionSummaryDto } from '@/app/features/subscriptions/models/subscription-api.model';
-import type { SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import { mapSubscriptionCheckoutSessionDtoToVm, mapSubscriptionSummaryDtoToVm } from '@/app/features/subscriptions/data/subscription.mapper';
+import type {
+    FinalizeSubscriptionCheckoutRequestDto,
+    StartSubscriptionCheckoutRequestDto,
+    SubscriptionCheckoutSessionDto,
+    SubscriptionSummaryDto
+} from '@/app/features/subscriptions/models/subscription-api.model';
+import type { SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 
@@ -26,5 +31,52 @@ export class SubscriptionsService {
                 throwError(() => new Error(messageFromHttpError(err, 'Abonelik özeti yüklenemedi.')))
             )
         );
+    }
+
+    startCheckout(targetPlanCode: string): Observable<SubscriptionCheckoutSessionVm> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        const body: StartSubscriptionCheckoutRequestDto = { targetPlanCode };
+        return this.api.post<SubscriptionCheckoutSessionDto>(ApiEndpoints.tenants.subscriptionCheckout(tenantId), body).pipe(
+            map(mapSubscriptionCheckoutSessionDtoToVm),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Checkout oturumu başlatılamadı.')))
+            )
+        );
+    }
+
+    getCheckout(checkoutSessionId: string): Observable<SubscriptionCheckoutSessionVm> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        return this.api
+            .get<SubscriptionCheckoutSessionDto>(ApiEndpoints.tenants.subscriptionCheckoutById(tenantId, checkoutSessionId))
+            .pipe(
+                map(mapSubscriptionCheckoutSessionDtoToVm),
+                catchError((err: HttpErrorResponse) =>
+                    throwError(() => new Error(messageFromHttpError(err, 'Checkout oturumu yüklenemedi.')))
+                )
+            );
+    }
+
+    finalizeCheckout(checkoutSessionId: string, externalReference?: string | null): Observable<SubscriptionCheckoutSessionVm> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        const body: FinalizeSubscriptionCheckoutRequestDto = {
+            externalReference: externalReference?.trim() ? externalReference.trim() : null
+        };
+        return this.api
+            .post<SubscriptionCheckoutSessionDto>(ApiEndpoints.tenants.finalizeSubscriptionCheckout(tenantId, checkoutSessionId), body)
+            .pipe(
+                map(mapSubscriptionCheckoutSessionDtoToVm),
+                catchError((err: HttpErrorResponse) =>
+                    throwError(() => new Error(messageFromHttpError(err, 'Checkout aktivasyonu tamamlanamadı.')))
+                )
+            );
     }
 }

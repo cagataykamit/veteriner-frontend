@@ -8,6 +8,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-treatment-detail-page',
@@ -35,43 +36,73 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
             </div>
         } @else if (row()) {
             <app-page-header title="Tedavi" subtitle="Klinik" [description]="row()!.title">
-                <a
-                    actions
-                    [routerLink]="['/panel/treatments', row()!.id, 'edit']"
-                    pButton
-                    type="button"
-                    label="Düzenle"
-                    icon="pi pi-pencil"
-                    class="p-button-secondary"
-                ></a>
-                @if (row()!.clientId?.trim() && row()!.petId?.trim()) {
-                    <div actions class="flex flex-wrap gap-2">
+                <div actions class="flex flex-wrap gap-2">
+                    @if (!ro.mutationBlocked()) {
                         <a
-                            [routerLink]="['/panel/prescriptions/new']"
-                            [queryParams]="prescriptionCreateQueryParams()"
+                            [routerLink]="['/panel/treatments', row()!.id, 'edit']"
                             pButton
                             type="button"
-                            label="Reçete Oluştur"
-                            icon="pi pi-file-edit"
+                            label="Düzenle"
+                            icon="pi pi-pencil"
                             class="p-button-secondary"
                         ></a>
-                        @if (row()!.examinationId?.trim()) {
+                        @if (row()!.clientId?.trim() && row()!.petId?.trim()) {
                             <a
-                                [routerLink]="['/panel/payments/new']"
-                                [queryParams]="{
-                                    clientId: row()!.clientId,
-                                    petId: row()!.petId,
-                                    examinationId: row()!.examinationId
-                                }"
+                                [routerLink]="['/panel/prescriptions/new']"
+                                [queryParams]="prescriptionCreateQueryParams()"
                                 pButton
                                 type="button"
-                                label="Ödeme Oluştur"
-                                icon="pi pi-wallet"
+                                label="Reçete Oluştur"
+                                icon="pi pi-file-edit"
                                 class="p-button-secondary"
                             ></a>
+                            @if (row()!.examinationId?.trim()) {
+                                <a
+                                    [routerLink]="['/panel/payments/new']"
+                                    [queryParams]="{
+                                        clientId: row()!.clientId,
+                                        petId: row()!.petId,
+                                        examinationId: row()!.examinationId
+                                    }"
+                                    pButton
+                                    type="button"
+                                    label="Ödeme Oluştur"
+                                    icon="pi pi-wallet"
+                                    class="p-button-secondary"
+                                ></a>
+                            }
                         }
-                    </div>
-                }
+                    } @else {
+                        <button
+                            pButton
+                            type="button"
+                            label="Düzenle (salt okunur)"
+                            icon="pi pi-lock"
+                            [disabled]="true"
+                            class="p-button-secondary"
+                        ></button>
+                        @if (row()!.clientId?.trim() && row()!.petId?.trim()) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Reçete Oluştur (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                            @if (row()!.examinationId?.trim()) {
+                                <button
+                                    pButton
+                                    type="button"
+                                    label="Ödeme Oluştur (salt okunur)"
+                                    icon="pi pi-lock"
+                                    [disabled]="true"
+                                    class="p-button-secondary"
+                                ></button>
+                            }
+                        }
+                    }
+                </div>
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -140,6 +171,7 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
 export class TreatmentDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly treatmentsService = inject(TreatmentsService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);

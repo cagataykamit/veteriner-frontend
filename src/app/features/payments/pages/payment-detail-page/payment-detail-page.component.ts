@@ -16,6 +16,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 
 @Component({
@@ -45,15 +46,27 @@ import { EMPTY, switchMap } from 'rxjs';
             </div>
         } @else if (payment()) {
             <app-page-header title="Ödeme" subtitle="Finans" [description]="headerDescription(payment()!)">
-                <a
-                    actions
-                    [routerLink]="['/panel/payments', payment()!.id, 'edit']"
-                    pButton
-                    type="button"
-                    label="Düzenle"
-                    icon="pi pi-pencil"
-                    class="p-button-secondary"
-                ></a>
+                @if (!ro.mutationBlocked()) {
+                    <a
+                        actions
+                        [routerLink]="['/panel/payments', payment()!.id, 'edit']"
+                        pButton
+                        type="button"
+                        label="Düzenle"
+                        icon="pi pi-pencil"
+                        class="p-button-secondary"
+                    ></a>
+                } @else {
+                    <button
+                        actions
+                        pButton
+                        type="button"
+                        label="Düzenle (salt okunur)"
+                        icon="pi pi-lock"
+                        [disabled]="true"
+                        class="p-button-secondary"
+                    ></button>
+                }
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -191,6 +204,7 @@ export class PaymentDetailPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly paymentsService = inject(PaymentsService);
     private readonly related = inject(DetailRelatedSummariesService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
     readonly showSavedBanner = signal(false);

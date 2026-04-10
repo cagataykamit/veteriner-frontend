@@ -4,6 +4,7 @@ export interface SubscriptionPlanVm {
     code: string;
     name: string;
     description: string | null;
+    maxUsers: number | null;
 }
 
 export interface SubscriptionSummaryVm {
@@ -19,4 +20,19 @@ export interface SubscriptionSummaryVm {
     isReadOnly: boolean;
     canManageSubscription: boolean;
     availablePlans: SubscriptionPlanVm[];
+}
+
+export type SubscriptionCheckoutStatusKey = 'open' | 'finalized' | 'expired' | 'failed' | 'cancelled' | 'unknown';
+
+export interface SubscriptionCheckoutSessionVm {
+    checkoutSessionId: string;
+    tenantId: string | null;
+    currentPlanCode: string | null;
+    targetPlanCode: string | null;
+    statusRaw: string | null;
+    status: SubscriptionCheckoutStatusKey;
+    provider: string | null;
+    checkoutUrl: string | null;
+    canContinue: boolean;
+    expiresAtUtc: string | null;
 }

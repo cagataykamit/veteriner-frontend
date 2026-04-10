@@ -16,6 +16,7 @@ import {
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -51,6 +52,11 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
             />
 
             <div class="card">
+            @if (ro.mutationBlocked()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                    İşletme salt okunur moddadır; ırk kaydı güncellenemez veya oluşturulamaz.
+                </p>
+            }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -110,7 +116,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                         [label]="editing() ? 'Güncelle' : copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting() || loading()"
-                        [disabled]="form.invalid || submitting() || loading() || loadingSpecies()"
+                        [disabled]="form.invalid || submitting() || loading() || loadingSpecies() || ro.mutationBlocked()"
                     />
                     <p-button
                         type="button"
@@ -133,6 +139,7 @@ export class BreedFormPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly breedsService = inject(BreedsService);
     private readonly speciesService = inject(SpeciesService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly editing = signal(false);
     readonly loading = signal(false);
@@ -190,6 +197,9 @@ export class BreedFormPageComponent implements OnInit {
     }
 
     onSubmit(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         if (this.form.invalid) {

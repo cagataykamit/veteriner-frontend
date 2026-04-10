@@ -42,7 +42,13 @@ export function rateLimitUserMessage(err: HttpErrorResponse): string {
 const SUBSCRIPTION_WRITE_USER_MESSAGES: Record<string, string> = {
     'Subscriptions.TenantReadOnly':
         'Bu işletme salt okunur moddadır; yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik üzerinden devam edebilirsiniz.',
-    'Subscriptions.NotFound': 'Abonelik kaydı bulunamadı; bu işlem şu an yapılamıyor.'
+    'Subscriptions.TenantCancelled':
+        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik ekranından durumu yönetin.',
+    'Subscriptions.NotFound': 'Abonelik kaydı bulunamadı; bu işlem şu an yapılamıyor.',
+    'Subscriptions.PlanCodeInvalid': 'Seçilen paket kodu geçerli değil.',
+    'Subscriptions.SamePlanAlreadyActive': 'Bu paket zaten aktif görünüyor; farklı bir paket seçin.',
+    'Subscriptions.CheckoutSessionNotOpen': 'Checkout oturumu artık açık değil. Lütfen yeniden başlatın.',
+    'Subscriptions.CheckoutSessionNotFound': 'Checkout oturumu bulunamadı; işlemi yeniden başlatın.'
 };
 
 function readProblemCodeFromHttp(err: HttpErrorResponse): string | null {

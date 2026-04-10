@@ -1,5 +1,6 @@
-import type { SubscriptionSummaryDto } from '@/app/features/subscriptions/models/subscription-api.model';
-import type { SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { SubscriptionCheckoutSessionDto, SubscriptionSummaryDto } from '@/app/features/subscriptions/models/subscription-api.model';
+import type { SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import { parseSubscriptionCheckoutStatus } from '@/app/features/subscriptions/utils/subscription-checkout-status.utils';
 import { parseSubscriptionStatus } from '@/app/features/subscriptions/utils/subscription-status.utils';
 
 const EM_DASH = '—';
@@ -20,7 +21,7 @@ function toNullableNumber(value: number | null | undefined): number | null {
     return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-function mapPlan(dto: { code?: string | null; name?: string | null; description?: string | null }): SubscriptionPlanVm | null {
+function mapPlan(dto: { code?: string | null; name?: string | null; description?: string | null; maxUsers?: number | null }): SubscriptionPlanVm | null {
     const code = trimOrNull(dto.code);
     const name = trimOrNull(dto.name);
     if (!code && !name) {
@@ -29,7 +30,8 @@ function mapPlan(dto: { code?: string | null; name?: string | null; description?
     return {
         code: code ?? name ?? EM_DASH,
         name: name ?? code ?? EM_DASH,
-        description: trimOrNull(dto.description)
+        description: trimOrNull(dto.description),
+        maxUsers: toNullableNumber(dto.maxUsers)
     };
 }
 
@@ -51,5 +53,20 @@ export function mapSubscriptionSummaryDtoToVm(dto: SubscriptionSummaryDto): Subs
         isReadOnly: toBoolean(dto.isReadOnly),
         canManageSubscription: toBoolean(dto.canManageSubscription),
         availablePlans: plans
+    };
+}
+
+export function mapSubscriptionCheckoutSessionDtoToVm(dto: SubscriptionCheckoutSessionDto): SubscriptionCheckoutSessionVm {
+    return {
+        checkoutSessionId: trimOrNull(dto.checkoutSessionId) ?? '',
+        tenantId: trimOrNull(dto.tenantId),
+        currentPlanCode: trimOrNull(dto.currentPlanCode),
+        targetPlanCode: trimOrNull(dto.targetPlanCode),
+        statusRaw: trimOrNull(dto.status),
+        status: parseSubscriptionCheckoutStatus(dto.status),
+        provider: trimOrNull(dto.provider),
+        checkoutUrl: trimOrNull(dto.checkoutUrl),
+        canContinue: toBoolean(dto.canContinue),
+        expiresAtUtc: trimOrNull(dto.expiresAtUtc)
     };
 }

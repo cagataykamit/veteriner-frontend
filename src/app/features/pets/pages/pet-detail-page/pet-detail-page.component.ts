@@ -21,6 +21,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 
 const EM = '—';
@@ -56,15 +57,27 @@ const EM = '—';
                 subtitle="Hayvan"
                 [description]="'Doğum: ' + formatDateOnly(pet()!.birthDate) + ' · ' + pet()!.speciesName"
             >
-                <a
-                    actions
-                    [routerLink]="['/panel/pets', pet()!.id, 'edit']"
-                    pButton
-                    type="button"
-                    label="Düzenle"
-                    icon="pi pi-pencil"
-                    class="p-button-secondary"
-                ></a>
+                @if (!ro.mutationBlocked()) {
+                    <a
+                        actions
+                        [routerLink]="['/panel/pets', pet()!.id, 'edit']"
+                        pButton
+                        type="button"
+                        label="Düzenle"
+                        icon="pi pi-pencil"
+                        class="p-button-secondary"
+                    ></a>
+                } @else {
+                    <button
+                        actions
+                        pButton
+                        type="button"
+                        label="Düzenle (salt okunur)"
+                        icon="pi pi-lock"
+                        [disabled]="true"
+                        class="p-button-secondary"
+                    ></button>
+                }
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -376,6 +389,7 @@ export class PetDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly petsService = inject(PetsService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
     readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;

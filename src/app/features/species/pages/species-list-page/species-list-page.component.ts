@@ -11,6 +11,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-species-list-page',
@@ -28,7 +29,19 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     ],
     template: `
         <app-page-header title="Türler" subtitle="Referans yönetimi" description="Tür kayıtlarını yönetin.">
-            <a actions routerLink="/panel/species/new" pButton type="button" label="Yeni Tür" icon="pi pi-plus" class="p-button-primary"></a>
+            @if (!ro.mutationBlocked()) {
+                <a actions routerLink="/panel/species/new" pButton type="button" label="Yeni Tür" icon="pi pi-plus" class="p-button-primary"></a>
+            } @else {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni Tür (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
         </app-page-header>
 
         @if (loading()) {
@@ -68,7 +81,11 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                     </td>
                                     <td>{{ row.displayOrder }}</td>
                                     <td>
-                                        <a [routerLink]="['/panel/species', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                        @if (!ro.mutationBlocked()) {
+                                            <a [routerLink]="['/panel/species', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                        } @else {
+                                            <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                        }
                                     </td>
                                 </tr>
                             </ng-template>
@@ -89,7 +106,11 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                     <div>Sıra: {{ row.displayOrder }}</div>
                                 </div>
                                 <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/species', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
+                                    @if (!ro.mutationBlocked()) {
+                                        <a [routerLink]="['/panel/species', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
+                                    } @else {
+                                        <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                    }
                                 </div>
                             </div>
                         }
@@ -102,6 +123,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 export class SpeciesListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     private readonly speciesService = inject(SpeciesService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(false);
     readonly error = signal<string | null>(null);

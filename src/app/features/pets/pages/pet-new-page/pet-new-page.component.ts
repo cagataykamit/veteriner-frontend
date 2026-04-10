@@ -26,6 +26,7 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
 import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-pet-new-page',
@@ -47,6 +48,11 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
         <app-page-header title="Yeni Hayvan" subtitle="Hasta yönetimi" description="Hayvan kaydı oluşturun." />
 
         <div class="card">
+            @if (ro.mutationBlocked()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                    İşletme salt okunur moddadır; hayvan kaydı oluşturulamaz.
+                </p>
+            }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
@@ -105,6 +111,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                                 type="button"
                                 label="Yeni tür ekle"
                                 icon="pi pi-plus"
+                                [disabled]="ro.mutationBlocked()"
                                 [text]="true"
                                 styleClass="p-0"
                                 (onClick)="quickSpeciesOpen.set(true)"
@@ -134,6 +141,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                                     type="button"
                                     label="Bu tür için yeni ırk"
                                     icon="pi pi-plus"
+                                    [disabled]="ro.mutationBlocked()"
                                     [text]="true"
                                     styleClass="p-0"
                                     (onClick)="quickBreedOpen.set(true)"
@@ -215,7 +223,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients() || loadingSpecies() || loadingBreeds() || loadingColors()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()"
                     />
                     <p-button
                         type="button"
@@ -249,6 +257,7 @@ export class PetNewPageComponent implements OnInit {
     private readonly speciesService = inject(SpeciesService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -352,6 +361,9 @@ export class PetNewPageComponent implements OnInit {
     }
 
     onSubmit(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         if (this.form.invalid) {

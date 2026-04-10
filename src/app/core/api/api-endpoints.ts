@@ -77,6 +77,11 @@ export const ApiEndpoints = {
     },
     tenants: {
         subscriptionSummary: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-summary`,
+        subscriptionCheckout: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout`,
+        subscriptionCheckoutById: (tenantId: string, checkoutSessionId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout/${encodeURIComponent(checkoutSessionId)}`,
+        finalizeSubscriptionCheckout: (tenantId: string, checkoutSessionId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout/${encodeURIComponent(checkoutSessionId)}/finalize`,
         invites: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites`,
         /** Davet formu: atanabilir operation claim listesi (`operationClaimId`, `operationClaimName`). */
         assignableOperationClaims: (tenantId: string) =>

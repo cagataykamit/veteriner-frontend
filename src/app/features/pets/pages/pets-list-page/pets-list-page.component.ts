@@ -18,6 +18,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-pets-list-page',
@@ -38,7 +39,19 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     ],
     template: `
         <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay.">
-            <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hayvan" icon="pi pi-plus" class="p-button-primary"></a>
+            @if (!ro.mutationBlocked()) {
+                <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hayvan" icon="pi pi-plus" class="p-button-primary"></a>
+            } @else {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni Hayvan (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
         </app-page-header>
 
         <div class="card mb-6">
@@ -210,6 +223,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 })
 export class PetsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
 
     private readonly petsService = inject(PetsService);
     private readonly speciesService = inject(SpeciesService);

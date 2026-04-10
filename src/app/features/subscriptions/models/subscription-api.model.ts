@@ -2,6 +2,7 @@ export interface SubscriptionPlanDto {
     code?: string | null;
     name?: string | null;
     description?: string | null;
+    maxUsers?: number | null;
 }
 
 export interface SubscriptionSummaryDto {
@@ -16,4 +17,24 @@ export interface SubscriptionSummaryDto {
     isReadOnly?: boolean | null;
     canManageSubscription?: boolean | null;
     availablePlans?: SubscriptionPlanDto[] | null;
+}
+
+export interface SubscriptionCheckoutSessionDto {
+    checkoutSessionId?: string | null;
+    tenantId?: string | null;
+    currentPlanCode?: string | null;
+    targetPlanCode?: string | null;
+    status?: string | null;
+    provider?: string | null;
+    checkoutUrl?: string | null;
+    canContinue?: boolean | null;
+    expiresAtUtc?: string | null;
+}
+
+export interface StartSubscriptionCheckoutRequestDto {
+    targetPlanCode: string;
+}
+
+export interface FinalizeSubscriptionCheckoutRequestDto {
+    externalReference?: string | null;
 }
