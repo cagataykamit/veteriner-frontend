@@ -82,6 +82,10 @@ export const ApiEndpoints = {
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout/${encodeURIComponent(checkoutSessionId)}`,
         finalizeSubscriptionCheckout: (tenantId: string, checkoutSessionId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout/${encodeURIComponent(checkoutSessionId)}/finalize`,
+        scheduleSubscriptionDowngrade: (tenantId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-plan-change/downgrade`,
+        pendingSubscriptionPlanChange: (tenantId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-plan-change/pending`,
         invites: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites`,
         /** Davet formu: atanabilir operation claim listesi (`operationClaimId`, `operationClaimName`). */
         assignableOperationClaims: (tenantId: string) =>

@@ -47,8 +47,13 @@ const SUBSCRIPTION_WRITE_USER_MESSAGES: Record<string, string> = {
     'Subscriptions.NotFound': 'Abonelik kaydı bulunamadı; bu işlem şu an yapılamıyor.',
     'Subscriptions.PlanCodeInvalid': 'Seçilen paket kodu geçerli değil.',
     'Subscriptions.SamePlanAlreadyActive': 'Bu paket zaten aktif görünüyor; farklı bir paket seçin.',
+    'Subscriptions.DowngradeMustBeScheduled': 'Bu paket düşürme işlemi dönem sonuna planlanmalıdır.',
+    'Subscriptions.UpgradeRequiresCheckout': 'Yükseltme işlemi için ödeme adımını tamamlamanız gerekiyor.',
     'Subscriptions.CheckoutSessionNotOpen': 'Checkout oturumu artık açık değil. Lütfen yeniden başlatın.',
-    'Subscriptions.CheckoutSessionNotFound': 'Checkout oturumu bulunamadı; işlemi yeniden başlatın.'
+    'Subscriptions.CheckoutSessionNotFound': 'Checkout oturumu bulunamadı; işlemi yeniden başlatın.',
+    'Subscriptions.PendingPlanChangeNotFound': 'Bekleyen plan değişikliği bulunamadı.',
+    'Subscriptions.PendingPlanChangeNotCancelable': 'Bekleyen plan değişikliği artık iptal edilemiyor.',
+    'Subscriptions.DowngradeScheduleConflict': 'Bu plan geçişi şu an planlanamıyor. Özet bilgiyi yenileyip tekrar deneyin.'
 };
 
 function readProblemCodeFromHttp(err: HttpErrorResponse): string | null {
@@ -157,6 +162,9 @@ function panelHttpStatusUserMessage(status: number): string | null {
         case 408:
         case 504:
             return 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.';
+        case 502:
+        case 503:
+            return 'Ödeme veya abonelik hizmeti geçici olarak yanıt veremedi. Lütfen kısa süre sonra tekrar deneyin.';
         case 409:
             return null;
         case 415:

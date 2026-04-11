@@ -17,22 +17,56 @@ export interface SubscriptionSummaryVm {
     trialStartsAtUtc: string | null;
     trialEndsAtUtc: string | null;
     daysRemaining: number | null;
+    currentPeriodStartUtc: string | null;
+    currentPeriodEndUtc: string | null;
+    billingCycleAnchorUtc: string | null;
+    nextBillingAtUtc: string | null;
+    pendingPlanChange: PendingPlanChangeVm | null;
     isReadOnly: boolean;
     canManageSubscription: boolean;
     availablePlans: SubscriptionPlanVm[];
 }
 
-export type SubscriptionCheckoutStatusKey = 'open' | 'finalized' | 'expired' | 'failed' | 'cancelled' | 'unknown';
+export type PendingPlanChangeTypeKey = 'downgrade' | 'upgrade' | 'unknown';
+export type PendingPlanChangeStatusKey = 'pending' | 'scheduled' | 'cancelled' | 'applied' | 'unknown';
+
+export interface PendingPlanChangeVm {
+    currentPlanCode: string | null;
+    targetPlanCode: string | null;
+    changeTypeRaw: string | number | null;
+    changeType: PendingPlanChangeTypeKey;
+    statusRaw: string | number | null;
+    status: PendingPlanChangeStatusKey;
+    effectiveAtUtc: string | null;
+}
+
+export type SubscriptionCheckoutStatusKey =
+    | 'open'
+    | 'redirect_ready'
+    | 'processing'
+    | 'finalized'
+    | 'expired'
+    | 'failed'
+    | 'cancelled'
+    | 'unknown';
+
+/** Checkout provider — mapper sayı/string API değerini buraya indirger. */
+export type SubscriptionCheckoutProviderSlug = 'none' | 'manual' | 'stripe' | 'iyzico';
 
 export interface SubscriptionCheckoutSessionVm {
     checkoutSessionId: string;
     tenantId: string | null;
     currentPlanCode: string | null;
     targetPlanCode: string | null;
-    statusRaw: string | null;
+    statusRaw: string | number | null;
     status: SubscriptionCheckoutStatusKey;
-    provider: string | null;
+    /** Bilinen provider; parse edilemezse `null` (UI: Tanımsız). */
+    provider: SubscriptionCheckoutProviderSlug | null;
     checkoutUrl: string | null;
     canContinue: boolean;
     expiresAtUtc: string | null;
+    externalReference: string | null;
+    proratedChargeMinor: number | null;
+    chargeCurrencyCode: string | null;
+    prorationRatio: number | null;
 }

@@ -8,8 +8,42 @@ interface SubscriptionCheckoutStatusDef {
     readonly aliases: readonly string[];
 }
 
+/**
+ * Backend sayısal enum (sıra): Pending=0, RedirectReady=1, Completed=2, Failed=3, Expired=4, Cancelled=5, Processing=6.
+ * String isimler ve eski API alias’ları da tolere edilir.
+ */
+const CHECKOUT_STATUS_BY_NUM: Readonly<Record<number, SubscriptionCheckoutStatusKey>> = {
+    0: 'processing',
+    1: 'redirect_ready',
+    2: 'finalized',
+    3: 'failed',
+    4: 'expired',
+    5: 'cancelled',
+    6: 'processing'
+};
+
 const STATUS_DEFS: readonly SubscriptionCheckoutStatusDef[] = [
-    { key: 'open', label: 'Açık', severity: 'info', aliases: ['open', 'pending', 'created'] },
+    { key: 'open', label: 'Açık', severity: 'info', aliases: ['open', 'created'] },
+    {
+        key: 'redirect_ready',
+        label: 'Yönlendirmeye hazır',
+        severity: 'info',
+        aliases: ['redirectready', 'redirect_ready', 'readyforredirect', 'awaitingredirect']
+    },
+    {
+        key: 'processing',
+        label: 'İşleniyor',
+        severity: 'info',
+        aliases: [
+            'processing',
+            'pending',
+            'pendingpayment',
+            'awaitingwebhook',
+            'paidpending',
+            'inprogress',
+            'in_progress'
+        ]
+    },
     { key: 'finalized', label: 'Tamamlandı', severity: 'success', aliases: ['finalized', 'completed', 'activated', 'success'] },
     { key: 'expired', label: 'Süresi doldu', severity: 'warn', aliases: ['expired', 'timeout'] },
     { key: 'failed', label: 'Başarısız', severity: 'danger', aliases: ['failed', 'error'] },
@@ -29,14 +63,22 @@ for (const def of STATUS_DEFS) {
 }
 
 export function parseSubscriptionCheckoutStatus(raw: unknown): SubscriptionCheckoutStatusKey {
-    if (typeof raw !== 'string') {
-        return 'unknown';
+    if (typeof raw === 'number' && Number.isFinite(raw)) {
+        const i = Math.trunc(raw);
+        return CHECKOUT_STATUS_BY_NUM[i] ?? 'unknown';
     }
-    const n = normalize(raw);
-    if (!n) {
-        return 'unknown';
+    if (typeof raw === 'string') {
+        const t = raw.trim();
+        if (/^-?\d+$/.test(t)) {
+            return parseSubscriptionCheckoutStatus(Number.parseInt(t, 10));
+        }
+        const n = normalize(raw);
+        if (!n) {
+            return 'unknown';
+        }
+        return byAlias.get(n)?.key ?? 'unknown';
     }
-    return byAlias.get(n)?.key ?? 'unknown';
+    return 'unknown';
 }
 
 export function subscriptionCheckoutStatusLabel(status: SubscriptionCheckoutStatusKey): string {
