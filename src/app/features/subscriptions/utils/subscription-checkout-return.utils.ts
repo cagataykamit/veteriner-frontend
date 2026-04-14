@@ -40,7 +40,15 @@ const RETURN_QUERY_KEYS = [
     'payment_status',
     'payment',
     'status',
-    'result'
+    'result',
+    /** Sık hosted TR / iyzico benzeri dönüş parametreleri */
+    'token',
+    'conversationId',
+    'conversation_id',
+    'paymentConversationId',
+    'payment_conversation_id',
+    'merchant_oid',
+    'merchantOid'
 ] as const;
 
 /** Success/cancel dönüşü için URL’de anlamlı query var mı (`session_id` dahil). */
@@ -51,11 +59,18 @@ export function hasSubscriptionCheckoutReturnQuery(params: ParamMap): boolean {
     });
 }
 
-export function parseSubscriptionCheckoutReturn(params: ParamMap): ParsedSubscriptionCheckoutReturn {
+/**
+ * @param sessionIdFallback — URL’de oturum id yoksa (ör. yalnızca `token` dönüyorsa) `sessionStorage`’daki checkout id.
+ */
+export function parseSubscriptionCheckoutReturn(
+    params: ParamMap,
+    sessionIdFallback?: string | null
+): ParsedSubscriptionCheckoutReturn {
     const sessionId =
         trimParam(params.get('session_id')) ??
         trimParam(params.get('checkoutSessionId')) ??
-        trimParam(params.get('billing_checkout_session_id'));
+        trimParam(params.get('billing_checkout_session_id')) ??
+        trimParam(sessionIdFallback ?? undefined);
 
     const keysToScan = ['checkout', 'billing', 'payment_status', 'payment', 'status', 'result'] as const;
     let explicit: 'success' | 'cancel' | null = null;
@@ -74,6 +89,9 @@ export function parseSubscriptionCheckoutReturn(params: ParamMap): ParsedSubscri
     if (explicit === 'cancel') {
         outcome = 'cancel';
     } else if (explicit === 'success' || sessionId) {
+        outcome = 'success';
+    } else if (hasSubscriptionCheckoutReturnQuery(params)) {
+        /** Örn. yalnızca `token` / iyzico parametreleri; checkout id sessionStorage’da kalır. */
         outcome = 'success';
     }
 

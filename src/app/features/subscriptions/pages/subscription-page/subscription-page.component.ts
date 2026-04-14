@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -33,7 +33,9 @@ import {
 } from '@/app/features/subscriptions/utils/subscription-checkout-return.utils';
 import {
     clearStoredCheckoutSessionId,
+    consumeExpectingHostedCheckoutReturn,
     hasUpgradeSuccessAck,
+    markExpectingHostedCheckoutReturn,
     markUpgradeSuccessAck,
     readStoredCheckoutSessionId,
     writeStoredCheckoutSessionId
@@ -45,7 +47,18 @@ import {
 import { subscriptionPlanLabel } from '@/app/features/subscriptions/utils/subscription-plan.utils';
 import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/features/subscriptions/utils/subscription-status.utils';
 
-type ReturnBannerSeverity = 'info' | 'success' | 'warn' | 'secondary';
+type ReturnBannerSeverity = 'info' | 'success' | 'warn' | 'secondary' | 'error';
+
+/** Ödeme dönüşü sonrası üst düzey UX fazı (banner + processing ile uyumlu). */
+type PostCheckoutPhase = 'idle' | 'processing' | 'success' | 'warning' | 'error';
+
+interface ReturnBannerVm {
+    readonly severity: ReturnBannerSeverity;
+    readonly title: string;
+    readonly detail?: string;
+    /** Özet + varsa checkout’u yeniden çek (sayfa yenilemeden). */
+    readonly showRefreshCta?: boolean;
+}
 
 @Component({
     selector: 'app-subscription-page',
@@ -69,6 +82,13 @@ type ReturnBannerSeverity = 'info' | 'success' | 'warn' | 'secondary';
             description="Kiracı abonelik özeti ve paket aktivasyon akışı."
         />
 
+        @if (postCheckoutSyncing() && !error()) {
+            <div class="card mb-4 border-round bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
+                <p class="m-0 text-sm text-color font-medium">Ödeme sonucu işleniyor.</p>
+                <p class="m-0 text-sm text-color mt-2">Paket değişikliği birkaç saniye içinde yansıyabilir.</p>
+            </div>
+        }
+
         @if (loading()) {
             <app-loading-state message="Abonelik özeti yükleniyor…" />
         } @else if (error(); as err) {
@@ -83,18 +103,27 @@ type ReturnBannerSeverity = 'info' | 'success' | 'warn' | 'secondary';
                         'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800': banner.severity === 'info',
                         'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800': banner.severity === 'success',
                         'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800': banner.severity === 'warn',
-                        'bg-surface-100 dark:bg-surface-800 border-surface-200 dark:border-surface-700': banner.severity === 'secondary'
+                        'bg-surface-100 dark:bg-surface-800 border-surface-200 dark:border-surface-700': banner.severity === 'secondary',
+                        'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800': banner.severity === 'error'
                     }"
                 >
-                    <p class="m-0 text-sm text-color">{{ banner.text }}</p>
-                </div>
-            }
-
-            @if (postCheckoutSyncing()) {
-                <div class="card mb-4 border-round bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
-                    <p class="m-0 text-sm text-color">
-                        Ödeme onayı işleniyor; oturum ve abonelik durumu birkaç saniye içinde güncellenir. Lütfen bu sayfayı kapatmayın.
-                    </p>
+                    <p class="m-0 text-sm text-color font-medium">{{ banner.title }}</p>
+                    @if (banner.detail) {
+                        <p class="m-0 text-sm text-color mt-2">{{ banner.detail }}</p>
+                    }
+                    @if (banner.showRefreshCta) {
+                        <div class="mt-3">
+                            <p-button
+                                type="button"
+                                label="Durumu yenile"
+                                icon="pi pi-refresh"
+                                severity="secondary"
+                                [loading]="subscriptionRefreshLoading()"
+                                [disabled]="subscriptionRefreshLoading() || postCheckoutSyncing()"
+                                (onClick)="refreshSubscriptionSnapshot()"
+                            />
+                        </div>
+                    }
                 </div>
             }
 
@@ -428,8 +457,28 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     readonly planActionInfo = signal<string | null>(null);
     readonly pendingCancelLoading = signal(false);
     readonly pendingCancelError = signal<string | null>(null);
-    readonly returnBanner = signal<{ readonly text: string; readonly severity: ReturnBannerSeverity } | null>(null);
+    readonly returnBanner = signal<ReturnBannerVm | null>(null);
     readonly postCheckoutSyncing = signal(false);
+    /** Uyarı banner’ındaki “Durumu yenile” — tam sayfa loading olmadan özet + checkout yeniler. */
+    readonly subscriptionRefreshLoading = signal(false);
+
+    /** Ödeme dönüşü sonrası anlık faz: processing öncelikli, sonra banner şiddeti. */
+    readonly postCheckoutPhase = computed<PostCheckoutPhase>(() => {
+        if (this.postCheckoutSyncing()) {
+            return 'processing';
+        }
+        const b = this.returnBanner();
+        if (!b) {
+            return 'idle';
+        }
+        if (b.severity === 'success') {
+            return 'success';
+        }
+        if (b.severity === 'error') {
+            return 'error';
+        }
+        return 'warning';
+    });
 
     readonly formatDate = (v: string | null | undefined) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null | undefined) => formatDateTimeDisplay(v);
@@ -440,26 +489,48 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         const params = this.route.snapshot.queryParamMap;
-        const hadReturnQuery = hasSubscriptionCheckoutReturnQuery(params);
-        const parsedReturn = parseSubscriptionCheckoutReturn(params);
-        if (hadReturnQuery) {
+        const storedId = readStoredCheckoutSessionId();
+        const expectingHostedReturn = consumeExpectingHostedCheckoutReturn();
+        const returnQueryPresent = hasSubscriptionCheckoutReturnQuery(params);
+        const parsedReturn = parseSubscriptionCheckoutReturn(params, storedId);
+
+        /** Query (iyzico token vb.) veya hosted’a gidip dönüş: oturum id sessionStorage’da. */
+        const hostedCheckoutEntry = returnQueryPresent || (expectingHostedReturn && !!storedId);
+
+        if (returnQueryPresent) {
             void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
         }
-        this.reload(() => {
-            if (hadReturnQuery) {
-                this.handleCheckoutReturn(parsedReturn);
-            }
-        });
+
+        const sessionForSync = (parsedReturn.sessionId?.trim() || storedId?.trim()) ?? '';
+        const shouldStartProcessingEarly =
+            hostedCheckoutEntry && parsedReturn.outcome === 'success' && !!sessionForSync;
+
+        if (shouldStartProcessingEarly) {
+            this.postCheckoutSyncing.set(true);
+        }
+
+        this.reload(
+            () => {
+                if (hostedCheckoutEntry) {
+                    this.handleCheckoutReturn(parsedReturn);
+                }
+            },
+            { bustSummaryCache: hostedCheckoutEntry }
+        );
     }
 
     ngOnDestroy(): void {
         this.clearPollTimeout();
     }
 
-    reload(onComplete?: () => void): void {
+    reload(onComplete?: () => void, options?: { readonly bustSummaryCache?: boolean }): void {
         this.loading.set(true);
         this.error.set(null);
-        forkJoin([this.subscriptions.getSubscriptionSummary(), this.subscriptions.getPendingPlanChange()]).subscribe({
+        const bust = !!options?.bustSummaryCache;
+        forkJoin([
+            this.subscriptions.getSubscriptionSummary({ bustCache: bust }),
+            this.subscriptions.getPendingPlanChange({ bustCache: bust })
+        ]).subscribe({
             next: ([data, pending]) => {
                 const merged = { ...data, pendingPlanChange: pending };
                 this.summary.set(merged);
@@ -477,6 +548,51 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 onComplete?.();
             }
         });
+    }
+
+    /**
+     * Tam sayfa loading açmadan abonelik özetini ve (varsa) checkout oturumunu yeniler.
+     * Uyarı / zaman aşımı banner’larındaki “Durumu yenile” için.
+     */
+    refreshSubscriptionSnapshot(): void {
+        this.subscriptionRefreshLoading.set(true);
+        this.planActionError.set(null);
+        const sessionId = this.checkoutSession()?.checkoutSessionId?.trim() ?? readStoredCheckoutSessionId()?.trim() ?? null;
+
+        const done = (e: unknown) => {
+            this.subscriptionRefreshLoading.set(false);
+            this.planActionError.set(e instanceof Error ? e.message : 'Durum yenilenemedi.');
+        };
+
+        if (sessionId) {
+            forkJoin([
+                this.subscriptions.getSubscriptionSummary({ bustCache: true }),
+                this.subscriptions.getPendingPlanChange({ bustCache: true }),
+                this.subscriptions.getCheckout(sessionId)
+            ]).subscribe({
+                next: ([data, pending, session]) => {
+                    const merged = this.mergeSummaryWithPending(data, pending);
+                    this.summary.set(merged);
+                    this.tenantReadOnlyContext.applySummary(merged);
+                    this.checkoutSession.set(session);
+                    this.subscriptionRefreshLoading.set(false);
+                },
+                error: done
+            });
+        } else {
+            forkJoin([
+                this.subscriptions.getSubscriptionSummary({ bustCache: true }),
+                this.subscriptions.getPendingPlanChange({ bustCache: true })
+            ]).subscribe({
+                next: ([data, pending]) => {
+                    const merged = this.mergeSummaryWithPending(data, pending);
+                    this.summary.set(merged);
+                    this.tenantReadOnlyContext.applySummary(merged);
+                    this.subscriptionRefreshLoading.set(false);
+                },
+                error: done
+            });
+        }
     }
 
     statusLabel(summary: SubscriptionSummaryVm): string {
@@ -558,6 +674,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         const id = this.checkoutSession()?.checkoutSessionId?.trim();
         if (id) {
             writeStoredCheckoutSessionId(id);
+            markExpectingHostedCheckoutReturn();
         }
         window.location.assign(checkoutUrl.trim());
     }
@@ -773,7 +890,8 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (parsed.outcome === 'cancel') {
             this.returnBanner.set({
                 severity: 'warn',
-                text: 'Ödeme sayfasından ayrıldınız veya işlemi iptal ettiniz. Aynı oturuma devam etmek için aşağıdan ödeme akışına dönebilir veya yeni checkout başlatabilirsiniz.'
+                title: 'Ödeme sayfasından ayrıldınız veya işlemi iptal ettiniz.',
+                detail: 'Aynı oturuma devam etmek için aşağıdan ödeme akışına dönebilir veya yeni checkout başlatabilirsiniz.'
             });
             const sessionId = parsed.sessionId ?? readStoredCheckoutSessionId();
             if (sessionId) {
@@ -787,15 +905,14 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             if (!sessionId) {
                 this.returnBanner.set({
                     severity: 'warn',
-                    text: 'Dönüş algılandı ancak oturum kimliği bulunamadı. Checkout’u bu sayfadan yeniden başlatın.'
+                    title: 'Dönüş algılandı ancak oturum kimliği bulunamadı.',
+                    detail: 'Checkout’u bu sayfadan yeniden başlatın.',
+                    showRefreshCta: true
                 });
                 return;
             }
+            this.returnBanner.set(null);
             this.postCheckoutSyncing.set(true);
-            this.returnBanner.set({
-                severity: 'info',
-                text: 'Ödeme sağlayıcısından dönüldü; oturum ve abonelik doğrulanıyor.'
-            });
             this.runPostCheckoutSyncRound(sessionId, 0);
         }
     }
@@ -824,20 +941,17 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     private runPostCheckoutSyncRound(sessionId: string, attempt: number): void {
         this.clearPollTimeout();
-        const maxAttempts = 30;
+        const maxAttempts = 45;
+
         if (attempt >= maxAttempts) {
-            this.postCheckoutSyncing.set(false);
-            this.returnBanner.set({
-                severity: 'warn',
-                text: 'Abonelik durumu henüz güncellenmediyse webhook gecikmesi olabilir. Bir süre sonra “Durumu yenile” veya sayfayı yeniden yükleyin.'
-            });
+            this.finishPostCheckoutPollingTimeout(sessionId);
             return;
         }
 
         forkJoin([
             this.subscriptions.getCheckout(sessionId),
-            this.subscriptions.getSubscriptionSummary(),
-            this.subscriptions.getPendingPlanChange()
+            this.subscriptions.getSubscriptionSummary({ bustCache: true }),
+            this.subscriptions.getPendingPlanChange({ bustCache: true })
         ]).subscribe({
             next: ([session, data, pending]) => {
                 const summary = this.mergeSummaryWithPending(data, pending);
@@ -846,19 +960,6 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 this.tenantReadOnlyContext.applySummary(summary);
 
                 const planMatchesTarget = this.planCodeMatchesTarget(summary.planCode, session.targetPlanCode);
-                const accessOpened =
-                    !summary.isReadOnly && (summary.status === 'active' || summary.status === 'trialing');
-                const finalized = session.status === 'finalized';
-
-                if (planMatchesTarget && (accessOpened || finalized)) {
-                    this.completePostCheckoutUpgrade(sessionId);
-                    return;
-                }
-
-                if (planMatchesTarget && summary.isReadOnly && !finalized) {
-                    this.pollTimeoutId = setTimeout(() => this.runPostCheckoutSyncRound(sessionId, attempt + 1), 2000);
-                    return;
-                }
 
                 const terminalFailed =
                     session.status === 'failed' || session.status === 'cancelled' || session.status === 'expired';
@@ -868,24 +969,23 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                     if (session.status === 'cancelled') {
                         this.returnBanner.set({
                             severity: 'secondary',
-                            text: 'Checkout oturumu iptal veya kapatılmış görünüyor.'
+                            title: 'Checkout oturumu iptal veya kapatılmış görünüyor.',
+                            showRefreshCta: true
                         });
                     } else {
                         this.returnBanner.set({
-                            severity: 'warn',
-                            text: 'Checkout oturumu beklenmedik şekilde kapandı. Gerekirse yeni oturum başlatın.'
+                            severity: 'error',
+                            title: 'Ödeme veya oturum tamamlanamadı.',
+                            detail: 'Gerekirse aşağıdan yeni bir checkout başlatın.',
+                            showRefreshCta: true
                         });
                     }
                     return;
                 }
 
-                if (finalized && !planMatchesTarget) {
-                    this.pollTimeoutId = setTimeout(() => this.runPostCheckoutSyncRound(sessionId, attempt + 1), 2000);
-                    return;
-                }
-
-                if (accessOpened && !planMatchesTarget) {
-                    this.pollTimeoutId = setTimeout(() => this.runPostCheckoutSyncRound(sessionId, attempt + 1), 2000);
+                /** Başarı yalnızca subscription-summary ile: hedef plan kodu eşleşti ve erişim salt okunur değil. Checkout finalized tek başına yetmez. */
+                if (planMatchesTarget && !summary.isReadOnly) {
+                    this.completePostCheckoutUpgrade(sessionId);
                     return;
                 }
 
@@ -893,6 +993,66 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             },
             error: () => {
                 this.pollTimeoutId = setTimeout(() => this.runPostCheckoutSyncRound(sessionId, attempt + 1), 2500);
+            }
+        });
+    }
+
+    /** Son tur: özet hâlâ hedef planı göstermiyorsa veya erişim kilitliyse anlamlı uyarı. */
+    private finishPostCheckoutPollingTimeout(sessionId: string): void {
+        forkJoin([
+            this.subscriptions.getCheckout(sessionId),
+            this.subscriptions.getSubscriptionSummary({ bustCache: true }),
+            this.subscriptions.getPendingPlanChange({ bustCache: true })
+        ]).subscribe({
+            next: ([session, data, pending]) => {
+                const summary = this.mergeSummaryWithPending(data, pending);
+                this.summary.set(summary);
+                this.tenantReadOnlyContext.applySummary(summary);
+
+                const planMatchesTarget = this.planCodeMatchesTarget(summary.planCode, session.targetPlanCode);
+                this.postCheckoutSyncing.set(false);
+
+                if (planMatchesTarget && !summary.isReadOnly) {
+                    clearStoredCheckoutSessionId();
+                    this.checkoutSession.set(null);
+                    this.returnBanner.set({
+                        severity: 'warn',
+                        title: 'Ödeme doğrulaması zaman aşımına uğradı.',
+                        detail: 'Abonelik özetiniz güncellenmiş görünüyor; emin değilseniz durumu yenileyin.',
+                        showRefreshCta: true
+                    });
+                    return;
+                }
+
+                this.checkoutSession.set(session);
+
+                if (planMatchesTarget && summary.isReadOnly) {
+                    this.returnBanner.set({
+                        severity: 'warn',
+                        title: 'Paket bilgisi güncellendi; tam erişim birkaç saniye içinde açılabilir.',
+                        detail: '“Durumu yenile” ile kontrol edin veya kısa süre sonra tekrar deneyin.',
+                        showRefreshCta: true
+                    });
+                    return;
+                }
+
+                if (!planMatchesTarget) {
+                    this.returnBanner.set({
+                        severity: 'warn',
+                        title: 'Ödeme tamamlandı ancak paket değişikliği henüz yansımadı.',
+                        detail: 'Durumu yeniden kontrol edin.',
+                        showRefreshCta: true
+                    });
+                }
+            },
+            error: () => {
+                this.postCheckoutSyncing.set(false);
+                this.returnBanner.set({
+                    severity: 'warn',
+                    title: 'Abonelik durumu doğrulanamadı.',
+                    detail: 'Bağlantınızı kontrol edip durumu yenileyin.',
+                    showRefreshCta: true
+                });
             }
         });
     }
@@ -917,13 +1077,14 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         this.checkoutSession.set(null);
         this.returnBanner.set({
             severity: 'success',
-            text: 'Üyeliğiniz başarıyla yükseltildi. Yeni paketiniz artık aktif.'
+            title: 'Üyeliğiniz başarıyla güncellendi.',
+            detail: 'Yeni paketiniz artık aktif.'
         });
         if (!hasUpgradeSuccessAck(checkoutSessionId)) {
             markUpgradeSuccessAck(checkoutSessionId);
             this.messageService.add({
                 severity: 'success',
-                summary: 'Üyeliğiniz başarıyla yükseltildi.',
+                summary: 'Üyeliğiniz başarıyla güncellendi.',
                 detail: 'Yeni paketiniz artık aktif.',
                 life: 8000
             });

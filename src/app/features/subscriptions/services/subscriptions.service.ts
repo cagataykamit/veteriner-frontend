@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -21,17 +21,25 @@ import type { PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionSu
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 
+/** Ödeme sonrası polling gibi senaryolarda GET önbelleğini bypass etmek için (backend genelde yok sayar). */
+export interface SubscriptionSummaryRequestOptions {
+    readonly bustCache?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SubscriptionsService {
     private readonly api = inject(ApiClient);
     private readonly auth = inject(AuthService);
 
-    getSubscriptionSummary(): Observable<SubscriptionSummaryVm> {
+    getSubscriptionSummary(options?: SubscriptionSummaryRequestOptions): Observable<SubscriptionSummaryVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
             return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
-        return this.api.get<SubscriptionSummaryDto>(ApiEndpoints.tenants.subscriptionSummary(tenantId)).pipe(
+        const params = options?.bustCache
+            ? new HttpParams().set('_cb', `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`)
+            : undefined;
+        return this.api.get<SubscriptionSummaryDto>(ApiEndpoints.tenants.subscriptionSummary(tenantId), params).pipe(
             map(mapSubscriptionSummaryDtoToVm),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Abonelik özeti yüklenemedi.')))
@@ -103,12 +111,15 @@ export class SubscriptionsService {
         );
     }
 
-    getPendingPlanChange(): Observable<PendingPlanChangeVm | null> {
+    getPendingPlanChange(options?: SubscriptionSummaryRequestOptions): Observable<PendingPlanChangeVm | null> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
             return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
-        return this.api.get<PendingPlanChangeDto | null>(ApiEndpoints.tenants.pendingSubscriptionPlanChange(tenantId)).pipe(
+        const params = options?.bustCache
+            ? new HttpParams().set('_cb', `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`)
+            : undefined;
+        return this.api.get<PendingPlanChangeDto | null>(ApiEndpoints.tenants.pendingSubscriptionPlanChange(tenantId), params).pipe(
             map((dto) => mapPendingPlanChangeDtoToVm(dto)),
             catchError((err: HttpErrorResponse) =>
                 err.status === 404

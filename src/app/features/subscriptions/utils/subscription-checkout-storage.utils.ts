@@ -1,4 +1,6 @@
 const STORAGE_KEY = 'veteriner.subscription.checkoutSessionId';
+/** Hosted ödeme sayfasına gidildi; dönüşte query yoksa bile abonelik sayfası senkron başlatabilsin. */
+const EXPECTING_HOSTED_RETURN_KEY = 'veteriner.subscription.expectingHostedReturn';
 
 function trimOrEmpty(v: string | null | undefined): string | null {
     const t = v?.trim();
@@ -28,6 +30,31 @@ export function writeStoredCheckoutSessionId(checkoutSessionId: string): void {
         sessionStorage.setItem(STORAGE_KEY, id);
     } catch {
         /* ignore quota / private mode */
+    }
+}
+
+export function markExpectingHostedCheckoutReturn(): void {
+    if (typeof sessionStorage === 'undefined') {
+        return;
+    }
+    try {
+        sessionStorage.setItem(EXPECTING_HOSTED_RETURN_KEY, '1');
+    } catch {
+        /* ignore */
+    }
+}
+
+/** Dönüş tek seferlik işlenir; tekrar yanlışlıkla polling başlatılmasın. */
+export function consumeExpectingHostedCheckoutReturn(): boolean {
+    if (typeof sessionStorage === 'undefined') {
+        return false;
+    }
+    try {
+        const v = sessionStorage.getItem(EXPECTING_HOSTED_RETURN_KEY);
+        sessionStorage.removeItem(EXPECTING_HOSTED_RETURN_KEY);
+        return v === '1';
+    } catch {
+        return false;
     }
 }
 

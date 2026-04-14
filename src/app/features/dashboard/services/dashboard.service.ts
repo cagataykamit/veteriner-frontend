@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, Observable, of, throwError } from 'rxjs';
+import { forkJoin, Observable, of, switchMap, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
@@ -15,7 +15,7 @@ import type {
     DashboardSection,
     DashboardSummaryNormalized
 } from '@/app/features/dashboard/models/dashboard-operational.model';
-import type { DashboardFinanceSummaryDto } from '@/app/features/dashboard/models/dashboard-finance.model';
+import type { DashboardFinanceSummaryDto, DashboardFinanceSummaryVm } from '@/app/features/dashboard/models/dashboard-finance.model';
 import type { DashboardSummaryDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
@@ -23,6 +23,52 @@ import { VaccinationsService } from '@/app/features/vaccinations/services/vaccin
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+
+/** Faz 1: dashboard summary + finance (+ paylaşımlı tenant subscription-summary). */
+export interface DashboardSummariesPhaseResult {
+    readonly summary: DashboardSection<DashboardSummaryNormalized | null>;
+    readonly finance: DashboardSection<DashboardFinanceSummaryVm | null>;
+}
+
+interface DashboardListsPhaseResult {
+    readonly todayAppointments: DashboardSection<AppointmentListItemVm[]>;
+    readonly vaccinationItems: DashboardSection<VaccinationListItemVm[]>;
+    readonly examinationItems: DashboardSection<ExaminationListItemVm[]>;
+}
+
+export function dashboardVmWithPendingLists(summaries: DashboardSummariesPhaseResult): DashboardOperationalVm {
+    const pending: DashboardListsPhaseResult = {
+        todayAppointments: { data: [], error: null },
+        vaccinationItems: { data: [], error: null },
+        examinationItems: { data: [], error: null }
+    };
+    return mergeDashboardListPhaseIntoVm(summaries, pending);
+}
+
+export function mergeDashboardListPhaseIntoVm(
+    summaries: DashboardSummariesPhaseResult,
+    lists: DashboardListsPhaseResult
+): DashboardOperationalVm {
+    return {
+        summary: summaries.summary,
+        finance: summaries.finance,
+        todayAppointments: {
+            data: sortAppointmentsByScheduledAsc(lists.todayAppointments.data),
+            error: lists.todayAppointments.error
+        },
+        upcomingVaccinations: {
+            data: pickUpcomingVaccinations(lists.vaccinationItems.data, 8),
+            error: lists.vaccinationItems.error
+        },
+        recentExaminations: {
+            data: lists.examinationItems.data.slice(0, 6),
+            error: lists.examinationItems.error
+        }
+    };
+}
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
@@ -30,6 +76,7 @@ export class DashboardService {
     private readonly appointments = inject(AppointmentsService);
     private readonly vaccinations = inject(VaccinationsService);
     private readonly examinations = inject(ExaminationsService);
+    private readonly tenantReadOnlyContext = inject(TenantReadOnlyContextService);
 
     getSummary(): Observable<DashboardSummaryDto> {
         return this.api.get<DashboardSummaryDto>(ApiEndpoints.dashboard.summary()).pipe(
@@ -38,18 +85,9 @@ export class DashboardService {
     }
 
     /**
-     * Tek turda özet + operasyon listeleri (paralel forkJoin).
-     * Blok bazlı hata: bir uç kırılsa bile diğer bölümler dolar.
+     * Faz 1 — en fazla 3 paralel: dashboard summary, finance-summary, tenant subscription-summary (paylaşımlı).
      */
-    loadOperationalDashboard(): Observable<DashboardOperationalVm> {
-        const today = localDateYyyyMmDd();
-
-        const section = <T,>(source: Observable<T>, fallback: T, errMsg: string): Observable<DashboardSection<T>> =>
-            source.pipe(
-                map((data): DashboardSection<T> => ({ data, error: null })),
-                catchError((): Observable<DashboardSection<T>> => of({ data: fallback, error: errMsg }))
-            );
-
+    loadDashboardSummariesPhase(): Observable<DashboardSummariesPhaseResult> {
         const summary$: Observable<DashboardSection<DashboardSummaryNormalized | null>> = this.getSummary().pipe(
             map(
                 (dto): DashboardSection<DashboardSummaryNormalized | null> => ({
@@ -62,8 +100,38 @@ export class DashboardService {
             )
         );
 
+        const section = <T,>(source: Observable<T>, fallback: T, errMsg: string): Observable<DashboardSection<T>> =>
+            source.pipe(
+                map((data): DashboardSection<T> => ({ data, error: null })),
+                catchError((): Observable<DashboardSection<T>> => of({ data: fallback, error: errMsg }))
+            );
+
         return forkJoin({
             summary: summary$,
+            finance: section(
+                this.api
+                    .get<DashboardFinanceSummaryDto>(ApiEndpoints.dashboard.financeSummary())
+                    .pipe(map(mapDashboardFinanceSummaryDtoToVm)),
+                null,
+                'Finans özeti yüklenemedi.'
+            ),
+            subscription: this.tenantReadOnlyContext.ensurePanelSubscriptionSummary()
+        }).pipe(map(({ summary, finance }) => ({ summary, finance })));
+    }
+
+    /**
+     * Faz 2 — en fazla 3 paralel: bugünkü randevular, aşı listesi (sonra süzülür), son muayeneler.
+     */
+    loadDashboardListsPhase(): Observable<DashboardListsPhaseResult> {
+        const today = localDateYyyyMmDd();
+
+        const section = <T,>(source: Observable<T>, fallback: T, errMsg: string): Observable<DashboardSection<T>> =>
+            source.pipe(
+                map((data): DashboardSection<T> => ({ data, error: null })),
+                catchError((): Observable<DashboardSection<T>> => of({ data: fallback, error: errMsg }))
+            );
+
+        return forkJoin({
             todayAppointments: section(
                 this.appointments
                     .getAppointments({ page: 1, pageSize: 40, fromDate: today, toDate: today })
@@ -94,32 +162,17 @@ export class DashboardService {
                     .pipe(map((r) => r.items)),
                 [],
                 'Muayene listesi yüklenemedi.'
-            ),
-            finance: section(
-                this.api
-                    .get<DashboardFinanceSummaryDto>(ApiEndpoints.dashboard.financeSummary())
-                    .pipe(map(mapDashboardFinanceSummaryDtoToVm)),
-                null,
-                'Finans özeti yüklenemedi.'
             )
-        }).pipe(
-            map(
-                (x): DashboardOperationalVm => ({
-                    summary: x.summary,
-                    todayAppointments: {
-                        data: sortAppointmentsByScheduledAsc(x.todayAppointments.data),
-                        error: x.todayAppointments.error
-                    },
-                    upcomingVaccinations: {
-                        data: pickUpcomingVaccinations(x.vaccinationItems.data, 8),
-                        error: x.vaccinationItems.error
-                    },
-                    recentExaminations: {
-                        data: x.examinationItems.data.slice(0, 6),
-                        error: x.examinationItems.error
-                    },
-                    finance: x.finance
-                })
+        });
+    }
+
+    /**
+     * Tek abonelik: faz 1 → faz 2 (test / basit yenileme).
+     */
+    loadOperationalDashboard(): Observable<DashboardOperationalVm> {
+        return this.loadDashboardSummariesPhase().pipe(
+            switchMap((summaries) =>
+                this.loadDashboardListsPhase().pipe(map((lists) => mergeDashboardListPhaseIntoVm(summaries, lists)))
             )
         );
     }

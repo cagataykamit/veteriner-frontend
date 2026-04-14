@@ -1,10 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { map, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import type { DashboardOperationalVm } from '@/app/features/dashboard/models/dashboard-operational.model';
-import { DashboardService } from '@/app/features/dashboard/services/dashboard.service';
+import {
+    DashboardService,
+    dashboardVmWithPendingLists,
+    mergeDashboardListPhaseIntoVm
+} from '@/app/features/dashboard/services/dashboard.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -34,7 +39,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
         <app-page-header
             title="Özet"
             subtitle="Operasyon"
-            description="Günlük randevular, aşılar, muayeneler ve ödemeler — özet ve listeler paralel yüklenir."
+            description="Özet ve finans kartları önce; randevu, aşı ve muayene listeleri ardından yüklenir."
         />
 
         @if (loading()) {
@@ -142,7 +147,9 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                             <h5 class="mt-0 mb-0">Bugünkü randevular</h5>
                             <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
-                        @if (d.todayAppointments.error) {
+                        @if (listsLoading()) {
+                            <app-loading-state message="Randevu listesi yükleniyor…" />
+                        } @else if (d.todayAppointments.error) {
                             <p class="text-red-500 m-0" role="alert">{{ d.todayAppointments.error }}</p>
                         } @else if (d.todayAppointments.data.length === 0) {
                             <app-empty-state message="Bugün için randevu yok." hint="Tarih filtresi yerel güne göredir." />
@@ -232,7 +239,9 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                             <h5 class="mt-0 mb-0">Yaklaşan aşılar</h5>
                             <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
-                        @if (d.upcomingVaccinations.error) {
+                        @if (listsLoading()) {
+                            <app-loading-state message="Aşı listesi yükleniyor…" />
+                        } @else if (d.upcomingVaccinations.error) {
                             <p class="text-red-500 m-0" role="alert">{{ d.upcomingVaccinations.error }}</p>
                         } @else if (d.upcomingVaccinations.data.length === 0) {
                             <app-empty-state message="Önümüzdeki dönem için uygun aşı kaydı yok." />
@@ -295,7 +304,9 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                             <h5 class="mt-0 mb-0">Son muayeneler</h5>
                             <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
-                        @if (d.recentExaminations.error) {
+                        @if (listsLoading()) {
+                            <app-loading-state message="Muayene listesi yükleniyor…" />
+                        } @else if (d.recentExaminations.error) {
                             <p class="text-red-500 m-0" role="alert">{{ d.recentExaminations.error }}</p>
                         } @else if (d.recentExaminations.data.length === 0) {
                             <app-empty-state message="Muayene kaydı yok." />
@@ -494,13 +505,24 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
                 </div>
 
                 <div class="col-span-12">
-                    <p-button [label]="copy.buttonRefresh" icon="pi pi-refresh" severity="secondary" (onClick)="reload()" [disabled]="loading()" />
+                    <p-button
+                        [label]="copy.buttonRefresh"
+                        icon="pi pi-refresh"
+                        severity="secondary"
+                        (onClick)="reload()"
+                        [disabled]="loading() || listsLoading()"
+                    />
                 </div>
             </div>
         } @else {
             <div class="card">
                 <p class="m-0 mb-4 text-muted-color">Özet verisi alınamadı.</p>
-                <p-button [label]="copy.buttonRefresh" icon="pi pi-refresh" (onClick)="reload()" />
+                <p-button
+                    [label]="copy.buttonRefresh"
+                    icon="pi pi-refresh"
+                    (onClick)="reload()"
+                    [disabled]="loading() || listsLoading()"
+                />
             </div>
         }
     `
@@ -512,6 +534,8 @@ export class DashboardPageComponent implements OnInit {
     readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
 
     readonly loading = signal(true);
+    /** Faz 2: randevu / aşı / muayene listeleri gelene kadar. */
+    readonly listsLoading = signal(false);
     readonly dash = signal<DashboardOperationalVm | null>(null);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
@@ -527,16 +551,31 @@ export class DashboardPageComponent implements OnInit {
 
     reload(): void {
         this.loading.set(true);
-        this.dashboardService.loadOperationalDashboard().subscribe({
-            next: (data) => {
-                this.dash.set(data);
-                this.loading.set(false);
-            },
-            error: () => {
-                this.loading.set(false);
-                this.dash.set(null);
-            }
-        });
+        this.listsLoading.set(false);
+        this.dashboardService
+            .loadDashboardSummariesPhase()
+            .pipe(
+                tap((summaries) => {
+                    this.dash.set(dashboardVmWithPendingLists(summaries));
+                    this.loading.set(false);
+                    this.listsLoading.set(true);
+                }),
+                switchMap((summaries) =>
+                    this.dashboardService.loadDashboardListsPhase().pipe(
+                        map((lists) => mergeDashboardListPhaseIntoVm(summaries, lists))
+                    )
+                )
+            )
+            .subscribe({
+                next: (full) => {
+                    this.dash.set(full);
+                    this.listsLoading.set(false);
+                },
+                error: () => {
+                    this.loading.set(false);
+                    this.listsLoading.set(false);
+                }
+            });
     }
 
     metricCount(n: number | null | undefined): string | number {
