@@ -38,10 +38,6 @@ export function mapClientListItemDtoToVm(dto: ClientListItemDto): ClientListItem
 }
 
 /**
- * Create form → API body.
- * Backend bazı alanları istemiyorsa burada çıkarılır (Swagger ile hizalanır).
- */
-/**
  * POST /clients yanıtından oluşturulan müşteri kimliğini çıkarır.
  * Doğrudan `ClientDetailDto`, sarmalayıcı `data`/`value` veya PascalCase alan adları için küçük uyum katmanı.
  */
@@ -90,6 +86,7 @@ function pickIdString(v: unknown): string | null {
     return null;
 }
 
+/** Create form → API body; backend’in istemediği alanlar burada çıkarılır (Swagger ile hizalanır). */
 export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsertRequestDto {
     const email = req.email?.trim() ? req.email.trim() : null;
     const address = req.address?.trim() ? req.address.trim() : null;
@@ -230,7 +227,10 @@ export function mapPagedClientsToVm(result: ClientListItemDtoPagedResult): {
     };
 }
 
-/** Page, PageSize, search, Sort, Order */
+/**
+ * GET `/api/v1/clients` — canonical query: `Page`, `PageSize`, `Search`, `Sort`, `Order`
+ * (@see docs/BACKEND-INTEGRATION.md — liste sorguları).
+ */
 export function clientsQueryToHttpParams(query: ClientsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -238,7 +238,7 @@ export function clientsQueryToHttpParams(query: ClientsListQuery): HttpParams {
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

@@ -175,7 +175,8 @@ export class ClientsListPageComponent implements OnInit {
 
     private readonly clientsService = inject(ClientsService);
 
-    readonly loading = signal(false);
+    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
+    readonly loading = signal(true);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<ClientListItemVm[]>([]);

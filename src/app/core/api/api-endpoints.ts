@@ -19,6 +19,7 @@ export const ApiEndpoints = {
         financeSummary: () => `/api/v1/dashboard/finance-summary`
     },
     clients: {
+        /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order` (canonical — @see docs/BACKEND-INTEGRATION.md). */
         list: () => `/api/v1/clients`,
         byId: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}`,
         recentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/recent-summary`,
