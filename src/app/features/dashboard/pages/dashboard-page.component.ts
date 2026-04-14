@@ -21,6 +21,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dashboard-summary.model';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-dashboard-page',
@@ -529,6 +530,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
 })
 export class DashboardPageComponent implements OnInit {
     private readonly dashboardService = inject(DashboardService);
+    private readonly auth = inject(AuthService);
 
     readonly copy = PANEL_COPY;
     readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
@@ -546,6 +548,9 @@ export class DashboardPageComponent implements OnInit {
     readonly payMethodLabel = paymentMethodLabel;
 
     ngOnInit(): void {
+        if (!this.auth.hasSelectedClinic()) {
+            return;
+        }
         this.reload();
     }
 

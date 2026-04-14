@@ -10,7 +10,7 @@ import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { RouterLink } from '@angular/router';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
-import { AuthService } from '@/app/core/auth/auth.service';
+import { AuthService, type ClinicResolutionDecision } from '@/app/core/auth/auth.service';
 import {
     AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE,
     authFailureMessage,
@@ -244,22 +244,16 @@ export class Login implements OnInit {
     private resolveClinicStepAfterLogin(): void {
         this.auth.getMyClinics().subscribe({
             next: (clinics) => {
-                if (clinics.length === 0) {
+                const decision = this.auth.resolveClinicDecision(clinics);
+                if (decision.kind === 'none') {
                     this.loginError.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
                     return;
                 }
-                if (clinics.length === 1) {
-                    this.autoSelectSingleClinic(clinics[0]);
+                if (decision.kind === 'single') {
+                    this.autoSelectSingleClinic(decision.clinic);
                     return;
                 }
-                const inviteTok = this.inviteTokenFromRoute();
-                void this.router.navigate(['/auth/select-clinic'], {
-                    queryParams: {
-                        returnUrl: this.safeReturnUrl(),
-                        ...(inviteTok ? { inviteToken: inviteTok } : {})
-                    },
-                    state: { clinics }
-                });
+                this.navigateToSelectClinic(decision, clinics);
             },
             error: (err: unknown) => {
                 const http = err instanceof HttpErrorResponse ? err : null;
@@ -296,5 +290,19 @@ export class Login implements OnInit {
     private inviteTokenFromRoute(): string | null {
         const t = this.route.snapshot.queryParamMap.get('inviteToken')?.trim();
         return t || null;
+    }
+
+    private navigateToSelectClinic(decision: ClinicResolutionDecision, clinics: ClinicSummary[]): void {
+        if (decision.kind !== 'multiple') {
+            return;
+        }
+        const inviteTok = this.inviteTokenFromRoute();
+        void this.router.navigate(['/auth/select-clinic'], {
+            queryParams: {
+                returnUrl: this.safeReturnUrl(),
+                ...(inviteTok ? { inviteToken: inviteTok } : {})
+            },
+            state: { clinics }
+        });
     }
 }

@@ -136,13 +136,13 @@ export class SelectClinicPage implements OnInit {
     private applyClinicsList(items: ClinicSummary[]): void {
         this.clinics.set(items);
         this.loading.set(false);
-        if (items.length === 0) {
+        const decision = this.auth.resolveClinicDecision(items);
+        if (decision.kind === 'none') {
             this.error.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
             return;
         }
-        if (items.length === 1) {
-            const single = items[0];
-            this.selectedClinicId = single.id;
+        if (decision.kind === 'single') {
+            this.selectedClinicId = decision.clinic.id;
             this.onContinue();
             return;
         }

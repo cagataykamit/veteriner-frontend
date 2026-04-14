@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 const AUTH_RETRY_HEADER = 'X-Auth-Retry';
@@ -27,6 +28,10 @@ function isPublicAuthUrl(url: string): boolean {
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const auth = inject(AuthService);
     const router = inject(Router);
+    const navigateReauth = () =>
+        router.navigate(['/auth/login'], {
+            queryParams: { returnUrl: panelReturnUrlOrDefault(router.url), reauth: '1' }
+        });
 
     const url = req.url;
     const isPublic = isPublicAuthUrl(url);
@@ -48,9 +53,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             if (isAuthRefreshUrl(url)) {
                 if (err.status === 401 || err.status === 400 || err.status === 403) {
                     auth.clearSession();
-                    router.navigate(['/auth/login'], {
-                        queryParams: { returnUrl: router.url, reauth: '1' }
-                    });
+                    navigateReauth();
                 }
                 return throwError(() => err);
             }
@@ -65,17 +68,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
             if (req.headers.has(AUTH_RETRY_HEADER)) {
                 auth.clearSession();
-                router.navigate(['/auth/login'], {
-                    queryParams: { returnUrl: router.url, reauth: '1' }
-                });
+                navigateReauth();
                 return throwError(() => err);
             }
 
             if (!auth.getRefreshToken()) {
                 auth.clearSession();
-                router.navigate(['/auth/login'], {
-                    queryParams: { returnUrl: router.url, reauth: '1' }
-                });
+                navigateReauth();
                 return throwError(() => err);
             }
 
@@ -84,9 +83,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                     const newAccess = session.accessToken ?? auth.getAccessToken();
                     if (!newAccess) {
                         auth.clearSession();
-                        router.navigate(['/auth/login'], {
-                            queryParams: { returnUrl: router.url, reauth: '1' }
-                        });
+                        navigateReauth();
                         return throwError(() => err);
                     }
                     const retry = req.clone({
@@ -102,9 +99,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                         return throwError(() => refreshErr);
                     }
                     auth.clearSession();
-                    router.navigate(['/auth/login'], {
-                        queryParams: { returnUrl: router.url, reauth: '1' }
-                    });
+                    navigateReauth();
                     return throwError(() => err);
                 })
             );

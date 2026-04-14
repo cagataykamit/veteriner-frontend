@@ -20,6 +20,11 @@ const ACTIVE_CLINIC_NAME_KEY = 'veteriner.active_clinic_name';
 /** Ham API gövdesi — `LoginResultDto` + PascalCase / snake_case varyantları serviste normalize edilir. */
 type LoginResultRaw = Record<string, unknown>;
 
+export type ClinicResolutionDecision =
+    | { readonly kind: 'none' }
+    | { readonly kind: 'single'; readonly clinic: ClinicSummary }
+    | { readonly kind: 'multiple' };
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private readonly api = inject(ApiClient);
@@ -101,6 +106,22 @@ export class AuthService {
 
     getMyClinics(): Observable<ClinicSummary[]> {
         return this.api.get<unknown>(ApiEndpoints.me.clinics()).pipe(map((raw) => this.mapClinicsResponse(raw)));
+    }
+
+    /**
+     * Login/select-clinic sonrası tek karar ağacı:
+     * - 0 klinik: erişim yok
+     * - 1 klinik: otomatik seçim adayı
+     * - >1 klinik: kullanıcı seçimi gerekli
+     */
+    resolveClinicDecision(clinics: ClinicSummary[]): ClinicResolutionDecision {
+        if (clinics.length <= 0) {
+            return { kind: 'none' };
+        }
+        if (clinics.length === 1) {
+            return { kind: 'single', clinic: clinics[0] };
+        }
+        return { kind: 'multiple' };
     }
 
     selectClinic(clinicId: string, clinicName?: string | null): Observable<SessionTokens> {

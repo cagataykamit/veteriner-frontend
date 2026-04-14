@@ -14,14 +14,18 @@ export const guestGuard: CanActivateFn = (route): boolean | UrlTree => {
         return true;
     }
     const inviteToken = route.queryParamMap.get('inviteToken')?.trim() ?? '';
-    if (inviteToken) {
-        return router.createUrlTree(['/join', inviteToken]);
-    }
-    const returnUrl = safePanelReturnUrl(route.root.queryParamMap.get('returnUrl'));
+    const returnUrl = safePanelReturnUrl(route.queryParamMap.get('returnUrl'));
     if (!auth.hasSelectedClinic()) {
         return returnUrl
-            ? router.createUrlTree(['/auth/select-clinic'], { queryParams: { returnUrl } })
-            : router.createUrlTree(['/auth/select-clinic']);
+            ? router.createUrlTree(['/auth/select-clinic'], {
+                  queryParams: { returnUrl, ...(inviteToken ? { inviteToken } : {}) }
+              })
+            : router.createUrlTree(['/auth/select-clinic'], {
+                  queryParams: inviteToken ? { inviteToken } : undefined
+              });
+    }
+    if (inviteToken) {
+        return router.createUrlTree(['/join', inviteToken]);
     }
     if (returnUrl) {
         return router.parseUrl(returnUrl);

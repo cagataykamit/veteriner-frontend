@@ -13,10 +13,20 @@ export default [
     { path: 'signup', canActivate: [guestGuard], component: OwnerSignupPageComponent },
     {
         path: 'select-clinic',
-        canActivate: [() => {
+        canActivate: [(route) => {
             const auth = inject(AuthService);
             const router = inject(Router);
-            return auth.isAuthenticated() ? true : router.createUrlTree(['/auth/login']);
+            if (auth.isAuthenticated()) {
+                return true;
+            }
+            const returnUrl = route.queryParamMap.get('returnUrl')?.trim() ?? '';
+            const inviteToken = route.queryParamMap.get('inviteToken')?.trim() ?? '';
+            return router.createUrlTree(['/auth/login'], {
+                queryParams: {
+                    ...(returnUrl ? { returnUrl } : {}),
+                    ...(inviteToken ? { inviteToken } : {})
+                }
+            });
         }],
         component: SelectClinicPage
     }
