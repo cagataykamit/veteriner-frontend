@@ -14,7 +14,6 @@ import {
     resolveAppointmentWriteTypeFormValue
 } from '@/app/features/appointments/utils/appointment-type.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
-import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -314,7 +313,10 @@ export function mapPagedAppointmentsToVm(result: AppointmentListItemDtoPagedResu
     };
 }
 
-/** Page, PageSize, search, clinicId, PetId, ClientId, Status, dateFromUtc, dateToUtc, Sort, Order */
+/**
+ * GET `/api/v1/appointments` — canonical query:
+ * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order`.
+ */
 export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -322,7 +324,7 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
@@ -337,16 +339,10 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
         p = p.set('Status', query.status.trim());
     }
     if (query.fromDate?.trim()) {
-        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
-        if (iso) {
-            p = p.set('dateFromUtc', iso);
-        }
+        p = p.set('FromDate', query.fromDate.trim());
     }
     if (query.toDate?.trim()) {
-        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
-        if (iso) {
-            p = p.set('dateToUtc', iso);
-        }
+        p = p.set('ToDate', query.toDate.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
@@ -357,18 +353,3 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
     return p;
 }
 
-/** Status filtresi: API desteklemediğinde istemci tarafında uygulanır (`'0'|'1'|'2'`). */
-export function filterAppointmentListByStatus(
-    items: AppointmentListItemVm[],
-    status: string | null | undefined
-): AppointmentListItemVm[] {
-    const s = status?.trim();
-    if (!s) {
-        return items;
-    }
-    const target = Number.parseInt(s, 10);
-    if (!Number.isFinite(target) || target < 0 || target > 2) {
-        return items;
-    }
-    return items.filter((i) => i.status === target);
-}

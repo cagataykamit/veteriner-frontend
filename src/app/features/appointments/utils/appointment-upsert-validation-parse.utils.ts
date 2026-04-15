@@ -1,9 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
+import { messageFromAppointmentUpsertHttpError } from '@/app/features/appointments/utils/appointment-upsert-error.utils';
 
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
-const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 
 export type AppointmentUpsertFormFieldKey =
     | 'clientId'
@@ -39,7 +38,7 @@ const FIELD_MAP: Record<string, AppointmentUpsertFormFieldKey> = {
 export function parseAppointmentUpsertHttpError(err: HttpErrorResponse): ParsedAppointmentUpsertHttpError {
     return parseValidationHttpError<AppointmentUpsertFormFieldKey>(err, {
         fieldMap: FIELD_MAP,
-        nonFieldMessage: (e) => messageFromHttpError(e, FALLBACK_GENERIC),
+        nonFieldMessage: (e) => messageFromAppointmentUpsertHttpError(e),
         fieldErrorsSummaryMessage: SUMMARY_FIELD_ERRORS
     });
 }

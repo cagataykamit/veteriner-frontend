@@ -9,7 +9,6 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { filterAppointmentListByStatus } from '@/app/features/appointments/data/appointment.mapper';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
@@ -234,7 +233,8 @@ export class AppointmentsListPageComponent implements OnInit {
 
     private readonly appointmentsService = inject(AppointmentsService);
 
-    readonly loading = signal(false);
+    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
+    readonly loading = signal(true);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<AppointmentListItemVm[]>([]);
@@ -259,9 +259,7 @@ export class AppointmentsListPageComponent implements OnInit {
         { label: 'İptal', value: '2' }
     ];
 
-    readonly displayedRows = computed(() =>
-        filterAppointmentListByStatus(this.rawItems(), this.statusFilter ? this.statusFilter : null)
-    );
+    readonly displayedRows = computed(() => this.rawItems());
 
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
     readonly statusLabel = appointmentStatusLabel;

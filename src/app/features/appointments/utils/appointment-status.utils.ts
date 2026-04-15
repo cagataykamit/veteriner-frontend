@@ -47,6 +47,16 @@ export function parseAppointmentStatusRawToEnum(raw: unknown): number | null {
         const i = Number.parseInt(s, 10);
         return i === 0 || i === 1 || i === 2 ? i : null;
     }
+    const k = s.toLocaleLowerCase('tr-TR');
+    if (k === 'scheduled' || k === 'planned' || k === 'planlandi' || k === 'planlandı') {
+        return 0;
+    }
+    if (k === 'completed' || k === 'done' || k === 'tamamlandi' || k === 'tamamlandı') {
+        return 1;
+    }
+    if (k === 'cancelled' || k === 'canceled' || k === 'iptal' || k === 'cancel') {
+        return 2;
+    }
     return null;
 }
 

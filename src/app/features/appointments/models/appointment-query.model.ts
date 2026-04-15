@@ -1,5 +1,7 @@
 /**
  * Randevu listesi — GET `/api/v1/appointments`.
+ * HttpParams: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order`
+ * (+ ilişkili filtreler: `clinicId`, `PetId`, `ClientId`).
  * `search`: Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
  * `petId`: Liste ekranında kullanılmaz; panel özet / ilişkili çağrılar için opsiyonel.
  */

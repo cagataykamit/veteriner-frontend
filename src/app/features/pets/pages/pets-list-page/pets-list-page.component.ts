@@ -229,7 +229,8 @@ export class PetsListPageComponent implements OnInit {
     private readonly speciesService = inject(SpeciesService);
     private readonly clientsService = inject(ClientsService);
 
-    readonly loading = signal(false);
+    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
+    readonly loading = signal(true);
     readonly loadingSpecies = signal(false);
     readonly loadingClients = signal(false);
     readonly error = signal<string | null>(null);

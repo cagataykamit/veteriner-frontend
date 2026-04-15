@@ -25,6 +25,10 @@ export interface PetDetailVm {
     clientName: string;
     clientPhone: string;
     clientEmail: string;
+    /**
+     * Aşağıdaki üç özet, GET `/pets/{id}` gövdesindeki alanlarla map edilir.
+     * Detay sayfası şu an bu blokları göstermez; hasta geçmişi için `PetHistorySummaryVm` / `history-summary` kullanılır (bilinçli ürün kararı; ayrı kart UI eklemeden önce backend anlamlılığını doğrulayın).
+     */
     vaccinationsSummary: {
         totalCount: number;
         items: { id: string; name: string }[];

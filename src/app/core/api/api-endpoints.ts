@@ -26,6 +26,7 @@ export const ApiEndpoints = {
         paymentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/payment-summary`
     },
     pets: {
+        /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
         list: () => `/api/v1/pets`,
         byId: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}`,
         historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`
@@ -43,6 +44,7 @@ export const ApiEndpoints = {
         list: () => `/api/v1/pet-colors`
     },
     appointments: {
+        /** Query: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/appointments`,
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`
     },

@@ -264,7 +264,7 @@ export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
         clientId: dto.clientId?.trim() ? dto.clientId : null,
         name: str(dto.name),
         speciesName: speciesName(dto.speciesName),
-        breed: str(firstTrimmed(dto.breed, dto.breedName)),
+        breed: canonicalBreedDisplay(dto),
         colorName: canonicalColorDisplayName(dto),
         weight: weightStr
     };
@@ -309,6 +309,7 @@ function canonicalPetDetailOwnerNavId(dto: PetDetailDto): string | null {
     return id ?? null;
 }
 
+/** GET `/pets/{id}` → `PetDetailVm` (özet alanları API ile hizalı; UI önceliği için bkz. `PetDetailVm`). */
 export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
     const vac = dto.vaccinationsSummary;
     const ex = dto.examinationsSummary;
@@ -549,6 +550,10 @@ function safeTrim(v: string | null | undefined): string | null {
     return t ? t : null;
 }
 
+/**
+ * GET `/api/v1/pets` — canonical query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId` (+ opsiyonel legacy `Species`).
+ * (@see docs/BACKEND-INTEGRATION.md — liste sorguları.)
+ */
 export function petsQueryToHttpParams(query: PetsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -556,7 +561,7 @@ export function petsQueryToHttpParams(query: PetsListQuery): HttpParams {
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
