@@ -49,15 +49,18 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`
     },
     examinations: {
+        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`, `appointmentId`). */
         list: () => `/api/v1/examinations`,
         byId: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}`,
         relatedSummary: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/related-summary`
     },
     vaccinations: {
+        /** Query: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/vaccinations`,
         byId: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}`
     },
     payments: {
+        /** Query: `Page`, `PageSize`, `Search`, `Method`, `FromDate`, `ToDate` (+ `ClientId`, `PetId`, `clinicId`). */
         list: () => `/api/v1/payments`,
         byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`
     },

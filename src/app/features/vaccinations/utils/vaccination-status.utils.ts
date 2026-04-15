@@ -26,6 +26,16 @@ export function parseVaccinationStatusRawToEnum(raw: unknown): VaccinationStatus
         const i = Number.parseInt(s, 10);
         return parseVaccinationStatusRawToEnum(i);
     }
+    const k = s.toLocaleLowerCase('tr-TR');
+    if (k === 'planned' || k === 'scheduled' || k === 'planlandi' || k === 'planlandı') {
+        return 0;
+    }
+    if (k === 'applied' || k === 'completed' || k === 'uygulandi' || k === 'uygulandı') {
+        return 1;
+    }
+    if (k === 'cancelled' || k === 'canceled' || k === 'iptal' || k === 'cancel') {
+        return 2;
+    }
     return null;
 }
 

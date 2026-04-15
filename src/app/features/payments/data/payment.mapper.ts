@@ -12,7 +12,6 @@ import {
     paymentMethodCanonicalToApiEnum,
     resolvePaymentMethodFormValue
 } from '@/app/features/payments/utils/payment-method.utils';
-import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -170,6 +169,8 @@ export function mapPaymentDetailDtoToEditVm(dto: PaymentDetailDto): PaymentEditV
         id: dto.id,
         clientId: detailClientId(dto) ?? '',
         petId: detailPetId(dto) ?? '',
+        appointmentId: detailAppointmentId(dto),
+        examinationId: detailExaminationId(dto),
         amountStr: amount != null ? String(amount) : '',
         currency: detailCurrency(dto),
         method: resolvePaymentMethodFormValue(readRawMethodFromUnknown(dto)) ?? 'cash',
@@ -195,46 +196,38 @@ export function mapPagedPaymentsToVm(result: PaymentListItemDtoPagedResult): {
     };
 }
 
-/**
- * GET `/api/v1/payments` — `search`, `clinicId`, `clientId`, `petId`, `method`, `paidFromUtc`, `paidToUtc`; sayfalama `page`/`pageSize`.
- */
+/** GET `/api/v1/payments` — canonical query: `Page`, `PageSize`, `Search`, `ClientId`, `PetId`, `Method`, `FromDate`, `ToDate` (+ `clinicId`). */
 export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
-    p = p.set('page', String(page));
-    p = p.set('pageSize', String(pageSize));
+    p = p.set('Page', String(page));
+    p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
     if (query.clientId?.trim()) {
-        p = p.set('clientId', query.clientId.trim());
+        p = p.set('ClientId', query.clientId.trim());
     }
     if (query.petId?.trim()) {
-        p = p.set('petId', query.petId.trim());
+        p = p.set('PetId', query.petId.trim());
     }
     if (query.method?.trim()) {
         try {
             const enumVal = paymentMethodCanonicalToApiEnum(query.method.trim());
-            p = p.set('method', String(enumVal));
+            p = p.set('Method', String(enumVal));
         } catch {
             /* bilinmeyen yöntem — parametre gönderme */
         }
     }
     if (query.paidFromDate?.trim()) {
-        const iso = dateOnlyInputToUtcIso(query.paidFromDate.trim());
-        if (iso) {
-            p = p.set('paidFromUtc', iso);
-        }
+        p = p.set('FromDate', query.paidFromDate.trim());
     }
     if (query.paidToDate?.trim()) {
-        const iso = dateOnlyInputToUtcIsoEndOfDay(query.paidToDate.trim());
-        if (iso) {
-            p = p.set('paidToUtc', iso);
-        }
+        p = p.set('ToDate', query.paidToDate.trim());
     }
     return p;
 }

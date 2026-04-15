@@ -315,6 +315,7 @@ export class VaccinationNewPageComponent implements OnInit {
         let dueAtUtc: string | undefined;
         const nd = v.nextDueDate?.trim();
         if (nd) {
+            // `type="date"` girdisi date-only semantiğindedir; UTC gün başına çevrilir.
             const iso = dateOnlyInputToUtcIso(nd);
             if (!iso) {
                 this.submitError.set('Geçerli bir sonraki tarih seçin.');
@@ -342,7 +343,7 @@ export class VaccinationNewPageComponent implements OnInit {
         this.vaccinationsService.createVaccination(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/vaccinations', id]);
+                void this.router.navigate(['/panel/vaccinations', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);

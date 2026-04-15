@@ -207,7 +207,8 @@ export class ExaminationsListPageComponent implements OnInit {
 
     private readonly examinationsService = inject(ExaminationsService);
 
-    readonly loading = signal(false);
+    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
+    readonly loading = signal(true);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<ExaminationListItemVm[]>([]);

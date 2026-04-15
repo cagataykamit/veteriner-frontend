@@ -10,7 +10,6 @@ import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/f
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
 import type { VaccinationDetailVm, VaccinationEditVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { parseVaccinationStatusRawToEnum } from '@/app/features/vaccinations/utils/vaccination-status.utils';
-import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -207,7 +206,10 @@ export function mapPagedVaccinationsToVm(result: VaccinationListItemDtoPagedResu
     };
 }
 
-/** Page, PageSize, search, clinicId, PetId, ClientId, Status, dateFromUtc, dateToUtc, Sort, Order */
+/**
+ * GET `/api/v1/vaccinations` — canonical query:
+ * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order`.
+ */
 export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -215,7 +217,7 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
@@ -232,16 +234,10 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
         p = p.set('Status', status);
     }
     if (query.fromDate?.trim()) {
-        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
-        if (iso) {
-            p = p.set('dateFromUtc', iso);
-        }
+        p = p.set('FromDate', query.fromDate.trim());
     }
     if (query.toDate?.trim()) {
-        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
-        if (iso) {
-            p = p.set('dateToUtc', iso);
-        }
+        p = p.set('ToDate', query.toDate.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
@@ -252,20 +248,3 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     return p;
 }
 
-/** Status filtresi: API desteklemediğinde istemci tarafında uygulanır (normalize ile eşleşir). */
-export function filterVaccinationListByStatus(
-    items: VaccinationListItemVm[],
-    status: string | null | undefined
-): VaccinationListItemVm[] {
-    const s = status?.trim();
-    if (!s) {
-        return items;
-    }
-    const target = parseVaccinationStatusRawToEnum(s);
-    if (target === null) {
-        return items;
-    }
-    return items.filter((i) => {
-        return i.status === target;
-    });
-}

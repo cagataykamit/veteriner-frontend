@@ -1,6 +1,8 @@
 /**
  * Aşı listesi — GET `/api/v1/vaccinations`.
- * `search`: VaccineName, Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
+ * HttpParams: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order`
+ * (+ ilişkili filtreler: `clinicId`, `PetId`, `ClientId`).
+ * `Search`: VaccineName, Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
  */
 
 export interface VaccinationsListQuery {

@@ -1,6 +1,7 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { normalizeFilterKey } from '@/app/shared/utils/normalize-filter-key.utils';
 
+// TODO(Sprint3): Payments list/detail DTO'sunda status alanı backend'de stabilize olduğunda bu util UI'a bağlanmalı.
 const EM = '—';
 
 export function normalizePaymentStatusKey(status: string): string {

@@ -15,7 +15,6 @@ import type {
     ExaminationListItemVm,
     ExaminationRelatedSummaryVm
 } from '@/app/features/examinations/models/examination-vm.model';
-import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -322,7 +321,10 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
     };
 }
 
-/** Page, PageSize, search, clinicId, PetId, ClientId, appointmentId, dateFromUtc, dateToUtc, Sort, Order */
+/**
+ * GET `/api/v1/examinations` — canonical query:
+ * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `appointmentId`, `FromDate`, `ToDate`, `Sort`, `Order`.
+ */
 export function examinationsQueryToHttpParams(query: ExaminationsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -330,7 +332,7 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
@@ -345,16 +347,10 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
         p = p.set('appointmentId', query.appointmentId.trim());
     }
     if (query.fromDate?.trim()) {
-        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
-        if (iso) {
-            p = p.set('dateFromUtc', iso);
-        }
+        p = p.set('FromDate', query.fromDate.trim());
     }
     if (query.toDate?.trim()) {
-        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
-        if (iso) {
-            p = p.set('dateToUtc', iso);
-        }
+        p = p.set('ToDate', query.toDate.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

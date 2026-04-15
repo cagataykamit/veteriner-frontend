@@ -1,6 +1,8 @@
 /**
  * Muayene listesi — GET `/api/v1/examinations`.
- * `search`: VisitReason, Findings, Assessment, Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
+ * HttpParams: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order`
+ * (+ ilişkili filtreler: `clinicId`, `PetId`, `ClientId`, `appointmentId`).
+ * `Search`: VisitReason, Findings, Assessment, Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
  */
 
 export interface ExaminationsListQuery {

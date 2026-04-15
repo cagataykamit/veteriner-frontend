@@ -35,6 +35,8 @@ export interface PaymentEditVm {
     id: string;
     clientId: string;
     petId: string;
+    appointmentId: string | null;
+    examinationId: string | null;
     amountStr: string;
     currency: string;
     method: string;

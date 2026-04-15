@@ -22,6 +22,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import {
     clientOptionsFromList,
     filterPetsByClientId,
+    isStalePetListResponse,
     petOptionsFromList,
     trimClientIdControlValue,
     type SelectOption
@@ -255,6 +256,8 @@ export class PaymentEditPageComponent implements OnInit {
 
     private paymentId = '';
     private isInitializingClient = false;
+    private appointmentId: string | null = null;
+    private examinationId: string | null = null;
 
     readonly currencyOptions = [
         { label: 'TRY', value: 'TRY' },
@@ -310,9 +313,13 @@ export class PaymentEditPageComponent implements OnInit {
     reload(): void {
         this.loading.set(true);
         this.loadError.set(null);
+        this.appointmentId = null;
+        this.examinationId = null;
         this.paymentsService.getPaymentForEditById(this.paymentId).subscribe({
             next: (x) => {
                 this.isInitializingClient = true;
+                this.appointmentId = x.appointmentId;
+                this.examinationId = x.examinationId;
                 this.form.patchValue({
                     clientId: x.clientId,
                     petId: '',
@@ -370,6 +377,8 @@ export class PaymentEditPageComponent implements OnInit {
             clinicId,
             clientId: v.clientId,
             petId: v.petId,
+            appointmentId: this.appointmentId,
+            examinationId: this.examinationId,
             amount,
             currency: v.currency,
             method: v.method,
@@ -463,6 +472,11 @@ export class PaymentEditPageComponent implements OnInit {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
             next: (r) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    this.loadingPets.set(false);
+                    this.isInitializingClient = false;
+                    return;
+                }
                 let items = r.items;
                 const anyClientId = items.some((p) => (p.clientId ?? '').trim());
                 if (anyClientId) {
@@ -479,6 +493,11 @@ export class PaymentEditPageComponent implements OnInit {
                 this.isInitializingClient = false;
             },
             error: (e: unknown) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    this.loadingPets.set(false);
+                    this.isInitializingClient = false;
+                    return;
+                }
                 this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
                 this.petOptions.set([]);
                 this.loadingPets.set(false);

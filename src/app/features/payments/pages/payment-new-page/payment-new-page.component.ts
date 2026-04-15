@@ -21,6 +21,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import {
     clientOptionsFromList,
     filterPetsByClientId,
+    isStalePetListResponse,
     petOptionsFromList,
     trimClientIdControlValue,
     type SelectOption
@@ -375,7 +376,7 @@ export class PaymentNewPageComponent implements OnInit {
         this.paymentsService.createPayment(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/payments', id]);
+                void this.router.navigate(['/panel/payments', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
@@ -475,6 +476,10 @@ export class PaymentNewPageComponent implements OnInit {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
             next: (r) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    this.loadingPets.set(false);
+                    return;
+                }
                 let items = r.items;
                 const anyClientId = items.some((p) => (p.clientId ?? '').trim());
                 if (anyClientId) {
@@ -491,6 +496,10 @@ export class PaymentNewPageComponent implements OnInit {
                 this.loadingPets.set(false);
             },
             error: (e: unknown) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    this.loadingPets.set(false);
+                    return;
+                }
                 this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
                 this.petOptions.set([]);
                 this.loadingPets.set(false);

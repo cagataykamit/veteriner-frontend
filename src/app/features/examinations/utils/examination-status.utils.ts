@@ -1,5 +1,10 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
+/**
+ * TODO(Sprint3): Bu util şu an Examinations ekranlarında kullanılmıyor.
+ * Examinations API'de status alanı kesinleştiğinde ya aktif kullanıma alınmalı
+ * ya da modülden kaldırılmalı.
+ */
 const EM = '—';
 
 const LABELS: Record<string, string> = {

@@ -9,7 +9,6 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { filterVaccinationListByStatus } from '@/app/features/vaccinations/data/vaccination.mapper';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/features/vaccinations/utils/vaccination-status.utils';
@@ -234,7 +233,8 @@ export class VaccinationsListPageComponent implements OnInit {
 
     private readonly vaccinationsService = inject(VaccinationsService);
 
-    readonly loading = signal(false);
+    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
+    readonly loading = signal(true);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<VaccinationListItemVm[]>([]);
@@ -259,9 +259,7 @@ export class VaccinationsListPageComponent implements OnInit {
         { label: 'İptal', value: '2' }
     ];
 
-    readonly displayedRows = computed(() =>
-        filterVaccinationListByStatus(this.rawItems(), this.statusFilter ? this.statusFilter : null)
-    );
+    readonly displayedRows = computed(() => this.rawItems());
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly statusLabel = vaccinationStatusLabel;

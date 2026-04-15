@@ -353,7 +353,7 @@ export class ExaminationNewPageComponent implements OnInit {
         this.examinationsService.createExamination(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/examinations', id]);
+                void this.router.navigate(['/panel/examinations', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
