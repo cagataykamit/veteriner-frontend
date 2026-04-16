@@ -206,16 +206,17 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         }
                     </div>
 
-                    <p-paginator
-                        class="lg:hidden mt-4"
-                        [rows]="pageSize()"
-                        [totalRecords]="totalItems()"
-                        [first]="first()"
-                        [showCurrentPageReport]="true"
-                        currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                        [rowsPerPageOptions]="[10, 25, 50]"
-                        (onPageChange)="onMobilePageChange($event)"
-                    />
+                    <div class="lg:hidden mt-4">
+                        <p-paginator
+                            [rows]="pageSize()"
+                            [totalRecords]="totalItems()"
+                            [first]="first()"
+                            [showCurrentPageReport]="true"
+                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                            [rowsPerPageOptions]="[10, 25, 50]"
+                            (onPageChange)="onMobilePageChange($event)"
+                        />
+                    </div>
                 }
             </div>
         }
