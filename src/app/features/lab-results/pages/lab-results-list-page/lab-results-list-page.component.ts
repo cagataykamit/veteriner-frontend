@@ -205,7 +205,7 @@ export class LabResultsListPageComponent implements OnInit {
 
     private readonly labResultsService = inject(LabResultsService);
 
-    readonly loading = signal(false);
+    readonly loading = signal(true);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<LabResultListItemVm[]>([]);

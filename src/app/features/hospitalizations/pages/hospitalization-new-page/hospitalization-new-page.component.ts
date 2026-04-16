@@ -27,6 +27,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import {
     clientOptionsFromList,
     filterPetsByClientId,
+    isStalePetListResponse,
     petOptionsFromList,
     trimClientIdControlValue,
     type SelectOption
@@ -332,7 +333,7 @@ export class HospitalizationNewPageComponent implements OnInit {
         this.hospitalizationsService.createHospitalization(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/hospitalizations', id]);
+                void this.router.navigate(['/panel/hospitalizations', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
@@ -455,6 +456,9 @@ export class HospitalizationNewPageComponent implements OnInit {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
             next: (r) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    return;
+                }
                 let items = r.items;
                 const anyClientId = items.some((p) => (p.clientId ?? '').trim());
                 if (anyClientId) {

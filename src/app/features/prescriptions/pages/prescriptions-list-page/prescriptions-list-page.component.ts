@@ -212,7 +212,8 @@ export class PrescriptionsListPageComponent implements OnInit {
 
     private readonly prescriptionsService = inject(PrescriptionsService);
 
-    readonly loading = signal(false);
+    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
+    readonly loading = signal(true);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<PrescriptionListItemVm[]>([]);

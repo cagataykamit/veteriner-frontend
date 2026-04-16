@@ -1,5 +1,6 @@
 /**
  * Backend — Lab Results DTO’ları.
+ * Ayrı `resultType` / `resultStatus` (veya benzeri) alanları contract’ta yok; UI’da varsayılan alan eklenmez.
  */
 
 export interface LabResultListItemDto {

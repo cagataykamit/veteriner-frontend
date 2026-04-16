@@ -1,5 +1,7 @@
 /**
  * Backend Veteriner API — tedavi (treatment) DTO’ları.
+ *
+ * Şu an tedavi **türü** / **durum** alanları bu şemada yok; backend desteklemedikçe UI’da eklenmez (Sprint3).
  */
 
 export interface TreatmentListItemDto {

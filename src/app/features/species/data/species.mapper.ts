@@ -1,3 +1,4 @@
+import { HttpParams } from '@angular/common/http';
 import type {
     SpeciesDetailDto,
     SpeciesListItemDto,
@@ -44,6 +45,17 @@ export function mapSpeciesUpsertToApiBody(req: SpeciesUpsertRequest): SpeciesUps
 export function mapSpeciesListResponseToVm(raw: unknown): SpeciesListItemVm[] {
     const items = extractSpeciesListItems(raw);
     return items.map((x) => mapSpeciesListItemDtoToVm(x));
+}
+
+/**
+ * GET `/api/v1/species` — lookup için `activeOnly: true` → Http query **`isActive=true`** (backend filtresi).
+ * Parametre gönderilmezse tüm kayıtlar (ör. panel tür listesi).
+ */
+export function speciesListQueryToHttpParams(options?: { activeOnly?: boolean }): HttpParams | undefined {
+    if (options?.activeOnly === true) {
+        return new HttpParams().set('isActive', 'true');
+    }
+    return undefined;
 }
 
 export function extractCreatedSpeciesIdFromPostResponse(body: unknown): string | null {

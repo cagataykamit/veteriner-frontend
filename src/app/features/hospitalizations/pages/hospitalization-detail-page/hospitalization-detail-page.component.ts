@@ -195,7 +195,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             [draggable]="false"
             (onHide)="onDischargeDialogHide()"
         >
-            <p class="text-sm text-muted-color mt-0 mb-4">Taburcu tarihi ve saati zorunlucudur. İşlem sonrası kayıt kapatılır.</p>
+            <p class="text-sm text-muted-color mt-0 mb-4">Taburcu tarihi ve saati zorunludur. İşlem sonrası kayıt kapatılır.</p>
             <form [formGroup]="dischargeForm" (ngSubmit)="onDischargeSubmit()">
                 <div class="flex flex-col gap-4">
                     <div>

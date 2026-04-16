@@ -125,7 +125,7 @@ export class SpeciesListPageComponent implements OnInit {
     private readonly speciesService = inject(SpeciesService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly loading = signal(false);
+    readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly items = signal<SpeciesListItemVm[]>([]);
 

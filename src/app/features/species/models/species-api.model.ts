@@ -1,3 +1,4 @@
+/** GET `/api/v1/species` liste öğesi; opsiyonel `isActive` query ile filtre (servis katmanında). */
 export interface SpeciesListItemDto {
     id: string;
     code?: string | null;

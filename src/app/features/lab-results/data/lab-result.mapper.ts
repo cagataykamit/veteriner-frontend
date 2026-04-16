@@ -8,7 +8,6 @@ import type {
 import type { CreateLabResultRequest } from '@/app/features/lab-results/models/lab-result-create.model';
 import type { LabResultsListQuery } from '@/app/features/lab-results/models/lab-result-query.model';
 import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
-import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -156,6 +155,11 @@ export function mapPagedLabResultsToVm(result: LabResultListItemDtoPagedResult):
     };
 }
 
+/**
+ * GET `/api/v1/lab-results` — canonical query:
+ * `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`).
+ * Tarih alanları `type="date"` çıktısı gibi **yyyy-MM-dd** string olarak gider (examinations / treatments ile aynı semantik).
+ */
 export function labResultsQueryToHttpParams(query: LabResultsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -163,7 +167,7 @@ export function labResultsQueryToHttpParams(query: LabResultsListQuery): HttpPar
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
@@ -172,16 +176,10 @@ export function labResultsQueryToHttpParams(query: LabResultsListQuery): HttpPar
         p = p.set('PetId', query.petId.trim());
     }
     if (query.fromDate?.trim()) {
-        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
-        if (iso) {
-            p = p.set('dateFromUtc', iso);
-        }
+        p = p.set('FromDate', query.fromDate.trim());
     }
     if (query.toDate?.trim()) {
-        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
-        if (iso) {
-            p = p.set('dateToUtc', iso);
-        }
+        p = p.set('ToDate', query.toDate.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

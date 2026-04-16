@@ -1,6 +1,7 @@
 /**
  * Tedavi listesi — GET `/api/v1/treatments`.
- * `search`: başlık, açıklama, not ve pet/müşteri metin kümesi (backend contract).
+ * HttpParams: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`).
+ * `Search`: başlık, açıklama, not ve pet/müşteri metin kümesi (backend contract).
  */
 
 export interface TreatmentsListQuery {
@@ -11,9 +12,9 @@ export interface TreatmentsListQuery {
     clinicId?: string;
     /** Muayene/tedavi seçicileri için hayvana göre daraltma (backend `PetId`). */
     petId?: string;
-    /** yyyy-MM-dd */
+    /** yyyy-MM-dd; istekte `FromDate` olarak gider. */
     fromDate?: string;
-    /** yyyy-MM-dd */
+    /** yyyy-MM-dd; istekte `ToDate` olarak gider. */
     toDate?: string;
     sort?: string;
     order?: string;

@@ -32,6 +32,7 @@ export const ApiEndpoints = {
         historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`
     },
     species: {
+        /** Query: opsiyonel `isActive` (`true` → yalnız aktif türler; lookup). Parametre yok → tümü. */
         list: () => `/api/v1/species`,
         byId: (id: string) => `/api/v1/species/${encodeURIComponent(id)}`
     },
@@ -65,18 +66,22 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`
     },
     treatments: {
+        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/treatments`,
         byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`
     },
     prescriptions: {
+        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/prescriptions`,
         byId: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}`
     },
     labResults: {
+        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/lab-results`,
         byId: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}`
     },
     hospitalizations: {
+        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`). */
         list: () => `/api/v1/hospitalizations`,
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`

@@ -27,6 +27,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import {
     clientOptionsFromList,
     filterPetsByClientId,
+    isStalePetListResponse,
     petOptionsFromList,
     trimClientIdControlValue,
     type SelectOption
@@ -423,7 +424,7 @@ export class TreatmentNewPageComponent implements OnInit {
         this.treatmentsService.createTreatment(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/treatments', id]);
+                void this.router.navigate(['/panel/treatments', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
@@ -562,6 +563,10 @@ export class TreatmentNewPageComponent implements OnInit {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
             next: (r) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    this.loadingPets.set(false);
+                    return;
+                }
                 let items = r.items;
                 const anyClientId = items.some((p) => (p.clientId ?? '').trim());
                 if (anyClientId) {
@@ -581,6 +586,10 @@ export class TreatmentNewPageComponent implements OnInit {
                 }
             },
             error: (e: unknown) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    this.loadingPets.set(false);
+                    return;
+                }
                 this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
                 this.petOptions.set([]);
                 this.loadingPets.set(false);

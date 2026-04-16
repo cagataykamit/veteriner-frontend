@@ -7,7 +7,8 @@ import {
     extractCreatedSpeciesIdFromPostResponse,
     mapSpeciesDetailDtoToVm,
     mapSpeciesListResponseToVm,
-    mapSpeciesUpsertToApiBody
+    mapSpeciesUpsertToApiBody,
+    speciesListQueryToHttpParams
 } from '@/app/features/species/data/species.mapper';
 import type { SpeciesDetailDto } from '@/app/features/species/models/species-api.model';
 import type { SpeciesUpsertRequest } from '@/app/features/species/models/species-upsert.model';
@@ -18,10 +19,15 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 export class SpeciesService {
     private readonly api = inject(ApiClient);
 
+    /**
+     * GET `/api/v1/species`.
+     * `activeOnly: true` → istek **`isActive=true`** query ile gider (sunucu filtreler); istemci tarafında tekrar filtre yok.
+     * Parametresiz / `activeOnly` yok → tam liste (panel tür listesi).
+     */
     getSpeciesList(options?: { activeOnly?: boolean }): Observable<SpeciesListItemVm[]> {
-        return this.api.get<unknown>(ApiEndpoints.species.list()).pipe(
+        const params = speciesListQueryToHttpParams(options);
+        return this.api.get<unknown>(ApiEndpoints.species.list(), params).pipe(
             map((raw) => mapSpeciesListResponseToVm(raw)),
-            map((items) => (options?.activeOnly ? items.filter((x) => x.isActive) : items)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Tür listesi yüklenemedi.')))
             )

@@ -13,7 +13,6 @@ import type {
     HospitalizationEditVm,
     HospitalizationListItemVm
 } from '@/app/features/hospitalizations/models/hospitalization-vm.model';
-import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -111,6 +110,9 @@ function canonicalUpdatedAt(dto: HospitalizationDetailDto): string | null {
     return firstTrimmed(dto.updatedAtUtc, readDtoString(dto, ['UpdatedAtUtc']));
 }
 
+/**
+ * UI durumu: önce API `isActive`; yoksa `dischargedAtUtc` boşluğuna göre türetim (ayrı status enum yok).
+ */
 function canonicalIsActive(dto: HospitalizationListItemDto | HospitalizationDetailDto): boolean {
     const explicit = readDtoBoolean(dto, ['isActive', 'IsActive']);
     if (explicit !== null) {
@@ -190,6 +192,12 @@ export function mapPagedHospitalizationsToVm(result: HospitalizationListItemDtoP
     };
 }
 
+/**
+ * GET `/api/v1/hospitalizations` — canonical query:
+ * `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`).
+ * Tarihler `type="date"` çıktısı gibi **yyyy-MM-dd** (examinations / treatments / lab-results ile aynı semantik).
+ * Filtre: `ActiveOnly` = `true` | `false` (yalnızca ilgili durum seçildiğinde gönderilir).
+ */
 export function hospitalizationsQueryToHttpParams(query: HospitalizationsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -197,7 +205,7 @@ export function hospitalizationsQueryToHttpParams(query: HospitalizationsListQue
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
@@ -206,21 +214,15 @@ export function hospitalizationsQueryToHttpParams(query: HospitalizationsListQue
         p = p.set('PetId', query.petId.trim());
     }
     if (query.activeOnly === true) {
-        p = p.set('activeOnly', 'true');
+        p = p.set('ActiveOnly', 'true');
     } else if (query.activeOnly === false) {
-        p = p.set('activeOnly', 'false');
+        p = p.set('ActiveOnly', 'false');
     }
     if (query.fromDate?.trim()) {
-        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
-        if (iso) {
-            p = p.set('dateFromUtc', iso);
-        }
+        p = p.set('FromDate', query.fromDate.trim());
     }
     if (query.toDate?.trim()) {
-        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
-        if (iso) {
-            p = p.set('dateToUtc', iso);
-        }
+        p = p.set('ToDate', query.toDate.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

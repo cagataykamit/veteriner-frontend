@@ -37,6 +37,10 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     template: `
         <a routerLink="/panel/species" class="text-primary font-medium no-underline inline-block mb-4">← Tür listesine dön</a>
 
+        @if (showSavedBanner()) {
+            <p class="mb-4 m-0 text-sm font-medium" role="status">Tür kaydı oluşturuldu.</p>
+        }
+
         @if (editing() && loading()) {
             <app-loading-state message="Tür bilgileri yükleniyor…" />
         } @else if (editing() && loadError()) {
@@ -148,6 +152,7 @@ export class SpeciesFormPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly editing = signal(false);
+    readonly showSavedBanner = signal(false);
     readonly loading = signal(false);
     readonly loadError = signal<string | null>(null);
     readonly submitting = signal(false);
@@ -174,6 +179,7 @@ export class SpeciesFormPageComponent implements OnInit {
         }
         this.editing.set(true);
         this.currentId.set(id);
+        this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
         this.reloadSpeciesRecord();
     }
 

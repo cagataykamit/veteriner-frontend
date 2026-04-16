@@ -8,6 +8,7 @@ import {
     type SpeciesUpsertFieldErrors,
     parseSpeciesUpsertHttpError
 } from '@/app/features/species/utils/species-upsert-validation-parse.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -30,6 +31,11 @@ import { SelectModule } from 'primeng/select';
             [(visible)]="visible"
             (onShow)="onShow()"
         >
+            @if (ro.mutationBlocked()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">
+                    İşletme salt okunur moddadır; tür oluşturulamaz.
+                </p>
+            }
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-species-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -98,7 +104,7 @@ import { SelectModule } from 'primeng/select';
                     label="Kaydet"
                     icon="pi pi-check"
                     [loading]="submitting()"
-                    [disabled]="form.invalid || submitting()"
+                    [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
                     (onClick)="onSubmit()"
                 />
             </ng-template>
@@ -111,6 +117,7 @@ export class QuickSpeciesDialogComponent {
 
     private readonly fb = inject(FormBuilder);
     private readonly speciesService = inject(SpeciesService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -144,6 +151,9 @@ export class QuickSpeciesDialogComponent {
     }
 
     onSubmit(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         if (this.form.invalid) {

@@ -8,8 +8,6 @@ import type {
 import type { CreatePrescriptionRequest } from '@/app/features/prescriptions/models/prescription-create.model';
 import type { PrescriptionsListQuery } from '@/app/features/prescriptions/models/prescription-query.model';
 import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
-import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay } from '@/app/shared/utils/date.utils';
-
 const EM = '—';
 
 function str(v: string | null | undefined): string {
@@ -178,6 +176,7 @@ export function mapPagedPrescriptionsToVm(result: PrescriptionListItemDtoPagedRe
     };
 }
 
+/** GET `/api/v1/prescriptions` — canonical query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
 export function prescriptionsQueryToHttpParams(query: PrescriptionsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -185,7 +184,7 @@ export function prescriptionsQueryToHttpParams(query: PrescriptionsListQuery): H
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     if (query.search?.trim()) {
-        p = p.set('search', query.search.trim());
+        p = p.set('Search', query.search.trim());
     }
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
@@ -194,16 +193,10 @@ export function prescriptionsQueryToHttpParams(query: PrescriptionsListQuery): H
         p = p.set('PetId', query.petId.trim());
     }
     if (query.fromDate?.trim()) {
-        const iso = dateOnlyInputToUtcIso(query.fromDate.trim());
-        if (iso) {
-            p = p.set('dateFromUtc', iso);
-        }
+        p = p.set('FromDate', query.fromDate.trim());
     }
     if (query.toDate?.trim()) {
-        const iso = dateOnlyInputToUtcIsoEndOfDay(query.toDate.trim());
-        if (iso) {
-            p = p.set('dateToUtc', iso);
-        }
+        p = p.set('ToDate', query.toDate.trim());
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

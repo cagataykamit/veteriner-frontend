@@ -1,5 +1,8 @@
 /**
  * Backend Veteriner API — reçete (prescription) DTO’ları.
+ *
+ * Write/read şu an `title` / `content` / `notes` / `followUpDateUtc` odaklıdır.
+ * İlaç adedi, doz, frekans vb. alanlar backend şemasında yoksa UI’da eklenmez (Sprint3).
  */
 
 export interface PrescriptionListItemDto {
