@@ -55,60 +55,62 @@ type ActiveFilterUi = 'all' | 'active' | 'discharged';
             }
         </app-page-header>
 
-        <div class="card mb-6">
-            <div class="grid grid-cols-12 gap-4 items-end">
-                <div class="col-span-12 md:col-span-3">
-                    <label for="hospSearch" class="block text-sm font-medium text-muted-color mb-2">Arama</label>
-                    <input
-                        pInputText
-                        id="hospSearch"
-                        class="w-full"
-                        [(ngModel)]="searchInput"
-                        placeholder="Neden, müşteri veya hayvan…"
-                        (keyup.enter)="applyFilters()"
-                    />
-                </div>
-                <div class="col-span-12 md:col-span-3">
-                    <label for="hospStatus" class="block text-sm font-medium text-muted-color mb-2">Durum</label>
-                    <p-select
-                        inputId="hospStatus"
-                        [(ngModel)]="activeFilterInput"
-                        [options]="activeFilterOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="Durum"
-                        styleClass="w-full"
-                    />
-                </div>
-                <div class="col-span-12 md:col-span-2">
-                    <label for="hospFrom" class="block text-sm font-medium text-muted-color mb-2">Başlangıç</label>
-                    <input id="hospFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
-                </div>
-                <div class="col-span-12 md:col-span-2">
-                    <label for="hospTo" class="block text-sm font-medium text-muted-color mb-2">Bitiş</label>
-                    <input id="hospTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
-                </div>
-                <div class="col-span-12 md:col-span-2 flex flex-wrap gap-2">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
-                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                </div>
-            </div>
-        </div>
-
-        @if (loading()) {
-            <app-loading-state message="Liste yükleniyor…" />
-        } @else if (error()) {
-            <div class="card">
+        <div class="card">
+            @if (loading()) {
+                <app-loading-state message="Liste yükleniyor…" />
+            } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
-            </div>
-        } @else {
-            <div class="card">
-                <div class="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <h5 class="m-0">Yatışlar</h5>
-                    @if (totalItems() > 0) {
-                        <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                    }
-                </div>
+            } @else {
+                <div class="flex flex-col gap-4">
+                    <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
+                        <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
+                            <div class="min-w-0">
+                                <h5 class="m-0">Yatışlar</h5>
+                                @if (totalItems() > 0) {
+                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
+                                }
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
+                                <div class="flex-1 min-w-0">
+                                    <label for="hospSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                                    <input
+                                        pInputText
+                                        id="hospSearch"
+                                        class="w-full"
+                                        [(ngModel)]="searchInput"
+                                        placeholder="Neden, müşteri veya hayvan…"
+                                        (keyup.enter)="applyFilters()"
+                                    />
+                                </div>
+                                <div class="flex flex-wrap gap-2 shrink-0">
+                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
+                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-12 gap-3 items-end">
+                            <div class="col-span-12 md:col-span-4">
+                                <label for="hospStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
+                                <p-select
+                                    inputId="hospStatus"
+                                    [(ngModel)]="activeFilterInput"
+                                    [options]="activeFilterOptions"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Durum"
+                                    styleClass="w-full"
+                                />
+                            </div>
+                            <div class="col-span-12 md:col-span-4">
+                                <label for="hospFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
+                                <input id="hospFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
+                            </div>
+                            <div class="col-span-12 md:col-span-4">
+                                <label for="hospTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
+                                <input id="hospTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
+                            </div>
+                        </div>
+                    </div>
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
@@ -233,8 +235,9 @@ type ActiveFilterUi = 'all' | 'active' | 'discharged';
                         />
                     </div>
                 }
-            </div>
-        }
+                </div>
+            }
+        </div>
     `
 })
 export class HospitalizationsListPageComponent implements OnInit {

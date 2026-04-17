@@ -1,3 +1,4 @@
+import { HttpParams } from '@angular/common/http';
 import type {
     BreedCreateRequestDto,
     BreedDetailDto,
@@ -49,8 +50,24 @@ export function mapBreedUpdateToApiBody(id: string, req: BreedUpsertRequest): Br
     return {
         id: id.trim(),
         name: req.name.trim(),
-        isActive: !!req.isActive
+        isActive: req.isActive !== undefined ? !!req.isActive : false
     };
+}
+
+/** GET `/api/v1/breeds` — sunucu tarafı filtre (species listesi / lookup ile uyumlu). */
+export function breedListQueryToHttpParams(options?: { activeOnly?: boolean; speciesId?: string }): HttpParams | undefined {
+    let params = new HttpParams();
+    let has = false;
+    if (options?.activeOnly === true) {
+        params = params.set('isActive', 'true');
+        has = true;
+    }
+    const sid = options?.speciesId?.trim();
+    if (sid) {
+        params = params.set('speciesId', sid);
+        has = true;
+    }
+    return has ? params : undefined;
 }
 
 export function mapBreedListResponseToVm(raw: unknown): BreedListItemVm[] {

@@ -4,6 +4,7 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
+    breedListQueryToHttpParams,
     extractCreatedBreedIdFromPostResponse,
     mapBreedCreateToApiBody,
     mapBreedDetailDtoToVm,
@@ -20,19 +21,9 @@ export class BreedsService {
     private readonly api = inject(ApiClient);
 
     getBreedList(options?: { activeOnly?: boolean; speciesId?: string }): Observable<BreedListItemVm[]> {
-        return this.api.get<unknown>(ApiEndpoints.breeds.list()).pipe(
+        const params = breedListQueryToHttpParams(options);
+        return this.api.get<unknown>(ApiEndpoints.breeds.list(), params).pipe(
             map((raw) => mapBreedListResponseToVm(raw)),
-            map((items) =>
-                items.filter((x) => {
-                    if (options?.activeOnly && !x.isActive) {
-                        return false;
-                    }
-                    if (options?.speciesId?.trim() && x.speciesId?.trim() !== options.speciesId.trim()) {
-                        return false;
-                    }
-                    return true;
-                })
-            ),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Irk listesi yüklenemedi.')))
             )

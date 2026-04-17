@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import type { BreedUpsertRequest } from '@/app/features/breeds/models/breed-upsert.model';
+import type { BreedDetailVm } from '@/app/features/breeds/models/breed-vm.model';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import {
     type BreedUpsertFieldErrors,
@@ -61,6 +62,11 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
+                        @if (editing()) {
+                            <p class="text-xs text-muted-color mt-0 mb-2">
+                                Tür bu kayıt için sabittir; güncelleme API’si tür değişikliğini desteklemez.
+                            </p>
+                        }
                         <p-select
                             inputId="speciesId"
                             formControlName="speciesId"
@@ -90,20 +96,22 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             }
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                        <p-select
-                            inputId="isActive"
-                            formControlName="isActive"
-                            [options]="activeOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                        />
-                        @if (apiFieldErrors().isActive) {
-                            <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
-                        }
-                    </div>
+                    @if (editing()) {
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
+                            <p-select
+                                inputId="isActive"
+                                formControlName="isActive"
+                                [options]="activeOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                styleClass="w-full"
+                            />
+                            @if (apiFieldErrors().isActive) {
+                                <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
+                            }
+                        </div>
+                    }
                 </div>
 
                 @if (submitError()) {
@@ -151,6 +159,9 @@ export class BreedFormPageComponent implements OnInit {
     readonly currentId = signal<string | null>(null);
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
 
+    /** Düzenlemede pasif tür seçeneklere eklenir; tür listesi yüklendikten sonra tekrar merge için tutulur. */
+    private breedDetailForMerge: BreedDetailVm | null = null;
+
     readonly activeOptions = [
         { label: 'Aktif', value: true },
         { label: 'Pasif', value: false }
@@ -163,6 +174,8 @@ export class BreedFormPageComponent implements OnInit {
     });
 
     ngOnInit(): void {
+        this.breedDetailForMerge = null;
+        this.form.controls.speciesId.enable({ emitEvent: false });
         this.loadSpeciesOptions();
         const id = this.route.snapshot.paramMap.get('id');
         if (!id) {
@@ -182,11 +195,14 @@ export class BreedFormPageComponent implements OnInit {
         this.loadError.set(null);
         this.breedsService.getBreedById(id).subscribe({
             next: (item) => {
+                this.breedDetailForMerge = item;
+                this.mergeSpeciesOptionFromDetail(item);
                 this.form.patchValue({
                     speciesId: item.speciesId ?? '',
                     name: item.name === '—' ? '' : item.name,
                     isActive: item.isActive
                 });
+                this.form.controls.speciesId.disable({ emitEvent: false });
                 this.loading.set(false);
             },
             error: (e: unknown) => {
@@ -207,14 +223,14 @@ export class BreedFormPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const payload: BreedUpsertRequest = {
-            speciesId: v.speciesId.trim(),
-            name: v.name.trim(),
-            isActive: !!v.isActive
-        };
 
         this.submitting.set(true);
         if (this.editing() && this.currentId()) {
+            const payload: BreedUpsertRequest = {
+                speciesId: v.speciesId.trim(),
+                name: v.name.trim(),
+                isActive: !!v.isActive
+            };
             this.breedsService.updateBreed(this.currentId()!, payload).subscribe({
                 next: () => {
                     this.submitting.set(false);
@@ -225,7 +241,11 @@ export class BreedFormPageComponent implements OnInit {
             return;
         }
 
-        this.breedsService.createBreed(payload).subscribe({
+        const createPayload: BreedUpsertRequest = {
+            speciesId: v.speciesId.trim(),
+            name: v.name.trim()
+        };
+        this.breedsService.createBreed(createPayload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
                 void this.router.navigate(['/panel/breeds', id, 'edit'], { queryParams: { saved: '1' } });
@@ -238,6 +258,32 @@ export class BreedFormPageComponent implements OnInit {
         void this.router.navigate(['/panel/breeds']);
     }
 
+    private mergeSpeciesOptionFromDetail(vm: BreedDetailVm): void {
+        const sid = vm.speciesId?.trim();
+        if (!sid) {
+            return;
+        }
+        const opts = this.speciesOptions();
+        if (opts.some((o) => o.value === sid)) {
+            return;
+        }
+        const name = vm.speciesName?.trim();
+        const code = vm.speciesCode?.trim();
+        const hasName = !!name && name !== '-';
+        const hasCode = !!code && code !== '—';
+        let label: string;
+        if (hasName && hasCode) {
+            label = `${name} (${code})`;
+        } else if (hasName) {
+            label = name!;
+        } else if (hasCode) {
+            label = code!;
+        } else {
+            label = sid;
+        }
+        this.speciesOptions.set([{ label, value: sid }, ...opts]);
+    }
+
     private loadSpeciesOptions(): void {
         this.loadingSpecies.set(true);
         this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
@@ -248,6 +294,9 @@ export class BreedFormPageComponent implements OnInit {
                         value: x.id
                     }))
                 );
+                if (this.breedDetailForMerge) {
+                    this.mergeSpeciesOptionFromDetail(this.breedDetailForMerge);
+                }
                 this.loadingSpecies.set(false);
             },
             error: (e: unknown) => {

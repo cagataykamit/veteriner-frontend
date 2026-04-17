@@ -52,40 +52,40 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             }
         </app-page-header>
 
-        <div class="card mb-6">
-            <div class="grid grid-cols-12 gap-4 items-end">
-                <div class="col-span-12 md:col-span-9">
-                    <label for="clientSearch" class="block text-sm font-medium text-muted-color mb-2">Arama</label>
-                    <input
-                        pInputText
-                        id="clientSearch"
-                        class="w-full"
-                        [(ngModel)]="searchInput"
-                        placeholder="Ad, e-posta, telefon…"
-                        (keyup.enter)="applySearch()"
-                    />
-                </div>
-                <div class="col-span-12 md:col-span-3 flex flex-wrap gap-2">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
-                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                </div>
-            </div>
-        </div>
-
-        @if (loading()) {
-            <app-loading-state message="Müşteri listesi yükleniyor…" />
-        } @else if (error()) {
-            <div class="card">
+        <div class="card">
+            @if (loading()) {
+                <app-loading-state message="Müşteri listesi yükleniyor…" />
+            } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
-            </div>
-        } @else {
-            <div class="card">
-                <div class="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <h5 class="m-0">Müşteriler</h5>
-                    @if (totalItems() > 0) {
-                        <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                    }
-                </div>
+            } @else {
+                <div class="flex flex-col gap-4">
+                    <div
+                        class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 pb-3 border-b border-surface-200 dark:border-surface-700"
+                    >
+                        <div class="min-w-0">
+                            <h5 class="m-0">Müşteriler</h5>
+                            @if (totalItems() > 0) {
+                                <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
+                            }
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
+                            <div class="flex-1 min-w-0">
+                                <label for="clientSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                                <input
+                                    pInputText
+                                    id="clientSearch"
+                                    class="w-full"
+                                    [(ngModel)]="searchInput"
+                                    placeholder="Ad, e-posta, telefon…"
+                                    (keyup.enter)="applySearch()"
+                                />
+                            </div>
+                            <div class="flex flex-wrap gap-2 shrink-0">
+                                <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
+                                <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                            </div>
+                        </div>
+                    </div>
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
@@ -165,8 +165,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         />
                     </div>
                 }
-            </div>
-        }
+                </div>
+            }
+        </div>
     `
 })
 export class ClientsListPageComponent implements OnInit {

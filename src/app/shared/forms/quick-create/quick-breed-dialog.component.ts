@@ -14,15 +14,14 @@ import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selectio
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
 
 /**
- * Hayvan quick-create içinde, seçili türe yeni ırk eklemek (`BreedUpsertRequest` create hattı).
+ * Hayvan quick-create içinde, seçili türe yeni ırk eklemek (POST gövdesi: speciesId + name).
  */
 @Component({
     selector: 'app-quick-breed-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
     template: `
         <p-dialog
             header="Yeni ırk"
@@ -49,21 +48,6 @@ import { SelectModule } from 'primeng/select';
                             } @else if (form.controls.name.hasError('maxlength')) {
                                 <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
                             }
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="qb-isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                        <p-select
-                            inputId="qb-isActive"
-                            formControlName="isActive"
-                            [options]="activeOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                            appendTo="body"
-                        />
-                        @if (apiFieldErrors().isActive) {
-                            <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
                         }
                     </div>
                 </div>
@@ -101,14 +85,8 @@ export class QuickBreedDialogComponent {
     readonly submitError = signal<string | null>(null);
     readonly apiFieldErrors = signal<BreedUpsertFieldErrors>({});
 
-    readonly activeOptions = [
-        { label: 'Aktif', value: true },
-        { label: 'Pasif', value: false }
-    ];
-
     readonly form = this.fb.nonNullable.group({
-        name: ['', [Validators.required, Validators.maxLength(128)]],
-        isActive: [true, Validators.required]
+        name: ['', [Validators.required, Validators.maxLength(128)]]
     });
 
     constructor() {
@@ -117,14 +95,6 @@ export class QuickBreedDialogComponent {
             if (cur.name) {
                 const next = { ...cur };
                 delete next.name;
-                this.apiFieldErrors.set(next);
-            }
-        });
-        this.form.controls.isActive.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
-            const cur = this.apiFieldErrors();
-            if (cur.isActive) {
-                const next = { ...cur };
-                delete next.isActive;
                 this.apiFieldErrors.set(next);
             }
         });
@@ -138,8 +108,7 @@ export class QuickBreedDialogComponent {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         this.form.reset({
-            name: '',
-            isActive: true
+            name: ''
         });
     }
 
@@ -162,8 +131,7 @@ export class QuickBreedDialogComponent {
         const v = this.form.getRawValue();
         const payload: BreedUpsertRequest = {
             speciesId: sid,
-            name: v.name.trim(),
-            isActive: !!v.isActive
+            name: v.name.trim()
         };
 
         this.submitting.set(true);
