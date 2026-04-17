@@ -54,8 +54,13 @@ export function mapBreedUpdateToApiBody(id: string, req: BreedUpsertRequest): Br
     };
 }
 
-/** GET `/api/v1/breeds` — sunucu tarafı filtre (species listesi / lookup ile uyumlu). */
-export function breedListQueryToHttpParams(options?: { activeOnly?: boolean; speciesId?: string }): HttpParams | undefined {
+/** GET `/api/v1/breeds` — sunucu tarafı filtre (lookup / panel listesi ile uyumlu). */
+export function breedListQueryToHttpParams(options?: {
+    activeOnly?: boolean;
+    speciesId?: string;
+    /** Boş/whitespace gönderilmez. */
+    search?: string;
+}): HttpParams | undefined {
     let params = new HttpParams();
     let has = false;
     if (options?.activeOnly === true) {
@@ -65,6 +70,11 @@ export function breedListQueryToHttpParams(options?: { activeOnly?: boolean; spe
     const sid = options?.speciesId?.trim();
     if (sid) {
         params = params.set('speciesId', sid);
+        has = true;
+    }
+    const q = options?.search?.trim();
+    if (q) {
+        params = params.set('search', q);
         has = true;
     }
     return has ? params : undefined;

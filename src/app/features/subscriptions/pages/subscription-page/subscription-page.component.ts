@@ -279,19 +279,21 @@ interface ReturnBannerVm {
                                     <div>{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <p-button
-                                    type="button"
-                                    label="Bekleyen geçişi iptal et"
-                                    icon="pi pi-times"
-                                    severity="secondary"
-                                    [loading]="pendingCancelLoading()"
-                                    [disabled]="pendingCancelLoading() || planActionLoadingCode() !== null || finalizing() || postCheckoutSyncing()"
-                                    (onClick)="cancelPendingPlanChange()"
-                                />
-                            </div>
-                            @if (pendingCancelError()) {
-                                <p class="text-red-500 mt-3 mb-0 text-sm">{{ pendingCancelError() }}</p>
+                            @if (s.canManageSubscription) {
+                                <div class="flex items-center gap-2">
+                                    <p-button
+                                        type="button"
+                                        label="Bekleyen geçişi iptal et"
+                                        icon="pi pi-times"
+                                        severity="secondary"
+                                        [loading]="pendingCancelLoading()"
+                                        [disabled]="pendingCancelLoading() || planActionLoadingCode() !== null || finalizing() || postCheckoutSyncing()"
+                                        (onClick)="cancelPendingPlanChange()"
+                                    />
+                                </div>
+                                @if (pendingCancelError()) {
+                                    <p class="text-red-500 mt-3 mb-0 text-sm">{{ pendingCancelError() }}</p>
+                                }
                             }
                         </div>
                     </div>
@@ -825,6 +827,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     cancelPendingPlanChange(): void {
+        const s = this.summary();
+        if (!s?.canManageSubscription) {
+            return;
+        }
         this.pendingCancelLoading.set(true);
         this.pendingCancelError.set(null);
         this.planActionInfo.set(null);

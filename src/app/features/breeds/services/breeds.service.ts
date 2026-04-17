@@ -20,7 +20,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 export class BreedsService {
     private readonly api = inject(ApiClient);
 
-    getBreedList(options?: { activeOnly?: boolean; speciesId?: string }): Observable<BreedListItemVm[]> {
+    getBreedList(options?: { activeOnly?: boolean; speciesId?: string; search?: string }): Observable<BreedListItemVm[]> {
         const params = breedListQueryToHttpParams(options);
         return this.api.get<unknown>(ApiEndpoints.breeds.list(), params).pipe(
             map((raw) => mapBreedListResponseToVm(raw)),

@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import type { BreedListItemVm } from '@/app/features/breeds/models/breed-vm.model';
@@ -18,9 +20,11 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         RouterLink,
         TableModule,
         ButtonModule,
+        InputTextModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -52,12 +56,40 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             </div>
         } @else {
             <div class="card">
-                <div class="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <h5 class="m-0">Irklar</h5>
-                    @if (items().length > 0) {
-                        <span class="text-sm text-muted-color whitespace-nowrap">{{ items().length }} kayıt</span>
-                    }
-                </div>
+                <div class="flex flex-col gap-4">
+                    <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
+                        <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3">
+                            <div class="min-w-0">
+                                <h5 class="m-0">Irklar</h5>
+                                @if (items().length > 0) {
+                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ items().length }} kayıt</span>
+                                }
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
+                                <div class="flex-1 min-w-0">
+                                    <label for="breedListSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                                    <input
+                                        pInputText
+                                        id="breedListSearch"
+                                        class="w-full"
+                                        [(ngModel)]="searchDraft"
+                                        placeholder="Irk veya tür adı…"
+                                        (keyup.enter)="applySearch()"
+                                    />
+                                </div>
+                                <div class="flex flex-wrap gap-2 shrink-0">
+                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
+                                    <p-button
+                                        [label]="copy.buttonClear"
+                                        icon="pi pi-times"
+                                        severity="secondary"
+                                        (onClick)="clearSearch()"
+                                        [disabled]="loading()"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @if (items().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
@@ -113,6 +145,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         }
                     </div>
                 }
+                </div>
             </div>
         }
     `
@@ -126,6 +159,10 @@ export class BreedsListPageComponent implements OnInit {
     readonly error = signal<string | null>(null);
     readonly items = signal<BreedListItemVm[]>([]);
 
+    /** Girdi kutusu; API’ye yalnızca Ara ile `appliedSearch` aktarılır. */
+    searchDraft = '';
+    private readonly appliedSearch = signal('');
+
     readonly activeLabel = (isActive: boolean) => (isActive ? 'Aktif' : 'Pasif');
     readonly activeSeverity = (isActive: boolean) => (isActive ? 'success' : 'secondary');
 
@@ -133,10 +170,22 @@ export class BreedsListPageComponent implements OnInit {
         this.reload();
     }
 
+    applySearch(): void {
+        this.appliedSearch.set(this.searchDraft.trim());
+        this.reload();
+    }
+
+    clearSearch(): void {
+        this.searchDraft = '';
+        this.appliedSearch.set('');
+        this.reload();
+    }
+
     reload(): void {
         this.loading.set(true);
         this.error.set(null);
-        this.breedsService.getBreedList().subscribe({
+        const q = this.appliedSearch().trim();
+        this.breedsService.getBreedList({ search: q || undefined }).subscribe({
             next: (items) => {
                 this.items.set(items);
                 this.loading.set(false);

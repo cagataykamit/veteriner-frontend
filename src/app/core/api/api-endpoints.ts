@@ -37,7 +37,7 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/species/${encodeURIComponent(id)}`
     },
     breeds: {
-        /** Query: isteğe bağlı `isActive` (`true` → aktif ırklar), `speciesId` (türe göre). */
+        /** Query: isteğe bağlı `isActive` (`true` → aktif ırklar), `speciesId`, `search`. */
         list: () => `/api/v1/breeds`,
         byId: (id: string) => `/api/v1/breeds/${encodeURIComponent(id)}`
     },
