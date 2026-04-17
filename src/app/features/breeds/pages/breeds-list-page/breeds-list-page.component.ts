@@ -48,14 +48,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             }
         </app-page-header>
 
-        @if (loading()) {
-            <app-loading-state message="Irk listesi yükleniyor…" />
-        } @else if (error()) {
-            <div class="card">
+        <div class="card">
+            @if (loading()) {
+                <app-loading-state message="Irk listesi yükleniyor…" />
+            } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
-            </div>
-        } @else {
-            <div class="card">
+            } @else {
                 <div class="flex flex-col gap-4">
                     <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3">
@@ -90,64 +88,64 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             </div>
                         </div>
                     </div>
-                @if (items().length === 0) {
-                    <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
-                } @else {
-                    <div class="hidden lg:block overflow-x-auto">
-                        <p-table [value]="items()" [tableStyle]="{ 'min-width': '56rem' }">
-                            <ng-template #header>
-                                <tr>
-                                    <th>Ad</th>
-                                    <th>Tür</th>
-                                    <th>Durum</th>
-                                    <th style="width: 8rem">İşlemler</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template #body let-row>
-                                <tr>
-                                    <td class="font-medium">{{ row.name }}</td>
-                                    <td>{{ row.speciesName }}</td>
-                                    <td>
+                    @if (items().length === 0) {
+                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                    } @else {
+                        <div class="hidden lg:block overflow-x-auto">
+                            <p-table [value]="items()" [tableStyle]="{ 'min-width': '56rem' }">
+                                <ng-template #header>
+                                    <tr>
+                                        <th>Ad</th>
+                                        <th>Tür</th>
+                                        <th>Durum</th>
+                                        <th style="width: 8rem">İşlemler</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr>
+                                        <td class="font-medium">{{ row.name }}</td>
+                                        <td>{{ row.speciesName }}</td>
+                                        <td>
+                                            <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />
+                                        </td>
+                                        <td>
+                                            @if (!ro.mutationBlocked()) {
+                                                <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                            } @else {
+                                                <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+
+                        <div class="lg:hidden space-y-3">
+                            @for (row of items(); track row.id) {
+                                <div
+                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
+                                >
+                                    <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-2 min-w-0">
+                                        <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.name }}</div>
                                         <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />
-                                    </td>
-                                    <td>
+                                    </div>
+                                    <div class="text-sm text-muted-color mb-3 min-w-0 break-words">
+                                        <span class="font-medium">Tür: </span>{{ row.speciesName }}
+                                    </div>
+                                    <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                         @if (!ro.mutationBlocked()) {
-                                            <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                            <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
                                         } @else {
                                             <span class="text-muted-color">Düzenle (salt okunur)</span>
                                         }
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-
-                    <div class="lg:hidden space-y-3">
-                        @for (row of items(); track row.id) {
-                            <div
-                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                            >
-                                <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-2 min-w-0">
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.name }}</div>
-                                    <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />
+                                    </div>
                                 </div>
-                                <div class="text-sm text-muted-color mb-3 min-w-0 break-words">
-                                    <span class="font-medium">Tür: </span>{{ row.speciesName }}
-                                </div>
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    @if (!ro.mutationBlocked()) {
-                                        <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
-                                    } @else {
-                                        <span class="text-muted-color">Düzenle (salt okunur)</span>
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
+                            }
+                        </div>
+                    }
                 </div>
-            </div>
-        }
+            }
+        </div>
     `
 })
 export class BreedsListPageComponent implements OnInit {

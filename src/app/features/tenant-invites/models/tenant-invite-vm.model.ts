@@ -11,3 +11,12 @@ export interface TenantInviteCreatedVm {
     clinicId: string;
     expiresAtUtc: string | null;
 }
+
+export interface TenantInviteListItemVm {
+    id: string;
+    email: string;
+    statusLabel: string;
+    expiresAtUtc: string | null;
+    clinicSummary: string;
+    roleSummary: string;
+}

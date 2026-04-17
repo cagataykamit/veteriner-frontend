@@ -10,6 +10,7 @@ import {
     type BreedUpsertFormFieldKey,
     parseBreedUpsertHttpError
 } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -32,6 +33,11 @@ import { InputTextModule } from 'primeng/inputtext';
             [(visible)]="visible"
             (onShow)="onShow()"
         >
+            @if (ro.mutationBlocked()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">
+                    İşletme salt okunur moddadır; ırk oluşturulamaz.
+                </p>
+            }
             @if (speciesLabel().trim()) {
                 <p class="text-sm text-muted-color mt-0 mb-3">{{ speciesLabel() }}</p>
             }
@@ -62,7 +68,7 @@ import { InputTextModule } from 'primeng/inputtext';
                     label="Kaydet"
                     icon="pi pi-check"
                     [loading]="submitting()"
-                    [disabled]="form.invalid || submitting() || !speciesIdContext()"
+                    [disabled]="form.invalid || submitting() || !speciesIdContext() || ro.mutationBlocked()"
                     (onClick)="onSubmit()"
                 />
             </ng-template>
@@ -80,6 +86,7 @@ export class QuickBreedDialogComponent {
 
     private readonly fb = inject(FormBuilder);
     private readonly breedsService = inject(BreedsService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -117,6 +124,9 @@ export class QuickBreedDialogComponent {
     }
 
     onSubmit(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         const sid = this.speciesIdContext();

@@ -86,7 +86,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        @if (!contextFromRoute()) {
+                        @if (!contextFromRoute() && !ro.mutationBlocked()) {
                             <p class="text-muted-color text-sm mt-2 mb-0">
                                 Aradığınız kayıt yoksa
                                 <a routerLink="/panel/clients/new" class="text-primary font-medium no-underline">Yeni Müşteri</a>.
@@ -113,7 +113,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        @if (!contextFromRoute()) {
+                        @if (!contextFromRoute() && !ro.mutationBlocked()) {
                             <p class="text-muted-color text-sm mt-2 mb-0">
                                 <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
                                 — bu müşteri için hayvan ekleyebilirsiniz.

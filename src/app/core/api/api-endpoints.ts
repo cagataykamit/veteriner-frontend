@@ -98,6 +98,9 @@ export const ApiEndpoints = {
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-plan-change/downgrade`,
         pendingSubscriptionPlanChange: (tenantId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-plan-change/pending`,
+        /** Query: `Page`, `PageSize`, `Search` — kiracı kullanıcı üyeleri (salt liste). */
+        members: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/members`,
+        /** GET: Query `Page`, `PageSize`, `Search` (davet listesi). POST: davet oluşturur. */
         invites: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites`,
         /** Davet formu: atanabilir operation claim listesi (`operationClaimId`, `operationClaimName`). */
         assignableOperationClaims: (tenantId: string) =>

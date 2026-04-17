@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
@@ -22,6 +23,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     imports: [
         CommonModule,
         ReactiveFormsModule,
+        RouterLink,
         ButtonModule,
         InputTextModule,
         AppPageHeaderComponent,
@@ -32,7 +34,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             title="Kullanıcı daveti"
             subtitle="Hesap"
             description="Kiracıya katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez."
-        />
+        >
+            <a actions routerLink="/panel/settings/invites/list" pButton type="button" label="Davet listesi" icon="pi pi-list" class="p-button-secondary"></a>
+        </app-page-header>
 
         @if (pageLoading()) {
             <app-loading-state message="Klinik ve rol listesi yükleniyor…" />
