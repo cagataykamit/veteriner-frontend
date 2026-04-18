@@ -35,9 +35,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     ],
     template: `
         <app-page-header
-            title="Kiracı üyeleri"
+            title="Kurum üyeleri"
             subtitle="Hesap"
-            description="Bu kiracıya bağlı kullanıcıların salt okunur listesi."
+            description="Bu kuruma bağlı kullanıcıların salt okunur listesi."
         />
 
         <div class="card">

@@ -34,3 +34,7 @@ export interface TenantMemberDetailDto {
 }
 
 /** Rol atama: `POST .../members/{memberId}/roles/{operationClaimId}` — gövde `{}` (kimlik URL’de). */
+
+/** Klinik üyeliği: `POST|DELETE .../members/{memberId}/clinics/{clinicId}` — POST gövdesi `{}`. */
+
+/** Üye atama dropdown: `GET /api/v1/clinics` (kiracı JWT bağlamı); `/me/clinics` kişisel üyeliklerdir. Mapper: `mapTenantClinicsListRaw`. */

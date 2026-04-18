@@ -79,7 +79,7 @@ interface ReturnBannerVm {
         <app-page-header
             title="Abonelik"
             subtitle="Paket & Deneme"
-            description="Kiracı abonelik özeti ve paket aktivasyon akışı."
+            description="Kurum abonelik özeti ve paket aktivasyon akışı."
         />
 
         @if (postCheckoutSyncing() && !error()) {
@@ -404,7 +404,7 @@ interface ReturnBannerVm {
                                 </div>
                                 @if (shouldOfferManualCheckoutFinalize(session)) {
                                     <p class="text-xs text-muted-color mt-3 mb-0">
-                                        Bu düğme gerçek kart ödemesi olmadan kiracıyı aktifleştirir; yalnızca Manual provider veya geliştirme fallback’ı içindir.
+                                        Bu düğme gerçek kart ödemesi olmadan kurumu aktifleştirir; yalnızca Manual provider veya geliştirme fallback’ı içindir.
                                         Hosted ödeme sağlayıcısı kullanıldığında tamamlama genelde ödeme + webhook ile olur.
                                     </p>
                                 }

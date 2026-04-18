@@ -5,8 +5,10 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import {
     mapPagedTenantMembersToVm,
+    mapTenantClinicsListRaw,
     mapTenantMemberDetailRaw,
     tenantMembersQueryToHttpParams
 } from '@/app/features/tenant-members/data/tenant-members.mapper';
@@ -34,13 +36,13 @@ export class TenantMembersService {
     getMembers(query: TenantMembersListQuery): Observable<TenantMembersPagedVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const params = tenantMembersQueryToHttpParams(query);
         return this.api.get<TenantMemberListItemDtoPagedResult | unknown>(ApiEndpoints.tenants.members(tenantId), params).pipe(
             map((raw) => mapPagedTenantMembersToVm(raw)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Kiracı üyeleri yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Kurum üyeleri yüklenemedi.')))
             )
         );
     }
@@ -51,7 +53,7 @@ export class TenantMembersService {
     getMemberById(memberId: string): Observable<TenantMemberDetailVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const id = memberId.trim();
         if (!id) {
@@ -72,12 +74,29 @@ export class TenantMembersService {
     }
 
     /**
+     * `GET /api/v1/clinics` — panel oturumundaki kiracı kapsamındaki klinikler (üye atama).
+     * Kişisel üyelik listesi `/api/v1/me/clinics` değildir.
+     */
+    listTenantClinics(): Observable<ClinicSummary[]> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        return this.api.get<unknown>(ApiEndpoints.clinics.list()).pipe(
+            map((raw) => mapTenantClinicsListRaw(raw)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Klinik listesi yüklenemedi.')))
+            )
+        );
+    }
+
+    /**
      * `POST .../members/{memberId}/roles/{operationClaimId}` — whitelist rol atar (gövde boş).
      */
     assignMemberClaim(memberId: string, operationClaimId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const mid = memberId.trim();
         const cid = operationClaimId.trim();
@@ -96,7 +115,7 @@ export class TenantMembersService {
     removeMemberClaim(memberId: string, operationClaimId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const mid = memberId.trim();
         const cid = operationClaimId.trim();
@@ -104,6 +123,44 @@ export class TenantMembersService {
             return throwError(() => new Error('Geçersiz istek.'));
         }
         return this.api.delete<unknown>(ApiEndpoints.tenants.memberRemoveClaim(tenantId, mid, cid)).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) => throwError(() => err))
+        );
+    }
+
+    /**
+     * `POST .../members/{memberId}/clinics/{clinicId}` — gövde boş.
+     */
+    assignMemberClinic(memberId: string, clinicId: string): Observable<void> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        const mid = memberId.trim();
+        const cid = clinicId.trim();
+        if (!mid || !cid) {
+            return throwError(() => new Error('Geçersiz istek.'));
+        }
+        return this.api.post<unknown>(ApiEndpoints.tenants.memberAssignClinic(tenantId, mid, cid), {}).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) => throwError(() => err))
+        );
+    }
+
+    /**
+     * `DELETE .../members/{memberId}/clinics/{clinicId}`
+     */
+    removeMemberClinic(memberId: string, clinicId: string): Observable<void> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        const mid = memberId.trim();
+        const cid = clinicId.trim();
+        if (!mid || !cid) {
+            return throwError(() => new Error('Geçersiz istek.'));
+        }
+        return this.api.delete<unknown>(ApiEndpoints.tenants.memberRemoveClinic(tenantId, mid, cid)).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) => throwError(() => err))
         );

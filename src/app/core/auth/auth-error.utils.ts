@@ -20,13 +20,13 @@ const LOGIN_INVALID_CREDENTIALS_MESSAGE = 'E-posta veya şifre hatalı.';
 const AUTH_PROBLEM_CODE_MESSAGES: Record<string, string> = {
     'Auth.UserClinicNotAssigned': 'Bu kliniğe erişim yetkiniz bulunmuyor.',
     'Auth.UserMultipleTenantsForbidden':
-        'Bu kullanıcı kaydında kiracı üyeliği tutarsız. Lütfen yöneticinizle iletişime geçin.',
+        'Bu kullanıcı kaydında kurum üyeliği tutarsız. Lütfen yöneticinizle iletişime geçin.',
     'Auth.ClinicNotFound': 'Seçilen klinik bulunamadı.',
     'Auth.ClinicSelectionRequired': 'Birden fazla aktif klinik var. Devam etmek için klinik seçimi gerekli.',
-    'Auth.TenantMismatch': 'Kiracı bağlamı uyuşmuyor. Lütfen tekrar giriş yapın.',
-    'Auth.TenantMembershipRequired': 'Bu işlem için kiracı üyeliği gerekli.',
-    'Tenants.NotFound': 'Kiracı bulunamadı veya erişilemiyor.',
-    'Tenants.TenantInactive': 'Kiracı hesabı aktif değil.',
+    'Auth.TenantMismatch': 'Kurum bağlamı uyuşmuyor. Lütfen tekrar giriş yapın.',
+    'Auth.TenantMembershipRequired': 'Bu işlem için kurum üyeliği gerekli.',
+    'Tenants.NotFound': 'Kurum bulunamadı veya erişilemiyor.',
+    'Tenants.TenantInactive': 'Kurum hesabı aktif değil.',
     'Auth.Validation.InvalidRequestBody': 'İstek gövdesi geçersiz. Alanları kontrol edip tekrar deneyin.',
     'Auth.Validation.RefreshTokenRequired': 'Yenileme anahtarı gerekli. Lütfen tekrar giriş yapın.',
     'Auth.Validation.SelectClinicRequestInvalid': 'Klinik seçim isteği geçersiz. Lütfen tekrar deneyin.'

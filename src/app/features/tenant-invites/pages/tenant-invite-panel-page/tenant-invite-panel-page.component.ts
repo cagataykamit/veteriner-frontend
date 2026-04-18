@@ -33,7 +33,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         <app-page-header
             title="Kullanıcı daveti"
             subtitle="Hesap"
-            description="Kiracıya katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez."
+            description="Kuruma katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez."
         >
             <a actions routerLink="/panel/settings/invites/list" pButton type="button" label="Davet listesi" icon="pi pi-list" class="p-button-secondary"></a>
         </app-page-header>
@@ -52,7 +52,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     <p class="text-muted-color text-sm mt-2 mb-0">
                         Beklenen:
                         <code class="text-xs">GET /api/v1/tenants/{{ '{' }}tenantId{{ '}' }}/assignable-operation-claims</code>
-                        — yetki yoksa veya kiracı id JWT ile uyuşmuyorsa hata alınabilir.
+                        — yetki yoksa veya oturumdaki kurum bilgisi JWT ile uyuşmuyorsa hata alınabilir.
                     </p>
                 </div>
             }

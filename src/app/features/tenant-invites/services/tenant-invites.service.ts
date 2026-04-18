@@ -43,7 +43,7 @@ export class TenantInvitesService {
     listOperationClaims(): Observable<OperationClaimOptionVm[]> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         return this.api
             .get<unknown>(ApiEndpoints.tenants.assignableOperationClaims(tenantId))
@@ -56,7 +56,7 @@ export class TenantInvitesService {
     getInvitesList(query: TenantInvitesListQuery): Observable<TenantInvitesPagedVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const params = tenantInvitesListQueryToHttpParams(query);
         return this.api.get<TenantInviteListItemDtoPagedResult | unknown>(ApiEndpoints.tenants.invites(tenantId), params).pipe(
@@ -73,7 +73,7 @@ export class TenantInvitesService {
     getInviteById(inviteId: string): Observable<TenantInviteDetailVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const id = inviteId.trim();
         if (!id) {
@@ -99,7 +99,7 @@ export class TenantInvitesService {
     cancelInvite(inviteId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const id = inviteId.trim();
         if (!id) {
@@ -119,7 +119,7 @@ export class TenantInvitesService {
     resendInvite(inviteId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const id = inviteId.trim();
         if (!id) {
@@ -136,7 +136,7 @@ export class TenantInvitesService {
     createInvite(body: TenantInviteCreateRequestDto): Observable<TenantInviteCreatedVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         return this.api.post<unknown>(ApiEndpoints.tenants.invites(tenantId), body).pipe(
             map((raw) => {

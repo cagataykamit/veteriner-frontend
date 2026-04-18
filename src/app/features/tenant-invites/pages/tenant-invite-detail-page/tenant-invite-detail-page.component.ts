@@ -62,7 +62,7 @@ import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
                         />
                     }
                     @if (ro.mutationBlocked()) {
-                        <p class="text-sm text-muted-color m-0 self-center">Salt okunur kiracıda iptal ve yeniden gönder kullanılamaz.</p>
+                        <p class="text-sm text-muted-color m-0 self-center">Salt okunur kurumda iptal ve yeniden gönder kullanılamaz.</p>
                     }
                 </div>
                 @if (actionError()) {

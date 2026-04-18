@@ -5,8 +5,8 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 const PUBLIC_OWNER_SIGNUP_CODE_MESSAGES: Record<string, string> = {
     'Subscriptions.PlanCodeInvalid': 'Seçilen plan geçersiz. Basic, Pro veya Premium seçin.',
     'Users.DuplicateEmail': 'Bu e-posta adresi zaten kayıtlı.',
-    'Tenants.DuplicateName': 'Bu kiracı adı zaten kullanılıyor.',
-    'Clinics.DuplicateName': 'Bu klinik adı bu kiracıda zaten kullanılıyor.',
+    'Tenants.DuplicateName': 'Bu kurum adı zaten kullanılıyor.',
+    'Clinics.DuplicateName': 'Bu klinik adı bu kurumda zaten kullanılıyor.',
     'Auth.AdminClaimMissing': 'Yönetici yetkisi atanamadı. Lütfen destek ile iletişime geçin.'
 };
 

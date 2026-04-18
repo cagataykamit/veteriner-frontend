@@ -5,10 +5,10 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 const PANEL_INVITE_CODE_MESSAGES: Record<string, string> = {
     'Subscriptions.UserLimitExceeded': 'Kullanıcı kotası doldu; yeni davet oluşturulamıyor.',
     'Invites.DuplicatePending': 'Bu e-posta için zaten bekleyen bir davet var.',
-    'Tenants.TenantInactive': 'Kiracı hesabı aktif değil.',
-    'Tenants.NotFound': 'Kiracı bulunamadı veya erişilemiyor.',
+    'Tenants.TenantInactive': 'Kurum hesabı aktif değil.',
+    'Tenants.NotFound': 'Kurum bulunamadı veya erişilemiyor.',
     'Clinics.NotFound': 'Seçilen klinik bulunamadı.',
-    'Clinics.ClinicNotInTenant': 'Seçilen klinik bu kiracıya ait değil.',
+    'Clinics.ClinicNotInTenant': 'Seçilen klinik bu kuruma ait değil.',
     'Invites.InvalidOperationClaim': 'Seçilen rol bu davet için geçersiz.',
     'Invites.Forbidden': 'Davet oluşturma yetkiniz yok.',
     'Auth.Forbidden': 'Bu işlem için yetkiniz yok.'

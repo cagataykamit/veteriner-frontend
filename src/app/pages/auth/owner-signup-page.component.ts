@@ -76,7 +76,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 }
 
                                 <div>
-                                    <label for="tenantName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">İşletme / kiracı adı *</label>
+                                    <label for="tenantName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">İşletme / kurum adı *</label>
                                     <input pInputText id="tenantName" type="text" class="w-full" [(ngModel)]="tenantName" autocomplete="organization" />
                                 </div>
 
@@ -110,7 +110,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 </div>
 
                                 <p class="text-sm text-muted-color m-0">
-                                    Bu adımda ödeme alınmaz; deneme süresi kiracı aboneliğinde başlatılır. Paket değişimi ve ödeme sonraki fazda
+                                    Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır. Paket değişimi ve ödeme sonraki fazda
                                     eklenecektir.
                                 </p>
 

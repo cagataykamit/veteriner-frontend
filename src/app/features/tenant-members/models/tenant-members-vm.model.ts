@@ -13,10 +13,12 @@ export interface TenantMemberClaimVm {
 }
 
 export interface TenantMemberClinicVm {
-    /** Takip / iç kullanım; UI’da gösterilmez. */
+    /** Klinik kimliği; yalnızca isteklerde kullanılır, etiket olarak gösterilmez. */
     id: string;
     name: string;
     isActive: boolean | null;
+    /** Backend `false` gönderirse kaldır gizlenir; yoksa true kabul edilir. */
+    canRemove: boolean;
 }
 
 export interface TenantMemberDetailVm {

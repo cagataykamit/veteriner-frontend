@@ -7,11 +7,17 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import type { OperationClaimOptionVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/features/tenant-invites/services/tenant-invites.service';
 import type { TenantMemberDetailVm } from '@/app/features/tenant-members/models/tenant-members-vm.model';
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
+import {
+    isMemberClinicAlreadyAssignedConflict,
+    isMemberClinicAlreadyRemoved,
+    memberClinicAssignRemoveMessage
+} from '@/app/features/tenant-members/utils/tenant-member-clinic-mutation.utils';
 import {
     isMemberRoleAlreadyAssignedConflict,
     isMemberRoleAlreadyRemoved,
@@ -44,7 +50,7 @@ import { catchError, forkJoin, of } from 'rxjs';
         <app-page-header
             title="Üye detayı"
             subtitle="Hesap"
-            description="Kiracı üyeliği bilgileri. Salt okunur kiracıda rol değişikliği yapılamaz."
+            description="Kurum üyeliği bilgileri. Salt okunur kurumda rol değişikliği yapılamaz."
         >
             <a actions routerLink="/panel/settings/members" pButton type="button" label="Listeye dön" icon="pi pi-arrow-left" class="p-button-secondary"></a>
         </app-page-header>
@@ -68,7 +74,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                         <dd class="m-0">{{ formatConfirmed(m.emailConfirmed) }}</dd>
                     </div>
                     <div class="md:col-span-2">
-                        <dt class="text-muted-color font-medium m-0 mb-1">Kiracı üyeliği oluşturulma</dt>
+                        <dt class="text-muted-color font-medium m-0 mb-1">Kurum üyeliği oluşturulma</dt>
                         <dd class="m-0">{{ formatDt(m.tenantMembershipCreatedAtUtc) }}</dd>
                     </div>
                 </dl>
@@ -95,7 +101,11 @@ import { catchError, forkJoin, of } from 'rxjs';
                                     style="min-height: 2.5rem"
                                     [ngModel]="selectedClaimId()"
                                     (ngModelChange)="selectedClaimId.set($event)"
-                                    [disabled]="assignableFiltered().length === 0"
+                                    [disabled]="
+                                        assignableFiltered().length === 0 ||
+                                        busyAddClinic() ||
+                                        busyRemoveClinicId() !== null
+                                    "
                                 >
                                     <option value="">Atanabilir rol seçin</option>
                                     @for (opt of assignableFiltered(); track opt.id) {
@@ -111,13 +121,15 @@ import { catchError, forkJoin, of } from 'rxjs';
                                 [disabled]="
                                     !selectedClaimId() ||
                                     assignableFiltered().length === 0 ||
-                                    busyRemoveClaimId() !== null
+                                    busyRemoveClaimId() !== null ||
+                                    busyAddClinic() ||
+                                    busyRemoveClinicId() !== null
                                 "
                                 (onClick)="onAddRole()"
                             />
                         </div>
                     } @else {
-                        <p class="text-sm text-muted-color mt-0 mb-3">Salt okunur kiracıda rol ekleyemezsiniz.</p>
+                        <p class="text-sm text-muted-color mt-0 mb-3">Salt okunur kurumda rol ekleyemezsiniz.</p>
                     }
                     @if (m.claims.length === 0) {
                         <app-empty-state
@@ -138,7 +150,12 @@ import { catchError, forkJoin, of } from 'rxjs';
                                             severity="danger"
                                             styleClass="p-button-sm p-button-text shrink-0"
                                             [loading]="busyRemoveClaimId() === c.id"
-                                            [disabled]="busyAdd() || (busyRemoveClaimId() !== null && busyRemoveClaimId() !== c.id)"
+                                            [disabled]="
+                                                busyAdd() ||
+                                                busyAddClinic() ||
+                                                busyRemoveClinicId() !== null ||
+                                                (busyRemoveClaimId() !== null && busyRemoveClaimId() !== c.id)
+                                            "
                                             (onClick)="onRemoveRole(c.id)"
                                         />
                                     }
@@ -152,6 +169,53 @@ import { catchError, forkJoin, of } from 'rxjs';
             @if (m.clinicsSectionPresent) {
                 <div class="card mb-4">
                     <h5 class="mt-0 mb-3">Klinik üyelikleri</h5>
+                    @if (clinicActionError()) {
+                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ clinicActionError() }}</p>
+                    }
+                    @if (clinicsPickerError()) {
+                        <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ clinicsPickerError() }}</p>
+                    }
+                    @if (!ro.mutationBlocked()) {
+                        <div
+                            class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700"
+                        >
+                            <div class="flex-1 min-w-[12rem] w-full sm:w-auto">
+                                <label for="tmAddClinic" class="block text-xs font-medium text-muted-color mb-1">Klinik ekle</label>
+                                <p class="text-xs text-muted-color m-0 mb-2">
+                                    Kurum kapsamındaki klinikler listelenir (kişisel klinik listeniz değil); bu üyede zaten olanlar seçenekte gösterilmez.
+                                </p>
+                                <select
+                                    id="tmAddClinic"
+                                    class="w-full p-inputtext p-component"
+                                    style="min-height: 2.5rem"
+                                    [ngModel]="selectedClinicId()"
+                                    (ngModelChange)="selectedClinicId.set($event)"
+                                    [disabled]="assignableClinicsFiltered().length === 0"
+                                >
+                                    <option value="">Eklenebilir klinik seçin</option>
+                                    @for (opt of assignableClinicsFiltered(); track opt.id) {
+                                        <option [value]="opt.id">{{ opt.name }}</option>
+                                    }
+                                </select>
+                            </div>
+                            <p-button
+                                label="Ekle"
+                                icon="pi pi-plus"
+                                styleClass="shrink-0"
+                                [loading]="busyAddClinic()"
+                                [disabled]="
+                                    !selectedClinicId() ||
+                                    assignableClinicsFiltered().length === 0 ||
+                                    busyAdd() ||
+                                    busyRemoveClaimId() !== null ||
+                                    busyRemoveClinicId() !== null
+                                "
+                                (onClick)="onAddClinic()"
+                            />
+                        </div>
+                    } @else {
+                        <p class="text-sm text-muted-color mt-0 mb-3">Salt okunur kurumda klinik üyeliği ekleyemez veya kaldıramazsınız.</p>
+                    }
                     @if (m.clinics.length === 0) {
                         <app-empty-state
                             message="Bu üye için listelenen klinik üyeliği yok."
@@ -164,11 +228,29 @@ import { catchError, forkJoin, of } from 'rxjs';
                                     class="p-3 rounded-lg border border-surface-200 dark:border-surface-700 text-sm flex flex-wrap items-center justify-between gap-2"
                                 >
                                     <span class="font-medium break-words">{{ cl.name }}</span>
-                                    @if (cl.isActive === true) {
-                                        <span class="text-xs text-green-700 dark:text-green-400 shrink-0">Aktif</span>
-                                    } @else if (cl.isActive === false) {
-                                        <span class="text-xs text-muted-color shrink-0">Pasif</span>
-                                    }
+                                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                        @if (cl.isActive === true) {
+                                            <span class="text-xs text-green-700 dark:text-green-400">Aktif</span>
+                                        } @else if (cl.isActive === false) {
+                                            <span class="text-xs text-muted-color">Pasif</span>
+                                        }
+                                        @if (!ro.mutationBlocked() && cl.canRemove) {
+                                            <p-button
+                                                label="Kaldır"
+                                                icon="pi pi-times"
+                                                severity="danger"
+                                                styleClass="p-button-sm p-button-text shrink-0"
+                                                [loading]="busyRemoveClinicId() === cl.id"
+                                                [disabled]="
+                                                    busyAddClinic() ||
+                                                    busyAdd() ||
+                                                    busyRemoveClaimId() !== null ||
+                                                    (busyRemoveClinicId() !== null && busyRemoveClinicId() !== cl.id)
+                                                "
+                                                (onClick)="onRemoveClinic(cl.id)"
+                                            />
+                                        }
+                                    </div>
                                 </li>
                             }
                         </ul>
@@ -193,10 +275,19 @@ export class TenantMemberDetailPageComponent implements OnInit {
     readonly claimOptions = signal<OperationClaimOptionVm[]>([]);
     readonly claimsOptionsError = signal<string | null>(null);
 
+    /** Üye atama: `GET /api/v1/clinics` (panel kapsamı; kişisel `/me/clinics` değil). */
+    readonly tenantClinicOptions = signal<ClinicSummary[]>([]);
+    readonly clinicsPickerError = signal<string | null>(null);
+
     readonly selectedClaimId = signal('');
+    readonly selectedClinicId = signal('');
     readonly busyAdd = signal(false);
     readonly busyRemoveClaimId = signal<string | null>(null);
     readonly roleActionError = signal<string | null>(null);
+
+    readonly busyAddClinic = signal(false);
+    readonly busyRemoveClinicId = signal<string | null>(null);
+    readonly clinicActionError = signal<string | null>(null);
 
     readonly assignableFiltered = computed(() => {
         const m = this.member();
@@ -206,6 +297,16 @@ export class TenantMemberDetailPageComponent implements OnInit {
         }
         const assigned = new Set(m.claims.map((c) => c.id));
         return opts.filter((o) => !assigned.has(o.id));
+    });
+
+    readonly assignableClinicsFiltered = computed(() => {
+        const m = this.member();
+        const list = this.tenantClinicOptions();
+        if (!m) {
+            return list;
+        }
+        const assigned = new Set(m.clinics.map((c) => c.id));
+        return list.filter((c) => !assigned.has(c.id));
     });
 
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
@@ -324,14 +425,102 @@ export class TenantMemberDetailPageComponent implements OnInit {
         this.roleActionError.set('Rol kaldırılamadı.');
     }
 
+    onAddClinic(): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
+        const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
+        const clinicId = this.selectedClinicId().trim();
+        if (!memberId || !clinicId) {
+            return;
+        }
+        this.clinicActionError.set(null);
+        this.busyAddClinic.set(true);
+        this.tenantMembers.assignMemberClinic(memberId, clinicId).subscribe({
+            next: () => {
+                this.busyAddClinic.set(false);
+                this.selectedClinicId.set('');
+                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Klinik üyeliği eklendi.' });
+                this.refreshMember(memberId);
+            },
+            error: (e: unknown) => {
+                this.busyAddClinic.set(false);
+                this.handleAddClinicError(e, memberId);
+            }
+        });
+    }
+
+    onRemoveClinic(clinicId: string): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
+        const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
+        const cid = clinicId.trim();
+        if (!memberId || !cid) {
+            return;
+        }
+        this.clinicActionError.set(null);
+        this.busyRemoveClinicId.set(cid);
+        this.tenantMembers.removeMemberClinic(memberId, cid).subscribe({
+            next: () => {
+                this.busyRemoveClinicId.set(null);
+                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Klinik üyeliği kaldırıldı.' });
+                this.refreshMember(memberId);
+            },
+            error: (e: unknown) => {
+                this.busyRemoveClinicId.set(null);
+                this.handleRemoveClinicError(e, memberId);
+            }
+        });
+    }
+
+    private handleAddClinicError(e: unknown, memberId: string): void {
+        if (e instanceof HttpErrorResponse) {
+            if (isMemberClinicAlreadyAssignedConflict(e)) {
+                this.selectedClinicId.set('');
+                this.refreshMember(memberId);
+                this.messages.add({
+                    severity: 'info',
+                    summary: 'Bilgi',
+                    detail: 'Bu klinik üyeliği zaten mevcut; liste güncellendi.'
+                });
+                return;
+            }
+            this.clinicActionError.set(memberClinicAssignRemoveMessage(e, 'Klinik üyeliği eklenemedi.'));
+            return;
+        }
+        this.clinicActionError.set('Klinik üyeliği eklenemedi.');
+    }
+
+    private handleRemoveClinicError(e: unknown, memberId: string): void {
+        if (e instanceof HttpErrorResponse) {
+            if (isMemberClinicAlreadyRemoved(e) || e.status === 404) {
+                this.refreshMember(memberId);
+                this.messages.add({
+                    severity: 'info',
+                    summary: 'Bilgi',
+                    detail: 'Bu klinik üyeliği zaten kaldırılmış veya bulunamadı; liste güncellendi.'
+                });
+                return;
+            }
+            this.clinicActionError.set(memberClinicAssignRemoveMessage(e, 'Klinik üyeliği kaldırılamadı.'));
+            return;
+        }
+        this.clinicActionError.set('Klinik üyeliği kaldırılamadı.');
+    }
+
     private load(id: string): void {
         this.loading.set(true);
         this.error.set(null);
         this.member.set(null);
         this.roleActionError.set(null);
+        this.clinicActionError.set(null);
         this.claimsOptionsError.set(null);
+        this.clinicsPickerError.set(null);
         this.selectedClaimId.set('');
+        this.selectedClinicId.set('');
         this.claimOptions.set([]);
+        this.tenantClinicOptions.set([]);
 
         forkJoin({
             member: this.tenantMembers.getMemberById(id),
@@ -340,11 +529,18 @@ export class TenantMemberDetailPageComponent implements OnInit {
                     this.claimsOptionsError.set('Atanabilir rol listesi yüklenemedi; rol ekleyemeyebilirsiniz.');
                     return of([] as OperationClaimOptionVm[]);
                 })
+            ),
+            tenantClinics: this.tenantMembers.listTenantClinics().pipe(
+                catchError(() => {
+                    this.clinicsPickerError.set('Klinik listesi yüklenemedi; klinik ekleyemeyebilirsiniz.');
+                    return of([] as ClinicSummary[]);
+                })
             )
         }).subscribe({
-            next: ({ member: vm, claims }) => {
+            next: ({ member: vm, claims, tenantClinics: clinics }) => {
                 this.member.set(vm);
                 this.claimOptions.set(claims);
+                this.tenantClinicOptions.set(clinics);
                 this.loading.set(false);
             },
             error: (e: Error) => {
@@ -356,10 +552,13 @@ export class TenantMemberDetailPageComponent implements OnInit {
 
     private refreshMember(memberId: string): void {
         this.roleActionError.set(null);
+        this.clinicActionError.set(null);
         this.tenantMembers.getMemberById(memberId).subscribe({
             next: (vm) => this.member.set(vm),
             error: (e: Error) => {
-                this.roleActionError.set(e.message ?? 'Liste yenilenemedi.');
+                const msg = e.message ?? 'Liste yenilenemedi.';
+                this.roleActionError.set(msg);
+                this.clinicActionError.set(msg);
             }
         });
     }

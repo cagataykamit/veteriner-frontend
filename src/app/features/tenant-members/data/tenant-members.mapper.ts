@@ -1,4 +1,5 @@
 import { HttpParams } from '@angular/common/http';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import type { TenantMemberListItemDtoPagedResult } from '@/app/features/tenant-members/models/tenant-members-api.model';
 import type { TenantMembersListQuery } from '@/app/features/tenant-members/models/tenant-members-query.model';
 import type {
@@ -259,7 +260,9 @@ function mapClinicRow(raw: unknown): TenantMemberClinicVm | null {
     if (!id && !name) {
         return null;
     }
-    return { id: id || name, name: name || id || '—', isActive };
+    const removable = readTriBool(raw, ['canRemove', 'CanRemove', 'isRemovable', 'IsRemovable', 'allowRemove', 'AllowRemove']);
+    const canRemove = removable !== false;
+    return { id: id || name, name: name || id || '—', isActive, canRemove };
 }
 
 export function mapTenantMemberDetailRaw(raw: unknown): TenantMemberDetailVm | null {
@@ -330,4 +333,39 @@ export function tenantMembersQueryToHttpParams(query: TenantMembersListQuery): H
         p = p.set('Search', query.search.trim());
     }
     return p;
+}
+
+function extractTenantClinicListArray(raw: unknown): unknown[] {
+    if (Array.isArray(raw)) {
+        return raw;
+    }
+    if (!isRecord(raw)) {
+        return [];
+    }
+    for (const k of ['items', 'Items', 'data', 'Data', 'value', 'Value', 'result', 'Result', 'clinics', 'Clinics']) {
+        const v = raw[k];
+        if (Array.isArray(v)) {
+            return v;
+        }
+    }
+    return [];
+}
+
+function mapClinicSummaryRow(raw: unknown): ClinicSummary | null {
+    if (!isRecord(raw)) {
+        return null;
+    }
+    const id = firstString(raw, ['id', 'Id', 'clinicId', 'ClinicId']);
+    const name = firstString(raw, ['name', 'Name', 'clinicName', 'ClinicName', 'title', 'Title']);
+    if (!id?.trim() || !name?.trim()) {
+        return null;
+    }
+    return { id: id.trim(), name: name.trim() };
+}
+
+/** `GET /api/v1/clinics` (kiracı kapsamı) — `/me/clinics` ile aynı toleranslı kök/satır şekli. */
+export function mapTenantClinicsListRaw(raw: unknown): ClinicSummary[] {
+    return extractTenantClinicListArray(raw)
+        .map((row) => mapClinicSummaryRow(row))
+        .filter((x): x is ClinicSummary => !!x);
 }

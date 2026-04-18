@@ -35,7 +35,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         AppErrorStateComponent
     ],
     template: `
-        <app-page-header title="Davetler" subtitle="Hesap" description="Kiracı davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
+        <app-page-header title="Davetler" subtitle="Hesap" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
             <a actions routerLink="/panel/settings/invites" pButton type="button" label="Davet oluştur" icon="pi pi-plus" class="p-button-primary"></a>
         </app-page-header>
 

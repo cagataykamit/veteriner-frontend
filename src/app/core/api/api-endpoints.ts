@@ -14,6 +14,10 @@ export const ApiEndpoints = {
     me: {
         clinics: () => `/api/v1/me/clinics`
     },
+    /** Kiracı/panel bağlamında klinik katalog (JWT tenant); kişisel üyelik listesi için `me.clinics`. */
+    clinics: {
+        list: () => `/api/v1/clinics`
+    },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
         financeSummary: () => `/api/v1/dashboard/finance-summary`
@@ -109,6 +113,12 @@ export const ApiEndpoints = {
         /** DELETE: üyeden ilgili `operationClaimId` rolünü kaldırır. */
         memberRemoveClaim: (tenantId: string, memberId: string, operationClaimId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}/roles/${encodeURIComponent(operationClaimId)}`,
+        /** POST: üyeye klinik üyeliği ekler; gövde `{}`, `clinicId` yol parametresinde. */
+        memberAssignClinic: (tenantId: string, memberId: string, clinicId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}/clinics/${encodeURIComponent(clinicId)}`,
+        /** DELETE: üyeden klinik üyeliğini kaldırır. */
+        memberRemoveClinic: (tenantId: string, memberId: string, clinicId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}/clinics/${encodeURIComponent(clinicId)}`,
         /** GET: Query `Page`, `PageSize`, `Search` (davet listesi). POST: davet oluşturur. */
         invites: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites`,
         /** GET: tek davet detayı. */

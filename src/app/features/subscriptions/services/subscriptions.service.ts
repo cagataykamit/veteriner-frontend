@@ -34,7 +34,7 @@ export class SubscriptionsService {
     getSubscriptionSummary(options?: SubscriptionSummaryRequestOptions): Observable<SubscriptionSummaryVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const params = options?.bustCache
             ? new HttpParams().set('_cb', `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`)
@@ -50,7 +50,7 @@ export class SubscriptionsService {
     startCheckout(targetPlanCode: string): Observable<SubscriptionCheckoutSessionVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const body: StartSubscriptionCheckoutRequestDto = { targetPlanCode };
         return this.api.post<SubscriptionCheckoutSessionDto>(ApiEndpoints.tenants.subscriptionCheckout(tenantId), body).pipe(
@@ -64,7 +64,7 @@ export class SubscriptionsService {
     getCheckout(checkoutSessionId: string): Observable<SubscriptionCheckoutSessionVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         return this.api
             .get<SubscriptionCheckoutSessionDto>(ApiEndpoints.tenants.subscriptionCheckoutById(tenantId, checkoutSessionId))
@@ -79,7 +79,7 @@ export class SubscriptionsService {
     finalizeCheckout(checkoutSessionId: string, externalReference?: string | null): Observable<SubscriptionCheckoutSessionVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const body: FinalizeSubscriptionCheckoutRequestDto = {
             externalReference: externalReference?.trim() ? externalReference.trim() : null
@@ -97,7 +97,7 @@ export class SubscriptionsService {
     scheduleDowngrade(targetPlanCode: string, reason?: string | null): Observable<SubscriptionSummaryVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const body: ScheduleSubscriptionDowngradeRequestDto = {
             targetPlanCode,
@@ -114,7 +114,7 @@ export class SubscriptionsService {
     getPendingPlanChange(options?: SubscriptionSummaryRequestOptions): Observable<PendingPlanChangeVm | null> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         const params = options?.bustCache
             ? new HttpParams().set('_cb', `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`)
@@ -132,7 +132,7 @@ export class SubscriptionsService {
     cancelPendingPlanChange(): Observable<SubscriptionSummaryVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {
-            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
         return this.api.delete<SubscriptionSummaryDto>(ApiEndpoints.tenants.pendingSubscriptionPlanChange(tenantId)).pipe(
             map(mapSubscriptionSummaryDtoToVm),
