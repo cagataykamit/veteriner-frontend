@@ -1,7 +1,16 @@
 import { HttpParams } from '@angular/common/http';
 import type { TenantInviteCreateRequestDto } from '@/app/features/tenant-invites/models/tenant-invite-api.model';
 import type { TenantInvitesListQuery } from '@/app/features/tenant-invites/models/tenant-invite-list-query.model';
-import type { OperationClaimOptionVm, TenantInviteCreatedVm, TenantInviteListItemVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
+import type {
+    OperationClaimOptionVm,
+    TenantInviteCreatedVm,
+    TenantInviteDetailVm,
+    TenantInviteListItemVm
+} from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
+import {
+    resolveInviteActions,
+    tenantInviteLifecycleFromRaw
+} from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
     return x !== null && typeof x === 'object';
@@ -15,6 +24,25 @@ function firstString(o: Record<string, unknown>, keys: string[]): string | null 
         }
         if (typeof v === 'number' && !Number.isNaN(v)) {
             return String(v);
+        }
+    }
+    return null;
+}
+
+function readTriBool(o: Record<string, unknown>, keys: string[]): boolean | null {
+    for (const k of keys) {
+        const v = o[k];
+        if (typeof v === 'boolean') {
+            return v;
+        }
+        if (typeof v === 'string') {
+            const t = v.trim().toLowerCase();
+            if (t === 'true' || t === '1') {
+                return true;
+            }
+            if (t === 'false' || t === '0') {
+                return false;
+            }
         }
     }
     return null;
@@ -148,9 +176,15 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
         return null;
     }
     const email = firstString(raw, ['email', 'Email']) ?? '—';
-    const statusLabel =
-        firstString(raw, ['status', 'Status', 'state', 'State', 'inviteStatus', 'InviteStatus']) ?? '—';
+    const statusRaw = firstString(raw, ['status', 'Status', 'state', 'State', 'inviteStatus', 'InviteStatus']);
+    const statusLabel = statusRaw?.trim() ? statusRaw : '—';
+    const lifecycle = tenantInviteLifecycleFromRaw(statusRaw);
     const expiresAtUtc = firstString(raw, ['expiresAtUtc', 'ExpiresAtUtc']);
+    const explicit = {
+        canCancel: readTriBool(raw, ['canCancel', 'CanCancel', 'isCancellable', 'IsCancellable']),
+        canResend: readTriBool(raw, ['canResend', 'CanResend', 'isResendable', 'IsResendable'])
+    };
+    const { canCancel, canResend } = resolveInviteActions(lifecycle, expiresAtUtc ?? null, explicit);
     const clinicName = firstString(raw, ['clinicName', 'ClinicName']);
     const clinicId = firstString(raw, ['clinicId', 'ClinicId']);
     const clinicSummary = clinicName?.trim() ? clinicName : clinicId ? `Klinik (${clinicId})` : '—';
@@ -168,9 +202,53 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
         id,
         email,
         statusLabel,
+        statusRaw: statusRaw ?? null,
         expiresAtUtc: expiresAtUtc ?? null,
         clinicSummary,
-        roleSummary
+        roleSummary,
+        canCancel,
+        canResend
+    };
+}
+
+export function mapTenantInviteDetailRaw(raw: unknown): TenantInviteDetailVm | null {
+    if (!isRecord(raw)) {
+        return null;
+    }
+    let o: Record<string, unknown> = raw;
+    for (const wrap of ['data', 'Data', 'value', 'Value', 'result', 'Result']) {
+        const inner = raw[wrap];
+        if (isRecord(inner)) {
+            o = inner;
+            break;
+        }
+    }
+    const row = mapTenantInviteListItemRaw(o);
+    if (!row) {
+        return null;
+    }
+    const createdAtUtc = firstString(o, ['createdAtUtc', 'CreatedAtUtc', 'createdAt', 'CreatedAt']);
+    const token = firstString(o, ['token', 'Token', 'inviteToken', 'InviteToken']);
+    const tenantId = firstString(o, ['tenantId', 'TenantId']);
+    const clinicId = firstString(o, ['clinicId', 'ClinicId']);
+    const clinicName = firstString(o, ['clinicName', 'ClinicName']);
+    const operationClaimId = firstString(o, ['operationClaimId', 'OperationClaimId']);
+    const operationClaimName = firstString(o, ['operationClaimName', 'OperationClaimName']);
+    return {
+        id: row.id,
+        email: row.email,
+        statusLabel: row.statusLabel,
+        statusRaw: row.statusRaw,
+        expiresAtUtc: row.expiresAtUtc,
+        createdAtUtc: createdAtUtc ?? null,
+        clinicId: clinicId ?? null,
+        clinicName: clinicName ?? null,
+        operationClaimId: operationClaimId ?? null,
+        operationClaimName: operationClaimName ?? null,
+        token: token ?? null,
+        tenantId: tenantId ?? null,
+        canCancel: row.canCancel,
+        canResend: row.canResend
     };
 }
 

@@ -10,6 +10,7 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { TenantInviteListItemVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/features/tenant-invites/services/tenant-invites.service';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -78,6 +79,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             </div>
                         </div>
                     </div>
+                    @if (actionError()) {
+                        <p class="text-red-500 text-sm m-0" role="alert">{{ actionError() }}</p>
+                    }
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                     } @else {
@@ -90,7 +94,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '52rem' }"
+                                [tableStyle]="{ 'min-width': '58rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -101,6 +105,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         <th>Son geçerlilik</th>
                                         <th>Klinik</th>
                                         <th>Rol</th>
+                                        <th style="min-width: 14rem">İşlemler</th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
@@ -110,6 +115,41 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         <td>{{ formatDate(row.expiresAtUtc) }}</td>
                                         <td class="break-words">{{ row.clinicSummary }}</td>
                                         <td class="break-words">{{ row.roleSummary }}</td>
+                                        <td>
+                                            <div class="flex flex-wrap gap-2 align-items-center">
+                                                <a
+                                                    [routerLink]="['/panel/settings/invites', row.id]"
+                                                    pButton
+                                                    type="button"
+                                                    class="p-button-text p-button-sm"
+                                                    label="Detay"
+                                                    icon="pi pi-eye"
+                                                ></a>
+                                                @if (row.canCancel && !ro.mutationBlocked()) {
+                                                    <p-button
+                                                        type="button"
+                                                        label="İptal"
+                                                        icon="pi pi-times"
+                                                        severity="danger"
+                                                        styleClass="p-button-sm p-button-text"
+                                                        [loading]="isRowBusy(row.id, 'cancel')"
+                                                        [disabled]="anyRowBusy() && !isRowBusy(row.id, 'cancel')"
+                                                        (onClick)="onCancelInvite(row.id)"
+                                                    />
+                                                }
+                                                @if (row.canResend && !ro.mutationBlocked()) {
+                                                    <p-button
+                                                        type="button"
+                                                        label="Yeniden gönder"
+                                                        icon="pi pi-send"
+                                                        styleClass="p-button-sm p-button-text"
+                                                        [loading]="isRowBusy(row.id, 'resend')"
+                                                        [disabled]="anyRowBusy() && !isRowBusy(row.id, 'resend')"
+                                                        (onClick)="onResendInvite(row.id)"
+                                                    />
+                                                }
+                                            </div>
+                                        </td>
                                     </tr>
                                 </ng-template>
                             </p-table>
@@ -129,6 +169,39 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         <div><span class="text-muted-color font-medium">Rol: </span>{{ row.roleSummary }}</div>
                                         @if (row.expiresAtUtc) {
                                             <div class="text-xs text-muted-color">Son geçerlilik: {{ formatDate(row.expiresAtUtc) }}</div>
+                                        }
+                                    </div>
+                                    <div class="flex flex-wrap gap-2 justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                                        <a
+                                            [routerLink]="['/panel/settings/invites', row.id]"
+                                            pButton
+                                            type="button"
+                                            class="p-button-text p-button-sm"
+                                            label="Detay"
+                                            icon="pi pi-eye"
+                                        ></a>
+                                        @if (row.canCancel && !ro.mutationBlocked()) {
+                                            <p-button
+                                                type="button"
+                                                label="İptal"
+                                                icon="pi pi-times"
+                                                severity="danger"
+                                                styleClass="p-button-sm p-button-text"
+                                                [loading]="isRowBusy(row.id, 'cancel')"
+                                                [disabled]="anyRowBusy() && !isRowBusy(row.id, 'cancel')"
+                                                (onClick)="onCancelInvite(row.id)"
+                                            />
+                                        }
+                                        @if (row.canResend && !ro.mutationBlocked()) {
+                                            <p-button
+                                                type="button"
+                                                label="Yeniden gönder"
+                                                icon="pi pi-send"
+                                                styleClass="p-button-sm p-button-text"
+                                                [loading]="isRowBusy(row.id, 'resend')"
+                                                [disabled]="anyRowBusy() && !isRowBusy(row.id, 'resend')"
+                                                (onClick)="onResendInvite(row.id)"
+                                            />
                                         }
                                     </div>
                                 </div>
@@ -156,9 +229,12 @@ export class TenantInviteListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly tenantInvites = inject(TenantInvitesService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
+    readonly actionError = signal<string | null>(null);
+    readonly actionBusy = signal<{ id: string; kind: 'cancel' | 'resend' } | null>(null);
 
     readonly rawItems = signal<TenantInviteListItemVm[]>([]);
     readonly totalItems = signal(0);
@@ -182,12 +258,14 @@ export class TenantInviteListPageComponent implements OnInit {
     }
 
     applySearch(): void {
+        this.actionError.set(null);
         this.activeSearch.set(this.searchInput.trim());
         this.first.set(0);
         this.loadFromServer(1, this.pageSize(), this.activeSearch());
     }
 
     resetFilters(): void {
+        this.actionError.set(null);
         this.searchInput = '';
         this.activeSearch.set('');
         this.first.set(0);
@@ -195,6 +273,56 @@ export class TenantInviteListPageComponent implements OnInit {
     }
 
     reload(): void {
+        this.actionError.set(null);
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), true);
+    }
+
+    isRowBusy(rowId: string, kind: 'cancel' | 'resend'): boolean {
+        const b = this.actionBusy();
+        return b?.id === rowId && b?.kind === kind;
+    }
+
+    anyRowBusy(): boolean {
+        return this.actionBusy() !== null;
+    }
+
+    onCancelInvite(id: string): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
+        this.actionError.set(null);
+        this.actionBusy.set({ id, kind: 'cancel' });
+        this.tenantInvites.cancelInvite(id).subscribe({
+            next: () => {
+                this.actionBusy.set(null);
+                this.reloadCurrent();
+            },
+            error: (e: Error) => {
+                this.actionBusy.set(null);
+                this.actionError.set(e.message ?? 'İptal başarısız.');
+            }
+        });
+    }
+
+    onResendInvite(id: string): void {
+        if (this.ro.mutationBlocked()) {
+            return;
+        }
+        this.actionError.set(null);
+        this.actionBusy.set({ id, kind: 'resend' });
+        this.tenantInvites.resendInvite(id).subscribe({
+            next: () => {
+                this.actionBusy.set(null);
+                this.reloadCurrent();
+            },
+            error: (e: Error) => {
+                this.actionBusy.set(null);
+                this.actionError.set(e.message ?? 'Yeniden gönderim başarısız.');
+            }
+        });
+    }
+
+    private reloadCurrent(): void {
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), true);
     }
 

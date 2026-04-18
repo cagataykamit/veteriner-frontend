@@ -22,10 +22,14 @@ export interface TenantInviteListItemDto {
     status?: string | null;
     state?: string | null;
     expiresAtUtc?: string | null;
+    createdAtUtc?: string | null;
     clinicId?: string | null;
     clinicName?: string | null;
     operationClaimId?: string | null;
     operationClaimName?: string | null;
+    /** Backend gönderirse öncelikli aksiyon bayrakları. */
+    canCancel?: boolean | null;
+    canResend?: boolean | null;
 }
 
 export interface TenantInviteListItemDtoPagedResult {

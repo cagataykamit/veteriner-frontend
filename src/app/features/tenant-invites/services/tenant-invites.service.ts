@@ -10,11 +10,17 @@ import {
     mapOperationClaimsListResponse,
     mapPagedTenantInvitesToVm,
     mapTenantInviteCreatedDto,
+    mapTenantInviteDetailRaw,
     tenantInvitesListQueryToHttpParams
 } from '@/app/features/tenant-invites/data/tenant-invite.mapper';
 import type { TenantInviteCreateRequestDto, TenantInviteListItemDtoPagedResult } from '@/app/features/tenant-invites/models/tenant-invite-api.model';
 import type { TenantInvitesListQuery } from '@/app/features/tenant-invites/models/tenant-invite-list-query.model';
-import type { OperationClaimOptionVm, TenantInviteCreatedVm, TenantInviteListItemVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
+import type {
+    OperationClaimOptionVm,
+    TenantInviteCreatedVm,
+    TenantInviteDetailVm,
+    TenantInviteListItemVm
+} from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface TenantInvitesPagedVm {
@@ -57,6 +63,72 @@ export class TenantInvitesService {
             map((raw) => mapPagedTenantInvitesToVm(raw)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Davet listesi yüklenemedi.')))
+            )
+        );
+    }
+
+    /**
+     * `GET /api/v1/tenants/{tenantId}/invites/{inviteId}`
+     */
+    getInviteById(inviteId: string): Observable<TenantInviteDetailVm> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        const id = inviteId.trim();
+        if (!id) {
+            return throwError(() => new Error('Geçersiz davet kimliği.'));
+        }
+        return this.api.get<unknown>(ApiEndpoints.tenants.inviteById(tenantId, id)).pipe(
+            map((raw) => {
+                const vm = mapTenantInviteDetailRaw(raw);
+                if (!vm) {
+                    throw new Error('Davet yanıtı okunamadı.');
+                }
+                return vm;
+            }),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Davet yüklenemedi.')))
+            )
+        );
+    }
+
+    /**
+     * `POST .../invites/{inviteId}/cancel`
+     */
+    cancelInvite(inviteId: string): Observable<void> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        const id = inviteId.trim();
+        if (!id) {
+            return throwError(() => new Error('Geçersiz davet kimliği.'));
+        }
+        return this.api.post<unknown>(ApiEndpoints.tenants.inviteCancel(tenantId, id), {}).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Davet iptal edilemedi.')))
+            )
+        );
+    }
+
+    /**
+     * `POST .../invites/{inviteId}/resend`
+     */
+    resendInvite(inviteId: string): Observable<void> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kiracı bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        const id = inviteId.trim();
+        if (!id) {
+            return throwError(() => new Error('Geçersiz davet kimliği.'));
+        }
+        return this.api.post<unknown>(ApiEndpoints.tenants.inviteResend(tenantId, id), {}).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Davet yeniden gönderilemedi.')))
             )
         );
     }

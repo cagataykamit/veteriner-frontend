@@ -100,8 +100,26 @@ export const ApiEndpoints = {
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-plan-change/pending`,
         /** Query: `Page`, `PageSize`, `Search` — kiracı kullanıcı üyeleri (salt liste). */
         members: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/members`,
+        /** GET: tek kiracı üyesi detayı (rol/claim ve klinik üyelikleri backend gönderirse). */
+        memberById: (tenantId: string, memberId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}`,
+        /** POST: gövde genelde `{}`; `operationClaimId` yol parametresinde — üyeye whitelist rol atanır. */
+        memberAssignClaim: (tenantId: string, memberId: string, operationClaimId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}/roles/${encodeURIComponent(operationClaimId)}`,
+        /** DELETE: üyeden ilgili `operationClaimId` rolünü kaldırır. */
+        memberRemoveClaim: (tenantId: string, memberId: string, operationClaimId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}/roles/${encodeURIComponent(operationClaimId)}`,
         /** GET: Query `Page`, `PageSize`, `Search` (davet listesi). POST: davet oluşturur. */
         invites: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites`,
+        /** GET: tek davet detayı. */
+        inviteById: (tenantId: string, inviteId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites/${encodeURIComponent(inviteId)}`,
+        /** POST: gövde genelde boş; bekleyen daveti iptal eder. */
+        inviteCancel: (tenantId: string, inviteId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites/${encodeURIComponent(inviteId)}/cancel`,
+        /** POST: davet e-postasını yeniden gönderir. */
+        inviteResend: (tenantId: string, inviteId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites/${encodeURIComponent(inviteId)}/resend`,
         /** Davet formu: atanabilir operation claim listesi (`operationClaimId`, `operationClaimName`). */
         assignableOperationClaims: (tenantId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-operation-claims`

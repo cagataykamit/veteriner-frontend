@@ -15,3 +15,22 @@ export interface TenantMemberListItemDtoPagedResult {
     totalItems: number;
     totalPages: number;
 }
+
+/**
+ * GET tek üye — şema backend ile hizalanır; ek koleksiyonlar mapper’da okunur.
+ * Bu arayüz yalnızca tip rehberi; gerçek yanıt `unknown` üzerinden map edilir.
+ *
+ * Örnek: `roles[]` (`operationClaimId`, `operationClaimName`), `clinics[]` (`clinicId`, `name`, `isActive`).
+ */
+export interface TenantMemberDetailDto {
+    id?: string | null;
+    userId?: string | null;
+    email?: string | null;
+    emailConfirmed?: boolean | null;
+    tenantMembershipCreatedAtUtc?: string | null;
+    createdAtUtc?: string | null;
+    roles?: unknown[] | null;
+    clinics?: unknown[] | null;
+}
+
+/** Rol atama: `POST .../members/{memberId}/roles/{operationClaimId}` — gövde `{}` (kimlik URL’de). */

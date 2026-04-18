@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
@@ -22,6 +23,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     imports: [
         CommonModule,
         FormsModule,
+        RouterLink,
         TableModule,
         Paginator,
         ButtonModule,
@@ -90,7 +92,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '42rem' }"
+                                [tableStyle]="{ 'min-width': '48rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -99,6 +101,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         <th>E-posta</th>
                                         <th>E-posta onayı</th>
                                         <th>Oluşturulma</th>
+                                        <th style="width: 8rem">İşlemler</th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
@@ -106,6 +109,16 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         <td class="font-medium break-all">{{ row.email }}</td>
                                         <td>{{ formatConfirmed(row.emailConfirmed) }}</td>
                                         <td>{{ formatDate(row.createdAtUtc) }}</td>
+                                        <td>
+                                            <a
+                                                [routerLink]="['/panel/settings/members', row.id]"
+                                                pButton
+                                                type="button"
+                                                class="p-button-text p-button-sm"
+                                                label="Detay"
+                                                icon="pi pi-eye"
+                                            ></a>
+                                        </td>
                                     </tr>
                                 </ng-template>
                             </p-table>
@@ -127,6 +140,16 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         @if (row.createdAtUtc) {
                                             <div class="text-xs text-muted-color">Oluşturulma: {{ formatDate(row.createdAtUtc) }}</div>
                                         }
+                                    </div>
+                                    <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                                        <a
+                                            [routerLink]="['/panel/settings/members', row.id]"
+                                            pButton
+                                            type="button"
+                                            class="p-button-text p-button-sm"
+                                            label="Detay →"
+                                            icon="pi pi-eye"
+                                        ></a>
                                     </div>
                                 </div>
                             }
