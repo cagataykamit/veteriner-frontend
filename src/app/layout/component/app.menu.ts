@@ -47,6 +47,7 @@ export class AppMenu {
             {
                 label: 'Hesap',
                 items: [
+                    { label: 'Kurum Bilgileri', icon: 'pi pi-fw pi-id-card', routerLink: ['/panel/settings/organization'] },
                     { label: 'Abonelik', icon: 'pi pi-fw pi-wallet', routerLink: ['/panel/settings/subscription'] },
                     { label: 'Klinikler', icon: 'pi pi-fw pi-building', routerLink: ['/panel/settings/clinics'] },
                     { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', routerLink: ['/panel/settings/members'] },

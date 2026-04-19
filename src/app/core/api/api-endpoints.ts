@@ -95,6 +95,8 @@ export const ApiEndpoints = {
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
     },
     tenants: {
+        /** PUT: kiracı paneli — kurum adı vb. (Faz 5B); gövde backend sözleşmesine uyar. */
+        settings: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/settings`,
         subscriptionSummary: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-summary`,
         subscriptionCheckout: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout`,
         subscriptionCheckoutById: (tenantId: string, checkoutSessionId: string) =>

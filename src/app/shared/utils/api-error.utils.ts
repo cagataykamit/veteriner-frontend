@@ -80,6 +80,26 @@ function readProblemCodeFromHttp(err: HttpErrorResponse): string | null {
     return code ?? null;
 }
 
+/** Kiracı ayarları / kurum adı güncelleme vb. — `ProblemDetails` + `extensions.code`. */
+const TENANT_ORGANIZATION_PROBLEM_MESSAGES: Record<string, string> = {
+    'Tenants.AccessDenied': 'Bu kuruma erişim yetkiniz bulunmuyor.',
+    TenantsAccessDenied: 'Bu kuruma erişim yetkiniz bulunmuyor.',
+    'Tenants.NotFound': 'Kurum kaydı bulunamadı veya artık erişilemiyor.',
+    TenantsNotFound: 'Kurum kaydı bulunamadı veya artık erişilemiyor.',
+    'Tenants.DuplicateName': 'Bu kurum adı zaten kullanılıyor. Lütfen farklı bir ad deneyin.',
+    TenantsDuplicateName: 'Bu kurum adı zaten kullanılıyor. Lütfen farklı bir ad deneyin.',
+    'Auth.PermissionDenied': 'Bu işlem için yetkiniz yok.',
+    AuthPermissionDenied: 'Bu işlem için yetkiniz yok.'
+};
+
+function tenantOrganizationProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    if (!code) {
+        return null;
+    }
+    return TENANT_ORGANIZATION_PROBLEM_MESSAGES[code] ?? TENANT_ORGANIZATION_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
+}
+
 function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
     if (!code) {
@@ -93,6 +113,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const subscriptionMsg = subscriptionWriteUserMessage(err);
     if (subscriptionMsg) {
         return subscriptionMsg;
+    }
+    const tenantOrgMsg = tenantOrganizationProblemUserMessage(err);
+    if (tenantOrgMsg) {
+        return tenantOrgMsg;
     }
 
     const body = err.error as ProblemDetails | string | null | undefined;
