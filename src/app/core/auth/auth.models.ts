@@ -43,6 +43,8 @@ export interface SessionTokens {
 export interface ClinicSummary {
     id: string;
     name: string;
+    /** `/me/clinics` yanıtında varsa; pasifler seçim listelerinde gösterilmez. */
+    isActive?: boolean | null;
 }
 
 export interface SelectClinicRequest {

@@ -11,6 +11,7 @@ export default [
     { path: 'vaccinations', loadChildren: () => import('../vaccinations/routes/vaccinations.routes') },
     { path: 'payments', loadChildren: () => import('../payments/routes/payments.routes') },
     { path: 'settings/subscription', loadChildren: () => import('../subscriptions/routes/subscriptions.routes') },
+    { path: 'settings/clinics', loadChildren: () => import('../clinics/routes/clinics.routes') },
     { path: 'settings/members', loadChildren: () => import('../tenant-members/routes/tenant-members.routes') },
     { path: 'settings/invites', loadChildren: () => import('../tenant-invites/routes/tenant-invites.routes') },
     { path: 'treatments', loadChildren: () => import('../treatments/routes/treatments.routes') },

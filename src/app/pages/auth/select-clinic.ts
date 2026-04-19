@@ -90,10 +90,16 @@ export class SelectClinicPage implements OnInit {
             return;
         }
         const selected = this.clinics().find((x) => x.id === clinicId) ?? null;
+        if (!selected) {
+            this.error.set(
+                'Seçilen klinik artık listede yok veya pasif. Lütfen sayfayı yenileyin veya listeden tekrar seçin.'
+            );
+            return;
+        }
         this.submitting.set(true);
         this.error.set(null);
         this.auth
-            .selectClinic(clinicId, selected?.name ?? null)
+            .selectClinic(clinicId, selected.name)
             .pipe(finalize(() => this.submitting.set(false)))
             .subscribe({
                 next: () => {
@@ -134,9 +140,10 @@ export class SelectClinicPage implements OnInit {
     }
 
     private applyClinicsList(items: ClinicSummary[]): void {
-        this.clinics.set(items);
+        const selectable = filterClinicsForSelection(items);
+        this.clinics.set(selectable);
         this.loading.set(false);
-        const decision = this.auth.resolveClinicDecision(items);
+        const decision = this.auth.resolveClinicDecision(selectable);
         if (decision.kind === 'none') {
             this.error.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
             return;
@@ -146,7 +153,7 @@ export class SelectClinicPage implements OnInit {
             this.onContinue();
             return;
         }
-        this.selectedClinicId = items[0]?.id ?? null;
+        this.selectedClinicId = selectable[0]?.id ?? null;
     }
 
     private safeReturnUrl(): string {
@@ -182,8 +189,37 @@ function clinicsFromNavigationState(nav: Navigation | null): ClinicSummary[] | n
         if (typeof id !== 'string' || typeof name !== 'string' || !id.trim() || !name.trim()) {
             return null;
         }
-        out.push({ id: id.trim(), name: name.trim() });
+        const row: ClinicSummary = { id: id.trim(), name: name.trim() };
+        const active = readClinicIsActiveFromState(o);
+        if (active !== null) {
+            row.isActive = active;
+        }
+        out.push(row);
     }
-    return out;
+    return filterClinicsForSelection(out);
+}
+
+function readClinicIsActiveFromState(o: Record<string, unknown>): boolean | null {
+    for (const k of ['isActive', 'IsActive', 'active', 'Active']) {
+        const v = o[k];
+        if (typeof v === 'boolean') {
+            return v;
+        }
+        if (typeof v === 'string') {
+            const t = v.trim().toLowerCase();
+            if (t === 'true' || t === '1') {
+                return true;
+            }
+            if (t === 'false' || t === '0') {
+                return false;
+            }
+        }
+    }
+    return null;
+}
+
+/** Yanıtta `isActive` yoksa tüm kayıtlar kalır; `false` olanlar seçimde gösterilmez. */
+function filterClinicsForSelection(list: ClinicSummary[]): ClinicSummary[] {
+    return list.filter((c) => c.isActive !== false);
 }
 

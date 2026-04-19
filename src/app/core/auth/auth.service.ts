@@ -289,7 +289,8 @@ export class AuthService {
         const list = this.extractClinicArray(raw);
         return list
             .map((x) => this.normalizeClinic(x))
-            .filter((x): x is ClinicSummary => !!x);
+            .filter((x): x is ClinicSummary => !!x)
+            .filter((c) => c.isActive !== false);
     }
 
     private extractClinicArray(raw: unknown): unknown[] {
@@ -330,7 +331,32 @@ export class AuthService {
         if (!id || !name) {
             return null;
         }
-        return { id: id.trim(), name: name.trim() };
+        const isActive = this.readClinicIsActiveTri(o);
+        const base: ClinicSummary = { id: id.trim(), name: name.trim() };
+        if (isActive !== null) {
+            base.isActive = isActive;
+        }
+        return base;
+    }
+
+    /** `isActive` / `IsActive` / `active` — yoksa `null` (seçim filtresi uygulanmaz). */
+    private readClinicIsActiveTri(o: Record<string, unknown>): boolean | null {
+        for (const k of ['isActive', 'IsActive', 'active', 'Active']) {
+            const v = o[k];
+            if (typeof v === 'boolean') {
+                return v;
+            }
+            if (typeof v === 'string') {
+                const t = v.trim().toLowerCase();
+                if (t === 'true' || t === '1') {
+                    return true;
+                }
+                if (t === 'false' || t === '0') {
+                    return false;
+                }
+            }
+        }
+        return null;
     }
 
     private syncClinicFromTokenClaims(): void {

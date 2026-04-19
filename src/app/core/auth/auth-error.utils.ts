@@ -21,7 +21,10 @@ const AUTH_PROBLEM_CODE_MESSAGES: Record<string, string> = {
     'Auth.UserClinicNotAssigned': 'Bu kliniğe erişim yetkiniz bulunmuyor.',
     'Auth.UserMultipleTenantsForbidden':
         'Bu kullanıcı kaydında kurum üyeliği tutarsız. Lütfen yöneticinizle iletişime geçin.',
-    'Auth.ClinicNotFound': 'Seçilen klinik bulunamadı.',
+    'Auth.ClinicNotFound':
+        'Seçilen klinik bu işlem için kullanılamıyor. Lütfen listeden tekrar seçin veya sayfayı yenileyin.',
+    'Clinics.Inactive': 'Seçilen klinik artık aktif değil. Lütfen başka bir klinik seçin.',
+    ClinicsInactive: 'Seçilen klinik artık aktif değil. Lütfen başka bir klinik seçin.',
     'Auth.ClinicSelectionRequired': 'Birden fazla aktif klinik var. Devam etmek için klinik seçimi gerekli.',
     'Auth.TenantMismatch': 'Kurum bağlamı uyuşmuyor. Lütfen tekrar giriş yapın.',
     'Auth.TenantMembershipRequired': 'Bu işlem için kurum üyeliği gerekli.',
@@ -40,6 +43,10 @@ function messageForAuthProblemCode(code: string, context: 'login' | 'general'): 
     const exact = AUTH_PROBLEM_CODE_MESSAGES[trimmed];
     if (exact) {
         return exact;
+    }
+    const fuzzy = AUTH_PROBLEM_CODE_MESSAGES[trimmed.replace(/\./g, '')];
+    if (fuzzy) {
+        return fuzzy;
     }
     if (trimmed.startsWith('Auth.Unauthorized.')) {
         return context === 'login' ? LOGIN_INVALID_CREDENTIALS_MESSAGE : 'Yetkisiz işlem. Lütfen tekrar giriş yapın.';

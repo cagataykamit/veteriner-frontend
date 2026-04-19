@@ -14,9 +14,12 @@ export const ApiEndpoints = {
     me: {
         clinics: () => `/api/v1/me/clinics`
     },
-    /** Kiracı/panel bağlamında klinik katalog (JWT tenant); kişisel üyelik listesi için `me.clinics`. */
+    /** Panel JWT kiracı bağlamında klinik rehberi; `me.clinics` kişisel üyelik listesidir. */
     clinics: {
-        list: () => `/api/v1/clinics`
+        list: () => `/api/v1/clinics`,
+        byId: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}`,
+        activate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/activate`,
+        deactivate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/deactivate`
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
