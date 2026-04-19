@@ -19,3 +19,9 @@ export interface ClinicUpdateRequestDto {
     name: string;
     city: string;
 }
+
+/** `POST /api/v1/clinics` gövdesi. */
+export interface ClinicCreateRequestDto {
+    name: string;
+    city: string;
+}

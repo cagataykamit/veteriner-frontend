@@ -106,3 +106,25 @@ export function mapClinicDetailRaw(raw: unknown): ClinicDetailVm | null {
 export function clinicUpsertToUpdateDto(name: string, city: string): { name: string; city: string } {
     return { name: name.trim(), city: city.trim() };
 }
+
+/**
+ * POST create yanıtından klinik kimliği — düz GUID, `ClinicDetailDto` veya sarmalayıcı.
+ * Gövde boş / ID yoksa `null` (çağıran liste + toast ile devam eder).
+ */
+export function extractCreatedClinicIdFromPostResponse(raw: unknown): string | null {
+    if (raw === null || raw === undefined) {
+        return null;
+    }
+    if (typeof raw === 'string') {
+        const t = raw.trim();
+        return /^[0-9a-f-]{36}$/i.test(t) ? t : null;
+    }
+    const vm = mapClinicDetailRaw(raw);
+    if (vm?.id) {
+        return vm.id;
+    }
+    if (!isRecord(raw)) {
+        return null;
+    }
+    return firstString(raw, ['id', 'Id', 'clinicId', 'ClinicId']);
+}

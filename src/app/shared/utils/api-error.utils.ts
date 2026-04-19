@@ -100,6 +100,26 @@ function tenantOrganizationProblemUserMessage(err: HttpErrorResponse): string | 
     return TENANT_ORGANIZATION_PROBLEM_MESSAGES[code] ?? TENANT_ORGANIZATION_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
+/** Klinik oluşturma / panel klinik yazma — `ProblemDetails` + `extensions.code`. */
+const CLINIC_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Clinics.DuplicateName': 'Bu isimde bir klinik zaten kayıtlı. Lütfen farklı bir klinik adı kullanın.',
+    ClinicsDuplicateName: 'Bu isimde bir klinik zaten kayıtlı. Lütfen farklı bir klinik adı kullanın.',
+    'Tenants.ContextMissing':
+        'Kurum bağlamı bulunamadı. Sayfayı yenileyip tekrar deneyin veya oturumu kapatıp yeniden giriş yapın.',
+    TenantsContextMissing:
+        'Kurum bağlamı bulunamadı. Sayfayı yenileyip tekrar deneyin veya oturumu kapatıp yeniden giriş yapın.',
+    'Tenants.TenantInactive': 'Bu kurum şu anda aktif değil; klinik eklenemiyor.',
+    TenantsTenantInactive: 'Bu kurum şu anda aktif değil; klinik eklenemiyor.'
+};
+
+function clinicPanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    if (!code) {
+        return null;
+    }
+    return CLINIC_PANEL_PROBLEM_MESSAGES[code] ?? CLINIC_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
+}
+
 function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
     if (!code) {
@@ -117,6 +137,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const tenantOrgMsg = tenantOrganizationProblemUserMessage(err);
     if (tenantOrgMsg) {
         return tenantOrgMsg;
+    }
+    const clinicPanelMsg = clinicPanelProblemUserMessage(err);
+    if (clinicPanelMsg) {
+        return clinicPanelMsg;
     }
 
     const body = err.error as ProblemDetails | string | null | undefined;

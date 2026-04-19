@@ -5,11 +5,12 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    clinicUpsertToUpdateDto,
+    extractCreatedClinicIdFromPostResponse,
     mapClinicDetailRaw,
-    mapClinicsListRaw,
-    clinicUpsertToUpdateDto
+    mapClinicsListRaw
 } from '@/app/features/clinics/data/clinic.mapper';
-import type { ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/features/clinics/models/clinic-api.model';
+import type { ClinicCreateRequestDto, ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/features/clinics/models/clinic-api.model';
 import type { ClinicDetailVm, ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
@@ -77,6 +78,20 @@ export class ClinicsService {
      */
     updateClinicFromForm(clinicId: string, name: string, city: string): Observable<ClinicDetailVm> {
         return this.updateClinic(clinicId, clinicUpsertToUpdateDto(name, city));
+    }
+
+    /**
+     * `POST /api/v1/clinics` — yanıtta ID yoksa `createdId` null olur; çağıran listeye yönlendirir.
+     */
+    createClinic(name: string, city: string): Observable<{ createdId: string | null }> {
+        if (!this.auth.getAccessToken()?.trim()) {
+            return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
+        }
+        const body: ClinicCreateRequestDto = clinicUpsertToUpdateDto(name, city);
+        return this.api.post<unknown>(ApiEndpoints.clinics.list(), body).pipe(
+            map((raw) => ({ createdId: extractCreatedClinicIdFromPostResponse(raw) })),
+            catchError((err: HttpErrorResponse) => throwError(() => err))
+        );
     }
 
     /** `POST .../deactivate` — gövde boş. */

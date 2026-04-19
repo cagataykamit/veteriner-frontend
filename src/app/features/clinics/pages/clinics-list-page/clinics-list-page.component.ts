@@ -29,7 +29,17 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             title="Klinikler"
             subtitle="Hesap"
             description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları."
-        />
+        >
+            <a
+                actions
+                routerLink="/panel/settings/clinics/new"
+                pButton
+                type="button"
+                label="Yeni Klinik"
+                icon="pi pi-plus"
+                class="p-button-primary"
+            ></a>
+        </app-page-header>
 
         <div class="card">
             @if (loading()) {
