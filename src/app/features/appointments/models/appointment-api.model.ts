@@ -7,6 +7,9 @@
 export interface AppointmentListItemDto {
     id: string;
     tenantId?: string;
+    /** Rapor / liste; backend gönderirse gösterilir. */
+    clinicId?: string | null;
+    clinicName?: string | null;
     scheduledAtUtc?: string | null;
     clientId?: string | null;
     /** Batch listelerde müşteri kimliği bu alias ile gelebilir. */
@@ -25,6 +28,8 @@ export interface AppointmentListItemDto {
     lifecycleStatus?: string | number | null;
     lifecycle?: string | number | null;
     createdAtUtc?: string | null;
+    /** Rapor veya detay benzeri yanıtlarda gelebilir. */
+    notes?: string | null;
 }
 
 export interface AppointmentListItemDtoPagedResult {

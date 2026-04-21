@@ -40,5 +40,18 @@ export const PANEL_COPY = {
     paymentsReportColNotes: 'Not',
     paymentsReportSearchPlaceholder: 'Müşteri, hayvan, not veya para birimi ile ara…',
     paymentsReportEmptyMessage: 'Bu filtrelerde tahsilat hareketi bulunamadı.',
-    paymentsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.'
+    paymentsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.',
+    /** Raporlar — Faz 6C.2 */
+    appointmentsReportTitle: 'Randevu Raporu',
+    appointmentsReportDescription: 'Filtreli randevu listesini görüntüleyin; okunur alanlarla CSV/Excel olarak dışa aktarın.',
+    appointmentsReportDefaultPeriodHint:
+        'Tarih seçmezseniz ayın başından bugüne kadar olan randevular gösterilir; klinik filtresi boşsa panelde seçili klinik kullanılır.',
+    appointmentsReportTotalRecords: 'Toplam kayıt',
+    appointmentsReportExportCsv: 'CSV Dışa Aktar',
+    appointmentsReportExportXlsx: 'Excel Dışa Aktar',
+    appointmentsReportColScheduledAt: 'Randevu zamanı',
+    appointmentsReportColStatus: 'Durum',
+    appointmentsReportSearchPlaceholder: 'Not; müşteri, hayvan, tür veya ırk metni…',
+    appointmentsReportEmptyMessage: 'Bu filtrelerde randevu bulunamadı.',
+    appointmentsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.'
 } as const;

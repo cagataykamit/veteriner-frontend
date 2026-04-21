@@ -77,7 +77,11 @@ export const ApiEndpoints = {
         /** Faz 6C.1 — Payments reporting contract (`from`, `to`, `clinicId`, `method`, `clientId`, `petId`, `search`, `page`, `pageSize`). */
         payments: () => `/api/v1/reports/payments`,
         paymentsExport: () => `/api/v1/reports/payments/export`,
-        paymentsExportXlsx: () => `/api/v1/reports/payments/export-xlsx`
+        paymentsExportXlsx: () => `/api/v1/reports/payments/export-xlsx`,
+        /** Faz 6C.2 — Appointments reporting (`from`, `to`, `clinicId`, `status`, `clientId`, `petId`, `search`, `page`, `pageSize`). */
+        appointments: () => `/api/v1/reports/appointments`,
+        appointmentsExport: () => `/api/v1/reports/appointments/export`,
+        appointmentsExportXlsx: () => `/api/v1/reports/appointments/export-xlsx`
     },
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */

@@ -51,6 +51,11 @@ export class AppMenu {
                         label: 'Ödeme Raporu',
                         icon: 'pi pi-fw pi-file-export',
                         routerLink: ['/panel/reports/payments']
+                    },
+                    {
+                        label: 'Randevu Raporu',
+                        icon: 'pi pi-fw pi-calendar-plus',
+                        routerLink: ['/panel/reports/appointments']
                     }
                 ]
             },
