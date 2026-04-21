@@ -61,6 +61,11 @@ export class AppMenu {
                         label: 'Muayene Raporu',
                         icon: 'pi pi-fw pi-file-edit',
                         routerLink: ['/panel/reports/examinations']
+                    },
+                    {
+                        label: 'Aşı Raporu',
+                        icon: 'pi pi-fw pi-shield',
+                        routerLink: ['/panel/reports/vaccinations']
                     }
                 ]
             },

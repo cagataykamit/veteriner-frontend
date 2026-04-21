@@ -70,5 +70,21 @@ export const PANEL_COPY = {
     examinationsReportNoAppointment: 'Bağlı değil',
     examinationsReportSearchPlaceholder: 'Sebep, bulgu, değerlendirme, not; müşteri, hayvan, tür veya ırk metni…',
     examinationsReportEmptyMessage: 'Bu filtrelerde muayene bulunamadı.',
-    examinationsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.'
+    examinationsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.',
+    /** Raporlar — Faz 6C.4 */
+    vaccinationsReportTitle: 'Aşı Raporu',
+    vaccinationsReportDescription: 'Filtreli aşı listesini görüntüleyin; CSV veya Excel ile dışa aktarın.',
+    vaccinationsReportDefaultPeriodHint:
+        'Tarih seçmezseniz ayın başından bugüne kadar olan aşı kayıtları gösterilir; klinik filtresi boşsa panelde seçili klinik kullanılır.',
+    vaccinationsReportTotalRecords: 'Toplam kayıt',
+    vaccinationsReportExportCsv: 'CSV Dışa Aktar',
+    vaccinationsReportExportXlsx: 'Excel Dışa Aktar',
+    vaccinationsReportColVaccinationDate: 'Aşı tarihi',
+    vaccinationsReportColVaccineName: 'Aşı adı',
+    vaccinationsReportColStatus: 'Durum',
+    vaccinationsReportColAppliedAt: 'Uygulama tarihi',
+    vaccinationsReportColNextDue: 'Sonraki tarih',
+    vaccinationsReportSearchPlaceholder: 'Aşı adı, not; müşteri, hayvan, tür veya ırk metni…',
+    vaccinationsReportEmptyMessage: 'Bu filtrelerde aşı kaydı bulunamadı.',
+    vaccinationsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.'
 } as const;

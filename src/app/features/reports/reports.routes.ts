@@ -22,5 +22,12 @@ export default [
             import('@/app/features/reports/examinations/pages/examinations-report-page/examinations-report-page.component').then(
                 (m) => m.ExaminationsReportPageComponent
             )
+    },
+    {
+        path: 'vaccinations',
+        loadComponent: () =>
+            import('@/app/features/reports/vaccinations/pages/vaccinations-report-page/vaccinations-report-page.component').then(
+                (m) => m.VaccinationsReportPageComponent
+            )
     }
 ] as Routes;
