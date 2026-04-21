@@ -14,7 +14,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatDateTimeDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
@@ -107,7 +107,7 @@ import { EMPTY, switchMap } from 'rxjs';
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Kanal</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ methodLabel(payment()!.method) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Ödeme zamanı</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(payment()!.paidAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatPaidAtUtc(payment()!.paidAtUtc) }}</dd>
                             @if (payment()!.appointmentId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
@@ -225,7 +225,7 @@ export class PaymentDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
     readonly typeDisplay = appointmentTypeDisplayLabel;
@@ -238,7 +238,7 @@ export class PaymentDetailPageComponent implements OnInit {
         const parts: string[] = [this.moneyLine(p), this.methodLabel(p.method)];
         const paid = p.paidAtUtc?.trim();
         if (paid) {
-            parts.push('Ödeme: ' + this.formatDateTime(paid));
+            parts.push('Ödeme: ' + this.formatPaidAtUtc(paid));
         }
         return parts.join(' · ');
     }

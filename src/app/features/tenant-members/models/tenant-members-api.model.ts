@@ -1,6 +1,7 @@
 /** Kiracı üyesi liste satırı — backend şemasıyla hizalı; ek anahtarlar mapper’da okunur. */
 export interface TenantMemberListItemDto {
     id: string;
+    name?: string | null;
     email?: string | null;
     emailConfirmed?: boolean | null;
     /** Alternatif anahtarlar için mapper fallback. */
@@ -25,6 +26,7 @@ export interface TenantMemberListItemDtoPagedResult {
 export interface TenantMemberDetailDto {
     id?: string | null;
     userId?: string | null;
+    name?: string | null;
     email?: string | null;
     emailConfirmed?: boolean | null;
     tenantMembershipCreatedAtUtc?: string | null;

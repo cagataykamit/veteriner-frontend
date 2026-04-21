@@ -79,6 +79,19 @@ function mapMemberItemDto(raw: unknown): TenantMemberListItemVm | null {
     if (!id) {
         return null;
     }
+    const name =
+        firstString(raw, [
+            'name',
+            'Name',
+            'fullName',
+            'FullName',
+            'displayName',
+            'DisplayName',
+            'userName',
+            'UserName',
+            'firstName',
+            'FirstName'
+        ]) ?? null;
     const email = firstString(raw, ['email', 'Email']);
     let emailConfirmed: boolean | null = null;
     const ec = raw['emailConfirmed'] ?? raw['EmailConfirmed'] ?? raw['isEmailConfirmed'] ?? raw['IsEmailConfirmed'];
@@ -95,6 +108,7 @@ function mapMemberItemDto(raw: unknown): TenantMemberListItemVm | null {
     const createdAtUtc = firstString(raw, ['createdAtUtc', 'CreatedAtUtc', 'createdAt', 'CreatedAt']);
     return {
         id,
+        name,
         email: email ?? '—',
         emailConfirmed,
         createdAtUtc: createdAtUtc ?? null
@@ -281,6 +295,17 @@ export function mapTenantMemberDetailRaw(raw: unknown): TenantMemberDetailVm | n
         return null;
     }
 
+    if (!base.name?.trim()) {
+        const user = root['user'] ?? root['User'];
+        if (isRecord(user)) {
+            const fromUser = mapMemberItemDto(user);
+            const picked = fromUser?.name?.trim() ?? null;
+            if (picked) {
+                base = { ...base, name: picked };
+            }
+        }
+    }
+
     const layers = detailRecordLayers(root);
 
     let membershipAt = firstString(root, [
@@ -313,6 +338,7 @@ export function mapTenantMemberDetailRaw(raw: unknown): TenantMemberDetailVm | n
 
     return {
         id: base.id,
+        name: base.name,
         email: base.email,
         emailConfirmed: base.emailConfirmed,
         tenantMembershipCreatedAtUtc: membershipAt ?? null,

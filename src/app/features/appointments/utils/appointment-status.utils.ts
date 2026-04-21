@@ -108,3 +108,15 @@ export function appointmentStatusSeverity(status: number | string | null | undef
     }
     return 'secondary';
 }
+
+/** Ürün kuralı: Cancelled (2) randevudan muayene create başlatılamaz. */
+export function isAppointmentCancelledStatus(status: number | string | null | undefined): boolean {
+    if (status === null || status === undefined) {
+        return false;
+    }
+    if (typeof status === 'number') {
+        return status === 2;
+    }
+    const n = parseAppointmentStatusRawToEnum(status);
+    return n === 2;
+}

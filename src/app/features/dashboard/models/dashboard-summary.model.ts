@@ -32,6 +32,8 @@ export interface DashboardRecentPetDto {
 }
 
 export interface DashboardSummaryDto {
+    /** Faz 6B — son 7 gün günlük randevu sayıları (dizi veya günlük nesneler; mapper toleranslı). */
+    last7DaysAppointments?: unknown | null;
     todayAppointmentsCount?: number | null;
     upcomingAppointmentsCount?: number | null;
     completedTodayCount?: number | null;

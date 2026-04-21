@@ -1,4 +1,5 @@
 import type { DashboardSummaryDto } from '@/app/features/dashboard/models/dashboard-summary.model';
+import type { DashboardTrendDayVm } from '@/app/features/dashboard/models/dashboard-trend.model';
 import type { DashboardFinanceSummaryVm } from '@/app/features/dashboard/models/dashboard-finance.model';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -16,6 +17,8 @@ export interface DashboardSummaryNormalized extends DashboardSummaryDto {
     upcomingAppointments: NonNullable<DashboardSummaryDto['upcomingAppointments']>;
     recentClients: NonNullable<DashboardSummaryDto['recentClients']>;
     recentPets: NonNullable<DashboardSummaryDto['recentPets']>;
+    /** Son 7 gün günlük randevu sayısı (mapper; backend alanı toleranslı). */
+    last7DaysAppointmentsTrend: readonly DashboardTrendDayVm[];
 }
 
 /** Dashboard sayfası — tek snapshot (forkJoin sonucu). */

@@ -4,6 +4,7 @@ import type {
     DashboardFinanceSummaryDto,
     DashboardFinanceSummaryVm
 } from '@/app/features/dashboard/models/dashboard-finance.model';
+import { buildSevenDayTrendPoints, parseLastSevenDayPaidAmounts } from '@/app/features/dashboard/utils/dashboard-trend.utils';
 
 const EM = '—';
 
@@ -41,6 +42,7 @@ function mapRecentPayment(dto: DashboardFinanceRecentPaymentItemDto): DashboardF
 
 export function mapDashboardFinanceSummaryDtoToVm(dto: DashboardFinanceSummaryDto): DashboardFinanceSummaryVm {
     return {
+        last7DaysPaidTrend: buildSevenDayTrendPoints(parseLastSevenDayPaidAmounts(dto.last7DaysPaid)),
         todayTotalPaid: safeNum(dto.todayTotalPaid),
         weekTotalPaid: safeNum(dto.weekTotalPaid),
         monthTotalPaid: safeNum(dto.monthTotalPaid),

@@ -1,5 +1,7 @@
 export interface TenantMemberListItemVm {
     id: string;
+    /** Ad soyad; backend göndermezse `null` — birincil etiket için e-posta kullanılır. */
+    name: string | null;
     email: string;
     emailConfirmed: boolean | null;
     createdAtUtc: string | null;
@@ -23,6 +25,8 @@ export interface TenantMemberClinicVm {
 
 export interface TenantMemberDetailVm {
     id: string;
+    /** Ad soyad; backend göndermezse `null`. */
+    name: string | null;
     email: string;
     emailConfirmed: boolean | null;
     tenantMembershipCreatedAtUtc: string | null;

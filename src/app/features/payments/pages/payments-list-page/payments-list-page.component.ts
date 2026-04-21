@@ -16,7 +16,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -160,7 +160,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     <td class="text-right font-medium">{{ money(row.amount, row.currency) }}</td>
                                     <td>{{ row.currency }}</td>
                                     <td>{{ methodLabel(row.method) }}</td>
-                                    <td>{{ formatDateTime(row.paidAtUtc) }}</td>
+                                    <td>{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
                                     <td>
                                         <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                     </td>
@@ -175,7 +175,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
                             >
                                 <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                    {{ formatDateTime(row.paidAtUtc) }}
+                                    {{ formatPaidAtUtc(row.paidAtUtc) }}
                                 </div>
                                 <div class="space-y-2 mb-3 min-w-0">
                                     <div class="text-sm">
@@ -264,7 +264,7 @@ export class PaymentsListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
     readonly methodLabel = paymentMethodLabel;
     private suppressNextLazy = false;

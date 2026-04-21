@@ -31,6 +31,7 @@ import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quic
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import { parseAppointmentExaminationRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { isAppointmentCancelledStatus } from '@/app/features/appointments/utils/appointment-status.utils';
 
 @Component({
     selector: 'app-examination-new-page',
@@ -66,6 +67,26 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     Bu randevu kaydından bağlam taşındı; müşteri ve hayvan kilitlidir; kayıt ilgili randevuya bağlanır.
                 </p>
             }
+            @if (cancelledAppointmentBlocked()) {
+                <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4">
+                    <p class="text-amber-800 dark:text-amber-200 m-0 font-medium" role="alert">
+                        {{ copy.cancelledAppointmentExamCreateBlocked }}
+                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 mt-2 mb-0 text-sm">
+                        {{ copy.cancelledAppointmentExamCreateHint }}
+                    </p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <p-button type="button" label="Randevu detayı" icon="pi pi-calendar" (onClick)="goAppointmentDetail()" />
+                        <p-button
+                            type="button"
+                            label="Randevu listesi"
+                            icon="pi pi-list"
+                            severity="secondary"
+                            (onClick)="goAppointmentsList()"
+                        />
+                    </div>
+                </div>
+            } @else {
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -199,6 +220,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
             </form>
+            }
         </div>
 
         <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
@@ -227,6 +249,8 @@ export class ExaminationNewPageComponent implements OnInit {
     readonly applyingRouteContext = signal(false);
     /** Randevu bağlamından gelirse create body’de `appointmentId` olarak gider. */
     readonly appointmentContextId = signal<string | null>(null);
+    readonly cancelledAppointmentBlocked = signal(false);
+    readonly blockedAppointmentId = signal<string | null>(null);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -281,6 +305,19 @@ export class ExaminationNewPageComponent implements OnInit {
         void this.router.navigate(['/panel/examinations']);
     }
 
+    goAppointmentDetail(): void {
+        const id = this.blockedAppointmentId();
+        if (!id) {
+            this.goAppointmentsList();
+            return;
+        }
+        void this.router.navigate(['/panel/appointments', id]);
+    }
+
+    goAppointmentsList(): void {
+        void this.router.navigate(['/panel/appointments']);
+    }
+
     petQuickAddDisabled(): boolean {
         if (this.ro.mutationBlocked()) {
             return true;
@@ -321,6 +358,10 @@ export class ExaminationNewPageComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+        if (this.cancelledAppointmentBlocked()) {
+            this.submitError.set(this.copy.cancelledAppointmentExamCreateBlocked);
+            return;
+        }
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
@@ -444,6 +485,16 @@ export class ExaminationNewPageComponent implements OnInit {
         this.selectionError.set(null);
         this.appointmentsService.getAppointmentById(ctx.appointmentId).subscribe({
             next: (ap) => {
+                if (isAppointmentCancelledStatus(ap.status)) {
+                    this.cancelledAppointmentBlocked.set(true);
+                    this.blockedAppointmentId.set(ctx.appointmentId);
+                    this.appointmentContextId.set(ctx.appointmentId);
+                    this.contextFromAppointment.set(true);
+                    this.form.disable({ emitEvent: false });
+                    this.selectionError.set(this.copy.cancelledAppointmentExamCreateBlocked);
+                    this.applyingRouteContext.set(false);
+                    return;
+                }
                 const cId = ap.clientId?.trim() ?? '';
                 const pId = ap.petId?.trim() ?? '';
                 if (cId !== ctx.clientId || pId !== ctx.petId) {

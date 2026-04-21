@@ -31,7 +31,7 @@ import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quic
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { amountToFormString, parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { dateTimeLocalInputToIsoUtc, utcIsoStringToDateTimeLocalInput } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -326,7 +326,7 @@ export class PaymentEditPageComponent implements OnInit {
                     amount: amountToFormString(x.amountStr),
                     currency: x.currency || 'TRY',
                     method: x.method ?? 'cash',
-                    paidAtLocal: toDateTimeLocalInput(x.paidAtUtc),
+                    paidAtLocal: utcIsoStringToDateTimeLocalInput(x.paidAtUtc),
                     note: x.note
                 });
                 if (x.clientId) {
@@ -512,20 +512,4 @@ export class PaymentEditPageComponent implements OnInit {
         }
         return e instanceof Error ? e.message : fallback;
     }
-}
-
-function toDateTimeLocalInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
 }

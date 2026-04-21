@@ -7,7 +7,11 @@ import { AppointmentsService } from '@/app/features/appointments/services/appoin
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
+import {
+    appointmentStatusLabel,
+    appointmentStatusSeverity,
+    isAppointmentCancelledStatus
+} from '@/app/features/appointments/utils/appointment-status.utils';
 import {
     appointmentTypeDisplayLabel,
     appointmentTypeDisplaySeverity
@@ -65,7 +69,7 @@ import { EMPTY, switchMap } from 'rxjs';
                             icon="pi pi-pencil"
                             class="p-button-secondary"
                         ></a>
-                        @if (appt()!.clientId?.trim() && appt()!.petId?.trim()) {
+                        @if (appt()!.clientId?.trim() && appt()!.petId?.trim() && !isCancelledForExam(appt()!.status)) {
                             <a
                                 [routerLink]="['/panel/examinations/new']"
                                 [queryParams]="{
@@ -79,6 +83,15 @@ import { EMPTY, switchMap } from 'rxjs';
                                 icon="pi pi-plus"
                                 class="p-button-secondary"
                             ></a>
+                        } @else if (appt()!.clientId?.trim() && appt()!.petId?.trim() && isCancelledForExam(appt()!.status)) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Muayene Oluştur"
+                                icon="pi pi-ban"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
                         }
                     } @else {
                         <button
@@ -89,7 +102,7 @@ import { EMPTY, switchMap } from 'rxjs';
                             [disabled]="true"
                             class="p-button-secondary"
                         ></button>
-                        @if (appt()!.clientId?.trim() && appt()!.petId?.trim()) {
+                        @if (appt()!.clientId?.trim() && appt()!.petId?.trim() && !isCancelledForExam(appt()!.status)) {
                             <button
                                 pButton
                                 type="button"
@@ -98,9 +111,23 @@ import { EMPTY, switchMap } from 'rxjs';
                                 [disabled]="true"
                                 class="p-button-secondary"
                             ></button>
+                        } @else if (appt()!.clientId?.trim() && appt()!.petId?.trim() && isCancelledForExam(appt()!.status)) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Muayene Oluştur"
+                                icon="pi pi-ban"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
                         }
                     }
                 </div>
+                @if (isCancelledForExam(appt()!.status)) {
+                    <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mt-2" role="status">
+                        {{ copy.cancelledAppointmentExamCreateBlocked }}
+                    </p>
+                }
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -236,6 +263,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly typeSeverity = appointmentTypeDisplaySeverity;
+    readonly isCancelledForExam = isAppointmentCancelledStatus;
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {

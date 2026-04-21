@@ -41,6 +41,67 @@ export function formatDateTimeDisplay(value: string | Date | null | undefined, l
     return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
 }
 
+function hasExplicitIso8601Zone(s: string): boolean {
+    return /(?:[zZ]|[+-]\d{2}:\d{2})$/.test(s.trim());
+}
+
+/**
+ * `paidAtUtc` gibi alanlar: sunucu UTC anını döndürür; bazen `Z` / offset olmadan (`2026-04-20T03:03:00`)
+ * gelir ve `new Date` bunu yerel saat sanarak 3 saat geri gösterebilir.
+ * Offset yoksa UTC kabul edilir.
+ */
+export function parseUtcApiInstantIsoString(value: string | null | undefined): Date | null {
+    if (value == null) {
+        return null;
+    }
+    let s = value.trim();
+    if (!s) {
+        return null;
+    }
+    if (s.includes(' ') && !s.includes('T')) {
+        s = s.replace(' ', 'T');
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const d = new Date(s);
+        return Number.isNaN(d.getTime()) ? null : d;
+    }
+    const normalized = hasExplicitIso8601Zone(s) ? s : `${s}Z`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** UTC ISO anını kullanıcı yerel saatine çevirip `formatDateTimeDisplay` ile aynı biçimde gösterir. */
+export function formatUtcIsoAsLocalDateTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+    if (value == null || value === '') {
+        return '—';
+    }
+    if (value instanceof Date) {
+        if (Number.isNaN(value.getTime())) {
+            return '—';
+        }
+        return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(value);
+    }
+    const d = parseUtcApiInstantIsoString(value);
+    if (!d) {
+        return '—';
+    }
+    return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+}
+
+/** GET `paidAtUtc` → `datetime-local` (yerel saat bileşenleri). */
+export function utcIsoStringToDateTimeLocalInput(value: string | null | undefined): string {
+    const d = parseUtcApiInstantIsoString(value);
+    if (!d) {
+        return '';
+    }
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day}T${hh}:${mm}`;
+}
+
 /** HTML `datetime-local` değerini ISO UTC stringe çevirir (form gönderimi için). */
 export function dateTimeLocalInputToIsoUtc(localValue: string): string {
     if (!localValue?.trim()) {

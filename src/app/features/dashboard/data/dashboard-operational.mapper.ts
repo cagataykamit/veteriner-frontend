@@ -2,6 +2,7 @@ import type { DashboardSummaryDto } from '@/app/features/dashboard/models/dashbo
 import type { DashboardSummaryNormalized } from '@/app/features/dashboard/models/dashboard-operational.model';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import { buildSevenDayTrendPoints, parseLastSevenDayAppointmentCounts } from '@/app/features/dashboard/utils/dashboard-trend.utils';
 
 /**
  * Summary DTO’da liste alanları null olabilir — tabloya güvenli varsayılan.
@@ -17,7 +18,8 @@ export function normalizeDashboardSummaryDto(raw: DashboardSummaryDto): Dashboar
         totalPetsCount: raw.totalPetsCount ?? 0,
         upcomingAppointments: raw.upcomingAppointments ?? [],
         recentClients: raw.recentClients ?? [],
-        recentPets: raw.recentPets ?? []
+        recentPets: raw.recentPets ?? [],
+        last7DaysAppointmentsTrend: buildSevenDayTrendPoints(parseLastSevenDayAppointmentCounts(raw.last7DaysAppointments))
     };
 }
 

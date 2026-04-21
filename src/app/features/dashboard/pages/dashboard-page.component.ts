@@ -1,10 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { map, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
+import { DashboardMiniTrendChartComponent } from '@/app/features/dashboard/components/dashboard-mini-trend-chart.component';
 import type { DashboardOperationalVm } from '@/app/features/dashboard/models/dashboard-operational.model';
+import type { DashboardTrendDayVm } from '@/app/features/dashboard/models/dashboard-trend.model';
+import { buildSevenDayTrendPoints } from '@/app/features/dashboard/utils/dashboard-trend.utils';
 import {
     DashboardService,
     dashboardVmWithPendingLists,
@@ -16,12 +19,18 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay, formatDateTimeDisplay, formatTimeDisplay } from '@/app/shared/utils/date.utils';
+import {
+    formatDateDisplay,
+    formatDateTimeDisplay,
+    formatTimeDisplay,
+    formatUtcIsoAsLocalDateTimeDisplay
+} from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 
 @Component({
     selector: 'app-dashboard-page',
@@ -34,19 +43,48 @@ import { AuthService } from '@/app/core/auth/auth.service';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        DashboardMiniTrendChartComponent
     ],
     template: `
-        <app-page-header
-            title="Özet"
-            subtitle="Operasyon"
-            description="Özet ve finans kartları önce; randevu, aşı ve muayene listeleri ardından yüklenir."
-        />
+        <app-page-header title="Özet" subtitle="Operasyon" [description]="pageDescription()" />
 
-        @if (loading()) {
-            <app-loading-state message="Operasyon verileri yükleniyor…" />
-        } @else if (dash(); as d) {
-            <div class="grid grid-cols-12 gap-8">
+        @if (!clinicContextOk()) {
+            <div class="card">
+                <app-empty-state
+                    [message]="copy.dashboardNeedClinicMessage"
+                    [hint]="copy.dashboardNeedClinicHint"
+                    iconClass="pi pi-building"
+                >
+                    <a
+                        routerLink="/auth/select-clinic"
+                        [queryParams]="selectClinicQueryParams"
+                        pButton
+                        type="button"
+                        label="Klinik seç"
+                        icon="pi pi-check"
+                        class="p-button-primary"
+                    ></a>
+                </app-empty-state>
+            </div>
+        } @else {
+            <div class="card mb-6">
+                <h5 class="mt-0 mb-3 text-base font-medium text-surface-900 dark:text-surface-0">{{ copy.dashboardQuickActionsTitle }}</h5>
+                <div class="flex flex-wrap gap-2">
+                    <a routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-sm"></a>
+                    <a routerLink="/panel/clients" pButton type="button" label="Müşteriler" icon="pi pi-users" severity="secondary" class="p-button-sm"></a>
+                    <a routerLink="/panel/pets" pButton type="button" label="Hayvanlar" icon="pi pi-heart" severity="secondary" class="p-button-sm"></a>
+                    <a routerLink="/panel/payments" pButton type="button" label="Ödemeler" icon="pi pi-credit-card" severity="secondary" class="p-button-sm"></a>
+                </div>
+            </div>
+
+            @if (loading()) {
+                <app-loading-state message="Operasyon verileri yükleniyor…" />
+            } @else if (dash(); as d) {
+                <div class="grid grid-cols-12 gap-8">
+                <div class="col-span-12">
+                    <p class="text-muted-color text-sm m-0 mb-0">{{ copy.dashboardContextFootnote }}</p>
+                </div>
                 <div class="col-span-12 md:col-span-6 xl:col-span-3">
                     <div class="card mb-0">
                         <span class="block text-muted-color font-medium mb-4">Bugünkü randevular</span>
@@ -77,6 +115,25 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
                             {{ metricCount(d.summary.data?.cancelledTodayCount) }}
                         </div>
+                    </div>
+                </div>
+
+                <div class="col-span-12 lg:col-span-6">
+                    <div class="card mb-0 h-full">
+                        <app-dashboard-mini-trend-chart
+                            title="Son 7 gün — randevu"
+                            [points]="appointmentTrendPoints(d)"
+                            valueKind="count"
+                        />
+                    </div>
+                </div>
+                <div class="col-span-12 lg:col-span-6">
+                    <div class="card mb-0 h-full">
+                        <app-dashboard-mini-trend-chart
+                            title="Son 7 gün — tahsilat"
+                            [points]="paidTrendPoints(d)"
+                            valueKind="money"
+                        />
                     </div>
                 </div>
 
@@ -372,7 +429,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                                     <li
                                         class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3"
                                     >
-                                        <div class="text-muted-color text-sm break-words">{{ formatDateTime(row.paidAtUtc) }}</div>
+                                        <div class="text-muted-color text-sm break-words">{{ formatPaidAtUtc(row.paidAtUtc) }}</div>
                                         <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
                                             @if (row.clientId) {
                                                 <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
@@ -415,7 +472,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                                     </ng-template>
                                     <ng-template #body let-row>
                                         <tr>
-                                            <td>{{ formatDateTime(row.paidAtUtc) }}</td>
+                                            <td>{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
                                             <td>
                                                 @if (row.clientId) {
                                                     <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
@@ -526,11 +583,13 @@ import { AuthService } from '@/app/core/auth/auth.service';
                 />
             </div>
         }
+        }
     `
 })
 export class DashboardPageComponent implements OnInit {
     private readonly dashboardService = inject(DashboardService);
     private readonly auth = inject(AuthService);
+    private readonly router = inject(Router);
 
     readonly copy = PANEL_COPY;
     readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
@@ -542,19 +601,42 @@ export class DashboardPageComponent implements OnInit {
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly formatTime = (v: string | null) => formatTimeDisplay(v);
     readonly apptStatusLabel = appointmentStatusLabel;
     readonly apptStatusSeverity = appointmentStatusSeverity;
     readonly payMethodLabel = paymentMethodLabel;
 
+    /** Guard dışı kenar durumlarında sonsuz yükleme göstermemek için. */
+    readonly clinicContextOk = signal(false);
+
+    readonly selectClinicQueryParams = { returnUrl: panelReturnUrlOrDefault(this.router.url) };
+
     ngOnInit(): void {
-        if (!this.auth.hasSelectedClinic()) {
+        const ok = this.auth.hasSelectedClinic();
+        this.clinicContextOk.set(ok);
+        if (!ok) {
+            this.loading.set(false);
+            this.listsLoading.set(false);
+            this.dash.set(null);
             return;
         }
         this.reload();
     }
 
+    pageDescription(): string {
+        if (!this.clinicContextOk()) {
+            return this.copy.dashboardNeedClinicHint;
+        }
+        const label = this.auth.activeClinicLabel()?.trim();
+        const who = label ? `“${label}”` : 'Seçili klinik';
+        return `${who} için operasyon özeti. Özet ve finans kartları önce; randevu, aşı ve muayene listeleri ardından yüklenir.`;
+    }
+
     reload(): void {
+        if (!this.clinicContextOk()) {
+            return;
+        }
         this.loading.set(true);
         this.listsLoading.set(false);
         this.dashboardService
@@ -588,6 +670,14 @@ export class DashboardPageComponent implements OnInit {
             return '—';
         }
         return n;
+    }
+
+    appointmentTrendPoints(d: DashboardOperationalVm): readonly DashboardTrendDayVm[] {
+        return d.summary.data?.last7DaysAppointmentsTrend ?? buildSevenDayTrendPoints([]);
+    }
+
+    paidTrendPoints(d: DashboardOperationalVm): readonly DashboardTrendDayVm[] {
+        return d.finance.data?.last7DaysPaidTrend ?? buildSevenDayTrendPoints([]);
     }
 
     todayAppointmentsMetric(d: DashboardOperationalVm): number | null {
