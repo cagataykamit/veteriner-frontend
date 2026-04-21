@@ -197,12 +197,14 @@ export function mapPagedPaymentsToVm(result: PaymentListItemDtoPagedResult): {
 }
 
 /** GET `/api/v1/payments` — canonical query: `Page`, `PageSize`, `Search`, `ClientId`, `PetId`, `Method`, `FromDate`, `ToDate` (+ `clinicId`). */
-export function paymentsQueryToHttpParams(query: PaymentsListQuery): HttpParams {
+export function paymentsQueryToHttpParams(query: PaymentsListQuery, opts?: { omitPaging?: boolean }): HttpParams {
     let p = new HttpParams();
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    p = p.set('Page', String(page));
-    p = p.set('PageSize', String(pageSize));
+    if (!opts?.omitPaging) {
+        const page = query.page ?? 1;
+        const pageSize = query.pageSize ?? 10;
+        p = p.set('Page', String(page));
+        p = p.set('PageSize', String(pageSize));
+    }
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }

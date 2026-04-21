@@ -12,6 +12,8 @@
 export interface PaymentListItemDto {
     id: string;
     clinicId?: string;
+    /** Liste / rapor; backend gönderirse gösterilir. */
+    clinicName?: string | null;
     clientId?: string | null;
     clientName?: string | null;
     /** Null olabilir. */
@@ -23,6 +25,8 @@ export interface PaymentListItemDto {
     /** Backend enum (0 / 1 / 2) veya string. */
     method?: string | number | null;
     paidAtUtc?: string | null;
+    /** Liste / rapor satırı; backend gönderirse. */
+    notes?: string | null;
 }
 
 export interface PaymentListItemDtoPagedResult {
@@ -31,6 +35,8 @@ export interface PaymentListItemDtoPagedResult {
     pageSize: number;
     totalItems: number;
     totalPages: number;
+    /** Rapor toplamı; backend göndermezse istemci satırlardan hesaplar. */
+    totalAmount?: number | string | null;
 }
 
 /** GET /payments/{id} */

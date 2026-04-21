@@ -45,6 +45,16 @@ export class AppMenu {
                 ]
             },
             {
+                label: 'Raporlar',
+                items: [
+                    {
+                        label: 'Ödeme Raporu',
+                        icon: 'pi pi-fw pi-file-export',
+                        routerLink: ['/panel/reports/payments']
+                    }
+                ]
+            },
+            {
                 label: 'Hesap',
                 items: [
                     { label: 'Kurum Bilgileri', icon: 'pi pi-fw pi-id-card', routerLink: ['/panel/settings/organization'] },

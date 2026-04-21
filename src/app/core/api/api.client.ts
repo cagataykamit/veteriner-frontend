@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from './api-base-url.token';
@@ -14,6 +14,15 @@ export class ApiClient {
 
     get<T>(path: string, params?: HttpParams): Observable<T> {
         return this.http.get<T>(this.url(path), { params });
+    }
+
+    /** CSV / binary export — `Content-Disposition` ile dosya adı okunabilir. */
+    getBlob(path: string, params?: HttpParams): Observable<HttpResponse<Blob>> {
+        return this.http.get(this.url(path), {
+            params,
+            responseType: 'blob',
+            observe: 'response'
+        });
     }
 
     post<T>(path: string, body: unknown): Observable<T> {

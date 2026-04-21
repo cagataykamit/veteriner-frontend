@@ -73,6 +73,12 @@ export const ApiEndpoints = {
         list: () => `/api/v1/payments`,
         byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`
     },
+    reports: {
+        /** Faz 6C.1 — Payments reporting contract (`from`, `to`, `clinicId`, `method`, `clientId`, `petId`, `search`, `page`, `pageSize`). */
+        payments: () => `/api/v1/reports/payments`,
+        paymentsExport: () => `/api/v1/reports/payments/export`,
+        paymentsExportXlsx: () => `/api/v1/reports/payments/export-xlsx`
+    },
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/treatments`,
