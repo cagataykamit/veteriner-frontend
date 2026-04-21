@@ -81,7 +81,11 @@ export const ApiEndpoints = {
         /** Faz 6C.2 — Appointments reporting (`from`, `to`, `clinicId`, `status`, `clientId`, `petId`, `search`, `page`, `pageSize`). */
         appointments: () => `/api/v1/reports/appointments`,
         appointmentsExport: () => `/api/v1/reports/appointments/export`,
-        appointmentsExportXlsx: () => `/api/v1/reports/appointments/export-xlsx`
+        appointmentsExportXlsx: () => `/api/v1/reports/appointments/export-xlsx`,
+        /** Faz 6C.3 — Examinations reporting (`from`, `to`, `clinicId`, `search`, `clientId`, `petId`, `appointmentId`, `page`, `pageSize`). */
+        examinations: () => `/api/v1/reports/examinations`,
+        examinationsExport: () => `/api/v1/reports/examinations/export`,
+        examinationsExportXlsx: () => `/api/v1/reports/examinations/export-xlsx`
     },
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */

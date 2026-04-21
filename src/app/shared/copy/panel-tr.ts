@@ -53,5 +53,22 @@ export const PANEL_COPY = {
     appointmentsReportColStatus: 'Durum',
     appointmentsReportSearchPlaceholder: 'Not; müşteri, hayvan, tür veya ırk metni…',
     appointmentsReportEmptyMessage: 'Bu filtrelerde randevu bulunamadı.',
-    appointmentsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.'
+    appointmentsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.',
+    /** Raporlar — Faz 6C.3 */
+    examinationsReportTitle: 'Muayene Raporu',
+    examinationsReportDescription: 'Filtreli muayene listesini görüntüleyin; CSV veya Excel ile dışa aktarın.',
+    examinationsReportDefaultPeriodHint:
+        'Tarih seçmezseniz ayın başından bugüne kadar olan muayeneler gösterilir; klinik filtresi boşsa panelde seçili klinik kullanılır.',
+    examinationsReportTotalRecords: 'Toplam kayıt',
+    examinationsReportExportCsv: 'CSV Dışa Aktar',
+    examinationsReportExportXlsx: 'Excel Dışa Aktar',
+    examinationsReportColExaminedAt: 'Muayene zamanı',
+    examinationsReportColLinkedAppointment: 'Bağlı randevu',
+    examinationsReportColVisitReason: 'Geliş nedeni',
+    examinationsReportColAssessment: 'Değerlendirme',
+    examinationsReportLinkedAppointment: 'Randevu detayı',
+    examinationsReportNoAppointment: 'Bağlı değil',
+    examinationsReportSearchPlaceholder: 'Sebep, bulgu, değerlendirme, not; müşteri, hayvan, tür veya ırk metni…',
+    examinationsReportEmptyMessage: 'Bu filtrelerde muayene bulunamadı.',
+    examinationsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.'
 } as const;

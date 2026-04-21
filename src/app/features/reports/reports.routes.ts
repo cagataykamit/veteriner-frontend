@@ -15,5 +15,12 @@ export default [
             import('@/app/features/reports/appointments/pages/appointments-report-page/appointments-report-page.component').then(
                 (m) => m.AppointmentsReportPageComponent
             )
+    },
+    {
+        path: 'examinations',
+        loadComponent: () =>
+            import('@/app/features/reports/examinations/pages/examinations-report-page/examinations-report-page.component').then(
+                (m) => m.ExaminationsReportPageComponent
+            )
     }
 ] as Routes;
