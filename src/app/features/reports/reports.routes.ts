@@ -1,4 +1,6 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, Router } from '@angular/router';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 export default [
     { path: '', pathMatch: 'full', redirectTo: 'payments' },
@@ -25,6 +27,11 @@ export default [
     },
     {
         path: 'vaccinations',
+        canActivate: [() => {
+            const auth = inject(AuthService);
+            const router = inject(Router);
+            return auth.hasOperationClaim('Vaccinations.Read') ? true : router.createUrlTree(['/notfound']);
+        }],
         loadComponent: () =>
             import('@/app/features/reports/vaccinations/pages/vaccinations-report-page/vaccinations-report-page.component').then(
                 (m) => m.VaccinationsReportPageComponent

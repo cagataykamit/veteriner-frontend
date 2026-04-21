@@ -109,6 +109,18 @@ export class AuthService {
     }
 
     /**
+     * JWT claim kontrolü (case-insensitive tam eşleşme).
+     * Örn: `Vaccinations.Read`
+     */
+    hasOperationClaim(claim: string): boolean {
+        const wanted = claim.trim().toLocaleLowerCase('tr-TR');
+        if (!wanted) {
+            return false;
+        }
+        return this.readOperationClaimsFromCurrentToken().some((c) => c === wanted);
+    }
+
+    /**
      * Login/select-clinic sonrası tek karar ağacı:
      * - 0 klinik: erişim yok
      * - 1 klinik: otomatik seçim adayı
@@ -418,6 +430,46 @@ export class AuthService {
         };
     }
 
+    /**
+     * JWT payload içinden olası claim alanlarını normalize eder.
+     * Backend farklı anahtarlar kullanabildiği için birden fazla kaynaktan toplanır.
+     */
+    private readOperationClaimsFromCurrentToken(): string[] {
+        const token = this.getAccessToken();
+        if (!token) {
+            return [];
+        }
+        const payload = this.decodeJwtPayload(token);
+        if (!payload) {
+            return [];
+        }
+        const keys = [
+            'permissions',
+            'Permissions',
+            'permission',
+            'Permission',
+            'claims',
+            'Claims',
+            'roles',
+            'Roles',
+            'role',
+            'Role',
+            'scp',
+            'scope',
+            'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+        ];
+        const out = new Set<string>();
+        for (const k of keys) {
+            this.collectClaimStrings(payload[k]).forEach((v) => {
+                const n = v.trim().toLocaleLowerCase('tr-TR');
+                if (n) {
+                    out.add(n);
+                }
+            });
+        }
+        return Array.from(out);
+    }
+
     private decodeJwtPayload(token: string): Record<string, unknown> | null {
         try {
             const parts = token.split('.');
@@ -432,6 +484,21 @@ export class AuthService {
         } catch {
             return null;
         }
+    }
+
+    private collectClaimStrings(v: unknown): string[] {
+        if (typeof v === 'string') {
+            const raw = v.trim();
+            if (!raw) {
+                return [];
+            }
+            // `scope` / `scp` gibi boşluk ayrımlı claimleri de aç.
+            return raw.split(/\s+/).filter((x) => x.trim().length > 0);
+        }
+        if (Array.isArray(v)) {
+            return v.filter((x): x is string => typeof x === 'string' && x.trim().length > 0);
+        }
+        return [];
     }
 
     private firstString(...vals: unknown[]): string | null {

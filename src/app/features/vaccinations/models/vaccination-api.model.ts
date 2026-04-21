@@ -5,6 +5,8 @@
 
 export interface VaccinationListItemDto {
     id: string;
+    /** Reports endpointleri bu alias ile dönebilir. */
+    vaccinationId?: string | null;
     tenantId?: string | null;
     petId?: string | null;
     petName?: string | null;
@@ -17,6 +19,8 @@ export interface VaccinationListItemDto {
     dueAtUtc?: string | null;
     /** Bazı list yanıtlarında sonraki doz tarihi bu adla gelir. */
     nextDueAtUtc?: string | null;
+    /** Reports contract — backend status kuralına göre belirlenmiş tarih. */
+    effectiveReportDateUtc?: string | null;
     status?: number | null;
     notes?: string | null;
 }

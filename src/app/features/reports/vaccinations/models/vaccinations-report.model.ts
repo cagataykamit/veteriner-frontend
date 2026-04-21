@@ -3,7 +3,8 @@ import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/v
 /** Aşı raporu tablo satırı — liste VM + klinik / ana tarih gösterimi. */
 export type VaccinationReportRowVm = VaccinationListItemVm & {
     readonly clinicLabel: string;
-    readonly vaccinationDateUtc: string | null;
+    /** Backend tarafından status kuralıyla belirlenen rapor tarihi. */
+    readonly effectiveReportDateUtc: string | null;
 };
 
 export interface VaccinationsReportResultVm {

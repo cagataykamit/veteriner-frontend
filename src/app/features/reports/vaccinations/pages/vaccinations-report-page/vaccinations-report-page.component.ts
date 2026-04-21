@@ -9,8 +9,8 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import type { ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
+import { AuthService } from '@/app/core/auth/auth.service';
 import type { VaccinationsReportQuery } from '@/app/features/reports/vaccinations/models/vaccinations-report-query.model';
 import type { VaccinationsReportResultVm } from '@/app/features/reports/vaccinations/models/vaccinations-report.model';
 import { VaccinationsReportService } from '@/app/features/reports/vaccinations/services/vaccinations-report.service';
@@ -173,7 +173,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr>
-                                    <td>{{ formatVaccinationDate(row.vaccinationDateUtc) }}</td>
+                                    <td>{{ formatVaccinationDate(row.effectiveReportDateUtc) }}</td>
                                     <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
                                     <td>
                                         @if (row.clientId) {
@@ -207,7 +207,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                     <div class="lg:hidden space-y-3">
                         @for (row of displayedRows(); track row.id) {
                             <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                <div class="text-sm text-muted-color mb-2">{{ formatVaccinationDate(row.vaccinationDateUtc) }}</div>
+                                <div class="text-sm text-muted-color mb-2">{{ formatVaccinationDate(row.effectiveReportDateUtc) }}</div>
                                 <div class="text-sm mb-1">
                                     <span class="text-muted-color font-medium">{{ copy.paymentsReportColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
                                 </div>
@@ -270,7 +270,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
 export class VaccinationsReportPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     private readonly reportService = inject(VaccinationsReportService);
-    private readonly clinicsService = inject(ClinicsService);
+    private readonly auth = inject(AuthService);
 
     readonly loading = signal(true);
     readonly exportKind = signal<'csv' | 'xlsx' | null>(null);
@@ -430,10 +430,10 @@ export class VaccinationsReportPageComponent implements OnInit {
     }
 
     private loadClinicOptions(): void {
-        this.clinicsService.listClinics().subscribe({
-            next: (list: ClinicListItemVm[]) => {
+        this.auth.getMyClinics().subscribe({
+            next: (list: ClinicSummary[]) => {
                 const base = [{ label: this.copy.paymentsReportClinicPanelDefault, value: '' }];
-                const opts = list.map((c) => ({ label: `${c.name} (${c.city})`, value: c.id }));
+                const opts = list.map((c) => ({ label: c.name, value: c.id }));
                 this.clinicOptions.set([...base, ...opts]);
             },
             error: () => {
