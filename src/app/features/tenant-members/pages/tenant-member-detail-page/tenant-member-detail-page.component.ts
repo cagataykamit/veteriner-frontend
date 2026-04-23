@@ -27,6 +27,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { catchError, forkJoin, of } from 'rxjs';
 
@@ -62,6 +63,11 @@ import { catchError, forkJoin, of } from 'rxjs';
                 <app-error-state [detail]="err" (retry)="reload()" />
             </div>
         } @else if (member(); as m) {
+            @if (m.isCurrentUser) {
+                <div class="card mb-4 border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/20">
+                    <p class="text-sm m-0 text-surface-700 dark:text-surface-200">{{ copy.tenantMemberSelfProfileHint }}</p>
+                </div>
+            }
             <div class="card mb-4">
                 <h5 class="mt-0 mb-4">Genel</h5>
                 <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 text-sm">
@@ -89,7 +95,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                     @if (claimsOptionsError()) {
                         <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ claimsOptionsError() }}</p>
                     }
-                    @if (!ro.mutationBlocked()) {
+                    @if (!ro.mutationBlocked() && !m.isCurrentUser) {
                         <div
                             class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700"
                         >
@@ -128,8 +134,10 @@ import { catchError, forkJoin, of } from 'rxjs';
                                 (onClick)="onAddRole()"
                             />
                         </div>
-                    } @else {
+                    } @else if (ro.mutationBlocked()) {
                         <p class="text-sm text-muted-color mt-0 mb-3">Salt okunur kurumda rol ekleyemezsiniz.</p>
+                    } @else if (m.isCurrentUser) {
+                        <p class="text-sm text-muted-color mt-0 mb-3">Kendi hesabınız için rol ekleyemezsiniz.</p>
                     }
                     @if (m.claims.length === 0) {
                         <app-empty-state
@@ -143,7 +151,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                     class="p-3 rounded-lg border border-surface-200 dark:border-surface-700 text-sm flex flex-wrap items-center justify-between gap-2"
                                 >
                                     <span class="font-medium break-words">{{ c.name }}</span>
-                                    @if (!ro.mutationBlocked() && c.canRemove) {
+                                    @if (!ro.mutationBlocked() && !m.isCurrentUser && c.canRemove) {
                                         <p-button
                                             label="Kaldır"
                                             icon="pi pi-times"
@@ -175,7 +183,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                     @if (clinicsPickerError()) {
                         <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ clinicsPickerError() }}</p>
                     }
-                    @if (!ro.mutationBlocked()) {
+                    @if (!ro.mutationBlocked() && !m.isCurrentUser) {
                         <div
                             class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700"
                         >
@@ -213,8 +221,10 @@ import { catchError, forkJoin, of } from 'rxjs';
                                 (onClick)="onAddClinic()"
                             />
                         </div>
-                    } @else {
+                    } @else if (ro.mutationBlocked()) {
                         <p class="text-sm text-muted-color mt-0 mb-3">Salt okunur kurumda klinik üyeliği ekleyemez veya kaldıramazsınız.</p>
+                    } @else if (m.isCurrentUser) {
+                        <p class="text-sm text-muted-color mt-0 mb-3">Kendi hesabınız için klinik üyeliği ekleyemez veya kaldıramazsınız.</p>
                     }
                     @if (m.clinics.length === 0) {
                         <app-empty-state
@@ -234,7 +244,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                         } @else if (cl.isActive === false) {
                                             <span class="text-xs text-muted-color">Pasif</span>
                                         }
-                                        @if (!ro.mutationBlocked() && cl.canRemove) {
+                                        @if (!ro.mutationBlocked() && !m.isCurrentUser && cl.canRemove) {
                                             <p-button
                                                 label="Kaldır"
                                                 icon="pi pi-times"
@@ -261,6 +271,7 @@ import { catchError, forkJoin, of } from 'rxjs';
     `
 })
 export class TenantMemberDetailPageComponent implements OnInit {
+    readonly copy = PANEL_COPY;
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly tenantMembers = inject(TenantMembersService);
@@ -342,7 +353,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     }
 
     onAddRole(): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.member()?.isCurrentUser || this.ro.mutationBlocked()) {
             return;
         }
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
@@ -367,7 +378,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     }
 
     onRemoveRole(operationClaimId: string): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.member()?.isCurrentUser || this.ro.mutationBlocked()) {
             return;
         }
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
@@ -426,7 +437,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     }
 
     onAddClinic(): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.member()?.isCurrentUser || this.ro.mutationBlocked()) {
             return;
         }
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
@@ -451,7 +462,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     }
 
     onRemoveClinic(clinicId: string): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.member()?.isCurrentUser || this.ro.mutationBlocked()) {
             return;
         }
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';

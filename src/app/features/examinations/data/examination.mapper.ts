@@ -140,9 +140,19 @@ function canonicalDetailUpdatedAtUtc(dto: ExaminationDetailDto): string | null {
     return firstTrimmed(dto.updatedAtUtc, readDtoString(dto, ['UpdatedAtUtc']));
 }
 
+function canonicalExaminationListItemId(dto: ExaminationListItemDto): string {
+    return (
+        firstTrimmed(
+            dto.examinationId,
+            dto.id,
+            readDtoString(dto, ['examinationId', 'ExaminationId', 'id', 'Id'])
+        ) ?? ''
+    );
+}
+
 export function mapExaminationListItemDtoToVm(dto: ExaminationListItemDto): ExaminationListItemVm {
     return {
-        id: dto.id,
+        id: canonicalExaminationListItemId(dto),
         clinicId: canonicalClinicId(dto),
         clinicName: canonicalClinicName(dto),
         examinedAtUtc: canonicalExaminedAt(dto),

@@ -6,7 +6,9 @@ import type {
     TenantMemberClaimVm,
     TenantMemberClinicVm,
     TenantMemberDetailVm,
-    TenantMemberListItemVm
+    TenantMemberListItemVm,
+    TenantRoleMatrixPermissionVm,
+    TenantRolePermissionMatrixRowVm
 } from '@/app/features/tenant-members/models/tenant-members-vm.model';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
@@ -336,17 +338,137 @@ export function mapTenantMemberDetailRaw(raw: unknown): TenantMemberDetailVm | n
     const claims = claimsPick.items.map(mapClaimRow).filter((x): x is TenantMemberClaimVm => !!x);
     const clinics = clinicsPick.items.map(mapClinicRow).filter((x): x is TenantMemberClinicVm => !!x);
 
+    let isCurrentUser = readTriBool(root, ['isCurrentUser', 'IsCurrentUser']) === true;
+    if (!isCurrentUser) {
+        const user = root['user'] ?? root['User'];
+        if (isRecord(user)) {
+            isCurrentUser = readTriBool(user, ['isCurrentUser', 'IsCurrentUser']) === true;
+        }
+    }
+
     return {
         id: base.id,
         name: base.name,
         email: base.email,
         emailConfirmed: base.emailConfirmed,
         tenantMembershipCreatedAtUtc: membershipAt ?? null,
+        isCurrentUser,
         claims,
         clinics,
         claimsSectionPresent: claimsPick.present,
         clinicsSectionPresent: clinicsPick.present
     };
+}
+
+function mapMatrixPermissionRow(raw: unknown): TenantRoleMatrixPermissionVm | null {
+    if (!isRecord(raw)) {
+        return null;
+    }
+    const id =
+        firstString(raw, [
+            'id',
+            'Id',
+            'operationClaimId',
+            'OperationClaimId',
+            'permissionId',
+            'PermissionId',
+            'claimId',
+            'ClaimId'
+        ]) ?? '';
+    const name =
+        firstString(raw, [
+            'name',
+            'Name',
+            'operationClaimName',
+            'OperationClaimName',
+            'permissionName',
+            'PermissionName',
+            'claimName',
+            'ClaimName',
+            'title',
+            'Title'
+        ]) ?? id;
+    if (!id.trim() && !name.trim()) {
+        return null;
+    }
+    return { id: id.trim() || name.trim(), name: name.trim() || id.trim() || '—' };
+}
+
+function permissionArrayKeys(): string[] {
+    return [
+        'permissions',
+        'Permissions',
+        'operationClaims',
+        'OperationClaims',
+        'claims',
+        'Claims',
+        'items',
+        'Items'
+    ];
+}
+
+function mapMatrixRoleRow(raw: unknown): TenantRolePermissionMatrixRowVm | null {
+    if (!isRecord(raw)) {
+        return null;
+    }
+    const roleId =
+        firstString(raw, [
+            'roleId',
+            'RoleId',
+            'id',
+            'Id',
+            'operationClaimGroupId',
+            'OperationClaimGroupId'
+        ]) ?? '';
+    const roleName =
+        firstString(raw, [
+            'roleName',
+            'RoleName',
+            'name',
+            'Name',
+            'title',
+            'Title',
+            'operationClaimName',
+            'OperationClaimName'
+        ]) ?? roleId;
+    let permItems: unknown[] = [];
+    for (const k of permissionArrayKeys()) {
+        const v = raw[k];
+        if (Array.isArray(v)) {
+            permItems = v;
+            break;
+        }
+    }
+    const permissions = permItems.map(mapMatrixPermissionRow).filter((x): x is TenantRoleMatrixPermissionVm => !!x);
+    if (!roleId.trim() && !roleName.trim() && permissions.length === 0) {
+        return null;
+    }
+    return {
+        roleId: roleId.trim() || roleName.trim() || '—',
+        roleName: roleName.trim() || roleId.trim() || '—',
+        permissions
+    };
+}
+
+/** `GET .../assignable-role-permission-matrix` — kök dizi veya sarılmış koleksiyon. */
+export function mapAssignableRolePermissionMatrixRaw(raw: unknown): TenantRolePermissionMatrixRowVm[] {
+    let rows: unknown[] = [];
+    if (Array.isArray(raw)) {
+        rows = raw;
+    } else if (isRecord(raw)) {
+        for (const k of ['data', 'Data', 'value', 'Value', 'result', 'Result', 'items', 'Items', 'roles', 'Roles', 'matrix', 'Matrix']) {
+            const v = raw[k];
+            if (Array.isArray(v)) {
+                rows = v;
+                break;
+            }
+            if (isRecord(v) && Array.isArray(v['items'] ?? v['Items'])) {
+                rows = (v['items'] ?? v['Items']) as unknown[];
+                break;
+            }
+        }
+    }
+    return rows.map(mapMatrixRoleRow).filter((x): x is TenantRolePermissionMatrixRowVm => !!x);
 }
 
 export function tenantMembersQueryToHttpParams(query: TenantMembersListQuery): HttpParams {

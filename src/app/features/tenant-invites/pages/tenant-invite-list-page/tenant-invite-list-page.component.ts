@@ -17,6 +17,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 
 @Component({
     selector: 'app-tenant-invite-list-page',
@@ -32,7 +34,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        AppStatusTagComponent
     ],
     template: `
         <app-page-header title="Davetler" subtitle="Hesap" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
@@ -111,7 +114,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <ng-template #body let-row>
                                     <tr>
                                         <td class="font-medium break-all">{{ row.email }}</td>
-                                        <td>{{ row.statusLabel }}</td>
+                                        <td>
+                                            <app-status-tag [label]="row.statusLabel" [severity]="inviteStatusSeverity(row)" />
+                                        </td>
                                         <td>{{ formatDate(row.expiresAtUtc) }}</td>
                                         <td class="break-words">{{ row.clinicSummary }}</td>
                                         <td class="break-words">{{ row.roleSummary }}</td>
@@ -164,7 +169,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         {{ row.email }}
                                     </div>
                                     <div class="space-y-2 text-sm min-w-0">
-                                        <div><span class="text-muted-color font-medium">Durum: </span>{{ row.statusLabel }}</div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="text-muted-color font-medium">Durum:</span>
+                                            <app-status-tag [label]="row.statusLabel" [severity]="inviteStatusSeverity(row)" />
+                                        </div>
                                         <div><span class="text-muted-color font-medium">Klinik: </span>{{ row.clinicSummary }}</div>
                                         <div><span class="text-muted-color font-medium">Rol: </span>{{ row.roleSummary }}</div>
                                         @if (row.expiresAtUtc) {
@@ -227,6 +235,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 })
 export class TenantInviteListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly inviteStatusSeverity = (row: TenantInviteListItemVm) => tenantInviteStatusTagSeverity(row.statusLifecycle);
 
     private readonly tenantInvites = inject(TenantInvitesService);
     readonly ro = inject(TenantReadOnlyContextService);

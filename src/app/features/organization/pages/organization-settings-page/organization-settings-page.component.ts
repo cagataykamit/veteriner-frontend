@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -89,7 +89,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                                 class="w-full"
                                 formControlName="tenantName"
                                 autocomplete="organization"
-                                [disabled]="ro.mutationBlocked()"
                             />
                             @if (form.controls.tenantName.invalid && form.controls.tenantName.touched) {
                                 <small class="text-red-500">Kurum adı en az bir karakter içermelidir.</small>
@@ -126,6 +125,19 @@ export class OrganizationSettingsPageComponent implements OnInit {
 
     readonly form = this.fb.nonNullable.group({
         tenantName: ['', [Validators.maxLength(256), trimmedRequired()]]
+    });
+
+    /** Reactive form: `disabled` şablonda verilmez; salt okunur kiracıda API ile kapatılır. */
+    private readonly syncTenantNameDisabledWithReadOnly = effect(() => {
+        const blocked = this.ro.mutationBlocked();
+        const c = this.form.controls.tenantName;
+        if (blocked) {
+            if (c.enabled) {
+                c.disable({ emitEvent: false });
+            }
+        } else if (c.disabled) {
+            c.enable({ emitEvent: false });
+        }
     });
 
     ngOnInit(): void {

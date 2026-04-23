@@ -38,7 +38,17 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             title="Kurum üyeleri"
             subtitle="Hesap"
             description="Bu kuruma bağlı kullanıcıların salt okunur listesi."
-        />
+        >
+            <a
+                actions
+                routerLink="/panel/settings/members/role-permission-matrix"
+                pButton
+                type="button"
+                [label]="copy.tenantRoleMatrixTitle"
+                icon="pi pi-table"
+                class="p-button-secondary p-button-outlined"
+            ></a>
+        </app-page-header>
 
         <div class="card">
             @if (loading()) {

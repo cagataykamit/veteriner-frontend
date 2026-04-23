@@ -10,6 +10,8 @@
 
 /** Liste satırı — GET /payments */
 export interface PaymentListItemDto {
+    /** Bazı rapor / batch yanıtlarında kimlik bu alanda gelebilir. */
+    paymentId?: string | null;
     id: string;
     clinicId?: string;
     /** Liste / rapor; backend gönderirse gösterilir. */

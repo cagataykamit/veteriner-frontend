@@ -90,8 +90,9 @@ type ActiveFilterUi = 'all' | 'active' | 'discharged';
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-4">
-                                <label for="hospStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
+                                <span id="lblHospStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</span>
                                 <p-select
+                                    ariaLabelledBy="lblHospStatus"
                                     inputId="hospStatus"
                                     [(ngModel)]="activeFilterInput"
                                     [options]="activeFilterOptions"

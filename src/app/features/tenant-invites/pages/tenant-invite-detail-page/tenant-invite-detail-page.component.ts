@@ -12,7 +12,9 @@ import { buildPublicJoinInviteUrl } from '@/app/features/tenant-invites/utils/jo
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 
 @Component({
     selector: 'app-tenant-invite-detail-page',
@@ -24,7 +26,8 @@ import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
         ToastModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        AppStatusTagComponent
     ],
     providers: [MessageService],
     template: `
@@ -75,7 +78,9 @@ import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
                     </div>
                     <div>
                         <dt class="text-muted-color font-medium m-0 mb-1">Durum</dt>
-                        <dd class="m-0">{{ d.statusLabel }}</dd>
+                        <dd class="m-0">
+                            <app-status-tag [label]="d.statusLabel" [severity]="inviteStatusSeverity(d)" />
+                        </dd>
                     </div>
                     <div>
                         <dt class="text-muted-color font-medium m-0 mb-1">Klinik</dt>
@@ -126,6 +131,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
     readonly joinUrl = signal<string>('');
 
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
+    readonly inviteStatusSeverity = (d: TenantInviteDetailVm) => tenantInviteStatusTagSeverity(d.statusLifecycle);
 
     ngOnInit(): void {
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pm) => {

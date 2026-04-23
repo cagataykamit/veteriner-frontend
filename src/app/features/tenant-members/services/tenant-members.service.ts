@@ -7,6 +7,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import {
+    mapAssignableRolePermissionMatrixRaw,
     mapPagedTenantMembersToVm,
     mapTenantClinicsListRaw,
     mapTenantMemberDetailRaw,
@@ -14,7 +15,11 @@ import {
 } from '@/app/features/tenant-members/data/tenant-members.mapper';
 import type { TenantMemberListItemDtoPagedResult } from '@/app/features/tenant-members/models/tenant-members-api.model';
 import type { TenantMembersListQuery } from '@/app/features/tenant-members/models/tenant-members-query.model';
-import type { TenantMemberDetailVm, TenantMemberListItemVm } from '@/app/features/tenant-members/models/tenant-members-vm.model';
+import type {
+    TenantMemberDetailVm,
+    TenantMemberListItemVm,
+    TenantRolePermissionMatrixRowVm
+} from '@/app/features/tenant-members/models/tenant-members-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface TenantMembersPagedVm {
@@ -50,6 +55,22 @@ export class TenantMembersService {
     /**
      * `GET /api/v1/tenants/{tenantId}/members/{memberId}`
      */
+    /**
+     * `GET /api/v1/tenants/{tenantId}/assignable-role-permission-matrix`
+     */
+    getAssignableRolePermissionMatrix(): Observable<TenantRolePermissionMatrixRowVm[]> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        return this.api.get<unknown>(ApiEndpoints.tenants.assignableRolePermissionMatrix(tenantId)).pipe(
+            map((raw) => mapAssignableRolePermissionMatrixRaw(raw)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Rol yetki matrisi yüklenemedi.')))
+            )
+        );
+    }
+
     getMemberById(memberId: string): Observable<TenantMemberDetailVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
         if (!tenantId) {

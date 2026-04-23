@@ -1,3 +1,5 @@
+import type { TenantInviteLifecycle } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+
 export interface OperationClaimOptionVm {
     id: string;
     name: string;
@@ -16,6 +18,8 @@ export interface TenantInviteListItemVm {
     id: string;
     email: string;
     statusLabel: string;
+    /** Normalize edilmiş durum; etiket/severity ve `canCancel`/`canResend` türevi tek kaynak. */
+    statusLifecycle: TenantInviteLifecycle;
     /** Ham durum metni (lifecycle türetimi için). */
     statusRaw: string | null;
     expiresAtUtc: string | null;
@@ -30,6 +34,7 @@ export interface TenantInviteDetailVm {
     id: string;
     email: string;
     statusLabel: string;
+    statusLifecycle: TenantInviteLifecycle;
     statusRaw: string | null;
     expiresAtUtc: string | null;
     createdAtUtc: string | null;

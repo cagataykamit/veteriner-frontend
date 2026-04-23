@@ -9,8 +9,9 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import type { ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-my-clinics-to-select-options';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import type { AppointmentsReportQuery } from '@/app/features/reports/appointments/models/appointments-report-query.model';
 import type { AppointmentsReportResultVm } from '@/app/features/reports/appointments/models/appointments-report.model';
@@ -23,6 +24,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
+import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.utils';
 
 @Component({
     selector: 'app-appointments-report-page',
@@ -59,29 +61,31 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
             <p class="text-sm text-muted-color m-0 mb-4">{{ copy.appointmentsReportDefaultPeriodHint }}</p>
             <div class="grid grid-cols-12 gap-3 items-end">
                 <div class="col-span-12 md:col-span-3">
-                    <label for="apptRepFrom" class="block text-xs font-medium text-muted-color mb-1">Tarih (Başlangıç)</label>
+                    <label for="apptRepFrom" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterDateFrom }}</label>
                     <input id="apptRepFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
                 </div>
                 <div class="col-span-12 md:col-span-3">
-                    <label for="apptRepTo" class="block text-xs font-medium text-muted-color mb-1">Tarih (Bitiş)</label>
+                    <label for="apptRepTo" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterDateTo }}</label>
                     <input id="apptRepTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
                 </div>
                 <div class="col-span-12 md:col-span-3">
-                    <label for="apptRepClinic" class="block text-xs font-medium text-muted-color mb-1">Klinik</label>
+                    <span id="lblApptRepClinic" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterClinic }}</span>
                     <p-select
+                        ariaLabelledBy="lblApptRepClinic"
                         inputId="apptRepClinic"
                         [options]="clinicOptions()"
                         [(ngModel)]="clinicIdFilter"
                         optionLabel="label"
                         optionValue="value"
-                        [placeholder]="copy.paymentsReportClinicPanelDefault"
+                        [placeholder]="copy.reportsClinicPanelDefault"
                         styleClass="w-full"
                         [showClear]="true"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-3">
-                    <label for="apptRepStatus" class="block text-xs font-medium text-muted-color mb-1">{{ copy.appointmentsReportColStatus }}</label>
+                    <span id="lblApptRepStatus" class="block text-xs font-medium text-muted-color mb-1">{{ copy.appointmentsReportColStatus }}</span>
                     <p-select
+                        ariaLabelledBy="lblApptRepStatus"
                         inputId="apptRepStatus"
                         [options]="statusOptions"
                         [(ngModel)]="statusFilter"
@@ -93,7 +97,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                     />
                 </div>
                 <div class="col-span-12 md:col-span-6">
-                    <label for="apptRepSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                    <label for="apptRepSearch" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterSearch }}</label>
                     <input
                         pInputText
                         id="apptRepSearch"
@@ -107,7 +111,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                     <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                     <p-button
-                        [label]="copy.appointmentsReportExportXlsx"
+                        [label]="copy.reportsExportXlsx"
                         icon="pi pi-file-excel"
                         severity="success"
                         (onClick)="exportXlsx()"
@@ -115,7 +119,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                         [disabled]="loading() || exporting()"
                     />
                     <p-button
-                        [label]="copy.appointmentsReportExportCsv"
+                        [label]="copy.reportsExportCsv"
                         icon="pi pi-download"
                         severity="help"
                         (onClick)="exportCsv()"
@@ -127,7 +131,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
         </div>
 
         @if (loading()) {
-            <app-loading-state message="Rapor yükleniyor…" />
+            <app-loading-state [message]="copy.reportsLoadingMessage" />
         } @else if (error()) {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
@@ -136,7 +140,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
             <div class="card mb-4">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 sm:col-span-6">
-                        <span class="block text-muted-color text-sm mb-1">{{ copy.appointmentsReportTotalRecords }}</span>
+                        <span class="block text-muted-color text-sm mb-1">{{ copy.reportsTotalRecords }}</span>
                         <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totalCount }}</div>
                     </div>
                 </div>
@@ -163,12 +167,12 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                         >
                             <ng-template #header>
                                 <tr>
-                                    <th>{{ copy.appointmentsReportColScheduledAt }}</th>
-                                    <th>{{ copy.paymentsReportColClinic }}</th>
+                                    <th>{{ copy.reportsColPrimaryLocalTime }}</th>
+                                    <th>{{ copy.reportsColClinic }}</th>
                                     <th>{{ copy.labelClient }}</th>
                                     <th>{{ copy.labelPet }}</th>
                                     <th>{{ copy.appointmentsReportColStatus }}</th>
-                                    <th>{{ copy.paymentsReportColNotes }}</th>
+                                    <th>{{ copy.reportsColNotes }}</th>
                                     <th style="width: 6rem"></th>
                                 </tr>
                             </ng-template>
@@ -197,7 +201,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                                     </td>
                                     <td class="max-w-[14rem] truncate" [title]="row.notes">{{ row.notes }}</td>
                                     <td>
-                                        <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                        <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }}</a>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -205,7 +209,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                     </div>
 
                     <div class="lg:hidden space-y-3">
-                        @for (row of displayedRows(); track row.id) {
+                        @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
                             <div
                                 class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
                             >
@@ -214,7 +218,7 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </div>
                                 <div class="text-sm mb-1">
-                                    <span class="text-muted-color font-medium">{{ copy.paymentsReportColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
+                                    <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
                                 </div>
                                 <div class="text-sm mb-1">
                                     <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
@@ -236,11 +240,11 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
                                 </div>
                                 @if (row.notes && row.notes !== '—') {
                                     <div class="text-sm text-muted-color break-words mb-2">
-                                        <span class="font-medium">{{ copy.paymentsReportColNotes }}: </span>{{ row.notes }}
+                                        <span class="font-medium">{{ copy.reportsColNotes }}: </span>{{ row.notes }}
                                     </div>
                                 }
                                 <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                    <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }} →</a>
                                 </div>
                             </div>
                         }
@@ -264,8 +268,9 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
 })
 export class AppointmentsReportPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly reportTableRowTrackKey = reportTableRowTrackKey;
     private readonly reportService = inject(AppointmentsReportService);
-    private readonly clinicsService = inject(ClinicsService);
+    private readonly auth = inject(AuthService);
 
     readonly loading = signal(true);
     readonly exportKind = signal<'csv' | 'xlsx' | null>(null);
@@ -289,10 +294,10 @@ export class AppointmentsReportPageComponent implements OnInit {
     statusFilter = '';
     clinicIdFilter = '';
 
-    readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.paymentsReportClinicPanelDefault, value: '' }]);
+    readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
 
     readonly statusOptions = [
-        { label: 'Tümü', value: '' },
+        { label: PANEL_COPY.filterPlaceholderAll, value: '' },
         { label: 'Planlandı', value: '0' },
         { label: 'Tamamlandı', value: '1' },
         { label: 'İptal', value: '2' }
@@ -309,7 +314,7 @@ export class AppointmentsReportPageComponent implements OnInit {
     readonly exporting = () => this.exportKind() !== null;
 
     displayClinicLabel(clinicLabel: string): string {
-        return clinicLabel === '—' ? this.copy.paymentsReportClinicPanelDefault : clinicLabel;
+        return clinicLabel === '—' ? this.copy.reportsClinicPanelDefault : clinicLabel;
     }
 
     isExporting(kind: 'csv' | 'xlsx'): boolean {
@@ -426,14 +431,12 @@ export class AppointmentsReportPageComponent implements OnInit {
     }
 
     private loadClinicOptions(): void {
-        this.clinicsService.listClinics().subscribe({
-            next: (list: ClinicListItemVm[]) => {
-                const base = [{ label: this.copy.paymentsReportClinicPanelDefault, value: '' }];
-                const opts = list.map((c) => ({ label: `${c.name} (${c.city})`, value: c.id }));
-                this.clinicOptions.set([...base, ...opts]);
+        this.auth.getMyClinics().subscribe({
+            next: (list: ClinicSummary[]) => {
+                this.clinicOptions.set(mapMyClinicsToSelectOptions(list, this.copy.reportsClinicPanelDefault));
             },
             error: () => {
-                this.clinicOptions.set([{ label: this.copy.paymentsReportClinicPanelDefault, value: '' }]);
+                this.clinicOptions.set([{ label: this.copy.reportsClinicPanelDefault, value: '' }]);
             }
         });
     }
@@ -470,7 +473,7 @@ export class AppointmentsReportPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
+                this.error.set(e.message ?? this.copy.reportsLoadErrorFallback);
                 this.loading.set(false);
             }
         });

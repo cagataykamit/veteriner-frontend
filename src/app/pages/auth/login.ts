@@ -86,11 +86,19 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                             <input pInputText id="email1" type="text" placeholder="E-posta adresiniz" class="w-full md:w-120 mb-8" [(ngModel)]="email" />
 
                             <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Şifre</label>
-                            <p-password id="password1" [(ngModel)]="password" placeholder="Şifreniz" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
+                            <p-password
+                                inputId="password1"
+                                [(ngModel)]="password"
+                                placeholder="Şifreniz"
+                                [toggleMask]="true"
+                                styleClass="mb-4"
+                                [fluid]="true"
+                                [feedback]="false"
+                            ></p-password>
 
                             <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                                 <div class="flex items-center">
-                                    <p-checkbox [(ngModel)]="checked" id="rememberme1" binary class="mr-2"></p-checkbox>
+                                    <p-checkbox [(ngModel)]="checked" inputId="rememberme1" binary class="mr-2"></p-checkbox>
                                     <label for="rememberme1">Beni hatırla</label>
                                 </div>
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Şifremi unuttum</span>

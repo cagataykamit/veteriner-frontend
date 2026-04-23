@@ -92,8 +92,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-4">
-                                <label for="apptStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
+                                <span id="lblApptStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</span>
                                 <p-select
+                                    ariaLabelledBy="lblApptStatus"
                                     inputId="apptStatus"
                                     [options]="statusOptions"
                                     [(ngModel)]="statusFilter"

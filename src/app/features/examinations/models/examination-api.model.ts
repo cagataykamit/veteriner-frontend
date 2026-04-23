@@ -4,6 +4,8 @@
  */
 
 export interface ExaminationListItemDto {
+    /** Bazı rapor yanıtlarında `id` ile birlikte veya onun yerine gelebilir. */
+    examinationId?: string | null;
     id: string;
     tenantId?: string;
     clinicId?: string | null;

@@ -130,11 +130,21 @@ function listPetNameFromDto(petName: string | null | undefined): string {
     return petName == null ? '' : String(petName).trim();
 }
 
+function canonicalPaymentListItemId(dto: PaymentListItemDto): string {
+    return (
+        firstTrimmed(
+            dto.paymentId,
+            dto.id,
+            readDtoString(dto, ['paymentId', 'PaymentId', 'id', 'Id'])
+        ) ?? ''
+    );
+}
+
 export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListItemVm {
     const clientId = dto.clientId?.trim() ? dto.clientId.trim() : null;
     const petId = dto.petId?.trim() ? dto.petId.trim() : null;
     return {
-        id: dto.id,
+        id: canonicalPaymentListItemId(dto),
         clientId,
         clientName: str(dto.clientName?.trim() ?? null),
         petId,

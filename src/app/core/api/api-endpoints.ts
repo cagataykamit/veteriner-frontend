@@ -155,7 +155,10 @@ export const ApiEndpoints = {
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/invites/${encodeURIComponent(inviteId)}/resend`,
         /** Davet formu: atanabilir operation claim listesi (`operationClaimId`, `operationClaimName`). */
         assignableOperationClaims: (tenantId: string) =>
-            `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-operation-claims`
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-operation-claims`,
+        /** GET: rol → atanabilir permission matrisi (salt okunur; panel bilgilendirme). */
+        assignableRolePermissionMatrix: (tenantId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-role-permission-matrix`
     },
     public: {
         ownerSignup: () => `/api/v1/public/owner-signup`,

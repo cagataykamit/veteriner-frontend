@@ -30,9 +30,23 @@ export interface TenantMemberDetailVm {
     email: string;
     emailConfirmed: boolean | null;
     tenantMembershipCreatedAtUtc: string | null;
+    /** Oturumdaki kullanıcı bu üye kaydıysa self-aksiyonlar kapatılır. */
+    isCurrentUser: boolean;
     claims: TenantMemberClaimVm[];
     clinics: TenantMemberClinicVm[];
     /** Yanıtta ilgili koleksiyon anahtarı hiç yoksa bölüm render edilmez. */
     claimsSectionPresent: boolean;
     clinicsSectionPresent: boolean;
+}
+
+/** GET assignable-role-permission-matrix — salt okunur rol satırı. */
+export interface TenantRoleMatrixPermissionVm {
+    id: string;
+    name: string;
+}
+
+export interface TenantRolePermissionMatrixRowVm {
+    roleId: string;
+    roleName: string;
+    permissions: TenantRoleMatrixPermissionVm[];
 }

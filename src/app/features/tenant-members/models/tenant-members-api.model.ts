@@ -24,6 +24,8 @@ export interface TenantMemberListItemDtoPagedResult {
  * Örnek: `roles[]` (`operationClaimId`, `operationClaimName`), `clinics[]` (`clinicId`, `name`, `isActive`).
  */
 export interface TenantMemberDetailDto {
+    /** Oturumdaki kullanıcı bu üye ise self-aksiyonlar UI’da kapatılır. */
+    isCurrentUser?: boolean | null;
     id?: string | null;
     userId?: string | null;
     name?: string | null;

@@ -90,8 +90,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-4">
-                                <label for="payMethod" class="block text-xs font-medium text-muted-color mb-1">Yöntem</label>
+                                <span id="lblPayMethod" class="block text-xs font-medium text-muted-color mb-1">Yöntem</span>
                                 <p-select
+                                    ariaLabelledBy="lblPayMethod"
                                     inputId="payMethod"
                                     [options]="methodOptions"
                                     [(ngModel)]="methodFilter"

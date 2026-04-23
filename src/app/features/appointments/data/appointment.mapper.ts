@@ -167,12 +167,22 @@ function readAppointmentLifecycleEnumFromDto(dto: AppointmentListItemDto | Appoi
     return parseAppointmentStatusRawToEnum(v);
 }
 
+function canonicalAppointmentListItemId(dto: AppointmentListItemDto): string {
+    return (
+        firstTrimmed(
+            dto.appointmentId,
+            dto.id,
+            readDtoString(dto as unknown as AppointmentDetailDto, ['appointmentId', 'AppointmentId', 'id', 'Id'])
+        ) ?? ''
+    );
+}
+
 export function mapAppointmentListItemDtoToVm(dto: AppointmentListItemDto): AppointmentListItemVm {
     const typeNum = readAppointmentTypeNumericFromDto(dto);
     const typeName = readAppointmentTypeNameFromDto(dto);
     const clientId = canonicalClientIdList(dto);
     return {
-        id: dto.id,
+        id: canonicalAppointmentListItemId(dto),
         scheduledAtUtc: dto.scheduledAtUtc ?? null,
         clientId: clientId?.trim() ? clientId : null,
         clientName: str(dto.clientName),

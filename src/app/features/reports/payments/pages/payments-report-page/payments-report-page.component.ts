@@ -9,8 +9,9 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import type { ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-my-clinics-to-select-options';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import type { PaymentsReportQuery } from '@/app/features/reports/payments/models/payments-report-query.model';
 import { PaymentsReportService } from '@/app/features/reports/payments/services/payments-report.service';
@@ -23,6 +24,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.utils';
 
 @Component({
     selector: 'app-payments-report-page',
@@ -58,29 +60,31 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
             <p class="text-sm text-muted-color m-0 mb-4">{{ copy.paymentsReportDefaultPeriodHint }}</p>
             <div class="grid grid-cols-12 gap-3 items-end">
                 <div class="col-span-12 md:col-span-3">
-                    <label for="repFrom" class="block text-xs font-medium text-muted-color mb-1">Tarih (Başlangıç)</label>
+                    <label for="repFrom" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterDateFrom }}</label>
                     <input id="repFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
                 </div>
                 <div class="col-span-12 md:col-span-3">
-                    <label for="repTo" class="block text-xs font-medium text-muted-color mb-1">Tarih (Bitiş)</label>
+                    <label for="repTo" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterDateTo }}</label>
                     <input id="repTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
                 </div>
                 <div class="col-span-12 md:col-span-3">
-                    <label for="repClinic" class="block text-xs font-medium text-muted-color mb-1">Klinik</label>
+                    <span id="lblRepClinic" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterClinic }}</span>
                     <p-select
+                        ariaLabelledBy="lblRepClinic"
                         inputId="repClinic"
                         [options]="clinicOptions()"
                         [(ngModel)]="clinicIdFilter"
                         optionLabel="label"
                         optionValue="value"
-                        [placeholder]="copy.paymentsReportClinicPanelDefault"
+                        [placeholder]="copy.reportsClinicPanelDefault"
                         styleClass="w-full"
                         [showClear]="true"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-3">
-                    <label for="repMethod" class="block text-xs font-medium text-muted-color mb-1">{{ copy.paymentsReportColMethod }}</label>
+                    <span id="lblRepMethod" class="block text-xs font-medium text-muted-color mb-1">{{ copy.paymentsReportColMethod }}</span>
                     <p-select
+                        ariaLabelledBy="lblRepMethod"
                         inputId="repMethod"
                         [options]="methodOptions"
                         [(ngModel)]="methodFilter"
@@ -92,7 +96,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                     />
                 </div>
                 <div class="col-span-12 md:col-span-6">
-                    <label for="repSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                    <label for="repSearch" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterSearch }}</label>
                     <input
                         pInputText
                         id="repSearch"
@@ -106,7 +110,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                     <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                     <p-button
-                        [label]="copy.paymentsReportExportXlsx"
+                        [label]="copy.reportsExportXlsx"
                         icon="pi pi-file-excel"
                         severity="success"
                         (onClick)="exportXlsx()"
@@ -114,7 +118,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         [disabled]="loading() || exporting()"
                     />
                     <p-button
-                        [label]="copy.paymentsReportExportCsv"
+                        [label]="copy.reportsExportCsv"
                         icon="pi pi-download"
                         severity="help"
                         (onClick)="exportCsv()"
@@ -126,7 +130,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         </div>
 
         @if (loading()) {
-            <app-loading-state message="Rapor yükleniyor…" />
+            <app-loading-state [message]="copy.reportsLoadingMessage" />
         } @else if (error()) {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
@@ -135,7 +139,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
             <div class="card mb-4">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 sm:col-span-6">
-                        <span class="block text-muted-color text-sm mb-1">{{ copy.paymentsReportTotalRecords }}</span>
+                        <span class="block text-muted-color text-sm mb-1">{{ copy.reportsTotalRecords }}</span>
                         <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totalCount }}</div>
                     </div>
                     <div class="col-span-12 sm:col-span-6">
@@ -166,14 +170,14 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         >
                             <ng-template #header>
                                 <tr>
-                                    <th>{{ copy.paymentsReportColPaidAt }}</th>
-                                    <th>{{ copy.paymentsReportColClinic }}</th>
+                                    <th>{{ copy.reportsColPrimaryLocalTime }}</th>
+                                    <th>{{ copy.reportsColClinic }}</th>
                                     <th>{{ copy.labelClient }}</th>
                                     <th>{{ copy.labelPet }}</th>
                                     <th class="text-right">Tutar</th>
                                     <th>Para birimi</th>
                                     <th>{{ copy.paymentsReportColMethod }}</th>
-                                    <th>{{ copy.paymentsReportColNotes }}</th>
+                                    <th>{{ copy.reportsColNotes }}</th>
                                     <th style="width: 6rem"></th>
                                 </tr>
                             </ng-template>
@@ -202,7 +206,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                     <td>{{ methodLabel(row.method) }}</td>
                                     <td class="max-w-[14rem] truncate" [title]="row.notes">{{ row.notes }}</td>
                                     <td>
-                                        <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                        <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }}</a>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -210,13 +214,13 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                     </div>
 
                     <div class="lg:hidden space-y-3">
-                        @for (row of displayedRows(); track row.id) {
+                        @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
                             <div
                                 class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
                             >
                                 <div class="text-sm text-muted-color mb-2">{{ formatPaidAt(row.paidAtUtc) }}</div>
                                 <div class="text-sm mb-1">
-                                    <span class="text-muted-color font-medium">{{ copy.paymentsReportColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
+                                    <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
                                 </div>
                                 <div class="text-sm mb-1">
                                     <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
@@ -242,7 +246,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                     <div class="text-sm text-muted-color break-words mb-2">{{ row.notes }}</div>
                                 }
                                 <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }} →</a>
                                 </div>
                             </div>
                         }
@@ -266,8 +270,9 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 })
 export class PaymentsReportPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly reportTableRowTrackKey = reportTableRowTrackKey;
     private readonly reportService = inject(PaymentsReportService);
-    private readonly clinicsService = inject(ClinicsService);
+    private readonly auth = inject(AuthService);
 
     readonly loading = signal(true);
     readonly exportKind = signal<'csv' | 'xlsx' | null>(null);
@@ -291,10 +296,10 @@ export class PaymentsReportPageComponent implements OnInit {
     methodFilter = '';
     clinicIdFilter = '';
 
-    readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.paymentsReportClinicPanelDefault, value: '' }]);
+    readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
 
     readonly methodOptions = [
-        { label: 'Tümü', value: '' },
+        { label: PANEL_COPY.filterPlaceholderAll, value: '' },
         { label: 'Nakit', value: 'cash' },
         { label: 'Kart', value: 'card' },
         { label: 'Havale / EFT', value: 'transfer' }
@@ -311,7 +316,7 @@ export class PaymentsReportPageComponent implements OnInit {
     readonly exporting = () => this.exportKind() !== null;
 
     displayClinicLabel(clinicLabel: string): string {
-        return clinicLabel === '—' ? this.copy.paymentsReportClinicPanelDefault : clinicLabel;
+        return clinicLabel === '—' ? this.copy.reportsClinicPanelDefault : clinicLabel;
     }
 
     isExporting(kind: 'csv' | 'xlsx'): boolean {
@@ -432,14 +437,12 @@ export class PaymentsReportPageComponent implements OnInit {
     }
 
     private loadClinicOptions(): void {
-        this.clinicsService.listClinics().subscribe({
-            next: (list: ClinicListItemVm[]) => {
-                const base = [{ label: this.copy.paymentsReportClinicPanelDefault, value: '' }];
-                const opts = list.map((c) => ({ label: `${c.name} (${c.city})`, value: c.id }));
-                this.clinicOptions.set([...base, ...opts]);
+        this.auth.getMyClinics().subscribe({
+            next: (list: ClinicSummary[]) => {
+                this.clinicOptions.set(mapMyClinicsToSelectOptions(list, this.copy.reportsClinicPanelDefault));
             },
             error: () => {
-                this.clinicOptions.set([{ label: this.copy.paymentsReportClinicPanelDefault, value: '' }]);
+                this.clinicOptions.set([{ label: this.copy.reportsClinicPanelDefault, value: '' }]);
             }
         });
     }
@@ -476,7 +479,7 @@ export class PaymentsReportPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
+                this.error.set(e.message ?? this.copy.reportsLoadErrorFallback);
                 this.loading.set(false);
             }
         });

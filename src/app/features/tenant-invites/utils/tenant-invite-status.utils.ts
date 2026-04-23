@@ -1,10 +1,20 @@
 /**
  * Davet durumu ve iptal / yeniden gönder görünürlüğü.
- * Backend `canCancel` / `canResend` boolean gönderirse öncelik onlardadır; yoksa durum + süre ile türetilir.
+ * Backend `TenantInviteStatus` (`Backend.Veteriner.Domain/Tenants/TenantInviteStatus.cs`):
+ * `Pending = 0`, `Accepted = 1`, `Revoked = 2`. JSON’da sayı olarak gelir.
+ *
+ * “Süresi doldu” ayrı enum değeri değildir: `Pending` (0) + `isExpired === true`.
+ *
+ * Backend `canCancel` / `canResend` boolean gönderirse öncelik onlardadır; yoksa durum + süre (+ API `isExpired`) ile türetilir.
  */
 
+import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+
+/** UI + aksiyon türevi için genişletilmiş lifecycle (`expired_pending` yalnızca gösterim / türetilmiş). */
 export type TenantInviteLifecycle =
     | 'pending'
+    | 'expired_pending'
     | 'sent'
     | 'accepted'
     | 'cancelled'
@@ -17,12 +27,82 @@ function norm(s: string): string {
     return s.trim().toLowerCase().replace(/[\s_-]+/g, '');
 }
 
-/** Ham API durum metninden sınıflandırma (Türkçe/İngilizce varyantlar). */
+/** Ham `status` alanından 0 | 1 | 2; aksi halde `null` (string / bilinmeyen). */
+export function parseTenantInviteStatusCode(raw: string | null | undefined): number | null {
+    const t = (raw ?? '').trim();
+    if (!/^\d+$/.test(t)) {
+        return null;
+    }
+    const n = Number(t);
+    if (n === 0 || n === 1 || n === 2) {
+        return n;
+    }
+    return null;
+}
+
+/**
+ * Backend enum → aksiyon mantığı için temel lifecycle (`Pending` süresi dolmuş olsa bile burada `pending` kalır).
+ */
+export function tenantInviteBackendLifecycleFromStatusCode(code: number | null): TenantInviteLifecycle {
+    if (code === 0) {
+        return 'pending';
+    }
+    if (code === 1) {
+        return 'accepted';
+    }
+    if (code === 2) {
+        return 'revoked';
+    }
+    return 'unknown';
+}
+
+/**
+ * Liste/detay etiketi ve tag için lifecycle.
+ * `0 + isExpired` → `expired_pending` (“Süresi doldu”); diğerleri enum ile uyumlu.
+ */
+export function tenantInviteDisplayLifecycle(statusCode: number | null, isExpiredFromApi: boolean): TenantInviteLifecycle {
+    if (statusCode === 0 && isExpiredFromApi) {
+        return 'expired_pending';
+    }
+    if (statusCode === 0) {
+        return 'pending';
+    }
+    if (statusCode === 1) {
+        return 'accepted';
+    }
+    if (statusCode === 2) {
+        return 'revoked';
+    }
+    return 'unknown';
+}
+
+/** Sayısal enum yoksa string heuristik; `pending` + API `isExpired` ise gösterim `expired_pending`. */
+export function tenantInviteResolveDisplayLifecycle(
+    statusRaw: string | null | undefined,
+    isExpiredFromApi: boolean
+): TenantInviteLifecycle {
+    const code = parseTenantInviteStatusCode(statusRaw);
+    if (code !== null) {
+        return tenantInviteDisplayLifecycle(code, isExpiredFromApi);
+    }
+    const h = tenantInviteLifecycleFromRaw(statusRaw);
+    if (h === 'pending' && isExpiredFromApi) {
+        return 'expired_pending';
+    }
+    return h;
+}
+
+/** Ham API durum metninden sınıflandırma — önce sayısal enum; yoksa Türkçe/İngilizce string (eski API). */
 export function tenantInviteLifecycleFromRaw(raw: string | null | undefined): TenantInviteLifecycle {
-    const s = norm(raw ?? '');
-    if (!s) {
+    const trimmed = (raw ?? '').trim();
+    if (!trimmed) {
         return 'unknown';
     }
+    const code = parseTenantInviteStatusCode(trimmed);
+    if (code !== null) {
+        return tenantInviteBackendLifecycleFromStatusCode(code);
+    }
+    const s = norm(trimmed);
     if (s.includes('accept') || s.includes('tamam') || s.includes('complete') || s.includes('kullan')) {
         return 'accepted';
     }
@@ -42,6 +122,53 @@ export function tenantInviteLifecycleFromRaw(raw: string | null | undefined): Te
         return 'sent';
     }
     return 'unknown';
+}
+
+/** Lifecycle → panel dilinde kısa etiket (liste/detay ortak). */
+export function tenantInviteStatusLabel(lifecycle: TenantInviteLifecycle): string {
+    switch (lifecycle) {
+        case 'pending':
+            return PANEL_COPY.tenantInviteStatusPending;
+        case 'expired_pending':
+            return PANEL_COPY.tenantInviteStatusExpired;
+        case 'sent':
+            return PANEL_COPY.tenantInviteStatusSent;
+        case 'accepted':
+            return PANEL_COPY.tenantInviteStatusAccepted;
+        case 'cancelled':
+            return PANEL_COPY.tenantInviteStatusCancelled;
+        case 'expired':
+            return PANEL_COPY.tenantInviteStatusExpired;
+        case 'declined':
+            return PANEL_COPY.tenantInviteStatusDeclined;
+        case 'revoked':
+            return PANEL_COPY.tenantInviteStatusRevoked;
+        default:
+            return PANEL_COPY.tenantInviteStatusUnknown;
+    }
+}
+
+/** `app-status-tag` / `p-tag` severity. */
+export function tenantInviteStatusTagSeverity(lifecycle: TenantInviteLifecycle): StatusTagSeverity {
+    switch (lifecycle) {
+        case 'accepted':
+            return 'success';
+        case 'expired_pending':
+            return 'danger';
+        case 'cancelled':
+        case 'declined':
+            return 'danger';
+        case 'revoked':
+            return 'secondary';
+        case 'expired':
+            return 'secondary';
+        case 'sent':
+            return 'info';
+        case 'pending':
+            return 'warn';
+        default:
+            return 'secondary';
+    }
 }
 
 function parseIsoMs(iso: string | null | undefined): number | null {
@@ -67,15 +194,21 @@ export interface InviteExplicitActionFlags {
 }
 
 /**
- * `explicit` içindeki alan `true` → göster; `false` → gizle; `null` → türet.
- * Terminal durumlarda (kabul/iptal vb.) her iki aksiyon da kapatılır.
+ * `explicit` içinde ilgili alan `true` / `false` ise sunucu sinyali olarak doğrudan kullanılır.
+ * `null` ise durum + süre (+ API `isExpired`) ile türetilir (geriye dönük uyumluluk).
+ *
+ * `lifecycle` aksiyon türevi için lifecycle’dır (çoğunlukla `pending` | `accepted` | `revoked` | …); `expired_pending` buraya verilmez.
  */
 export function resolveInviteActions(
     lifecycle: TenantInviteLifecycle,
     expiresAtUtc: string | null,
-    explicit: InviteExplicitActionFlags
+    explicit: InviteExplicitActionFlags,
+    isExpiredFromApi: boolean | null = null
 ): { canCancel: boolean; canResend: boolean } {
-    const past = isInvitePastExpiryUtc(expiresAtUtc);
+    const pastByUtc = isInvitePastExpiryUtc(expiresAtUtc);
+    const expiredPendingApi = lifecycle === 'pending' && isExpiredFromApi === true;
+    const pastForResend = pastByUtc || expiredPendingApi;
+
     const terminal =
         lifecycle === 'accepted' ||
         lifecycle === 'cancelled' ||
@@ -85,18 +218,10 @@ export function resolveInviteActions(
 
     const derivedOpen = !terminal && (lifecycle === 'pending' || lifecycle === 'sent');
 
-    const baseCancel =
-        explicit.canCancel === false ? false : explicit.canCancel === true ? true : derivedOpen;
+    const derivedCancel = derivedOpen;
+    const derivedResend = derivedOpen && !pastForResend;
 
-    const baseResend =
-        explicit.canResend === false
-            ? false
-            : explicit.canResend === true
-              ? true
-              : derivedOpen;
-
-    return {
-        canCancel: baseCancel && !terminal,
-        canResend: baseResend && !terminal && !past
-    };
+    const canCancel = explicit.canCancel === null ? derivedCancel : explicit.canCancel;
+    const canResend = explicit.canResend === null ? derivedResend : explicit.canResend;
+    return { canCancel, canResend };
 }

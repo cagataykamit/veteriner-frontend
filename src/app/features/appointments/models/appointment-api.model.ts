@@ -5,6 +5,8 @@
  */
 
 export interface AppointmentListItemDto {
+    /** Bazı rapor yanıtlarında `id` yerine bu alan kullanılabilir. */
+    appointmentId?: string | null;
     id: string;
     tenantId?: string;
     /** Rapor / liste; backend gönderirse gösterilir. */

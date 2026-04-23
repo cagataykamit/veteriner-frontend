@@ -8,8 +8,12 @@ import type {
     TenantInviteListItemVm
 } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
 import {
+    parseTenantInviteStatusCode,
     resolveInviteActions,
-    tenantInviteLifecycleFromRaw
+    tenantInviteBackendLifecycleFromStatusCode,
+    tenantInviteLifecycleFromRaw,
+    tenantInviteResolveDisplayLifecycle,
+    tenantInviteStatusLabel
 } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
@@ -177,14 +181,33 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
     }
     const email = firstString(raw, ['email', 'Email']) ?? '—';
     const statusRaw = firstString(raw, ['status', 'Status', 'state', 'State', 'inviteStatus', 'InviteStatus']);
-    const statusLabel = statusRaw?.trim() ? statusRaw : '—';
-    const lifecycle = tenantInviteLifecycleFromRaw(statusRaw);
+    const isExpiredTri = readTriBool(raw, ['isExpired', 'IsExpired']);
+    const isExpiredApi = isExpiredTri === true;
+    const statusCode = parseTenantInviteStatusCode(statusRaw);
+    const statusLifecycle = tenantInviteResolveDisplayLifecycle(statusRaw, isExpiredApi);
+    const statusLabel = tenantInviteStatusLabel(statusLifecycle);
+    const actionLifecycle =
+        statusCode !== null ? tenantInviteBackendLifecycleFromStatusCode(statusCode) : tenantInviteLifecycleFromRaw(statusRaw);
     const expiresAtUtc = firstString(raw, ['expiresAtUtc', 'ExpiresAtUtc']);
     const explicit = {
-        canCancel: readTriBool(raw, ['canCancel', 'CanCancel', 'isCancellable', 'IsCancellable']),
-        canResend: readTriBool(raw, ['canResend', 'CanResend', 'isResendable', 'IsResendable'])
+        canCancel: readTriBool(raw, [
+            'canCancelInvite',
+            'CanCancelInvite',
+            'canCancel',
+            'CanCancel',
+            'isCancellable',
+            'IsCancellable'
+        ]),
+        canResend: readTriBool(raw, [
+            'canResendInvite',
+            'CanResendInvite',
+            'canResend',
+            'CanResend',
+            'isResendable',
+            'IsResendable'
+        ])
     };
-    const { canCancel, canResend } = resolveInviteActions(lifecycle, expiresAtUtc ?? null, explicit);
+    const { canCancel, canResend } = resolveInviteActions(actionLifecycle, expiresAtUtc ?? null, explicit, isExpiredTri);
     const clinicName = firstString(raw, ['clinicName', 'ClinicName']);
     const clinicId = firstString(raw, ['clinicId', 'ClinicId']);
     const clinicSummary = clinicName?.trim() ? clinicName : clinicId ? `Klinik (${clinicId})` : '—';
@@ -202,6 +225,7 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
         id,
         email,
         statusLabel,
+        statusLifecycle,
         statusRaw: statusRaw ?? null,
         expiresAtUtc: expiresAtUtc ?? null,
         clinicSummary,
@@ -238,6 +262,7 @@ export function mapTenantInviteDetailRaw(raw: unknown): TenantInviteDetailVm | n
         id: row.id,
         email: row.email,
         statusLabel: row.statusLabel,
+        statusLifecycle: row.statusLifecycle,
         statusRaw: row.statusRaw,
         expiresAtUtc: row.expiresAtUtc,
         createdAtUtc: createdAtUtc ?? null,

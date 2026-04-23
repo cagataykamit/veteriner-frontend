@@ -89,8 +89,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6">
-                                <label for="petClient" class="block text-xs font-medium text-muted-color mb-1">Müşteri</label>
+                                <span id="lblPetClient" class="block text-xs font-medium text-muted-color mb-1">Müşteri</span>
                                 <p-select
+                                    ariaLabelledBy="lblPetClient"
                                     inputId="petClient"
                                     [options]="clientOptions()"
                                     [(ngModel)]="clientIdInput"
@@ -103,8 +104,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 />
                             </div>
                             <div class="col-span-12 md:col-span-6">
-                                <label for="petSpecies" class="block text-xs font-medium text-muted-color mb-1">Tür</label>
+                                <span id="lblPetSpecies" class="block text-xs font-medium text-muted-color mb-1">Tür</span>
                                 <p-select
+                                    ariaLabelledBy="lblPetSpecies"
                                     inputId="petSpecies"
                                     [options]="speciesOptions()"
                                     [(ngModel)]="speciesIdInput"
