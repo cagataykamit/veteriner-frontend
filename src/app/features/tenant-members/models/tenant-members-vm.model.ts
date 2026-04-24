@@ -42,7 +42,14 @@ export interface TenantMemberDetailVm {
 /** GET assignable-role-permission-matrix — salt okunur rol satırı. */
 export interface TenantRoleMatrixPermissionVm {
     id: string;
+    /** Backend permission kodu (örn. `Clinics.Update`); Türkçe etiket üretimi için. */
+    code: string | null;
+    /** Chip / kısa etiket (operationClaimName veya code öncelikli). */
     name: string;
+    /** Backend `group`; gruplama için. */
+    group: string | null;
+    /** Uzun açıklama; chip `title` ile gösterilir, chip metni olarak kullanılmaz. */
+    description: string | null;
 }
 
 export interface TenantRolePermissionMatrixRowVm {

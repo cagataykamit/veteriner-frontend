@@ -6,13 +6,24 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import type { OperationClaimOptionVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/features/tenant-invites/services/tenant-invites.service';
-import type { TenantMemberDetailVm } from '@/app/features/tenant-members/models/tenant-members-vm.model';
+import type {
+    TenantMemberDetailVm,
+    TenantRolePermissionMatrixRowVm
+} from '@/app/features/tenant-members/models/tenant-members-vm.model';
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
+import { buildTenantMemberEffectivePermissionSummary } from '@/app/features/tenant-members/utils/tenant-member-effective-permission.utils';
+import {
+    buildPermissionGroupPanels,
+    filterTenantFacingMatrixPermissions,
+    permissionDisplayLabel,
+    permissionTooltipText
+} from '@/app/features/tenant-members/utils/tenant-role-permission-display.utils';
 import {
     isMemberClinicAlreadyAssignedConflict,
     isMemberClinicAlreadyRemoved,
@@ -39,6 +50,7 @@ import { catchError, forkJoin, of } from 'rxjs';
         FormsModule,
         RouterLink,
         ButtonModule,
+        DialogModule,
         ToastModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
@@ -88,7 +100,7 @@ import { catchError, forkJoin, of } from 'rxjs';
 
             @if (m.claimsSectionPresent) {
                 <div class="card mb-4">
-                    <h5 class="mt-0 mb-3">Whitelist roller / yetkiler</h5>
+                    <h5 class="mt-0 mb-3">{{ copy.tenantMemberRolesSectionTitle }}</h5>
                     @if (roleActionError()) {
                         <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ roleActionError() }}</p>
                     }
@@ -145,10 +157,10 @@ import { catchError, forkJoin, of } from 'rxjs';
                             hint="Backend bu koleksiyonu boş döndürdü."
                         />
                     } @else {
-                        <ul class="list-none p-0 m-0 space-y-2">
+                        <div class="flex flex-wrap gap-2 mb-3">
                             @for (c of m.claims; track c.id + c.name) {
-                                <li
-                                    class="p-3 rounded-lg border border-surface-200 dark:border-surface-700 text-sm flex flex-wrap items-center justify-between gap-2"
+                                <div
+                                    class="inline-flex flex-wrap items-center gap-2 max-w-full rounded-full border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-800/40 px-3 py-1.5 text-sm"
                                 >
                                     <span class="font-medium break-words">{{ c.name }}</span>
                                     @if (!ro.mutationBlocked() && !m.isCurrentUser && c.canRemove) {
@@ -167,9 +179,89 @@ import { catchError, forkJoin, of } from 'rxjs';
                                             (onClick)="onRemoveRole(c.id)"
                                         />
                                     }
-                                </li>
+                                </div>
                             }
-                        </ul>
+                        </div>
+                        <p class="text-sm text-muted-color m-0 mb-2">
+                            {{ effectivePermissionSummary().assignedRoleCount }} {{ copy.tenantMemberSummaryRolesPart }}
+                            · {{ effectivePermissionSummary().uniquePermissionCount }}
+                            {{ copy.tenantMemberSummaryUniquePermsPart }}
+                            · {{ effectivePermissionSummary().groupCount }} {{ copy.tenantMemberSummaryGroupsPart }}
+                        </p>
+                        @if (matrixLoadError(); as mxErr) {
+                            <p class="text-xs text-orange-600 dark:text-orange-400 m-0 mb-2" role="status">{{ mxErr }}</p>
+                        }
+                        <p-button
+                            [label]="copy.tenantMemberViewPermissionSummaryButton"
+                            icon="pi pi-list"
+                            styleClass="p-button-outlined"
+                            (onClick)="openPermissionSummary()"
+                        />
+                        <p-dialog
+                            [header]="copy.tenantMemberPermissionDialogTitle"
+                            [modal]="true"
+                            [draggable]="false"
+                            [dismissableMask]="true"
+                            [style]="{ width: 'min(40rem, 96vw)' }"
+                            [visible]="permissionSummaryOpen()"
+                            (visibleChange)="onPermissionSummaryVisible($event)"
+                        >
+                            <p class="text-sm text-muted-color m-0 mb-3">{{ copy.tenantMemberPermissionDialogHint }}</p>
+                            <div
+                                class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40"
+                            >
+                                <div class="text-sm">
+                                    <p class="m-0 text-muted-color">{{ copy.tenantMemberSummaryRolesPart }}</p>
+                                    <p class="m-0 font-semibold">{{ effectivePermissionSummary().assignedRoleCount }}</p>
+                                </div>
+                                <div class="text-sm">
+                                    <p class="m-0 text-muted-color">{{ copy.tenantMemberSummaryUniquePermsPart }}</p>
+                                    <p class="m-0 font-semibold">{{ effectivePermissionSummary().uniquePermissionCount }}</p>
+                                </div>
+                                <div class="text-sm">
+                                    <p class="m-0 text-muted-color">{{ copy.tenantMemberSummaryGroupsPart }}</p>
+                                    <p class="m-0 font-semibold">{{ effectivePermissionSummary().groupCount }}</p>
+                                </div>
+                            </div>
+                            <p class="text-xs font-semibold text-muted-color m-0 mb-2">
+                                {{ copy.tenantMemberPermissionDialogAssignedRoles }}
+                            </p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                @for (rc of m.claims; track rc.id + rc.name) {
+                                    <span
+                                        class="text-xs sm:text-sm px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600"
+                                    >
+                                        {{ rc.name }}
+                                    </span>
+                                }
+                            </div>
+                            @if (effectivePermissionSummary().permissions.length === 0) {
+                                <p class="text-sm text-muted-color m-0">{{ copy.tenantMemberPermissionDialogEmpty }}</p>
+                            } @else {
+                                <p class="text-xs font-semibold text-muted-color m-0 mb-1">{{ copy.tenantMemberPermissionDialogGroupsTitle }}</p>
+                                <p class="text-xs text-muted-color m-0 mb-3">{{ copy.tenantMemberPermissionDialogAccordionHint }}</p>
+                                <div class="max-h-[min(28rem,70vh)] overflow-y-auto pr-1 space-y-2">
+                                    @for (g of effectivePermissionGroups(); track g.rawKey) {
+                                        <details class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/30 px-3 py-2">
+                                            <summary class="cursor-pointer list-none flex items-center justify-between gap-2">
+                                                <span class="text-sm font-semibold">{{ g.title }}</span>
+                                                <span class="text-xs text-muted-color">({{ g.items.length }})</span>
+                                            </summary>
+                                            <ul class="list-none p-0 m-0 mt-3 flex flex-wrap gap-2">
+                                                @for (p of g.items; track p.id + permissionDisplayLabel(p)) {
+                                                    <li
+                                                        class="text-xs sm:text-sm max-w-[18rem] truncate px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600"
+                                                        [attr.title]="permissionTooltipText(p)"
+                                                    >
+                                                        {{ permissionDisplayLabel(p) }}
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </details>
+                                    }
+                                </div>
+                            }
+                        </p-dialog>
                     }
                 </div>
             }
@@ -272,6 +364,9 @@ import { catchError, forkJoin, of } from 'rxjs';
 })
 export class TenantMemberDetailPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    /** Şablonda pipe olmadan kullanım. */
+    readonly permissionDisplayLabel = permissionDisplayLabel;
+    readonly permissionTooltipText = permissionTooltipText;
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly tenantMembers = inject(TenantMembersService);
@@ -299,6 +394,37 @@ export class TenantMemberDetailPageComponent implements OnInit {
     readonly busyAddClinic = signal(false);
     readonly busyRemoveClinicId = signal<string | null>(null);
     readonly clinicActionError = signal<string | null>(null);
+
+    /** `GET .../assignable-role-permission-matrix` — üye özetinde birleşik yetki için. */
+    readonly matrixRows = signal<TenantRolePermissionMatrixRowVm[]>([]);
+    readonly matrixLoadError = signal<string | null>(null);
+    readonly permissionSummaryOpen = signal(false);
+
+    readonly effectivePermissionSummary = computed(() => {
+        const m = this.member();
+        const rows = this.matrixRows();
+        const claims = m?.claims ?? [];
+        const other = this.copy.tenantRoleMatrixGroupOther;
+        const base = buildTenantMemberEffectivePermissionSummary(rows, claims, other);
+        const permissions = filterTenantFacingMatrixPermissions(base.permissions);
+        const groupKeys = new Set<string>();
+        for (const p of permissions) {
+            groupKeys.add(p.group?.trim() || other);
+        }
+        return {
+            assignedRoleCount: base.assignedRoleCount,
+            uniquePermissionCount: permissions.length,
+            groupCount: groupKeys.size,
+            permissions
+        };
+    });
+
+    readonly effectivePermissionGroups = computed(() =>
+        buildPermissionGroupPanels(
+            this.effectivePermissionSummary().permissions,
+            this.copy.tenantRoleMatrixGroupOther
+        )
+    );
 
     readonly assignableFiltered = computed(() => {
         const m = this.member();
@@ -330,6 +456,14 @@ export class TenantMemberDetailPageComponent implements OnInit {
             return 'Hayır';
         }
         return '—';
+    }
+
+    openPermissionSummary(): void {
+        this.permissionSummaryOpen.set(true);
+    }
+
+    onPermissionSummaryVisible(open: boolean): void {
+        this.permissionSummaryOpen.set(!!open);
     }
 
     ngOnInit(): void {
@@ -532,6 +666,9 @@ export class TenantMemberDetailPageComponent implements OnInit {
         this.selectedClinicId.set('');
         this.claimOptions.set([]);
         this.tenantClinicOptions.set([]);
+        this.matrixRows.set([]);
+        this.matrixLoadError.set(null);
+        this.permissionSummaryOpen.set(false);
 
         forkJoin({
             member: this.tenantMembers.getMemberById(id),
@@ -546,12 +683,19 @@ export class TenantMemberDetailPageComponent implements OnInit {
                     this.clinicsPickerError.set('Klinik listesi yüklenemedi; klinik ekleyemeyebilirsiniz.');
                     return of([] as ClinicSummary[]);
                 })
+            ),
+            roleMatrix: this.tenantMembers.getAssignableRolePermissionMatrix().pipe(
+                catchError(() => {
+                    this.matrixLoadError.set(this.copy.tenantMemberMatrixForSummaryError);
+                    return of([] as TenantRolePermissionMatrixRowVm[]);
+                })
             )
         }).subscribe({
-            next: ({ member: vm, claims, tenantClinics: clinics }) => {
+            next: ({ member: vm, claims, tenantClinics: clinics, roleMatrix }) => {
                 this.member.set(vm);
                 this.claimOptions.set(claims);
                 this.tenantClinicOptions.set(clinics);
+                this.matrixRows.set(roleMatrix);
                 this.loading.set(false);
             },
             error: (e: Error) => {

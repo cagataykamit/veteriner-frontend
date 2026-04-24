@@ -360,10 +360,22 @@ export function mapTenantMemberDetailRaw(raw: unknown): TenantMemberDetailVm | n
     };
 }
 
+function truncateLabel(s: string, maxLen: number): string {
+    const t = s.trim();
+    if (t.length <= maxLen) {
+        return t;
+    }
+    return `${t.slice(0, Math.max(0, maxLen - 1))}…`;
+}
+
 function mapMatrixPermissionRow(raw: unknown): TenantRoleMatrixPermissionVm | null {
     if (!isRecord(raw)) {
         return null;
     }
+    const code = firstString(raw, ['code', 'Code']) ?? '';
+    const operationClaimName = firstString(raw, ['operationClaimName', 'OperationClaimName']) ?? '';
+    const description = firstString(raw, ['description', 'Description']);
+    const group = firstString(raw, ['group', 'Group']);
     const id =
         firstString(raw, [
             'id',
@@ -373,25 +385,27 @@ function mapMatrixPermissionRow(raw: unknown): TenantRoleMatrixPermissionVm | nu
             'permissionId',
             'PermissionId',
             'claimId',
-            'ClaimId'
+            'ClaimId',
+            'code',
+            'Code'
         ]) ?? '';
-    const name =
-        firstString(raw, [
-            'name',
-            'Name',
-            'operationClaimName',
-            'OperationClaimName',
-            'permissionName',
-            'PermissionName',
-            'claimName',
-            'ClaimName',
-            'title',
-            'Title'
-        ]) ?? id;
-    if (!id.trim() && !name.trim()) {
+    /** Chip metni: okunur kısa etiket önce; açıklama en son ve kısaltılmış. */
+    const shortLabel =
+        operationClaimName.trim() ||
+        code.trim() ||
+        firstString(raw, ['name', 'Name', 'permissionName', 'PermissionName', 'claimName', 'ClaimName', 'title', 'Title'])?.trim() ||
+        (description?.trim() ? truncateLabel(description, 52) : '') ||
+        id.trim();
+    if (!id.trim() && !shortLabel.trim()) {
         return null;
     }
-    return { id: id.trim() || name.trim(), name: name.trim() || id.trim() || '—' };
+    return {
+        id: id.trim() || code.trim() || shortLabel.trim(),
+        code: code.trim() ? code.trim() : null,
+        name: shortLabel.trim() || '—',
+        group: group?.trim() ? group.trim() : null,
+        description: description?.trim() ? description.trim() : null
+    };
 }
 
 function permissionArrayKeys(): string[] {
@@ -418,7 +432,9 @@ function mapMatrixRoleRow(raw: unknown): TenantRolePermissionMatrixRowVm | null 
             'id',
             'Id',
             'operationClaimGroupId',
-            'OperationClaimGroupId'
+            'OperationClaimGroupId',
+            'operationClaimId',
+            'OperationClaimId'
         ]) ?? '';
     const roleName =
         firstString(raw, [

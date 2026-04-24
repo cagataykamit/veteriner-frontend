@@ -85,16 +85,37 @@ export const PANEL_COPY = {
     vaccinationsReportEmptyHint: 'Tarih aralığını veya diğer filtreleri genişletip tekrar deneyin.',
     /** Kiracı — rol yetki matrisi (salt okunur) */
     tenantRoleMatrixNavTitle: 'Hesap',
-    tenantRoleMatrixTitle: 'Rol yetki matrisi',
+    tenantRoleMatrixTitle: 'Rol Yetki Özeti',
     tenantRoleMatrixDescription:
-        'Kurumda atanabilen rollere bağlı permission’ların özeti; salt okunur. Değişiklikler sunucu kurallarıyla yapılır.',
-    tenantRoleMatrixLoading: 'Rol yetki matrisi yükleniyor…',
-    tenantRoleMatrixLoadError: 'Rol yetki matrisi yüklenemedi.',
-    tenantRoleMatrixEmptyMessage: 'Gösterilecek rol veya yetki satırı yok.',
-    tenantRoleMatrixEmptyHint: 'Backend boş yanıt döndürdü veya bu kurum için tanım yok.',
+        'Bu ekran salt okunur bir özet görünümüdür. Sunucuda tanımlı rol-yetki bağlarını gösterir; tenant panelinden düzenleme yapılamaz.',
+    tenantRoleMatrixLoading: 'Rol Yetki Özeti yükleniyor…',
+    tenantRoleMatrixLoadError: 'Rol Yetki Özeti yüklenemedi.',
+    tenantRoleMatrixEmptyMessage: 'Bu rol için ayrı yetki bağı tanımlı değil.',
+    tenantRoleMatrixEmptyHint: 'Bu ortamda rol yetki bağları tanımlı değil veya henüz uygulanmamış olabilir.',
+    tenantRoleMatrixGlobalInfo:
+        'Bu ekran yalnızca bilgilendirme amaçlıdır. Rol-yetki bağları merkezde tanımlanır ve tenant panelinden değiştirilemez.',
+    tenantRoleMatrixTotalPrefix: 'Toplam',
+    tenantRoleMatrixTotalSuffix: 'yetki',
+    tenantRoleMatrixGroupOther: 'Diğer',
     tenantRoleMatrixColRole: 'Rol',
     tenantRoleMatrixColPermissions: 'Yetkiler',
     tenantRoleMatrixBackMembers: 'Üye listesine dön',
+    /** Üye detayı — roller ve birleşik yetki özeti (salt okunur) */
+    tenantMemberRolesSectionTitle: 'Roller ve yetki özeti',
+    tenantMemberSummaryRolesPart: 'rol atanmış',
+    tenantMemberSummaryUniquePermsPart: 'benzersiz yetki',
+    tenantMemberSummaryGroupsPart: 'yetki grubu',
+    tenantMemberViewPermissionSummaryButton: 'Yetki özetini görüntüle',
+    tenantMemberMatrixForSummaryError:
+        'Yetki özeti için rol matrisi yüklenemedi; özet sayıları eksik veya boş olabilir.',
+    tenantMemberPermissionDialogTitle: 'Yetki Özeti',
+    tenantMemberPermissionDialogHint:
+        'Aşağıda bu kullanıcıya atanmış tüm rollerden gelen etkili yetkiler birleştirilmiş ve tekilleştirilmiş olarak gösterilir.',
+    tenantMemberPermissionDialogAssignedRoles: 'Bu kullanıcıya atanmış roller',
+    tenantMemberPermissionDialogGroupsTitle: 'Yetki grupları',
+    tenantMemberPermissionDialogAccordionHint: 'Gruplar varsayılan kapalıdır; görmek istediğiniz grubu açın.',
+    tenantMemberPermissionDialogEmpty:
+        'Bu üyenin rolleri için tanımlı yetki bulunamadı veya matriste eşleşen satır yok.',
     tenantMemberSelfProfileHint:
         'Bu kayıt sizin hesabınıza ait. Rol ve klinik değişiklikleri bu ekrandan yapılamaz; başka bir yönetici ilgili işlemleri yapmalıdır.',
     /** Kurum daveti — `tenant-invite-status.utils` lifecycle etiketleri (ham status / enum sayısı yerine). */
