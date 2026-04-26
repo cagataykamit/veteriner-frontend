@@ -48,7 +48,7 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
         DashboardMiniTrendChartComponent
     ],
     template: `
-        <app-page-header title="Özet" subtitle="Operasyon" [description]="pageDescription()" />
+        <app-page-header title="Operasyon Özeti" subtitle="Operasyon" [description]="pageDescription()" />
 
         @if (!clinicContextOk()) {
             <div class="card">
@@ -179,9 +179,6 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                 <app-loading-state message="Operasyon verileri yükleniyor…" />
             } @else if (dash(); as d) {
                 <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12">
-                    <p class="text-muted-color text-sm m-0 mb-0">{{ copy.dashboardContextFootnote }}</p>
-                </div>
                 <div class="col-span-12 md:col-span-6 xl:col-span-3">
                     <div class="card mb-0">
                         <span class="block text-muted-color font-medium mb-4">Bugünkü randevular</span>
@@ -756,8 +753,8 @@ export class DashboardPageComponent implements OnInit {
             return this.copy.dashboardNeedClinicHint;
         }
         const label = this.auth.activeClinicLabel()?.trim();
-        const who = label ? `“${label}”` : 'Seçili klinik';
-        return `${who} için operasyon özeti. Özet ve finans kartları önce; randevu, aşı ve muayene listeleri ardından yüklenir.`;
+        const who = label ? label : 'Seçili klinik';
+        return `${who} için günlük operasyon durumu, yaklaşan takipler ve kritik uyarılar.`;
     }
 
     reload(): void {
