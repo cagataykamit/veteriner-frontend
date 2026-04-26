@@ -57,6 +57,7 @@ export const ApiEndpoints = {
     appointments: {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/appointments`,
+        calendar: () => `/api/v1/appointments/calendar`,
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`
     },
     examinations: {

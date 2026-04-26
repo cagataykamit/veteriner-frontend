@@ -12,10 +12,19 @@ import {
     mapUpdateAppointmentToApiBody,
     mapPagedAppointmentsToVm
 } from '@/app/features/appointments/data/appointment.mapper';
+import {
+    appointmentCalendarQueryToHttpParams,
+    mapAppointmentCalendarItemsToVm
+} from '@/app/features/appointments/data/appointment-calendar.mapper';
 import type { AppointmentDetailDto, AppointmentListItemDtoPagedResult } from '@/app/features/appointments/models/appointment-api.model';
+import type {
+    AppointmentCalendarItemDto,
+    AppointmentCalendarQuery
+} from '@/app/features/appointments/models/appointment-calendar-api.model';
 import type { CreateAppointmentRequest, UpdateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
 import type { AppointmentsListQuery } from '@/app/features/appointments/models/appointment-query.model';
 import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentCalendarItemVm } from '@/app/features/appointments/models/appointment-calendar-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface AppointmentsPagedVm {
@@ -42,6 +51,21 @@ export class AppointmentsService {
             map((res) => mapPagedAppointmentsToVm(res)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Randevu listesi yüklenemedi.')))
+            )
+        );
+    }
+
+    getCalendarAppointments(query: AppointmentCalendarQuery): Observable<AppointmentCalendarItemVm[]> {
+        const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+        const merged: AppointmentCalendarQuery = {
+            ...query,
+            clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
+        };
+        const params = appointmentCalendarQueryToHttpParams(merged);
+        return this.api.get<AppointmentCalendarItemDto[]>(ApiEndpoints.appointments.calendar(), params).pipe(
+            map((res) => mapAppointmentCalendarItemsToVm(res)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Takvim randevuları yüklenemedi.')))
             )
         );
     }

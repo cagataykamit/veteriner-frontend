@@ -42,6 +42,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     ],
     template: `
         <app-page-header title="Randevular" subtitle="Operasyon" description="Randevu listesi ve durum takibi.">
+            <a actions routerLink="/panel/appointments/calendar" pButton type="button" label="Takvim Görünümü" icon="pi pi-calendar" severity="secondary"></a>
             @if (!ro.mutationBlocked()) {
                 <a actions routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary"></a>
             } @else {

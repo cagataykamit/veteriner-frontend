@@ -35,6 +35,7 @@ export class AppMenu {
                     { label: 'Türler', icon: 'pi pi-fw pi-tags', routerLink: ['/panel/species'] },
                     { label: 'Irklar', icon: 'pi pi-fw pi-sitemap', routerLink: ['/panel/breeds'] },
                     { label: 'Randevular', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] },
+                    { label: 'Randevu Takvimi', icon: 'pi pi-fw pi-calendar-clock', routerLink: ['/panel/appointments/calendar'] },
                     { label: 'Muayeneler', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/examinations'] },
                     { label: 'Tedaviler', icon: 'pi pi-fw pi-briefcase', routerLink: ['/panel/treatments'] },
                     { label: 'Reçeteler', icon: 'pi pi-fw pi-file', routerLink: ['/panel/prescriptions'] },
