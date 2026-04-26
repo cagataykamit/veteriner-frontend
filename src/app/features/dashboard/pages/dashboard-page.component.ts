@@ -18,7 +18,7 @@ import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import {
     formatDateDisplay,
     formatDateTimeDisplay,
@@ -29,6 +29,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dashboard-summary.model';
+import type { DashboardActionSeverity } from '@/app/features/dashboard/models/dashboard-operational-alerts.model';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 
@@ -68,14 +69,110 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                 </app-empty-state>
             </div>
         } @else {
-            <div class="card mb-6">
-                <h5 class="mt-0 mb-3 text-base font-medium text-surface-900 dark:text-surface-0">{{ copy.dashboardQuickActionsTitle }}</h5>
-                <div class="flex flex-wrap gap-2">
-                    <a routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-sm"></a>
-                    <a routerLink="/panel/clients" pButton type="button" label="Müşteriler" icon="pi pi-users" severity="secondary" class="p-button-sm"></a>
-                    <a routerLink="/panel/pets" pButton type="button" label="Hayvanlar" icon="pi pi-heart" severity="secondary" class="p-button-sm"></a>
-                    <a routerLink="/panel/payments" pButton type="button" label="Ödemeler" icon="pi pi-credit-card" severity="secondary" class="p-button-sm"></a>
+            <div
+                class="grid grid-cols-1 gap-6 mb-6"
+                [ngClass]="{
+                    'lg:grid-cols-2': !loading() && !!dash() && hasTopRightOperationalPanel(dash()!)
+                }"
+            >
+                <div>
+                    <div class="card mb-0 h-full">
+                        <h5 class="mt-0 mb-3 text-base font-medium text-surface-900 dark:text-surface-0">{{ copy.dashboardQuickActionsTitle }}</h5>
+                        <div class="flex flex-wrap gap-2">
+                            @if (canOpenAppointments()) {
+                                <a routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-sm"></a>
+                            }
+                            @if (canOpenClients()) {
+                                <a routerLink="/panel/clients" pButton type="button" label="Müşteriler" icon="pi pi-users" severity="secondary" class="p-button-sm"></a>
+                            }
+                            @if (canOpenPets()) {
+                                <a routerLink="/panel/pets" pButton type="button" label="Hayvanlar" icon="pi pi-heart" severity="secondary" class="p-button-sm"></a>
+                            }
+                            @if (canShowPaymentsQuickAction()) {
+                                <a routerLink="/panel/payments" pButton type="button" label="Ödemeler" icon="pi pi-credit-card" severity="secondary" class="p-button-sm"></a>
+                            }
+                        </div>
+                    </div>
                 </div>
+                @if (!loading() && dash(); as d) {
+                    @if (hasTopRightOperationalPanel(d)) {
+                        <div class="flex flex-col gap-6">
+                            @if (d.alerts.length > 0) {
+                                <div class="card mb-0">
+                                    <h5 class="mt-0 mb-4">Uyarılar</h5>
+                                    <div class="flex flex-col gap-3">
+                                        @for (alert of d.alerts; track alert.key) {
+                                            <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="min-w-0">
+                                                        <div class="flex items-center gap-2 mb-1">
+                                                            <app-status-tag [label]="severityLabel(alert.severity)" [severity]="statusSeverity(alert.severity)" />
+                                                            <span class="font-medium text-surface-900 dark:text-surface-0">{{ alert.title }}</span>
+                                                        </div>
+                                                        <p class="m-0 text-sm text-muted-color">{{ alert.description }}</p>
+                                                    </div>
+                                                    @if (alert.route) {
+                                                        <a
+                                                            [routerLink]="[alert.route]"
+                                                            pButton
+                                                            type="button"
+                                                            label="Git"
+                                                            severity="secondary"
+                                                            class="p-button-sm whitespace-nowrap"
+                                                            [attr.aria-label]="alert.title + ' detayina git'"
+                                                        ></a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            @if (d.canViewOperationalAlerts && d.actionItems.length > 0) {
+                                <div class="card mb-0">
+                                    <h5 class="mt-0 mb-4">Öncelikli işler</h5>
+                                    <div class="grid grid-cols-1 gap-3">
+                                        @for (item of d.actionItems; track item.key) {
+                                            <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="min-w-0">
+                                                        <div class="flex items-center gap-2 mb-1">
+                                                            <app-status-tag [label]="severityLabel(item.severity)" [severity]="statusSeverity(item.severity)" />
+                                                            <span class="font-medium text-surface-900 dark:text-surface-0">{{ item.title }}</span>
+                                                            <span class="text-sm text-muted-color">({{ item.count }})</span>
+                                                        </div>
+                                                        <p class="m-0 text-sm text-muted-color">{{ item.description }}</p>
+                                                    </div>
+                                                    @if (item.route) {
+                                                        <a
+                                                            [routerLink]="[item.route]"
+                                                            pButton
+                                                            type="button"
+                                                            label="İncele"
+                                                            class="p-button-sm whitespace-nowrap"
+                                                            [attr.aria-label]="item.title + ' listesini ac'"
+                                                        ></a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            @if (d.capabilities.error || d.operationalAlerts.error) {
+                                <div class="card mb-0">
+                                    <p class="m-0 text-sm text-muted-color">
+                                        @if (d.capabilities.error) {
+                                            {{ d.capabilities.error }}
+                                        } @else if (d.operationalAlerts.error) {
+                                            {{ d.operationalAlerts.error }}
+                                        }
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
             </div>
 
             @if (loading()) {
@@ -127,24 +224,35 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                         />
                     </div>
                 </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card mb-0 h-full">
-                        <app-dashboard-mini-trend-chart
-                            title="Son 7 gün — tahsilat"
-                            [points]="paidTrendPoints(d)"
-                            valueKind="money"
-                        />
+                @if (canViewFinance(d)) {
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card mb-0 h-full">
+                            <app-dashboard-mini-trend-chart
+                                title="Son 7 gün — tahsilat"
+                                [points]="paidTrendPoints(d)"
+                                valueKind="money"
+                            />
+                        </div>
                     </div>
-                </div>
+                }
 
-                @if (d.finance.error) {
+                @if (canViewFinance(d) && d.finance.error) {
                     <div class="col-span-12">
                         <div class="card mb-0">
                             <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
                             <p class="text-muted-color text-sm mt-2 mb-0">Finans kartları ve son ödemeler bu yüzden eksik olabilir.</p>
+                            <p-button
+                                class="mt-3"
+                                label="Finansı tekrar dene"
+                                icon="pi pi-refresh"
+                                size="small"
+                                severity="secondary"
+                                (onClick)="reload()"
+                                [attr.aria-label]="'Finans bolumunu tekrar dene'"
+                            />
                         </div>
                     </div>
-                } @else if (d.finance.data) {
+                } @else if (canViewFinance(d) && d.finance.data) {
                     <div class="col-span-12 sm:col-span-6 xl:col-span-2">
                         <div class="card mb-0">
                             <span class="block text-muted-color font-medium mb-4">Bugün alınan ödeme</span>
@@ -188,6 +296,15 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                         <div class="card mb-0">
                             <p class="text-red-500 m-0" role="alert">{{ d.summary.error }}</p>
                             <p class="text-muted-color text-sm mt-2 mb-0">Üst sayaçlar bu yüzden eksik olabilir.</p>
+                            <p-button
+                                class="mt-3"
+                                label="Özeti tekrar dene"
+                                icon="pi pi-refresh"
+                                size="small"
+                                severity="secondary"
+                                (onClick)="reload()"
+                                [attr.aria-label]="'Ozet bolumunu tekrar dene'"
+                            />
                         </div>
                     </div>
                 } @else if (d.summary.data) {
@@ -413,92 +530,102 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                     </div>
                 </div>
 
-                <div class="col-span-12">
-                    <div class="card">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                            <h5 class="mt-0 mb-0">Son ödemeler</h5>
-                            <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
-                        @if (d.finance.error) {
-                            <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
-                        } @else if (!d.finance.data || d.finance.data.recentPayments.length === 0) {
-                            <app-empty-state message="Ödeme kaydı yok." />
-                        } @else {
-                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
-                                @for (row of d.finance.data.recentPayments; track row.id) {
-                                    <li
-                                        class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3"
-                                    >
-                                        <div class="text-muted-color text-sm break-words">{{ formatPaidAtUtc(row.paidAtUtc) }}</div>
-                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
-                                            @if (row.clientId) {
-                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
-                                            } @else {
-                                                {{ row.clientName }}
-                                            }
-                                        </div>
-                                        @if (row.petId || (row.petName && row.petName.trim())) {
-                                            <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">
-                                                @if (row.petId) {
-                                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                                } @else {
-                                                    {{ row.petName }}
-                                                }
-                                            </div>
-                                        }
-                                        <div class="min-w-0 break-words text-surface-900 dark:text-surface-0 font-medium">{{ money(row.amount, row.currency) }}</div>
-                                        <div class="text-sm text-muted-color break-words">{{ payMethodLabel(row.method) }}</div>
-                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                            <a
-                                                [routerLink]="['/panel/payments', row.id]"
-                                                class="text-primary font-medium no-underline text-sm inline-flex py-1"
-                                                >Detay →</a
-                                            >
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                            <div class="hidden lg:block">
-                                <p-table [value]="d.finance.data.recentPayments" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
-                                    <ng-template #header>
-                                        <tr>
-                                            <th>Tarih</th>
-                                            <th>Müşteri</th>
-                                            <th>Hayvan</th>
-                                            <th>Tutar</th>
-                                            <th>Yöntem</th>
-                                            <th></th>
-                                        </tr>
-                                    </ng-template>
-                                    <ng-template #body let-row>
-                                        <tr>
-                                            <td>{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
-                                            <td>
+                @if (canViewFinance(d)) {
+                    <div class="col-span-12">
+                        <div class="card">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                                <h5 class="mt-0 mb-0">Son ödemeler</h5>
+                                <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (d.finance.error) {
+                                <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
+                                <p-button
+                                    class="mt-3"
+                                    label="Finansı tekrar dene"
+                                    icon="pi pi-refresh"
+                                    size="small"
+                                    severity="secondary"
+                                    (onClick)="reload()"
+                                />
+                            } @else if (!d.finance.data || d.finance.data.recentPayments.length === 0) {
+                                <app-empty-state message="Ödeme kaydı yok." hint="İlk ödeme kaydı için ödeme ekranına gidin." />
+                            } @else {
+                                <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                    @for (row of d.finance.data.recentPayments; track row.id) {
+                                        <li
+                                            class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3"
+                                        >
+                                            <div class="text-muted-color text-sm break-words">{{ formatPaidAtUtc(row.paidAtUtc) }}</div>
+                                            <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
                                                 @if (row.clientId) {
                                                     <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
                                                 } @else {
                                                     {{ row.clientName }}
                                                 }
-                                            </td>
-                                            <td>
-                                                @if (row.petId) {
-                                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                                } @else {
-                                                    {{ row.petName }}
-                                                }
-                                            </td>
-                                            <td>{{ money(row.amount, row.currency) }}</td>
-                                            <td>{{ payMethodLabel(row.method) }}</td>
-                                            <td>
-                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
-                                            </td>
-                                        </tr>
-                                    </ng-template>
-                                </p-table>
-                            </div>
-                        }
+                                            </div>
+                                            @if (row.petId || (row.petName && row.petName.trim())) {
+                                                <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">
+                                                    @if (row.petId) {
+                                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                    } @else {
+                                                        {{ row.petName }}
+                                                    }
+                                                </div>
+                                            }
+                                            <div class="min-w-0 break-words text-surface-900 dark:text-surface-0 font-medium">{{ money(row.amount, row.currency) }}</div>
+                                            <div class="text-sm text-muted-color break-words">{{ payMethodLabel(row.method) }}</div>
+                                            <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                                <a
+                                                    [routerLink]="['/panel/payments', row.id]"
+                                                    class="text-primary font-medium no-underline text-sm inline-flex py-1"
+                                                    >Detay →</a
+                                                >
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                                <div class="hidden lg:block">
+                                    <p-table [value]="d.finance.data.recentPayments" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                        <ng-template #header>
+                                            <tr>
+                                                <th>Tarih</th>
+                                                <th>Müşteri</th>
+                                                <th>Hayvan</th>
+                                                <th>Tutar</th>
+                                                <th>Yöntem</th>
+                                                <th></th>
+                                            </tr>
+                                        </ng-template>
+                                        <ng-template #body let-row>
+                                            <tr>
+                                                <td>{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
+                                                <td>
+                                                    @if (row.clientId) {
+                                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                                    } @else {
+                                                        {{ row.clientName }}
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (row.petId) {
+                                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                    } @else {
+                                                        {{ row.petName }}
+                                                    }
+                                                </td>
+                                                <td>{{ money(row.amount, row.currency) }}</td>
+                                                <td>{{ payMethodLabel(row.method) }}</td>
+                                                <td>
+                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                </td>
+                                            </tr>
+                                        </ng-template>
+                                    </p-table>
+                                </div>
+                            }
+                        </div>
                     </div>
-                </div>
+                }
 
                 <div class="col-span-12">
                     @if (d.summary.error || !d.summary.data) {
@@ -680,6 +807,51 @@ export class DashboardPageComponent implements OnInit {
         return d.finance.data?.last7DaysPaidTrend ?? buildSevenDayTrendPoints([]);
     }
 
+    canViewFinance(d: DashboardOperationalVm): boolean {
+        return d.canViewFinance;
+    }
+
+    canShowPaymentsQuickAction(): boolean {
+        const d = this.dash();
+        if (d) {
+            return d.canViewFinance;
+        }
+        return this.auth.hasOperationClaim('Payments.Read');
+    }
+
+    canOpenAppointments(): boolean {
+        return this.hasAnyClaim('Appointments.Read', 'Appointments.Create');
+    }
+
+    canOpenClients(): boolean {
+        return this.hasAnyClaim('Clients.Read');
+    }
+
+    canOpenPets(): boolean {
+        return this.hasAnyClaim('Pets.Read');
+    }
+
+    severityLabel(severity: DashboardActionSeverity): string {
+        if (severity === 'danger') {
+            return 'Kritik';
+        }
+        if (severity === 'warning') {
+            return 'Dikkat';
+        }
+        return 'Bilgi';
+    }
+
+    statusSeverity(severity: DashboardActionSeverity): StatusTagSeverity {
+        if (severity === 'warning') {
+            return 'warn';
+        }
+        return severity;
+    }
+
+    hasTopRightOperationalPanel(d: DashboardOperationalVm): boolean {
+        return d.alerts.length > 0 || (d.canViewOperationalAlerts && d.actionItems.length > 0) || !!d.capabilities.error || !!d.operationalAlerts.error;
+    }
+
     todayAppointmentsMetric(d: DashboardOperationalVm): number | null {
         // "Bugünkü randevular" kartı ve tablosu aynı kavramı göstersin:
         // öncelik tablo verisi (aynı source/filter), fallback summary sayacı.
@@ -702,5 +874,13 @@ export class DashboardPageComponent implements OnInit {
         const species = row.speciesName?.trim() || row.species?.trim() || '-';
         const breed = row.breedName?.trim() || row.breed?.trim() || '';
         return breed ? `${species} · ${breed}` : species;
+    }
+
+    private hasAnyClaim(...claims: readonly string[]): boolean {
+        const d = this.dash();
+        if (d?.capabilities.data.isOwner || d?.capabilities.data.isAdmin) {
+            return true;
+        }
+        return claims.some((claim) => this.auth.hasOperationClaim(claim));
     }
 }

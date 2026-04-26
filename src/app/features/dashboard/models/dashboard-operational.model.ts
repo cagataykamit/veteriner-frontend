@@ -1,6 +1,11 @@
 import type { DashboardSummaryDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 import type { DashboardTrendDayVm } from '@/app/features/dashboard/models/dashboard-trend.model';
 import type { DashboardFinanceSummaryVm } from '@/app/features/dashboard/models/dashboard-finance.model';
+import type { DashboardCapabilitiesVm } from '@/app/features/dashboard/models/dashboard-capabilities.model';
+import type {
+    DashboardActionItemVm,
+    DashboardOperationalAlertsVm
+} from '@/app/features/dashboard/models/dashboard-operational-alerts.model';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
@@ -24,6 +29,12 @@ export interface DashboardSummaryNormalized extends DashboardSummaryDto {
 /** Dashboard sayfası — tek snapshot (forkJoin sonucu). */
 export interface DashboardOperationalVm {
     summary: DashboardSection<DashboardSummaryNormalized | null>;
+    capabilities: DashboardSection<DashboardCapabilitiesVm>;
+    operationalAlerts: DashboardSection<DashboardOperationalAlertsVm>;
+    actionItems: DashboardActionItemVm[];
+    alerts: DashboardActionItemVm[];
+    canViewFinance: boolean;
+    canViewOperationalAlerts: boolean;
     todayAppointments: DashboardSection<AppointmentListItemVm[]>;
     upcomingVaccinations: DashboardSection<VaccinationListItemVm[]>;
     recentExaminations: DashboardSection<ExaminationListItemVm[]>;

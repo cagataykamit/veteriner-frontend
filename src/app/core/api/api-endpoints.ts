@@ -23,7 +23,9 @@ export const ApiEndpoints = {
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
-        financeSummary: () => `/api/v1/dashboard/finance-summary`
+        financeSummary: () => `/api/v1/dashboard/finance-summary`,
+        capabilities: () => `/api/v1/dashboard/capabilities`,
+        operationalAlerts: () => `/api/v1/dashboard/operational-alerts`
     },
     clients: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order` (canonical — @see docs/BACKEND-INTEGRATION.md). */
