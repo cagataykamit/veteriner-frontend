@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import type {
@@ -17,6 +17,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatDateDisplay, localDateYyyyMmDd, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 type CalendarViewMode = 'day' | 'week';
+type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
 
 @Component({
     selector: 'app-appointments-calendar-page',
@@ -31,7 +32,7 @@ type CalendarViewMode = 'day' | 'week';
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Randevu Takvimi" subtitle="Operasyon" description="Günlük ve haftalık randevu akışını takip edin.">
+        <app-page-header [title]="pageTitle()" subtitle="Operasyon" [description]="pageDescription()">
             @if (!ro.mutationBlocked()) {
                 <button actions pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary" (click)="createAppointment()"></button>
             } @else {
@@ -40,29 +41,39 @@ type CalendarViewMode = 'day' | 'week';
         </app-page-header>
 
         <div class="card">
-            <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 mb-4">
-                <div class="flex items-center gap-2">
-                    <p-button
-                        [severity]="viewMode() === 'day' ? undefined : 'secondary'"
-                        label="Gün"
-                        size="small"
-                        (onClick)="changeViewMode('day')"
-                    />
-                    <p-button
-                        [severity]="viewMode() === 'week' ? undefined : 'secondary'"
-                        label="Hafta"
-                        size="small"
-                        (onClick)="changeViewMode('week')"
-                    />
+            @if (!isPresetDateGroupedMode()) {
+                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <p-button
+                            [severity]="viewMode() === 'day' ? undefined : 'secondary'"
+                            label="Gün"
+                            size="small"
+                            (onClick)="changeViewMode('day')"
+                        />
+                        <p-button
+                            [severity]="viewMode() === 'week' ? undefined : 'secondary'"
+                            label="Hafta"
+                            size="small"
+                            (onClick)="changeViewMode('week')"
+                        />
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <p-button severity="secondary" size="small" icon="pi pi-angle-left" label="Önceki" (onClick)="previous()" />
+                        <p-button severity="secondary" size="small" label="Bugün" (onClick)="goToday()" />
+                        <p-button severity="secondary" size="small" iconPos="right" icon="pi pi-angle-right" label="Sonraki" (onClick)="next()" />
+                    </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <p-button severity="secondary" size="small" icon="pi pi-angle-left" label="Önceki" (onClick)="previous()" />
-                    <p-button severity="secondary" size="small" label="Bugün" (onClick)="goToday()" />
-                    <p-button severity="secondary" size="small" iconPos="right" icon="pi pi-angle-right" label="Sonraki" (onClick)="next()" />
-                </div>
-            </div>
+            }
 
-            <p class="text-sm text-muted-color mt-0 mb-4">{{ rangeLabel() }}</p>
+            @if (!isPresetDateGroupedMode()) {
+                <p class="text-sm text-muted-color mt-0 mb-4">{{ rangeLabel() }}</p>
+            }
+            @if (activePreset(); as preset) {
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                    <span class="text-sm text-muted-color">{{ presetHelperText(preset) }}</span>
+                    <button pButton type="button" size="small" text="true" label="Filtreyi temizle" icon="pi pi-times" (click)="clearPreset()"></button>
+                </div>
+            }
 
             @if (loading()) {
                 <app-loading-state message="Takvim verileri yükleniyor…" />
@@ -74,6 +85,73 @@ type CalendarViewMode = 'day' | 'week';
                         <button pButton type="button" label="Yeni randevu oluştur" icon="pi pi-plus" (click)="createAppointment()"></button>
                     }
                 </app-empty-state>
+            } @else if (isPresetDateGroupedMode()) {
+                <div class="flex flex-col gap-4">
+                    @for (day of presetGroupedByDate(); track day.dateKey) {
+                        <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                            <h6 class="m-0 mb-3 text-sm font-semibold">{{ day.dateLabel }}</h6>
+                            <div class="flex flex-col gap-2">
+                                @for (item of day.items; track item.id) {
+                                    <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
+                                        <div
+                                            class="grid items-center gap-2 w-full min-h-9"
+                                            style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;"
+                                        >
+                                            <span
+                                                class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
+                                                >{{ item.timeLabel }}</span
+                                            >
+                                            <div class="flex items-center min-w-0">
+                                                <p class="m-0 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" [title]="item.petName">
+                                                    {{ item.petName }}
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center min-w-0">
+                                                <p class="m-0 text-sm text-muted-color min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" [title]="item.clientName">
+                                                    {{ item.clientName }}
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center justify-start whitespace-nowrap">
+                                                <app-status-tag [label]="item.statusLabel" [severity]="item.statusSeverity" />
+                                            </div>
+                                            <div class="flex items-center justify-start whitespace-nowrap">
+                                                <app-status-tag [label]="item.appointmentTypeLabel" severity="secondary" />
+                                            </div>
+                                            <div class="flex items-center justify-center shrink-0">
+                                                <button
+                                                    pButton
+                                                    type="button"
+                                                    size="small"
+                                                    text="true"
+                                                    rounded="true"
+                                                    icon="pi pi-eye"
+                                                    class="h-7 w-7 p-0"
+                                                    [attr.aria-label]="'Randevu detayını görüntüle'"
+                                                    title="Detay"
+                                                    (click)="openDetail(item.id)"
+                                                ></button>
+                                            </div>
+                                            <div class="flex items-center justify-center shrink-0">
+                                                <button
+                                                    pButton
+                                                    type="button"
+                                                    size="small"
+                                                    text="true"
+                                                    rounded="true"
+                                                    icon="pi pi-pencil"
+                                                    class="h-7 w-7 p-0"
+                                                    [attr.aria-label]="'Randevuyu düzenle'"
+                                                    title="Düzenle"
+                                                    (click)="openEdit(item.id)"
+                                                ></button>
+                                            </div>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        </section>
+                    }
+                </div>
             } @else {
                 @if (viewMode() === 'day') {
                     <div class="hidden lg:grid 2xl:grid-cols-2 gap-4">
@@ -390,14 +468,17 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly appointments = inject(AppointmentsService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
 
     readonly viewMode = signal<CalendarViewMode>('day');
     readonly selectedDate = signal(new Date());
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly items = signal<AppointmentCalendarItemVm[]>([]);
+    readonly activePreset = signal<CalendarPreset | null>(null);
 
     readonly groupedByDay = computed(() => groupCalendarItemsByDay(this.items()));
+    readonly presetGroupedByDate = computed(() => this.groupedByDay());
     readonly dayMorningItems = computed(() => this.items().filter((item) => this.getLocalHour(item) < 13));
     readonly dayAfternoonItems = computed(() => this.items().filter((item) => this.getLocalHour(item) >= 13));
     readonly rangeLabel = computed(() => {
@@ -431,7 +512,16 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     });
 
     ngOnInit(): void {
-        this.reload();
+        this.route.queryParamMap.subscribe((params) => {
+            const raw = params.get('preset');
+            const preset = this.toPreset(raw);
+            this.activePreset.set(preset);
+            if (preset) {
+                this.viewMode.set('day');
+                this.selectedDate.set(new Date());
+            }
+            this.reload();
+        });
     }
 
     changeViewMode(mode: CalendarViewMode): void {
@@ -462,13 +552,16 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     reload(): void {
-        const { start, endExclusive } = this.getDateRange();
+        const presetQuery = this.presetQuery();
+        const start = presetQuery?.start ?? this.getDateRange().start;
+        const endExclusive = presetQuery?.endExclusive ?? this.getDateRange().endExclusive;
         this.loading.set(true);
         this.error.set(null);
         this.appointments
             .getCalendarAppointments({
                 dateFromUtc: start.toISOString(),
-                dateToUtc: endExclusive.toISOString()
+                dateToUtc: endExclusive.toISOString(),
+                status: presetQuery?.status
             })
             .subscribe({
                 next: (res) => {
@@ -483,15 +576,52 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     openDetail(id: string): void {
-        void this.router.navigate(['/panel/appointments', id]);
+        void this.router.navigate(['/panel/appointments', id], {
+            queryParams: this.returnContextQueryParams()
+        });
     }
 
     openEdit(id: string): void {
-        void this.router.navigate(['/panel/appointments', id, 'edit']);
+        void this.router.navigate(['/panel/appointments', id, 'edit'], {
+            queryParams: this.returnContextQueryParams()
+        });
     }
 
     createAppointment(): void {
         void this.router.navigate(['/panel/appointments/new']);
+    }
+
+    pageTitle(): string {
+        const preset = this.activePreset();
+        if (preset === 'overdue-appointments') {
+            return 'Zamanı Geçmiş Randevular';
+        }
+        if (preset === 'upcoming-24h') {
+            return 'Önümüzdeki 24 Saatteki Randevular';
+        }
+        if (preset === 'today-cancelled') {
+            return 'Bugün İptal Edilen Randevular';
+        }
+        return 'Randevu Takvimi';
+    }
+
+    pageDescription(): string {
+        const preset = this.activePreset();
+        if (preset === 'overdue-appointments') {
+            return 'Planlanan zamanı geçmiş ve hâlâ tamamlanmamış randevular.';
+        }
+        if (preset === 'upcoming-24h') {
+            return 'Önümüzdeki 24 saat içinde planlanan randevular.';
+        }
+        if (preset === 'today-cancelled') {
+            return 'Bugün iptal edilen randevuların listesi.';
+        }
+        return 'Günlük ve haftalık randevu akışını takip edin.';
+    }
+
+    clearPreset(): void {
+        this.activePreset.set(null);
+        void this.router.navigate(['/panel/appointments/calendar']);
     }
 
     private getDateRange(): { start: Date; endExclusive: Date } {
@@ -525,5 +655,71 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             return 99;
         }
         return d.getHours();
+    }
+
+    private toPreset(value: string | null): CalendarPreset | null {
+        if (value === 'overdue-appointments' || value === 'upcoming-24h' || value === 'today-cancelled') {
+            return value;
+        }
+        return null;
+    }
+
+    private presetQuery(): { start: Date; endExclusive: Date; status?: string } | null {
+        const now = new Date();
+        const preset = this.activePreset();
+        if (!preset) {
+            return null;
+        }
+        if (preset === 'overdue-appointments') {
+            const start = new Date(now);
+            start.setDate(start.getDate() - 45);
+            return { start, endExclusive: now, status: 'Scheduled' };
+        }
+        if (preset === 'upcoming-24h') {
+            const end = new Date(now);
+            end.setHours(end.getHours() + 24);
+            return { start: now, endExclusive: end, status: 'Scheduled' };
+        }
+        const start = this.startOfDay(now);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 1);
+        return { start, endExclusive: end, status: 'Cancelled' };
+    }
+
+    presetHelperText(preset: CalendarPreset): string {
+        if (preset === 'overdue-appointments') {
+            return 'Zamanı geçmiş randevular filtreleniyor.';
+        }
+        if (preset === 'upcoming-24h') {
+            return 'Önümüzdeki 24 saat randevuları filtreleniyor.';
+        }
+        return 'Bugün iptal edilen randevular filtreleniyor.';
+    }
+
+    isPresetDateGroupedMode(): boolean {
+        const preset = this.activePreset();
+        return preset === 'overdue-appointments' || preset === 'upcoming-24h';
+    }
+
+    private returnContextQueryParams(): Record<string, string> {
+        const returnUrl = this.router.url;
+        return {
+            returnUrl,
+            returnLabel: this.returnLabelForContext()
+        };
+    }
+
+    private returnLabelForContext(): string {
+        const preset = this.activePreset();
+        if (preset === 'overdue-appointments') {
+            return 'Zamanı geçmiş randevulara dön';
+        }
+        if (preset === 'upcoming-24h') {
+            return 'Önümüzdeki 24 saat randevularına dön';
+        }
+        if (preset === 'today-cancelled') {
+            return 'Bugün iptal edilen randevulara dön';
+        }
+        return 'Randevu takvimine dön';
     }
 }

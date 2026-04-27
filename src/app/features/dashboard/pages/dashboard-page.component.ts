@@ -146,6 +146,7 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                                                     @if (item.route) {
                                                         <a
                                                             [routerLink]="[item.route]"
+                                                            [queryParams]="item.queryParams ?? undefined"
                                                             pButton
                                                             type="button"
                                                             label="İncele"

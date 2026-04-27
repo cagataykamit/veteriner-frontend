@@ -39,7 +39,7 @@ import { EMPTY, switchMap } from 'rxjs';
         AppStatusTagComponent
     ],
     template: `
-        <a routerLink="/panel/appointments" class="text-primary font-medium no-underline inline-block mb-4">← Randevu listesine dön</a>
+        <a href="" (click)="goBack($event)" class="text-primary font-medium no-underline inline-block mb-4">← {{ backLabel() }}</a>
 
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Randevu kaydedildi.</p>
@@ -63,6 +63,7 @@ import { EMPTY, switchMap } from 'rxjs';
                     @if (!ro.mutationBlocked()) {
                         <a
                             [routerLink]="['/panel/appointments', appt()!.id, 'edit']"
+                            [queryParams]="returnContextQueryParams() ?? undefined"
                             pButton
                             type="button"
                             label="Düzenle"
@@ -254,6 +255,8 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly linkedExamLoading = signal(false);
     readonly linkedExamError = signal<string | null>(null);
     readonly linkedExams = signal<ExaminationListItemVm[]>([]);
+    readonly returnUrl = signal<string | null>(null);
+    readonly backLabel = signal('Randevu listesine dön');
 
     private lastId: string | null = null;
 
@@ -266,12 +269,13 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly isCancelledForExam = isAppointmentCancelledStatus;
 
     ngOnInit(): void {
+        this.readReturnContext();
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
             this.showSavedBanner.set(true);
             void this.router.navigate([], {
                 relativeTo: this.route,
                 queryParams: { saved: null },
-                queryParamsHandling: '',
+                queryParamsHandling: 'merge',
                 replaceUrl: true
             });
         }
@@ -323,6 +327,24 @@ export class AppointmentDetailPageComponent implements OnInit {
         });
     }
 
+    returnContextQueryParams(): Record<string, string> | null {
+        const url = this.returnUrl();
+        if (!url) {
+            return null;
+        }
+        return { returnUrl: url, returnLabel: this.backLabel() };
+    }
+
+    goBack(event: Event): void {
+        event.preventDefault();
+        const safeUrl = this.returnUrl();
+        if (safeUrl) {
+            void this.router.navigateByUrl(safeUrl);
+            return;
+        }
+        void this.router.navigate(['/panel/appointments']);
+    }
+
     private loadLinkedExaminations(x: AppointmentDetailVm): void {
         this.linkedExamLoading.set(true);
         this.linkedExamError.set(null);
@@ -336,5 +358,28 @@ export class AppointmentDetailPageComponent implements OnInit {
                 this.linkedExamLoading.set(false);
             }
         });
+    }
+
+    private readReturnContext(): void {
+        const query = this.route.snapshot.queryParamMap;
+        const safeUrl = this.normalizeSafeReturnUrl(query.get('returnUrl'));
+        this.returnUrl.set(safeUrl);
+        if (safeUrl) {
+            const label = query.get('returnLabel')?.trim();
+            this.backLabel.set(label || 'Randevu takvimine dön');
+            return;
+        }
+        this.backLabel.set('Randevu listesine dön');
+    }
+
+    private normalizeSafeReturnUrl(raw: string | null): string | null {
+        const value = raw?.trim();
+        if (!value) {
+            return null;
+        }
+        if (!value.startsWith('/panel/')) {
+            return null;
+        }
+        return value;
     }
 }

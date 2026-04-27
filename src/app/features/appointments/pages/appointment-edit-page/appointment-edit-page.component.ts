@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -45,7 +45,6 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         InputTextModule,
         SelectModule,
@@ -56,7 +55,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
         QuickPetDialogComponent
     ],
     template: `
-        <a routerLink="/panel/appointments" class="text-primary font-medium no-underline inline-block mb-4">← Randevu listesine dön</a>
+        <a href="" (click)="goBack($event)" class="text-primary font-medium no-underline inline-block mb-4">← {{ backLabel() }}</a>
 
         @if (loading()) {
             <app-loading-state message="Randevu düzenleme bilgileri yükleniyor…" />
@@ -259,6 +258,8 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly petOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<AppointmentUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
+    readonly returnUrl = signal<string | null>(null);
+    readonly backLabel = signal('Randevu listesine dön');
 
     readonly quickClientOpen = signal(false);
     readonly quickPetOpen = signal(false);
@@ -298,6 +299,7 @@ export class AppointmentEditPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.readReturnContext();
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
         if (!id) {
@@ -407,7 +409,12 @@ export class AppointmentEditPageComponent implements OnInit {
         this.appointmentsService.updateAppointment(this.appointmentId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/appointments', this.appointmentId], { queryParams: { saved: '1' } });
+                void this.router.navigate(['/panel/appointments', this.appointmentId], {
+                    queryParams: {
+                        saved: '1',
+                        ...(this.returnContextQueryParams() ?? {})
+                    }
+                });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
@@ -428,7 +435,24 @@ export class AppointmentEditPageComponent implements OnInit {
     }
 
     goDetail(): void {
-        void this.router.navigate(['/panel/appointments', this.appointmentId]);
+        const safeUrl = this.returnUrl();
+        if (safeUrl) {
+            void this.router.navigateByUrl(safeUrl);
+            return;
+        }
+        void this.router.navigate(['/panel/appointments', this.appointmentId], {
+            queryParams: this.returnContextQueryParams() ?? undefined
+        });
+    }
+
+    goBack(event: Event): void {
+        event.preventDefault();
+        const safeUrl = this.returnUrl();
+        if (safeUrl) {
+            void this.router.navigateByUrl(safeUrl);
+            return;
+        }
+        void this.router.navigate(['/panel/appointments']);
     }
 
     petQuickAddDisabled(): boolean {
@@ -569,6 +593,37 @@ export class AppointmentEditPageComponent implements OnInit {
             return messageFromHttpError(e, fallback);
         }
         return e instanceof Error ? e.message : fallback;
+    }
+
+    private returnContextQueryParams(): Record<string, string> | null {
+        const url = this.returnUrl();
+        if (!url) {
+            return null;
+        }
+        return { returnUrl: url, returnLabel: this.backLabel() };
+    }
+
+    private readReturnContext(): void {
+        const query = this.route.snapshot.queryParamMap;
+        const safeUrl = this.normalizeSafeReturnUrl(query.get('returnUrl'));
+        this.returnUrl.set(safeUrl);
+        if (safeUrl) {
+            const label = query.get('returnLabel')?.trim();
+            this.backLabel.set(label || 'Randevu takvimine dön');
+            return;
+        }
+        this.backLabel.set('Randevu listesine dön');
+    }
+
+    private normalizeSafeReturnUrl(raw: string | null): string | null {
+        const value = raw?.trim();
+        if (!value) {
+            return null;
+        }
+        if (!value.startsWith('/panel/')) {
+            return null;
+        }
+        return value;
     }
 }
 

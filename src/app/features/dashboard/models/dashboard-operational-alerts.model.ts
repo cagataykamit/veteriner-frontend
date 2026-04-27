@@ -26,4 +26,5 @@ export interface DashboardActionItemVm {
     severity: DashboardActionSeverity;
     count: number;
     route: string | null;
+    queryParams?: Record<string, string> | null;
 }

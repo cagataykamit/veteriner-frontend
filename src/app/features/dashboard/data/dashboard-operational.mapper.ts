@@ -99,12 +99,13 @@ function item(
     title: string,
     description: string,
     severity: DashboardActionSeverity,
-    route: string | null
+    route: string | null,
+    queryParams: Record<string, string> | null = null
 ): DashboardActionItemVm | null {
     if (count <= 0) {
         return null;
     }
-    return { key, title, description, severity, count, route };
+    return { key, title, description, severity, count, route, queryParams };
 }
 
 function severityRank(severity: DashboardActionSeverity): number {
@@ -125,7 +126,8 @@ export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm
             'Zamanı geçmiş randevular',
             'Planlanan zamanı geçmiş randevular kontrol edilmeli.',
             alerts.overdueScheduledAppointmentsCount >= 3 ? 'danger' : 'warning',
-            '/panel/appointments'
+            '/panel/appointments/calendar',
+            { preset: 'overdue-appointments' }
         ),
         item(
             'upcoming24hAppointments',
@@ -133,7 +135,8 @@ export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm
             'Önümüzdeki 24 saatte randevular',
             'Yaklaşan randevu yoğunluğunu kontrol edin.',
             'info',
-            '/panel/appointments'
+            '/panel/appointments/calendar',
+            { preset: 'upcoming-24h' }
         ),
         item(
             'todayCancelledAppointments',
@@ -141,7 +144,8 @@ export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm
             'Bugün iptal edilen randevular',
             'İptal edilen randevular günlük planı etkileyebilir.',
             'warning',
-            '/panel/appointments'
+            '/panel/appointments/calendar',
+            { preset: 'today-cancelled' }
         ),
         item(
             'overdueVaccinations',
