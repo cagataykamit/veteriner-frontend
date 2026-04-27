@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
+import { AuthService } from '@/app/core/auth/auth.service';
 
 @Component({
     selector: 'app-menu',
@@ -19,9 +20,20 @@ import { AppMenuitem } from './app.menuitem';
     </ul> `,
 })
 export class AppMenu {
+    private readonly auth = inject(AuthService);
     model: MenuItem[] = [];
 
     ngOnInit() {
+        const canReadReminders = this.auth.hasOperationClaim('Reminders.Read');
+        const canManageReminders = this.auth.hasOperationClaim('Reminders.Manage');
+        const reminderItems: MenuItem[] = [];
+        if (canReadReminders || canManageReminders) {
+            reminderItems.push({ label: 'Hatırlatmalar', icon: 'pi pi-fw pi-bell', routerLink: ['/panel/settings/reminders'] });
+        }
+        if (canReadReminders) {
+            reminderItems.push({ label: 'Hatırlatma Geçmişi', icon: 'pi pi-fw pi-history', routerLink: ['/panel/settings/reminders/logs'] });
+        }
+
         this.model = [
             {
                 label: 'Panel',
@@ -76,6 +88,7 @@ export class AppMenu {
                     { label: 'Kurum Bilgileri', icon: 'pi pi-fw pi-id-card', routerLink: ['/panel/settings/organization'] },
                     { label: 'Abonelik', icon: 'pi pi-fw pi-wallet', routerLink: ['/panel/settings/subscription'] },
                     { label: 'Klinikler', icon: 'pi pi-fw pi-building', routerLink: ['/panel/settings/clinics'] },
+                    ...reminderItems,
                     { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', routerLink: ['/panel/settings/members'] },
                     { label: 'Davetler', icon: 'pi pi-fw pi-list', routerLink: ['/panel/settings/invites/list'] },
                     { label: 'Davet oluştur', icon: 'pi pi-fw pi-user-plus', routerLink: ['/panel/settings/invites'] },

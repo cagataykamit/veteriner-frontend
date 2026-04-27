@@ -60,6 +60,10 @@ export const ApiEndpoints = {
         calendar: () => `/api/v1/appointments/calendar`,
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`
     },
+    reminders: {
+        settings: () => `/api/v1/reminders/settings`,
+        logs: () => `/api/v1/reminders/logs`
+    },
     examinations: {
         /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`, `appointmentId`). */
         list: () => `/api/v1/examinations`,
