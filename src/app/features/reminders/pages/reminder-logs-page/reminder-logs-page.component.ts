@@ -14,7 +14,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 @Component({
     selector: 'app-reminder-logs-page',
@@ -178,7 +178,7 @@ export class ReminderLogsPageComponent implements OnInit {
     ];
 
     readonly displayedRows = computed(() => this.rows());
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     private suppressNextLazy = false;
     private lastLoadKey = '';

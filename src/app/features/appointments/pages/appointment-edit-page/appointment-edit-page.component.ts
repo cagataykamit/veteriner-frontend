@@ -32,7 +32,7 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { dateTimeLocalInputToIsoUtc, utcIsoStringToDateTimeLocalInput } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -341,7 +341,7 @@ export class AppointmentEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        scheduledAtLocal: toDateTimeLocalInput(x.scheduledAtUtc),
+                        scheduledAtLocal: utcIsoStringToDateTimeLocalInput(x.scheduledAtUtc),
                         appointmentType: x.appointmentType,
                         status: x.status,
                         notes: x.notes
@@ -625,20 +625,4 @@ export class AppointmentEditPageComponent implements OnInit {
         }
         return value;
     }
-}
-
-function toDateTimeLocalInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
 }

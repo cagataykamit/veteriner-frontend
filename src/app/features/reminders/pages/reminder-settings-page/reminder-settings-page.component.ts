@@ -17,7 +17,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 @Component({
     selector: 'app-reminder-settings-page',
@@ -189,7 +189,7 @@ export class ReminderSettingsPageComponent implements OnInit {
     }
 
     updatedAtLabel(): string | null {
-        return formatDateTimeDisplay(this.updatedAtUtc());
+        return formatUtcIsoAsLocalDateTimeDisplay(this.updatedAtUtc());
     }
 
     showNoManagePermissionBanner(): boolean {

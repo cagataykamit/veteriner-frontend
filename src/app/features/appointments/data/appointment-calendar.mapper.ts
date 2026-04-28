@@ -9,7 +9,7 @@ import type {
 } from '@/app/features/appointments/models/appointment-calendar-vm.model';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
-import { formatDateDisplay, formatTimeDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -49,8 +49,8 @@ export function mapAppointmentCalendarItemDtoToVm(dto: AppointmentCalendarItemDt
         petId: dto.petId?.trim() ? dto.petId.trim() : null,
         clientId: dto.clientId?.trim() ? dto.clientId.trim() : null,
         scheduledAtUtc: scheduled,
-        localDateLabel: formatDateDisplay(scheduled),
-        timeLabel: formatTimeDisplay(scheduled),
+        localDateLabel: formatUtcIsoAsLocalDateDisplay(scheduled),
+        timeLabel: formatUtcIsoAsLocalTimeDisplay(scheduled),
         status: dto.status ?? null,
         statusLabel: appointmentStatusLabel(dto.status ?? null),
         statusSeverity: appointmentStatusSeverity(dto.status ?? null),
@@ -83,7 +83,7 @@ export function groupCalendarItemsByDay(items: readonly AppointmentCalendarItemV
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([dateKey, dayItems]) => ({
             dateKey,
-            dateLabel: formatDateDisplay(dayItems[0]?.scheduledAtUtc ?? null),
+            dateLabel: formatUtcIsoAsLocalDateDisplay(dayItems[0]?.scheduledAtUtc ?? null),
             items: dayItems
         }));
 }

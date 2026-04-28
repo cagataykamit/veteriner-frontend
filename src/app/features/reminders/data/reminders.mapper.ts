@@ -12,27 +12,43 @@ import type {
     ReminderSettingsUpdateRequestDto as ReminderSettingsUpdateBody
 } from '@/app/features/reminders/models/reminder-settings-api.model';
 
-function safeText(value: string | null | undefined, fallback = '—'): string {
-    const t = value?.trim();
-    return t ? t : fallback;
+function toTrimmedString(value: unknown): string {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    if (typeof value === 'string') {
+        return value.trim();
+    }
+    return String(value).trim();
+}
+
+function safeText(value: unknown, fallback = '—'): string {
+    const t = toTrimmedString(value);
+    return t || fallback;
+}
+
+function appendQueryParam(params: HttpParams, key: string, value: unknown): HttpParams {
+    if (value === null || value === undefined) {
+        return params;
+    }
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        return trimmed ? params.set(key, trimmed) : params;
+    }
+    if (value instanceof Date) {
+        return params.set(key, value.toISOString());
+    }
+    return params.set(key, String(value));
 }
 
 export function reminderLogsQueryToHttpParams(query: ReminderLogsQuery): HttpParams {
     let p = new HttpParams();
-    p = p.set('page', String(query.page));
-    p = p.set('pageSize', String(query.pageSize));
-    if (query.reminderType?.trim()) {
-        p = p.set('reminderType', query.reminderType.trim());
-    }
-    if (query.status?.trim()) {
-        p = p.set('status', query.status.trim());
-    }
-    if (query.fromUtc?.trim()) {
-        p = p.set('fromUtc', query.fromUtc.trim());
-    }
-    if (query.toUtc?.trim()) {
-        p = p.set('toUtc', query.toUtc.trim());
-    }
+    p = appendQueryParam(p, 'page', query.page);
+    p = appendQueryParam(p, 'pageSize', query.pageSize);
+    p = appendQueryParam(p, 'reminderType', query.reminderType);
+    p = appendQueryParam(p, 'status', query.status);
+    p = appendQueryParam(p, 'fromUtc', query.fromUtc);
+    p = appendQueryParam(p, 'toUtc', query.toUtc);
     return p;
 }
 
@@ -83,7 +99,7 @@ export function mapReminderLogsPagedDtoToVm(dto: ReminderLogsPagedDto): Reminder
 }
 
 function reminderTypeLabel(type: string | null): string {
-    const t = type?.trim().toLowerCase();
+    const t = toTrimmedString(type).toLowerCase();
     if (t === 'appointment') {
         return 'Randevu';
     }
@@ -94,7 +110,7 @@ function reminderTypeLabel(type: string | null): string {
 }
 
 function reminderStatusLabel(status: string | null): string {
-    const s = status?.trim().toLowerCase();
+    const s = toTrimmedString(status).toLowerCase();
     if (s === 'pending') {
         return 'Bekliyor';
     }
@@ -114,7 +130,7 @@ function reminderStatusLabel(status: string | null): string {
 }
 
 function reminderStatusSeverity(status: string | null): ReminderLogItemVm['statusSeverity'] {
-    const s = status?.trim().toLowerCase();
+    const s = toTrimmedString(status).toLowerCase();
     if (s === 'sent') {
         return 'success';
     }
@@ -134,8 +150,8 @@ function reminderStatusSeverity(status: string | null): ReminderLogItemVm['statu
 }
 
 function recipientDisplay(dto: ReminderLogItemDto): string {
-    const name = dto.recipientName?.trim();
-    const email = dto.recipientEmail?.trim();
+    const name = toTrimmedString(dto.recipientName);
+    const email = toTrimmedString(dto.recipientEmail);
     if (name && email) {
         return `${name} (${email})`;
     }

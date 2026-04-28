@@ -1,4 +1,5 @@
 const DEFAULT_LOCALE = 'tr-TR';
+const DEFAULT_UTC_DISPLAY_TIME_ZONE = 'Europe/Istanbul';
 
 /** Yerel takvim günü `yyyy-MM-dd` (form `type="date"`; liste API `dateFromUtc`/`dateToUtc` dönüşümü mapper’da). */
 export function localDateYyyyMmDd(d: Date = new Date()): string {
@@ -79,13 +80,83 @@ export function formatUtcIsoAsLocalDateTimeDisplay(value: string | Date | null |
         if (Number.isNaN(value.getTime())) {
             return '—';
         }
-        return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(value);
+        return new Intl.DateTimeFormat(locale, {
+            timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE,
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(value);
     }
     const d = parseUtcApiInstantIsoString(value);
     if (!d) {
         return '—';
     }
-    return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    return new Intl.DateTimeFormat(locale, {
+        timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE,
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(d);
+}
+
+/** UTC ISO anı -> Europe/Istanbul tarih (`dd.MM.yyyy`) */
+export function formatUtcIsoAsLocalDateDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+    if (value == null || value === '') {
+        return '—';
+    }
+    const d = value instanceof Date ? value : parseUtcApiInstantIsoString(value);
+    if (!d || Number.isNaN(d.getTime())) {
+        return '—';
+    }
+    return new Intl.DateTimeFormat(locale, {
+        timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE,
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    }).format(d);
+}
+
+/** UTC ISO anı -> Europe/Istanbul saat (`HH:mm`) */
+export function formatUtcIsoAsLocalTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+    if (value == null || value === '') {
+        return '—';
+    }
+    const d = value instanceof Date ? value : parseUtcApiInstantIsoString(value);
+    if (!d || Number.isNaN(d.getTime())) {
+        return '—';
+    }
+    return new Intl.DateTimeFormat(locale, {
+        timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE,
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(d);
+}
+
+/** Alias: UTC anı -> local datetime (TR/Istanbul). */
+export function formatUtcToLocalDateTime(value: string | Date | null | undefined): string {
+    return formatUtcIsoAsLocalDateTimeDisplay(value);
+}
+
+/** Alias: UTC anı -> local date (TR/Istanbul). */
+export function formatUtcToLocalDate(value: string | Date | null | undefined): string {
+    return formatUtcIsoAsLocalDateDisplay(value);
+}
+
+/** Alias: UTC anı -> local time (TR/Istanbul). */
+export function formatUtcToLocalTime(value: string | Date | null | undefined): string {
+    return formatUtcIsoAsLocalTimeDisplay(value);
+}
+
+/** Yerel Date -> UTC ISO (`toISOString`) */
+export function toUtcIsoFromLocalDate(value: Date | null | undefined): string | null {
+    if (!value || Number.isNaN(value.getTime())) {
+        return null;
+    }
+    return value.toISOString();
 }
 
 /** GET `paidAtUtc` → `datetime-local` (yerel saat bileşenleri). */
