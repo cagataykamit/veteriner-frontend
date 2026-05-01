@@ -1,11 +1,12 @@
-export type ReminderTypeApi = 'Appointment' | 'Vaccination' | string;
-export type ReminderStatusApi = 'Pending' | 'Enqueued' | 'Sent' | 'Failed' | 'Skipped' | string;
+export type ReminderTypeApi = 'Appointment' | 'Vaccination' | 0 | 1 | string | number;
+export type ReminderStatusApi = 'Pending' | 'Enqueued' | 'Sent' | 'Failed' | 'Skipped' | 0 | 1 | 2 | 3 | 4 | string | number;
+export type ReminderSourceEntityTypeApi = 'Appointment' | 'Vaccination' | 0 | 1 | string | number;
 
 export interface ReminderLogItemDto {
     id: string;
     clinicId: string | null;
     reminderType: ReminderTypeApi | null;
-    sourceEntityType: string | null;
+    sourceEntityType: ReminderSourceEntityTypeApi | null;
     sourceEntityId: string | null;
     recipientEmail: string | null;
     recipientName: string | null;

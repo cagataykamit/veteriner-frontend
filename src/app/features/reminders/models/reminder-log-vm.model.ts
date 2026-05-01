@@ -3,10 +3,13 @@ import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-ta
 export interface ReminderLogItemVm {
     id: string;
     reminderTypeLabel: string;
+    sourceEntityTypeLabel: string;
+    sourceEntityId: string | null;
     statusLabel: string;
     statusSeverity: StatusTagSeverity;
     recipientDisplay: string;
-    relatedRecordDisplay: string;
+    relatedRecordLabel: string;
+    relatedRecordRoute: string[] | null;
     errorDisplay: string;
     primaryDateUtc: string | null;
 }

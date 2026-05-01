@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
@@ -22,6 +23,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
     imports: [
         CommonModule,
         FormsModule,
+        RouterLink,
         TableModule,
         Paginator,
         SelectModule,
@@ -108,8 +110,20 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                         <td>{{ formatDateTime(row.primaryDateUtc) }}</td>
                                         <td>{{ row.reminderTypeLabel }}</td>
                                         <td class="break-words">{{ row.recipientDisplay }}</td>
-                                        <td><app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" /></td>
-                                        <td class="break-words">{{ row.relatedRecordDisplay }}</td>
+                                        <td class="whitespace-nowrap">
+                                            <span class="inline-flex items-center w-auto max-w-fit whitespace-nowrap">
+                                                <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                            </span>
+                                        </td>
+                                        <td class="break-words">
+                                            @if (row.relatedRecordRoute) {
+                                                <a [routerLink]="row.relatedRecordRoute" class="text-primary font-medium no-underline">
+                                                    {{ row.relatedRecordLabel }}
+                                                </a>
+                                            } @else {
+                                                {{ row.relatedRecordLabel }}
+                                            }
+                                        </td>
                                         <td class="break-words">{{ row.errorDisplay }}</td>
                                     </tr>
                                 </ng-template>
@@ -121,11 +135,22 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                 <div class="rounded-border border border-surface-200 dark:border-surface-700 p-4">
                                     <div class="flex items-center justify-between gap-2 mb-2">
                                         <div class="text-sm font-medium">{{ formatDateTime(row.primaryDateUtc) }}</div>
-                                        <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                        <span class="inline-flex items-center w-auto max-w-fit whitespace-nowrap">
+                                            <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                        </span>
                                     </div>
                                     <div class="text-sm mb-1"><span class="text-muted-color">Tür: </span>{{ row.reminderTypeLabel }}</div>
                                     <div class="text-sm mb-1 break-words"><span class="text-muted-color">Alıcı: </span>{{ row.recipientDisplay }}</div>
-                                    <div class="text-sm mb-1 break-words"><span class="text-muted-color">İlgili kayıt: </span>{{ row.relatedRecordDisplay }}</div>
+                                    <div class="text-sm mb-1 break-words">
+                                        <span class="text-muted-color">İlgili kayıt: </span>
+                                        @if (row.relatedRecordRoute) {
+                                            <a [routerLink]="row.relatedRecordRoute" class="text-primary font-medium no-underline">
+                                                {{ row.relatedRecordLabel }}
+                                            </a>
+                                        } @else {
+                                            {{ row.relatedRecordLabel }}
+                                        }
+                                    </div>
                                     <div class="text-sm break-words"><span class="text-muted-color">Hata: </span>{{ row.errorDisplay }}</div>
                                 </div>
                             }
