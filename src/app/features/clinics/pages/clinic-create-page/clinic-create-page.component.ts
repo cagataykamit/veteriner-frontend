@@ -15,6 +15,7 @@ import {
 } from '@/app/features/clinics/utils/clinic-upsert-validation-parse.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
     selector: 'app-clinic-create-page',
@@ -139,7 +140,7 @@ export class ClinicCreatePageComponent {
         this.clinicsApi.createClinic(v.name, v.city).subscribe({
             next: ({ createdId }) => {
                 this.submitting.set(false);
-                this.messages.add({
+                addTracedToast(this.messages, 'ClinicCreatePage', this.router.url, {
                     severity: 'success',
                     summary: 'Tamam',
                     detail: createdId ? 'Klinik oluşturuldu.' : 'Klinik oluşturuldu. Listeden açabilirsiniz.'

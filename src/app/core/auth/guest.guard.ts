@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
+import { catchError, map, of } from 'rxjs';
 import { DEFAULT_PANEL_AFTER_AUTH, safePanelReturnUrl } from './auth-return-url.utils';
 import { AuthService } from './auth.service';
 
@@ -7,28 +8,33 @@ import { AuthService } from './auth.service';
  * Misafir ekranları (login vb.): oturum açıksa panele veya güvenli `returnUrl` hedefine yönlendirir.
  * Önceden giriş yapmış kullanıcı `/auth/login?returnUrl=/panel/...` ile geldiğinde hedef yutuluyordu.
  */
-export const guestGuard: CanActivateFn = (route): boolean | UrlTree => {
+export const guestGuard: CanActivateFn = (route) => {
     const auth = inject(AuthService);
     const router = inject(Router);
-    if (!auth.isAuthenticated()) {
-        return true;
-    }
-    const inviteToken = route.queryParamMap.get('inviteToken')?.trim() ?? '';
-    const returnUrl = safePanelReturnUrl(route.queryParamMap.get('returnUrl'));
-    if (!auth.hasSelectedClinic()) {
-        return returnUrl
-            ? router.createUrlTree(['/auth/select-clinic'], {
-                  queryParams: { returnUrl, ...(inviteToken ? { inviteToken } : {}) }
-              })
-            : router.createUrlTree(['/auth/select-clinic'], {
-                  queryParams: inviteToken ? { inviteToken } : undefined
-              });
-    }
-    if (inviteToken) {
-        return router.createUrlTree(['/join', inviteToken]);
-    }
-    if (returnUrl) {
-        return router.parseUrl(returnUrl);
-    }
-    return router.parseUrl(DEFAULT_PANEL_AFTER_AUTH);
+    return auth.ensureValidAccessToken().pipe(
+        map(() => {
+            if (!auth.isAuthenticated()) {
+                return true;
+            }
+            const inviteToken = route.queryParamMap.get('inviteToken')?.trim() ?? '';
+            const returnUrl = safePanelReturnUrl(route.queryParamMap.get('returnUrl'));
+            if (!auth.hasSelectedClinic()) {
+                return returnUrl
+                    ? router.createUrlTree(['/auth/select-clinic'], {
+                          queryParams: { returnUrl, ...(inviteToken ? { inviteToken } : {}) }
+                      })
+                    : router.createUrlTree(['/auth/select-clinic'], {
+                          queryParams: inviteToken ? { inviteToken } : undefined
+                      });
+            }
+            if (inviteToken) {
+                return router.createUrlTree(['/join', inviteToken]);
+            }
+            if (returnUrl) {
+                return router.parseUrl(returnUrl);
+            }
+            return router.parseUrl(DEFAULT_PANEL_AFTER_AUTH);
+        }),
+        catchError(() => of(true))
+    );
 };

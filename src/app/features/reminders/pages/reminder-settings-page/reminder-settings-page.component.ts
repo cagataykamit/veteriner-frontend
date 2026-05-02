@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -18,6 +19,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
     selector: 'app-reminder-settings-page',
@@ -122,6 +124,7 @@ export class ReminderSettingsPageComponent implements OnInit {
     private readonly fb = inject(FormBuilder);
     private readonly reminders = inject(RemindersService);
     private readonly auth = inject(AuthService);
+    private readonly router = inject(Router);
     private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -179,7 +182,11 @@ export class ReminderSettingsPageComponent implements OnInit {
                 this.saving.set(false);
                 this.updatedAtUtc.set(vm.updatedAtUtc);
                 this.form.markAsPristine();
-                this.messages.add({ severity: 'success', summary: 'Kaydedildi', detail: 'Hatırlatma ayarları güncellendi.' });
+                addTracedToast(this.messages, 'ReminderSettingsPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Kaydedildi',
+                    detail: 'Hatırlatma ayarları güncellendi.'
+                });
             },
             error: (e: Error) => {
                 this.saving.set(false);

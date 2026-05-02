@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, finalize, map, share, tap } from 'rxjs/operators';
+import { catchError, finalize, map, shareReplay, tap } from 'rxjs/operators';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import type {
@@ -32,6 +32,7 @@ export class AuthService {
     private readonly tokenSignal = signal<string | null>(this.readAccessTokenFromStorage());
     private readonly activeClinicIdSignal = signal<string | null>(localStorage.getItem(ACTIVE_CLINIC_ID_KEY));
     private readonly activeClinicNameSignal = signal<string | null>(localStorage.getItem(ACTIVE_CLINIC_NAME_KEY));
+    private readonly authReadySignal = signal(false);
 
     /**
      * Topbar / layout: klinik adı veya id; ikisi de yoksa null.
@@ -51,6 +52,8 @@ export class AuthService {
 
     /** Aynı anda tek refresh HTTP çağrısı (paralel 401’lerde paylaşılır). */
     private refreshShare: Observable<SessionTokens> | null = null;
+
+    readonly authReady = computed(() => this.authReadySignal());
 
     getAccessToken(): string | null {
         return this.tokenSignal();
@@ -177,9 +180,53 @@ export class AuthService {
             finalize(() => {
                 this.refreshShare = null;
             }),
-            share()
+            shareReplay({ bufferSize: 1, refCount: false })
         );
         return this.refreshShare;
+    }
+
+    /**
+     * Protected route/endpoint öncesi erişim anahtarını doğrular.
+     * - Token yoksa `null`
+     * - Token geçerliyse mevcut token
+     * - Token süresi dolduysa tek-flight refresh ile yeniler
+     */
+    ensureValidAccessToken(leewaySeconds = 30): Observable<string | null> {
+        const current = this.getAccessToken();
+        if (!current) {
+            this.authReadySignal.set(true);
+            return of(null);
+        }
+        if (!this.isAccessTokenExpired(leewaySeconds)) {
+            this.authReadySignal.set(true);
+            return of(current);
+        }
+        if (!this.getRefreshToken()) {
+            this.clearSession();
+            this.authReadySignal.set(true);
+            return of(null);
+        }
+        return this.refreshSession().pipe(
+            map((session) => session.accessToken ?? this.getAccessToken()),
+            tap(() => this.authReadySignal.set(true)),
+            catchError((err) => {
+                this.clearSession();
+                this.authReadySignal.set(true);
+                return throwError(() => err);
+            })
+        );
+    }
+
+    isAccessTokenExpired(leewaySeconds = 30): boolean {
+        const token = this.getAccessToken();
+        if (!token) {
+            return true;
+        }
+        const expEpochMs = this.readTokenExpiryEpochMs(token);
+        if (!expEpochMs) {
+            return false;
+        }
+        return Date.now() >= expEpochMs - Math.max(0, leewaySeconds) * 1000;
     }
 
     /**
@@ -484,6 +531,24 @@ export class AuthService {
         } catch {
             return null;
         }
+    }
+
+    private readTokenExpiryEpochMs(token: string): number | null {
+        const payload = this.decodeJwtPayload(token);
+        if (!payload) {
+            return null;
+        }
+        const expRaw = payload['exp'] ?? payload['Exp'];
+        if (typeof expRaw === 'number' && Number.isFinite(expRaw)) {
+            return expRaw > 1_000_000_000_000 ? expRaw : expRaw * 1000;
+        }
+        if (typeof expRaw === 'string') {
+            const n = Number(expRaw.trim());
+            if (Number.isFinite(n)) {
+                return n > 1_000_000_000_000 ? n : n * 1000;
+            }
+        }
+        return null;
     }
 
     private collectClaimStrings(v: unknown): string[] {

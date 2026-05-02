@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -23,6 +23,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
     selector: 'app-clinic-detail-page',
@@ -151,6 +152,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 })
 export class ClinicDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly clinicsApi = inject(ClinicsService);
     private readonly messages = inject(MessageService);
@@ -231,7 +233,11 @@ export class ClinicDetailPageComponent implements OnInit {
                 this.saving.set(false);
                 this.detail.set(vm);
                 this.form.patchValue({ name: vm.name, city: vm.city });
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Klinik bilgileri güncellendi.' });
+                addTracedToast(this.messages, 'ClinicDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Klinik bilgileri güncellendi.'
+                });
             },
             error: (e: unknown) => {
                 this.saving.set(false);
@@ -269,7 +275,11 @@ export class ClinicDetailPageComponent implements OnInit {
         this.clinicsApi.deactivateClinic(id).subscribe({
             next: () => {
                 this.busyDeactivate.set(false);
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Klinik pasife alındı.' });
+                addTracedToast(this.messages, 'ClinicDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Klinik pasife alındı.'
+                });
                 this.refreshAfterMutation(id);
             },
             error: (e: unknown) => {
@@ -282,7 +292,7 @@ export class ClinicDetailPageComponent implements OnInit {
     private handleDeactivateError(e: unknown, clinicId: string): void {
         if (e instanceof HttpErrorResponse && isClinicDeactivateAlreadyInactive(e)) {
             this.refreshAfterMutation(clinicId);
-            this.messages.add({
+            addTracedToast(this.messages, 'ClinicDetailPage', this.router.url, {
                 severity: 'info',
                 summary: 'Bilgi',
                 detail: 'Bu klinik zaten pasif; bilgiler güncellendi.'
@@ -309,7 +319,11 @@ export class ClinicDetailPageComponent implements OnInit {
         this.clinicsApi.activateClinic(id).subscribe({
             next: () => {
                 this.busyActivate.set(false);
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Klinik aktifleştirildi.' });
+                addTracedToast(this.messages, 'ClinicDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Klinik aktifleştirildi.'
+                });
                 this.refreshAfterMutation(id);
             },
             error: (e: unknown) => {
@@ -322,7 +336,7 @@ export class ClinicDetailPageComponent implements OnInit {
     private handleActivateError(e: unknown, clinicId: string): void {
         if (e instanceof HttpErrorResponse && isClinicActivateAlreadyActive(e)) {
             this.refreshAfterMutation(clinicId);
-            this.messages.add({
+            addTracedToast(this.messages, 'ClinicDetailPage', this.router.url, {
                 severity: 'info',
                 summary: 'Bilgi',
                 detail: 'Bu klinik zaten aktif; bilgiler güncellendi.'

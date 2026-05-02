@@ -46,6 +46,7 @@ import {
 } from '@/app/features/subscriptions/utils/subscription-checkout-status.utils';
 import { subscriptionPlanLabel } from '@/app/features/subscriptions/utils/subscription-plan.utils';
 import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/features/subscriptions/utils/subscription-status.utils';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 type ReturnBannerSeverity = 'info' | 'success' | 'warn' | 'secondary' | 'error';
 
@@ -1088,7 +1089,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         });
         if (!hasUpgradeSuccessAck(checkoutSessionId)) {
             markUpgradeSuccessAck(checkoutSessionId);
-            this.messageService.add({
+            addTracedToast(this.messageService, 'SubscriptionPage', this.router.url, {
                 severity: 'success',
                 summary: 'Üyeliğiniz başarıyla güncellendi.',
                 detail: 'Yeni paketiniz artık aktif.',

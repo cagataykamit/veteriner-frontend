@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
@@ -15,6 +15,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
     selector: 'app-tenant-invite-detail-page',
@@ -116,6 +117,7 @@ import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/uti
 })
 export class TenantInviteDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly tenantInvites = inject(TenantInvitesService);
     private readonly messages = inject(MessageService);
@@ -182,7 +184,11 @@ export class TenantInviteDetailPageComponent implements OnInit {
         this.tenantInvites.cancelInvite(id).subscribe({
             next: () => {
                 this.cancelBusy.set(false);
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Davet iptal edildi.' });
+                addTracedToast(this.messages, 'TenantInviteDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Davet iptal edildi.'
+                });
                 this.load(id);
             },
             error: (e: Error) => {
@@ -201,7 +207,11 @@ export class TenantInviteDetailPageComponent implements OnInit {
         this.tenantInvites.resendInvite(id).subscribe({
             next: () => {
                 this.resendBusy.set(false);
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Davet yeniden gönderildi.' });
+                addTracedToast(this.messages, 'TenantInviteDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Davet yeniden gönderildi.'
+                });
                 this.load(id);
             },
             error: (e: Error) => {

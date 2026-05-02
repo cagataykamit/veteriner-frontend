@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { map, switchMap, tap } from 'rxjs';
+import { forkJoin, fromEvent, map, take } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DashboardMiniTrendChartComponent } from '@/app/features/dashboard/components/dashboard-mini-trend-chart.component';
@@ -222,7 +223,7 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                         />
                     </div>
                 </div>
-                @if (canViewFinance(d)) {
+                @if (canViewFinance(d) && belowFoldLoaded()) {
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card mb-0 h-full">
                             <app-dashboard-mini-trend-chart
@@ -232,9 +233,21 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                             />
                         </div>
                     </div>
+                } @else if (canViewFinance(d) && belowFoldLoading()) {
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card mb-0 h-full flex items-center">
+                            <p class="m-0 text-sm text-muted-color">Finans verileri yükleniyor…</p>
+                        </div>
+                    </div>
+                } @else if (canViewFinance(d) && !belowFoldLoaded()) {
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card mb-0 h-full flex items-center">
+                            <p class="m-0 text-sm text-muted-color">Finans trendi, bu bölüme gelince yüklenecek.</p>
+                        </div>
+                    </div>
                 }
 
-                @if (canViewFinance(d) && d.finance.error) {
+                @if (canViewFinance(d) && belowFoldLoaded() && d.finance.error) {
                     <div class="col-span-12">
                         <div class="card mb-0">
                             <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
@@ -250,7 +263,7 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                             />
                         </div>
                     </div>
-                } @else if (canViewFinance(d) && d.finance.data) {
+                } @else if (canViewFinance(d) && belowFoldLoaded() && d.finance.data) {
                     <div class="col-span-12 sm:col-span-6 xl:col-span-2">
                         <div class="card mb-0">
                             <span class="block text-muted-color font-medium mb-4">Bugün alınan ödeme</span>
@@ -314,19 +327,56 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                     </div>
                 }
 
-                <div class="col-span-12">
-                    <div class="card">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                            <h5 class="mt-0 mb-0">Bugünkü randevular</h5>
-                            <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                <div #belowFoldTrigger class="col-span-12 h-px"></div>
+
+                @if (!belowFoldRequested() && !belowFoldLoaded()) {
+                    <div class="col-span-12">
+                        <div class="card flex flex-wrap items-center justify-between gap-3">
+                            <p class="m-0 text-sm text-muted-color">Detay listeleri bu bölüme gelince yüklenecek.</p>
+                            <p-button
+                                type="button"
+                                label="Detayları yükle"
+                                icon="pi pi-download"
+                                size="small"
+                                severity="secondary"
+                                (onClick)="onManualBelowFoldLoad()"
+                            />
                         </div>
-                        @if (listsLoading()) {
-                            <app-loading-state message="Randevu listesi yükleniyor…" />
-                        } @else if (d.todayAppointments.error) {
-                            <p class="text-red-500 m-0" role="alert">{{ d.todayAppointments.error }}</p>
-                        } @else if (d.todayAppointments.data.length === 0) {
-                            <app-empty-state message="Bugün için randevu yok." hint="Tarih filtresi yerel güne göredir." />
-                        } @else {
+                    </div>
+                } @else if (belowFoldLoading() && !belowFoldLoaded()) {
+                    <div class="col-span-12">
+                        <div class="card">
+                            <app-loading-state message="Detay listeleri yükleniyor…" />
+                        </div>
+                    </div>
+                } @else if (belowFoldError() && !belowFoldLoaded()) {
+                    <div class="col-span-12">
+                        <div class="card flex flex-wrap items-center justify-between gap-3">
+                            <p class="m-0 text-sm text-red-500">{{ belowFoldError() }}</p>
+                            <p-button
+                                type="button"
+                                label="Tekrar dene"
+                                icon="pi pi-refresh"
+                                size="small"
+                                severity="secondary"
+                                (onClick)="onManualBelowFoldLoad()"
+                            />
+                        </div>
+                    </div>
+                } @else {
+                    <div class="col-span-12">
+                        <div class="card">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                                <h5 class="mt-0 mb-0">Bugünkü randevular</h5>
+                                <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (listsLoading()) {
+                                <app-loading-state message="Randevu listesi yükleniyor…" />
+                            } @else if (d.todayAppointments.error) {
+                                <p class="text-red-500 m-0" role="alert">{{ d.todayAppointments.error }}</p>
+                            } @else if (d.todayAppointments.data.length === 0) {
+                                <app-empty-state message="Bugün için randevu yok." hint="Tarih filtresi yerel güne göredir." />
+                            } @else {
                             <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
                                 @for (row of d.todayAppointments.data; track row.id) {
                                     <li
@@ -402,11 +452,11 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                                     </ng-template>
                                 </p-table>
                             </div>
-                        }
+                            }
+                        </div>
                     </div>
-                </div>
 
-                <div class="col-span-12 xl:col-span-6">
+                    <div class="col-span-12 xl:col-span-6">
                     <div class="card h-full">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Yaklaşan aşılar</h5>
@@ -469,9 +519,9 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                             </div>
                         }
                     </div>
-                </div>
+                    </div>
 
-                <div class="col-span-12 xl:col-span-6">
+                    <div class="col-span-12 xl:col-span-6">
                     <div class="card h-full">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Son muayeneler</h5>
@@ -526,11 +576,11 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                             </div>
                         }
                     </div>
-                </div>
+                    </div>
 
-                @if (canViewFinance(d)) {
-                    <div class="col-span-12">
-                        <div class="card">
+                    @if (canViewFinance(d)) {
+                        <div class="col-span-12">
+                            <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son ödemeler</h5>
                                 <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
@@ -621,8 +671,9 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                                     </p-table>
                                 </div>
                             }
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
 
                 <div class="col-span-12">
@@ -711,10 +762,15 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
         }
     `
 })
-export class DashboardPageComponent implements OnInit {
+export class DashboardPageComponent implements OnInit, AfterViewInit {
     private readonly dashboardService = inject(DashboardService);
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly belowFoldTriggerEl = viewChild<ElementRef<HTMLElement>>('belowFoldTrigger');
+    private belowFoldObserver: IntersectionObserver | null = null;
+    private belowFoldSetupTimer: ReturnType<typeof setTimeout> | null = null;
+    private summariesLoadingInFlight = false;
 
     readonly copy = PANEL_COPY;
     readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
@@ -723,6 +779,10 @@ export class DashboardPageComponent implements OnInit {
     /** Faz 2: randevu / aşı / muayene listeleri gelene kadar. */
     readonly listsLoading = signal(false);
     readonly dash = signal<DashboardOperationalVm | null>(null);
+    readonly belowFoldRequested = signal(false);
+    readonly belowFoldLoading = signal(false);
+    readonly belowFoldLoaded = signal(false);
+    readonly belowFoldError = signal<string | null>(null);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
@@ -747,6 +807,21 @@ export class DashboardPageComponent implements OnInit {
             return;
         }
         this.reload();
+        if (typeof window !== 'undefined') {
+            fromEvent(window, 'scroll')
+                .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+                .subscribe(() => {
+                    this.requestBelowFoldOnce();
+                });
+        }
+        this.destroyRef.onDestroy(() => {
+            this.disconnectBelowFoldObserver();
+            this.clearBelowFoldSetupTimer();
+        });
+    }
+
+    ngAfterViewInit(): void {
+        this.scheduleBelowFoldObserverSetup();
     }
 
     pageDescription(): string {
@@ -762,30 +837,28 @@ export class DashboardPageComponent implements OnInit {
         if (!this.clinicContextOk()) {
             return;
         }
+        if (this.summariesLoadingInFlight) {
+            return;
+        }
+        this.summariesLoadingInFlight = true;
+        this.resetBelowFoldStateForReload();
         this.loading.set(true);
-        this.listsLoading.set(false);
         this.dashboardService
             .loadDashboardSummariesPhase()
-            .pipe(
-                tap((summaries) => {
+            .subscribe({
+                next: (summaries) => {
                     this.dash.set(dashboardVmWithPendingLists(summaries));
                     this.loading.set(false);
-                    this.listsLoading.set(true);
-                }),
-                switchMap((summaries) =>
-                    this.dashboardService.loadDashboardListsPhase().pipe(
-                        map((lists) => mergeDashboardListPhaseIntoVm(summaries, lists))
-                    )
-                )
-            )
-            .subscribe({
-                next: (full) => {
-                    this.dash.set(full);
-                    this.listsLoading.set(false);
+                    this.summariesLoadingInFlight = false;
+                    if (this.belowFoldRequested() && !this.belowFoldLoaded()) {
+                        this.requestBelowFoldOnce();
+                    }
+                    this.scheduleBelowFoldObserverSetup();
                 },
                 error: () => {
                     this.loading.set(false);
-                    this.listsLoading.set(false);
+                    this.summariesLoadingInFlight = false;
+                    this.setBelowFoldLoading(false);
                 }
             });
     }
@@ -851,6 +924,9 @@ export class DashboardPageComponent implements OnInit {
     }
 
     todayAppointmentsMetric(d: DashboardOperationalVm): number | null {
+        if (!this.belowFoldLoaded()) {
+            return d.summary.data?.todayAppointmentsCount ?? null;
+        }
         // "Bugünkü randevular" kartı ve tablosu aynı kavramı göstersin:
         // öncelik tablo verisi (aynı source/filter), fallback summary sayacı.
         if (!d.todayAppointments.error) {
@@ -880,5 +956,131 @@ export class DashboardPageComponent implements OnInit {
             return true;
         }
         return claims.some((claim) => this.auth.hasOperationClaim(claim));
+    }
+
+    requestBelowFoldOnce(): void {
+        if (this.belowFoldLoaded() || this.belowFoldLoading()) {
+            return;
+        }
+        this.belowFoldRequested.set(true);
+        this.belowFoldError.set(null);
+        this.disconnectBelowFoldObserver();
+        if (this.summariesLoadingInFlight || this.loading()) {
+            return;
+        }
+        const current = this.dash();
+        if (!current) {
+            return;
+        }
+        this.loadBelowFoldData({
+            summary: current.summary,
+            capabilities: current.capabilities,
+            operationalAlerts: current.operationalAlerts,
+            actionItems: current.actionItems,
+            alerts: current.alerts,
+            canViewFinance: current.canViewFinance,
+            canViewOperationalAlerts: current.canViewOperationalAlerts,
+            finance: current.finance
+        });
+    }
+
+    onManualBelowFoldLoad(): void {
+        this.requestBelowFoldOnce();
+    }
+
+    private loadBelowFoldData(summaries: Parameters<typeof mergeDashboardListPhaseIntoVm>[0]): void {
+        if (this.belowFoldLoaded() || this.belowFoldLoading()) {
+            return;
+        }
+        this.setBelowFoldLoading(true);
+        forkJoin({
+            lists: this.dashboardService.loadDashboardListsPhase(),
+            finance: this.dashboardService.loadDashboardFinancePhase(summaries.canViewFinance)
+        })
+            .pipe(map(({ lists, finance }) => ({ ...mergeDashboardListPhaseIntoVm(summaries, lists), finance })))
+            .subscribe({
+                next: (full) => {
+                    this.dash.set(full);
+                    this.belowFoldLoaded.set(true);
+                    this.belowFoldError.set(null);
+                    this.setBelowFoldLoading(false);
+                },
+                error: () => {
+                    this.belowFoldError.set('Detaylar yüklenemedi.');
+                    this.setBelowFoldLoading(false);
+                }
+            });
+    }
+
+    private setupBelowFoldObserver(): void {
+        if (this.belowFoldLoaded()) {
+            return;
+        }
+        if (typeof window === 'undefined') {
+            this.requestBelowFoldOnce();
+            return;
+        }
+        const el = this.belowFoldTriggerEl()?.nativeElement ?? null;
+        if (!el) {
+            return;
+        }
+        const preloadMarginPx = 300;
+        if (el.getBoundingClientRect().top <= window.innerHeight + preloadMarginPx) {
+            this.requestBelowFoldOnce();
+            return;
+        }
+        if (typeof IntersectionObserver === 'undefined') {
+            this.requestBelowFoldOnce();
+            return;
+        }
+        this.disconnectBelowFoldObserver();
+        this.belowFoldObserver = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((entry) => entry.isIntersecting)) {
+                    this.requestBelowFoldOnce();
+                }
+            },
+            { root: null, rootMargin: '300px 0px', threshold: 0.01 }
+        );
+        this.belowFoldObserver.observe(el);
+    }
+
+    private disconnectBelowFoldObserver(): void {
+        if (this.belowFoldObserver) {
+            this.belowFoldObserver.disconnect();
+            this.belowFoldObserver = null;
+        }
+    }
+
+    private setBelowFoldLoading(value: boolean): void {
+        this.belowFoldLoading.set(value);
+        this.listsLoading.set(value);
+    }
+
+    private resetBelowFoldStateForReload(): void {
+        this.disconnectBelowFoldObserver();
+        this.clearBelowFoldSetupTimer();
+        this.belowFoldRequested.set(false);
+        this.belowFoldLoaded.set(false);
+        this.belowFoldError.set(null);
+        this.setBelowFoldLoading(false);
+    }
+
+    private scheduleBelowFoldObserverSetup(): void {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        this.clearBelowFoldSetupTimer();
+        this.belowFoldSetupTimer = setTimeout(() => {
+            this.belowFoldSetupTimer = null;
+            this.setupBelowFoldObserver();
+        }, 0);
+    }
+
+    private clearBelowFoldSetupTimer(): void {
+        if (this.belowFoldSetupTimer !== null) {
+            clearTimeout(this.belowFoldSetupTimer);
+            this.belowFoldSetupTimer = null;
+        }
     }
 }

@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -40,6 +40,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { catchError, forkJoin, of } from 'rxjs';
 
 @Component({
@@ -368,6 +369,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     readonly permissionDisplayLabel = permissionDisplayLabel;
     readonly permissionTooltipText = permissionTooltipText;
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly tenantMembers = inject(TenantMembersService);
     private readonly tenantInvites = inject(TenantInvitesService);
@@ -501,7 +503,11 @@ export class TenantMemberDetailPageComponent implements OnInit {
             next: () => {
                 this.busyAdd.set(false);
                 this.selectedClaimId.set('');
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Rol eklendi.' });
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Rol eklendi.'
+                });
                 this.refreshMember(memberId);
             },
             error: (e: unknown) => {
@@ -525,7 +531,11 @@ export class TenantMemberDetailPageComponent implements OnInit {
         this.tenantMembers.removeMemberClaim(memberId, cid).subscribe({
             next: () => {
                 this.busyRemoveClaimId.set(null);
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Rol kaldırıldı.' });
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Rol kaldırıldı.'
+                });
                 this.refreshMember(memberId);
             },
             error: (e: unknown) => {
@@ -540,7 +550,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
             if (isMemberRoleAlreadyAssignedConflict(e)) {
                 this.selectedClaimId.set('');
                 this.refreshMember(memberId);
-                this.messages.add({
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
                     severity: 'info',
                     summary: 'Bilgi',
                     detail: 'Bu rol zaten atanmış; liste güncellendi.'
@@ -557,7 +567,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             if (isMemberRoleAlreadyRemoved(e) || e.status === 404) {
                 this.refreshMember(memberId);
-                this.messages.add({
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
                     severity: 'info',
                     summary: 'Bilgi',
                     detail: 'Bu rol zaten kaldırılmış veya bulunamadı; liste güncellendi.'
@@ -585,7 +595,11 @@ export class TenantMemberDetailPageComponent implements OnInit {
             next: () => {
                 this.busyAddClinic.set(false);
                 this.selectedClinicId.set('');
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Klinik üyeliği eklendi.' });
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Klinik üyeliği eklendi.'
+                });
                 this.refreshMember(memberId);
             },
             error: (e: unknown) => {
@@ -609,7 +623,11 @@ export class TenantMemberDetailPageComponent implements OnInit {
         this.tenantMembers.removeMemberClinic(memberId, cid).subscribe({
             next: () => {
                 this.busyRemoveClinicId.set(null);
-                this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Klinik üyeliği kaldırıldı.' });
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Klinik üyeliği kaldırıldı.'
+                });
                 this.refreshMember(memberId);
             },
             error: (e: unknown) => {
@@ -624,7 +642,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
             if (isMemberClinicAlreadyAssignedConflict(e)) {
                 this.selectedClinicId.set('');
                 this.refreshMember(memberId);
-                this.messages.add({
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
                     severity: 'info',
                     summary: 'Bilgi',
                     detail: 'Bu klinik üyeliği zaten mevcut; liste güncellendi.'
@@ -641,7 +659,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             if (isMemberClinicAlreadyRemoved(e) || e.status === 404) {
                 this.refreshMember(memberId);
-                this.messages.add({
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
                     severity: 'info',
                     summary: 'Bilgi',
                     detail: 'Bu klinik üyeliği zaten kaldırılmış veya bulunamadı; liste güncellendi.'

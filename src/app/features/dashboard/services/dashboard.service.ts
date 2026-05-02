@@ -37,7 +37,7 @@ import type { ExaminationListItemVm } from '@/app/features/examinations/models/e
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
-/** Faz 1: dashboard summary + finance (+ paylaşımlı tenant subscription-summary). */
+/** Faz 1: dashboard summary (+ paylaşımlı tenant subscription-summary). */
 export interface DashboardSummariesPhaseResult {
     readonly summary: DashboardSection<DashboardSummaryNormalized | null>;
     readonly capabilities: DashboardSection<DashboardCapabilitiesVm>;
@@ -122,10 +122,24 @@ export class DashboardService {
         );
     }
 
-    /**
-     * Faz 1 — summary/capabilities/alerts/subscription paralel;
-     * finance-summary yalnız `canViewFinance` true ise çağrılır.
-     */
+    loadDashboardFinancePhase(canViewFinance: boolean): Observable<DashboardSection<DashboardFinanceSummaryVm | null>> {
+        if (!canViewFinance) {
+            return of({ data: null, error: null });
+        }
+        return this.api
+            .get<DashboardFinanceSummaryDto>(ApiEndpoints.dashboard.financeSummary())
+            .pipe(
+                map((dto): DashboardSection<DashboardFinanceSummaryVm | null> => ({
+                    data: mapDashboardFinanceSummaryDtoToVm(dto),
+                    error: null
+                })),
+                catchError((): Observable<DashboardSection<DashboardFinanceSummaryVm | null>> =>
+                    of({ data: null, error: 'Finans özeti yüklenemedi.' })
+                )
+            );
+    }
+
+    /** Faz 1 — summary/capabilities/alerts/subscription paralel (below-the-fold yok). */
     loadDashboardSummariesPhase(): Observable<DashboardSummariesPhaseResult> {
         const summary$: Observable<DashboardSection<DashboardSummaryNormalized | null>> = this.getSummary().pipe(
             map(
@@ -149,15 +163,6 @@ export class DashboardService {
         const fallbackOperationalAlerts = mapDashboardOperationalAlertsDtoToVm(null);
         const fallbackFinance: DashboardSection<DashboardFinanceSummaryVm | null> = { data: null, error: null };
 
-        const financeSection$ = (): Observable<DashboardSection<DashboardFinanceSummaryVm | null>> =>
-            section(
-                this.api
-                    .get<DashboardFinanceSummaryDto>(ApiEndpoints.dashboard.financeSummary())
-                    .pipe(map(mapDashboardFinanceSummaryDtoToVm)),
-                null,
-                'Finans özeti yüklenemedi.'
-            );
-
         return forkJoin({
             summary: summary$,
             capabilities: section(
@@ -172,26 +177,21 @@ export class DashboardService {
             ),
             subscription: this.tenantReadOnlyContext.ensurePanelSubscriptionSummary()
         }).pipe(
-            switchMap(({ summary, capabilities, operationalAlerts }) => {
-                const canViewFinance = capabilities.data.canViewFinance;
-                return (canViewFinance ? financeSection$() : of(fallbackFinance)).pipe(
-                    map((finance) => {
-                        const alerts = buildDashboardAlerts(capabilities.data);
-                        const actionItems = capabilities.data.canViewOperationalAlerts
-                            ? buildOperationalActionItems(operationalAlerts.data)
-                            : [];
-                        return {
-                            summary,
-                            capabilities,
-                            operationalAlerts,
-                            actionItems,
-                            alerts,
-                            canViewFinance,
-                            canViewOperationalAlerts: capabilities.data.canViewOperationalAlerts,
-                            finance
-                        };
-                    })
-                );
+            map(({ summary, capabilities, operationalAlerts }) => {
+                const alerts = buildDashboardAlerts(capabilities.data);
+                const actionItems = capabilities.data.canViewOperationalAlerts
+                    ? buildOperationalActionItems(operationalAlerts.data)
+                    : [];
+                return {
+                    summary,
+                    capabilities,
+                    operationalAlerts,
+                    actionItems,
+                    alerts,
+                    canViewFinance: capabilities.data.canViewFinance,
+                    canViewOperationalAlerts: capabilities.data.canViewOperationalAlerts,
+                    finance: fallbackFinance
+                };
             })
         );
     }
