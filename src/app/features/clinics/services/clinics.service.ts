@@ -10,6 +10,9 @@ import {
     mapClinicDetailRaw,
     mapClinicsListRaw
 } from '@/app/features/clinics/data/clinic.mapper';
+import { mapClinicWorkingHoursResponse } from '@/app/features/clinics/data/clinic-working-hours.mapper';
+import type { UpdateClinicWorkingHoursRequestDto } from '@/app/features/clinics/models/clinic-working-hours-api.model';
+import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import type { ClinicCreateRequestDto, ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/features/clinics/models/clinic-api.model';
 import type { ClinicUpsertFormValue } from '@/app/features/clinics/models/clinic-upsert.model';
 import type { ClinicDetailVm, ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
@@ -115,6 +118,38 @@ export class ClinicsService {
         }
         return this.api.post<unknown>(ApiEndpoints.clinics.activate(id), {}).pipe(
             map(() => undefined),
+            catchError((err: HttpErrorResponse) => throwError(() => err))
+        );
+    }
+
+    /** `GET /api/v1/clinics/{id}/working-hours` */
+    getWorkingHours(clinicId: string): Observable<ClinicWorkingHourVm[]> {
+        const id = clinicId.trim();
+        if (!id) {
+            return throwError(() => new Error('Geçersiz klinik kimliği.'));
+        }
+        if (!this.auth.getAccessToken()?.trim()) {
+            return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
+        }
+        return this.api.get<unknown>(ApiEndpoints.clinics.workingHours(id)).pipe(
+            map((raw) => mapClinicWorkingHoursResponse(raw)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Çalışma saatleri yüklenemedi.')))
+            )
+        );
+    }
+
+    /** `PUT /api/v1/clinics/{id}/working-hours` */
+    updateWorkingHours(
+        clinicId: string,
+        body: UpdateClinicWorkingHoursRequestDto
+    ): Observable<ClinicWorkingHourVm[]> {
+        const id = clinicId.trim();
+        if (!id) {
+            return throwError(() => new Error('Geçersiz klinik kimliği.'));
+        }
+        return this.api.put<unknown>(ApiEndpoints.clinics.workingHours(id), body).pipe(
+            map((raw) => mapClinicWorkingHoursResponse(raw)),
             catchError((err: HttpErrorResponse) => throwError(() => err))
         );
     }

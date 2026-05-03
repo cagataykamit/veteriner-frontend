@@ -19,7 +19,8 @@ export const ApiEndpoints = {
         list: () => `/api/v1/clinics`,
         byId: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}`,
         activate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/activate`,
-        deactivate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/deactivate`
+        deactivate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/deactivate`,
+        workingHours: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/working-hours`
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
