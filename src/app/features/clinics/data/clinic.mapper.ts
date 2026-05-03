@@ -1,8 +1,27 @@
-import type { ClinicDetailDto, ClinicListItemDto } from '@/app/features/clinics/models/clinic-api.model';
+import type { ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/features/clinics/models/clinic-api.model';
+import type { ClinicUpsertFormValue } from '@/app/features/clinics/models/clinic-upsert.model';
+import { normalizeClinicPhoneForApi } from '@/app/features/clinics/utils/clinic-phone-format.utils';
 import type { ClinicDetailVm, ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
     return x !== null && typeof x === 'object';
+}
+
+/** Boş/null backend alanları UI’da `''`; Pascal/camel toleranslı. */
+function nullableStringField(o: Record<string, unknown>, keys: string[]): string {
+    for (const k of keys) {
+        const v = o[k];
+        if (v === null || v === undefined) {
+            continue;
+        }
+        if (typeof v === 'string') {
+            return v.trim();
+        }
+        if (typeof v === 'number' && !Number.isNaN(v)) {
+            return String(v);
+        }
+    }
+    return '';
 }
 
 function firstString(o: Record<string, unknown>, keys: string[]): string | null {
@@ -61,11 +80,15 @@ function mapListRow(raw: unknown): ClinicListItemVm | null {
     }
     const city = firstString(raw, ['city', 'City']) ?? '';
     const isActive = readTriBool(raw, ['isActive', 'IsActive', 'active', 'Active']);
+    const phone = nullableStringField(raw, ['phone', 'Phone', 'phoneNumber', 'PhoneNumber']);
+    const email = nullableStringField(raw, ['email', 'Email', 'emailAddress', 'EmailAddress']);
     return {
         id,
         name: name ?? '—',
         city,
-        isActive
+        isActive,
+        phone,
+        email
     };
 }
 
@@ -84,7 +107,11 @@ export function mapClinicDetailDtoToVm(dto: ClinicDetailDto | Record<string, unk
     const name = firstString(o, ['name', 'Name', 'clinicName', 'ClinicName']) ?? '';
     const city = firstString(o, ['city', 'City']) ?? '';
     const isActive = readTriBool(o, ['isActive', 'IsActive', 'active', 'Active']);
-    return { id, name, city, isActive };
+    const phone = nullableStringField(o, ['phone', 'Phone', 'phoneNumber', 'PhoneNumber']);
+    const email = nullableStringField(o, ['email', 'Email', 'emailAddress', 'EmailAddress']);
+    const address = nullableStringField(o, ['address', 'Address']);
+    const description = nullableStringField(o, ['description', 'Description']);
+    return { id, name, city, isActive, phone, email, address, description };
 }
 
 export function mapClinicDetailRaw(raw: unknown): ClinicDetailVm | null {
@@ -103,8 +130,24 @@ export function mapClinicDetailRaw(raw: unknown): ClinicDetailVm | null {
     return mapClinicDetailDtoToVm(inner);
 }
 
-export function clinicUpsertToUpdateDto(name: string, city: string): { name: string; city: string } {
-    return { name: name.trim(), city: city.trim() };
+/**
+ * PUT/POST gövdesi — tüm profil alanları her istekte gönderilir (boş alanlar `null`).
+ */
+export function clinicProfileToWriteDto(v: ClinicUpsertFormValue): ClinicUpdateRequestDto {
+    const name = v.name.trim();
+    const city = v.city.trim();
+    const phone = normalizeClinicPhoneForApi(v.phone);
+    const email = v.email.trim();
+    const address = v.address.trim();
+    const description = v.description.trim();
+    return {
+        name,
+        city,
+        phone: phone === '' ? null : phone,
+        email: email === '' ? null : email,
+        address: address === '' ? null : address,
+        description: description === '' ? null : description
+    };
 }
 
 /**

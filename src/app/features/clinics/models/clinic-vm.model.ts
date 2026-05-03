@@ -3,6 +3,9 @@ export interface ClinicListItemVm {
     name: string;
     city: string;
     isActive: boolean | null;
+    /** Liste DTO; boş backend alanı için `''`. */
+    phone: string;
+    email: string;
 }
 
 export interface ClinicDetailVm {
@@ -10,4 +13,8 @@ export interface ClinicDetailVm {
     name: string;
     city: string;
     isActive: boolean | null;
+    phone: string;
+    email: string;
+    address: string;
+    description: string;
 }

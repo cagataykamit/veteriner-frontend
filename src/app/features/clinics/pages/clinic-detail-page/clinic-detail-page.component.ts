@@ -1,14 +1,23 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import type { ClinicUpsertFormValue } from '@/app/features/clinics/models/clinic-upsert.model';
+import type { ClinicDetailVm } from '@/app/features/clinics/models/clinic-vm.model';
+import {
+    CLINIC_ADDRESS_MAX,
+    CLINIC_DESCRIPTION_MAX,
+    CLINIC_EMAIL_MAX,
+    CLINIC_PHONE_MAX,
+    clinicOptionalEmailValidator
+} from '@/app/features/clinics/utils/clinic-profile-form.validators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
-import type { ClinicDetailVm } from '@/app/features/clinics/models/clinic-vm.model';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import {
     clinicSettingsMutationMessage,
@@ -23,6 +32,10 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import {
+    formatClinicPhoneForDisplay,
+    formatClinicPhoneForInput
+} from '@/app/features/clinics/utils/clinic-phone-format.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
@@ -34,6 +47,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         RouterLink,
         ButtonModule,
         InputTextModule,
+        TextareaModule,
         ToastModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
@@ -54,7 +68,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
             <app-page-header
                 title="Klinik ayarları"
                 subtitle="Hesap"
-                description="Klinik adı ve şehir bilgisini güncelleyebilir; kliniği pasife alabilir veya yeniden aktifleştirebilirsiniz."
+                description="Klinik bilgileri, iletişim ve profil alanlarını güncelleyebilir; kliniği pasife alabilir veya yeniden aktifleştirebilirsiniz."
             />
 
             <div class="card mb-4">
@@ -71,6 +85,22 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                 <span class="text-muted-color">—</span>
                             }
                         </dd>
+                    </div>
+                    <div>
+                        <dt class="text-muted-color font-medium m-0 mb-1">Telefon</dt>
+                        <dd class="m-0 break-all">{{ formatClinicPhoneForDisplay(d.phone) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-muted-color font-medium m-0 mb-1">E-posta</dt>
+                        <dd class="m-0 break-all">{{ d.email || '—' }}</dd>
+                    </div>
+                    <div class="md:col-span-2">
+                        <dt class="text-muted-color font-medium m-0 mb-1">Adres</dt>
+                        <dd class="m-0 whitespace-pre-wrap break-words">{{ d.address || '—' }}</dd>
+                    </div>
+                    <div class="md:col-span-2">
+                        <dt class="text-muted-color font-medium m-0 mb-1">Açıklama</dt>
+                        <dd class="m-0 whitespace-pre-wrap break-words">{{ d.description || '—' }}</dd>
                     </div>
                 </dl>
             </div>
@@ -89,7 +119,13 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicName" class="block text-sm font-medium text-muted-color mb-2">Klinik adı *</label>
-                            <input id="clinicName" pInputText class="w-full" formControlName="name" autocomplete="organization" />
+                            <input
+                                id="clinicName"
+                                pInputText
+                                class="w-full"
+                                formControlName="name"
+                                autocomplete="organization"
+                            />
                             @if (apiFieldErrors().name) {
                                 <small class="text-red-500">{{ apiFieldErrors().name }}</small>
                             } @else if (form.controls.name.invalid && form.controls.name.touched) {
@@ -98,11 +134,81 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicCity" class="block text-sm font-medium text-muted-color mb-2">Şehir *</label>
-                            <input id="clinicCity" pInputText class="w-full" formControlName="city" autocomplete="address-level2" />
+                            <input
+                                id="clinicCity"
+                                pInputText
+                                class="w-full"
+                                formControlName="city"
+                                autocomplete="address-level2"
+                            />
                             @if (apiFieldErrors().city) {
                                 <small class="text-red-500">{{ apiFieldErrors().city }}</small>
                             } @else if (form.controls.city.invalid && form.controls.city.touched) {
                                 <small class="text-red-500">Şehir zorunludur.</small>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="clinicPhone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
+                            <input
+                                id="clinicPhone"
+                                pInputText
+                                class="w-full"
+                                formControlName="phone"
+                                autocomplete="tel"
+                                (blur)="onClinicPhoneBlur()"
+                            />
+                            @if (apiFieldErrors().phone) {
+                                <small class="text-red-500">{{ apiFieldErrors().phone }}</small>
+                            } @else if (form.controls.phone.invalid && form.controls.phone.touched) {
+                                <small class="text-red-500">En fazla {{ phoneMax }} karakter.</small>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="clinicEmail" class="block text-sm font-medium text-muted-color mb-2">E-posta</label>
+                            <input
+                                id="clinicEmail"
+                                pInputText
+                                class="w-full"
+                                formControlName="email"
+                                type="email"
+                                autocomplete="email"
+                            />
+                            @if (apiFieldErrors().email) {
+                                <small class="text-red-500">{{ apiFieldErrors().email }}</small>
+                            } @else if (form.controls.email.hasError('email') && form.controls.email.touched) {
+                                <small class="text-red-500">Geçerli bir e-posta girin.</small>
+                            } @else if (form.controls.email.invalid && form.controls.email.touched) {
+                                <small class="text-red-500">En fazla {{ emailMax }} karakter.</small>
+                            }
+                        </div>
+                        <div class="col-span-12">
+                            <label for="clinicAddress" class="block text-sm font-medium text-muted-color mb-2">Adres</label>
+                            <textarea
+                                id="clinicAddress"
+                                pTextarea
+                                class="w-full"
+                                formControlName="address"
+                                rows="3"
+                            ></textarea>
+                            @if (apiFieldErrors().address) {
+                                <small class="text-red-500">{{ apiFieldErrors().address }}</small>
+                            } @else if (form.controls.address.invalid && form.controls.address.touched) {
+                                <small class="text-red-500">En fazla {{ addressMax }} karakter.</small>
+                            }
+                        </div>
+                        <div class="col-span-12">
+                            <label for="clinicDescription" class="block text-sm font-medium text-muted-color mb-2">Açıklama</label>
+                            <textarea
+                                id="clinicDescription"
+                                pTextarea
+                                class="w-full"
+                                formControlName="description"
+                                rows="4"
+                            ></textarea>
+                            @if (apiFieldErrors().description) {
+                                <small class="text-red-500">{{ apiFieldErrors().description }}</small>
+                            } @else if (form.controls.description.invalid && form.controls.description.touched) {
+                                <small class="text-red-500">En fazla {{ descriptionMax }} karakter.</small>
                             }
                         </div>
                     </div>
@@ -151,6 +257,14 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     `
 })
 export class ClinicDetailPageComponent implements OnInit {
+    /** Özet telefon satırı — yalnızca gösterim; form/API değişmez. */
+    readonly formatClinicPhoneForDisplay = formatClinicPhoneForDisplay;
+
+    onClinicPhoneBlur(): void {
+        const c = this.form.controls.phone;
+        c.setValue(formatClinicPhoneForInput(c.value), { emitEvent: false });
+    }
+
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
@@ -158,6 +272,11 @@ export class ClinicDetailPageComponent implements OnInit {
     private readonly messages = inject(MessageService);
     private readonly fb = inject(FormBuilder);
     readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly phoneMax = CLINIC_PHONE_MAX;
+    readonly emailMax = CLINIC_EMAIL_MAX;
+    readonly addressMax = CLINIC_ADDRESS_MAX;
+    readonly descriptionMax = CLINIC_DESCRIPTION_MAX;
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -171,7 +290,24 @@ export class ClinicDetailPageComponent implements OnInit {
 
     readonly form = this.fb.nonNullable.group({
         name: ['', [Validators.required, Validators.maxLength(256)]],
-        city: ['', [Validators.required, Validators.maxLength(128)]]
+        city: ['', [Validators.required, Validators.maxLength(128)]],
+        phone: ['', [Validators.maxLength(CLINIC_PHONE_MAX)]],
+        email: ['', [Validators.maxLength(CLINIC_EMAIL_MAX), clinicOptionalEmailValidator()]],
+        address: ['', [Validators.maxLength(CLINIC_ADDRESS_MAX)]],
+        description: ['', [Validators.maxLength(CLINIC_DESCRIPTION_MAX)]]
+    });
+
+    /** Reactive form uyarısı: disabled yalnızca `FormGroup` üzerinden. */
+    private readonly formEditLockEffect = effect(() => {
+        const lock =
+            this.ro.mutationBlocked() || this.saving() || this.busyDeactivate() || this.busyActivate();
+        if (lock) {
+            if (this.form.enabled) {
+                this.form.disable({ emitEvent: false });
+            }
+        } else if (this.form.disabled) {
+            this.form.enable({ emitEvent: false });
+        }
     });
 
     ngOnInit(): void {
@@ -202,7 +338,7 @@ export class ClinicDetailPageComponent implements OnInit {
         this.clinicsApi.getClinicById(id).subscribe({
             next: (vm) => {
                 this.detail.set(vm);
-                this.form.patchValue({ name: vm.name, city: vm.city });
+                this.patchFormFromVm(vm);
                 this.loading.set(false);
             },
             error: (e: Error) => {
@@ -226,13 +362,16 @@ export class ClinicDetailPageComponent implements OnInit {
         if (!id) {
             return;
         }
-        const v = this.form.getRawValue();
+        this.form.controls.phone.setValue(formatClinicPhoneForInput(this.form.controls.phone.value), {
+            emitEvent: false
+        });
+        const v = this.form.getRawValue() as ClinicUpsertFormValue;
         this.saving.set(true);
-        this.clinicsApi.updateClinicFromForm(id, v.name, v.city).subscribe({
+        this.clinicsApi.updateClinicFromForm(id, v).subscribe({
             next: (vm) => {
                 this.saving.set(false);
                 this.detail.set(vm);
-                this.form.patchValue({ name: vm.name, city: vm.city });
+                this.patchFormFromVm(vm);
                 addTracedToast(this.messages, 'ClinicDetailPage', this.router.url, {
                     severity: 'success',
                     summary: 'Tamam',
@@ -350,11 +489,22 @@ export class ClinicDetailPageComponent implements OnInit {
         );
     }
 
+    private patchFormFromVm(vm: ClinicDetailVm): void {
+        this.form.patchValue({
+            name: vm.name,
+            city: vm.city,
+            phone: formatClinicPhoneForInput(vm.phone),
+            email: vm.email,
+            address: vm.address,
+            description: vm.description
+        });
+    }
+
     private refreshAfterMutation(clinicId: string): void {
         this.clinicsApi.getClinicById(clinicId).subscribe({
             next: (vm) => {
                 this.detail.set(vm);
-                this.form.patchValue({ name: vm.name, city: vm.city });
+                this.patchFormFromVm(vm);
             },
             error: (err: Error) => {
                 this.formError.set(err.message ?? 'Liste yenilenemedi.');
