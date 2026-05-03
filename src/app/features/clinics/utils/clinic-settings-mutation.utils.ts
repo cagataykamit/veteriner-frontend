@@ -27,6 +27,8 @@ function extractProblemCode(err: HttpErrorResponse): string | null {
 }
 
 const CLINIC_MESSAGES: Record<string, string> = {
+    'Clinics.AccessDenied': 'Bu kliniğe erişim yetkiniz yok.',
+    ClinicsAccessDenied: 'Bu kliniğe erişim yetkiniz yok.',
     'Clinics.NotFound': 'Klinik bulunamadı veya erişilemiyor.',
     ClinicsNotFound: 'Klinik bulunamadı veya erişilemiyor.',
     'Clinics.DuplicateName': 'Bu klinik adı bu kurumda zaten kullanılıyor.',

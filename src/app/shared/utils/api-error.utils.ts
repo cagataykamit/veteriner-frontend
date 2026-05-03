@@ -102,6 +102,8 @@ function tenantOrganizationProblemUserMessage(err: HttpErrorResponse): string | 
 
 /** Klinik oluşturma / panel klinik yazma — `ProblemDetails` + `extensions.code`. */
 const CLINIC_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Clinics.AccessDenied': 'Bu kliniğe erişim yetkiniz yok.',
+    ClinicsAccessDenied: 'Bu kliniğe erişim yetkiniz yok.',
     'Clinics.DuplicateName': 'Bu isimde bir klinik zaten kayıtlı. Lütfen farklı bir klinik adı kullanın.',
     ClinicsDuplicateName: 'Bu isimde bir klinik zaten kayıtlı. Lütfen farklı bir klinik adı kullanın.',
     'Tenants.ContextMissing':

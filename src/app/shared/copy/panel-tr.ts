@@ -5,6 +5,9 @@
 export const PANEL_COPY = {
     listEmptyMessage: 'Kayıt bulunamadı.',
     listEmptyHint: 'Arama veya filtreleri değiştirerek tekrar deneyin.',
+    /** `settings/clinics` — API scope’a göre liste boş olabilir */
+    clinicsListEmptyMessage: 'Görüntüleme yetkiniz olan klinik bulunmuyor.',
+    clinicsListEmptyHint: 'Atama veya ek yetki için kurum yöneticinize başvurun.',
     loadingDefault: 'Yükleniyor…',
     filterPlaceholderAll: 'Tümü',
     buttonSearch: 'Ara',

@@ -9,3 +9,6 @@ export const SUBSCRIPTIONS_READ_CLAIM = 'Subscriptions.Read' as const;
 
 /** Paket değişimi, checkout, bekleyen plan — yazma */
 export const SUBSCRIPTIONS_MANAGE_CLAIM = 'Subscriptions.Manage' as const;
+
+/** Yeni klinik oluşturma (panel `settings/clinics/new`) */
+export const CLINICS_CREATE_CLAIM = 'Clinics.Create' as const;

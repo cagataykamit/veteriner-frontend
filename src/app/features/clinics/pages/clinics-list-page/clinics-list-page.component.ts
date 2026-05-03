@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { CLINICS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -30,15 +32,17 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             subtitle="Hesap"
             description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları."
         >
-            <a
-                actions
-                routerLink="/panel/settings/clinics/new"
-                pButton
-                type="button"
-                label="Yeni Klinik"
-                icon="pi pi-plus"
-                class="p-button-primary"
-            ></a>
+            @if (canCreateClinic()) {
+                <a
+                    actions
+                    routerLink="/panel/settings/clinics/new"
+                    pButton
+                    type="button"
+                    label="Yeni Klinik"
+                    icon="pi pi-plus"
+                    class="p-button-primary"
+                ></a>
+            }
         </app-page-header>
 
         <div class="card">
@@ -47,7 +51,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else if (rows().length === 0) {
-                <app-empty-state message="Kayıtlı klinik bulunamadı." [hint]="copy.listEmptyHint" />
+                <app-empty-state [message]="copy.clinicsListEmptyMessage" [hint]="copy.clinicsListEmptyHint" />
             } @else {
                 <div class="hidden lg:block overflow-x-auto">
                     <p-table [value]="rows()" [tableStyle]="{ 'min-width': '42rem' }">
@@ -120,8 +124,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 })
 export class ClinicsListPageComponent implements OnInit {
     private readonly clinics = inject(ClinicsService);
+    private readonly auth = inject(AuthService);
 
     readonly copy = PANEL_COPY;
+    readonly canCreateClinic = computed(() => this.auth.hasOperationClaim(CLINICS_CREATE_CLAIM));
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly rows = signal<ClinicListItemVm[]>([]);
