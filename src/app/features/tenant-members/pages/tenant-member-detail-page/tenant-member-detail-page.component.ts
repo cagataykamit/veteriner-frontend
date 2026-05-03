@@ -36,6 +36,7 @@ import {
     isMemberRoleAlreadyRemoved,
     memberRoleAssignRemoveMessage
 } from '@/app/features/tenant-members/utils/tenant-member-role-mutation.utils';
+import { memberRemoveMessage } from '@/app/features/tenant-members/utils/tenant-member-remove-mutation.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -100,6 +101,25 @@ import { catchError, forkJoin, of } from 'rxjs';
                     </div>
                 </dl>
             </div>
+
+            @if (canManageTenantAccess() && !m.isCurrentUser) {
+                <div class="card mb-4 border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/20">
+                    <h5 class="mt-0 mb-3 text-red-700 dark:text-red-300">Yıkıcı işlem</h5>
+                    @if (memberRemoveError()) {
+                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ memberRemoveError() }}</p>
+                    }
+                    <div class="flex flex-wrap gap-2">
+                        <p-button
+                            label="Üyeyi kurumdan çıkar"
+                            icon="pi pi-user-minus"
+                            severity="danger"
+                            [loading]="busyRemoveMember()"
+                            [disabled]="busyRemoveMember() || busyAdd() || busyAddClinic()"
+                            (onClick)="openRemoveMemberConfirm()"
+                        />
+                    </div>
+                </div>
+            }
 
             @if (m.claimsSectionPresent) {
                 <div class="card mb-4">
@@ -365,6 +385,39 @@ import { catchError, forkJoin, of } from 'rxjs';
                 </div>
             }
         }
+
+        <p-dialog
+            header="Üyeyi kurumdan çıkar"
+            [modal]="true"
+            [draggable]="false"
+            [dismissableMask]="true"
+            [style]="{ width: 'min(32rem, 95vw)' }"
+            [visible]="removeMemberConfirmOpen()"
+            (visibleChange)="onRemoveMemberConfirmVisible($event)"
+        >
+            <p class="text-sm text-muted-color mt-0 mb-4">Bu kullanıcı kurum üyeliğini kaybedecek. Devam etmek istiyor musunuz?</p>
+            @if (memberRemoveError()) {
+                <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ memberRemoveError() }}</p>
+            }
+            <div class="flex flex-wrap justify-end gap-2">
+                <p-button
+                    type="button"
+                    label="Vazgeç"
+                    severity="secondary"
+                    [disabled]="busyRemoveMember()"
+                    (onClick)="onRemoveMemberConfirmVisible(false)"
+                />
+                <p-button
+                    type="button"
+                    label="Üyeyi çıkar"
+                    icon="pi pi-user-minus"
+                    severity="danger"
+                    [loading]="busyRemoveMember()"
+                    [disabled]="busyRemoveMember()"
+                    (onClick)="onRemoveMemberConfirmed()"
+                />
+            </div>
+        </p-dialog>
     `
 })
 export class TenantMemberDetailPageComponent implements OnInit {
@@ -406,6 +459,9 @@ export class TenantMemberDetailPageComponent implements OnInit {
     readonly busyAddClinic = signal(false);
     readonly busyRemoveClinicId = signal<string | null>(null);
     readonly clinicActionError = signal<string | null>(null);
+    readonly busyRemoveMember = signal(false);
+    readonly memberRemoveError = signal<string | null>(null);
+    readonly removeMemberConfirmOpen = signal(false);
 
     /** `GET .../assignable-role-permission-matrix` — üye özetinde birleşik yetki için. */
     readonly matrixRows = signal<TenantRolePermissionMatrixRowVm[]>([]);
@@ -476,6 +532,18 @@ export class TenantMemberDetailPageComponent implements OnInit {
 
     onPermissionSummaryVisible(open: boolean): void {
         this.permissionSummaryOpen.set(!!open);
+    }
+
+    openRemoveMemberConfirm(): void {
+        if (!this.canManageTenantAccess() || this.member()?.isCurrentUser) {
+            return;
+        }
+        this.memberRemoveError.set(null);
+        this.removeMemberConfirmOpen.set(true);
+    }
+
+    onRemoveMemberConfirmVisible(open: boolean): void {
+        this.removeMemberConfirmOpen.set(!!open);
     }
 
     ngOnInit(): void {
@@ -647,6 +715,35 @@ export class TenantMemberDetailPageComponent implements OnInit {
         });
     }
 
+    onRemoveMemberConfirmed(): void {
+        const vm = this.member();
+        if (!vm || vm.isCurrentUser || !this.canManageTenantAccess()) {
+            return;
+        }
+        this.memberRemoveError.set(null);
+        this.busyRemoveMember.set(true);
+        this.tenantMembers.removeMember(vm.id).subscribe({
+            next: () => {
+                this.busyRemoveMember.set(false);
+                this.removeMemberConfirmOpen.set(false);
+                addTracedToast(this.messages, 'TenantMemberDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Üye kurumdan çıkarıldı.'
+                });
+                void this.router.navigate(['/panel/settings/members']);
+            },
+            error: (e: unknown) => {
+                this.busyRemoveMember.set(false);
+                if (e instanceof HttpErrorResponse) {
+                    this.memberRemoveError.set(memberRemoveMessage(e, 'Üye çıkarılamadı. Lütfen tekrar deneyin.'));
+                    return;
+                }
+                this.memberRemoveError.set('Üye çıkarılamadı. Lütfen tekrar deneyin.');
+            }
+        });
+    }
+
     private handleAddClinicError(e: unknown, memberId: string): void {
         if (e instanceof HttpErrorResponse) {
             if (isMemberClinicAlreadyAssignedConflict(e)) {
@@ -688,6 +785,8 @@ export class TenantMemberDetailPageComponent implements OnInit {
         this.member.set(null);
         this.roleActionError.set(null);
         this.clinicActionError.set(null);
+        this.memberRemoveError.set(null);
+        this.busyRemoveMember.set(false);
         this.claimsOptionsError.set(null);
         this.clinicsPickerError.set(null);
         this.selectedClaimId.set('');
@@ -697,6 +796,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
         this.matrixRows.set([]);
         this.matrixLoadError.set(null);
         this.permissionSummaryOpen.set(false);
+        this.removeMemberConfirmOpen.set(false);
 
         forkJoin({
             member: this.tenantMembers.getMemberById(id),

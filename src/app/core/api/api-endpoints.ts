@@ -137,6 +137,9 @@ export const ApiEndpoints = {
         /** GET: tek kiracı üyesi detayı (rol/claim ve klinik üyelikleri backend gönderirse). */
         memberById: (tenantId: string, memberId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}`,
+        /** DELETE: kiracı üyeliğini kaldırır (`/members/{memberId}`). */
+        memberRemove: (tenantId: string, memberId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}`,
         /** POST: gövde genelde `{}`; `operationClaimId` yol parametresinde — üyeye whitelist rol atanır. */
         memberAssignClaim: (tenantId: string, memberId: string, operationClaimId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/members/${encodeURIComponent(memberId)}/roles/${encodeURIComponent(operationClaimId)}`,

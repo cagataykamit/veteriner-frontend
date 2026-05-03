@@ -95,6 +95,24 @@ export class TenantMembersService {
     }
 
     /**
+     * `DELETE /api/v1/tenants/{tenantId}/members/{memberId}`
+     */
+    removeMember(memberId: string): Observable<void> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+        if (!tenantId) {
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+        const mid = memberId.trim();
+        if (!mid) {
+            return throwError(() => new Error('Geçersiz üye kimliği.'));
+        }
+        return this.api.delete<unknown>(ApiEndpoints.tenants.memberRemove(tenantId, mid)).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) => throwError(() => err))
+        );
+    }
+
+    /**
      * `GET /api/v1/clinics` — panel oturumundaki kiracı kapsamındaki klinikler (üye atama).
      * Kişisel üyelik listesi `/api/v1/me/clinics` değildir.
      */
