@@ -20,7 +20,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 
 @Component({
     selector: 'app-tenant-invite-list-page',
@@ -239,7 +239,8 @@ import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/uti
 })
 export class TenantInviteListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
-    readonly inviteStatusSeverity = (row: TenantInviteListItemVm) => tenantInviteStatusTagSeverity(row.statusLifecycle);
+    readonly inviteStatusSeverity = (row: TenantInviteListItemVm) =>
+        tenantInviteDisplayStatusSeverity(row.statusLifecycle, row.isCurrentMember);
 
     private readonly auth = inject(AuthService);
     private readonly tenantInvites = inject(TenantInvitesService);

@@ -27,6 +27,11 @@ export interface TenantInviteListItemVm {
     roleSummary: string;
     canCancel: boolean;
     canResend: boolean;
+    /**
+     * Sunucu boolean gönderdiyse üyelik durumu; Accepted + `false` → “Üyelikten çıkarıldı” gösterimi.
+     * Alan yoksa özellik tanımsız (eski API uyumu).
+     */
+    isCurrentMember?: boolean;
 }
 
 /** GET tek davet — salt okunur detay. */
@@ -47,4 +52,6 @@ export interface TenantInviteDetailVm {
     tenantId: string | null;
     canCancel: boolean;
     canResend: boolean;
+    /** Liste VM ile aynı anlam; sunucu göndermezse tanımsız. */
+    isCurrentMember?: boolean;
 }

@@ -39,7 +39,15 @@ export interface TenantInviteListItemDto {
     /** Sunucu kurallı davet aksiyonları (varsa `canCancel` / `canResend` üzerinde önceliklidir). */
     canCancelInvite?: boolean | null;
     canResendInvite?: boolean | null;
+    /**
+     * Accepted davet için: kullanıcı hâlâ kurum üyesi mi.
+     * Alan yoksa eski API; mapper gösterimde Accepted için önceki davranışı korur.
+     */
+    isCurrentMember?: boolean | null;
 }
+
+/** Tek davet GET — liste satırı ile aynı kök alanlar (+ detay alanları mapper’da birleşir). */
+export interface TenantInviteDetailDto extends TenantInviteListItemDto {}
 
 export interface TenantInviteListItemDtoPagedResult {
     items?: TenantInviteListItemDto[] | null;

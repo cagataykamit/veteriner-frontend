@@ -124,6 +124,20 @@ export function tenantInviteLifecycleFromRaw(raw: string | null | undefined): Te
     return 'unknown';
 }
 
+/**
+ * Liste/detay durum etiketi — Accepted + sunucunun `isCurrentMember === false` bilgisinde özel metin.
+ * `isCurrentMember` tanımsızken eski API: Accepted için yalnızca “Kabul edildi” (alan yok sayılmaz).
+ */
+export function tenantInviteDisplayStatusLabel(
+    lifecycle: TenantInviteLifecycle,
+    isCurrentMember?: boolean
+): string {
+    if (lifecycle === 'accepted' && isCurrentMember === false) {
+        return PANEL_COPY.tenantInviteStatusAcceptedMembershipRemoved;
+    }
+    return tenantInviteStatusLabel(lifecycle);
+}
+
 /** Lifecycle → panel dilinde kısa etiket (liste/detay ortak). */
 export function tenantInviteStatusLabel(lifecycle: TenantInviteLifecycle): string {
     switch (lifecycle) {
@@ -169,6 +183,24 @@ export function tenantInviteStatusTagSeverity(lifecycle: TenantInviteLifecycle):
         default:
             return 'secondary';
     }
+}
+
+/**
+ * Davet listesi / detay için gösterim severity’si.
+ * Accepted + üyelik yok (`false`): warn; Accepted + üye veya alan yok: success.
+ * Bekleyen davetler: info (liste/detay isteği).
+ */
+export function tenantInviteDisplayStatusSeverity(
+    lifecycle: TenantInviteLifecycle,
+    isCurrentMember?: boolean
+): StatusTagSeverity {
+    if (lifecycle === 'accepted') {
+        return isCurrentMember === false ? 'warn' : 'success';
+    }
+    if (lifecycle === 'pending') {
+        return 'info';
+    }
+    return tenantInviteStatusTagSeverity(lifecycle);
 }
 
 function parseIsoMs(iso: string | null | undefined): number | null {

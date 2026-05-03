@@ -16,7 +16,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
-import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
@@ -140,7 +140,8 @@ export class TenantInviteDetailPageComponent implements OnInit {
     readonly joinUrl = signal<string>('');
 
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
-    readonly inviteStatusSeverity = (d: TenantInviteDetailVm) => tenantInviteStatusTagSeverity(d.statusLifecycle);
+    readonly inviteStatusSeverity = (d: TenantInviteDetailVm) =>
+        tenantInviteDisplayStatusSeverity(d.statusLifecycle, d.isCurrentMember);
 
     ngOnInit(): void {
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pm) => {

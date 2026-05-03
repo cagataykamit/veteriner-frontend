@@ -11,9 +11,9 @@ import {
     parseTenantInviteStatusCode,
     resolveInviteActions,
     tenantInviteBackendLifecycleFromStatusCode,
+    tenantInviteDisplayStatusLabel,
     tenantInviteLifecycleFromRaw,
-    tenantInviteResolveDisplayLifecycle,
-    tenantInviteStatusLabel
+    tenantInviteResolveDisplayLifecycle
 } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
@@ -185,7 +185,9 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
     const isExpiredApi = isExpiredTri === true;
     const statusCode = parseTenantInviteStatusCode(statusRaw);
     const statusLifecycle = tenantInviteResolveDisplayLifecycle(statusRaw, isExpiredApi);
-    const statusLabel = tenantInviteStatusLabel(statusLifecycle);
+    const isCurrentMemberTri = readTriBool(raw, ['isCurrentMember', 'IsCurrentMember']);
+    const isCurrentMemberOpt = isCurrentMemberTri === null ? undefined : isCurrentMemberTri;
+    const statusLabel = tenantInviteDisplayStatusLabel(statusLifecycle, isCurrentMemberOpt);
     const actionLifecycle =
         statusCode !== null ? tenantInviteBackendLifecycleFromStatusCode(statusCode) : tenantInviteLifecycleFromRaw(statusRaw);
     const expiresAtUtc = firstString(raw, ['expiresAtUtc', 'ExpiresAtUtc']);
@@ -221,7 +223,7 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
     ]);
     const roleId = firstString(raw, ['operationClaimId', 'OperationClaimId']);
     const roleSummary = roleName?.trim() ? roleName : roleId ? `Rol (${roleId})` : '—';
-    return {
+    const base: TenantInviteListItemVm = {
         id,
         email,
         statusLabel,
@@ -233,6 +235,7 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
         canCancel,
         canResend
     };
+    return isCurrentMemberTri === null ? base : { ...base, isCurrentMember: isCurrentMemberTri };
 }
 
 export function mapTenantInviteDetailRaw(raw: unknown): TenantInviteDetailVm | null {
@@ -258,7 +261,7 @@ export function mapTenantInviteDetailRaw(raw: unknown): TenantInviteDetailVm | n
     const clinicName = firstString(o, ['clinicName', 'ClinicName']);
     const operationClaimId = firstString(o, ['operationClaimId', 'OperationClaimId']);
     const operationClaimName = firstString(o, ['operationClaimName', 'OperationClaimName']);
-    return {
+    const detail: TenantInviteDetailVm = {
         id: row.id,
         email: row.email,
         statusLabel: row.statusLabel,
@@ -275,6 +278,7 @@ export function mapTenantInviteDetailRaw(raw: unknown): TenantInviteDetailVm | n
         canCancel: row.canCancel,
         canResend: row.canResend
     };
+    return row.isCurrentMember !== undefined ? { ...detail, isCurrentMember: row.isCurrentMember } : detail;
 }
 
 export function mapPagedTenantInvitesToVm(raw: unknown): {

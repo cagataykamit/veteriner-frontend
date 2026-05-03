@@ -122,6 +122,7 @@ export const PANEL_COPY = {
     tenantInviteStatusPending: 'Bekliyor',
     tenantInviteStatusSent: 'Gönderildi',
     tenantInviteStatusAccepted: 'Kabul edildi',
+    tenantInviteStatusAcceptedMembershipRemoved: 'Kabul edildi — Üyelikten çıkarıldı',
     tenantInviteStatusCancelled: 'İptal edildi',
     tenantInviteStatusExpired: 'Süresi doldu',
     tenantInviteStatusDeclined: 'Reddedildi',
