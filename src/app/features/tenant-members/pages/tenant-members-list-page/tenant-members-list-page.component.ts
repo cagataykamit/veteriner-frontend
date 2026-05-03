@@ -8,8 +8,11 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { TenantMemberListItemVm } from '@/app/features/tenant-members/models/tenant-members-vm.model';
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -39,15 +42,17 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             subtitle="Hesap"
             description="Bu kuruma bağlı kullanıcıların salt okunur listesi."
         >
-            <a
-                actions
-                routerLink="/panel/settings/members/role-permission-matrix"
-                pButton
-                type="button"
-                [label]="copy.tenantRoleMatrixTitle"
-                icon="pi pi-table"
-                class="p-button-secondary p-button-outlined"
-            ></a>
+            @if (canManageTenantAccess()) {
+                <a
+                    actions
+                    routerLink="/panel/settings/members/role-permission-matrix"
+                    pButton
+                    type="button"
+                    [label]="copy.tenantRoleMatrixTitle"
+                    icon="pi pi-table"
+                    class="p-button-secondary p-button-outlined"
+                ></a>
+            }
         </app-page-header>
 
         <div class="card">
@@ -185,7 +190,14 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 export class TenantMembersListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
+    private readonly auth = inject(AuthService);
+    private readonly ro = inject(TenantReadOnlyContextService);
     private readonly tenantMembers = inject(TenantMembersService);
+
+    /** Davet/üye yönetimi: `Tenants.InviteCreate` ve salt okunur değil. */
+    readonly canManageTenantAccess = computed(
+        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
+    );
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);

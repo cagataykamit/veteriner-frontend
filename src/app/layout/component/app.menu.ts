@@ -4,6 +4,11 @@ import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { AuthService } from '@/app/core/auth/auth.service';
+import {
+    SUBSCRIPTIONS_MANAGE_CLAIM,
+    SUBSCRIPTIONS_READ_CLAIM,
+    TENANT_MANAGEMENT_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-menu',
@@ -32,6 +37,21 @@ export class AppMenu {
         }
         if (canReadReminders) {
             reminderItems.push({ label: 'Hatırlatma Geçmişi', icon: 'pi pi-fw pi-history', routerLink: ['/panel/settings/reminders/logs'] });
+        }
+
+        const canAccessSubscriptionPage =
+            this.auth.hasOperationClaim(SUBSCRIPTIONS_READ_CLAIM) ||
+            this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM);
+
+        const canManageTenantAccess = this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM);
+        const tenantManagementItems: MenuItem[] = [];
+        if (canManageTenantAccess) {
+            tenantManagementItems.push(
+                { label: 'Kurum Bilgileri', icon: 'pi pi-fw pi-id-card', routerLink: ['/panel/settings/organization'] },
+                { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', routerLink: ['/panel/settings/members'] },
+                { label: 'Davetler', icon: 'pi pi-fw pi-list', routerLink: ['/panel/settings/invites/list'] },
+                { label: 'Davet oluştur', icon: 'pi pi-fw pi-user-plus', routerLink: ['/panel/settings/invites'] }
+            );
         }
 
         this.model = [
@@ -85,13 +105,12 @@ export class AppMenu {
             {
                 label: 'Hesap',
                 items: [
-                    { label: 'Kurum Bilgileri', icon: 'pi pi-fw pi-id-card', routerLink: ['/panel/settings/organization'] },
-                    { label: 'Abonelik', icon: 'pi pi-fw pi-wallet', routerLink: ['/panel/settings/subscription'] },
+                    ...(canAccessSubscriptionPage
+                        ? [{ label: 'Abonelik', icon: 'pi pi-fw pi-wallet', routerLink: ['/panel/settings/subscription'] }]
+                        : []),
                     { label: 'Klinikler', icon: 'pi pi-fw pi-building', routerLink: ['/panel/settings/clinics'] },
                     ...reminderItems,
-                    { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', routerLink: ['/panel/settings/members'] },
-                    { label: 'Davetler', icon: 'pi pi-fw pi-list', routerLink: ['/panel/settings/invites/list'] },
-                    { label: 'Davet oluştur', icon: 'pi pi-fw pi-user-plus', routerLink: ['/panel/settings/invites'] },
+                    ...tenantManagementItems,
                     { label: 'Giriş', icon: 'pi pi-fw pi-sign-in', routerLink: ['/auth/login'] }
                 ]
             }

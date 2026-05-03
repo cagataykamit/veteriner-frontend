@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { mapCreateInviteFormToApiDto } from '@/app/features/tenant-invites/data/tenant-invite.mapper';
 import type { OperationClaimOptionVm, TenantInviteCreatedVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/features/tenant-invites/services/tenant-invites.service';
@@ -128,7 +129,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 submitting() ||
                                 clinics().length === 0 ||
                                 operationClaims().length === 0 ||
-                                ro.mutationBlocked()
+                                !canManageTenantAccess()
                             "
                         />
                     </div>
@@ -201,6 +202,11 @@ export class TenantInvitePanelPageComponent implements OnInit {
     private readonly tenantInvites = inject(TenantInvitesService);
     readonly ro = inject(TenantReadOnlyContextService);
 
+    /** `Tenants.InviteCreate` ve salt okunur değil. */
+    readonly canManageTenantAccess = computed(
+        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
+    );
+
     readonly pageLoading = signal(true);
     readonly pageError = signal<string | null>(null);
     readonly claimsLoadError = signal<string | null>(null);
@@ -268,7 +274,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
     }
 
     onSubmit(): void {
-        if (this.ro.mutationBlocked()) {
+        if (!this.canManageTenantAccess()) {
             return;
         }
         this.submitError.set(null);

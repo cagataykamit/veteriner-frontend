@@ -165,7 +165,9 @@ export const ApiEndpoints = {
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-operation-claims`,
         /** GET: rol → atanabilir permission matrisi (salt okunur; panel bilgilendirme). */
         assignableRolePermissionMatrix: (tenantId: string) =>
-            `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-role-permission-matrix`
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-role-permission-matrix`,
+        /** GET: panel salt okunur / yazma kilit durumu (abonelik özetinden bağımsız). */
+        accessState: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/access-state`
     },
     public: {
         ownerSignup: () => `/api/v1/public/owner-signup`,

@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -46,7 +48,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         } @else if (item(); as d) {
             <div class="card mb-4">
                 <div class="flex flex-wrap gap-2 mb-4">
-                    @if (d.canCancel && !ro.mutationBlocked()) {
+                    @if (d.canCancel && canManageTenantAccess()) {
                         <p-button
                             label="Daveti iptal et"
                             icon="pi pi-times"
@@ -56,7 +58,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                             (onClick)="onCancel(d.id)"
                         />
                     }
-                    @if (d.canResend && !ro.mutationBlocked()) {
+                    @if (d.canResend && canManageTenantAccess()) {
                         <p-button
                             label="Yeniden gönder"
                             icon="pi pi-send"
@@ -119,9 +121,14 @@ export class TenantInviteDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
     private readonly tenantInvites = inject(TenantInvitesService);
     private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly canManageTenantAccess = computed(
+        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
+    );
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -176,7 +183,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
     }
 
     onCancel(id: string): void {
-        if (this.ro.mutationBlocked()) {
+        if (!this.canManageTenantAccess()) {
             return;
         }
         this.actionError.set(null);
@@ -199,7 +206,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
     }
 
     onResend(id: string): void {
-        if (this.ro.mutationBlocked()) {
+        if (!this.canManageTenantAccess()) {
             return;
         }
         this.actionError.set(null);

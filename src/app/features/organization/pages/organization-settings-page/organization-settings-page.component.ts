@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -8,6 +8,8 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
 import { finalize, switchMap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { SubscriptionStatusKey, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
 import { OrganizationSettingsService } from '@/app/features/organization/services/organization-settings.service';
 import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
@@ -101,7 +103,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             label="Kaydet"
                             icon="pi pi-save"
                             [loading]="saving()"
-                            [disabled]="form.invalid || saving() || ro.mutationBlocked() || !form.dirty"
+                            [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"
                         />
                     </div>
                 </form>
@@ -111,11 +113,15 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 })
 export class OrganizationSettingsPageComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
     private readonly subscriptions = inject(SubscriptionsService);
     private readonly orgSettings = inject(OrganizationSettingsService);
     private readonly messages = inject(MessageService);
     private readonly fb = inject(FormBuilder);
     readonly ro = inject(TenantReadOnlyContextService);
+    readonly canManageTenantAccess = computed(
+        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
+    );
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -177,7 +183,7 @@ export class OrganizationSettingsPageComponent implements OnInit {
     }
 
     onSave(): void {
-        if (this.ro.mutationBlocked()) {
+        if (!this.canManageTenantAccess()) {
             return;
         }
         this.formError.set(null);

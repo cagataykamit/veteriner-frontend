@@ -4,7 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { SUBSCRIPTIONS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -19,6 +21,7 @@ import type {
     SubscriptionPlanVm,
     SubscriptionSummaryVm
 } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { SubscriptionSummaryRequestOptions } from '@/app/features/subscriptions/services/subscriptions.service';
 import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import {
@@ -187,7 +190,7 @@ interface ReturnBannerVm {
                                 <span class="font-medium">{{ boolText(s.canManageSubscription) }}</span>
                             </div>
                         </div>
-                        @if (s.canManageSubscription) {
+                        @if (canManageSubscriptionOperations(s)) {
                             <div class="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
                                 <p class="m-0 text-sm text-color">
                                     Paket seçtiğinizde güvenli ödeme sağlayıcısına yönlendirilirsiniz. Ödeme sonucu işlendiğinde sistem otomatik güncellenir; bu
@@ -225,7 +228,7 @@ interface ReturnBannerVm {
                                         @if (plan.maxUsers !== null) {
                                             <p class="mt-2 mb-0 text-xs text-muted-color">Maks. kullanıcı: {{ plan.maxUsers }}</p>
                                         }
-                                        @if (s.canManageSubscription && !isCurrentPlan(plan, s)) {
+                                        @if (canManageSubscriptionOperations(s) && !isCurrentPlan(plan, s)) {
                                             <div class="mt-3">
                                                 <p-button
                                                     type="button"
@@ -280,7 +283,7 @@ interface ReturnBannerVm {
                                     <div>{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</div>
                                 </div>
                             </div>
-                            @if (s.canManageSubscription) {
+                            @if (canManageSubscriptionOperations(s)) {
                                 <div class="flex items-center gap-2">
                                     <p-button
                                         type="button"
@@ -300,7 +303,7 @@ interface ReturnBannerVm {
                     </div>
                 }
 
-                @if (s.canManageSubscription) {
+                @if (canManageSubscriptionOperations(s)) {
                     <div class="col-span-12">
                         <div class="card mb-0">
                             <h5 class="mt-0 mb-3">Checkout oturumu</h5>
@@ -443,6 +446,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly messageService = inject(MessageService);
+    private readonly auth = inject(AuthService);
 
     private pollTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -464,6 +468,13 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     readonly postCheckoutSyncing = signal(false);
     /** Uyarı banner’ındaki “Durumu yenile” — tam sayfa loading olmadan özet + checkout yeniler. */
     readonly subscriptionRefreshLoading = signal(false);
+
+    /**
+     * Özet `canManageSubscription` + JWT `Subscriptions.Manage` — paket değişimi, checkout, bekleyen plan iptali.
+     */
+    canManageSubscriptionOperations(s: SubscriptionSummaryVm): boolean {
+        return !!s.canManageSubscription && this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM);
+    }
 
     /** Ödeme dönüşü sonrası anlık faz: processing öncelikli, sonra banner şiddeti. */
     readonly postCheckoutPhase = computed<PostCheckoutPhase>(() => {
@@ -532,7 +543,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         const bust = !!options?.bustSummaryCache;
         forkJoin([
             this.subscriptions.getSubscriptionSummary({ bustCache: bust }),
-            this.subscriptions.getPendingPlanChange({ bustCache: bust })
+            this.pendingPlanChangeObservable({ bustCache: bust })
         ]).subscribe({
             next: ([data, pending]) => {
                 const merged = { ...data, pendingPlanChange: pending };
@@ -570,7 +581,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (sessionId) {
             forkJoin([
                 this.subscriptions.getSubscriptionSummary({ bustCache: true }),
-                this.subscriptions.getPendingPlanChange({ bustCache: true }),
+                this.pendingPlanChangeObservable({ bustCache: true }),
                 this.subscriptions.getCheckout(sessionId)
             ]).subscribe({
                 next: ([data, pending, session]) => {
@@ -585,7 +596,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         } else {
             forkJoin([
                 this.subscriptions.getSubscriptionSummary({ bustCache: true }),
-                this.subscriptions.getPendingPlanChange({ bustCache: true })
+                this.pendingPlanChangeObservable({ bustCache: true })
             ]).subscribe({
                 next: ([data, pending]) => {
                     const merged = this.mergeSummaryWithPending(data, pending);
@@ -651,6 +662,9 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (!summary) {
             return;
         }
+        if (!this.canManageSubscriptionOperations(summary)) {
+            return;
+        }
         this.planActionError.set(null);
         this.planActionInfo.set(null);
         if (this.hasOpenSessionForPlan(plan)) {
@@ -712,6 +726,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (!sessionId) {
             return;
         }
+        const s = this.summary();
+        if (!s || !this.canManageSubscriptionOperations(s)) {
+            return;
+        }
         this.finalizing.set(true);
         this.finalizeError.set(null);
         this.subscriptions.finalizeCheckout(sessionId).subscribe({
@@ -746,6 +764,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     private startCheckout(targetPlanCode: string): void {
+        const sum = this.summary();
+        if (!sum || !this.canManageSubscriptionOperations(sum)) {
+            return;
+        }
         this.planActionLoadingCode.set(targetPlanCode);
         this.checkoutLoading.set(true);
         this.checkoutError.set(null);
@@ -829,7 +851,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     cancelPendingPlanChange(): void {
         const s = this.summary();
-        if (!s?.canManageSubscription) {
+        if (!s || !this.canManageSubscriptionOperations(s)) {
             return;
         }
         this.pendingCancelLoading.set(true);
@@ -875,6 +897,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     private scheduleDowngrade(targetPlanCode: string): void {
+        const sum = this.summary();
+        if (!sum || !this.canManageSubscriptionOperations(sum)) {
+            return;
+        }
         this.schedulingDowngradeCode.set(targetPlanCode);
         this.planActionError.set(null);
         this.planActionInfo.set(null);
@@ -958,7 +984,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         forkJoin([
             this.subscriptions.getCheckout(sessionId),
             this.subscriptions.getSubscriptionSummary({ bustCache: true }),
-            this.subscriptions.getPendingPlanChange({ bustCache: true })
+            this.pendingPlanChangeObservable({ bustCache: true })
         ]).subscribe({
             next: ([session, data, pending]) => {
                 const summary = this.mergeSummaryWithPending(data, pending);
@@ -1009,7 +1035,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         forkJoin([
             this.subscriptions.getCheckout(sessionId),
             this.subscriptions.getSubscriptionSummary({ bustCache: true }),
-            this.subscriptions.getPendingPlanChange({ bustCache: true })
+            this.pendingPlanChangeObservable({ bustCache: true })
         ]).subscribe({
             next: ([session, data, pending]) => {
                 const summary = this.mergeSummaryWithPending(data, pending);
@@ -1062,6 +1088,14 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 });
             }
         });
+    }
+
+    private pendingPlanChangeObservable(
+        options?: SubscriptionSummaryRequestOptions
+    ): Observable<PendingPlanChangeVm | null> {
+        return this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM)
+            ? this.subscriptions.getPendingPlanChange(options)
+            : of(null);
     }
 
     private mergeSummaryWithPending(data: SubscriptionSummaryVm, pending: PendingPlanChangeVm | null): SubscriptionSummaryVm {

@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { subscriptionAccessGuard } from '@/app/core/auth/subscription-access.guard';
+import { tenantManagementGuard } from '@/app/core/auth/tenant-management.guard';
 
 export default [
     { path: 'dashboard', loadChildren: () => import('../dashboard/dashboard.routes') },
@@ -11,12 +13,28 @@ export default [
     { path: 'vaccinations', loadChildren: () => import('../vaccinations/routes/vaccinations.routes') },
     { path: 'payments', loadChildren: () => import('../payments/routes/payments.routes') },
     { path: 'reports', loadChildren: () => import('../reports/reports.routes') },
-    { path: 'settings/subscription', loadChildren: () => import('../subscriptions/routes/subscriptions.routes') },
-    { path: 'settings/organization', loadChildren: () => import('../organization/routes/organization.routes') },
+    {
+        path: 'settings/subscription',
+        loadChildren: () => import('../subscriptions/routes/subscriptions.routes'),
+        canActivate: [subscriptionAccessGuard]
+    },
+    {
+        path: 'settings/organization',
+        loadChildren: () => import('../organization/routes/organization.routes'),
+        canActivate: [tenantManagementGuard]
+    },
     { path: 'settings/clinics', loadChildren: () => import('../clinics/routes/clinics.routes') },
     { path: 'settings/reminders', loadChildren: () => import('../reminders/routes/reminders.routes') },
-    { path: 'settings/members', loadChildren: () => import('../tenant-members/routes/tenant-members.routes') },
-    { path: 'settings/invites', loadChildren: () => import('../tenant-invites/routes/tenant-invites.routes') },
+    {
+        path: 'settings/members',
+        loadChildren: () => import('../tenant-members/routes/tenant-members.routes'),
+        canActivate: [tenantManagementGuard]
+    },
+    {
+        path: 'settings/invites',
+        loadChildren: () => import('../tenant-invites/routes/tenant-invites.routes'),
+        canActivate: [tenantManagementGuard]
+    },
     { path: 'treatments', loadChildren: () => import('../treatments/routes/treatments.routes') },
     { path: 'prescriptions', loadChildren: () => import('../prescriptions/routes/prescriptions.routes') },
     { path: 'lab-results', loadChildren: () => import('../lab-results/routes/lab-results.routes') },

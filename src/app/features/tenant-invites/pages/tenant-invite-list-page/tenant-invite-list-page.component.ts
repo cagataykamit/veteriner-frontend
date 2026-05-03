@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -39,7 +41,9 @@ import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/uti
     ],
     template: `
         <app-page-header title="Davetler" subtitle="Hesap" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
-            <a actions routerLink="/panel/settings/invites" pButton type="button" label="Davet oluştur" icon="pi pi-plus" class="p-button-primary"></a>
+            @if (canManageTenantAccess()) {
+                <a actions routerLink="/panel/settings/invites" pButton type="button" label="Davet oluştur" icon="pi pi-plus" class="p-button-primary"></a>
+            }
         </app-page-header>
 
         <div class="card">
@@ -130,7 +134,7 @@ import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/uti
                                                     label="Detay"
                                                     icon="pi pi-eye"
                                                 ></a>
-                                                @if (row.canCancel && !ro.mutationBlocked()) {
+                                                @if (row.canCancel && canManageTenantAccess()) {
                                                     <p-button
                                                         type="button"
                                                         label="İptal"
@@ -142,7 +146,7 @@ import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/uti
                                                         (onClick)="onCancelInvite(row.id)"
                                                     />
                                                 }
-                                                @if (row.canResend && !ro.mutationBlocked()) {
+                                                @if (row.canResend && canManageTenantAccess()) {
                                                     <p-button
                                                         type="button"
                                                         label="Yeniden gönder"
@@ -188,7 +192,7 @@ import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/uti
                                             label="Detay"
                                             icon="pi pi-eye"
                                         ></a>
-                                        @if (row.canCancel && !ro.mutationBlocked()) {
+                                        @if (row.canCancel && canManageTenantAccess()) {
                                             <p-button
                                                 type="button"
                                                 label="İptal"
@@ -200,7 +204,7 @@ import { tenantInviteStatusTagSeverity } from '@/app/features/tenant-invites/uti
                                                 (onClick)="onCancelInvite(row.id)"
                                             />
                                         }
-                                        @if (row.canResend && !ro.mutationBlocked()) {
+                                        @if (row.canResend && canManageTenantAccess()) {
                                             <p-button
                                                 type="button"
                                                 label="Yeniden gönder"
@@ -237,8 +241,13 @@ export class TenantInviteListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly inviteStatusSeverity = (row: TenantInviteListItemVm) => tenantInviteStatusTagSeverity(row.statusLifecycle);
 
+    private readonly auth = inject(AuthService);
     private readonly tenantInvites = inject(TenantInvitesService);
     readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly canManageTenantAccess = computed(
+        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
+    );
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -296,7 +305,7 @@ export class TenantInviteListPageComponent implements OnInit {
     }
 
     onCancelInvite(id: string): void {
-        if (this.ro.mutationBlocked()) {
+        if (!this.canManageTenantAccess()) {
             return;
         }
         this.actionError.set(null);
@@ -314,7 +323,7 @@ export class TenantInviteListPageComponent implements OnInit {
     }
 
     onResendInvite(id: string): void {
-        if (this.ro.mutationBlocked()) {
+        if (!this.canManageTenantAccess()) {
             return;
         }
         this.actionError.set(null);

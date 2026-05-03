@@ -37,7 +37,7 @@ import type { ExaminationListItemVm } from '@/app/features/examinations/models/e
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
-/** Faz 1: dashboard summary (+ paylaşımlı tenant subscription-summary). */
+/** Faz 1: dashboard summary (+ paylaşımlı tenant access-state / salt okunur bağlamı). */
 export interface DashboardSummariesPhaseResult {
     readonly summary: DashboardSection<DashboardSummaryNormalized | null>;
     readonly capabilities: DashboardSection<DashboardCapabilitiesVm>;
@@ -139,7 +139,7 @@ export class DashboardService {
             );
     }
 
-    /** Faz 1 — summary/capabilities/alerts/subscription paralel (below-the-fold yok). */
+    /** Faz 1 — summary/capabilities/alerts + panel tenant access-state paralel (below-the-fold yok). */
     loadDashboardSummariesPhase(): Observable<DashboardSummariesPhaseResult> {
         const summary$: Observable<DashboardSection<DashboardSummaryNormalized | null>> = this.getSummary().pipe(
             map(
@@ -175,7 +175,7 @@ export class DashboardService {
                 fallbackOperationalAlerts,
                 'Operasyon uyarıları yüklenemedi.'
             ),
-            subscription: this.tenantReadOnlyContext.ensurePanelSubscriptionSummary()
+            tenantAccess: this.tenantReadOnlyContext.ensurePanelTenantAccess()
         }).pipe(
             map(({ summary, capabilities, operationalAlerts }) => {
                 const alerts = buildDashboardAlerts(capabilities.data);

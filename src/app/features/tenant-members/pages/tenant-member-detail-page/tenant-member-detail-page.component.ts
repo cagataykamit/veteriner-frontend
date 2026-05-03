@@ -9,6 +9,8 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import type { OperationClaimOptionVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/features/tenant-invites/services/tenant-invites.service';
@@ -108,7 +110,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                     @if (claimsOptionsError()) {
                         <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ claimsOptionsError() }}</p>
                     }
-                    @if (!ro.mutationBlocked() && !m.isCurrentUser) {
+                    @if (canManageTenantAccess() && !m.isCurrentUser) {
                         <div
                             class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700"
                         >
@@ -164,7 +166,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                     class="inline-flex flex-wrap items-center gap-2 max-w-full rounded-full border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-800/40 px-3 py-1.5 text-sm"
                                 >
                                     <span class="font-medium break-words">{{ c.name }}</span>
-                                    @if (!ro.mutationBlocked() && !m.isCurrentUser && c.canRemove) {
+                                    @if (canManageTenantAccess() && !m.isCurrentUser && c.canRemove) {
                                         <p-button
                                             label="Kaldır"
                                             icon="pi pi-times"
@@ -192,12 +194,14 @@ import { catchError, forkJoin, of } from 'rxjs';
                         @if (matrixLoadError(); as mxErr) {
                             <p class="text-xs text-orange-600 dark:text-orange-400 m-0 mb-2" role="status">{{ mxErr }}</p>
                         }
-                        <p-button
-                            [label]="copy.tenantMemberViewPermissionSummaryButton"
-                            icon="pi pi-list"
-                            styleClass="p-button-outlined"
-                            (onClick)="openPermissionSummary()"
-                        />
+                        @if (canManageTenantAccess()) {
+                            <p-button
+                                [label]="copy.tenantMemberViewPermissionSummaryButton"
+                                icon="pi pi-list"
+                                styleClass="p-button-outlined"
+                                (onClick)="openPermissionSummary()"
+                            />
+                        }
                         <p-dialog
                             [header]="copy.tenantMemberPermissionDialogTitle"
                             [modal]="true"
@@ -276,7 +280,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                     @if (clinicsPickerError()) {
                         <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ clinicsPickerError() }}</p>
                     }
-                    @if (!ro.mutationBlocked() && !m.isCurrentUser) {
+                    @if (canManageTenantAccess() && !m.isCurrentUser) {
                         <div
                             class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700"
                         >
@@ -337,7 +341,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                         } @else if (cl.isActive === false) {
                                             <span class="text-xs text-muted-color">Pasif</span>
                                         }
-                                        @if (!ro.mutationBlocked() && !m.isCurrentUser && cl.canRemove) {
+                                        @if (canManageTenantAccess() && !m.isCurrentUser && cl.canRemove) {
                                             <p-button
                                                 label="Kaldır"
                                                 icon="pi pi-times"
@@ -373,8 +377,14 @@ export class TenantMemberDetailPageComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
     private readonly tenantMembers = inject(TenantMembersService);
     private readonly tenantInvites = inject(TenantInvitesService);
+    private readonly auth = inject(AuthService);
     private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
+
+    /** `Tenants.InviteCreate` ve salt okunur değil — rol/klinik mutasyonları. */
+    readonly canManageTenantAccess = computed(
+        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
+    );
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -489,7 +499,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     }
 
     onAddRole(): void {
-        if (this.member()?.isCurrentUser || this.ro.mutationBlocked()) {
+        if (this.member()?.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
@@ -518,7 +528,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     }
 
     onRemoveRole(operationClaimId: string): void {
-        if (this.member()?.isCurrentUser || this.ro.mutationBlocked()) {
+        if (this.member()?.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
@@ -581,7 +591,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     }
 
     onAddClinic(): void {
-        if (this.member()?.isCurrentUser || this.ro.mutationBlocked()) {
+        if (this.member()?.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
@@ -610,7 +620,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     }
 
     onRemoveClinic(clinicId: string): void {
-        if (this.member()?.isCurrentUser || this.ro.mutationBlocked()) {
+        if (this.member()?.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
