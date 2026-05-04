@@ -16,8 +16,11 @@ import {
 } from '@/app/features/clinics/utils/clinic-profile-form.validators';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { clinicAppointmentSettingsFormToPutBody } from '@/app/features/clinics/data/clinic-appointment-settings.mapper';
 import { clinicWorkingHoursFormToPutBody, normalizeTimeForInput } from '@/app/features/clinics/data/clinic-working-hours.mapper';
+import type { ClinicAppointmentSettingsFormValue, ClinicAppointmentSettingsVm } from '@/app/features/clinics/models/clinic-appointment-settings-vm.model';
 import type { ClinicWorkingHourFormValue, ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
+import { clinicAppointmentSettingsMutationMessage } from '@/app/features/clinics/utils/clinic-appointment-settings-mutation.utils';
 import {
     clinicWorkingDayErrorMessage,
     clinicWorkingDayGroupValidator
@@ -292,6 +295,86 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                 }
             </div>
 
+            <div class="card mb-4" [formGroup]="apSettingsForm">
+                <h5 class="mt-0 mb-2">Randevu Varsayılanları</h5>
+                <p class="text-sm text-muted-color mt-0 mb-4">
+                    Randevu oluşturma ekranlarında kullanılacak varsayılan süre ve slot aralığını yönetin.
+                </p>
+
+                @if (apSettingsLoading()) {
+                    <app-loading-state message="Randevu varsayılanları yükleniyor…" />
+                } @else if (apSettingsError(); as apErr) {
+                    <app-error-state [detail]="apErr" (retry)="retryAppointmentSettingsLoad()" />
+                } @else {
+                    @if (apSettingsFormError()) {
+                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ apSettingsFormError() }}</p>
+                    }
+                    <div class="grid grid-cols-12 gap-4">
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="block text-sm font-medium text-muted-color mb-2" for="defaultAppointmentDurationMinutes">
+                                Varsayılan randevu süresi (dakika)
+                            </label>
+                            <input
+                                id="defaultAppointmentDurationMinutes"
+                                type="number"
+                                class="w-full p-inputtext p-component"
+                                formControlName="defaultAppointmentDurationMinutes"
+                                min="5"
+                                max="240"
+                                step="1"
+                            />
+                            @if (
+                                apSettingsForm.controls.defaultAppointmentDurationMinutes.invalid &&
+                                apSettingsForm.controls.defaultAppointmentDurationMinutes.touched
+                            ) {
+                                <small class="text-red-500">Varsayılan randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
+                            }
+                        </div>
+
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="block text-sm font-medium text-muted-color mb-2" for="slotIntervalMinutes">Slot aralığı (dakika)</label>
+                            <input
+                                id="slotIntervalMinutes"
+                                type="number"
+                                class="w-full p-inputtext p-component"
+                                formControlName="slotIntervalMinutes"
+                                min="5"
+                                max="120"
+                                step="1"
+                            />
+                            @if (apSettingsForm.controls.slotIntervalMinutes.invalid && apSettingsForm.controls.slotIntervalMinutes.touched) {
+                                <small class="text-red-500">Slot aralığı 5 ile 120 dakika arasında olmalıdır.</small>
+                            }
+                        </div>
+
+                        <div class="col-span-12 md:col-span-4 flex items-center">
+                            <div class="flex items-center gap-2 mt-5">
+                                <p-checkbox
+                                    formControlName="allowOverlappingAppointments"
+                                    [binary]="true"
+                                    inputId="allowOverlappingAppointments"
+                                />
+                                <label class="text-sm cursor-pointer" for="allowOverlappingAppointments">
+                                    Aynı saate birden fazla randevuya izin ver
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <p-button
+                            type="button"
+                            label="Randevu varsayılanlarını kaydet"
+                            icon="pi pi-save"
+                            severity="secondary"
+                            [loading]="apSettingsSaving()"
+                            [disabled]="!canSaveAppointmentSettings()"
+                            (onClick)="onSaveAppointmentSettings()"
+                        />
+                    </div>
+                }
+            </div>
+
             <div class="card">
                 <h5 class="mt-0 mb-3">Durum</h5>
                 @if (ro.mutationBlocked()) {
@@ -384,9 +467,18 @@ export class ClinicDetailPageComponent implements OnInit {
     readonly whError = signal<string | null>(null);
     readonly whSaving = signal(false);
     readonly whFormError = signal<string | null>(null);
+    readonly apSettingsLoading = signal(false);
+    readonly apSettingsError = signal<string | null>(null);
+    readonly apSettingsSaving = signal(false);
+    readonly apSettingsFormError = signal<string | null>(null);
 
     readonly whForm = this.fb.group({
         days: this.fb.array<FormGroup>([])
+    });
+    readonly apSettingsForm = this.fb.nonNullable.group({
+        defaultAppointmentDurationMinutes: [30, [Validators.required, Validators.min(5), Validators.max(240), Validators.pattern(/^\d+$/)]],
+        slotIntervalMinutes: [15, [Validators.required, Validators.min(5), Validators.max(120), Validators.pattern(/^\d+$/)]],
+        allowOverlappingAppointments: [false]
     });
 
     get whDays(): FormArray<FormGroup> {
@@ -438,6 +530,18 @@ export class ClinicDetailPageComponent implements OnInit {
         this.applyWhFormGlobalLock();
     });
 
+    private readonly apSettingsFormLockEffect = effect(() => {
+        const lock =
+            this.ro.mutationBlocked() || !this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) || this.apSettingsSaving();
+        if (lock) {
+            if (this.apSettingsForm.enabled) {
+                this.apSettingsForm.disable({ emitEvent: false });
+            }
+        } else if (this.apSettingsForm.disabled) {
+            this.apSettingsForm.enable({ emitEvent: false });
+        }
+    });
+
     trackWhRow(_i: number, row: AbstractControl): number {
         return (row as FormGroup).get('dayOfWeek')?.value ?? _i;
     }
@@ -461,6 +565,24 @@ export class ClinicDetailPageComponent implements OnInit {
         }
     }
 
+    canSaveAppointmentSettings(): boolean {
+        return (
+            this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) &&
+            !this.ro.mutationBlocked() &&
+            !this.apSettingsSaving() &&
+            this.apSettingsForm.valid &&
+            !this.apSettingsLoading() &&
+            this.apSettingsError() === null
+        );
+    }
+
+    retryAppointmentSettingsLoad(): void {
+        const id = this.detail()?.id;
+        if (id) {
+            this.loadAppointmentSettings(id);
+        }
+    }
+
     private loadWorkingHours(clinicId: string): void {
         this.whLoading.set(true);
         this.whError.set(null);
@@ -473,6 +595,33 @@ export class ClinicDetailPageComponent implements OnInit {
             error: (e: Error) => {
                 this.whError.set(e.message ?? 'Çalışma saatleri yüklenemedi.');
                 this.whLoading.set(false);
+            }
+        });
+    }
+
+    private patchAppointmentSettingsForm(vm: ClinicAppointmentSettingsVm): void {
+        this.apSettingsForm.patchValue(
+            {
+                defaultAppointmentDurationMinutes: vm.defaultAppointmentDurationMinutes,
+                slotIntervalMinutes: vm.slotIntervalMinutes,
+                allowOverlappingAppointments: vm.allowOverlappingAppointments
+            },
+            { emitEvent: false }
+        );
+    }
+
+    private loadAppointmentSettings(clinicId: string): void {
+        this.apSettingsLoading.set(true);
+        this.apSettingsError.set(null);
+        this.apSettingsFormError.set(null);
+        this.clinicsApi.getAppointmentSettings(clinicId).subscribe({
+            next: (vm) => {
+                this.patchAppointmentSettingsForm(vm);
+                this.apSettingsLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.apSettingsError.set(e.message ?? 'Randevu varsayılanları yüklenemedi.');
+                this.apSettingsLoading.set(false);
             }
         });
     }
@@ -558,6 +707,56 @@ export class ClinicDetailPageComponent implements OnInit {
         });
     }
 
+    onSaveAppointmentSettings(): void {
+        if (!this.canSaveAppointmentSettings()) {
+            return;
+        }
+        const id = this.detail()?.id ?? this.route.snapshot.paramMap.get('clinicId')?.trim() ?? '';
+        if (!id) {
+            return;
+        }
+        this.apSettingsFormError.set(null);
+        this.apSettingsForm.markAllAsTouched();
+        this.apSettingsForm.updateValueAndValidity({ emitEvent: false });
+        if (this.apSettingsForm.invalid) {
+            if (this.apSettingsForm.controls.defaultAppointmentDurationMinutes.invalid) {
+                this.apSettingsFormError.set('Varsayılan randevu süresi 5 ile 240 dakika arasında olmalıdır.');
+                return;
+            }
+            if (this.apSettingsForm.controls.slotIntervalMinutes.invalid) {
+                this.apSettingsFormError.set('Slot aralığı 5 ile 120 dakika arasında olmalıdır.');
+                return;
+            }
+            this.apSettingsFormError.set('Lütfen randevu varsayılanlarını kontrol edin.');
+            return;
+        }
+        const value = this.apSettingsForm.getRawValue() as ClinicAppointmentSettingsFormValue;
+        const body = clinicAppointmentSettingsFormToPutBody(value);
+        this.apSettingsSaving.set(true);
+        this.clinicsApi.updateAppointmentSettings(id, body).subscribe({
+            next: (vm) => {
+                this.apSettingsSaving.set(false);
+                this.patchAppointmentSettingsForm(vm);
+                this.apSettingsFormError.set(null);
+                addTracedToast(this.messages, 'ClinicDetailPage', this.router.url, {
+                    severity: 'success',
+                    summary: 'Tamam',
+                    detail: 'Randevu varsayılanları güncellendi.'
+                });
+            },
+            error: (e: unknown) => {
+                this.apSettingsSaving.set(false);
+                if (e instanceof HttpErrorResponse) {
+                    this.apSettingsFormError.set(
+                        clinicAppointmentSettingsMutationMessage(e, 'Randevu varsayılanları güncellenemedi.')
+                    );
+                    return;
+                }
+                this.apSettingsFormError.set('Randevu varsayılanları güncellenemedi.');
+            }
+        });
+    }
+
     ngOnInit(): void {
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pm) => {
             const id = pm.get('clinicId')?.trim() ?? '';
@@ -586,12 +785,15 @@ export class ClinicDetailPageComponent implements OnInit {
         this.whDays.clear();
         this.whError.set(null);
         this.whFormError.set(null);
+        this.apSettingsError.set(null);
+        this.apSettingsFormError.set(null);
         this.clinicsApi.getClinicById(id).subscribe({
             next: (vm) => {
                 this.detail.set(vm);
                 this.patchFormFromVm(vm);
                 this.loading.set(false);
                 this.loadWorkingHours(vm.id);
+                this.loadAppointmentSettings(vm.id);
             },
             error: (e: Error) => {
                 this.loadError.set(e.message ?? 'Yükleme hatası');
@@ -758,6 +960,7 @@ export class ClinicDetailPageComponent implements OnInit {
                 this.detail.set(vm);
                 this.patchFormFromVm(vm);
                 this.loadWorkingHours(clinicId);
+                this.loadAppointmentSettings(clinicId);
             },
             error: (err: Error) => {
                 this.formError.set(err.message ?? 'Liste yenilenemedi.');

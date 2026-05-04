@@ -10,7 +10,14 @@ import {
     mapClinicDetailRaw,
     mapClinicsListRaw
 } from '@/app/features/clinics/data/clinic.mapper';
+import {
+    mapClinicAppointmentSettingsResponse
+} from '@/app/features/clinics/data/clinic-appointment-settings.mapper';
 import { mapClinicWorkingHoursResponse } from '@/app/features/clinics/data/clinic-working-hours.mapper';
+import type {
+    UpdateClinicAppointmentSettingsRequestDto
+} from '@/app/features/clinics/models/clinic-appointment-settings-api.model';
+import type { ClinicAppointmentSettingsVm } from '@/app/features/clinics/models/clinic-appointment-settings-vm.model';
 import type { UpdateClinicWorkingHoursRequestDto } from '@/app/features/clinics/models/clinic-working-hours-api.model';
 import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import type { ClinicCreateRequestDto, ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/features/clinics/models/clinic-api.model';
@@ -150,6 +157,38 @@ export class ClinicsService {
         }
         return this.api.put<unknown>(ApiEndpoints.clinics.workingHours(id), body).pipe(
             map((raw) => mapClinicWorkingHoursResponse(raw)),
+            catchError((err: HttpErrorResponse) => throwError(() => err))
+        );
+    }
+
+    /** `GET /api/v1/clinics/{id}/appointment-settings` */
+    getAppointmentSettings(clinicId: string): Observable<ClinicAppointmentSettingsVm> {
+        const id = clinicId.trim();
+        if (!id) {
+            return throwError(() => new Error('Geçersiz klinik kimliği.'));
+        }
+        if (!this.auth.getAccessToken()?.trim()) {
+            return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
+        }
+        return this.api.get<unknown>(ApiEndpoints.clinics.appointmentSettings(id)).pipe(
+            map((raw) => mapClinicAppointmentSettingsResponse(raw)),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(messageFromHttpError(err, 'Randevu varsayılanları yüklenemedi.')))
+            )
+        );
+    }
+
+    /** `PUT /api/v1/clinics/{id}/appointment-settings` */
+    updateAppointmentSettings(
+        clinicId: string,
+        body: UpdateClinicAppointmentSettingsRequestDto
+    ): Observable<ClinicAppointmentSettingsVm> {
+        const id = clinicId.trim();
+        if (!id) {
+            return throwError(() => new Error('Geçersiz klinik kimliği.'));
+        }
+        return this.api.put<unknown>(ApiEndpoints.clinics.appointmentSettings(id), body).pipe(
+            map((raw) => mapClinicAppointmentSettingsResponse(raw)),
             catchError((err: HttpErrorResponse) => throwError(() => err))
         );
     }
