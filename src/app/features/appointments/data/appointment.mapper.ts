@@ -14,8 +14,10 @@ import {
     resolveAppointmentWriteTypeFormValue
 } from '@/app/features/appointments/utils/appointment-type.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
+import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
+const DEFAULT_APPOINTMENT_DURATION_MINUTES = 30;
 
 function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
@@ -167,6 +169,78 @@ function readAppointmentLifecycleEnumFromDto(dto: AppointmentListItemDto | Appoi
     return parseAppointmentStatusRawToEnum(v);
 }
 
+export function formatAppointmentDurationLabel(minutes: number): string {
+    const n = Number.isFinite(minutes) ? Math.trunc(minutes) : DEFAULT_APPOINTMENT_DURATION_MINUTES;
+    return `${n} dk`;
+}
+
+/** VM gösterimi: API’de yok / geçersiz → 30 dk. */
+export function normalizeAppointmentDurationMinutesFromApi(raw: unknown): number {
+    if (raw === null || raw === undefined) {
+        return DEFAULT_APPOINTMENT_DURATION_MINUTES;
+    }
+    let n: number;
+    if (typeof raw === 'number' && Number.isFinite(raw)) {
+        n = Math.trunc(raw);
+    } else if (typeof raw === 'string' && /^\d+$/.test(raw.trim())) {
+        n = Number(raw.trim());
+    } else {
+        return DEFAULT_APPOINTMENT_DURATION_MINUTES;
+    }
+    if (n < 5 || n > 240) {
+        return DEFAULT_APPOINTMENT_DURATION_MINUTES;
+    }
+    return n;
+}
+
+export function resolveAppointmentScheduledEndUtc(
+    scheduledAtUtc: string | null,
+    explicitEndUtc: string | null | undefined,
+    durationMinutes: number
+): string | null {
+    const trimmedEnd = explicitEndUtc?.trim() ? explicitEndUtc.trim() : null;
+    if (trimmedEnd) {
+        return trimmedEnd;
+    }
+    if (!scheduledAtUtc?.trim()) {
+        return null;
+    }
+    const start = parseUtcApiInstantIsoString(scheduledAtUtc);
+    if (!start) {
+        return null;
+    }
+    const safeMinutes =
+        Number.isFinite(durationMinutes) && durationMinutes > 0
+            ? Math.trunc(durationMinutes)
+            : DEFAULT_APPOINTMENT_DURATION_MINUTES;
+    return new Date(start.getTime() + safeMinutes * 60 * 1000).toISOString();
+}
+
+function readDurationMinutesFromDtoRecord(o: Record<string, unknown>): number {
+    const v = readFirstScalarFromDto(o, ['durationMinutes', 'DurationMinutes']);
+    return normalizeAppointmentDurationMinutesFromApi(v);
+}
+
+function readScheduledEndUtcFromDtoRecord(o: Record<string, unknown>): string | null {
+    for (const k of ['scheduledEndUtc', 'ScheduledEndUtc']) {
+        const v = o[k];
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+    return null;
+}
+
+function canonicalScheduledAtUtcList(dto: AppointmentListItemDto): string | null {
+    const o = dto as unknown as Record<string, unknown>;
+    return firstTrimmed(
+        dto.scheduledAtUtc,
+        typeof o['ScheduledAtUtc'] === 'string' ? (o['ScheduledAtUtc'] as string) : undefined,
+        typeof o['scheduledAt'] === 'string' ? (o['scheduledAt'] as string) : undefined,
+        typeof o['ScheduledAt'] === 'string' ? (o['ScheduledAt'] as string) : undefined
+    );
+}
+
 function canonicalAppointmentListItemId(dto: AppointmentListItemDto): string {
     return (
         firstTrimmed(
@@ -181,9 +255,20 @@ export function mapAppointmentListItemDtoToVm(dto: AppointmentListItemDto): Appo
     const typeNum = readAppointmentTypeNumericFromDto(dto);
     const typeName = readAppointmentTypeNameFromDto(dto);
     const clientId = canonicalClientIdList(dto);
+    const rawRecord = dto as unknown as Record<string, unknown>;
+    const scheduledAtUtc = canonicalScheduledAtUtcList(dto);
+    const durationMinutes = readDurationMinutesFromDtoRecord(rawRecord);
+    const scheduledEndUtc = resolveAppointmentScheduledEndUtc(
+        scheduledAtUtc,
+        readScheduledEndUtcFromDtoRecord(rawRecord),
+        durationMinutes
+    );
     return {
         id: canonicalAppointmentListItemId(dto),
-        scheduledAtUtc: dto.scheduledAtUtc ?? null,
+        scheduledAtUtc,
+        scheduledEndUtc,
+        durationMinutes,
+        durationLabel: formatAppointmentDurationLabel(durationMinutes),
         clientId: clientId?.trim() ? clientId : null,
         clientName: str(dto.clientName),
         petId: dto.petId?.trim() ? dto.petId : null,
@@ -200,12 +285,22 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
     const typeNum = readAppointmentTypeNumericFromDto(dto);
     const typeName = readAppointmentTypeNameFromDto(dto);
     const scheduledAt = canonicalScheduledAtUtc(dto);
+    const rawRecord = dto as unknown as Record<string, unknown>;
+    const durationMinutes = readDurationMinutesFromDtoRecord(rawRecord);
+    const scheduledEndUtc = resolveAppointmentScheduledEndUtc(
+        scheduledAt,
+        readScheduledEndUtcFromDtoRecord(rawRecord),
+        durationMinutes
+    );
     const clientId = canonicalClientIdDetail(dto);
     const petId = canonicalPetIdDetail(dto);
     const notes = canonicalNotesDetail(dto);
     return {
         id: dto.id,
         scheduledAtUtc: scheduledAt,
+        scheduledEndUtc,
+        durationMinutes,
+        durationLabel: formatAppointmentDurationLabel(durationMinutes),
         clientId: clientId?.trim() ? clientId : null,
         clientName: str(rawClientNameDetail(dto)),
         petId: petId?.trim() ? petId : null,
@@ -226,6 +321,8 @@ export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): Appo
     const typeName = readAppointmentTypeNameFromDto(dto);
     const clientId = canonicalClientIdDetail(dto) ?? '';
     const petId = canonicalPetIdDetail(dto) ?? '';
+    const rawRecord = dto as unknown as Record<string, unknown>;
+    const durationMinutes = readDurationMinutesFromDtoRecord(rawRecord);
     return {
         id: dto.id,
         clientId,
@@ -233,6 +330,7 @@ export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): Appo
         clientName: rawClientNameDetail(dto),
         petName: rawPetNameDetail(dto),
         scheduledAtUtc: canonicalScheduledAtUtc(dto),
+        durationMinutes,
         appointmentType: resolveAppointmentWriteTypeFormValue(typeNum, typeName),
         status: readAppointmentStatusEnumFromDto(dto),
         notes: canonicalNotesDetail(dto)
@@ -243,6 +341,7 @@ export interface AppointmentUpsertFormAdapterInput {
     clinicId: string;
     petId: string;
     scheduledAtUtc: string;
+    durationMinutes: number;
     appointmentType: number;
     status?: number | null;
     notes?: string;
@@ -253,6 +352,7 @@ export function mapAppointmentUpsertFormToCreateRequest(input: AppointmentUpsert
         clinicId: input.clinicId.trim(),
         petId: input.petId.trim(),
         scheduledAtUtc: input.scheduledAtUtc,
+        durationMinutes: Math.trunc(input.durationMinutes),
         appointmentType: input.appointmentType,
         status: input.status ?? undefined,
         notes: input.notes?.trim() || undefined
@@ -267,6 +367,7 @@ export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): Ap
         petId: req.petId.trim(),
         scheduledAtUtc: req.scheduledAtUtc,
         appointmentType: req.appointmentType,
+        durationMinutes: Math.trunc(req.durationMinutes),
         ...(statusParsed === null ? {} : { status: statusParsed }),
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
@@ -283,6 +384,7 @@ export function mapAppointmentUpsertFormToUpdateRequest(id: string, input: Appoi
         clinicId: input.clinicId.trim(),
         petId: input.petId.trim(),
         scheduledAtUtc: input.scheduledAtUtc,
+        durationMinutes: Math.trunc(input.durationMinutes),
         appointmentType: input.appointmentType,
         status: statusParsed,
         notes: input.notes?.trim() || undefined
@@ -300,6 +402,7 @@ export function mapUpdateAppointmentToApiBody(req: UpdateAppointmentRequest): Ap
         petId: req.petId.trim(),
         scheduledAtUtc: req.scheduledAtUtc,
         appointmentType: req.appointmentType,
+        durationMinutes: Math.trunc(req.durationMinutes),
         status: statusParsed,
         notes: req.notes?.trim() ? req.notes.trim() : null
     };

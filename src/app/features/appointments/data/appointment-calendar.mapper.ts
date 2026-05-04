@@ -1,4 +1,9 @@
 import { HttpParams } from '@angular/common/http';
+import {
+    formatAppointmentDurationLabel,
+    normalizeAppointmentDurationMinutesFromApi,
+    resolveAppointmentScheduledEndUtc
+} from '@/app/features/appointments/data/appointment.mapper';
 import type {
     AppointmentCalendarItemDto,
     AppointmentCalendarQuery
@@ -43,14 +48,31 @@ export function appointmentCalendarQueryToHttpParams(query: AppointmentCalendarQ
 
 export function mapAppointmentCalendarItemDtoToVm(dto: AppointmentCalendarItemDto): AppointmentCalendarItemVm {
     const scheduled = dto.scheduledAtUtc?.trim() ? dto.scheduledAtUtc.trim() : null;
+    const raw = dto as unknown as Record<string, unknown>;
+    const durationMinutes = normalizeAppointmentDurationMinutesFromApi(raw['durationMinutes'] ?? raw['DurationMinutes']);
+    const explicitEnd =
+        typeof raw['scheduledEndUtc'] === 'string' && raw['scheduledEndUtc'].trim()
+            ? raw['scheduledEndUtc'].trim()
+            : typeof raw['ScheduledEndUtc'] === 'string' && (raw['ScheduledEndUtc'] as string).trim()
+              ? (raw['ScheduledEndUtc'] as string).trim()
+              : null;
+    const scheduledEndUtc = resolveAppointmentScheduledEndUtc(scheduled, explicitEnd, durationMinutes);
+    const startLabel = formatUtcIsoAsLocalTimeDisplay(scheduled);
+    const endLabel = formatUtcIsoAsLocalTimeDisplay(scheduledEndUtc);
+    const timeRangeLabel =
+        scheduledEndUtc && endLabel && startLabel && endLabel !== startLabel ? `${startLabel}–${endLabel}` : startLabel;
     return {
         id: dto.id?.trim() ?? '',
         clinicId: dto.clinicId?.trim() ? dto.clinicId.trim() : null,
         petId: dto.petId?.trim() ? dto.petId.trim() : null,
         clientId: dto.clientId?.trim() ? dto.clientId.trim() : null,
         scheduledAtUtc: scheduled,
+        scheduledEndUtc,
+        durationMinutes,
+        durationLabel: formatAppointmentDurationLabel(durationMinutes),
         localDateLabel: formatUtcIsoAsLocalDateDisplay(scheduled),
         timeLabel: formatUtcIsoAsLocalTimeDisplay(scheduled),
+        timeRangeLabel,
         status: dto.status ?? null,
         statusLabel: appointmentStatusLabel(dto.status ?? null),
         statusSeverity: appointmentStatusSeverity(dto.status ?? null),

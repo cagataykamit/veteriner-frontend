@@ -51,6 +51,8 @@ export interface ClientRecentAppointmentSummaryItemDto {
     petName?: string | null;
     status?: string | number | null;
     notes?: string | null;
+    durationMinutes?: number | string | null;
+    scheduledEndUtc?: string | null;
 }
 
 export interface ClientRecentExaminationSummaryItemDto {

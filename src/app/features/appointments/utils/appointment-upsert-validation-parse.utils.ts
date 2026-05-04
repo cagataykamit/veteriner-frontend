@@ -8,6 +8,7 @@ export type AppointmentUpsertFormFieldKey =
     | 'clientId'
     | 'petId'
     | 'scheduledAtLocal'
+    | 'durationMinutes'
     | 'appointmentType'
     | 'status'
     | 'notes';
@@ -32,7 +33,9 @@ const FIELD_MAP: Record<string, AppointmentUpsertFormFieldKey> = {
     appointmentstatus: 'status',
     lifecyclestatus: 'status',
     notes: 'notes',
-    note: 'notes'
+    note: 'notes',
+    durationminutes: 'durationMinutes',
+    duration: 'durationMinutes'
 };
 
 export function parseAppointmentUpsertHttpError(err: HttpErrorResponse): ParsedAppointmentUpsertHttpError {

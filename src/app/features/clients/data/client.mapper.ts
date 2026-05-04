@@ -1,4 +1,9 @@
 import { HttpParams } from '@angular/common/http';
+import {
+    formatAppointmentDurationLabel,
+    normalizeAppointmentDurationMinutesFromApi,
+    resolveAppointmentScheduledEndUtc
+} from '@/app/features/appointments/data/appointment.mapper';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type {
@@ -102,9 +107,24 @@ export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsert
 function mapClientRecentAppointmentItemToVm(dto: ClientRecentAppointmentSummaryItemDto): AppointmentListItemVm {
     const notesRaw = dto.notes?.trim() ? dto.notes.trim() : null;
     const status = parseAppointmentStatusRawToEnum(dto.status);
+    const raw = dto as unknown as Record<string, unknown>;
+    const scheduledAtUtc = dto.scheduledAtUtc ?? null;
+    const durationMinutes = normalizeAppointmentDurationMinutesFromApi(raw['durationMinutes'] ?? raw['DurationMinutes']);
+    const scheduledEndUtc = resolveAppointmentScheduledEndUtc(
+        scheduledAtUtc,
+        typeof raw['scheduledEndUtc'] === 'string' && raw['scheduledEndUtc'].trim()
+            ? raw['scheduledEndUtc'].trim()
+            : typeof raw['ScheduledEndUtc'] === 'string' && (raw['ScheduledEndUtc'] as string).trim()
+              ? (raw['ScheduledEndUtc'] as string).trim()
+              : null,
+        durationMinutes
+    );
     return {
         id: dto.id,
-        scheduledAtUtc: dto.scheduledAtUtc ?? null,
+        scheduledAtUtc,
+        scheduledEndUtc,
+        durationMinutes,
+        durationLabel: formatAppointmentDurationLabel(durationMinutes),
         clientId: null,
         clientName: EM,
         petId: dto.petId?.trim() ? dto.petId.trim() : null,

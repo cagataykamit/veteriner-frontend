@@ -153,6 +153,10 @@ import { EMPTY, switchMap } from 'rxjs';
                             }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tarih / saat</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.scheduledAtUtc) }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Süre</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.durationLabel }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Bitiş</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.scheduledEndUtc) }}</dd>
                         </dl>
                     </div>
                 </div>

@@ -4,6 +4,8 @@ export interface AppointmentCalendarItemDto {
     petId?: string | null;
     clientId?: string | null;
     scheduledAtUtc?: string | null;
+    durationMinutes?: number | string | null;
+    scheduledEndUtc?: string | null;
     status?: string | number | null;
     appointmentType?: string | number | null;
     petName?: string | null;

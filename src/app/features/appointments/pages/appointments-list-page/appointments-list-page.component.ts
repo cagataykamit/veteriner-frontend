@@ -128,13 +128,14 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             [lazy]="true"
                             [first]="first()"
                             (onLazyLoad)="onTableLazyLoad($event)"
-                            [tableStyle]="{ 'min-width': '70rem' }"
+                            [tableStyle]="{ 'min-width': '78rem' }"
                             [showCurrentPageReport]="true"
                             currentPageReportTemplate="{first} - {last} / {totalRecords}"
                         >
                             <ng-template #header>
                                 <tr>
                                     <th>Tarih / Saat</th>
+                                    <th>Süre</th>
                                     <th>Müşteri</th>
                                     <th>Hayvan</th>
                                     <th>Randevu Türü</th>
@@ -145,6 +146,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <ng-template #body let-row>
                                 <tr>
                                     <td>{{ formatDateTime(row.scheduledAtUtc) }}</td>
+                                    <td class="text-sm whitespace-nowrap">{{ row.durationLabel }}</td>
                                     <td>
                                         @if (row.clientId) {
                                             <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
@@ -181,6 +183,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-3">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0">
                                         {{ formatDateTime(row.scheduledAtUtc) }}
+                                        <span class="text-muted-color font-normal"> · {{ row.durationLabel }}</span>
                                     </div>
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </div>

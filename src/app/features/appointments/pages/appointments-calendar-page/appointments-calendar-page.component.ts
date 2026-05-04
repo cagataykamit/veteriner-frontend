@@ -99,7 +99,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                         >
                                             <span
                                                 class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
-                                                >{{ item.timeLabel }}</span
+                                                >{{ item.timeRangeLabel }}</span
                                             >
                                             <div class="flex items-center min-w-0">
                                                 <p class="m-0 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" [title]="item.petName">
@@ -169,7 +169,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                             >
                                                 <span
                                                     class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
-                                                    >{{ item.timeLabel }}</span
+                                                    >{{ item.timeRangeLabel }}</span
                                                 >
                                                 <div class="flex items-center min-w-0">
                                                     <p class="m-0 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" [title]="item.petName">
@@ -235,7 +235,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                             >
                                                 <span
                                                     class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
-                                                    >{{ item.timeLabel }}</span
+                                                    >{{ item.timeRangeLabel }}</span
                                                 >
                                                 <div class="flex items-center min-w-0">
                                                     <p class="m-0 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" [title]="item.petName">
@@ -300,7 +300,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                         @for (item of day.items; track item.id) {
                                             <article class="rounded-md border border-surface-200 dark:border-surface-700 p-2">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-xs font-medium shrink-0">{{ item.timeLabel }}</span>
+                                                    <span class="text-xs font-medium shrink-0">{{ item.timeRangeLabel }}</span>
                                                 </div>
                                                 <p class="m-0 mt-1 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{{ item.petName }}</p>
                                                 <p class="m-0 text-sm text-muted-color min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -335,7 +335,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <div class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold">
-                                                    {{ item.timeLabel }}
+                                                    {{ item.timeRangeLabel }}
                                                 </div>
                                                 <div class="min-w-0 flex-1 text-sm">
                                                     <p class="m-0 font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -386,7 +386,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <div class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold">
-                                                    {{ item.timeLabel }}
+                                                    {{ item.timeRangeLabel }}
                                                 </div>
                                                 <div class="min-w-0 flex-1 text-sm">
                                                     <p class="m-0 font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -438,7 +438,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                         @for (item of day.items; track item.id) {
                                             <article class="rounded-md border border-surface-200 dark:border-surface-700 p-2">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-xs font-medium shrink-0">{{ item.timeLabel }}</span>
+                                                    <span class="text-xs font-medium shrink-0">{{ item.timeRangeLabel }}</span>
                                                 </div>
                                                 <p class="m-0 mt-1 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{{ item.petName }}</p>
                                                 <p class="m-0 text-sm text-muted-color min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">

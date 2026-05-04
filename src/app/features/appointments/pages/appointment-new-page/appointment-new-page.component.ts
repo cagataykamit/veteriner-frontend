@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import { mapAppointmentUpsertFormToCreateRequest } from '@/app/features/appointments/data/appointment.mapper';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import {
@@ -144,6 +145,23 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
+                        <label for="durationMinutes" class="block text-sm font-medium text-muted-color mb-2">Süre (dakika) *</label>
+                        <input
+                            id="durationMinutes"
+                            type="number"
+                            class="w-full p-inputtext p-component"
+                            formControlName="durationMinutes"
+                            min="5"
+                            max="240"
+                            step="1"
+                        />
+                        @if (apiFieldErrors().durationMinutes) {
+                            <small class="text-red-500">{{ apiFieldErrors().durationMinutes }}</small>
+                        } @else if (form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched) {
+                            <small class="text-red-500">Randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-6">
                         <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu Türü *</label>
                         <p-select
                             inputId="appointmentType"
@@ -216,6 +234,7 @@ export class AppointmentNewPageComponent implements OnInit {
     private readonly appointmentsService = inject(AppointmentsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
+    private readonly clinicsApi = inject(ClinicsService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
@@ -242,6 +261,12 @@ export class AppointmentNewPageComponent implements OnInit {
         clientId: this.fb.nonNullable.control('', Validators.required),
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
         scheduledAtLocal: this.fb.nonNullable.control('', Validators.required),
+        durationMinutes: this.fb.nonNullable.control<number | string>(30, [
+            Validators.required,
+            Validators.min(5),
+            Validators.max(240),
+            Validators.pattern(/^[0-9]+$/)
+        ]),
         appointmentType: this.fb.control<number | null>(null, Validators.required),
         status: this.fb.control<number | null>(0),
         notes: this.fb.nonNullable.control('')
@@ -260,12 +285,14 @@ export class AppointmentNewPageComponent implements OnInit {
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('petId'));
         this.form.controls.scheduledAtLocal.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
         this.form.controls.appointmentType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('appointmentType'));
+        this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('durationMinutes'));
         this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('status'));
         this.form.controls.notes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('notes'));
     }
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
+        this.loadDefaultDurationFromClinic();
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
@@ -345,10 +372,18 @@ export class AppointmentNewPageComponent implements OnInit {
             return;
         }
 
+        const durationMinutes = Math.trunc(Number(v.durationMinutes));
+        if (!Number.isFinite(durationMinutes) || durationMinutes < 5 || durationMinutes > 240) {
+            this.form.markAllAsTouched();
+            this.submitError.set('Randevu süresi 5 ile 240 dakika arasında olmalıdır.');
+            return;
+        }
+
         const payload = mapAppointmentUpsertFormToCreateRequest({
             clinicId,
             petId: v.petId,
             scheduledAtUtc,
+            durationMinutes,
             appointmentType,
             status: v.status,
             notes: v.notes
@@ -432,6 +467,22 @@ export class AppointmentNewPageComponent implements OnInit {
                 this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
                 this.petOptions.set([]);
                 this.loadingPets.set(false);
+            }
+        });
+    }
+
+    private loadDefaultDurationFromClinic(): void {
+        const clinicId = this.auth.getClinicId()?.trim();
+        if (!clinicId) {
+            this.form.patchValue({ durationMinutes: 30 });
+            return;
+        }
+        this.clinicsApi.getAppointmentSettings(clinicId).subscribe({
+            next: (s) => {
+                this.form.patchValue({ durationMinutes: s.defaultAppointmentDurationMinutes });
+            },
+            error: () => {
+                this.form.patchValue({ durationMinutes: 30 });
             }
         });
     }

@@ -5,6 +5,10 @@
 export interface AppointmentListItemVm {
     id: string;
     scheduledAtUtc: string | null;
+    /** Planlanan bitiş; yoksa `scheduledAtUtc` + `durationMinutes` ile türetilir. */
+    scheduledEndUtc: string | null;
+    durationMinutes: number;
+    durationLabel: string;
     clientId: string | null;
     clientName: string;
     petId: string | null;
@@ -26,6 +30,9 @@ export interface AppointmentListItemVm {
 export interface AppointmentDetailVm {
     id: string;
     scheduledAtUtc: string | null;
+    scheduledEndUtc: string | null;
+    durationMinutes: number;
+    durationLabel: string;
     clientId: string | null;
     clientName: string;
     petId: string | null;
@@ -48,6 +55,7 @@ export interface AppointmentEditVm {
     clientName: string | null;
     petName: string | null;
     scheduledAtUtc: string | null;
+    durationMinutes: number;
     /** Form `p-select` — 0…6 veya bilinmeyen için `null`. */
     appointmentType: number | null;
     /** Salt okunur gösterim (GET); yazma isteğine dahil edilmez. */

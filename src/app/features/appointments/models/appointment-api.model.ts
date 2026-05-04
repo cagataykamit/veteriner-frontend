@@ -32,6 +32,8 @@ export interface AppointmentListItemDto {
     createdAtUtc?: string | null;
     /** Rapor veya detay benzeri yanıtlarda gelebilir. */
     notes?: string | null;
+    durationMinutes?: number | string | null;
+    scheduledEndUtc?: string | null;
 }
 
 export interface AppointmentListItemDtoPagedResult {
@@ -69,6 +71,8 @@ export interface AppointmentDetailDto {
     notes?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
+    durationMinutes?: number | string | null;
+    scheduledEndUtc?: string | null;
 }
 
 /** POST/PUT /appointments body — durum backend’de ayrı iş akışlarıyla yönetilir; gövdede yok. */
@@ -83,6 +87,7 @@ export interface AppointmentCreateRequestDto {
      */
     status?: number | null;
     notes?: string | null;
+    durationMinutes?: number | null;
 }
 
 /** PUT /appointments body (güncelleme) — id + status zorunlu. */
@@ -95,4 +100,5 @@ export interface AppointmentUpdateRequestDto {
     /** Backend `AppointmentStatus` (0/1/2) — update için zorunlu. */
     status: number;
     notes?: string | null;
+    durationMinutes?: number | null;
 }

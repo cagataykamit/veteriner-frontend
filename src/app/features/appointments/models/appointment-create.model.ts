@@ -6,6 +6,7 @@ export interface CreateAppointmentRequest {
     clinicId?: string;
     petId: string;
     scheduledAtUtc: string;
+    durationMinutes: number;
     /** Backend `AppointmentType` int enum. */
     appointmentType: number;
     /** Create için opsiyonel; yoksa backend Scheduled (=0). */
@@ -19,6 +20,7 @@ export interface UpdateAppointmentRequest {
     clinicId?: string;
     petId: string;
     scheduledAtUtc: string;
+    durationMinutes: number;
     appointmentType: number;
     /** Update için zorunlu (0/1/2). */
     status: number;
