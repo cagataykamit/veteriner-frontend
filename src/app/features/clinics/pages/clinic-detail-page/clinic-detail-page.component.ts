@@ -298,7 +298,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
             <div class="card mb-4" [formGroup]="apSettingsForm">
                 <h5 class="mt-0 mb-2">Randevu Varsayılanları</h5>
                 <p class="text-sm text-muted-color mt-0 mb-4">
-                    Randevu oluşturma ekranlarında kullanılacak varsayılan süre ve slot aralığını yönetin.
+                    Randevu oluşturma ekranlarında kullanılacak varsayılan süre ve randevu başlangıç aralığını yönetin.
                 </p>
 
                 @if (apSettingsLoading()) {
@@ -332,7 +332,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
 
                         <div class="col-span-12 md:col-span-4">
-                            <label class="block text-sm font-medium text-muted-color mb-2" for="slotIntervalMinutes">Slot aralığı (dakika)</label>
+                            <label class="block text-sm font-medium text-muted-color mb-2" for="slotIntervalMinutes">Randevu başlangıç aralığı (dakika)</label>
                             <input
                                 id="slotIntervalMinutes"
                                 type="number"
@@ -343,7 +343,10 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                 step="1"
                             />
                             @if (apSettingsForm.controls.slotIntervalMinutes.invalid && apSettingsForm.controls.slotIntervalMinutes.touched) {
-                                <small class="text-red-500">Slot aralığı 5 ile 120 dakika arasında olmalıdır.</small>
+                                <small class="text-red-500">Randevu başlangıç aralığı 5 ile 120 dakika arasında olmalıdır.</small>
+                            } @else {
+                                <small class="text-muted-color">Randevuların kaç dakikada bir başlatılabileceğini belirler.</small>
+                                <small class="block text-muted-color mt-1">Örneğin 15 dakika seçilirse randevular 09:00, 09:15, 09:30 gibi saatlerde başlatılır.</small>
                             }
                         </div>
 
@@ -724,7 +727,7 @@ export class ClinicDetailPageComponent implements OnInit {
                 return;
             }
             if (this.apSettingsForm.controls.slotIntervalMinutes.invalid) {
-                this.apSettingsFormError.set('Slot aralığı 5 ile 120 dakika arasında olmalıdır.');
+                this.apSettingsFormError.set('Randevu başlangıç aralığı 5 ile 120 dakika arasında olmalıdır.');
                 return;
             }
             this.apSettingsFormError.set('Lütfen randevu varsayılanlarını kontrol edin.');

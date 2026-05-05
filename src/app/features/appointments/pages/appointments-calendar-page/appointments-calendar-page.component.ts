@@ -99,6 +99,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                         >
                                             <span
                                                 class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
+                                                [title]="calendarRowHint(item)"
                                                 >{{ item.timeRangeLabel }}</span
                                             >
                                             <div class="flex items-center min-w-0">
@@ -169,6 +170,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                             >
                                                 <span
                                                     class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
+                                                    [title]="calendarRowHint(item)"
                                                     >{{ item.timeRangeLabel }}</span
                                                 >
                                                 <div class="flex items-center min-w-0">
@@ -235,6 +237,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                             >
                                                 <span
                                                     class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
+                                                    [title]="calendarRowHint(item)"
                                                     >{{ item.timeRangeLabel }}</span
                                                 >
                                                 <div class="flex items-center min-w-0">
@@ -300,7 +303,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                         @for (item of day.items; track item.id) {
                                             <article class="rounded-md border border-surface-200 dark:border-surface-700 p-2">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-xs font-medium shrink-0">{{ item.timeRangeLabel }}</span>
+                                                    <span class="text-xs font-medium shrink-0" [title]="calendarRowHint(item)">{{ item.timeRangeLabel }}</span>
                                                 </div>
                                                 <p class="m-0 mt-1 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{{ item.petName }}</p>
                                                 <p class="m-0 text-sm text-muted-color min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -334,7 +337,10 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                     @for (item of dayMorningItems(); track item.id) {
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <div class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold">
+                                                <div
+                                                    class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold"
+                                                    [title]="calendarRowHint(item)"
+                                                >
                                                     {{ item.timeRangeLabel }}
                                                 </div>
                                                 <div class="min-w-0 flex-1 text-sm">
@@ -385,7 +391,10 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                     @for (item of dayAfternoonItems(); track item.id) {
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <div class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold">
+                                                <div
+                                                    class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold"
+                                                    [title]="calendarRowHint(item)"
+                                                >
                                                     {{ item.timeRangeLabel }}
                                                 </div>
                                                 <div class="min-w-0 flex-1 text-sm">
@@ -438,7 +447,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                         @for (item of day.items; track item.id) {
                                             <article class="rounded-md border border-surface-200 dark:border-surface-700 p-2">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-xs font-medium shrink-0">{{ item.timeRangeLabel }}</span>
+                                                    <span class="text-xs font-medium shrink-0" [title]="calendarRowHint(item)">{{ item.timeRangeLabel }}</span>
                                                 </div>
                                                 <p class="m-0 mt-1 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{{ item.petName }}</p>
                                                 <p class="m-0 text-sm text-muted-color min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -589,6 +598,11 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     createAppointment(): void {
         void this.router.navigate(['/panel/appointments/new']);
+    }
+
+    /** Rozet dar olduğunda süre bilgisini tooltip ile gösterir. */
+    calendarRowHint(item: AppointmentCalendarItemVm): string {
+        return `${item.timeRangeLabel} · ${item.durationLabel}`;
     }
 
     pageTitle(): string {

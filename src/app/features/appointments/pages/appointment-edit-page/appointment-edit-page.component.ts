@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import { mapAppointmentUpsertFormToUpdateRequest } from '@/app/features/appointments/data/appointment.mapper';
 import type { AppointmentEditVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
@@ -23,6 +24,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
 import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
+import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import {
     clientOptionsFromList,
     filterPetsByClientId,
@@ -143,21 +145,39 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                             </div>
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="scheduledAtLocal" class="block text-sm font-medium text-muted-color mb-2">Tarih / saat *</label>
-                            <input
-                                id="scheduledAtLocal"
-                                type="datetime-local"
-                                class="w-full p-inputtext p-component"
-                                formControlName="scheduledAtLocal"
+                            <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
+                            <input id="scheduledDate" type="date" class="w-full p-inputtext p-component" formControlName="scheduledDate" />
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="scheduledTime" class="block text-sm font-medium text-muted-color mb-2">Randevu saati *</label>
+                            <p-select
+                                inputId="scheduledTime"
+                                formControlName="scheduledTime"
+                                [options]="timeOptions()"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Randevu saati seçin"
+                                [showClear]="true"
+                                styleClass="w-full"
+                                [disabled]="timeOptions().length === 0 || !!workingHoursLoadError()"
                             />
                             @if (apiFieldErrors().scheduledAtLocal) {
                                 <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                            } @else if (form.controls.scheduledAtLocal.invalid && form.controls.scheduledAtLocal.touched) {
-                                <small class="text-red-500">Tarih / saat zorunludur.</small>
+                            } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
+                                <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
+                            } @else if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
+                                <small class="text-red-500">Randevu saati seçilmelidir.</small>
+                            } @else if (workingHoursLoadError(); as whErr) {
+                                <small class="text-red-500">{{ whErr }}</small>
+                            } @else if (form.controls.scheduledDate.value && timeOptions().length === 0) {
+                                <small class="text-amber-600">Seçilen gün için uygun randevu saati bulunmuyor.</small>
+                            }
+                            @if (clinicSlotIntervalMinutes(); as startIntervalMinutes) {
+                                <small class="block text-muted-color mt-1">Bu klinikte randevular {{ startIntervalMinutes }} dakikalık aralıklarla başlatılır.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="durationMinutes" class="block text-sm font-medium text-muted-color mb-2">Süre (dakika) *</label>
+                            <label for="durationMinutes" class="block text-sm font-medium text-muted-color mb-2">Randevu süresi (dakika) *</label>
                             <input
                                 id="durationMinutes"
                                 type="number"
@@ -258,6 +278,7 @@ export class AppointmentEditPageComponent implements OnInit {
     private readonly appointmentsService = inject(AppointmentsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
+    private readonly clinicsApi = inject(ClinicsService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
@@ -275,6 +296,9 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly petOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<AppointmentUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
+    readonly clinicSlotIntervalMinutes = signal<number | null>(null);
+    readonly timeOptions = signal<SelectOption[]>([]);
+    readonly workingHoursLoadError = signal<string | null>(null);
     readonly returnUrl = signal<string | null>(null);
     readonly backLabel = signal('Randevu listesine dön');
 
@@ -284,6 +308,8 @@ export class AppointmentEditPageComponent implements OnInit {
     private appointmentId = '';
     private isInitializingClient = false;
     private editVmCache: AppointmentEditVm | null = null;
+    private workingHours: ClinicWorkingHourVm[] = [];
+    private legacyInitialTime: string | null = null;
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
 
@@ -292,7 +318,8 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
-        scheduledAtLocal: this.fb.nonNullable.control('', Validators.required),
+        scheduledDate: this.fb.nonNullable.control('', Validators.required),
+        scheduledTime: this.fb.nonNullable.control('', Validators.required),
         durationMinutes: this.fb.nonNullable.control<number | string>(30, [
             Validators.required,
             Validators.min(5),
@@ -315,7 +342,8 @@ export class AppointmentEditPageComponent implements OnInit {
         };
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('clientId'));
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('petId'));
-        this.form.controls.scheduledAtLocal.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
+        this.form.controls.scheduledDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
+        this.form.controls.scheduledTime.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
         this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('durationMinutes'));
         this.form.controls.appointmentType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('appointmentType'));
         this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('status'));
@@ -325,6 +353,8 @@ export class AppointmentEditPageComponent implements OnInit {
     ngOnInit(): void {
         this.readReturnContext();
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
+        this.loadSlotIntervalHint();
+        this.loadWorkingHours();
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
         if (!id) {
             this.loadError.set('Geçersiz randevu.');
@@ -349,6 +379,8 @@ export class AppointmentEditPageComponent implements OnInit {
             this.form.controls.petId.enable({ emitEvent: false });
             this.loadPetsForClient(cid);
         });
+        this.form.controls.scheduledDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildTimeOptions());
+        this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildTimeOptions());
 
         this.loadClients();
         this.reload();
@@ -365,7 +397,8 @@ export class AppointmentEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        scheduledAtLocal: utcIsoStringToDateTimeLocalInput(x.scheduledAtUtc),
+                        scheduledDate: this.extractDatePart(x.scheduledAtUtc),
+                        scheduledTime: this.extractTimePart(x.scheduledAtUtc),
                         durationMinutes: x.durationMinutes,
                         appointmentType: x.appointmentType,
                         status: x.status,
@@ -381,6 +414,8 @@ export class AppointmentEditPageComponent implements OnInit {
                     this.form.controls.petId.disable({ emitEvent: false });
                     this.isInitializingClient = false;
                 }
+                this.legacyInitialTime = this.form.controls.scheduledTime.value.trim() || null;
+                this.rebuildTimeOptions();
                 this.loading.set(false);
             },
             error: (e: unknown) => {
@@ -398,7 +433,7 @@ export class AppointmentEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const scheduledAtUtc = dateTimeLocalInputToIsoUtc(v.scheduledAtLocal);
+        const scheduledAtUtc = this.combineLocalDateAndTimeToUtc(v.scheduledDate, v.scheduledTime);
         if (!scheduledAtUtc) {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
             return;
@@ -626,6 +661,168 @@ export class AppointmentEditPageComponent implements OnInit {
             return messageFromHttpError(e, fallback);
         }
         return e instanceof Error ? e.message : fallback;
+    }
+
+    private loadSlotIntervalHint(): void {
+        const clinicId = this.auth.getClinicId()?.trim();
+        if (!clinicId) {
+            this.clinicSlotIntervalMinutes.set(null);
+            this.rebuildTimeOptions();
+            return;
+        }
+        this.clinicsApi.getAppointmentSettings(clinicId).subscribe({
+            next: (settings) => {
+                this.clinicSlotIntervalMinutes.set(settings.slotIntervalMinutes);
+                this.rebuildTimeOptions();
+            },
+            error: () => {
+                this.clinicSlotIntervalMinutes.set(null);
+                this.rebuildTimeOptions();
+            }
+        });
+    }
+
+    private loadWorkingHours(): void {
+        const clinicId = this.auth.getClinicId()?.trim();
+        if (!clinicId) {
+            this.workingHours = [];
+            this.workingHoursLoadError.set('Çalışma saatleri alınamadı.');
+            this.rebuildTimeOptions();
+            return;
+        }
+        this.workingHoursLoadError.set(null);
+        this.clinicsApi.getWorkingHours(clinicId).subscribe({
+            next: (items) => {
+                this.workingHours = items;
+                this.workingHoursLoadError.set(null);
+                this.rebuildTimeOptions();
+            },
+            error: () => {
+                this.workingHours = [];
+                this.workingHoursLoadError.set('Çalışma saatleri alınamadı.');
+                this.rebuildTimeOptions();
+            }
+        });
+    }
+
+    private rebuildTimeOptions(): void {
+        const date = this.form.controls.scheduledDate.value.trim();
+        const duration = Math.trunc(Number(this.form.controls.durationMinutes.value));
+        const interval = this.clinicSlotIntervalMinutes() ?? 15;
+        if (!date || !Number.isFinite(duration) || duration < 5 || duration > 240 || interval <= 0) {
+            this.timeOptions.set([]);
+            this.form.controls.scheduledTime.setValue('', { emitEvent: false });
+            return;
+        }
+        const day = this.resolveWorkingDay(date);
+        if (!day || day.isClosed) {
+            this.timeOptions.set([]);
+            this.form.controls.scheduledTime.setValue('', { emitEvent: false });
+            return;
+        }
+        const options = this.buildTimeOptions(day, duration, interval);
+        const selected = this.form.controls.scheduledTime.value.trim();
+        if (selected && !options.some((o) => o.value === selected) && this.legacyInitialTime === selected) {
+            options.unshift({ value: selected, label: `Mevcut saat: ${selected}` });
+        }
+        this.timeOptions.set(options);
+        if (selected && !options.some((o) => o.value === selected)) {
+            this.form.controls.scheduledTime.setValue('', { emitEvent: false });
+            this.legacyInitialTime = null;
+            return;
+        }
+        if (selected && this.legacyInitialTime && selected !== this.legacyInitialTime) {
+            this.legacyInitialTime = null;
+            this.rebuildTimeOptions();
+        }
+    }
+
+    private resolveWorkingDay(dateYmd: string): ClinicWorkingHourVm | null {
+        const date = new Date(`${dateYmd}T00:00:00`);
+        if (Number.isNaN(date.getTime())) {
+            return null;
+        }
+        const dow = date.getDay();
+        return this.workingHours.find((x) => x.dayOfWeek === dow) ?? null;
+    }
+
+    private buildTimeOptions(day: ClinicWorkingHourVm, durationMinutes: number, intervalMinutes: number): SelectOption[] {
+        const open = this.timeToMinutes(day.opensAt);
+        const close = this.timeToMinutes(day.closesAt);
+        if (open === null || close === null || open >= close) {
+            return [];
+        }
+        const breakStart = this.timeToMinutes(day.breakStartsAt);
+        const breakEnd = this.timeToMinutes(day.breakEndsAt);
+        const opts: SelectOption[] = [];
+        for (let start = open; start < close; start += intervalMinutes) {
+            const end = start + durationMinutes;
+            if (end > close) {
+                continue;
+            }
+            if (breakStart !== null && breakEnd !== null && start < breakEnd && end > breakStart) {
+                continue;
+            }
+            const hh = String(Math.floor(start / 60)).padStart(2, '0');
+            const mm = String(start % 60).padStart(2, '0');
+            const hm = `${hh}:${mm}`;
+            opts.push({ value: hm, label: hm });
+        }
+        return opts;
+    }
+
+    private timeToMinutes(value: string | null): number | null {
+        if (!value?.trim()) {
+            return null;
+        }
+        const m = value.trim().match(/^(\d{1,2}):(\d{2})/);
+        if (!m) {
+            return null;
+        }
+        const h = Number(m[1]);
+        const mm = Number(m[2]);
+        if (!Number.isFinite(h) || !Number.isFinite(mm) || h < 0 || h > 23 || mm < 0 || mm > 59) {
+            return null;
+        }
+        return h * 60 + mm;
+    }
+
+    private extractDatePart(utc: string | null): string {
+        const input = utcIsoStringToDateTimeLocalInput(utc);
+        return input.includes('T') ? input.split('T')[0] : '';
+    }
+
+    private extractTimePart(utc: string | null): string {
+        const input = utcIsoStringToDateTimeLocalInput(utc);
+        if (!input.includes('T')) {
+            return '';
+        }
+        const raw = input.split('T')[1] ?? '';
+        return raw.slice(0, 5);
+    }
+
+    private combineLocalDateAndTimeToUtc(dateYmd: string, timeHm: string): string | null {
+        const d = dateYmd.trim();
+        const t = timeHm.trim();
+        if (!d || !t) {
+            return null;
+        }
+        const m = t.match(/^(\d{2}):(\d{2})$/);
+        if (!m) {
+            return null;
+        }
+        const hours = Number(m[1]);
+        const minutes = Number(m[2]);
+        const local = new Date(`${d}T00:00:00`);
+        if (Number.isNaN(local.getTime())) {
+            return null;
+        }
+        local.setHours(hours, minutes, 0, 0);
+        const iso = dateTimeLocalInputToIsoUtc(`${d}T${t}`);
+        if (!iso) {
+            return null;
+        }
+        return new Date(iso).toISOString().replace(/\.\d{3}Z$/, '.000Z');
     }
 
     private returnContextQueryParams(): Record<string, string> | null {

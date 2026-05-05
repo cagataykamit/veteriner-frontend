@@ -18,7 +18,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
@@ -134,7 +134,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         >
                             <ng-template #header>
                                 <tr>
-                                    <th>Tarih / Saat</th>
+                                    <th>Tarih · saat</th>
                                     <th>Süre</th>
                                     <th>Müşteri</th>
                                     <th>Hayvan</th>
@@ -145,7 +145,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr>
-                                    <td>{{ formatDateTime(row.scheduledAtUtc) }}</td>
+                                    <td>{{ formatListAppointmentSchedule(row) }}</td>
                                     <td class="text-sm whitespace-nowrap">{{ row.durationLabel }}</td>
                                     <td>
                                         @if (row.clientId) {
@@ -182,7 +182,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             >
                                 <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-3">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0">
-                                        {{ formatDateTime(row.scheduledAtUtc) }}
+                                        {{ formatListAppointmentSchedule(row) }}
                                         <span class="text-muted-color font-normal"> · {{ row.durationLabel }}</span>
                                     </div>
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
@@ -270,7 +270,17 @@ export class AppointmentsListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
+    /** Liste satırı: `05.05.2026 · 14:00–14:45` (Europe/Istanbul). */
+    readonly formatListAppointmentSchedule = (row: AppointmentListItemVm): string => {
+        const date = formatUtcIsoAsLocalDateDisplay(row.scheduledAtUtc);
+        const start = formatUtcIsoAsLocalTimeDisplay(row.scheduledAtUtc);
+        const end = formatUtcIsoAsLocalTimeDisplay(row.scheduledEndUtc);
+        if (!start || start === '—') {
+            return date;
+        }
+        const range = end && end !== '—' && end !== start ? `${start}–${end}` : start;
+        return `${date} · ${range}`;
+    };
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;

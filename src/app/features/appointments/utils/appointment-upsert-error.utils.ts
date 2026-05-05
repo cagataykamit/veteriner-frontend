@@ -6,22 +6,24 @@ const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 const APPOINTMENT_CONFLICT_USER_MESSAGE =
     'Randevu kaydedilemedi. Aynı zaman diliminde çakışan bir kayıt olabilir; tarih/saat ve seçimleri kontrol edip tekrar deneyin.';
 
-/** Backend ProblemDetails `code` / `extensions.code` — süre bazlı çakışma ve eski slot kodları. */
+/** Backend ProblemDetails `code` / `extensions.code` — süre bazlı çakışma ve eski kod takma adları. */
 const APPOINTMENT_CONFLICT_CODE_MESSAGES: Record<string, string> = {
     'Appointments.ClinicTimeConflict': 'Bu saat aralığında klinikte başka bir randevu var.',
     AppointmentsClinicTimeConflict: 'Bu saat aralığında klinikte başka bir randevu var.',
     'Appointments.PetTimeConflict': 'Bu hayvanın bu saat aralığında başka bir randevusu var.',
     AppointmentsPetTimeConflict: 'Bu hayvanın bu saat aralığında başka bir randevusu var.',
-    'Appointments.ClinicSlotDuplicate': 'Bu saatte klinikte başka bir randevu var.',
-    AppointmentsClinicSlotDuplicate: 'Bu saatte klinikte başka bir randevu var.',
-    'Appointments.PetSlotDuplicate': 'Bu hayvanın bu saatte başka bir randevusu var.',
-    AppointmentsPetSlotDuplicate: 'Bu hayvanın bu saatte başka bir randevusu var.',
+    'Appointments.ClinicSlotDuplicate': 'Bu saat aralığında klinikte başka bir randevu var.',
+    AppointmentsClinicSlotDuplicate: 'Bu saat aralığında klinikte başka bir randevu var.',
+    'Appointments.PetSlotDuplicate': 'Bu hayvanın bu saat aralığında başka bir randevusu var.',
+    AppointmentsPetSlotDuplicate: 'Bu hayvanın bu saat aralığında başka bir randevusu var.',
     'Appointments.OutsideWorkingHours': "Randevu saati kliniğin çalışma saatleri dışında.",
     AppointmentsOutsideWorkingHours: "Randevu saati kliniğin çalışma saatleri dışında.",
     'Appointments.ClinicClosed': 'Seçilen gün klinik kapalı.',
     AppointmentsClinicClosed: 'Seçilen gün klinik kapalı.',
     'Appointments.BreakTimeConflict': "Randevu saati kliniğin mola aralığına denk geliyor.",
-    AppointmentsBreakTimeConflict: "Randevu saati kliniğin mola aralığına denk geliyor."
+    AppointmentsBreakTimeConflict: "Randevu saati kliniğin mola aralığına denk geliyor.",
+    'Appointments.NotAlignedToSlotInterval': "Randevu başlangıç saati bu kliniğin belirlenen saat aralığına uygun değil.",
+    AppointmentsNotAlignedToSlotInterval: "Randevu başlangıç saati bu kliniğin belirlenen saat aralığına uygun değil."
 };
 
 function extractAppointmentProblemCode(err: HttpErrorResponse): string | null {

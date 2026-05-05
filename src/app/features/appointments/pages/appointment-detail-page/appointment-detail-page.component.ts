@@ -151,12 +151,12 @@ import { EMPTY, switchMap } from 'rxjs';
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan Türü</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.speciesName }}</dd>
                             }
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Tarih / saat</dt>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Başlangıç</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.scheduledAtUtc) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Süre</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.durationLabel }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Bitiş</dt>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Bitiş saati</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.scheduledEndUtc) }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu süresi</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.durationLabel }}</dd>
                         </dl>
                     </div>
                 </div>
