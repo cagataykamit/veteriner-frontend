@@ -5,7 +5,14 @@ html {
 }
 
 body {
-    font-family: 'Lato', sans-serif;
+    /* Lato: Türkçe için latin-ext yüklü kaynak (index.html); yedekler benzer metrikli sistem fontları */
+    font-family:
+        'Lato',
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        sans-serif;
     color: var(--text-color);
     background-color: var(--surface-ground);
     margin: 0;
@@ -13,6 +20,18 @@ body {
     min-height: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* PrimeNG / form kontrolleri gövde ile aynı aileden render edilsin (fallback karışmasın) */
+.p-component,
+.p-inputtext,
+.p-button,
+.p-select,
+.p-dropdown,
+textarea,
+input,
+button {
+    font-family: inherit;
 }
 
 a {
