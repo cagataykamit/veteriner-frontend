@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -9,8 +10,10 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-my-clinics-to-select-options';
+import { isReportUiClinicIdMisalignedWithJwt, isReportUiClinicIdUnknownToMyClinics } from '@/app/features/reports/shared/report-my-clinic.utils';
 import type { VaccinationsReportQuery } from '@/app/features/reports/vaccinations/models/vaccinations-report-query.model';
 import type { VaccinationsReportResultVm } from '@/app/features/reports/vaccinations/models/vaccinations-report.model';
 import { VaccinationsReportService } from '@/app/features/reports/vaccinations/services/vaccinations-report.service';
@@ -24,6 +27,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatUtcIsoAsLocalDateTimeDisplay, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
 import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.utils';
+import { isReportRecoverableClinicConstraint403, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 type VaccinationsReportState = {
     search: string;
@@ -369,6 +373,8 @@ export class VaccinationsReportPageComponent implements OnInit {
     readonly displayedRows = computed(() => [...(this.report()?.items ?? [])]);
     private suppressNextLazy = false;
     private lastLoadKey = '';
+    private clinicSummariesLoadedOk = false;
+    private latestReportLoadSeq = 0;
 
     readonly formatVaccinationDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly formatUtcInstant = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
@@ -393,9 +399,8 @@ export class VaccinationsReportPageComponent implements OnInit {
             this.currentPage.set(1);
             this.first.set(0);
         }
-        this.loadClinicOptions();
         this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize());
+        this.bootstrapReportAfterMyClinics();
     }
 
     applyFilters(): void {
@@ -418,6 +423,7 @@ export class VaccinationsReportPageComponent implements OnInit {
         this.activeToDate.set(to);
         this.activeStatus.set(this.statusFilter.trim());
         this.activeClinicId.set(this.clinicIdFilter.trim());
+        this.stripJwtMisalignedReportClinicIfNeeded();
         this.first.set(0);
         this.currentPage.set(1);
         this.persistStateToSessionStorage(1, this.pageSize());
@@ -476,6 +482,7 @@ export class VaccinationsReportPageComponent implements OnInit {
     private export(kind: 'csv' | 'xlsx'): void {
         this.exportError.set(null);
         this.exportKind.set(kind);
+        this.sanitizeExportClinicFilterIfStale();
         const q = this.buildQuery(1, this.pageSize());
         const req$ = kind === 'xlsx' ? this.reportService.exportXlsxBlob(q) : this.reportService.exportCsvBlob(q);
         req$.subscribe({
@@ -504,15 +511,83 @@ export class VaccinationsReportPageComponent implements OnInit {
         this.toDateInput = localDateYyyyMmDd();
     }
 
-    private loadClinicOptions(): void {
+    private bootstrapReportAfterMyClinics(): void {
         this.auth.getMyClinics().subscribe({
-            next: (list) => {
+            next: (list: ClinicSummary[]) => {
+                this.clinicSummariesLoadedOk = true;
                 this.clinicOptions.set(mapMyClinicsToSelectOptions(list, this.copy.reportsClinicPanelDefault));
+                const stale = this.clearStaleRestoredClinicIfNeeded(list);
+                if (stale) {
+                    this.suppressNextLazy = true;
+                    this.loadFromServer(1, this.pageSize(), true);
+                } else {
+                    this.loadFromServer(this.currentPage(), this.pageSize());
+                }
             },
             error: () => {
+                this.clinicSummariesLoadedOk = false;
                 this.clinicOptions.set([{ label: this.copy.reportsClinicPanelDefault, value: '' }]);
+                this.loadFromServer(this.currentPage(), this.pageSize());
             }
         });
+    }
+
+    private clearStaleRestoredClinicIfNeeded(summaries: ClinicSummary[]): boolean {
+        const id = this.activeClinicId().trim();
+        if (!id) {
+            return false;
+        }
+        const jwtClinic = this.auth.getJwtClinicId();
+        if (
+            isReportUiClinicIdUnknownToMyClinics(id, summaries) ||
+            isReportUiClinicIdMisalignedWithJwt(id, jwtClinic)
+        ) {
+            this.clearStaleUiClinicFilterSilently();
+            return true;
+        }
+        return false;
+    }
+
+    private clearJwtMisalignedUiClinicOnly(): void {
+        this.clinicIdFilter = '';
+        this.activeClinicId.set('');
+        this.persistStateToSessionStorage(this.currentPage(), this.pageSize());
+    }
+
+    private stripJwtMisalignedReportClinicIfNeeded(): void {
+        const id = this.activeClinicId().trim();
+        if (!id) {
+            return;
+        }
+        if (isReportUiClinicIdMisalignedWithJwt(id, this.auth.getJwtClinicId())) {
+            this.clearJwtMisalignedUiClinicOnly();
+        }
+    }
+
+    private clearStaleUiClinicFilterSilently(): void {
+        this.clinicIdFilter = '';
+        this.activeClinicId.set('');
+        this.first.set(0);
+        this.currentPage.set(1);
+        this.persistStateToSessionStorage(1, this.pageSize());
+    }
+
+    private sanitizeExportClinicFilterIfStale(): void {
+        if (!this.clinicSummariesLoadedOk) {
+            return;
+        }
+        const id = this.activeClinicId().trim();
+        if (!id) {
+            return;
+        }
+        const jwtClinic = this.auth.getJwtClinicId();
+        if (!this.clinicOptions().some((o) => o.value === id)) {
+            this.clearStaleUiClinicFilterSilently();
+            return;
+        }
+        if (isReportUiClinicIdMisalignedWithJwt(id, jwtClinic)) {
+            this.clearJwtMisalignedUiClinicOnly();
+        }
     }
 
     private buildQuery(page: number, pageSize: number): VaccinationsReportQuery {
@@ -530,16 +605,22 @@ export class VaccinationsReportPageComponent implements OnInit {
     }
 
     private loadFromServer(page: number, pageSize: number, force = false): void {
+        this.stripJwtMisalignedReportClinicIfNeeded();
         const q = this.buildQuery(page, pageSize);
-        const key = `${q.page}|${q.pageSize}|${(q.search ?? '').trim()}|${(q.from ?? '').trim()}|${(q.to ?? '').trim()}|${(q.status ?? '').trim()}|${(q.clinicId ?? '').trim()}`;
-        if (!force && key === this.lastLoadKey) {
+        const explicitQueryClinicId = !!q.clinicId;
+        const requestKey = JSON.stringify(q);
+        if (!force && requestKey === this.lastLoadKey) {
             return;
         }
-        this.lastLoadKey = key;
+        this.lastLoadKey = requestKey;
+        const seq = ++this.latestReportLoadSeq;
         this.loading.set(true);
         this.error.set(null);
         this.reportService.loadReport(q).subscribe({
             next: (r) => {
+                if (seq !== this.latestReportLoadSeq) {
+                    return;
+                }
                 this.report.set(r);
                 this.pageSize.set(r.pageSize);
                 this.currentPage.set(r.page);
@@ -547,8 +628,22 @@ export class VaccinationsReportPageComponent implements OnInit {
                 this.persistStateToSessionStorage(r.page, r.pageSize);
                 this.loading.set(false);
             },
-            error: (e: Error) => {
-                this.error.set(e.message ?? this.copy.reportsLoadErrorFallback);
+            error: (err: unknown) => {
+                if (seq !== this.latestReportLoadSeq) {
+                    return;
+                }
+                if (
+                    err instanceof HttpErrorResponse &&
+                    explicitQueryClinicId &&
+                    isReportRecoverableClinicConstraint403(err)
+                ) {
+                    this.lastLoadKey = '';
+                    this.clearStaleUiClinicFilterSilently();
+                    this.suppressNextLazy = true;
+                    this.loadFromServer(1, this.pageSize(), true);
+                    return;
+                }
+                this.error.set(panelHttpFailureMessage(err, this.copy.reportsLoadErrorFallback));
                 this.loading.set(false);
             }
         });

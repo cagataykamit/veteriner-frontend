@@ -25,9 +25,7 @@ export class PaymentsReportService {
         const pageSize = merged.pageSize ?? 25;
         return this.api.get<PaymentsReportDto>(ApiEndpoints.reports.payments(), params).pipe(
             map((raw) => mapPaymentsReportDtoToVm(raw, { page, pageSize })),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Ödeme raporu yüklenemedi.')))
-            )
+            catchError((err: HttpErrorResponse) => throwError(() => err))
         );
     }
 

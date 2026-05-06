@@ -26,9 +26,7 @@ export class VaccinationsReportService {
         const pageSize = merged.pageSize ?? 25;
         return this.api.get<VaccinationsReportDto>(ApiEndpoints.reports.vaccinations(), params).pipe(
             map((raw) => mapVaccinationsReportDtoToVm(raw, { page, pageSize })),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Aşı raporu yüklenemedi.')))
-            )
+            catchError((err: HttpErrorResponse) => throwError(() => err))
         );
     }
 

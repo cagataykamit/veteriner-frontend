@@ -56,6 +56,11 @@ const SUBSCRIPTION_WRITE_USER_MESSAGES: Record<string, string> = {
     'Subscriptions.DowngradeScheduleConflict': 'Bu plan geçişi şu an planlanamıyor. Özet bilgiyi yenileyip tekrar deneyin.'
 };
 
+/** ProblemDetails / extensions üzerinden ham problem kodu (test ve rapor toparlama için). */
+export function problemCodeFromHttpError(err: HttpErrorResponse): string | null {
+    return readProblemCodeFromHttp(err);
+}
+
 function readProblemCodeFromHttp(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -196,9 +201,57 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     return fallback;
 }
 
+/** Rapor 403 toparlama: gövde + Angular mesajından küçük harf metin. */
+function httpErrorDiagnosticBlobLower(err: HttpErrorResponse): string {
+    const parts: string[] = [];
+    const body = err.error as unknown;
+    if (body && typeof body === 'object' && !Array.isArray(body)) {
+        const o = body as Record<string, unknown>;
+        for (const k of ['detail', 'Detail', 'title', 'Title']) {
+            const v = o[k];
+            if (typeof v === 'string' && v.trim()) {
+                parts.push(v.trim());
+            }
+        }
+    }
+    if (typeof body === 'string' && body.trim()) {
+        parts.push(body.trim());
+    }
+    if (err.message?.trim()) {
+        parts.push(err.message.trim());
+    }
+    return parts.join('\n').toLocaleLowerCase('tr-TR');
+}
+
 /**
- * Bilinmeyen `catch` / subscribe hatası: HTTP ise gövde+ durum, değilse güvenli fallback.
+ * Rapor yükleme 403: açık `clinicId` ile gönderilmiş istekte klinik bağlamı / JWT uyumsuzluğu toparlanabilir.
+ * `Reports.AccessDenied` genel yetki olarak retry edilmez.
  */
+export function isReportRecoverableClinicConstraint403(err: unknown): boolean {
+    if (!(err instanceof HttpErrorResponse)) {
+        return false;
+    }
+    if (err.status !== 403) {
+        return false;
+    }
+    const codeRaw = readProblemCodeFromHttp(err);
+    const code = codeRaw?.replace(/\./g, '').toLowerCase() ?? '';
+    if (code === 'reportsaccessdenied') {
+        return false;
+    }
+    if (code === 'clinicsaccessdenied' || code === 'tenantscontextmissing') {
+        return true;
+    }
+    const blob = httpErrorDiagnosticBlobLower(err);
+    if (blob.includes('jwt') && blob.includes('clinic')) {
+        return true;
+    }
+    if (blob.includes('clinic_id') && /farklı|reddedildi|uyumsuz|güvenlik/.test(blob)) {
+        return true;
+    }
+    return false;
+}
+
 export function panelHttpFailureMessage(err: unknown, fallback: string): string {
     if (err instanceof HttpErrorResponse) {
         return messageFromHttpError(err, fallback);

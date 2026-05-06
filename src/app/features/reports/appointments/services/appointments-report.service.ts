@@ -26,9 +26,7 @@ export class AppointmentsReportService {
         const pageSize = merged.pageSize ?? 25;
         return this.api.get<AppointmentsReportDto>(ApiEndpoints.reports.appointments(), params).pipe(
             map((raw) => mapAppointmentsReportDtoToVm(raw, { page, pageSize })),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Randevu raporu yüklenemedi.')))
-            )
+            catchError((err: HttpErrorResponse) => throwError(() => err))
         );
     }
 

@@ -53,6 +53,12 @@ export class AuthService {
     /** Aynı anda tek refresh HTTP çağrısı (paralel 401’lerde paylaşılır). */
     private refreshShare: Observable<SessionTokens> | null = null;
 
+    /** `/me/clinics` — kısa TTL + kullanıcı/kiracı kimliği ile anahtarlı önbellek (shareReplay). */
+    private readonly MY_CLINICS_TTL_MS = 120_000;
+    private myClinicsShared$: Observable<ClinicSummary[]> | null = null;
+    private myClinicsCachedIdentity: string | null = null;
+    private myClinicsFetchedAtMs = 0;
+
     readonly authReady = computed(() => this.authReadySignal());
 
     getAccessToken(): string | null {
@@ -81,6 +87,15 @@ export class AuthService {
         return stored?.trim() ? stored.trim() : null;
     }
 
+    /**
+     * Yalnızca access token içindeki klinik id (localStorage / refresh fallback yok).
+     * Backend raporlarında istek `clinicId` ile JWT claim eşleşmesi zorunlu olduğundan kullanılır.
+     */
+    getJwtClinicId(): string | null {
+        const fromToken = this.readClinicClaimsFromCurrentToken().id;
+        return fromToken?.trim() ? fromToken.trim() : null;
+    }
+
     getClinicName(): string | null {
         const fromToken = this.readClinicClaimsFromCurrentToken().name;
         if (fromToken) {
@@ -107,8 +122,36 @@ export class AuthService {
         );
     }
 
-    getMyClinics(): Observable<ClinicSummary[]> {
-        return this.api.get<unknown>(ApiEndpoints.me.clinics()).pipe(map((raw) => this.mapClinicsResponse(raw)));
+    /**
+     * Oturum kimliğine bağlı klinik listesi; TTL içinde tekrar çağrılarda HTTP paylaşılır.
+     * `forceRefresh`: önbelleği atlayıp yeniden çeker.
+     */
+    getMyClinics(forceRefresh = false): Observable<ClinicSummary[]> {
+        const identity = this.computeMyClinicsCacheIdentityForAccessToken(this.getAccessToken());
+        const now = Date.now();
+        const shared = this.myClinicsShared$;
+        const cacheWarm =
+            !forceRefresh &&
+            shared !== null &&
+            identity === this.myClinicsCachedIdentity &&
+            now - this.myClinicsFetchedAtMs < this.MY_CLINICS_TTL_MS;
+        if (cacheWarm) {
+            return shared;
+        }
+        this.myClinicsCachedIdentity = identity;
+        this.myClinicsFetchedAtMs = now;
+        this.myClinicsShared$ = this.api.get<unknown>(ApiEndpoints.me.clinics()).pipe(
+            map((raw) => this.mapClinicsResponse(raw)),
+            shareReplay({ bufferSize: 1, refCount: false })
+        );
+        return this.myClinicsShared$;
+    }
+
+    /** Logout / klinik seçimi / oturum sıfırlama sonrası `getMyClinics` önbelleğini temizler. */
+    clearMyClinicsCache(): void {
+        this.myClinicsShared$ = null;
+        this.myClinicsCachedIdentity = null;
+        this.myClinicsFetchedAtMs = 0;
     }
 
     /**
@@ -153,6 +196,7 @@ export class AuthService {
             tap((tokens) => {
                 this.persistFromTokens(tokens);
                 this.setActiveClinicContext(clinicId, clinicName ?? null);
+                this.clearMyClinicsCache();
             })
         );
     }
@@ -242,6 +286,7 @@ export class AuthService {
         localStorage.removeItem(REFRESH_TOKEN_KEY);
         this.tokenSignal.set(null);
         this.resetClinicContext();
+        this.clearMyClinicsCache();
     }
 
     /** `clearSession` ile aynı — kullanıcı çıkışı. */
@@ -278,12 +323,17 @@ export class AuthService {
     }
 
     private persistFromTokens(tokens: SessionTokens): void {
+        const prevIdentity = this.computeMyClinicsCacheIdentityForAccessToken(this.getAccessToken());
         if (tokens.accessToken) {
             localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
             this.tokenSignal.set(tokens.accessToken);
         }
         if (tokens.refreshToken) {
             localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+        }
+        const nextIdentity = this.computeMyClinicsCacheIdentityForAccessToken(this.getAccessToken());
+        if (prevIdentity !== nextIdentity) {
+            this.clearMyClinicsCache();
         }
         this.syncClinicFromTokenClaims();
     }
@@ -515,6 +565,33 @@ export class AuthService {
             });
         }
         return Array.from(out);
+    }
+
+    /** `getMyClinics` önbellek anahtarı: aynı kullanıcı+kiracıda TTL tutulur; yenilemede token string değişse de anahtar sabit kalabilir. */
+    private computeMyClinicsCacheIdentityForAccessToken(token: string | null): string {
+        const t = token?.trim() ?? '';
+        if (!t) {
+            return '';
+        }
+        const payload = this.decodeJwtPayload(t);
+        if (!payload) {
+            return t;
+        }
+        const sub = this.firstString(payload['sub'], payload['Sub'], payload['user_id'], payload['UserId']) ?? '';
+        const tenant =
+            this.firstString(
+                payload['tenant_id'],
+                payload['tenantId'],
+                payload['TenantId'],
+                payload['tid'],
+                payload['http://schemas.microsoft.com/identity/claims/tenantid']
+            ) ?? '';
+        const s = sub.trim();
+        const tn = tenant.trim();
+        if (s || tn) {
+            return `${s}|${tn}`;
+        }
+        return t;
     }
 
     private decodeJwtPayload(token: string): Record<string, unknown> | null {

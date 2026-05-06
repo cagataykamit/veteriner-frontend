@@ -26,9 +26,7 @@ export class ExaminationsReportService {
         const pageSize = merged.pageSize ?? 25;
         return this.api.get<ExaminationsReportDto>(ApiEndpoints.reports.examinations(), params).pipe(
             map((raw) => mapExaminationsReportDtoToVm(raw, { page, pageSize })),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Muayene raporu yüklenemedi.')))
-            )
+            catchError((err: HttpErrorResponse) => throwError(() => err))
         );
     }
 
