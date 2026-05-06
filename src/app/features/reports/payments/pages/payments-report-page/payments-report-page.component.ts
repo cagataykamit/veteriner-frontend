@@ -26,6 +26,18 @@ import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/share
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.utils';
 
+type PaymentsReportState = {
+    search: string;
+    fromDate: string;
+    toDate: string;
+    method: string;
+    clinicId: string;
+    page: number;
+    pageSize: number;
+};
+
+const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
+
 @Component({
     selector: 'app-payments-report-page',
     standalone: true,
@@ -59,16 +71,49 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
         <div class="card mb-4">
             <p class="text-sm text-muted-color m-0 mb-4">{{ copy.paymentsReportDefaultPeriodHint }}</p>
             <div class="grid grid-cols-12 gap-3 items-end">
-                <div class="col-span-12 md:col-span-3">
-                    <label for="repFrom" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterDateFrom }}</label>
-                    <input id="repFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
+                <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isFromDateActive())">
+                    <label for="repFrom" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isFromDateActive())">
+                        {{ copy.reportsFilterDateFrom }}
+                        @if (isFromDateActive()) {
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                Aktif
+                            </span>
+                        }
+                    </label>
+                    <input
+                        id="repFrom"
+                        type="date"
+                        class="w-full p-inputtext p-component"
+                        [ngClass]="activeInputClass(isFromDateActive())"
+                        [(ngModel)]="fromDateInput"
+                    />
                 </div>
-                <div class="col-span-12 md:col-span-3">
-                    <label for="repTo" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterDateTo }}</label>
-                    <input id="repTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
+                <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isToDateActive())">
+                    <label for="repTo" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isToDateActive())">
+                        {{ copy.reportsFilterDateTo }}
+                        @if (isToDateActive()) {
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                Aktif
+                            </span>
+                        }
+                    </label>
+                    <input
+                        id="repTo"
+                        type="date"
+                        class="w-full p-inputtext p-component"
+                        [ngClass]="activeInputClass(isToDateActive())"
+                        [(ngModel)]="toDateInput"
+                    />
                 </div>
-                <div class="col-span-12 md:col-span-3">
-                    <span id="lblRepClinic" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterClinic }}</span>
+                <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClinicActive())">
+                    <span id="lblRepClinic" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClinicActive())">
+                        {{ copy.reportsFilterClinic }}
+                        @if (isClinicActive()) {
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                Aktif
+                            </span>
+                        }
+                    </span>
                     <p-select
                         ariaLabelledBy="lblRepClinic"
                         inputId="repClinic"
@@ -81,8 +126,15 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                         [showClear]="true"
                     />
                 </div>
-                <div class="col-span-12 md:col-span-3">
-                    <span id="lblRepMethod" class="block text-xs font-medium text-muted-color mb-1">{{ copy.paymentsReportColMethod }}</span>
+                <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isMethodActive())">
+                    <span id="lblRepMethod" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isMethodActive())">
+                        {{ copy.paymentsReportColMethod }}
+                        @if (isMethodActive()) {
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                Aktif
+                            </span>
+                        }
+                    </span>
                     <p-select
                         ariaLabelledBy="lblRepMethod"
                         inputId="repMethod"
@@ -95,12 +147,20 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                         [showClear]="true"
                     />
                 </div>
-                <div class="col-span-12 md:col-span-6">
-                    <label for="repSearch" class="block text-xs font-medium text-muted-color mb-1">{{ copy.reportsFilterSearch }}</label>
+                <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isSearchActive())">
+                    <label for="repSearch" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isSearchActive())">
+                        {{ copy.reportsFilterSearch }}
+                        @if (isSearchActive()) {
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                Aktif
+                            </span>
+                        }
+                    </label>
                     <input
                         pInputText
                         id="repSearch"
                         class="w-full"
+                        [ngClass]="activeInputClass(isSearchActive())"
                         [(ngModel)]="searchInput"
                         [placeholder]="copy.paymentsReportSearchPlaceholder"
                         (keyup.enter)="applyFilters()"
@@ -324,12 +384,17 @@ export class PaymentsReportPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.bootstrapDefaultDates();
-        this.activeFromDate.set(this.fromDateInput.trim());
-        this.activeToDate.set(this.toDateInput.trim());
+        const restored = this.restoreStateFromSessionStorage();
+        if (!restored) {
+            this.bootstrapDefaultDates();
+            this.activeFromDate.set(this.fromDateInput.trim());
+            this.activeToDate.set(this.toDateInput.trim());
+            this.currentPage.set(1);
+            this.first.set(0);
+        }
         this.loadClinicOptions();
         this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize());
+        this.loadFromServer(this.currentPage(), this.pageSize());
     }
 
     formatMoneyLine(n: number): string {
@@ -357,6 +422,8 @@ export class PaymentsReportPageComponent implements OnInit {
         this.activeMethod.set(this.methodFilter.trim());
         this.activeClinicId.set(this.clinicIdFilter.trim());
         this.first.set(0);
+        this.currentPage.set(1);
+        this.persistStateToSessionStorage(1, this.pageSize());
         this.loadFromServer(1, this.pageSize());
     }
 
@@ -371,6 +438,8 @@ export class PaymentsReportPageComponent implements OnInit {
         this.activeFromDate.set(this.fromDateInput.trim());
         this.activeToDate.set(this.toDateInput.trim());
         this.first.set(0);
+        this.currentPage.set(1);
+        this.clearStateFromSessionStorage();
         this.loadFromServer(1, this.pageSize());
     }
 
@@ -386,6 +455,7 @@ export class PaymentsReportPageComponent implements OnInit {
         const rows = event.rows ?? this.pageSize();
         const f = event.first ?? 0;
         const page = Math.floor(f / rows) + 1;
+        this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows);
     }
 
@@ -394,6 +464,7 @@ export class PaymentsReportPageComponent implements OnInit {
         const f = state.first ?? 0;
         const page = Math.floor(f / rows) + 1;
         this.suppressNextLazy = true;
+        this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows);
     }
 
@@ -476,6 +547,7 @@ export class PaymentsReportPageComponent implements OnInit {
                 this.pageSize.set(r.pageSize);
                 this.currentPage.set(r.page);
                 this.first.set((r.page - 1) * r.pageSize);
+                this.persistStateToSessionStorage(r.page, r.pageSize);
                 this.loading.set(false);
             },
             error: (e: Error) => {
@@ -483,6 +555,91 @@ export class PaymentsReportPageComponent implements OnInit {
                 this.loading.set(false);
             }
         });
+    }
+
+    isSearchActive(): boolean {
+        return !!this.activeSearch().trim();
+    }
+
+    isFromDateActive(): boolean {
+        return !!this.activeFromDate().trim();
+    }
+
+    isToDateActive(): boolean {
+        return !!this.activeToDate().trim();
+    }
+
+    isMethodActive(): boolean {
+        return !!this.activeMethod().trim();
+    }
+
+    isClinicActive(): boolean {
+        return !!this.activeClinicId().trim();
+    }
+
+    filterBoxClass(active: boolean): string {
+        return active
+            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900';
+    }
+
+    filterLabelClass(active: boolean): string {
+        return active ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color';
+    }
+
+    activeInputClass(active: boolean): string {
+        return active ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : '';
+    }
+
+    private restoreStateFromSessionStorage(): boolean {
+        const raw = sessionStorage.getItem(PAYMENTS_REPORT_STATE_KEY);
+        if (!raw) {
+            return false;
+        }
+        try {
+            const parsed = JSON.parse(raw) as Partial<PaymentsReportState>;
+            const page = Number(parsed.page);
+            const pageSize = Number(parsed.pageSize);
+            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
+                sessionStorage.removeItem(PAYMENTS_REPORT_STATE_KEY);
+                return false;
+            }
+            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+            this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
+            this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+            this.methodFilter = typeof parsed.method === 'string' ? parsed.method : '';
+            this.clinicIdFilter = typeof parsed.clinicId === 'string' ? parsed.clinicId : '';
+
+            this.activeSearch.set(this.searchInput.trim());
+            this.activeFromDate.set(this.fromDateInput.trim());
+            this.activeToDate.set(this.toDateInput.trim());
+            this.activeMethod.set(this.methodFilter.trim());
+            this.activeClinicId.set(this.clinicIdFilter.trim());
+            this.pageSize.set(pageSize);
+            this.currentPage.set(page);
+            this.first.set((page - 1) * pageSize);
+            return true;
+        } catch {
+            sessionStorage.removeItem(PAYMENTS_REPORT_STATE_KEY);
+            return false;
+        }
+    }
+
+    private persistStateToSessionStorage(page: number, pageSize: number): void {
+        const state: PaymentsReportState = {
+            search: this.searchInput.trim(),
+            fromDate: this.fromDateInput.trim(),
+            toDate: this.toDateInput.trim(),
+            method: this.methodFilter.trim(),
+            clinicId: this.clinicIdFilter.trim(),
+            page,
+            pageSize
+        };
+        sessionStorage.setItem(PAYMENTS_REPORT_STATE_KEY, JSON.stringify(state));
+    }
+
+    private clearStateFromSessionStorage(): void {
+        sessionStorage.removeItem(PAYMENTS_REPORT_STATE_KEY);
     }
 }
 

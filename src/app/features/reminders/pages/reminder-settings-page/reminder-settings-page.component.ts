@@ -54,7 +54,9 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Hesap salt okunur durumda.</p>
                 }
 
-                <p class="text-sm text-muted-color mt-0 mb-4">Otomatik gönderim altyapısı sonraki fazda etkinleştirilecektir.</p>
+                <p class="text-sm text-muted-color mt-0 mb-4">
+                    Hatırlatmalar etkinse sistem, yaklaşan randevu ve aşılar için e-posta gönderimlerini otomatik olarak kuyruğa alır.
+                </p>
 
                 @if (updatedAtLabel()) {
                     <p class="text-sm text-muted-color mt-0 mb-4">Son güncelleme: {{ updatedAtLabel() }}</p>

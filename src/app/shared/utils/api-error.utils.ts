@@ -122,6 +122,20 @@ function clinicPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     return CLINIC_PANEL_PROBLEM_MESSAGES[code] ?? CLINIC_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
+/** Hatırlatma ayarları / geçmiş — `ProblemDetails` + `extensions.code`. */
+const REMINDER_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Reminders.AccessDenied': 'Bu hatırlatma kayıtlarına erişim yetkiniz yok.',
+    RemindersAccessDenied: 'Bu hatırlatma kayıtlarına erişim yetkiniz yok.'
+};
+
+function reminderPanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    if (!code) {
+        return null;
+    }
+    return REMINDER_PANEL_PROBLEM_MESSAGES[code] ?? REMINDER_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
+}
+
 function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
     if (!code) {
@@ -139,6 +153,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const tenantOrgMsg = tenantOrganizationProblemUserMessage(err);
     if (tenantOrgMsg) {
         return tenantOrgMsg;
+    }
+    const reminderPanelMsg = reminderPanelProblemUserMessage(err);
+    if (reminderPanelMsg) {
+        return reminderPanelMsg;
     }
     const clinicPanelMsg = clinicPanelProblemUserMessage(err);
     if (clinicPanelMsg) {

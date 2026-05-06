@@ -20,6 +20,16 @@ import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 type ActiveFilterUi = 'all' | 'active' | 'discharged';
+type HospitalizationsListState = {
+    search: string;
+    fromDate: string;
+    toDate: string;
+    activeFilter: ActiveFilterUi;
+    page: number;
+    pageSize: number;
+};
+
+const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
 
 @Component({
     selector: 'app-hospitalizations-list-page',
@@ -71,12 +81,31 @@ type ActiveFilterUi = 'all' | 'active' | 'discharged';
                                 }
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <div class="flex-1 min-w-0">
-                                    <label for="hospSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                                <div
+                                    class="flex-1 min-w-0 rounded-lg border p-2 transition-colors"
+                                    [ngClass]="
+                                        isSearchActive()
+                                            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+                                            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
+                                    "
+                                >
+                                    <label
+                                        for="hospSearch"
+                                        class="flex items-center gap-2 text-xs font-medium mb-1"
+                                        [ngClass]="isSearchActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
+                                    >
+                                        Arama
+                                        @if (isSearchActive()) {
+                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                                Aktif
+                                            </span>
+                                        }
+                                    </label>
                                     <input
                                         pInputText
                                         id="hospSearch"
                                         class="w-full"
+                                        [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
                                         [(ngModel)]="searchInput"
                                         placeholder="Neden, müşteri veya hayvan…"
                                         (keyup.enter)="applyFilters()"
@@ -89,8 +118,26 @@ type ActiveFilterUi = 'all' | 'active' | 'discharged';
                             </div>
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
-                            <div class="col-span-12 md:col-span-4">
-                                <span id="lblHospStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</span>
+                            <div
+                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
+                                [ngClass]="
+                                    isStatusActive()
+                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
+                                "
+                            >
+                                <span
+                                    id="lblHospStatus"
+                                    class="flex items-center gap-2 text-xs font-medium mb-1"
+                                    [ngClass]="isStatusActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
+                                >
+                                    Durum
+                                    @if (isStatusActive()) {
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                            Aktif
+                                        </span>
+                                    }
+                                </span>
                                 <p-select
                                     ariaLabelledBy="lblHospStatus"
                                     inputId="hospStatus"
@@ -102,13 +149,61 @@ type ActiveFilterUi = 'all' | 'active' | 'discharged';
                                     styleClass="w-full"
                                 />
                             </div>
-                            <div class="col-span-12 md:col-span-4">
-                                <label for="hospFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
-                                <input id="hospFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
+                            <div
+                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
+                                [ngClass]="
+                                    isFromDateActive()
+                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
+                                "
+                            >
+                                <label
+                                    for="hospFrom"
+                                    class="flex items-center gap-2 text-xs font-medium mb-1"
+                                    [ngClass]="isFromDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
+                                >
+                                    Başlangıç
+                                    @if (isFromDateActive()) {
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                            Aktif
+                                        </span>
+                                    }
+                                </label>
+                                <input
+                                    id="hospFrom"
+                                    type="date"
+                                    class="w-full p-inputtext p-component"
+                                    [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
+                                    [(ngModel)]="fromDateInput"
+                                />
                             </div>
-                            <div class="col-span-12 md:col-span-4">
-                                <label for="hospTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
-                                <input id="hospTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
+                            <div
+                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
+                                [ngClass]="
+                                    isToDateActive()
+                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
+                                "
+                            >
+                                <label
+                                    for="hospTo"
+                                    class="flex items-center gap-2 text-xs font-medium mb-1"
+                                    [ngClass]="isToDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
+                                >
+                                    Bitiş
+                                    @if (isToDateActive()) {
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                            Aktif
+                                        </span>
+                                    }
+                                </label>
+                                <input
+                                    id="hospTo"
+                                    type="date"
+                                    class="w-full p-inputtext p-component"
+                                    [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
+                                    [(ngModel)]="toDateInput"
+                                />
                             </div>
                         </div>
                     </div>
@@ -280,8 +375,20 @@ export class HospitalizationsListPageComponent implements OnInit {
     private lastLoadKey = '';
 
     ngOnInit(): void {
+        const restored = this.restoreStateFromSessionStorage();
+        if (!restored) {
+            this.currentPage.set(1);
+            this.first.set(0);
+        }
         this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
+        this.loadFromServer(
+            this.currentPage(),
+            this.pageSize(),
+            this.activeSearch(),
+            this.activeFromDate(),
+            this.activeToDate(),
+            this.activeFilter()
+        );
     }
 
     private activeOnlyFromFilter(f: ActiveFilterUi): boolean | undefined {
@@ -310,6 +417,8 @@ export class HospitalizationsListPageComponent implements OnInit {
         this.activeToDate.set(to);
         this.activeFilter.set(this.activeFilterInput);
         this.first.set(0);
+        this.currentPage.set(1);
+        this.persistStateToSessionStorage(1, this.pageSize());
         this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
     }
 
@@ -323,6 +432,8 @@ export class HospitalizationsListPageComponent implements OnInit {
         this.activeToDate.set('');
         this.activeFilter.set('all');
         this.first.set(0);
+        this.currentPage.set(1);
+        this.clearStateFromSessionStorage();
         this.loadFromServer(1, this.pageSize(), '', '', '', 'all');
     }
 
@@ -346,6 +457,7 @@ export class HospitalizationsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+        this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
     }
 
@@ -354,6 +466,7 @@ export class HospitalizationsListPageComponent implements OnInit {
         const first = state.first ?? 0;
         const page = Math.floor(first / rows) + 1;
         this.suppressNextLazy = true;
+        this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
     }
 
@@ -390,6 +503,7 @@ export class HospitalizationsListPageComponent implements OnInit {
                     this.pageSize.set(r.pageSize);
                     this.currentPage.set(r.page);
                     this.first.set((r.page - 1) * r.pageSize);
+                    this.persistStateToSessionStorage(r.page, r.pageSize);
                     this.loading.set(false);
                 },
                 error: (e: Error) => {
@@ -397,5 +511,69 @@ export class HospitalizationsListPageComponent implements OnInit {
                     this.loading.set(false);
                 }
             });
+    }
+
+    isSearchActive(): boolean {
+        return !!this.activeSearch().trim();
+    }
+
+    isStatusActive(): boolean {
+        return this.activeFilter() !== 'all';
+    }
+
+    isFromDateActive(): boolean {
+        return !!this.activeFromDate().trim();
+    }
+
+    isToDateActive(): boolean {
+        return !!this.activeToDate().trim();
+    }
+
+    private restoreStateFromSessionStorage(): boolean {
+        const raw = sessionStorage.getItem(HOSPITALIZATIONS_LIST_STATE_KEY);
+        if (!raw) {
+            return false;
+        }
+        try {
+            const parsed = JSON.parse(raw) as Partial<HospitalizationsListState>;
+            const page = Number(parsed.page);
+            const pageSize = Number(parsed.pageSize);
+            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
+                sessionStorage.removeItem(HOSPITALIZATIONS_LIST_STATE_KEY);
+                return false;
+            }
+            const activeFilter = parsed.activeFilter === 'active' || parsed.activeFilter === 'discharged' ? parsed.activeFilter : 'all';
+            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+            this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
+            this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+            this.activeFilterInput = activeFilter;
+            this.activeSearch.set(this.searchInput.trim());
+            this.activeFromDate.set(this.fromDateInput.trim());
+            this.activeToDate.set(this.toDateInput.trim());
+            this.activeFilter.set(activeFilter);
+            this.pageSize.set(pageSize);
+            this.currentPage.set(page);
+            this.first.set((page - 1) * pageSize);
+            return true;
+        } catch {
+            sessionStorage.removeItem(HOSPITALIZATIONS_LIST_STATE_KEY);
+            return false;
+        }
+    }
+
+    private persistStateToSessionStorage(page: number, pageSize: number): void {
+        const state: HospitalizationsListState = {
+            search: this.searchInput.trim(),
+            fromDate: this.fromDateInput.trim(),
+            toDate: this.toDateInput.trim(),
+            activeFilter: this.activeFilterInput,
+            page,
+            pageSize
+        };
+        sessionStorage.setItem(HOSPITALIZATIONS_LIST_STATE_KEY, JSON.stringify(state));
+    }
+
+    private clearStateFromSessionStorage(): void {
+        sessionStorage.removeItem(HOSPITALIZATIONS_LIST_STATE_KEY);
     }
 }

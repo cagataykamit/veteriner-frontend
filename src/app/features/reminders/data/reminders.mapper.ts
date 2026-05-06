@@ -49,6 +49,7 @@ export function reminderLogsQueryToHttpParams(query: ReminderLogsQuery): HttpPar
     p = appendQueryParam(p, 'status', query.status);
     p = appendQueryParam(p, 'fromUtc', query.fromUtc);
     p = appendQueryParam(p, 'toUtc', query.toUtc);
+    p = appendQueryParam(p, 'clinicId', query.clinicId);
     return p;
 }
 

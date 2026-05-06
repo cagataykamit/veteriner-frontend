@@ -18,6 +18,16 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
+type PrescriptionsListState = {
+    search: string;
+    fromDate: string;
+    toDate: string;
+    page: number;
+    pageSize: number;
+};
+
+const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
+
 @Component({
     selector: 'app-prescriptions-list-page',
     standalone: true,
@@ -67,12 +77,31 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 }
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <div class="flex-1 min-w-0">
-                                    <label for="rxSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                                <div
+                                    class="flex-1 min-w-0 rounded-lg border p-2 transition-colors"
+                                    [ngClass]="
+                                        isSearchActive()
+                                            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+                                            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
+                                    "
+                                >
+                                    <label
+                                        for="rxSearch"
+                                        class="flex items-center gap-2 text-xs font-medium mb-1"
+                                        [ngClass]="isSearchActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
+                                    >
+                                        Arama
+                                        @if (isSearchActive()) {
+                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                                Aktif
+                                            </span>
+                                        }
+                                    </label>
                                     <input
                                         pInputText
                                         id="rxSearch"
                                         class="w-full"
+                                        [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
                                         [(ngModel)]="searchInput"
                                         placeholder="Başlık, müşteri veya hayvan…"
                                         (keyup.enter)="applyFilters()"
@@ -85,13 +114,61 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             </div>
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
-                            <div class="col-span-12 md:col-span-6">
-                                <label for="rxFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
-                                <input id="rxFrom" type="date" class="w-full p-inputtext p-component" [(ngModel)]="fromDateInput" />
+                            <div
+                                class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors"
+                                [ngClass]="
+                                    isFromDateActive()
+                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
+                                "
+                            >
+                                <label
+                                    for="rxFrom"
+                                    class="flex items-center gap-2 text-xs font-medium mb-1"
+                                    [ngClass]="isFromDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
+                                >
+                                    Başlangıç
+                                    @if (isFromDateActive()) {
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                            Aktif
+                                        </span>
+                                    }
+                                </label>
+                                <input
+                                    id="rxFrom"
+                                    type="date"
+                                    class="w-full p-inputtext p-component"
+                                    [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
+                                    [(ngModel)]="fromDateInput"
+                                />
                             </div>
-                            <div class="col-span-12 md:col-span-6">
-                                <label for="rxTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
-                                <input id="rxTo" type="date" class="w-full p-inputtext p-component" [(ngModel)]="toDateInput" />
+                            <div
+                                class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors"
+                                [ngClass]="
+                                    isToDateActive()
+                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
+                                "
+                            >
+                                <label
+                                    for="rxTo"
+                                    class="flex items-center gap-2 text-xs font-medium mb-1"
+                                    [ngClass]="isToDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
+                                >
+                                    Bitiş
+                                    @if (isToDateActive()) {
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                            Aktif
+                                        </span>
+                                    }
+                                </label>
+                                <input
+                                    id="rxTo"
+                                    type="date"
+                                    class="w-full p-inputtext p-component"
+                                    [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
+                                    [(ngModel)]="toDateInput"
+                                />
                             </div>
                         </div>
                     </div>
@@ -242,8 +319,13 @@ export class PrescriptionsListPageComponent implements OnInit {
     private lastLoadKey = '';
 
     ngOnInit(): void {
+        const restored = this.restoreStateFromSessionStorage();
+        if (!restored) {
+            this.currentPage.set(1);
+            this.first.set(0);
+        }
         this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
     applyFilters(): void {
@@ -261,6 +343,8 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
         this.first.set(0);
+        this.currentPage.set(1);
+        this.persistStateToSessionStorage(1, this.pageSize());
         this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
@@ -272,6 +356,8 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.activeFromDate.set('');
         this.activeToDate.set('');
         this.first.set(0);
+        this.currentPage.set(1);
+        this.clearStateFromSessionStorage();
         this.loadFromServer(1, this.pageSize(), '', '', '');
     }
 
@@ -294,6 +380,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+        this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
@@ -302,6 +389,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         const first = state.first ?? 0;
         const page = Math.floor(first / rows) + 1;
         this.suppressNextLazy = true;
+        this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
@@ -335,6 +423,7 @@ export class PrescriptionsListPageComponent implements OnInit {
                     this.pageSize.set(r.pageSize);
                     this.currentPage.set(r.page);
                     this.first.set((r.page - 1) * r.pageSize);
+                    this.persistStateToSessionStorage(r.page, r.pageSize);
                     this.loading.set(false);
                 },
                 error: (e: Error) => {
@@ -342,5 +431,61 @@ export class PrescriptionsListPageComponent implements OnInit {
                     this.loading.set(false);
                 }
             });
+    }
+
+    isSearchActive(): boolean {
+        return !!this.activeSearch().trim();
+    }
+
+    isFromDateActive(): boolean {
+        return !!this.activeFromDate().trim();
+    }
+
+    isToDateActive(): boolean {
+        return !!this.activeToDate().trim();
+    }
+
+    private restoreStateFromSessionStorage(): boolean {
+        const raw = sessionStorage.getItem(PRESCRIPTIONS_LIST_STATE_KEY);
+        if (!raw) {
+            return false;
+        }
+        try {
+            const parsed = JSON.parse(raw) as Partial<PrescriptionsListState>;
+            const page = Number(parsed.page);
+            const pageSize = Number(parsed.pageSize);
+            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
+                sessionStorage.removeItem(PRESCRIPTIONS_LIST_STATE_KEY);
+                return false;
+            }
+            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+            this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
+            this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+            this.activeSearch.set(this.searchInput.trim());
+            this.activeFromDate.set(this.fromDateInput.trim());
+            this.activeToDate.set(this.toDateInput.trim());
+            this.pageSize.set(pageSize);
+            this.currentPage.set(page);
+            this.first.set((page - 1) * pageSize);
+            return true;
+        } catch {
+            sessionStorage.removeItem(PRESCRIPTIONS_LIST_STATE_KEY);
+            return false;
+        }
+    }
+
+    private persistStateToSessionStorage(page: number, pageSize: number): void {
+        const state: PrescriptionsListState = {
+            search: this.searchInput.trim(),
+            fromDate: this.fromDateInput.trim(),
+            toDate: this.toDateInput.trim(),
+            page,
+            pageSize
+        };
+        sessionStorage.setItem(PRESCRIPTIONS_LIST_STATE_KEY, JSON.stringify(state));
+    }
+
+    private clearStateFromSessionStorage(): void {
+        sessionStorage.removeItem(PRESCRIPTIONS_LIST_STATE_KEY);
     }
 }

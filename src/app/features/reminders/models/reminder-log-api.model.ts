@@ -35,4 +35,6 @@ export interface ReminderLogsQuery {
     status?: string;
     fromUtc?: string;
     toUtc?: string;
+    /** Boş / gönderilmez → tenant/kullanıcı kapsamındaki tüm klinikler (backend). */
+    clinicId?: string | null;
 }
