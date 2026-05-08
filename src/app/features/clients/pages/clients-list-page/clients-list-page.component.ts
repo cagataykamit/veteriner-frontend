@@ -18,6 +18,8 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { CLIENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type ClientsListState = {
     search: string;
@@ -45,9 +47,9 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
     ],
     template: `
         <app-page-header title="Müşteriler" subtitle="Hasta yönetimi" description="Kayıtlı müşteri listesi ve detay.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreateClient && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/clients/new" pButton type="button" label="Yeni Müşteri" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreateClient && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -201,6 +203,7 @@ export class ClientsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly clientsService = inject(ClientsService);
 
@@ -218,6 +221,7 @@ export class ClientsListPageComponent implements OnInit {
     searchInput = '';
 
     readonly displayedRows = computed(() => this.rawItems());
+    readonly canCreateClient = this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     private suppressNextLazy = false;

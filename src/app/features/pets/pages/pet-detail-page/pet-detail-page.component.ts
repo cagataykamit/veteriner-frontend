@@ -23,6 +23,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 const EM = '—';
 
@@ -57,7 +59,7 @@ const EM = '—';
                 subtitle="Hayvan"
                 [description]="'Doğum: ' + formatDateOnly(pet()!.birthDate) + ' · ' + pet()!.speciesName"
             >
-                @if (!ro.mutationBlocked()) {
+                @if (canUpdatePet && !ro.mutationBlocked()) {
                     <a
                         actions
                         [routerLink]="['/panel/pets', pet()!.id, 'edit']"
@@ -67,7 +69,7 @@ const EM = '—';
                         icon="pi pi-pencil"
                         class="p-button-secondary"
                     ></a>
-                } @else {
+                } @else if (canUpdatePet && ro.mutationBlocked()) {
                     <button
                         actions
                         pButton
@@ -389,6 +391,7 @@ export class PetDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly petsService = inject(PetsService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
@@ -412,6 +415,7 @@ export class PetDetailPageComponent implements OnInit {
     readonly formatDateOnly = (v: string | null) => formatDateDisplay(v);
     readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
     readonly genderLabel = petGenderLabel;
+    readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
 
     appointmentSubtitle(row: PetHistoryAppointmentItemVm): string {
         const t = appointmentTypeDisplayLabel(row.appointmentType, row.appointmentTypeName);

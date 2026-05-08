@@ -19,6 +19,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type PetsListState = {
     search: string;
@@ -49,9 +51,9 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
     ],
     template: `
         <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreatePet && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hayvan" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreatePet && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -295,6 +297,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
 export class PetsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly petsService = inject(PetsService);
     private readonly speciesService = inject(SpeciesService);
@@ -321,6 +324,7 @@ export class PetsListPageComponent implements OnInit {
     clientIdInput = '';
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
     readonly clientOptions = signal<{ label: string; value: string }[]>([]);
+    readonly canCreatePet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
 
     readonly displayedRows = computed(() => this.rawItems());
     private suppressNextLazy = false;

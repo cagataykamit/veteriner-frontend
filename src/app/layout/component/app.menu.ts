@@ -5,6 +5,8 @@ import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    CLIENTS_READ_CLAIM,
+    PETS_READ_CLAIM,
     SUBSCRIPTIONS_MANAGE_CLAIM,
     SUBSCRIPTIONS_READ_CLAIM,
     TENANT_MANAGEMENT_CLAIM
@@ -42,6 +44,8 @@ export class AppMenu {
         const canAccessSubscriptionPage =
             this.auth.hasOperationClaim(SUBSCRIPTIONS_READ_CLAIM) ||
             this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM);
+        const canReadClients = this.auth.hasOperationClaim(CLIENTS_READ_CLAIM);
+        const canReadPets = this.auth.hasOperationClaim(PETS_READ_CLAIM);
 
         const canManageTenantAccess = this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM);
         const tenantManagementItems: MenuItem[] = [];
@@ -62,8 +66,8 @@ export class AppMenu {
             {
                 label: 'Hasta yönetimi',
                 items: [
-                    { label: 'Müşteriler', icon: 'pi pi-fw pi-users', routerLink: ['/panel/clients'] },
-                    { label: 'Hayvanlar', icon: 'pi pi-fw pi-heart', routerLink: ['/panel/pets'] },
+                    ...(canReadClients ? [{ label: 'Müşteriler', icon: 'pi pi-fw pi-users', routerLink: ['/panel/clients'] }] : []),
+                    ...(canReadPets ? [{ label: 'Hayvanlar', icon: 'pi pi-fw pi-heart', routerLink: ['/panel/pets'] }] : []),
                     { label: 'Türler', icon: 'pi pi-fw pi-tags', routerLink: ['/panel/species'] },
                     { label: 'Irklar', icon: 'pi pi-fw pi-sitemap', routerLink: ['/panel/breeds'] },
                     { label: 'Randevular', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] },

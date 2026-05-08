@@ -20,6 +20,8 @@ import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.ut
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-client-detail-page',
@@ -48,7 +50,7 @@ import { EMPTY, switchMap } from 'rxjs';
             </div>
         } @else if (client()) {
             <app-page-header [title]="client()!.fullName" subtitle="Müşteri" [description]="'Kayıt: ' + formatDt(client()!.createdAtUtc)">
-                @if (!ro.mutationBlocked()) {
+                @if (canUpdateClient && !ro.mutationBlocked()) {
                     <a
                         actions
                         [routerLink]="['/panel/clients', client()!.id, 'edit']"
@@ -58,7 +60,7 @@ import { EMPTY, switchMap } from 'rxjs';
                         icon="pi pi-pencil"
                         class="p-button-secondary"
                     ></a>
-                } @else {
+                } @else if (canUpdateClient && ro.mutationBlocked()) {
                     <button
                         actions
                         pButton
@@ -332,6 +334,7 @@ export class ClientDetailPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly clientsService = inject(ClientsService);
     private readonly related = inject(DetailRelatedSummariesService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
@@ -364,6 +367,7 @@ export class ClientDetailPageComponent implements OnInit {
         formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
     readonly statusLabel = appointmentStatusLabel;
     readonly payMethodLabel = paymentMethodLabel;
+    readonly canUpdateClient = this.auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM);
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
