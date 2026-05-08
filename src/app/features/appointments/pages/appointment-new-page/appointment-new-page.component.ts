@@ -270,7 +270,6 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly clinicSlotIntervalMinutes = signal<number | null>(null);
     readonly timeOptions = signal<SelectOption[]>([]);
     readonly workingHoursLoadError = signal<string | null>(null);
-    readonly useWorkingHoursConstraint = signal(true);
     private workingHours: ClinicWorkingHourVm[] = [];
 
     readonly quickClientOpen = signal(false);
@@ -523,24 +522,20 @@ export class AppointmentNewPageComponent implements OnInit {
         const clinicId = this.auth.getClinicId()?.trim();
         if (!clinicId) {
             this.workingHours = [];
-            this.useWorkingHoursConstraint.set(false);
-            this.workingHoursLoadError.set('Klinik çalışma saatleri okunamadı; saat listesi genel aralıkla gösteriliyor.');
+            this.workingHoursLoadError.set(null);
             this.rebuildTimeOptions();
             return;
         }
         this.workingHoursLoadError.set(null);
-        this.useWorkingHoursConstraint.set(true);
         this.clinicsApi.getWorkingHours(clinicId).subscribe({
             next: (items) => {
                 this.workingHours = items;
-                this.useWorkingHoursConstraint.set(true);
                 this.workingHoursLoadError.set(null);
                 this.rebuildTimeOptions();
             },
             error: () => {
                 this.workingHours = [];
-                this.useWorkingHoursConstraint.set(false);
-                this.workingHoursLoadError.set('Klinik çalışma saatleri okunamadı; saat listesi genel aralıkla gösteriliyor.');
+                this.workingHoursLoadError.set(null);
                 this.rebuildTimeOptions();
             }
         });
@@ -555,21 +550,11 @@ export class AppointmentNewPageComponent implements OnInit {
             this.form.controls.scheduledTime.setValue('', { emitEvent: false });
             return;
         }
-        if (!this.useWorkingHoursConstraint()) {
-            const options = this.buildFallbackTimeOptions(duration, interval);
-            this.timeOptions.set(options);
-            const selected = this.form.controls.scheduledTime.value.trim();
-            if (selected && !options.some((o) => o.value === selected)) {
-                this.form.controls.scheduledTime.setValue('', { emitEvent: false });
-            }
-            return;
-        }
         const day = this.resolveWorkingDay(date);
         if (!day || day.isClosed) {
-            const options = this.buildFallbackTimeOptions(duration, interval);
-            this.timeOptions.set(options);
+            this.timeOptions.set([]);
             const selected = this.form.controls.scheduledTime.value.trim();
-            if (selected && !options.some((o) => o.value === selected)) {
+            if (selected) {
                 this.form.controls.scheduledTime.setValue('', { emitEvent: false });
             }
             return;
@@ -606,22 +591,6 @@ export class AppointmentNewPageComponent implements OnInit {
                 continue;
             }
             if (breakStart !== null && breakEnd !== null && start < breakEnd && end > breakStart) {
-                continue;
-            }
-            const hh = String(Math.floor(start / 60)).padStart(2, '0');
-            const mm = String(start % 60).padStart(2, '0');
-            const hm = `${hh}:${mm}`;
-            opts.push({ value: hm, label: hm });
-        }
-        return opts;
-    }
-
-    private buildFallbackTimeOptions(durationMinutes: number, intervalMinutes: number): SelectOption[] {
-        const opts: SelectOption[] = [];
-        const dayMinutes = 24 * 60;
-        for (let start = 0; start < dayMinutes; start += intervalMinutes) {
-            const end = start + durationMinutes;
-            if (end > dayMinutes) {
                 continue;
             }
             const hh = String(Math.floor(start / 60)).padStart(2, '0');
