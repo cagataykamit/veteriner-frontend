@@ -22,6 +22,8 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-examination-detail-page',
@@ -55,7 +57,7 @@ import { EMPTY, switchMap } from 'rxjs';
                 [description]="formatDateTime(exam()!.examinedAtUtc)"
             >
                 <div actions class="flex flex-wrap gap-2">
-                    @if (!ro.mutationBlocked()) {
+                    @if (canUpdateExamination && !ro.mutationBlocked()) {
                         <a
                             [routerLink]="['/panel/examinations', exam()!.id, 'edit']"
                             pButton
@@ -144,7 +146,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                 class="p-button-secondary"
                             ></a>
                         }
-                    } @else {
+                    } @else if (canUpdateExamination && ro.mutationBlocked()) {
                         <button
                             pButton
                             type="button"
@@ -549,6 +551,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly examinationsService = inject(ExaminationsService);
     private readonly related = inject(DetailRelatedSummariesService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
@@ -564,6 +567,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly relatedSummaryLoading = signal(false);
     readonly relatedSummaryError = signal<string | null>(null);
     readonly relatedSummary = signal<ExaminationRelatedSummaryVm | null>(null);
+    readonly canUpdateExamination = this.auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM);
 
     readonly sibLoading = signal(false);
     readonly sibError = signal<string | null>(null);

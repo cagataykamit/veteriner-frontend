@@ -17,6 +17,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-lab-results-list-page',
@@ -36,9 +38,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     ],
     template: `
         <app-page-header title="Lab sonuçları" subtitle="Klinik" description="Laboratuvar sonuç kayıtları.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreateLabResult && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/lab-results/new" pButton type="button" label="Yeni kayıt" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreateLabResult && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -206,6 +208,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class LabResultsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly labResultsService = inject(LabResultsService);
 
@@ -226,6 +229,7 @@ export class LabResultsListPageComponent implements OnInit {
     fromDateInput = '';
     toDateInput = '';
     readonly displayedRows = computed(() => this.rawItems());
+    readonly canCreateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_CREATE_CLAIM);
 
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
 

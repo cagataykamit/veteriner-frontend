@@ -9,6 +9,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-prescription-detail-page',
@@ -37,7 +39,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         } @else if (row()) {
             <app-page-header title="Reçete" subtitle="Klinik" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
-                    @if (!ro.mutationBlocked()) {
+                    @if (canUpdatePrescription && !ro.mutationBlocked()) {
                         <a
                             [routerLink]="['/panel/prescriptions', row()!.id, 'edit']"
                             pButton
@@ -61,7 +63,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 class="p-button-secondary"
                             ></a>
                         }
-                    } @else {
+                    } @else if (canUpdatePrescription && ro.mutationBlocked()) {
                         <button
                             pButton
                             type="button"
@@ -160,12 +162,14 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class PrescriptionDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly prescriptionsService = inject(PrescriptionsService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly row = signal<PrescriptionDetailVm | null>(null);
     readonly showSavedBanner = signal(false);
+    readonly canUpdatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);

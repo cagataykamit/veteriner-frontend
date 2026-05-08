@@ -17,6 +17,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { PRESCRIPTIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type PrescriptionsListState = {
     search: string;
@@ -46,9 +48,9 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
     ],
     template: `
         <app-page-header title="Reçeteler" subtitle="Klinik" description="Reçete kayıtları.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreatePrescription && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/prescriptions/new" pButton type="button" label="Yeni Reçete" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreatePrescription && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -290,6 +292,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
 export class PrescriptionsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly prescriptionsService = inject(PrescriptionsService);
 
@@ -311,6 +314,7 @@ export class PrescriptionsListPageComponent implements OnInit {
     fromDateInput = '';
     toDateInput = '';
     readonly displayedRows = computed(() => this.rawItems());
+    readonly canCreatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_CREATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);

@@ -9,6 +9,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-treatment-detail-page',
@@ -37,7 +39,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         } @else if (row()) {
             <app-page-header title="Tedavi" subtitle="Klinik" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
-                    @if (!ro.mutationBlocked()) {
+                    @if (canUpdateTreatment && !ro.mutationBlocked()) {
                         <a
                             [routerLink]="['/panel/treatments', row()!.id, 'edit']"
                             pButton
@@ -72,7 +74,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 ></a>
                             }
                         }
-                    } @else {
+                    } @else if (canUpdateTreatment && ro.mutationBlocked()) {
                         <button
                             pButton
                             type="button"
@@ -171,12 +173,14 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class TreatmentDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly treatmentsService = inject(TreatmentsService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly row = signal<TreatmentDetailVm | null>(null);
     readonly showSavedBanner = signal(false);
+    readonly canUpdateTreatment = this.auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);

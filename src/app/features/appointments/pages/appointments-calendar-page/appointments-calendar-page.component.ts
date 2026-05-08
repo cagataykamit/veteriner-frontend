@@ -15,6 +15,11 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, localDateYyyyMmDd, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import { AuthService } from '@/app/core/auth/auth.service';
+import {
+    APPOINTMENTS_CREATE_CLAIM,
+    APPOINTMENTS_RESCHEDULE_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 
 type CalendarViewMode = 'day' | 'week';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
@@ -33,9 +38,9 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
     ],
     template: `
         <app-page-header [title]="pageTitle()" subtitle="Operasyon" [description]="pageDescription()">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreateAppointment && !ro.mutationBlocked()) {
                 <button actions pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary" (click)="createAppointment()"></button>
-            } @else {
+            } @else if (canCreateAppointment && ro.mutationBlocked()) {
                 <button actions pButton type="button" label="Yeni Randevu (salt okunur)" icon="pi pi-lock" class="p-button-secondary" [disabled]="true"></button>
             }
         </app-page-header>
@@ -81,7 +86,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                 <app-error-state [detail]="err" (retry)="reload()" />
             } @else if (items().length === 0) {
                 <app-empty-state message="Bu tarih aralığında randevu bulunmuyor." hint="Yeni randevu oluşturarak takvime kayıt ekleyin.">
-                    @if (!ro.mutationBlocked()) {
+                    @if (canCreateAppointment && !ro.mutationBlocked()) {
                         <button pButton type="button" label="Yeni randevu oluştur" icon="pi pi-plus" (click)="createAppointment()"></button>
                     }
                 </app-empty-state>
@@ -143,6 +148,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     class="h-7 w-7 p-0"
                                                     [attr.aria-label]="'Randevuyu düzenle'"
                                                     title="Düzenle"
+                                                    [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
                                                     (click)="openEdit(item.id)"
                                                 ></button>
                                             </div>
@@ -214,6 +220,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                         class="h-7 w-7 p-0"
                                                         [attr.aria-label]="'Randevuyu düzenle'"
                                                         title="Düzenle"
+                                                        [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
                                                         (click)="openEdit(item.id)"
                                                     ></button>
                                                 </div>
@@ -281,6 +288,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                         class="h-7 w-7 p-0"
                                                         [attr.aria-label]="'Randevuyu düzenle'"
                                                         title="Düzenle"
+                                                        [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
                                                         (click)="openEdit(item.id)"
                                                     ></button>
                                                 </div>
@@ -315,7 +323,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                 </div>
                                                 <div class="mt-2 flex gap-2">
                                                     <button pButton type="button" size="small" text="true" label="Detay" (click)="openDetail(item.id)"></button>
-                                                    <button pButton type="button" size="small" text="true" label="Düzenle" (click)="openEdit(item.id)"></button>
+                                                    <button pButton type="button" size="small" text="true" label="Düzenle" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (click)="openEdit(item.id)"></button>
                                                 </div>
                                             </article>
                                         }
@@ -373,6 +381,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                             icon="pi pi-pencil"
                                                             [attr.aria-label]="'Randevuyu düzenle'"
                                                             title="Düzenle"
+                                                            [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
                                                             (click)="openEdit(item.id)"
                                                         ></button>
                                                 </div>
@@ -427,6 +436,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                             icon="pi pi-pencil"
                                                             [attr.aria-label]="'Randevuyu düzenle'"
                                                             title="Düzenle"
+                                                            [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
                                                             (click)="openEdit(item.id)"
                                                         ></button>
                                                 </div>
@@ -459,7 +469,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                 </div>
                                                 <div class="mt-2 flex gap-2">
                                                     <button pButton type="button" size="small" text="true" label="Detay" (click)="openDetail(item.id)"></button>
-                                                    <button pButton type="button" size="small" text="true" label="Düzenle" (click)="openEdit(item.id)"></button>
+                                                    <button pButton type="button" size="small" text="true" label="Düzenle" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (click)="openEdit(item.id)"></button>
                                                 </div>
                                             </article>
                                         }
@@ -476,6 +486,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
 export class AppointmentsCalendarPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly appointments = inject(AppointmentsService);
+    private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
 
@@ -487,6 +498,8 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly activePreset = signal<CalendarPreset | null>(null);
 
     readonly groupedByDay = computed(() => groupCalendarItemsByDay(this.items()));
+    readonly canCreateAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM);
+    readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly presetGroupedByDate = computed(() => this.groupedByDay());
     readonly dayMorningItems = computed(() => this.items().filter((item) => this.getLocalHour(item) < 13));
     readonly dayAfternoonItems = computed(() => this.items().filter((item) => this.getLocalHour(item) >= 13));
@@ -591,12 +604,18 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     openEdit(id: string): void {
+        if (!this.canRescheduleAppointment || this.ro.mutationBlocked()) {
+            return;
+        }
         void this.router.navigate(['/panel/appointments', id, 'edit'], {
             queryParams: this.returnContextQueryParams()
         });
     }
 
     createAppointment(): void {
+        if (!this.canCreateAppointment || this.ro.mutationBlocked()) {
+            return;
+        }
         void this.router.navigate(['/panel/appointments/new']);
     }
 

@@ -16,6 +16,12 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateTimeLocalInputToIsoUtc, formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import {
+    HOSPITALIZATIONS_DISCHARGE_CLAIM,
+    HOSPITALIZATIONS_UPDATE_CLAIM,
+    PAYMENTS_CREATE_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-hospitalization-detail-page',
@@ -54,7 +60,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 ) {
                     <div actions class="flex flex-wrap gap-2">
                         @if (row()!.isActive) {
-                            @if (!ro.mutationBlocked()) {
+                            @if (canUpdateHospitalization && !ro.mutationBlocked()) {
                                 <a
                                     [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']"
                                     pButton
@@ -63,14 +69,16 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     icon="pi pi-pencil"
                                     class="p-button-secondary"
                                 ></a>
-                                <p-button
-                                    type="button"
-                                    label="Taburcu et"
-                                    icon="pi pi-sign-out"
-                                    severity="warn"
-                                    (onClick)="openDischargeDialog()"
-                                />
-                            } @else {
+                                @if (canDischargeHospitalization) {
+                                    <p-button
+                                        type="button"
+                                        label="Taburcu et"
+                                        icon="pi pi-sign-out"
+                                        severity="warn"
+                                        (onClick)="openDischargeDialog()"
+                                    />
+                                }
+                            } @else if (canUpdateHospitalization && ro.mutationBlocked()) {
                                 <button
                                     pButton
                                     type="button"
@@ -79,17 +87,19 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     [disabled]="true"
                                     class="p-button-secondary"
                                 ></button>
-                                <p-button
-                                    type="button"
-                                    label="Taburcu et (salt okunur)"
-                                    icon="pi pi-lock"
-                                    severity="secondary"
-                                    [disabled]="true"
-                                />
+                                @if (canDischargeHospitalization) {
+                                    <p-button
+                                        type="button"
+                                        label="Taburcu et (salt okunur)"
+                                        icon="pi pi-lock"
+                                        severity="secondary"
+                                        [disabled]="true"
+                                    />
+                                }
                             }
                         }
                         @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            @if (!ro.mutationBlocked()) {
+                            @if (canCreatePayment && !ro.mutationBlocked()) {
                                 <a
                                     [routerLink]="['/panel/payments/new']"
                                     [queryParams]="{
@@ -103,7 +113,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     icon="pi pi-wallet"
                                     class="p-button-secondary"
                                 ></a>
-                            } @else {
+                            } @else if (canCreatePayment && ro.mutationBlocked()) {
                                 <button
                                     pButton
                                     type="button"
@@ -241,6 +251,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly hospitalizationsService = inject(HospitalizationsService);
     private readonly fb = inject(FormBuilder);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
@@ -261,6 +272,9 @@ export class HospitalizationDetailPageComponent implements OnInit {
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly canUpdateHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM);
+    readonly canDischargeHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_DISCHARGE_CLAIM);
+    readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
 
     private hospitalizationId = '';
 
@@ -277,7 +291,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     }
 
     openDischargeDialog(): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.ro.mutationBlocked() || !this.canDischargeHospitalization) {
             return;
         }
         this.dischargeForm.reset({ dischargedAtLocal: '', notes: '' });
@@ -292,7 +306,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     }
 
     onDischargeSubmit(): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.ro.mutationBlocked() || !this.canDischargeHospitalization) {
             return;
         }
         this.dischargeSubmitError.set(null);

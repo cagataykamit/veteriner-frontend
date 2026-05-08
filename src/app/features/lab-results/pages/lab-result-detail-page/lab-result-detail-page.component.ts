@@ -9,6 +9,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-lab-result-detail-page',
@@ -36,7 +38,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             </div>
         } @else if (row()) {
             <app-page-header title="Lab sonucu" subtitle="Klinik" [description]="row()!.testName">
-                @if (!ro.mutationBlocked()) {
+                @if (canUpdateLabResult && !ro.mutationBlocked()) {
                     <a
                         actions
                         [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
@@ -46,7 +48,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         icon="pi pi-pencil"
                         class="p-button-secondary"
                     ></a>
-                } @else {
+                } @else if (canUpdateLabResult && ro.mutationBlocked()) {
                     <button
                         actions
                         pButton
@@ -124,12 +126,14 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class LabResultDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly labResultsService = inject(LabResultsService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly row = signal<LabResultDetailVm | null>(null);
     readonly showSavedBanner = signal(false);
+    readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);

@@ -18,6 +18,8 @@ import { formatDateTimeDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-payment-detail-page',
@@ -46,7 +48,7 @@ import { EMPTY, switchMap } from 'rxjs';
             </div>
         } @else if (payment()) {
             <app-page-header title="Ödeme" subtitle="Finans" [description]="headerDescription(payment()!)">
-                @if (!ro.mutationBlocked()) {
+                @if (canUpdatePayment && !ro.mutationBlocked()) {
                     <a
                         actions
                         [routerLink]="['/panel/payments', payment()!.id, 'edit']"
@@ -56,7 +58,7 @@ import { EMPTY, switchMap } from 'rxjs';
                         icon="pi pi-pencil"
                         class="p-button-secondary"
                     ></a>
-                } @else {
+                } @else if (canUpdatePayment && ro.mutationBlocked()) {
                     <button
                         actions
                         pButton
@@ -204,10 +206,12 @@ export class PaymentDetailPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly paymentsService = inject(PaymentsService);
     private readonly related = inject(DetailRelatedSummariesService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
     readonly showSavedBanner = signal(false);
+    readonly canUpdatePayment = this.auth.hasOperationClaim(PAYMENTS_UPDATE_CLAIM);
 
     readonly emptyMark = '—';
 

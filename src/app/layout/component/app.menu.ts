@@ -5,11 +5,20 @@ import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    APPOINTMENTS_READ_CLAIM,
     CLIENTS_READ_CLAIM,
+    CLINICS_READ_CLAIM,
+    EXAMINATIONS_READ_CLAIM,
+    HOSPITALIZATIONS_READ_CLAIM,
+    LAB_RESULTS_READ_CLAIM,
+    PAYMENTS_READ_CLAIM,
     PETS_READ_CLAIM,
+    PRESCRIPTIONS_READ_CLAIM,
     SUBSCRIPTIONS_MANAGE_CLAIM,
     SUBSCRIPTIONS_READ_CLAIM,
-    TENANT_MANAGEMENT_CLAIM
+    TENANT_MANAGEMENT_CLAIM,
+    TREATMENTS_READ_CLAIM,
+    VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
@@ -46,6 +55,15 @@ export class AppMenu {
             this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM);
         const canReadClients = this.auth.hasOperationClaim(CLIENTS_READ_CLAIM);
         const canReadPets = this.auth.hasOperationClaim(PETS_READ_CLAIM);
+        const canReadAppointments = this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM);
+        const canReadExaminations = this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM);
+        const canReadVaccinations = this.auth.hasOperationClaim(VACCINATIONS_READ_CLAIM);
+        const canReadPayments = this.auth.hasOperationClaim(PAYMENTS_READ_CLAIM);
+        const canReadTreatments = this.auth.hasOperationClaim(TREATMENTS_READ_CLAIM);
+        const canReadPrescriptions = this.auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM);
+        const canReadLabResults = this.auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM);
+        const canReadHospitalizations = this.auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM);
+        const canReadClinics = this.auth.hasOperationClaim(CLINICS_READ_CLAIM);
 
         const canManageTenantAccess = this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM);
         const tenantManagementItems: MenuItem[] = [];
@@ -70,15 +88,17 @@ export class AppMenu {
                     ...(canReadPets ? [{ label: 'Hayvanlar', icon: 'pi pi-fw pi-heart', routerLink: ['/panel/pets'] }] : []),
                     { label: 'Türler', icon: 'pi pi-fw pi-tags', routerLink: ['/panel/species'] },
                     { label: 'Irklar', icon: 'pi pi-fw pi-sitemap', routerLink: ['/panel/breeds'] },
-                    { label: 'Randevular', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] },
-                    { label: 'Randevu Takvimi', icon: 'pi pi-fw pi-calendar-clock', routerLink: ['/panel/appointments/calendar'] },
-                    { label: 'Muayeneler', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/examinations'] },
-                    { label: 'Tedaviler', icon: 'pi pi-fw pi-briefcase', routerLink: ['/panel/treatments'] },
-                    { label: 'Reçeteler', icon: 'pi pi-fw pi-file', routerLink: ['/panel/prescriptions'] },
-                    { label: 'Lab sonuçları', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/panel/lab-results'] },
-                    { label: 'Yatışlar', icon: 'pi pi-fw pi-building', routerLink: ['/panel/hospitalizations'] },
-                    { label: 'Aşılar', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/vaccinations'] },
-                    { label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }
+                    ...(canReadAppointments ? [{ label: 'Randevular', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] }] : []),
+                    ...(canReadAppointments
+                        ? [{ label: 'Randevu Takvimi', icon: 'pi pi-fw pi-calendar-clock', routerLink: ['/panel/appointments/calendar'] }]
+                        : []),
+                    ...(canReadExaminations ? [{ label: 'Muayeneler', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/examinations'] }] : []),
+                    ...(canReadTreatments ? [{ label: 'Tedaviler', icon: 'pi pi-fw pi-briefcase', routerLink: ['/panel/treatments'] }] : []),
+                    ...(canReadPrescriptions ? [{ label: 'Reçeteler', icon: 'pi pi-fw pi-file', routerLink: ['/panel/prescriptions'] }] : []),
+                    ...(canReadLabResults ? [{ label: 'Lab sonuçları', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/panel/lab-results'] }] : []),
+                    ...(canReadHospitalizations ? [{ label: 'Yatışlar', icon: 'pi pi-fw pi-building', routerLink: ['/panel/hospitalizations'] }] : []),
+                    ...(canReadVaccinations ? [{ label: 'Aşılar', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/vaccinations'] }] : []),
+                    ...(canReadPayments ? [{ label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }] : [])
                 ]
             },
             {
@@ -112,7 +132,7 @@ export class AppMenu {
                     ...(canAccessSubscriptionPage
                         ? [{ label: 'Abonelik', icon: 'pi pi-fw pi-wallet', routerLink: ['/panel/settings/subscription'] }]
                         : []),
-                    { label: 'Klinikler', icon: 'pi pi-fw pi-building', routerLink: ['/panel/settings/clinics'] },
+                    ...(canReadClinics ? [{ label: 'Klinikler', icon: 'pi pi-fw pi-building', routerLink: ['/panel/settings/clinics'] }] : []),
                     ...reminderItems,
                     ...tenantManagementItems,
                     { label: 'Giriş', icon: 'pi pi-fw pi-sign-in', routerLink: ['/auth/login'] }

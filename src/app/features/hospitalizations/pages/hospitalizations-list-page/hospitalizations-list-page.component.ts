@@ -18,6 +18,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { HOSPITALIZATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type ActiveFilterUi = 'all' | 'active' | 'discharged';
 type HospitalizationsListState = {
@@ -50,9 +52,9 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
     ],
     template: `
         <app-page-header title="Yatışlar" subtitle="Klinik" description="Yatış ve gözlem kayıtları.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreateHospitalization && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/hospitalizations/new" pButton type="button" label="Yeni yatış" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreateHospitalization && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -339,6 +341,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
 export class HospitalizationsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly hospitalizationsService = inject(HospitalizationsService);
 
@@ -349,6 +352,7 @@ export class HospitalizationsListPageComponent implements OnInit {
     ];
 
     activeFilterInput: ActiveFilterUi = 'all';
+    readonly canCreateHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_CREATE_CLAIM);
 
     readonly loading = signal(false);
     readonly error = signal<string | null>(null);

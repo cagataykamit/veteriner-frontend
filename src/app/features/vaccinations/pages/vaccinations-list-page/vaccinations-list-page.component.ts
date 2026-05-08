@@ -20,6 +20,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type VaccinationsListState = {
     search: string;
@@ -52,9 +54,9 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
     ],
     template: `
         <app-page-header title="Aşılar" subtitle="Klinik" description="Aşı kayıtları ve takip.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreateVaccination && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/vaccinations/new" pButton type="button" label="Yeni Aşı" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreateVaccination && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -331,6 +333,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
 export class VaccinationsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly vaccinationsService = inject(VaccinationsService);
 
@@ -359,6 +362,7 @@ export class VaccinationsListPageComponent implements OnInit {
         { label: 'Uygulandı', value: '1' },
         { label: 'İptal', value: '2' }
     ];
+    readonly canCreateVaccination = this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM);
 
     readonly displayedRows = computed(() => this.rawItems());
 

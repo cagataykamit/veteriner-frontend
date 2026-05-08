@@ -21,6 +21,11 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import {
+    APPOINTMENTS_CREATE_CLAIM,
+    APPOINTMENTS_READ_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 
 type AppointmentListState = {
     search: string;
@@ -53,10 +58,12 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
     ],
     template: `
         <app-page-header title="Randevular" subtitle="Operasyon" description="Randevu listesi ve durum takibi.">
-            <a actions routerLink="/panel/appointments/calendar" pButton type="button" label="Takvim Görünümü" icon="pi pi-calendar" severity="secondary"></a>
-            @if (!ro.mutationBlocked()) {
+            @if (canReadAppointments) {
+                <a actions routerLink="/panel/appointments/calendar" pButton type="button" label="Takvim Görünümü" icon="pi pi-calendar" severity="secondary"></a>
+            }
+            @if (canCreateAppointment && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreateAppointment && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -335,6 +342,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
 export class AppointmentsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly appointmentsService = inject(AppointmentsService);
 
@@ -380,6 +388,8 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;
+    readonly canReadAppointments = this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM);
+    readonly canCreateAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM);
     readonly hasActiveFilters = computed(
         () => !!this.activeSearch().trim() || !!this.statusFilter.trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim()
     );

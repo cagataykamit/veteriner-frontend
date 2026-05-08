@@ -13,6 +13,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatClinicPhoneForDisplay } from '@/app/features/clinics/utils/clinic-phone-format.utils';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-clinics-list-page',
@@ -33,7 +34,7 @@ import { formatClinicPhoneForDisplay } from '@/app/features/clinics/utils/clinic
             subtitle="Hesap"
             description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları."
         >
-            @if (canCreateClinic()) {
+            @if (canCreateClinic() && !ro.mutationBlocked()) {
                 <a
                     actions
                     routerLink="/panel/settings/clinics/new"
@@ -43,6 +44,16 @@ import { formatClinicPhoneForDisplay } from '@/app/features/clinics/utils/clinic
                     icon="pi pi-plus"
                     class="p-button-primary"
                 ></a>
+            } @else if (canCreateClinic() && ro.mutationBlocked()) {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni Klinik (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
             }
         </app-page-header>
 
@@ -134,6 +145,7 @@ export class ClinicsListPageComponent implements OnInit {
 
     private readonly clinics = inject(ClinicsService);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
     readonly canCreateClinic = computed(() => this.auth.hasOperationClaim(CLINICS_CREATE_CLAIM));

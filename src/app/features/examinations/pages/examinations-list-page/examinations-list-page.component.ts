@@ -17,6 +17,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { EXAMINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type ExaminationsListState = {
     search: string;
@@ -46,9 +48,9 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
     ],
     template: `
         <app-page-header title="Muayeneler" subtitle="Klinik" description="Muayene kayıtları ve takip.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreateExamination && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/examinations/new" pButton type="button" label="Yeni Muayene" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreateExamination && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -285,6 +287,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
 export class ExaminationsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly examinationsService = inject(ExaminationsService);
 
@@ -306,6 +309,7 @@ export class ExaminationsListPageComponent implements OnInit {
     fromDateInput = '';
     toDateInput = '';
     readonly displayedRows = computed(() => this.rawItems());
+    readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);

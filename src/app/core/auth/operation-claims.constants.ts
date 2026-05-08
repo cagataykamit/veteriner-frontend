@@ -36,3 +36,38 @@ export const PETS_CREATE_CLAIM = 'Pets.Create' as const;
 
 /** Hayvan güncelleme */
 export const PETS_UPDATE_CLAIM = 'Pets.Update' as const;
+
+export const APPOINTMENTS_READ_CLAIM = 'Appointments.Read' as const;
+export const APPOINTMENTS_CREATE_CLAIM = 'Appointments.Create' as const;
+export const APPOINTMENTS_CANCEL_CLAIM = 'Appointments.Cancel' as const;
+export const APPOINTMENTS_COMPLETE_CLAIM = 'Appointments.Complete' as const;
+export const APPOINTMENTS_RESCHEDULE_CLAIM = 'Appointments.Reschedule' as const;
+
+export const EXAMINATIONS_READ_CLAIM = 'Examinations.Read' as const;
+export const EXAMINATIONS_CREATE_CLAIM = 'Examinations.Create' as const;
+export const EXAMINATIONS_UPDATE_CLAIM = 'Examinations.Update' as const;
+
+export const VACCINATIONS_READ_CLAIM = 'Vaccinations.Read' as const;
+export const VACCINATIONS_CREATE_CLAIM = 'Vaccinations.Create' as const;
+export const VACCINATIONS_UPDATE_CLAIM = 'Vaccinations.Update' as const;
+
+export const PAYMENTS_READ_CLAIM = 'Payments.Read' as const;
+export const PAYMENTS_CREATE_CLAIM = 'Payments.Create' as const;
+export const PAYMENTS_UPDATE_CLAIM = 'Payments.Update' as const;
+
+export const TREATMENTS_READ_CLAIM = 'Treatments.Read' as const;
+export const TREATMENTS_CREATE_CLAIM = 'Treatments.Create' as const;
+export const TREATMENTS_UPDATE_CLAIM = 'Treatments.Update' as const;
+
+export const PRESCRIPTIONS_READ_CLAIM = 'Prescriptions.Read' as const;
+export const PRESCRIPTIONS_CREATE_CLAIM = 'Prescriptions.Create' as const;
+export const PRESCRIPTIONS_UPDATE_CLAIM = 'Prescriptions.Update' as const;
+
+export const LAB_RESULTS_READ_CLAIM = 'LabResults.Read' as const;
+export const LAB_RESULTS_CREATE_CLAIM = 'LabResults.Create' as const;
+export const LAB_RESULTS_UPDATE_CLAIM = 'LabResults.Update' as const;
+
+export const HOSPITALIZATIONS_READ_CLAIM = 'Hospitalizations.Read' as const;
+export const HOSPITALIZATIONS_CREATE_CLAIM = 'Hospitalizations.Create' as const;
+export const HOSPITALIZATIONS_UPDATE_CLAIM = 'Hospitalizations.Update' as const;
+export const HOSPITALIZATIONS_DISCHARGE_CLAIM = 'Hospitalizations.Discharge' as const;

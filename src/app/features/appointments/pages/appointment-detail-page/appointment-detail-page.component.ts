@@ -24,6 +24,10 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import {
+    APPOINTMENTS_RESCHEDULE_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-appointment-detail-page',
@@ -60,7 +64,7 @@ import { EMPTY, switchMap } from 'rxjs';
                 "
             >
                 <div actions class="flex flex-wrap gap-2">
-                    @if (!ro.mutationBlocked()) {
+                    @if (canRescheduleAppointment && !ro.mutationBlocked()) {
                         <a
                             [routerLink]="['/panel/appointments', appt()!.id, 'edit']"
                             [queryParams]="returnContextQueryParams() ?? undefined"
@@ -94,7 +98,7 @@ import { EMPTY, switchMap } from 'rxjs';
                                 class="p-button-secondary"
                             ></button>
                         }
-                    } @else {
+                    } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
                         <button
                             pButton
                             type="button"
@@ -246,6 +250,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly appointmentsService = inject(AppointmentsService);
     private readonly related = inject(DetailRelatedSummariesService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
@@ -270,6 +275,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly typeSeverity = appointmentTypeDisplaySeverity;
+    readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly isCancelledForExam = isAppointmentCancelledStatus;
 
     ngOnInit(): void {

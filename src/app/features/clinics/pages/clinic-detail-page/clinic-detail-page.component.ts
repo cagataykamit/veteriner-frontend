@@ -85,6 +85,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                 description="Klinik bilgileri, iletişim ve profil alanlarını güncelleyebilir; kliniği pasife alabilir veya yeniden aktifleştirebilirsiniz."
             />
 
+            @if (canUpdateClinic) {
             <div class="card mb-4">
                 <h5 class="mt-0 mb-3">Özet</h5>
                 <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 text-sm">
@@ -118,6 +119,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
                 </dl>
             </div>
+            }
 
             <div class="card mb-4">
                 <h5 class="mt-0 mb-4">Düzenle</h5>
@@ -238,6 +240,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                 </form>
             </div>
 
+            @if (canUpdateClinic) {
             <div class="card mb-4" [formGroup]="whForm">
                 <h5 class="mt-0 mb-2">Çalışma Saatleri</h5>
                 <p class="text-sm text-muted-color mt-0 mb-4">Kliniğin haftalık çalışma günleri ve saatlerini yönetin.</p>
@@ -294,7 +297,9 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
                 }
             </div>
+            }
 
+            @if (canUpdateClinic) {
             <div class="card mb-4" [formGroup]="apSettingsForm">
                 <h5 class="mt-0 mb-2">Randevu Varsayılanları</h5>
                 <p class="text-sm text-muted-color mt-0 mb-4">
@@ -377,7 +382,9 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
                 }
             </div>
+            }
 
+            @if (canUpdateClinic) {
             <div class="card">
                 <h5 class="mt-0 mb-3">Durum</h5>
                 @if (ro.mutationBlocked()) {
@@ -407,6 +414,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
                 }
             </div>
+            }
         }
     `
 })
@@ -454,7 +462,7 @@ export class ClinicDetailPageComponent implements OnInit {
     /** Reactive form uyarısı: disabled yalnızca `FormGroup` üzerinden. */
     private readonly formEditLockEffect = effect(() => {
         const lock =
-            this.ro.mutationBlocked() || this.saving() || this.busyDeactivate() || this.busyActivate();
+            !this.canUpdateClinic || this.ro.mutationBlocked() || this.saving() || this.busyDeactivate() || this.busyActivate();
         if (lock) {
             if (this.form.enabled) {
                 this.form.disable({ emitEvent: false });
@@ -465,6 +473,7 @@ export class ClinicDetailPageComponent implements OnInit {
     });
 
     private readonly auth = inject(AuthService);
+    readonly canUpdateClinic = this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM);
 
     readonly whLoading = signal(false);
     readonly whError = signal<string | null>(null);
@@ -806,7 +815,7 @@ export class ClinicDetailPageComponent implements OnInit {
     }
 
     onSave(): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.ro.mutationBlocked() || !this.canUpdateClinic) {
             return;
         }
         this.formError.set(null);
@@ -859,7 +868,7 @@ export class ClinicDetailPageComponent implements OnInit {
     }
 
     onDeactivate(): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.ro.mutationBlocked() || !this.canUpdateClinic) {
             return;
         }
         const id = this.detail()?.id ?? '';
@@ -903,7 +912,7 @@ export class ClinicDetailPageComponent implements OnInit {
     }
 
     onActivate(): void {
-        if (this.ro.mutationBlocked()) {
+        if (this.ro.mutationBlocked() || !this.canUpdateClinic) {
             return;
         }
         const id = this.detail()?.id ?? '';

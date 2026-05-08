@@ -20,6 +20,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type PaymentsListState = {
     search: string;
@@ -51,9 +53,9 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
     ],
     template: `
         <app-page-header title="Ödemeler" subtitle="Finans" description="Ödeme kayıtları.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreatePayment && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/payments/new" pButton type="button" label="Yeni Ödeme" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreatePayment && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -330,6 +332,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
 export class PaymentsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly auth = inject(AuthService);
 
     private readonly paymentsService = inject(PaymentsService);
 
@@ -358,6 +361,7 @@ export class PaymentsListPageComponent implements OnInit {
         { label: 'Kart', value: 'card' },
         { label: 'Havale / EFT', value: 'transfer' }
     ];
+    readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
 
     readonly displayedRows = computed(() => this.rawItems());
 

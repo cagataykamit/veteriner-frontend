@@ -14,6 +14,8 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-vaccination-detail-page',
@@ -47,7 +49,7 @@ import { EMPTY, switchMap } from 'rxjs';
                 subtitle="Klinik"
                 [description]="formatDateTime(vac()!.appliedAtUtc) + ' · ' + statusLabel(vac()!.status) + ' · ' + vac()!.vaccineName"
             >
-                @if (!ro.mutationBlocked()) {
+                @if (canUpdateVaccination && !ro.mutationBlocked()) {
                     <a
                         actions
                         [routerLink]="['/panel/vaccinations', vac()!.id, 'edit']"
@@ -57,7 +59,7 @@ import { EMPTY, switchMap } from 'rxjs';
                         icon="pi pi-pencil"
                         class="p-button-secondary"
                     ></a>
-                } @else {
+                } @else if (canUpdateVaccination && ro.mutationBlocked()) {
                     <button
                         actions
                         pButton
@@ -147,6 +149,7 @@ export class VaccinationDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly vaccinationsService = inject(VaccinationsService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly emptyMark = '—';
@@ -160,6 +163,7 @@ export class VaccinationDetailPageComponent implements OnInit {
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly canUpdateVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
     readonly statusLabel = vaccinationStatusLabel;
     readonly statusSeverity = vaccinationStatusSeverity;
 

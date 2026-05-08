@@ -37,6 +37,10 @@ import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/util
 import { dateTimeLocalInputToIsoUtc, utcIsoStringToDateTimeLocalInput } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import {
+    APPOINTMENTS_CANCEL_CLAIM,
+    APPOINTMENTS_COMPLETE_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
@@ -313,7 +317,18 @@ export class AppointmentEditPageComponent implements OnInit {
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
 
-    readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
+    readonly canCancelAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CANCEL_CLAIM);
+    readonly canCompleteAppointment = this.auth.hasOperationClaim(APPOINTMENTS_COMPLETE_CLAIM);
+    readonly statusOptions = APPOINTMENT_WRITE_STATUS_OPTIONS.filter((x) => {
+        const v = String(x.value);
+        if (v === '2') {
+            return this.canCancelAppointment;
+        }
+        if (v === '1') {
+            return this.canCompleteAppointment;
+        }
+        return true;
+    });
 
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
