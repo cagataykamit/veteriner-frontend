@@ -121,6 +121,34 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
     },
+    productCategories: {
+        list: () => `/api/v1/product-categories`,
+        byId: (id: string) => `/api/v1/product-categories/${encodeURIComponent(id)}`,
+        create: () => `/api/v1/product-categories`,
+        update: (id: string) => `/api/v1/product-categories/${encodeURIComponent(id)}`,
+        activate: (id: string) => `/api/v1/product-categories/${encodeURIComponent(id)}/activate`,
+        deactivate: (id: string) => `/api/v1/product-categories/${encodeURIComponent(id)}/deactivate`
+    },
+    products: {
+        /** Query: `Page`, `PageSize`, `Search` (+ `ProductCategoryId`, `IsActive` — backend ile uyumlu). */
+        list: () => `/api/v1/products`,
+        byId: (id: string) => `/api/v1/products/${encodeURIComponent(id)}`,
+        create: () => `/api/v1/products`,
+        update: (id: string) => `/api/v1/products/${encodeURIComponent(id)}`,
+        activate: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/activate`,
+        deactivate: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/deactivate`,
+        stocks: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stocks`,
+        stockMovements: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-movements`
+    },
+    productStocks: {
+        list: () => `/api/v1/product-stocks`,
+        updateMinimumStockLevel: (id: string) =>
+            `/api/v1/product-stocks/${encodeURIComponent(id)}/minimum-stock-level`
+    },
+    stockMovements: {
+        list: () => `/api/v1/stock-movements`,
+        create: () => `/api/v1/stock-movements`
+    },
     tenants: {
         /** PUT: kiracı paneli — kurum adı vb. (Faz 5B); gövde backend sözleşmesine uyar. */
         settings: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/settings`,

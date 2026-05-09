@@ -77,3 +77,33 @@ export const HOSPITALIZATIONS_READ_CLAIM = 'Hospitalizations.Read' as const;
 export const HOSPITALIZATIONS_CREATE_CLAIM = 'Hospitalizations.Create' as const;
 export const HOSPITALIZATIONS_UPDATE_CLAIM = 'Hospitalizations.Update' as const;
 export const HOSPITALIZATIONS_DISCHARGE_CLAIM = 'Hospitalizations.Discharge' as const;
+
+/** Ürün kategorileri — liste/detay */
+export const PRODUCT_CATEGORIES_READ_CLAIM = 'ProductCategories.Read' as const;
+
+/** Ürün kategorisi oluşturma */
+export const PRODUCT_CATEGORIES_CREATE_CLAIM = 'ProductCategories.Create' as const;
+
+/** Ürün kategorisi güncelleme */
+export const PRODUCT_CATEGORIES_UPDATE_CLAIM = 'ProductCategories.Update' as const;
+
+/** Ürün kategorisi pasifleştirme */
+export const PRODUCT_CATEGORIES_DEACTIVATE_CLAIM = 'ProductCategories.Deactivate' as const;
+
+/** Ürün modülü okuma/liste/detay */
+export const PRODUCTS_READ_CLAIM = 'Products.Read' as const;
+
+/** Ürün oluşturma */
+export const PRODUCTS_CREATE_CLAIM = 'Products.Create' as const;
+
+/** Ürün güncelleme */
+export const PRODUCTS_UPDATE_CLAIM = 'Products.Update' as const;
+
+/** Ürün pasifleştirme */
+export const PRODUCTS_DEACTIVATE_CLAIM = 'Products.Deactivate' as const;
+
+/** Stok hareketleri okuma */
+export const STOCK_MOVEMENTS_READ_CLAIM = 'StockMovements.Read' as const;
+
+/** Stok hareketi oluşturma */
+export const STOCK_MOVEMENTS_CREATE_CLAIM = 'StockMovements.Create' as const;

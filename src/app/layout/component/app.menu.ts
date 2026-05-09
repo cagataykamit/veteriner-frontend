@@ -12,6 +12,7 @@ import {
     HOSPITALIZATIONS_READ_CLAIM,
     LAB_RESULTS_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
+    PRODUCTS_READ_CLAIM,
     PETS_READ_CLAIM,
     PRESCRIPTIONS_READ_CLAIM,
     REMINDERS_MANAGE_CLAIM,
@@ -61,6 +62,7 @@ export class AppMenu {
         const canReadExaminations = this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM);
         const canReadVaccinations = this.auth.hasOperationClaim(VACCINATIONS_READ_CLAIM);
         const canReadPayments = this.auth.hasOperationClaim(PAYMENTS_READ_CLAIM);
+        const canReadProducts = this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM);
         const canReadTreatments = this.auth.hasOperationClaim(TREATMENTS_READ_CLAIM);
         const canReadPrescriptions = this.auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM);
         const canReadLabResults = this.auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM);
@@ -119,6 +121,14 @@ export class AppMenu {
                     ...(canReadPayments ? [{ label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }] : [])
                 ]
             },
+            ...(canReadProducts
+                ? [
+                      {
+                          label: 'Ürün ve Stok',
+                          items: [{ label: 'Ürünler', icon: 'pi pi-fw pi-box', routerLink: ['/panel/products'] }]
+                      }
+                  ]
+                : []),
             ...(canShowReportsGroup ? [{ label: 'Raporlar', items: reportMenuItems }] : []),
             {
                 label: 'Hesap',
