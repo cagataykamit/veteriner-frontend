@@ -9,5 +9,5 @@ export const subscriptionAccessGuard: CanActivateFn = () => {
     const router = inject(Router);
     const ok =
         auth.hasOperationClaim(SUBSCRIPTIONS_READ_CLAIM) || auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM);
-    return ok ? true : router.createUrlTree(['/panel/dashboard']);
+    return ok ? true : router.createUrlTree(['/notfound']);
 };
