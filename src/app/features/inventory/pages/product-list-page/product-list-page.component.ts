@@ -11,6 +11,13 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import {
+    PRODUCTS_CREATE_CLAIM,
+    PRODUCTS_DEACTIVATE_CLAIM,
+    PRODUCTS_UPDATE_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -46,7 +53,21 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Ürünler" subtitle="Ürün ve Stok" description="Ürün kataloğu (salt okunur)."></app-page-header>
+        <app-page-header title="Ürünler" subtitle="Ürün ve Stok" description="Ürün kataloğu.">
+            @if (canCreateProduct && !ro.mutationBlocked()) {
+                <a actions routerLink="/panel/products/new" pButton type="button" label="Yeni ürün" icon="pi pi-plus" class="p-button-primary"></a>
+            } @else if (canCreateProduct && ro.mutationBlocked()) {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni ürün (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
+        </app-page-header>
 
         <div class="card">
             @if (loading()) {
@@ -55,6 +76,9 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else {
                 <div class="flex flex-col gap-4">
+                    @if (listActionError()) {
+                        <p class="text-red-500 text-sm m-0" role="alert">{{ listActionError() }}</p>
+                    }
                     <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
                             <div class="min-w-0">
@@ -151,7 +175,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '56rem' }"
+                                [tableStyle]="{ 'min-width': '62rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -163,7 +187,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                         <th>Birim</th>
                                         <th class="text-right">Birim fiyat</th>
                                         <th>Durum</th>
-                                        <th style="width: 8rem">İşlemler</th>
+                                        <th style="min-width: 14rem">İşlemler</th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
@@ -177,7 +201,33 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                             <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
                                         </td>
                                         <td>
-                                            <a [routerLink]="['/panel/products', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                            <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
+                                                <a [routerLink]="['/panel/products', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                                @if (canUpdateProduct && !ro.mutationBlocked()) {
+                                                    <a [routerLink]="['/panel/products', row.id, 'edit']" class="text-primary font-medium no-underline"
+                                                        >Düzenle</a>
+                                                }
+                                                @if (canDeactivateProduct && !ro.mutationBlocked() && row.isActive) {
+                                                    <button
+                                                        type="button"
+                                                        class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50"
+                                                        [disabled]="rowMutatingId() !== null"
+                                                        (click)="onDeactivate(row)"
+                                                    >
+                                                        Pasifleştir
+                                                    </button>
+                                                }
+                                                @if (canUpdateProduct && !ro.mutationBlocked() && !row.isActive) {
+                                                    <button
+                                                        type="button"
+                                                        class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
+                                                        [disabled]="rowMutatingId() !== null"
+                                                        (click)="onActivate(row)"
+                                                    >
+                                                        Aktifleştir
+                                                    </button>
+                                                }
+                                            </div>
                                         </td>
                                     </tr>
                                 </ng-template>
@@ -210,8 +260,31 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                             <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
                                         </div>
                                     </div>
-                                    <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        <a [routerLink]="['/panel/products', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                    <div class="flex flex-wrap justify-end gap-x-3 gap-y-2 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                        <a [routerLink]="['/panel/products', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        @if (canUpdateProduct && !ro.mutationBlocked()) {
+                                            <a [routerLink]="['/panel/products', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                        }
+                                        @if (canDeactivateProduct && !ro.mutationBlocked() && row.isActive) {
+                                            <button
+                                                type="button"
+                                                class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50"
+                                                [disabled]="rowMutatingId() !== null"
+                                                (click)="onDeactivate(row)"
+                                            >
+                                                Pasifleştir
+                                            </button>
+                                        }
+                                        @if (canUpdateProduct && !ro.mutationBlocked() && !row.isActive) {
+                                            <button
+                                                type="button"
+                                                class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
+                                                [disabled]="rowMutatingId() !== null"
+                                                (click)="onActivate(row)"
+                                            >
+                                                Aktifleştir
+                                            </button>
+                                        }
                                     </div>
                                 </div>
                             }
@@ -238,6 +311,15 @@ export class ProductListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly productService = inject(ProductService);
+    private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly canCreateProduct = this.auth.hasOperationClaim(PRODUCTS_CREATE_CLAIM);
+    readonly canUpdateProduct = this.auth.hasOperationClaim(PRODUCTS_UPDATE_CLAIM);
+    readonly canDeactivateProduct = this.auth.hasOperationClaim(PRODUCTS_DEACTIVATE_CLAIM);
+
+    readonly rowMutatingId = signal<string | null>(null);
+    readonly listActionError = signal<string | null>(null);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -326,6 +408,48 @@ export class ProductListPageComponent implements OnInit {
 
     isActiveFilterApplied(): boolean {
         return this.activeIsActiveFilter() === 'true' || this.activeIsActiveFilter() === 'false';
+    }
+
+    onDeactivate(row: ProductListItemVm): void {
+        if (!this.canDeactivateProduct || this.ro.mutationBlocked() || !row.isActive) {
+            return;
+        }
+        if (!window.confirm('Bu ürünü pasifleştirmek istediğinize emin misiniz?')) {
+            return;
+        }
+        this.rowMutatingId.set(row.id);
+        this.listActionError.set(null);
+        this.productService.deactivate(row.id).subscribe({
+            next: () => {
+                this.rowMutatingId.set(null);
+                this.reload();
+            },
+            error: (e: Error) => {
+                this.rowMutatingId.set(null);
+                this.listActionError.set(e.message ?? 'Pasifleştirme başarısız.');
+            }
+        });
+    }
+
+    onActivate(row: ProductListItemVm): void {
+        if (!this.canUpdateProduct || this.ro.mutationBlocked() || row.isActive) {
+            return;
+        }
+        if (!window.confirm('Bu ürünü aktifleştirmek istediğinize emin misiniz?')) {
+            return;
+        }
+        this.rowMutatingId.set(row.id);
+        this.listActionError.set(null);
+        this.productService.activate(row.id).subscribe({
+            next: () => {
+                this.rowMutatingId.set(null);
+                this.reload();
+            },
+            error: (e: Error) => {
+                this.rowMutatingId.set(null);
+                this.listActionError.set(e.message ?? 'Aktifleştirme başarısız.');
+            }
+        });
     }
 
     private parseIsActive(filter: string): boolean | undefined {

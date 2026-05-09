@@ -24,3 +24,37 @@ export interface ProductDtoPagedResult {
     totalItems: number;
     totalPages: number;
 }
+
+/** POST /products gövdesi — JSON camelCase. */
+export interface CreateProductRequest {
+    productCategoryId?: string | null;
+    name: string;
+    sku?: string | null;
+    barcode?: string | null;
+    description?: string | null;
+    unit: string;
+    unitPrice: number;
+    currency: string;
+}
+
+/**
+ * PUT /products/{id} gövdesi.
+ * Kimlik yol parametresinde; gövdede `id` beklenmediği varsayımıyla (backend command ile teyit).
+ */
+export type UpdateProductRequest = CreateProductRequest;
+
+/** GET /product-categories satırı */
+export interface ProductCategoryDto {
+    id: string;
+    name?: string | null;
+    description?: string | null;
+    isActive?: boolean | null;
+}
+
+export interface ProductCategoryDtoPagedResult {
+    items?: ProductCategoryDto[] | null;
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+}

@@ -1,3 +1,11 @@
+/** Ürün kategorisi listesi GET parametreleri. */
+export interface ProductCategoriesListQuery {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    isActive?: boolean;
+}
+
 /** Ürün listesi GET parametreleri (istemci tarafı). */
 export interface ProductsListQuery {
     page?: number;
