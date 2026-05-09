@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -23,6 +23,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { EMPTY, switchMap } from 'rxjs';
+import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 
 @Component({
     selector: 'app-product-detail-page',
@@ -39,6 +40,17 @@ import { EMPTY, switchMap } from 'rxjs';
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent
+    ],
+    styles: [
+        `
+            /* Klinik stokları: 6 eşit kolon, dikey çizgi yok */
+            .product-stock-desktop-grid {
+                display: grid;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                column-gap: 1rem;
+                align-items: center;
+            }
+        `
     ],
     template: `
         <a routerLink="/panel/products" class="text-primary font-medium no-underline inline-block mb-4">← Ürün listesine dön</a>
@@ -144,19 +156,19 @@ import { EMPTY, switchMap } from 'rxjs';
 
                 <div class="col-span-12">
                     <div class="card">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                            <h5 class="mt-0 mb-0">Klinik stokları</h5>
-                            <div class="flex flex-wrap gap-3 items-center">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                            <h5 class="mt-0 mb-0 text-base font-semibold text-surface-900 dark:text-surface-0">Klinik stokları</h5>
+                            <div class="flex flex-wrap gap-3 items-center text-sm">
                                 @if (canReadStockMovements) {
                                     <a
                                         [routerLink]="['/panel/products', p.id, 'stock-movements']"
-                                        class="text-primary font-medium no-underline text-sm whitespace-nowrap"
+                                        class="text-primary font-medium no-underline whitespace-nowrap"
                                         >Stok hareketleri →</a>
                                 }
                                 @if (canCreateStockMovement && !ro.mutationBlocked()) {
                                     <a
                                         [routerLink]="['/panel/products', p.id, 'stock-movements']"
-                                        class="text-primary font-medium no-underline text-sm whitespace-nowrap"
+                                        class="text-primary font-medium no-underline whitespace-nowrap"
                                         >Stok hareketi ekle →</a>
                                 }
                             </div>
@@ -170,73 +182,98 @@ import { EMPTY, switchMap } from 'rxjs';
                             <app-loading-state message="Stok bilgileri yükleniyor…" />
                         } @else if (stocksError()) {
                             <app-error-state [detail]="stocksError()!" (retry)="reloadStocks()" />
-                        } @else if (stocksRows().length === 0) {
+                        } @else if (stocksRowsView().total === 0) {
                             <app-empty-state message="Bu ürün için henüz stok kaydı yok." />
                         } @else {
-                            <div class="hidden md:block overflow-x-auto">
-                                <table class="w-full text-sm border-collapse">
-                                    <thead>
-                                        <tr class="border-b border-surface-200 dark:border-surface-700 text-left">
-                                            <th class="py-2 pr-3 font-medium text-muted-color">Klinik</th>
-                                            <th class="py-2 pr-3 font-medium text-muted-color text-right">Eldeki</th>
-                                            <th class="py-2 pr-3 font-medium text-muted-color text-right">Minimum</th>
-                                            <th class="py-2 pr-3 font-medium text-muted-color">Durum</th>
-                                            <th class="py-2 pr-3 font-medium text-muted-color">Son güncelleme</th>
-                                            <th class="py-2 font-medium text-muted-color w-[10rem]">İşlem</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @for (row of stocksRows(); track row.id) {
-                                            <tr class="border-b border-surface-100 dark:border-surface-800 align-top">
-                                                <td class="py-3 pr-3 font-medium">{{ row.clinicName }}</td>
-                                                <td class="py-3 pr-3 text-right tabular-nums">{{ row.quantityText }}</td>
-                                                <td class="py-3 pr-3 text-right tabular-nums">{{ row.minimumStockLevelText }}</td>
-                                                <td class="py-3 pr-3">
-                                                    <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
-                                                </td>
-                                                <td class="py-3 pr-3 text-muted-color whitespace-nowrap">{{ row.updatedAtText }}</td>
-                                                <td class="py-3">
-                                                    @if (canUpdateProduct && !ro.mutationBlocked()) {
-                                                        <p-button
-                                                            type="button"
-                                                            label="Minimum güncelle"
-                                                            icon="pi pi-sliders-h"
-                                                            [text]="true"
-                                                            styleClass="p-0"
-                                                            (onClick)="openMinStockDialog(row)"
-                                                        />
-                                                    }
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="md:hidden space-y-3">
-                                @for (row of stocksRows(); track row.id) {
+                            <!-- Masaüstü: çizgisiz kolon hizası; yalnızca satır ayırıcıları -->
+                            <div class="hidden md:block overflow-x-auto w-full">
+                                <div class="w-full min-w-0">
                                     <div
-                                        class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4"
+                                        role="row"
+                                        class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700"
                                     >
-                                        <div class="font-medium mb-2">{{ row.clinicName }}</div>
-                                        <dl class="m-0 grid grid-cols-2 gap-2 text-sm">
-                                            <dt class="text-muted-color">Eldeki</dt>
-                                            <dd class="m-0 text-right tabular-nums">{{ row.quantityText }}</dd>
-                                            <dt class="text-muted-color">Minimum</dt>
-                                            <dd class="m-0 text-right tabular-nums">{{ row.minimumStockLevelText }}</dd>
-                                            <dt class="text-muted-color">Durum</dt>
-                                            <dd class="m-0">
+                                        <span class="text-sm font-semibold text-muted-color text-center block">Klinik</span>
+                                        <span class="text-sm font-semibold text-muted-color text-center block">Eldeki stok</span>
+                                        <span class="text-sm font-semibold text-muted-color text-center block">Minimum stok</span>
+                                        <span class="text-sm font-semibold text-muted-color text-center block">Durum</span>
+                                        <span class="text-sm font-semibold text-muted-color text-center block px-1">Son güncelleme</span>
+                                        <span class="text-sm font-semibold text-muted-color text-center block">İşlem</span>
+                                    </div>
+                                    @for (row of stocksRowsView().displayed; track row.id) {
+                                        <div
+                                            role="row"
+                                            class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors duration-150"
+                                        >
+                                            <span
+                                                class="font-semibold text-base text-surface-900 dark:text-surface-0 min-w-0 break-words leading-snug text-center block"
+                                                >{{ row.clinicName }}</span>
+                                            <span class="tabular-nums text-base font-medium text-surface-900 dark:text-surface-0 text-center block">{{
+                                                row.quantityText
+                                            }}</span>
+                                            <span class="tabular-nums text-base text-surface-900 dark:text-surface-0 text-center block">{{
+                                                row.minimumStockLevelText
+                                            }}</span>
+                                            <span class="flex justify-center items-center min-w-0 px-1">
+                                                <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                            </span>
+                                            <span
+                                                class="text-muted-color text-base min-w-0 text-center block px-1 break-words leading-snug"
+                                                [title]="row.updatedAtText"
+                                                >{{ row.updatedAtText }}</span>
+                                            <span class="flex justify-center items-center min-h-[2rem]">
+                                                @if (canUpdateProduct && !ro.mutationBlocked()) {
+                                                    <p-button
+                                                        type="button"
+                                                        label="Güncelle"
+                                                        icon="pi pi-pencil"
+                                                        size="small"
+                                                        [outlined]="true"
+                                                        severity="secondary"
+                                                        styleClass="!py-1 !px-2 !text-sm whitespace-nowrap"
+                                                        title="Minimum stok seviyesini güncelle"
+                                                        (onClick)="openMinStockDialog(row)"
+                                                    />
+                                                }
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="md:hidden space-y-2.5">
+                                @for (row of stocksRowsView().displayed; track row.id) {
+                                    <div
+                                        class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 px-3 py-2.5 shadow-sm"
+                                    >
+                                        <div class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-2 leading-snug">
+                                            {{ row.clinicName }}
+                                        </div>
+                                        <dl class="m-0 grid grid-cols-12 gap-x-2 gap-y-2">
+                                            <dt class="col-span-5 text-muted-color text-sm">Eldeki stok</dt>
+                                            <dd class="col-span-7 m-0 text-right tabular-nums text-base font-medium text-surface-900 dark:text-surface-0">
+                                                {{ row.quantityText }}
+                                            </dd>
+                                            <dt class="col-span-5 text-muted-color text-sm">Minimum stok</dt>
+                                            <dd class="col-span-7 m-0 text-right tabular-nums text-base text-surface-900 dark:text-surface-0">
+                                                {{ row.minimumStockLevelText }}
+                                            </dd>
+                                            <dt class="col-span-5 text-muted-color text-sm self-center">Durum</dt>
+                                            <dd class="col-span-7 m-0 flex justify-end items-center">
                                                 <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
                                             </dd>
-                                            <dt class="text-muted-color col-span-2">Son güncelleme</dt>
-                                            <dd class="m-0 col-span-2 text-muted-color">{{ row.updatedAtText }}</dd>
+                                            <dt class="col-span-12 text-muted-color text-sm pt-0.5">Son güncelleme</dt>
+                                            <dd class="col-span-12 m-0 text-muted-color text-base">{{ row.updatedAtText }}</dd>
                                         </dl>
                                         @if (canUpdateProduct && !ro.mutationBlocked()) {
-                                            <div class="flex justify-end mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                                            <div class="flex justify-end mt-2.5 pt-2 border-t border-surface-200 dark:border-surface-700">
                                                 <p-button
                                                     type="button"
-                                                    label="Minimum güncelle"
-                                                    icon="pi pi-sliders-h"
-                                                    [text]="true"
+                                                    label="Güncelle"
+                                                    icon="pi pi-pencil"
+                                                    size="small"
+                                                    [outlined]="true"
+                                                    severity="secondary"
+                                                    styleClass="!py-1 !px-2 !text-sm"
+                                                    title="Minimum stok seviyesini güncelle"
                                                     (onClick)="openMinStockDialog(row)"
                                                 />
                                             </div>
@@ -321,6 +358,7 @@ export class ProductDetailPageComponent implements OnInit {
     readonly stocksLoading = signal(false);
     readonly stocksError = signal<string | null>(null);
     readonly stocksRows = signal<ProductStockVm[]>([]);
+    readonly stocksRowsView = computed(() => sliceDetailRelatedList(this.stocksRows()));
 
     readonly minStockDialogOpen = signal(false);
     readonly editingStockRow = signal<ProductStockVm | null>(null);

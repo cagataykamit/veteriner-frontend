@@ -15,9 +15,9 @@ import { TreatmentsService } from '@/app/features/treatments/services/treatments
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import { DETAIL_RELATED_LIST_LIMIT } from '@/app/shared/constants/detail-list.constants';
 
 const DETAIL_FETCH_SIZE = 24;
-const DETAIL_LIMIT = 5;
 
 function sortIsoDesc<T>(items: T[], get: (x: T) => string | null): T[] {
     return [...items].sort((a, b) => {
@@ -57,7 +57,7 @@ export class DetailRelatedSummariesService {
             .pipe(
                 map((r) => {
                     const rows = filterByPetId(r.items, petId);
-                    return sortIsoDesc(rows, (x) => x.appliedAtUtc).slice(0, DETAIL_LIMIT);
+                    return sortIsoDesc(rows, (x) => x.appliedAtUtc).slice(0, DETAIL_RELATED_LIST_LIMIT);
                 })
             );
     }
@@ -69,7 +69,7 @@ export class DetailRelatedSummariesService {
             .pipe(
                 map((r) => {
                     const rows = filterByPetId(r.items, petId);
-                    return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
+                    return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_RELATED_LIST_LIMIT);
                 })
             );
     }
@@ -104,7 +104,7 @@ export class DetailRelatedSummariesService {
                         const tb = new Date(b.scheduledAtUtc ?? 0).getTime();
                         return ta - tb;
                     });
-                    return future.slice(0, DETAIL_LIMIT);
+                    return future.slice(0, DETAIL_RELATED_LIST_LIMIT);
                 })
             );
     }
@@ -114,7 +114,7 @@ export class DetailRelatedSummariesService {
         return this.pets.getPets({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId }).pipe(
             map((r) => {
                 const rows = filterByClientId(r.items, clientId);
-                return rows.slice(0, DETAIL_LIMIT);
+                return rows.slice(0, DETAIL_RELATED_LIST_LIMIT);
             })
         );
     }
@@ -129,7 +129,7 @@ export class DetailRelatedSummariesService {
                     const tb = new Date(b.paidAtUtc ?? 0).getTime();
                     return tb - ta;
                 });
-                return sorted.slice(0, DETAIL_LIMIT);
+                return sorted.slice(0, DETAIL_RELATED_LIST_LIMIT);
             })
         );
     }
@@ -143,7 +143,7 @@ export class DetailRelatedSummariesService {
         return this.treatments.getTreatments({ page: 1, pageSize: DETAIL_FETCH_SIZE, petId: pid }).pipe(
             map((r) => {
                 const rows = filterByPetId(r.items, pid).filter((t) => (t.examinationId ?? '').trim() === eid);
-                return sortIsoDesc(rows, (x) => x.treatmentDateUtc).slice(0, DETAIL_LIMIT);
+                return sortIsoDesc(rows, (x) => x.treatmentDateUtc).slice(0, DETAIL_RELATED_LIST_LIMIT);
             })
         );
     }
@@ -157,7 +157,7 @@ export class DetailRelatedSummariesService {
         return this.prescriptions.getPrescriptions({ page: 1, pageSize: DETAIL_FETCH_SIZE, petId: pid }).pipe(
             map((r) => {
                 const rows = filterByPetId(r.items, pid).filter((x) => (x.examinationId ?? '').trim() === eid);
-                return sortIsoDesc(rows, (x) => x.prescribedAtUtc).slice(0, DETAIL_LIMIT);
+                return sortIsoDesc(rows, (x) => x.prescribedAtUtc).slice(0, DETAIL_RELATED_LIST_LIMIT);
             })
         );
     }
@@ -173,7 +173,7 @@ export class DetailRelatedSummariesService {
             return this.payments.getPayments({ page: 1, pageSize: DETAIL_FETCH_SIZE, petId: pid }).pipe(
                 map((r) => {
                     const rows = filterByPetId(r.items, pid);
-                    return sortPaymentsByRecent(rows).slice(0, DETAIL_LIMIT);
+                    return sortPaymentsByRecent(rows).slice(0, DETAIL_RELATED_LIST_LIMIT);
                 })
             );
         }
@@ -181,7 +181,7 @@ export class DetailRelatedSummariesService {
             return this.payments.getPayments({ page: 1, pageSize: DETAIL_FETCH_SIZE, clientId: cid }).pipe(
                 map((r) => {
                     const rows = filterByClientId(r.items, cid);
-                    return sortPaymentsByRecent(rows).slice(0, DETAIL_LIMIT);
+                    return sortPaymentsByRecent(rows).slice(0, DETAIL_RELATED_LIST_LIMIT);
                 })
             );
         }
@@ -195,7 +195,7 @@ export class DetailRelatedSummariesService {
         return this.examinations.getExaminations({ page: 1, pageSize: DETAIL_FETCH_SIZE, petId: pid }).pipe(
             map((r) => {
                 const rows = filterByPetId(r.items, pid).filter((x) => x.id !== exId);
-                return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_LIMIT);
+                return sortIsoDesc(rows, (x) => x.examinedAtUtc).slice(0, DETAIL_RELATED_LIST_LIMIT);
             })
         );
     }
@@ -206,7 +206,7 @@ export class DetailRelatedSummariesService {
         return this.appointments.getAppointments({ page: 1, pageSize: DETAIL_FETCH_SIZE, petId: pid }).pipe(
             map((r) => {
                 const rows = filterByPetId(r.items, pid);
-                return sortIsoDesc(rows, (x) => x.scheduledAtUtc).slice(0, DETAIL_LIMIT);
+                return sortIsoDesc(rows, (x) => x.scheduledAtUtc).slice(0, DETAIL_RELATED_LIST_LIMIT);
             })
         );
     }

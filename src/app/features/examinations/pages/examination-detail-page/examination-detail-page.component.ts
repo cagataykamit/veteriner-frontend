@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
@@ -13,6 +13,7 @@ import type {
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -305,11 +306,11 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                                 <h5 class="mt-0 mb-0">Bağlı tedaviler</h5>
                                 <a routerLink="/panel/treatments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (relatedSummary()!.treatments.length === 0) {
+                            @if (relatedTreatmentsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
-                                    @for (row of relatedSummary()!.treatments; track row.id) {
+                                    @for (row of relatedTreatmentsView().displayed; track row.id) {
                                         <li
                                             class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
@@ -337,11 +338,11 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                                 <h5 class="mt-0 mb-0">Bağlı reçeteler</h5>
                                 <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (relatedSummary()!.prescriptions.length === 0) {
+                            @if (relatedPrescriptionsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
-                                    @for (row of relatedSummary()!.prescriptions; track row.id) {
+                                    @for (row of relatedPrescriptionsView().displayed; track row.id) {
                                         <li
                                             class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
@@ -369,11 +370,11 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                                 <h5 class="mt-0 mb-0">Bağlı lab sonuçları</h5>
                                 <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (relatedSummary()!.labResults.length === 0) {
+                            @if (relatedLabResultsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
-                                    @for (row of relatedSummary()!.labResults; track row.id) {
+                                    @for (row of relatedLabResultsView().displayed; track row.id) {
                                         <li
                                             class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
@@ -401,11 +402,11 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                                 <h5 class="mt-0 mb-0">Bağlı yatışlar</h5>
                                 <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (relatedSummary()!.hospitalizations.length === 0) {
+                            @if (relatedHospitalizationsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
-                                    @for (row of relatedSummary()!.hospitalizations; track row.id) {
+                                    @for (row of relatedHospitalizationsView().displayed; track row.id) {
                                         <li
                                             class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
@@ -434,11 +435,11 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                                 <h5 class="mt-0 mb-0">Bağlı ödemeler</h5>
                                 <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (relatedSummary()!.payments.length === 0) {
+                            @if (relatedPaymentsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
-                                    @for (row of relatedSummary()!.payments; track row.id) {
+                                    @for (row of relatedPaymentsView().displayed; track row.id) {
                                         <li
                                             class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
@@ -484,11 +485,11 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (sibError()) {
                             <p class="text-muted-color m-0">{{ sibError() }}</p>
-                        } @else if (sibItems().length === 0) {
+                        } @else if (sibItemsView().total === 0) {
                             <app-empty-state message="Başka muayene kaydı yok." />
                         } @else {
                             <ul class="list-none m-0 p-0">
-                                @for (row of sibItems(); track row.id) {
+                                @for (row of sibItemsView().displayed; track row.id) {
                                     <li
                                         class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
@@ -519,11 +520,11 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (apptError()) {
                             <p class="text-muted-color m-0">{{ apptError() }}</p>
-                        } @else if (apptItems().length === 0) {
+                        } @else if (apptItemsView().total === 0) {
                             <app-empty-state message="Kayıt bulunamadı." />
                         } @else {
                             <ul class="list-none m-0 p-0">
-                                @for (row of apptItems(); track row.id) {
+                                @for (row of apptItemsView().displayed; track row.id) {
                                     <li
                                         class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
@@ -568,6 +569,14 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly relatedSummaryError = signal<string | null>(null);
     readonly relatedSummary = signal<ExaminationRelatedSummaryVm | null>(null);
     readonly canUpdateExamination = this.auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM);
+
+    readonly relatedTreatmentsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.treatments));
+    readonly relatedPrescriptionsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.prescriptions));
+    readonly relatedLabResultsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.labResults));
+    readonly relatedHospitalizationsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.hospitalizations));
+    readonly relatedPaymentsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.payments));
+    readonly sibItemsView = computed(() => sliceDetailRelatedList(this.sibItems()));
+    readonly apptItemsView = computed(() => sliceDetailRelatedList(this.apptItems()));
 
     readonly sibLoading = signal(false);
     readonly sibError = signal<string | null>(null);

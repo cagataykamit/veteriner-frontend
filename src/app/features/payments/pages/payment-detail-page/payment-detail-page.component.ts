@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
@@ -9,6 +9,7 @@ import type { PaymentDetailVm } from '@/app/features/payments/models/payment-vm.
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -140,11 +141,11 @@ import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constant
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (exError()) {
                             <p class="text-muted-color m-0">{{ exError() }}</p>
-                        } @else if (exItems().length === 0) {
+                        } @else if (exItemsView().total === 0) {
                             <app-empty-state message="Bağlamsal muayene bulunamadı." />
                         } @else {
                             <ul class="list-none m-0 p-0">
-                                @for (row of exItems(); track row.id) {
+                                @for (row of exItemsView().displayed; track row.id) {
                                     <li class="mb-3 last:mb-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
                                             <span class="text-muted-color text-sm">{{ formatDt(row.examinedAtUtc) }}</span>
@@ -169,11 +170,11 @@ import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constant
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (apptError()) {
                             <p class="text-muted-color m-0">{{ apptError() }}</p>
-                        } @else if (apptItems().length === 0) {
+                        } @else if (apptItemsView().total === 0) {
                             <app-empty-state [message]="copy.listEmptyMessage" />
                         } @else {
                             <ul class="list-none m-0 p-0">
-                                @for (row of apptItems(); track row.id) {
+                                @for (row of apptItemsView().displayed; track row.id) {
                                     <li class="mb-3 last:mb-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
                                             <span class="text-muted-color text-sm">{{ formatDt(row.scheduledAtUtc) }}</span>
@@ -226,6 +227,9 @@ export class PaymentDetailPageComponent implements OnInit {
     readonly apptLoading = signal(false);
     readonly apptError = signal<string | null>(null);
     readonly apptItems = signal<AppointmentListItemVm[]>([]);
+
+    readonly exItemsView = computed(() => sliceDetailRelatedList(this.exItems()));
+    readonly apptItemsView = computed(() => sliceDetailRelatedList(this.apptItems()));
 
     private lastId: string | null = null;
 

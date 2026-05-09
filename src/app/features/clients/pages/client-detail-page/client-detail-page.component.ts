@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
@@ -10,6 +10,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -108,11 +109,11 @@ import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (petsError()) {
                             <p class="text-muted-color m-0">{{ petsError() }}</p>
-                        } @else if (petsItems().length === 0) {
+                        } @else if (petsListView().total === 0) {
                             <app-empty-state [message]="copy.listEmptyMessage" />
                         } @else {
                             <ul class="list-none m-0 p-0">
-                                @for (row of petsItems(); track row.id) {
+                                @for (row of petsListView().displayed; track row.id) {
                                     <li
                                         class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
@@ -139,11 +140,11 @@ import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (recentSummaryError()) {
                             <p class="text-muted-color m-0">{{ recentSummaryError() }}</p>
-                        } @else if (apptItems().length === 0) {
+                        } @else if (apptListView().total === 0) {
                             <app-empty-state message="Bu müşteriye ait randevu kaydı yok." />
                         } @else {
                             <ul class="list-none m-0 p-0">
-                                @for (row of apptItems(); track row.id) {
+                                @for (row of apptListView().displayed; track row.id) {
                                     <li
                                         class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
@@ -178,11 +179,11 @@ import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (recentSummaryError()) {
                             <p class="text-muted-color m-0">{{ recentSummaryError() }}</p>
-                        } @else if (examItems().length === 0) {
+                        } @else if (examListView().total === 0) {
                             <app-empty-state message="Bu müşteriye ait muayene kaydı yok." />
                         } @else {
                             <ul class="list-none m-0 p-0">
-                                @for (row of examItems(); track row.id) {
+                                @for (row of examListView().displayed; track row.id) {
                                     <li
                                         class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
@@ -255,7 +256,7 @@ import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants
                             </div>
                             <div class="pt-2 border-t border-surface-200 dark:border-surface-700">
                                 <h6 class="mt-0 mb-2 text-surface-900 dark:text-surface-0 font-semibold text-sm">Son ödemeler</h6>
-                                @if (paymentSummary()!.recentPayments.length === 0) {
+                                @if (paymentRecentView().total === 0) {
                                     <app-empty-state [message]="copy.listEmptyMessage" />
                                 } @else {
                                     <div class="max-lg:overflow-visible max-lg:mx-0 max-lg:px-0 overflow-x-auto -mx-1 px-1 lg:mx-0 lg:px-0">
@@ -269,7 +270,7 @@ import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants
                                                 <span class="text-right">İşlem</span>
                                             </div>
                                             <ul class="list-none m-0 p-0">
-                                                @for (row of paymentSummary()!.recentPayments; track row.id) {
+                                                @for (row of paymentRecentView().displayed; track row.id) {
                                                     <li
                                                         class="min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:mb-3 max-lg:last:mb-0 max-lg:shadow-sm lg:border-b lg:border-surface-200 lg:dark:border-surface-700 lg:last:border-0"
                                                     >
@@ -358,6 +359,11 @@ export class ClientDetailPageComponent implements OnInit {
     readonly paymentSummaryLoading = signal(false);
     readonly paymentSummaryError = signal<string | null>(null);
     readonly paymentSummary = signal<ClientPaymentSummaryVm | null>(null);
+
+    readonly petsListView = computed(() => sliceDetailRelatedList(this.petsItems()));
+    readonly apptListView = computed(() => sliceDetailRelatedList(this.apptItems()));
+    readonly examListView = computed(() => sliceDetailRelatedList(this.examItems()));
+    readonly paymentRecentView = computed(() => sliceDetailRelatedList(this.paymentSummary()?.recentPayments));
 
     private lastId: string | null = null;
 

@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentDetailVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import {
     appointmentStatusLabel,
@@ -197,11 +198,11 @@ import {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (linkedExamError()) {
                             <p class="text-muted-color m-0">{{ linkedExamError() }}</p>
-                        } @else if (linkedExams().length === 0) {
+                        } @else if (linkedExamsView().total === 0) {
                             <app-empty-state message="Bu randevuya bağlı muayene kaydı yok." />
                         } @else {
                             <ul class="list-none m-0 p-0">
-                                @for (row of linkedExams(); track row.id) {
+                                @for (row of linkedExamsView().displayed; track row.id) {
                                     <li
                                         class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                     >
@@ -264,6 +265,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly linkedExamLoading = signal(false);
     readonly linkedExamError = signal<string | null>(null);
     readonly linkedExams = signal<ExaminationListItemVm[]>([]);
+    readonly linkedExamsView = computed(() => sliceDetailRelatedList(this.linkedExams()));
     readonly returnUrl = signal<string | null>(null);
     readonly backLabel = signal('Randevu listesine dön');
 
