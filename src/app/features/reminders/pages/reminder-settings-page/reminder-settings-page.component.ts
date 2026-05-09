@@ -15,6 +15,7 @@ import { mapReminderSettingsFormToUpdateRequest } from '@/app/features/reminders
 import { RemindersService } from '@/app/features/reminders/services/reminders.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { REMINDERS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -140,7 +141,7 @@ export class ReminderSettingsPageComponent implements OnInit {
     readonly form = createReminderSettingsFormGroup(this.fb);
 
     ngOnInit(): void {
-        this.canManage.set(this.auth.hasOperationClaim('Reminders.Manage'));
+        this.canManage.set(this.auth.hasOperationClaim(REMINDERS_MANAGE_CLAIM));
         this.reload();
     }
 

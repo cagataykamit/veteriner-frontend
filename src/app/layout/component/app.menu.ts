@@ -14,6 +14,8 @@ import {
     PAYMENTS_READ_CLAIM,
     PETS_READ_CLAIM,
     PRESCRIPTIONS_READ_CLAIM,
+    REMINDERS_MANAGE_CLAIM,
+    REMINDERS_READ_CLAIM,
     SUBSCRIPTIONS_MANAGE_CLAIM,
     SUBSCRIPTIONS_READ_CLAIM,
     TENANT_MANAGEMENT_CLAIM,
@@ -40,8 +42,8 @@ export class AppMenu {
     model: MenuItem[] = [];
 
     ngOnInit() {
-        const canReadReminders = this.auth.hasOperationClaim('Reminders.Read');
-        const canManageReminders = this.auth.hasOperationClaim('Reminders.Manage');
+        const canReadReminders = this.auth.hasOperationClaim(REMINDERS_READ_CLAIM);
+        const canManageReminders = this.auth.hasOperationClaim(REMINDERS_MANAGE_CLAIM);
         const reminderItems: MenuItem[] = [];
         if (canReadReminders || canManageReminders) {
             reminderItems.push({ label: 'Hatırlatmalar', icon: 'pi pi-fw pi-bell', routerLink: ['/panel/settings/reminders'] });
