@@ -96,7 +96,6 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
                             placeholder="Irk seçin"
                             styleClass="w-full"
                             [loading]="loadingBreeds()"
-                            [disabled]="!form.controls.speciesId.value || loadingBreeds()"
                             [showClear]="true"
                             appendTo="body"
                         />
@@ -219,6 +218,7 @@ export class QuickPetDialogComponent {
             }
             const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
             if (!sid) {
+                this.syncBreedIdDisabledState();
                 return;
             }
             this.loadBreedsForSpecies(sid);
@@ -242,6 +242,7 @@ export class QuickPetDialogComponent {
             notes: ''
         });
         this.breedOptions.set([]);
+        this.syncBreedIdDisabledState();
         if (!this.speciesOptions().length) {
             this.loadSpecies();
         }
@@ -339,6 +340,7 @@ export class QuickPetDialogComponent {
 
     private loadBreedsForSpecies(speciesId: string, selectBreedId?: string): void {
         this.loadingBreeds.set(true);
+        this.syncBreedIdDisabledState();
         this.selectionError.set(null);
         this.breedsService.getBreedList({ activeOnly: true, speciesId }).subscribe({
             next: (items) => {
@@ -356,12 +358,25 @@ export class QuickPetDialogComponent {
                     }
                 }
                 this.loadingBreeds.set(false);
+                this.syncBreedIdDisabledState();
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Irk listesi yüklenemedi.'));
                 this.loadingBreeds.set(false);
+                this.syncBreedIdDisabledState();
             }
         });
+    }
+
+    private syncBreedIdDisabledState(): void {
+        const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
+        const shouldDisable = !sid || this.loadingBreeds();
+        const control = this.form.controls.breedId;
+        if (shouldDisable) {
+            control.disable({ emitEvent: false });
+            return;
+        }
+        control.enable({ emitEvent: false });
     }
 
     private mapLoadError(e: unknown, fallback: string): string {

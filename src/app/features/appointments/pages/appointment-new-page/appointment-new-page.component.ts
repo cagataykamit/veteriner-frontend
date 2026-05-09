@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -146,7 +146,6 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                             placeholder="Randevu saati seçin"
                             [showClear]="true"
                             styleClass="w-full"
-                            [disabled]="timeOptions().length === 0 || ro.mutationBlocked()"
                         />
                         @if (apiFieldErrors().scheduledAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
@@ -231,7 +230,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         label="Kaydet"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients() || ro.mutationBlocked()"
+                        [disabled]="form.invalid || submitting() || loadingClients() || ro.mutationBlocked() || timeOptions().length === 0"
                     />
                     <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -311,6 +310,12 @@ export class AppointmentNewPageComponent implements OnInit {
         this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('durationMinutes'));
         this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('status'));
         this.form.controls.notes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('notes'));
+
+        effect(() => {
+            this.timeOptions();
+            this.ro.mutationBlocked();
+            this.syncScheduledTimeDisabledState();
+        });
     }
 
     ngOnInit(): void {
@@ -336,6 +341,8 @@ export class AppointmentNewPageComponent implements OnInit {
             this.form.controls.petId.enable({ emitEvent: false });
             this.loadPetsForClient(id);
         });
+
+        this.syncScheduledTimeDisabledState();
     }
 
     goList(): void {
@@ -539,6 +546,16 @@ export class AppointmentNewPageComponent implements OnInit {
                 this.rebuildTimeOptions();
             }
         });
+    }
+
+    private syncScheduledTimeDisabledState(): void {
+        const control = this.form.controls.scheduledTime;
+        const shouldDisable = this.timeOptions().length === 0 || this.ro.mutationBlocked();
+        if (shouldDisable) {
+            control.disable({ emitEvent: false });
+            return;
+        }
+        control.enable({ emitEvent: false });
     }
 
     private rebuildTimeOptions(): void {
