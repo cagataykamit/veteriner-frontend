@@ -80,13 +80,9 @@ interface ReturnBannerVm {
     providers: [MessageService],
     template: `
         <p-toast position="top-right" />
-        <app-page-header
-            title="Abonelik"
-            subtitle="Paket & Deneme"
-            description="Kurum abonelik özeti ve paket aktivasyon akışı."
-        />
+        <app-page-header title="Abonelik" subtitle="Paket & Abonelik" [description]="subscriptionHeaderDescription()" />
 
-        @if (postCheckoutSyncing() && !error()) {
+        @if (postCheckoutSyncing() && !error() && showManageFlowChrome()) {
             <div class="card mb-4 border-round bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
                 <p class="m-0 text-sm text-color font-medium">Ödeme sonucu işleniyor.</p>
                 <p class="m-0 text-sm text-color mt-2">Paket değişikliği birkaç saniye içinde yansıyabilir.</p>
@@ -170,7 +166,7 @@ interface ReturnBannerVm {
                                 <span class="font-medium text-right">{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc || s.trialEndsAtUtc) }}</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-muted-color">Kalan gün</span>
+                                <span class="text-muted-color">{{ remainingDaysRowLabel(s) }}</span>
                                 <span class="font-medium text-right">{{ daysRemainingText(s.daysRemaining) }}</span>
                             </div>
                         </div>
@@ -182,8 +178,8 @@ interface ReturnBannerVm {
                         <h5 class="mt-0 mb-4">Erişim durumu</h5>
                         <div class="flex flex-col gap-3 mb-4">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-muted-color">Salt okunur</span>
-                                <span class="font-medium">{{ boolText(s.isReadOnly) }}</span>
+                                <span class="text-muted-color">Kurum erişimi</span>
+                                <span class="font-medium">{{ tenantAccessModeLabel(s.isReadOnly) }}</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-muted-color">Aboneliği yönetebilir</span>
@@ -199,7 +195,10 @@ interface ReturnBannerVm {
                             </div>
                         } @else {
                             <div class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
-                                <p class="m-0 text-sm text-color">Bu hesapta abonelik bilgisi yalnız görüntülenebilir.</p>
+                                <p class="m-0 text-sm text-color">
+                                    Bu hesapta abonelik bilgileri yalnızca görüntülenebilir. Plan değişikliği veya ödeme işlemleri için kurum yöneticinizle iletişime
+                                    geçin.
+                                </p>
                             </div>
                         }
                     </div>
@@ -207,7 +206,7 @@ interface ReturnBannerVm {
 
                 <div class="col-span-12">
                     <div class="card mb-0">
-                        <h5 class="mt-0 mb-4">Kullanılabilir planlar</h5>
+                        <h5 class="mt-0 mb-4">{{ canManageSubscriptionOperations(s) ? 'Kullanılabilir planlar' : 'Plan bilgileri' }}</h5>
                         @if (s.availablePlans.length === 0) {
                             <app-empty-state message="Plan listesi bulunamadı." />
                         } @else {
@@ -422,16 +421,18 @@ interface ReturnBannerVm {
                     </div>
                 }
 
-                <div class="col-span-12">
-                    <div class="card mb-0">
-                        <h5 class="mt-0 mb-3">Bilgi</h5>
-                        <ul class="m-0 pl-4 text-sm text-muted-color flex flex-col gap-1">
-                            <li>Ödeme hosted ödeme sağlayıcısı üzerinden yapılır; uygulama kart formu toplamaz.</li>
-                            <li>Başarılı dönüşten sonra durum birkaç saniye gecikmeli güncellenebilir (webhook).</li>
-                            <li>Manuel aktivasyon yalnızca test veya Manual provider için gösterilir.</li>
-                        </ul>
+                @if (canManageSubscriptionOperations(s)) {
+                    <div class="col-span-12">
+                        <div class="card mb-0">
+                            <h5 class="mt-0 mb-3">Bilgi</h5>
+                            <ul class="m-0 pl-4 text-sm text-muted-color flex flex-col gap-1">
+                                <li>Ödeme hosted ödeme sağlayıcısı üzerinden yapılır; uygulama kart formu toplamaz.</li>
+                                <li>Başarılı dönüşten sonra durum birkaç saniye gecikmeli güncellenebilir (webhook).</li>
+                                <li>Manuel aktivasyon yalnızca test veya Manual provider için gösterilir.</li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
+                }
             </div>
         } @else {
             <div class="card">
@@ -468,6 +469,23 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     readonly postCheckoutSyncing = signal(false);
     /** Uyarı banner’ındaki “Durumu yenile” — tam sayfa loading olmadan özet + checkout yeniler. */
     readonly subscriptionRefreshLoading = signal(false);
+
+    /** Özet yüklenene kadar nötr; yüklendikten sonra Manage ile ikinci satır metni. */
+    readonly subscriptionHeaderDescription = computed(() => {
+        const s = this.summary();
+        if (!s) {
+            return 'Kurum abonelik özeti.';
+        }
+        return this.canManageSubscriptionOperations(s)
+            ? 'Kurum abonelik özeti ve paket aktivasyon akışı.'
+            : 'Kurum abonelik özeti ve mevcut paket bilgileri.';
+    });
+
+    /** Hosted checkout / plan aksiyonu kromu — yalnızca yönetim yetkisi olan kullanıcıya gösterilir. */
+    readonly showManageFlowChrome = computed(() => {
+        const s = this.summary();
+        return !!s && this.canManageSubscriptionOperations(s);
+    });
 
     /**
      * Özet `canManageSubscription` + JWT `Subscriptions.Manage` — paket değişimi, checkout, bekleyen plan iptali.
@@ -796,6 +814,15 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             return '—';
         }
         return `${days} gün`;
+    }
+
+    /** API `daysRemaining`; deneme dışında etiket genel tutulur (backend alanı semantiği). */
+    remainingDaysRowLabel(s: SubscriptionSummaryVm): string {
+        return s.status === 'trialing' ? 'Deneme kalan günü' : 'Kalan gün';
+    }
+
+    tenantAccessModeLabel(isReadOnly: boolean): string {
+        return isReadOnly ? 'Salt okunur' : 'Aktif';
     }
 
     boolText(value: boolean): string {
