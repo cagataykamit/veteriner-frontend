@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
@@ -9,8 +10,13 @@ import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
+import { StockMovementCreateDialogComponent } from '@/app/features/inventory/components/stock-movement-create-dialog/stock-movement-create-dialog.component';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { STOCK_MOVEMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -32,6 +38,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
 @Component({
     selector: 'app-stock-movements-page',
     standalone: true,
+    providers: [MessageService],
     imports: [
         CommonModule,
         FormsModule,
@@ -41,6 +48,8 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         ButtonModule,
         InputTextModule,
         SelectModule,
+        ToastModule,
+        StockMovementCreateDialogComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -48,9 +57,33 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         AppStatusTagComponent
     ],
     template: `
+        <p-toast position="top-right" />
+
         <a routerLink="/panel/products" class="text-primary font-medium no-underline inline-block mb-4">← Ürünler</a>
 
-        <app-page-header title="Stok hareketleri" subtitle="Ürün ve Stok" description="Klinik bazlı stok giriş/çıkış kayıtları (salt okunur)." />
+        <app-page-header title="Stok hareketleri" subtitle="Ürün ve Stok" description="Klinik bazlı stok hareketleri; liste salt okunur. Yetkiniz varsa yeni kayıt ekleyebilirsiniz.">
+            @if (canCreateStockMovement && !ro.mutationBlocked()) {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni stok hareketi"
+                    icon="pi pi-plus"
+                    class="p-button-primary"
+                    (click)="createDialogOpen.set(true)"
+                ></button>
+            } @else if (canCreateStockMovement && ro.mutationBlocked()) {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Yeni stok hareketi (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
+        </app-page-header>
 
         <div class="card">
             @if (loading()) {
@@ -291,12 +324,24 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                 </div>
             }
         </div>
+
+        <app-stock-movement-create-dialog
+            [visible]="createDialogOpen()"
+            (visibleChange)="createDialogOpen.set($event)"
+            (created)="onStockMovementCreated()"
+        />
     `
 })
 export class StockMovementsPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly stockMovementService = inject(StockMovementService);
+    private readonly messages = inject(MessageService);
+    private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly canCreateStockMovement = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
+    readonly createDialogOpen = signal(false);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -522,5 +567,14 @@ export class StockMovementsPageComponent implements OnInit {
 
     private clearStateFromSessionStorage(): void {
         sessionStorage.removeItem(LIST_STATE_KEY);
+    }
+
+    onStockMovementCreated(): void {
+        this.messages.add({
+            severity: 'success',
+            summary: 'Kaydedildi',
+            detail: 'Stok hareketi oluşturuldu.'
+        });
+        this.reload();
     }
 }

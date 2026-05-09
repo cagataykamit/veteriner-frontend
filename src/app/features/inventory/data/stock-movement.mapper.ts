@@ -1,5 +1,10 @@
 import { HttpParams } from '@angular/common/http';
-import type { StockMovementDto, StockMovementDtoPagedResult } from '@/app/features/inventory/models/stock-movement-api.model';
+import type {
+    CreateStockMovementRequest,
+    StockMovementDto,
+    StockMovementDtoPagedResult
+} from '@/app/features/inventory/models/stock-movement-api.model';
+import type { StockMovementUpsertFormValue } from '@/app/features/inventory/models/stock-movement-form.model';
 import type { StockMovementsListQuery } from '@/app/features/inventory/models/stock-movement-query.model';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
 import { formatStockQuantityDisplay } from '@/app/features/inventory/data/product-stock.mapper';
@@ -222,4 +227,21 @@ export function stockMovementsListQueryToHttpParams(
         }
     }
     return p;
+}
+
+export function mapStockMovementUpsertFormValueToCreateRequest(
+    value: StockMovementUpsertFormValue
+): CreateStockMovementRequest {
+    return {
+        clinicId: value.clinicId.trim(),
+        productId: value.productId.trim(),
+        movementType: value.movementType,
+        quantity: value.quantity,
+        unitCost: value.unitCost,
+        reason: value.reason,
+        referenceType: null,
+        referenceId: null,
+        occurredAtUtc: value.occurredAtUtc,
+        notes: value.notes
+    };
 }

@@ -7,10 +7,13 @@ import {
     mapPagedStockMovementsToVm,
     stockMovementsListQueryToHttpParams
 } from '@/app/features/inventory/data/stock-movement.mapper';
-import type { StockMovementDtoPagedResult } from '@/app/features/inventory/models/stock-movement-api.model';
+import type {
+    CreateStockMovementRequest,
+    StockMovementDtoPagedResult
+} from '@/app/features/inventory/models/stock-movement-api.model';
 import type { StockMovementsListQuery } from '@/app/features/inventory/models/stock-movement-query.model';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface StockMovementsPagedVm {
     items: StockMovementVm[];
@@ -18,6 +21,26 @@ export interface StockMovementsPagedVm {
     pageSize: number;
     totalItems: number;
     totalPages: number;
+}
+
+const STOCK_MOVEMENT_CREATE_MESSAGES: Record<string, string> = {
+    'StockMovements.InsufficientStock':
+        'Yetersiz stok. Çıkış miktarı eldeki stoktan fazla olamaz.',
+    'StockMovements.StockAlreadyInitialized':
+        'Bu ürün için bu klinikte başlangıç stoğu daha önce oluşturulmuş.',
+    'StockMovements.AdjustmentUnchanged': 'Stok miktarı zaten girilen değerle aynı.',
+    'StockMovements.ConcurrencyConflict':
+        'Stok bilgisi başka bir işlemle güncellendi. Lütfen listeyi yenileyip tekrar deneyin.',
+    'StockMovements.ClinicContextMismatch': 'Seçili klinik ile aktif klinik bağlamı uyuşmuyor.',
+    'Clinics.AccessDenied': 'Bu klinik için stok işlemi yapma yetkiniz yok.'
+};
+
+function stockMovementCreateUserMessage(err: HttpErrorResponse): string {
+    const code = problemCodeFromHttpError(err);
+    if (code && STOCK_MOVEMENT_CREATE_MESSAGES[code]) {
+        return STOCK_MOVEMENT_CREATE_MESSAGES[code]!;
+    }
+    return messageFromHttpError(err, 'Stok hareketi kaydedilemedi.');
 }
 
 @Injectable({ providedIn: 'root' })
@@ -45,5 +68,14 @@ export class StockMovementService {
                     throwError(() => new Error(messageFromHttpError(err, 'Stok hareketleri yüklenemedi.')))
                 )
             );
+    }
+
+    create(request: CreateStockMovementRequest): Observable<void> {
+        return this.api.post<unknown>(ApiEndpoints.stockMovements.create(), request).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => new Error(stockMovementCreateUserMessage(err)))
+            )
+        );
     }
 }

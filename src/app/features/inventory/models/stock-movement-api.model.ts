@@ -30,3 +30,17 @@ export interface StockMovementDtoPagedResult {
     totalItems: number;
     totalPages: number;
 }
+
+/** POST `/api/v1/stock-movements` — alan adları backend ile birebir. */
+export interface CreateStockMovementRequest {
+    clinicId: string;
+    productId: string;
+    movementType: string;
+    quantity: number;
+    unitCost: number | null;
+    reason: string | null;
+    referenceType: string | null;
+    referenceId: string | null;
+    occurredAtUtc: string | null;
+    notes: string | null;
+}

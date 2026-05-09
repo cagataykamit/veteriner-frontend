@@ -2,21 +2,28 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
+import { StockMovementCreateDialogComponent } from '@/app/features/inventory/components/stock-movement-create-dialog/stock-movement-create-dialog.component';
+import { ProductService } from '@/app/features/inventory/services/product.service';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { STOCK_MOVEMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { EMPTY, switchMap } from 'rxjs';
+import { EMPTY, catchError, of, switchMap, tap } from 'rxjs';
 
 type ProductStockMovementsListState = {
     movementType: string;
@@ -29,6 +36,7 @@ type ProductStockMovementsListState = {
 @Component({
     selector: 'app-product-stock-movements-page',
     standalone: true,
+    providers: [MessageService],
     imports: [
         CommonModule,
         FormsModule,
@@ -37,6 +45,8 @@ type ProductStockMovementsListState = {
         Paginator,
         ButtonModule,
         SelectModule,
+        ToastModule,
+        StockMovementCreateDialogComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -44,13 +54,37 @@ type ProductStockMovementsListState = {
         AppStatusTagComponent
     ],
     template: `
+        <p-toast position="top-right" />
+
         <a [routerLink]="productDetailLink()" class="text-primary font-medium no-underline inline-block mb-4">← Ürün detayına dön</a>
 
         <app-page-header
             title="Ürün stok hareketleri"
             subtitle="Ürün ve Stok"
-            description="Bu ürüne ait stok hareketleri (salt okunur)."
-        />
+            description="Bu ürüne ait stok hareketleri; liste salt okunur. Yetkiniz varsa yeni kayıt ekleyebilirsiniz."
+        >
+            @if (canCreateStockMovement && !ro.mutationBlocked()) {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Bu ürün için stok hareketi ekle"
+                    icon="pi pi-plus"
+                    class="p-button-primary"
+                    (click)="createDialogOpen.set(true)"
+                ></button>
+            } @else if (canCreateStockMovement && ro.mutationBlocked()) {
+                <button
+                    actions
+                    pButton
+                    type="button"
+                    label="Stok hareketi (salt okunur)"
+                    icon="pi pi-lock"
+                    [disabled]="true"
+                    class="p-button-secondary"
+                ></button>
+            }
+        </app-page-header>
 
         <div class="card">
             @if (routeError()) {
@@ -216,6 +250,14 @@ type ProductStockMovementsListState = {
                 </div>
             }
         </div>
+
+        <app-stock-movement-create-dialog
+            [visible]="createDialogOpen()"
+            (visibleChange)="createDialogOpen.set($event)"
+            [fixedProductId]="productId()"
+            [fixedProductLabel]="productLabel()"
+            (created)="onStockMovementCreated()"
+        />
     `
 })
 export class ProductStockMovementsPageComponent implements OnInit {
@@ -223,8 +265,16 @@ export class ProductStockMovementsPageComponent implements OnInit {
 
     private readonly route = inject(ActivatedRoute);
     private readonly stockMovementService = inject(StockMovementService);
+    private readonly productService = inject(ProductService);
+    private readonly messages = inject(MessageService);
+    private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly canCreateStockMovement = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
+    readonly createDialogOpen = signal(false);
 
     readonly productId = signal<string | null>(null);
+    readonly productLabel = signal<string | null>(null);
 
     readonly routeError = signal<string | null>(null);
     readonly loading = signal(true);
@@ -278,6 +328,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
                     }
                     this.routeError.set(null);
                     this.productId.set(id);
+                    this.productLabel.set(null);
                     this.error.set(null);
                     this.suppressNextLazy = true;
                     const restored = this.restoreStateFromSessionStorage(id);
@@ -286,7 +337,17 @@ export class ProductStockMovementsPageComponent implements OnInit {
                         this.first.set(0);
                     }
                     this.loading.set(true);
-                    return this.stockMovementService.listByProductId(id, this.buildQueryFromSignals());
+                    return this.productService.getById(id).pipe(
+                        tap({
+                            next: (p) => this.productLabel.set(`${p.name} (${p.sku})`),
+                            error: () => this.productLabel.set(null)
+                        }),
+                        catchError(() => {
+                            this.productLabel.set(null);
+                            return of(undefined);
+                        }),
+                        switchMap(() => this.stockMovementService.listByProductId(id, this.buildQueryFromSignals()))
+                    );
                 })
             )
             .subscribe({
@@ -492,5 +553,14 @@ export class ProductStockMovementsPageComponent implements OnInit {
         if (key) {
             sessionStorage.removeItem(key);
         }
+    }
+
+    onStockMovementCreated(): void {
+        this.messages.add({
+            severity: 'success',
+            summary: 'Kaydedildi',
+            detail: 'Stok hareketi oluşturuldu.'
+        });
+        this.reloadWithCurrentFilters(true);
     }
 }
