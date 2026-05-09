@@ -76,6 +76,22 @@ export class AppMenu {
             );
         }
 
+        const reportMenuItems: MenuItem[] = [
+            ...(canReadPayments
+                ? [{ label: 'Ödeme Raporu', icon: 'pi pi-fw pi-file-export', routerLink: ['/panel/reports/payments'] }]
+                : []),
+            ...(canReadAppointments
+                ? [{ label: 'Randevu Raporu', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/panel/reports/appointments'] }]
+                : []),
+            ...(canReadExaminations
+                ? [{ label: 'Muayene Raporu', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/reports/examinations'] }]
+                : []),
+            ...(canReadVaccinations
+                ? [{ label: 'Aşı Raporu', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/reports/vaccinations'] }]
+                : [])
+        ];
+        const canShowReportsGroup = reportMenuItems.length > 0;
+
         this.model = [
             {
                 label: 'Panel',
@@ -101,31 +117,7 @@ export class AppMenu {
                     ...(canReadPayments ? [{ label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }] : [])
                 ]
             },
-            {
-                label: 'Raporlar',
-                items: [
-                    {
-                        label: 'Ödeme Raporu',
-                        icon: 'pi pi-fw pi-file-export',
-                        routerLink: ['/panel/reports/payments']
-                    },
-                    {
-                        label: 'Randevu Raporu',
-                        icon: 'pi pi-fw pi-calendar-plus',
-                        routerLink: ['/panel/reports/appointments']
-                    },
-                    {
-                        label: 'Muayene Raporu',
-                        icon: 'pi pi-fw pi-file-edit',
-                        routerLink: ['/panel/reports/examinations']
-                    },
-                    {
-                        label: 'Aşı Raporu',
-                        icon: 'pi pi-fw pi-shield',
-                        routerLink: ['/panel/reports/vaccinations']
-                    }
-                ]
-            },
+            ...(canShowReportsGroup ? [{ label: 'Raporlar', items: reportMenuItems }] : []),
             {
                 label: 'Hesap',
                 items: [

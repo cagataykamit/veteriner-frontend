@@ -12,6 +12,7 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PAYMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-my-clinics-to-select-options';
 import { isReportUiClinicIdMisalignedWithJwt, isReportUiClinicIdUnknownToMyClinics } from '@/app/features/reports/shared/report-my-clinic.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
@@ -172,22 +173,24 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
                     <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                    <p-button
-                        [label]="copy.reportsExportXlsx"
-                        icon="pi pi-file-excel"
-                        severity="success"
-                        (onClick)="exportXlsx()"
-                        [loading]="isExporting('xlsx')"
-                        [disabled]="loading() || exporting()"
-                    />
-                    <p-button
-                        [label]="copy.reportsExportCsv"
-                        icon="pi pi-download"
-                        severity="help"
-                        (onClick)="exportCsv()"
-                        [loading]="isExporting('csv')"
-                        [disabled]="loading() || exporting()"
-                    />
+                    @if (canExportReport()) {
+                        <p-button
+                            [label]="copy.reportsExportXlsx"
+                            icon="pi pi-file-excel"
+                            severity="success"
+                            (onClick)="exportXlsx()"
+                            [loading]="isExporting('xlsx')"
+                            [disabled]="loading() || exporting()"
+                        />
+                        <p-button
+                            [label]="copy.reportsExportCsv"
+                            icon="pi pi-download"
+                            severity="help"
+                            (onClick)="exportCsv()"
+                            [loading]="isExporting('csv')"
+                            [disabled]="loading() || exporting()"
+                        />
+                    }
                 </div>
             </div>
         </div>
@@ -337,6 +340,8 @@ export class PaymentsReportPageComponent implements OnInit {
     private readonly reportService = inject(PaymentsReportService);
     private readonly auth = inject(AuthService);
 
+    readonly canExportReport = computed(() => this.auth.hasOperationClaim(PAYMENTS_READ_CLAIM));
+
     readonly loading = signal(true);
     readonly exportKind = signal<'csv' | 'xlsx' | null>(null);
     readonly error = signal<string | null>(null);
@@ -482,6 +487,9 @@ export class PaymentsReportPageComponent implements OnInit {
     }
 
     private export(kind: 'csv' | 'xlsx'): void {
+        if (!this.auth.hasOperationClaim(PAYMENTS_READ_CLAIM)) {
+            return;
+        }
         this.exportError.set(null);
         this.exportKind.set(kind);
         this.sanitizeExportClinicFilterIfStale();
