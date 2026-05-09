@@ -2,9 +2,13 @@ import { HttpParams } from '@angular/common/http';
 import type {
     CreateStockMovementRequest,
     StockMovementDto,
-    StockMovementDtoPagedResult
+    StockMovementDtoPagedResult,
+    StockMovementTypeApiValue
 } from '@/app/features/inventory/models/stock-movement-api.model';
-import type { StockMovementUpsertFormValue } from '@/app/features/inventory/models/stock-movement-form.model';
+import type {
+    StockMovementFormMovementType,
+    StockMovementUpsertFormValue
+} from '@/app/features/inventory/models/stock-movement-form.model';
 import type { StockMovementsListQuery } from '@/app/features/inventory/models/stock-movement-query.model';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
 import { formatStockQuantityDisplay } from '@/app/features/inventory/data/product-stock.mapper';
@@ -73,6 +77,20 @@ export function movementKindToApiParam(kind: MovementKind): string | null {
         return null;
     }
     return kind;
+}
+
+/** CREATE gövdesi — backend C# enum numeric (JsonStringEnumConverter yok). */
+export function mapMovementTypeToApiValue(kind: StockMovementFormMovementType): StockMovementTypeApiValue {
+    switch (kind) {
+        case 'Initial':
+            return 0;
+        case 'In':
+            return 1;
+        case 'Out':
+            return 2;
+        case 'Adjustment':
+            return 3;
+    }
 }
 
 export function movementKindLabel(kind: MovementKind): string {
@@ -235,7 +253,7 @@ export function mapStockMovementUpsertFormValueToCreateRequest(
     return {
         clinicId: value.clinicId.trim(),
         productId: value.productId.trim(),
-        movementType: value.movementType,
+        movementType: mapMovementTypeToApiValue(value.movementType),
         quantity: value.quantity,
         unitCost: value.unitCost,
         reason: value.reason,

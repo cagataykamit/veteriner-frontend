@@ -1,4 +1,4 @@
-/** POST gövdesinde kullanılan hareket tipi — backend enum ile uyumlu string. */
+/** Form/UI kanonik hareket tipi — POST’ta `mapMovementTypeToApiValue` ile sayıya çevrilir. */
 export type StockMovementFormMovementType = 'Initial' | 'In' | 'Out' | 'Adjustment';
 
 /** `getStockMovementFormValue` çıktısı → mapper ile Create gövdesine. */

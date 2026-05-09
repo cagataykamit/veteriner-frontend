@@ -31,11 +31,17 @@ export interface StockMovementDtoPagedResult {
     totalPages: number;
 }
 
+/**
+ * C# `StockMovementType` — JsonStringEnumConverter yok; gövde numeric beklenir.
+ * Initial=0, In=1, Out=2, Adjustment=3
+ */
+export type StockMovementTypeApiValue = 0 | 1 | 2 | 3;
+
 /** POST `/api/v1/stock-movements` — alan adları backend ile birebir. */
 export interface CreateStockMovementRequest {
     clinicId: string;
     productId: string;
-    movementType: string;
+    movementType: StockMovementTypeApiValue;
     quantity: number;
     unitCost: number | null;
     reason: string | null;
