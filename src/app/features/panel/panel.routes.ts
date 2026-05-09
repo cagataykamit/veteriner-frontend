@@ -13,6 +13,7 @@ export default [
     { path: 'vaccinations', loadChildren: () => import('../vaccinations/routes/vaccinations.routes') },
     { path: 'payments', loadChildren: () => import('../payments/routes/payments.routes') },
     { path: 'products', loadChildren: () => import('../inventory/routes/inventory.routes') },
+    { path: 'stock-movements', loadChildren: () => import('../inventory/routes/stock-movements.routes') },
     { path: 'reports', loadChildren: () => import('../reports/reports.routes') },
     {
         path: 'settings/subscription',

@@ -10,7 +10,11 @@ import type { ProductStockVm } from '@/app/features/inventory/models/product-sto
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import {
+    PRODUCTS_DEACTIVATE_CLAIM,
+    PRODUCTS_UPDATE_CLAIM,
+    STOCK_MOVEMENTS_READ_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -139,7 +143,15 @@ import { EMPTY, switchMap } from 'rxjs';
 
                 <div class="col-span-12">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Klinik stokları</h5>
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                            <h5 class="mt-0 mb-0">Klinik stokları</h5>
+                            @if (canReadStockMovements) {
+                                <a
+                                    [routerLink]="['/panel/products', p.id, 'stock-movements']"
+                                    class="text-primary font-medium no-underline text-sm whitespace-nowrap"
+                                    >Stok hareketleri →</a>
+                            }
+                        </div>
                         @if (canUpdateProduct && ro.mutationBlocked()) {
                             <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3 m-0" role="status">
                                 Salt okunur modda minimum stok güncellenemez; stok bilgileri görüntülenebilir.
@@ -285,6 +297,7 @@ export class ProductDetailPageComponent implements OnInit {
 
     readonly canUpdateProduct = this.auth.hasOperationClaim(PRODUCTS_UPDATE_CLAIM);
     readonly canDeactivateProduct = this.auth.hasOperationClaim(PRODUCTS_DEACTIVATE_CLAIM);
+    readonly canReadStockMovements = this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM);
 
     readonly emptyMark = '—';
 
