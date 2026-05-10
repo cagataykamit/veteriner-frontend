@@ -7,6 +7,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { BREEDS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
@@ -118,17 +120,18 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
                                 <small class="text-red-500">Tür seçimi zorunludur.</small>
                             }
-                            <div class="mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Yeni tür ekle"
-                                    icon="pi pi-plus"
-                                    [disabled]="ro.mutationBlocked()"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    (onClick)="quickSpeciesOpen.set(true)"
-                                />
-                            </div>
+                            @if (canShowQuickSpeciesButton()) {
+                                <div class="mt-2">
+                                    <p-button
+                                        type="button"
+                                        label="Yeni tür ekle"
+                                        icon="pi pi-plus"
+                                        [text]="true"
+                                        styleClass="p-0"
+                                        (onClick)="quickSpeciesOpen.set(true)"
+                                    />
+                                </div>
+                            }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="breedId" class="block text-sm font-medium text-muted-color mb-2">Irk</label>
@@ -146,13 +149,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             @if (apiFieldErrors().breedId) {
                                 <small class="text-red-500">{{ apiFieldErrors().breedId }}</small>
                             }
-                            @if (hasSpeciesForQuickBreed()) {
+                            @if (hasSpeciesForQuickBreed() && canShowQuickBreedButton()) {
                                 <div class="mt-2">
                                     <p-button
                                         type="button"
                                         label="Bu tür için yeni ırk"
                                         icon="pi pi-plus"
-                                        [disabled]="ro.mutationBlocked()"
                                         [text]="true"
                                         styleClass="p-0"
                                         (onClick)="quickBreedOpen.set(true)"
@@ -270,7 +272,14 @@ export class PetEditPageComponent implements OnInit {
     private readonly breedsService = inject(BreedsService);
     private readonly speciesService = inject(SpeciesService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly canShowQuickSpeciesButton = (): boolean =>
+        this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked();
+
+    readonly canShowQuickBreedButton = (): boolean =>
+        this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM) && !this.ro.mutationBlocked();
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
