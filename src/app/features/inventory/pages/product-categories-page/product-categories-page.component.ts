@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
 import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
@@ -59,6 +60,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         ButtonModule,
         ConfirmDialogModule,
         DialogModule,
+        MessageModule,
         InputTextModule,
         SelectModule,
         TextareaModule,
@@ -109,9 +111,6 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                 <div class="flex flex-col gap-4">
                     @if (listActionError()) {
                         <p class="text-red-500 text-sm m-0" role="alert">{{ listActionError() }}</p>
-                    }
-                    @if (dialogError()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">{{ dialogError() }}</p>
                     }
                     <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
@@ -330,6 +329,9 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
             [draggable]="false"
         >
             <form [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
+                @if (dialogError()) {
+                    <p-message severity="error" styleClass="w-full" role="alert">{{ dialogError() }}</p-message>
+                }
                 <div class="flex flex-col gap-1">
                     <label for="catName" class="block text-sm font-medium text-muted-color">Kategori adı *</label>
                     <input id="catName" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" />
