@@ -16,14 +16,21 @@ import { ProductService } from '@/app/features/inventory/services/product.servic
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { STOCK_MOVEMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { STOCK_MOVEMENTS_CREATE_CLAIM, STOCK_MOVEMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { EMPTY, catchError, of, switchMap, tap } from 'rxjs';
+import { buildCsvFromStringRows, csvTextToUtf8BlobWithBom } from '@/app/shared/utils/csv-text.utils';
+import { localDateTimeYyyyMmDd_HHmmForFileName } from '@/app/shared/utils/date.utils';
+import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
+import {
+    STOCK_MOVEMENT_CSV_HEADERS,
+    stockMovementVmToCsvRow
+} from '@/app/features/inventory/utils/stock-movement-export.utils';
+import { EMPTY, catchError, forkJoin, map, of, switchMap, tap, type Observable } from 'rxjs';
 
 type ProductStockMovementsListState = {
     movementType: string;
@@ -87,6 +94,12 @@ type ProductStockMovementsListState = {
         </app-page-header>
 
         <div class="card">
+            @if (exportError()) {
+                <div class="mb-4 border border-red-200 dark:border-red-800 rounded-border p-3">
+                    <p class="text-red-500 m-0 text-sm" role="alert">{{ exportError() }}</p>
+                </div>
+            }
+
             @if (routeError()) {
                 <app-error-state [detail]="routeError()!" />
             } @else if (loading()) {
@@ -106,6 +119,16 @@ type ProductStockMovementsListState = {
                             <div class="flex flex-wrap gap-2 shrink-0">
                                 <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                 <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                                @if (canExportStockMovements()) {
+                                    <p-button
+                                        label="Dışa aktar"
+                                        icon="pi pi-download"
+                                        severity="help"
+                                        (onClick)="exportCsv()"
+                                        [loading]="exporting()"
+                                        [disabled]="loading() || exporting()"
+                                    />
+                                }
                             </div>
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
@@ -271,6 +294,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly canCreateStockMovement = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
+    readonly canExportStockMovements = computed(() => this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM));
     readonly createDialogOpen = signal(false);
 
     readonly productId = signal<string | null>(null);
@@ -279,6 +303,8 @@ export class ProductStockMovementsPageComponent implements OnInit {
     readonly routeError = signal<string | null>(null);
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
+    readonly exporting = signal(false);
+    readonly exportError = signal<string | null>(null);
 
     readonly rawItems = signal<StockMovementVm[]>([]);
     readonly totalItems = signal(0);
@@ -305,6 +331,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
 
     private suppressNextLazy = false;
     private lastLoadKey = '';
+    private readonly exportPageSize = 1000;
 
     readonly productDetailLink = () => {
         const id = this.productId();
@@ -384,6 +411,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
     }
 
     applyFilters(): void {
+        this.exportError.set(null);
         let from = this.dateFromInput?.trim() ?? '';
         let to = this.dateToInput?.trim() ?? '';
         if (from && to && from > to) {
@@ -403,6 +431,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
     }
 
     resetFilters(): void {
+        this.exportError.set(null);
         this.movementTypeFilter = '';
         this.dateFromInput = '';
         this.dateToInput = '';
@@ -416,6 +445,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
     }
 
     reload(): void {
+        this.exportError.set(null);
         this.reloadWithCurrentFilters(true);
     }
 
@@ -562,5 +592,67 @@ export class ProductStockMovementsPageComponent implements OnInit {
             detail: 'Stok hareketi oluşturuldu.'
         });
         this.reloadWithCurrentFilters(true);
+    }
+
+    exportCsv(): void {
+        if (!this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM)) {
+            return;
+        }
+        const id = this.productId();
+        if (!id || this.routeError()) {
+            return;
+        }
+        this.exportError.set(null);
+        this.exporting.set(true);
+        this.fetchAllFilteredProductStockMovementsForExport(id).subscribe({
+            next: (items) => {
+                const rows = items.map((row) => stockMovementVmToCsvRow(row));
+                const csv = buildCsvFromStringRows([...STOCK_MOVEMENT_CSV_HEADERS], rows);
+                const blob = csvTextToUtf8BlobWithBom(csv);
+                const name = `urun-stok-hareketleri-${localDateTimeYyyyMmDd_HHmmForFileName()}.csv`;
+                triggerBlobDownload(blob, name);
+                this.exporting.set(false);
+            },
+            error: () => {
+                this.exporting.set(false);
+                this.exportError.set('Stok hareketleri dışa aktarılamadı.');
+            }
+        });
+    }
+
+    private fetchAllFilteredProductStockMovementsForExport(productId: string): Observable<StockMovementVm[]> {
+        const movementType = this.activeMovementType().trim();
+        const dateFrom = this.activeDateFrom().trim();
+        const dateTo = this.activeDateTo().trim();
+        const q = {
+            movementType: movementType || undefined,
+            dateFromUtc: dateFrom || undefined,
+            dateToUtc: dateTo || undefined
+        };
+        const pageSize = this.exportPageSize;
+        return this.stockMovementService.listByProductId(productId, { page: 1, pageSize, ...q }).pipe(
+            switchMap((first) => {
+                if (first.totalItems === 0) {
+                    return of([]);
+                }
+                const totalPages = Math.ceil(first.totalItems / pageSize);
+                const collected = [...first.items];
+                if (totalPages <= 1) {
+                    return of(collected.slice(0, first.totalItems));
+                }
+                const rest = [];
+                for (let p = 2; p <= totalPages; p++) {
+                    rest.push(this.stockMovementService.listByProductId(productId, { page: p, pageSize, ...q }));
+                }
+                return forkJoin(rest).pipe(
+                    map((pages) => {
+                        for (const pg of pages) {
+                            collected.push(...pg.items);
+                        }
+                        return collected.slice(0, first.totalItems);
+                    })
+                );
+            })
+        );
     }
 }
