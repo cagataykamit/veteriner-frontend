@@ -49,8 +49,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     @if (canReadCategories) {
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="productCategoryId" class="block text-sm font-medium text-muted-color mb-2">Kategori</label>
+                        <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                            <label for="productCategoryId" class="block text-sm font-medium text-muted-color">Kategori</label>
                             <p-select
                                 inputId="productCategoryId"
                                 formControlName="productCategoryId"
@@ -65,37 +65,41 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             />
                         </div>
                     }
-                    <div [class]="canReadCategories ? 'col-span-12 md:col-span-6' : 'col-span-12'">
-                        <label for="productName" class="block text-sm font-medium text-muted-color mb-2">Ürün adı *</label>
-                        <input id="productName" type="text" class="w-full p-inputtext p-component" formControlName="name" autocomplete="off" />
+                    <div [class]="canReadCategories ? 'col-span-12 md:col-span-6 flex flex-col gap-1' : 'col-span-12 flex flex-col gap-1'">
+                        <label for="productName" class="block text-sm font-medium text-muted-color">Ürün adı *</label>
+                        <input id="productName" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" />
                         @if (form.controls.name.invalid && form.controls.name.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-red-500">Ürün adı zorunludur.</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="sku" class="block text-sm font-medium text-muted-color mb-2">SKU</label>
-                        <input id="sku" type="text" class="w-full p-inputtext p-component" formControlName="sku" autocomplete="off" />
+                    <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                        <label for="sku" class="block text-sm font-medium text-muted-color">SKU</label>
+                        <input id="sku" pInputText class="w-full" type="text" formControlName="sku" autocomplete="off" />
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="barcode" class="block text-sm font-medium text-muted-color mb-2">Barkod</label>
-                        <input id="barcode" type="text" class="w-full p-inputtext p-component" formControlName="barcode" autocomplete="off" />
+                    <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                        <label for="barcode" class="block text-sm font-medium text-muted-color">Barkod</label>
+                        <input id="barcode" pInputText class="w-full" type="text" formControlName="barcode" autocomplete="off" />
                     </div>
-                    <div class="col-span-12 md:col-span-4">
-                        <label for="unit" class="block text-sm font-medium text-muted-color mb-2">Birim *</label>
-                        <input id="unit" type="text" class="w-full p-inputtext p-component" formControlName="unit" placeholder="örn. Adet, Kutu" />
+                    <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+                        <label for="unit" class="block text-sm font-medium text-muted-color">Birim *</label>
+                        <input id="unit" pInputText class="w-full" type="text" formControlName="unit" placeholder="örn. Adet, Kutu" />
                         @if (form.controls.unit.invalid && form.controls.unit.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-red-500">Birim zorunludur.</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-4">
-                        <label for="unitPrice" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat *</label>
+                    <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+                        <label for="unitPrice" class="block text-sm font-medium text-muted-color">Birim fiyat *</label>
                         <input id="unitPrice" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
                         @if (form.controls.unitPrice.invalid && form.controls.unitPrice.touched) {
-                            <small class="text-red-500">0 veya üzeri geçerli tutar girin.</small>
+                            @if (form.controls.unitPrice.hasError('required')) {
+                                <small class="text-red-500">Birim fiyat zorunludur.</small>
+                            } @else if (form.controls.unitPrice.hasError('min')) {
+                                <small class="text-red-500">Birim fiyat 0’dan küçük olamaz.</small>
+                            }
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-4">
-                        <label for="currency" class="block text-sm font-medium text-muted-color mb-2">Para birimi *</label>
+                    <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+                        <label for="currency" class="block text-sm font-medium text-muted-color">Para birimi *</label>
                         <p-select
                             inputId="currency"
                             formControlName="currency"
@@ -104,10 +108,13 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             optionValue="value"
                             styleClass="w-full"
                         />
+                        @if (form.controls.currency.invalid && form.controls.currency.touched) {
+                            <small class="text-red-500">Para birimi zorunludur.</small>
+                        }
                     </div>
-                    <div class="col-span-12">
-                        <label for="description" class="block text-sm font-medium text-muted-color mb-2">Açıklama</label>
-                        <textarea id="description" rows="3" class="w-full p-inputtext p-component" formControlName="description"></textarea>
+                    <div class="col-span-12 flex flex-col gap-1">
+                        <label for="description" class="block text-sm font-medium text-muted-color">Açıklama</label>
+                        <textarea id="description" pTextarea rows="3" class="w-full" formControlName="description"></textarea>
                     </div>
                 </div>
 

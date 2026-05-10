@@ -64,8 +64,8 @@ import { EMPTY, map, switchMap } from 'rxjs';
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
                         @if (canReadCategories) {
-                            <div class="col-span-12 md:col-span-6">
-                                <label for="productCategoryIdEdit" class="block text-sm font-medium text-muted-color mb-2">Kategori</label>
+                            <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                                <label for="productCategoryIdEdit" class="block text-sm font-medium text-muted-color">Kategori</label>
                                 <p-select
                                     inputId="productCategoryIdEdit"
                                     formControlName="productCategoryId"
@@ -80,37 +80,41 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                 />
                             </div>
                         }
-                        <div [class]="canReadCategories ? 'col-span-12 md:col-span-6' : 'col-span-12'">
-                            <label for="productNameEdit" class="block text-sm font-medium text-muted-color mb-2">Ürün adı *</label>
-                            <input id="productNameEdit" type="text" class="w-full p-inputtext p-component" formControlName="name" autocomplete="off" />
+                        <div [class]="canReadCategories ? 'col-span-12 md:col-span-6 flex flex-col gap-1' : 'col-span-12 flex flex-col gap-1'">
+                            <label for="productNameEdit" class="block text-sm font-medium text-muted-color">Ürün adı *</label>
+                            <input id="productNameEdit" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" />
                             @if (form.controls.name.invalid && form.controls.name.touched) {
-                                <small class="text-red-500">Zorunlu alan.</small>
+                                <small class="text-red-500">Ürün adı zorunludur.</small>
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="skuEdit" class="block text-sm font-medium text-muted-color mb-2">SKU</label>
-                            <input id="skuEdit" type="text" class="w-full p-inputtext p-component" formControlName="sku" autocomplete="off" />
+                        <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                            <label for="skuEdit" class="block text-sm font-medium text-muted-color">SKU</label>
+                            <input id="skuEdit" pInputText class="w-full" type="text" formControlName="sku" autocomplete="off" />
                         </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="barcodeEdit" class="block text-sm font-medium text-muted-color mb-2">Barkod</label>
-                            <input id="barcodeEdit" type="text" class="w-full p-inputtext p-component" formControlName="barcode" autocomplete="off" />
+                        <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                            <label for="barcodeEdit" class="block text-sm font-medium text-muted-color">Barkod</label>
+                            <input id="barcodeEdit" pInputText class="w-full" type="text" formControlName="barcode" autocomplete="off" />
                         </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="unitEdit" class="block text-sm font-medium text-muted-color mb-2">Birim *</label>
-                            <input id="unitEdit" type="text" class="w-full p-inputtext p-component" formControlName="unit" />
+                        <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+                            <label for="unitEdit" class="block text-sm font-medium text-muted-color">Birim *</label>
+                            <input id="unitEdit" pInputText class="w-full" type="text" formControlName="unit" />
                             @if (form.controls.unit.invalid && form.controls.unit.touched) {
-                                <small class="text-red-500">Zorunlu alan.</small>
+                                <small class="text-red-500">Birim zorunludur.</small>
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="unitPriceEdit" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat *</label>
+                        <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+                            <label for="unitPriceEdit" class="block text-sm font-medium text-muted-color">Birim fiyat *</label>
                             <input id="unitPriceEdit" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
                             @if (form.controls.unitPrice.invalid && form.controls.unitPrice.touched) {
-                                <small class="text-red-500">0 veya üzeri geçerli tutar girin.</small>
+                                @if (form.controls.unitPrice.hasError('required')) {
+                                    <small class="text-red-500">Birim fiyat zorunludur.</small>
+                                } @else if (form.controls.unitPrice.hasError('min')) {
+                                    <small class="text-red-500">Birim fiyat 0’dan küçük olamaz.</small>
+                                }
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="currencyEdit" class="block text-sm font-medium text-muted-color mb-2">Para birimi *</label>
+                        <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+                            <label for="currencyEdit" class="block text-sm font-medium text-muted-color">Para birimi *</label>
                             <p-select
                                 inputId="currencyEdit"
                                 formControlName="currency"
@@ -119,10 +123,13 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                 optionValue="value"
                                 styleClass="w-full"
                             />
+                            @if (form.controls.currency.invalid && form.controls.currency.touched) {
+                                <small class="text-red-500">Para birimi zorunludur.</small>
+                            }
                         </div>
-                        <div class="col-span-12">
-                            <label for="descriptionEdit" class="block text-sm font-medium text-muted-color mb-2">Açıklama</label>
-                            <textarea id="descriptionEdit" rows="3" class="w-full p-inputtext p-component" formControlName="description"></textarea>
+                        <div class="col-span-12 flex flex-col gap-1">
+                            <label for="descriptionEdit" class="block text-sm font-medium text-muted-color">Açıklama</label>
+                            <textarea id="descriptionEdit" pTextarea rows="3" class="w-full" formControlName="description"></textarea>
                         </div>
                     </div>
 

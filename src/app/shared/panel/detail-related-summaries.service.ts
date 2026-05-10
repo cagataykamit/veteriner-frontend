@@ -84,7 +84,11 @@ export class DetailRelatedSummariesService {
         }
         return this.examinations
             .getExaminations({ page: 1, pageSize: DETAIL_FETCH_SIZE, appointmentId: aid })
-            .pipe(map((r) => sortIsoDesc(r.items, (x) => x.examinedAtUtc)));
+            .pipe(
+                map((r) =>
+                    sortIsoDesc(r.items, (x) => x.examinedAtUtc).slice(0, DETAIL_RELATED_LIST_LIMIT)
+                )
+            );
     }
 
     /** Yaklaşan randevular (şimdiden sonraki, en yakın önce). */
@@ -222,7 +226,9 @@ export class DetailRelatedSummariesService {
             return this.loadRecentExaminationsForPet(pid);
         }
         if (cid) {
-            return this.clients.getClientRecentSummary(cid).pipe(map((s) => s.examinations));
+            return this.clients.getClientRecentSummary(cid).pipe(
+                map((s) => (s.examinations ?? []).slice(0, DETAIL_RELATED_LIST_LIMIT))
+            );
         }
         return of([]);
     }

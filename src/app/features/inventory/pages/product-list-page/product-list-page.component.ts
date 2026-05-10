@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
@@ -24,6 +25,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { ConfirmationService } from 'primeng/api';
 
 type ProductsListState = {
     search: string;
@@ -44,6 +46,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         TableModule,
         Paginator,
         ButtonModule,
+        ConfirmDialogModule,
         InputTextModule,
         SelectModule,
         AppPageHeaderComponent,
@@ -52,6 +55,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         AppErrorStateComponent,
         AppStatusTagComponent
     ],
+    providers: [ConfirmationService],
     template: `
         <app-page-header title="Ürünler" subtitle="Ürün ve Stok" description="Ürün kataloğu.">
             @if (canCreateProduct && !ro.mutationBlocked()) {
@@ -305,12 +309,15 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                 </div>
             }
         </div>
+
+        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
     `
 })
 export class ProductListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly productService = inject(ProductService);
+    private readonly confirmationService = inject(ConfirmationService);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -414,19 +421,28 @@ export class ProductListPageComponent implements OnInit {
         if (!this.canDeactivateProduct || this.ro.mutationBlocked() || !row.isActive) {
             return;
         }
-        if (!window.confirm('Bu ürünü pasifleştirmek istediğinize emin misiniz?')) {
-            return;
-        }
-        this.rowMutatingId.set(row.id);
-        this.listActionError.set(null);
-        this.productService.deactivate(row.id).subscribe({
-            next: () => {
-                this.rowMutatingId.set(null);
-                this.reload();
-            },
-            error: (e: Error) => {
-                this.rowMutatingId.set(null);
-                this.listActionError.set(e.message ?? 'Pasifleştirme başarısız.');
+        const productId = row.id;
+        this.confirmationService.confirm({
+            header: 'Ürünü pasifleştir',
+            message: 'Bu ürünü pasifleştirmek istediğinize emin misiniz?',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Pasifleştir',
+            rejectLabel: 'Vazgeç',
+            acceptButtonStyleClass: 'p-button-danger',
+            rejectButtonStyleClass: 'p-button-secondary',
+            accept: () => {
+                this.rowMutatingId.set(productId);
+                this.listActionError.set(null);
+                this.productService.deactivate(productId).subscribe({
+                    next: () => {
+                        this.rowMutatingId.set(null);
+                        this.reload();
+                    },
+                    error: (e: Error) => {
+                        this.rowMutatingId.set(null);
+                        this.listActionError.set(e.message ?? 'Pasifleştirme başarısız.');
+                    }
+                });
             }
         });
     }
@@ -435,19 +451,28 @@ export class ProductListPageComponent implements OnInit {
         if (!this.canUpdateProduct || this.ro.mutationBlocked() || row.isActive) {
             return;
         }
-        if (!window.confirm('Bu ürünü aktifleştirmek istediğinize emin misiniz?')) {
-            return;
-        }
-        this.rowMutatingId.set(row.id);
-        this.listActionError.set(null);
-        this.productService.activate(row.id).subscribe({
-            next: () => {
-                this.rowMutatingId.set(null);
-                this.reload();
-            },
-            error: (e: Error) => {
-                this.rowMutatingId.set(null);
-                this.listActionError.set(e.message ?? 'Aktifleştirme başarısız.');
+        const productId = row.id;
+        this.confirmationService.confirm({
+            header: 'Ürünü aktifleştir',
+            message: 'Bu ürünü tekrar aktif hale getirmek istediğinize emin misiniz?',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Aktifleştir',
+            rejectLabel: 'Vazgeç',
+            acceptButtonStyleClass: 'p-button-primary',
+            rejectButtonStyleClass: 'p-button-secondary',
+            accept: () => {
+                this.rowMutatingId.set(productId);
+                this.listActionError.set(null);
+                this.productService.activate(productId).subscribe({
+                    next: () => {
+                        this.rowMutatingId.set(null);
+                        this.reload();
+                    },
+                    error: (e: Error) => {
+                        this.rowMutatingId.set(null);
+                        this.listActionError.set(e.message ?? 'Aktifleştirme başarısız.');
+                    }
+                });
             }
         });
     }
