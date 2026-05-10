@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -14,7 +14,7 @@ import type { ProductStockVm } from '@/app/features/inventory/models/product-sto
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
 import { ProductStockService } from '@/app/features/inventory/services/product-stock.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCT_CATEGORIES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PRODUCT_CATEGORIES_READ_CLAIM, PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -22,6 +22,10 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { buildCsvFromStringRows, csvTextToUtf8BlobWithBom } from '@/app/shared/utils/csv-text.utils';
+import { localDateTimeYyyyMmDd_HHmmForFileName } from '@/app/shared/utils/date.utils';
+import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
+import { forkJoin, map, of, switchMap, type Observable } from 'rxjs';
 
 type StocksListState = {
     search: string;
@@ -32,6 +36,17 @@ type StocksListState = {
 };
 
 const PRODUCT_STOCKS_LIST_STATE_KEY = 'panel:inventory:product-stocks:listState';
+
+const PRODUCT_STOCK_CSV_HEADERS = [
+    'Ürün',
+    'SKU',
+    'Kategori',
+    'Klinik',
+    'Eldeki Stok',
+    'Minimum Stok',
+    'Durum',
+    'Son Güncelleme'
+] as const;
 
 @Component({
     selector: 'app-product-stocks-page',
@@ -59,6 +74,12 @@ const PRODUCT_STOCKS_LIST_STATE_KEY = 'panel:inventory:product-stocks:listState'
         />
 
         <div class="card">
+            @if (exportError()) {
+                <div class="mb-4 border border-red-200 dark:border-red-800 rounded-border p-3">
+                    <p class="text-red-500 m-0 text-sm" role="alert">{{ exportError() }}</p>
+                </div>
+            }
+
             @if (loading()) {
                 <app-loading-state message="Stok listesi yükleniyor…" />
             } @else if (error()) {
@@ -108,6 +129,16 @@ const PRODUCT_STOCKS_LIST_STATE_KEY = 'panel:inventory:product-stocks:listState'
                                         (onClick)="resetFilters()"
                                         [disabled]="loading()"
                                     />
+                                    @if (canExportStocks()) {
+                                        <p-button
+                                            label="Dışa aktar"
+                                            icon="pi pi-download"
+                                            severity="help"
+                                            (onClick)="exportCsv()"
+                                            [loading]="exporting()"
+                                            [disabled]="loading() || exporting()"
+                                        />
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -271,9 +302,12 @@ export class ProductStocksPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     readonly canReadCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_READ_CLAIM);
+    readonly canExportStocks = computed(() => this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM));
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
+    readonly exporting = signal(false);
+    readonly exportError = signal<string | null>(null);
 
     readonly rawItems = signal<ProductStockVm[]>([]);
     readonly totalItems = signal(0);
@@ -300,6 +334,7 @@ export class ProductStocksPageComponent implements OnInit {
 
     private suppressNextLazy = false;
     private lastLoadKey = '';
+    private readonly exportPageSize = 1000;
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
@@ -356,6 +391,7 @@ export class ProductStocksPageComponent implements OnInit {
     }
 
     applyFilters(): void {
+        this.exportError.set(null);
         this.activeSearch.set(this.searchInput.trim());
         this.activeLowStock.set(String(this.lowStockFilterInput ?? '').trim());
         this.activeCategoryId.set(String(this.categoryFilterInput ?? '').trim());
@@ -366,6 +402,7 @@ export class ProductStocksPageComponent implements OnInit {
     }
 
     resetFilters(): void {
+        this.exportError.set(null);
         this.searchInput = '';
         this.lowStockFilterInput = '';
         this.categoryFilterInput = '';
@@ -379,6 +416,7 @@ export class ProductStocksPageComponent implements OnInit {
     }
 
     reload(): void {
+        this.exportError.set(null);
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeLowStock(), this.activeCategoryId(), true);
     }
 
@@ -499,5 +537,82 @@ export class ProductStocksPageComponent implements OnInit {
 
     private clearStateFromSessionStorage(): void {
         sessionStorage.removeItem(PRODUCT_STOCKS_LIST_STATE_KEY);
+    }
+
+    exportCsv(): void {
+        if (!this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM)) {
+            return;
+        }
+        this.exportError.set(null);
+        this.exporting.set(true);
+        this.fetchAllFilteredStocksForExport().subscribe({
+            next: (items) => {
+                const rows = items.map((row) => this.mapStockVmToCsvRow(row));
+                const csv = buildCsvFromStringRows([...PRODUCT_STOCK_CSV_HEADERS], rows);
+                const blob = csvTextToUtf8BlobWithBom(csv);
+                const name = `stok-durumu-${localDateTimeYyyyMmDd_HHmmForFileName()}.csv`;
+                triggerBlobDownload(blob, name);
+                this.exporting.set(false);
+            },
+            error: () => {
+                this.exporting.set(false);
+                this.exportError.set('Stok durumu dışa aktarılamadı.');
+            }
+        });
+    }
+
+    private fetchAllFilteredStocksForExport(): Observable<ProductStockVm[]> {
+        const search = this.activeSearch().trim();
+        const lowStockMode = this.activeLowStock();
+        const categoryId = this.activeCategoryId().trim();
+        const q = {
+            search: search || undefined,
+            isBelowMinimum: lowStockMode === 'low' ? true : undefined,
+            productCategoryId: categoryId || undefined
+        };
+        const pageSize = this.exportPageSize;
+        return this.stockService.list({ page: 1, pageSize, ...q }).pipe(
+            switchMap((first) => {
+                if (first.totalItems === 0) {
+                    return of([]);
+                }
+                const totalPages = Math.ceil(first.totalItems / pageSize);
+                const collected = [...first.items];
+                if (totalPages <= 1) {
+                    return of(collected.slice(0, first.totalItems));
+                }
+                const rest = [];
+                for (let p = 2; p <= totalPages; p++) {
+                    rest.push(this.stockService.list({ page: p, pageSize, ...q }));
+                }
+                return forkJoin(rest).pipe(
+                    map((pages) => {
+                        for (const pg of pages) {
+                            collected.push(...pg.items);
+                        }
+                        return collected.slice(0, first.totalItems);
+                    })
+                );
+            })
+        );
+    }
+
+    private mapStockVmToCsvRow(row: ProductStockVm): string[] {
+        const statusLabel = row.isBelowMinimum ? 'Düşük stok' : 'Yeterli';
+        return [
+            this.exportDisplayCell(row.productName),
+            this.exportDisplayCell(row.productSkuText),
+            this.exportDisplayCell(row.productCategoryName),
+            this.exportDisplayCell(row.clinicName),
+            this.exportDisplayCell(row.quantityText),
+            this.exportDisplayCell(row.minimumStockLevelText),
+            statusLabel,
+            this.exportDisplayCell(row.updatedAtText)
+        ];
+    }
+
+    private exportDisplayCell(value: string): string {
+        const t = (value ?? '').trim();
+        return t === '—' ? '' : t;
     }
 }

@@ -208,3 +208,13 @@ export function dateOnlyInputToUtcIsoEndOfDay(dateStr: string): string {
     }
     return new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999)).toISOString();
 }
+
+/** Dosya adı damgası: `yyyyMMdd-HHmm` (ör. `stok-durumu-20260509-1430.csv`). */
+export function localDateTimeYyyyMmDd_HHmmForFileName(d: Date = new Date()): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${y}${m}${day}-${h}${min}`;
+}
