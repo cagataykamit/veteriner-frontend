@@ -8,24 +8,14 @@ export interface ToastTraceMessage {
     [key: string]: unknown;
 }
 
-function textOrDash(value: string | null | undefined): string {
-    const trimmed = value?.trim();
-    return trimmed ? trimmed : '—';
-}
-
+/**
+ * Toast gösterir. `source` / `route` çağrı noktasında tutarlılık için korunur; otomatik konsol çıktısı üretilmez.
+ */
 export function addTracedToast(
     messages: MessageService,
-    source: string,
-    route: string,
+    _source: string,
+    _route: string,
     message: ToastTraceMessage
 ): void {
-    const severity = textOrDash(message.severity);
-    const summary = textOrDash(message.summary);
-    const detail = textOrDash(message.detail);
-    const timestamp = new Date().toISOString();
-    // Geçici runtime teşhis izi: ses ile aynı anda hangi toast tetiklendiğini yakalamak için.
-    console.info(
-        `[ToastTrace] source=${source} severity=${severity} summary=${summary} detail=${detail} route=${route} timestamp=${timestamp}`
-    );
     messages.add(message);
 }
