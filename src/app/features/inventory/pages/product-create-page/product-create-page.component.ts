@@ -6,14 +6,17 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
-import { mapProductCategoryDtoToSelectOption } from '@/app/features/inventory/data/product.mapper';
+import { mapProductCategoryListItemVmToSelectOption } from '@/app/features/inventory/data/product-category.mapper';
 import { createProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
 import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCT_CATEGORIES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import {
+    PRODUCT_CATEGORIES_CREATE_CLAIM,
+    PRODUCT_CATEGORIES_READ_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -63,6 +66,14 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 [showClear]="true"
                                 styleClass="w-full"
                             />
+                            @if (categoriesLoaded() && categoryOptions().length === 0 && !categoryLoadHint()) {
+                                <p class="text-muted-color text-sm mt-1 mb-0" role="status">
+                                    Henüz ürün kategorisi yok. Kategori eklemek için Kategoriler ekranını kullanabilirsiniz.
+                                    @if (canCreateCategories) {
+                                        <a routerLink="/panel/product-categories" class="text-primary font-medium no-underline ms-1">Kategori ekle</a>
+                                    }
+                                </p>
+                            }
                         </div>
                     }
                     <div [class]="canReadCategories ? 'col-span-12 md:col-span-6 flex flex-col gap-1' : 'col-span-12 flex flex-col gap-1'">
@@ -154,8 +165,10 @@ export class ProductCreatePageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly canReadCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_READ_CLAIM);
+    readonly canCreateCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_CREATE_CLAIM);
     readonly categoryOptions = signal<SelectOption[]>([]);
     readonly categoryLoadHint = signal<string | null>(null);
+    readonly categoriesLoaded = signal(false);
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -174,11 +187,13 @@ export class ProductCreatePageComponent implements OnInit {
         }
         this.categoryService.list({ page: 1, pageSize: 500, isActive: true }).subscribe({
             next: (r) => {
-                this.categoryOptions.set((r.items ?? []).map(mapProductCategoryDtoToSelectOption));
+                this.categoryOptions.set((r.items ?? []).map(mapProductCategoryListItemVmToSelectOption));
+                this.categoriesLoaded.set(true);
             },
             error: () => {
                 this.categoryLoadHint.set('Kategoriler yüklenemedi; ürünü kategori seçmeden kaydedebilirsiniz.');
                 this.categoryOptions.set([]);
+                this.categoriesLoaded.set(true);
             }
         });
     }

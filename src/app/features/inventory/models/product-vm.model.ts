@@ -13,6 +13,15 @@ export interface ProductListItemVm {
     statusSeverity: StatusTagSeverity;
 }
 
+export interface ProductCategoryListItemVm {
+    id: string;
+    name: string;
+    descriptionText: string;
+    isActive: boolean;
+    statusLabel: string;
+    statusSeverity: StatusTagSeverity;
+}
+
 export interface ProductDetailVm {
     id: string;
     name: string;

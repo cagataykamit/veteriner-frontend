@@ -58,3 +58,12 @@ export interface ProductCategoryDtoPagedResult {
     totalItems: number;
     totalPages: number;
 }
+
+/** POST /product-categories */
+export interface CreateProductCategoryRequest {
+    name: string;
+    description?: string | null;
+}
+
+/** PUT /product-categories/{id} — kimlik yol parametresinde. */
+export type UpdateProductCategoryRequest = CreateProductCategoryRequest;
