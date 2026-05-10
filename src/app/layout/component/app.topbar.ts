@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { MenuItem } from 'primeng/api';
+import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Menu, MenuModule } from 'primeng/menu';
 import { StyleClassModule } from 'primeng/styleclass';
 import { finalize } from 'rxjs';
@@ -14,7 +15,8 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator, MenuModule, ButtonModule],
+    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator, MenuModule, ButtonModule, ConfirmDialogModule],
+    providers: [ConfirmationService],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
             <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
@@ -106,12 +108,14 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                 </div>
             </div>
         </div>
-    </div>`
+    </div>
+    <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />`
 })
 export class AppTopbar implements OnInit, OnDestroy {
     readonly layoutService = inject(LayoutService);
     readonly auth = inject(AuthService);
     private readonly router = inject(Router);
+    private readonly confirmationService = inject(ConfirmationService);
     private readonly userMenuRef = viewChild<Menu>('userMenu');
 
     userMenuItems: MenuItem[] = [];
@@ -164,23 +168,32 @@ export class AppTopbar implements OnInit, OnDestroy {
     }
 
     private logoutAll(): void {
-        if (!window.confirm('Tüm cihazlardaki oturumlarınız sonlandırılacak. Devam edilsin mi?')) {
-            return;
-        }
         this.purgeUserMenuOverlayFromDocument();
-        this.auth
-            .logoutAllSessions()
-            .pipe(finalize(() => this.purgeUserMenuOverlayFromDocument()))
-            .subscribe({
-                next: () => {
-                    removeOrphanedPrimeMenuPopupsFromBody(document);
-                    void this.router.navigate(['/auth/login'], { replaceUrl: true });
-                },
-                error: () => {
-                    this.auth.logout();
-                    removeOrphanedPrimeMenuPopupsFromBody(document);
-                    void this.router.navigate(['/auth/login'], { replaceUrl: true });
-                }
-            });
+        this.confirmationService.confirm({
+            header: 'Tüm oturumları kapat',
+            message: 'Tüm cihazlardaki oturumlarınızı kapatmak istediğinize emin misiniz?',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Tümünü kapat',
+            rejectLabel: 'Vazgeç',
+            acceptButtonStyleClass: 'p-button-danger',
+            rejectButtonStyleClass: 'p-button-secondary',
+            accept: () => {
+                this.purgeUserMenuOverlayFromDocument();
+                this.auth
+                    .logoutAllSessions()
+                    .pipe(finalize(() => this.purgeUserMenuOverlayFromDocument()))
+                    .subscribe({
+                        next: () => {
+                            removeOrphanedPrimeMenuPopupsFromBody(document);
+                            void this.router.navigate(['/auth/login'], { replaceUrl: true });
+                        },
+                        error: () => {
+                            this.auth.logout();
+                            removeOrphanedPrimeMenuPopupsFromBody(document);
+                            void this.router.navigate(['/auth/login'], { replaceUrl: true });
+                        }
+                    });
+            }
+        });
     }
 }
