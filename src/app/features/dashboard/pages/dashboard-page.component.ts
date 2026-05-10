@@ -222,7 +222,12 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                         <div class="card mb-0">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Düşük stok uyarıları</h5>
-                                <a routerLink="/panel/products" class="text-primary font-medium no-underline text-sm whitespace-nowrap">Ürünler →</a>
+                                <a
+                                    [routerLink]="['/panel/stocks']"
+                                    [queryParams]="{ isBelowMinimum: 'true' }"
+                                    class="text-primary font-medium no-underline text-sm whitespace-nowrap"
+                                    >Stok durumu →</a
+                                >
                             </div>
                             @if (lowStockLoading()) {
                                 <app-loading-state message="Düşük stok bilgileri yükleniyor…" />

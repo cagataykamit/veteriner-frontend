@@ -86,12 +86,14 @@ export function mapProductStockDtoToVm(dto: ProductStockDto): ProductStockVm {
     const productName = dto.productName?.trim() ? dto.productName.trim() : EM;
     const skuRaw = dto.productSku?.trim();
     const productSkuText = skuRaw ? skuRaw : EM;
+    const productCategoryName = dto.productCategoryName?.trim() ? dto.productCategoryName.trim() : EM;
 
     return {
         id: dto.id,
         productId: dto.productId?.trim() ?? '',
         productName,
         productSkuText,
+        productCategoryName,
         clinicId: dto.clinicId?.trim() ?? '',
         clinicName,
         quantityOnHand: qoh ?? 0,

@@ -6,6 +6,7 @@ export interface ProductStockVm {
     productId: string;
     productName: string;
     productSkuText: string;
+    productCategoryName: string;
     clinicId: string;
     clinicName: string;
     quantityOnHand: number;

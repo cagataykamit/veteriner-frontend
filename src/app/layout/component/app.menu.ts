@@ -131,7 +131,10 @@ export class AppMenu {
                           label: 'Ürün ve Stok',
                           items: [
                               ...(canReadProducts
-                                  ? [{ label: 'Ürünler', icon: 'pi pi-fw pi-box', routerLink: ['/panel/products'] }]
+                                  ? [
+                                        { label: 'Ürünler', icon: 'pi pi-fw pi-box', routerLink: ['/panel/products'] },
+                                        { label: 'Stok Durumu', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/panel/stocks'] }
+                                    ]
                                   : []),
                               ...(canReadStockMovements
                                   ? [
