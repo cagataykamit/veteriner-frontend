@@ -31,8 +31,11 @@ import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.ut
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 import type { DashboardActionSeverity } from '@/app/features/dashboard/models/dashboard-operational-alerts.model';
+import { PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
+import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
+import { ProductStockService } from '@/app/features/inventory/services/product-stock.service';
 
 @Component({
     selector: 'app-dashboard-page',
@@ -213,6 +216,99 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
                         </div>
                     </div>
                 </div>
+
+                @if (canReadProducts) {
+                    <div class="col-span-12">
+                        <div class="card mb-0">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                                <h5 class="mt-0 mb-0">Düşük stok uyarıları</h5>
+                                <a routerLink="/panel/products" class="text-primary font-medium no-underline text-sm whitespace-nowrap">Ürünler →</a>
+                            </div>
+                            @if (lowStockLoading()) {
+                                <app-loading-state message="Düşük stok bilgileri yükleniyor…" />
+                            } @else if (lowStockError()) {
+                                <p class="text-red-500 m-0 text-sm" role="alert">{{ lowStockError() }}</p>
+                            } @else if (lowStockRows().length === 0) {
+                                <app-empty-state message="Düşük stokta ürün yok." />
+                            } @else {
+                                <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-3">
+                                    @for (row of lowStockRows(); track row.id) {
+                                        <li
+                                            class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3"
+                                        >
+                                            <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
+                                                @if (row.productId) {
+                                                    <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline">{{
+                                                        row.productName
+                                                    }}</a>
+                                                } @else {
+                                                    {{ row.productName }}
+                                                }
+                                            </div>
+                                            <div class="text-sm text-muted-color break-words">{{ row.clinicName }}</div>
+                                            <div class="text-sm text-surface-700 dark:text-surface-200">
+                                                Eldeki: <span class="font-medium">{{ row.quantityText }}</span>
+                                                · Min.: <span class="font-medium">{{ row.minimumStockLevelText }}</span>
+                                            </div>
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                            </div>
+                                            @if (row.productId) {
+                                                <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                                    <a
+                                                        [routerLink]="['/panel/products', row.productId]"
+                                                        class="text-primary font-medium no-underline text-sm inline-flex py-1"
+                                                        >Detay →</a
+                                                    >
+                                                </div>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                                <div class="hidden lg:block overflow-x-auto">
+                                    <p-table [value]="lowStockRows()" [tableStyle]="{ 'min-width': '42rem' }" [paginator]="false">
+                                        <ng-template #header>
+                                            <tr>
+                                                <th>Ürün</th>
+                                                <th>Klinik</th>
+                                                <th>Eldeki</th>
+                                                <th>Minimum</th>
+                                                <th>Durum</th>
+                                                <th></th>
+                                            </tr>
+                                        </ng-template>
+                                        <ng-template #body let-row>
+                                            <tr>
+                                                <td class="font-medium max-w-[14rem]">
+                                                    @if (row.productId) {
+                                                        <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline">{{
+                                                            row.productName
+                                                        }}</a>
+                                                    } @else {
+                                                        {{ row.productName }}
+                                                    }
+                                                </td>
+                                                <td>{{ row.clinicName }}</td>
+                                                <td>{{ row.quantityText }}</td>
+                                                <td>{{ row.minimumStockLevelText }}</td>
+                                                <td>
+                                                    <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                                </td>
+                                                <td>
+                                                    @if (row.productId) {
+                                                        <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline text-sm"
+                                                            >Detay</a
+                                                        >
+                                                    }
+                                                </td>
+                                            </tr>
+                                        </ng-template>
+                                    </p-table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
 
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card mb-0 h-full">
@@ -764,6 +860,7 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 })
 export class DashboardPageComponent implements OnInit, AfterViewInit {
     private readonly dashboardService = inject(DashboardService);
+    private readonly productStockService = inject(ProductStockService);
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
@@ -783,6 +880,11 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
     readonly belowFoldLoading = signal(false);
     readonly belowFoldLoaded = signal(false);
     readonly belowFoldError = signal<string | null>(null);
+
+    readonly canReadProducts = this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM);
+    readonly lowStockRows = signal<ProductStockVm[]>([]);
+    readonly lowStockLoading = signal(false);
+    readonly lowStockError = signal<string | null>(null);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
@@ -804,6 +906,7 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
             this.loading.set(false);
             this.listsLoading.set(false);
             this.dash.set(null);
+            this.resetLowStockState();
             return;
         }
         this.reload();
@@ -850,6 +953,7 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
                     this.dash.set(dashboardVmWithPendingLists(summaries));
                     this.loading.set(false);
                     this.summariesLoadingInFlight = false;
+                    this.loadLowStockIfAllowed();
                     if (this.belowFoldRequested() && !this.belowFoldLoaded()) {
                         this.requestBelowFoldOnce();
                     }
@@ -1082,5 +1186,30 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
             clearTimeout(this.belowFoldSetupTimer);
             this.belowFoldSetupTimer = null;
         }
+    }
+
+    private resetLowStockState(): void {
+        this.lowStockRows.set([]);
+        this.lowStockLoading.set(false);
+        this.lowStockError.set(null);
+    }
+
+    private loadLowStockIfAllowed(): void {
+        if (!this.clinicContextOk() || !this.canReadProducts) {
+            this.resetLowStockState();
+            return;
+        }
+        this.lowStockLoading.set(true);
+        this.lowStockError.set(null);
+        this.productStockService.list({ page: 1, pageSize: 5, isBelowMinimum: true }).subscribe({
+            next: (r) => {
+                this.lowStockRows.set(r.items);
+                this.lowStockLoading.set(false);
+            },
+            error: () => {
+                this.lowStockError.set('Düşük stok bilgileri yüklenemedi.');
+                this.lowStockLoading.set(false);
+            }
+        });
     }
 }

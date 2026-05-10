@@ -20,3 +20,22 @@ export interface ProductStockDto {
 export interface UpdateProductStockMinimumStockLevelRequest {
     minimumStockLevel: number;
 }
+
+/** GET `/api/v1/product-stocks` — sayfalı liste sorgusu (backend ile uyumlu). */
+export interface ProductStocksListQuery {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    clinicId?: string;
+    productId?: string;
+    productCategoryId?: string;
+    isBelowMinimum?: boolean;
+}
+
+export interface ProductStockDtoPagedResult {
+    items?: ProductStockDto[] | null;
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+}
