@@ -13,6 +13,8 @@ import {
     type SpeciesUpsertFormFieldKey,
     parseSpeciesUpsertHttpError
 } from '@/app/features/species/utils/species-upsert-validation-parse.utils';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { SPECIES_CREATE_CLAIM, SPECIES_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -149,6 +151,7 @@ export class SpeciesFormPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly speciesService = inject(SpeciesService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly editing = signal(false);
@@ -209,6 +212,12 @@ export class SpeciesFormPageComponent implements OnInit {
 
     onSubmit(): void {
         if (this.ro.mutationBlocked()) {
+            return;
+        }
+        if (this.editing() && !this.auth.hasOperationClaim(SPECIES_UPDATE_CLAIM)) {
+            return;
+        }
+        if (!this.editing() && !this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM)) {
             return;
         }
         this.submitError.set(null);

@@ -3,6 +3,8 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { SPECIES_CREATE_CLAIM, SPECIES_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import type { SpeciesListItemVm } from '@/app/features/species/models/species-vm.model';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -29,9 +31,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     ],
     template: `
         <app-page-header title="Türler" subtitle="Referans yönetimi" description="Tür kayıtlarını yönetin.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreateSpecies() && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/species/new" pButton type="button" label="Yeni Tür" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreateSpecies() && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -84,10 +86,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         </td>
                                         <td>{{ row.displayOrder }}</td>
                                         <td>
-                                            @if (!ro.mutationBlocked()) {
+                                            @if (canUpdateSpecies() && !ro.mutationBlocked()) {
                                                 <a [routerLink]="['/panel/species', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
-                                            } @else {
+                                            } @else if (canUpdateSpecies() && ro.mutationBlocked()) {
                                                 <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                            } @else {
+                                                <span class="text-muted-color">—</span>
                                             }
                                         </td>
                                     </tr>
@@ -109,10 +113,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         <div>Sıra: {{ row.displayOrder }}</div>
                                     </div>
                                     <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        @if (!ro.mutationBlocked()) {
+                                        @if (canUpdateSpecies() && !ro.mutationBlocked()) {
                                             <a [routerLink]="['/panel/species', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
-                                        } @else {
+                                        } @else if (canUpdateSpecies() && ro.mutationBlocked()) {
                                             <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                        } @else {
+                                            <span class="text-muted-color">—</span>
                                         }
                                     </div>
                                 </div>
@@ -126,8 +132,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class SpeciesListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    private readonly auth = inject(AuthService);
     private readonly speciesService = inject(SpeciesService);
     readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly canCreateSpecies = () => this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM);
+    readonly canUpdateSpecies = () => this.auth.hasOperationClaim(SPECIES_UPDATE_CLAIM);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);

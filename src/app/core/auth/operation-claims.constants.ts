@@ -107,3 +107,21 @@ export const STOCK_MOVEMENTS_READ_CLAIM = 'StockMovements.Read' as const;
 
 /** Stok hareketi oluşturma */
 export const STOCK_MOVEMENTS_CREATE_CLAIM = 'StockMovements.Create' as const;
+
+/** Tür (species) referansı — liste/okuma */
+export const SPECIES_READ_CLAIM = 'Species.Read' as const;
+
+/** Tür oluşturma */
+export const SPECIES_CREATE_CLAIM = 'Species.Create' as const;
+
+/** Tür güncelleme */
+export const SPECIES_UPDATE_CLAIM = 'Species.Update' as const;
+
+/** Irk (breed) referansı — liste/okuma */
+export const BREEDS_READ_CLAIM = 'Breeds.Read' as const;
+
+/** Irk oluşturma */
+export const BREEDS_CREATE_CLAIM = 'Breeds.Create' as const;
+
+/** Irk güncelleme */
+export const BREEDS_UPDATE_CLAIM = 'Breeds.Update' as const;

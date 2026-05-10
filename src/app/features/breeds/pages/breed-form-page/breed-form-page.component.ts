@@ -14,6 +14,8 @@ import {
     type BreedUpsertFormFieldKey,
     parseBreedUpsertHttpError
 } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -147,6 +149,7 @@ export class BreedFormPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly breedsService = inject(BreedsService);
     private readonly speciesService = inject(SpeciesService);
+    private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly editing = signal(false);
@@ -214,6 +217,12 @@ export class BreedFormPageComponent implements OnInit {
 
     onSubmit(): void {
         if (this.ro.mutationBlocked()) {
+            return;
+        }
+        if (this.editing() && !this.auth.hasOperationClaim(BREEDS_UPDATE_CLAIM)) {
+            return;
+        }
+        if (!this.editing() && !this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM)) {
             return;
         }
         this.submitError.set(null);

@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import type { BreedListItemVm } from '@/app/features/breeds/models/breed-vm.model';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -33,9 +35,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     ],
     template: `
         <app-page-header title="Irklar" subtitle="Referans yönetimi" description="Irk kayıtlarını yönetin.">
-            @if (!ro.mutationBlocked()) {
+            @if (canCreateBreed() && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/breeds/new" pButton type="button" label="Yeni Irk" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else {
+            } @else if (canCreateBreed() && ro.mutationBlocked()) {
                 <button
                     actions
                     pButton
@@ -109,10 +111,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                             <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />
                                         </td>
                                         <td>
-                                            @if (!ro.mutationBlocked()) {
+                                            @if (canUpdateBreed() && !ro.mutationBlocked()) {
                                                 <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
-                                            } @else {
+                                            } @else if (canUpdateBreed() && ro.mutationBlocked()) {
                                                 <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                            } @else {
+                                                <span class="text-muted-color">—</span>
                                             }
                                         </td>
                                     </tr>
@@ -133,10 +137,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         <span class="font-medium">Tür: </span>{{ row.speciesName }}
                                     </div>
                                     <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        @if (!ro.mutationBlocked()) {
+                                        @if (canUpdateBreed() && !ro.mutationBlocked()) {
                                             <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
-                                        } @else {
+                                        } @else if (canUpdateBreed() && ro.mutationBlocked()) {
                                             <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                        } @else {
+                                            <span class="text-muted-color">—</span>
                                         }
                                     </div>
                                 </div>
@@ -150,8 +156,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class BreedsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    private readonly auth = inject(AuthService);
     private readonly breedsService = inject(BreedsService);
     readonly ro = inject(TenantReadOnlyContextService);
+
+    readonly canCreateBreed = () => this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM);
+    readonly canUpdateBreed = () => this.auth.hasOperationClaim(BREEDS_UPDATE_CLAIM);
 
     readonly loading = signal(false);
     readonly error = signal<string | null>(null);
