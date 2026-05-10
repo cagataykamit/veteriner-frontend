@@ -55,7 +55,7 @@ const PRODUCT_STOCKS_LIST_STATE_KEY = 'panel:inventory:product-stocks:listState'
         <app-page-header
             title="Stok durumu"
             subtitle="Ürün ve Stok"
-            description="Tüm kliniklerdeki ürün stokları."
+            description="Aktif klinik bağlamındaki ürün stokları."
         />
 
         <div class="card">
@@ -69,6 +69,7 @@ const PRODUCT_STOCKS_LIST_STATE_KEY = 'panel:inventory:product-stocks:listState'
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
                             <div class="min-w-0">
                                 <h5 class="m-0">Stoklar</h5>
+                                <p class="text-muted-color text-sm m-0 mt-1">{{ activeClinicContextHint() }}</p>
                                 @if (totalItems() > 0) {
                                     <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
                                 }
@@ -111,26 +112,6 @@ const PRODUCT_STOCKS_LIST_STATE_KEY = 'panel:inventory:product-stocks:listState'
                             </div>
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
-                            <div
-                                class="col-span-12 md:col-span-6 lg:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isLowStockFilterApplied()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <span id="lblStockLow" class="flex items-center gap-2 text-xs font-medium mb-1 text-muted-color">Düşük stok</span>
-                                <p-select
-                                    ariaLabelledBy="lblStockLow"
-                                    inputId="stockLowFilter"
-                                    [options]="lowStockFilterOptions"
-                                    [(ngModel)]="lowStockFilterInput"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    placeholder="Tümü"
-                                    styleClass="w-full"
-                                />
-                            </div>
                             @if (canReadCategories && categoryOptions().length > 0) {
                                 <div
                                     class="col-span-12 md:col-span-6 lg:col-span-4 rounded-lg border p-2 transition-colors"
@@ -156,6 +137,26 @@ const PRODUCT_STOCKS_LIST_STATE_KEY = 'panel:inventory:product-stocks:listState'
                                     />
                                 </div>
                             }
+                            <div
+                                class="col-span-12 md:col-span-6 lg:col-span-4 rounded-lg border p-2 transition-colors"
+                                [ngClass]="
+                                    isLowStockFilterApplied()
+                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
+                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
+                                "
+                            >
+                                <span id="lblStockLow" class="flex items-center gap-2 text-xs font-medium mb-1 text-muted-color">Düşük stok</span>
+                                <p-select
+                                    ariaLabelledBy="lblStockLow"
+                                    inputId="stockLowFilter"
+                                    [options]="lowStockFilterOptions"
+                                    [(ngModel)]="lowStockFilterInput"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Tümü"
+                                    styleClass="w-full"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -323,14 +324,15 @@ export class ProductStocksPageComponent implements OnInit {
         }
 
         this.suppressNextLazy = true;
-        this.loadFromServer(
-            this.currentPage(),
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeLowStock(),
-            this.activeCategoryId(),
-            true
-        );
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeLowStock(), this.activeCategoryId(), true);
+    }
+
+    activeClinicContextHint(): string {
+        const nm = this.auth.getClinicName()?.trim();
+        if (nm) {
+            return `Stoklar aktif klinik bağlamına göre listelenir. Aktif klinik: ${nm}.`;
+        }
+        return 'Stoklar aktif klinik bağlamına göre listelenir.';
     }
 
     emptyListMessage(): string {
@@ -377,14 +379,7 @@ export class ProductStocksPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loadFromServer(
-            this.currentPage(),
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeLowStock(),
-            this.activeCategoryId(),
-            true
-        );
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeLowStock(), this.activeCategoryId(), true);
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
@@ -453,8 +448,12 @@ export class ProductStocksPageComponent implements OnInit {
                     this.persistStateToSessionStorage(r.page, r.pageSize);
                     this.loading.set(false);
                 },
-                error: () => {
-                    this.error.set('Stok bilgileri yüklenemedi.');
+                error: (e: unknown) => {
+                    const msg =
+                        e instanceof Error && e.message.trim()
+                            ? e.message.trim()
+                            : 'Stok bilgileri yüklenemedi.';
+                    this.error.set(msg);
                     this.loading.set(false);
                 }
             });
@@ -466,7 +465,7 @@ export class ProductStocksPageComponent implements OnInit {
             return false;
         }
         try {
-            const parsed = JSON.parse(raw) as Partial<StocksListState>;
+            const parsed = JSON.parse(raw) as Partial<StocksListState & { clinicId?: string }>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {

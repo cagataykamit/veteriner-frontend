@@ -107,6 +107,10 @@ function tenantOrganizationProblemUserMessage(err: HttpErrorResponse): string | 
 
 /** Klinik oluşturma / panel klinik yazma — `ProblemDetails` + `extensions.code`. */
 const CLINIC_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Context.ClinicConflict':
+        'Stok bilgileri aktif klinik bağlamıyla uyuşmadığı için yüklenemedi. Lütfen sayfayı yenileyin veya aktif kliniği kontrol edin.',
+    ContextClinicConflict:
+        'Stok bilgileri aktif klinik bağlamıyla uyuşmadığı için yüklenemedi. Lütfen sayfayı yenileyin veya aktif kliniği kontrol edin.',
     'Clinics.AccessDenied': 'Bu kliniğe erişim yetkiniz yok.',
     ClinicsAccessDenied: 'Bu kliniğe erişim yetkiniz yok.',
     'Clinics.DuplicateName': 'Bu isimde bir klinik zaten kayıtlı. Lütfen farklı bir klinik adı kullanın.',
