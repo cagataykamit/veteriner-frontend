@@ -17,7 +17,6 @@ import {
     STOCK_MOVEMENTS_READ_CLAIM,
     PETS_READ_CLAIM,
     PRESCRIPTIONS_READ_CLAIM,
-    REMINDERS_MANAGE_CLAIM,
     REMINDERS_READ_CLAIM,
     BREEDS_CREATE_CLAIM,
     BREEDS_UPDATE_CLAIM,
@@ -50,12 +49,9 @@ export class AppMenu {
 
     ngOnInit() {
         const canReadReminders = this.auth.hasOperationClaim(REMINDERS_READ_CLAIM);
-        const canManageReminders = this.auth.hasOperationClaim(REMINDERS_MANAGE_CLAIM);
         const reminderItems: MenuItem[] = [];
-        if (canReadReminders || canManageReminders) {
-            reminderItems.push({ label: 'Hatırlatmalar', icon: 'pi pi-fw pi-bell', routerLink: ['/panel/settings/reminders'] });
-        }
         if (canReadReminders) {
+            reminderItems.push({ label: 'Hatırlatmalar', icon: 'pi pi-fw pi-bell', routerLink: ['/panel/settings/reminders'] });
             reminderItems.push({ label: 'Hatırlatma Geçmişi', icon: 'pi pi-fw pi-history', routerLink: ['/panel/settings/reminders/logs'] });
         }
 
