@@ -159,7 +159,11 @@ export function toUtcIsoFromLocalDate(value: Date | null | undefined): string | 
     return value.toISOString();
 }
 
-/** GET `paidAtUtc` → `datetime-local` (yerel saat bileşenleri). */
+/**
+ * API UTC anı → `datetime-local` (`yyyy-MM-ddTHH:mm`).
+ * Tarayıcının **yerel** takvim/saat bileşenleri kullanılır; `dateTimeLocalInputToIsoUtc` ile çift kullanılmalıdır
+ * (panel TR kiosku: tarayıcı saat dilimi Europe/Istanbul kabulü).
+ */
 export function utcIsoStringToDateTimeLocalInput(value: string | null | undefined): string {
     const d = parseUtcApiInstantIsoString(value);
     if (!d) {
@@ -173,7 +177,10 @@ export function utcIsoStringToDateTimeLocalInput(value: string | null | undefine
     return `${y}-${m}-${day}T${hh}:${mm}`;
 }
 
-/** HTML `datetime-local` değerini ISO UTC stringe çevirir (form gönderimi için). */
+/**
+ * `datetime-local` girdisi (offset yok) → UTC ISO (`toISOString`).
+ * Değer tarayıcı **yerel** saat diliminde yorumlanır; `utcIsoStringToDateTimeLocalInput` ile simetrik.
+ */
 export function dateTimeLocalInputToIsoUtc(localValue: string): string {
     if (!localValue?.trim()) {
         return '';

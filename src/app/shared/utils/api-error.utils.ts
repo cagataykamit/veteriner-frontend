@@ -145,6 +145,28 @@ function reminderPanelProblemUserMessage(err: HttpErrorResponse): string | null 
     return REMINDER_PANEL_PROBLEM_MESSAGES[code] ?? REMINDER_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
+/** Aşı oluşturma / güncelleme — `ProblemDetails` + `extensions.code`. */
+const VACCINATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Vaccinations.ScheduledRequiresDueAt': 'Planlanan durumda planlanan uygulama tarihi zorunludur.',
+    VaccinationsScheduledRequiresDueAt: 'Planlanan durumda planlanan uygulama tarihi zorunludur.',
+    'Vaccinations.ScheduledDueAtMustNotBePast': 'Planlanan uygulama tarihi ve saati gelecekte olmalıdır.',
+    VaccinationsScheduledDueAtMustNotBePast: 'Planlanan uygulama tarihi ve saati gelecekte olmalıdır.',
+    'Vaccinations.AppliedAtMustNotBeFuture': 'Uygulama tarihi gelecek bir tarih olamaz.',
+    VaccinationsAppliedAtMustNotBeFuture: 'Uygulama tarihi gelecek bir tarih olamaz.',
+    'Vaccinations.DueAtMustBeAfterAppliedAt': 'Sonraki uygulama tarihi, uygulama tarihinden sonra olmalıdır.',
+    VaccinationsDueAtMustBeAfterAppliedAt: 'Sonraki uygulama tarihi, uygulama tarihinden sonra olmalıdır.',
+    'Vaccinations.ScheduledMustNotHaveAppliedAt': 'Planlanan kayıtta uygulama tarihi bulunmamalıdır.',
+    VaccinationsScheduledMustNotHaveAppliedAt: 'Planlanan kayıtta uygulama tarihi bulunmamalıdır.'
+};
+
+function vaccinationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    if (!code) {
+        return null;
+    }
+    return VACCINATION_PANEL_PROBLEM_MESSAGES[code] ?? VACCINATION_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
+}
+
 function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
     if (!code) {
@@ -166,6 +188,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const reminderPanelMsg = reminderPanelProblemUserMessage(err);
     if (reminderPanelMsg) {
         return reminderPanelMsg;
+    }
+    const vaccinationPanelMsg = vaccinationPanelProblemUserMessage(err);
+    if (vaccinationPanelMsg) {
+        return vaccinationPanelMsg;
     }
     const clinicPanelMsg = clinicPanelProblemUserMessage(err);
     if (clinicPanelMsg) {

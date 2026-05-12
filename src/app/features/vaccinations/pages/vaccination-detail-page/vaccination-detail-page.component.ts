@@ -10,7 +10,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
@@ -47,7 +47,7 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
             <app-page-header
                 title="Aşı kaydı"
                 subtitle="Klinik"
-                [description]="formatDateTime(vac()!.appliedAtUtc) + ' · ' + statusLabel(vac()!.status) + ' · ' + vac()!.vaccineName"
+                [description]="headerDescription(vac()!)"
             >
                 @if (canUpdateVaccination && !ro.mutationBlocked()) {
                     <a
@@ -113,10 +113,23 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                     <div class="card">
                         <h5 class="mt-0 mb-4">Tarihler</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.appliedAtUtc) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                            @if (vac()!.status === 0) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlanan uygulama tarihi ve saati</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                            } @else if (vac()!.status === 1) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.appliedAtUtc) }}</dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki uygulama</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                            } @else if (vac()!.status === 2) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlı / sonraki tarih</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                            } @else {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.appliedAtUtc) }}</dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                            }
                         </dl>
                     </div>
                 </div>
@@ -161,11 +174,24 @@ export class VaccinationDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
+    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly canUpdateVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
     readonly statusLabel = vaccinationStatusLabel;
     readonly statusSeverity = vaccinationStatusSeverity;
+
+    headerDescription(v: VaccinationDetailVm): string {
+        const st = v.status;
+        const parts: string[] = [];
+        if (st === 0) {
+            parts.push(v.dueAtUtc ? `${this.formatDateTime(v.dueAtUtc)} (planlanan uygulama)` : 'Planlanmış');
+        } else if (st === 1) {
+            parts.push(this.formatDateTime(v.appliedAtUtc));
+        }
+        parts.push(this.statusLabel(v.status));
+        parts.push(v.vaccineName);
+        return parts.join(' · ');
+    }
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {

@@ -17,7 +17,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -230,8 +230,8 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                         >
                             <ng-template #header>
                                 <tr>
-                                    <th>Uygulama tarihi</th>
-                                    <th>Sonraki tarih</th>
+                                    <th>Uygulama</th>
+                                    <th>Planlanan uygulama</th>
                                     <th>Aşı</th>
                                     <th>Hayvan</th>
                                     <th>Müşteri</th>
@@ -278,7 +278,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                             >
                                 <div class="text-sm text-muted-color mb-3 min-w-0 space-y-1">
                                     <div><span class="font-medium">Uygulama: </span>{{ formatDate(row.appliedAtUtc) }}</div>
-                                    <div><span class="font-medium">Sonraki: </span>{{ formatDate(row.dueAtUtc) }}</div>
+                                    <div><span class="font-medium">Planlanan uygulama: </span>{{ formatDate(row.dueAtUtc) }}</div>
                                 </div>
                                 <div class="space-y-2 mb-3 min-w-0">
                                     <div class="text-sm">
@@ -366,7 +366,7 @@ export class VaccinationsListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
+    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly statusLabel = vaccinationStatusLabel;
     readonly statusSeverity = vaccinationStatusSeverity;
     readonly hasActiveFilters = computed(

@@ -25,12 +25,21 @@ import {
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import type { VaccinationUpsertFieldErrors, VaccinationUpsertFormFieldKey } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import {
+    buildVaccinationAppliedDueForSubmit,
+    localDateTimeLocalInputMaxNow,
+    minDateTimeLocalMinuteAfter,
+    minDateTimeLocalMinuteAfterNow,
+    vaccinationAppliedNotFutureValidator,
+    vaccinationNextDueAfterAppliedGroupValidator,
+    vaccinationPlannedNotPastValidator,
+    vaccinationStatusDateFieldsAfterTransition
+} from '@/app/features/vaccinations/utils/vaccination-upsert-date-submit.utils';
 
 @Component({
     selector: 'app-vaccination-new-page',
@@ -146,35 +155,78 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati</label>
-                        <input
-                            id="appliedAtLocal"
-                            type="datetime-local"
-                            class="w-full p-inputtext p-component"
-                            formControlName="appliedAtLocal"
-                        />
-                        @if (apiFieldErrors().appliedAtLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().appliedAtLocal }}</small>
-                        } @else if (form.controls.appliedAtLocal.invalid && form.controls.appliedAtLocal.touched) {
-                            <small class="text-red-500">Bu durum için uygulama tarihi / saati zorunludur.</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="nextDueDate" class="block text-sm font-medium text-muted-color mb-2">Sonraki tarih</label>
-                        <input id="nextDueDate" type="date" class="w-full p-inputtext p-component" formControlName="nextDueDate" />
-                        @if (apiFieldErrors().nextDueDate) {
-                            <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
-                        } @else if (form.controls.nextDueDate.invalid && form.controls.nextDueDate.touched) {
-                            <small class="text-red-500">Bu durum için sonraki tarih zorunludur.</small>
-                        }
-                        @if (apiFieldErrors().notes) {
-                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
-                        }
-                    </div>
+                    @if (statusNum() === 1) {
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati *</label>
+                            <input
+                                id="appliedAtLocal"
+                                type="datetime-local"
+                                class="w-full p-inputtext p-component"
+                                formControlName="appliedAtLocal"
+                                [attr.max]="maxAppliedInput()"
+                            />
+                            @if (apiFieldErrors().appliedAtLocal) {
+                                <small class="text-red-500">{{ apiFieldErrors().appliedAtLocal }}</small>
+                            } @else if (form.controls.appliedAtLocal.hasError('required') && form.controls.appliedAtLocal.touched) {
+                                <small class="text-red-500">Uygulama tarihi zorunludur.</small>
+                            } @else if (form.controls.appliedAtLocal.hasError('appliedNotFuture') && form.controls.appliedAtLocal.touched) {
+                                <small class="text-red-500">Uygulama tarihi gelecek bir tarih olamaz.</small>
+                            }
+                        </div>
+                    }
+                    @if (statusNum() === 0) {
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="nextDueDateScheduled" class="block text-sm font-medium text-muted-color mb-2">Planlanan uygulama tarihi ve saati *</label>
+                            <input
+                                id="nextDueDateScheduled"
+                                type="datetime-local"
+                                class="w-full p-inputtext p-component"
+                                formControlName="nextDueDate"
+                                [attr.min]="plannedDateTimeMin()"
+                            />
+                            <p class="text-muted-color text-sm mt-2 mb-0">Aşı bu tarih ve saatte uygulanmak üzere planlanır.</p>
+                            @if (apiFieldErrors().nextDueDate) {
+                                <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
+                            } @else if (form.controls.nextDueDate.hasError('required') && form.controls.nextDueDate.touched) {
+                                <small class="text-red-500">Planlanan uygulama tarihi ve saati zorunludur.</small>
+                            } @else if (form.controls.nextDueDate.hasError('plannedNotPast') && form.controls.nextDueDate.touched) {
+                                <small class="text-red-500">Planlanan uygulama tarihi ve saati gelecekte olmalıdır.</small>
+                            }
+                        </div>
+                    }
+                    @if (statusNum() === 1) {
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="nextDueDateApplied" class="block text-sm font-medium text-muted-color mb-2">Sonraki uygulama tarihi</label>
+                            <input
+                                id="nextDueDateApplied"
+                                type="datetime-local"
+                                class="w-full p-inputtext p-component"
+                                formControlName="nextDueDate"
+                                [attr.min]="minNextDueAfterApplied()"
+                            />
+                            <p class="text-muted-color text-sm mt-2 mb-0">Boş bırakılırsa bu aşı için hatırlatma oluşturulmaz.</p>
+                            @if (apiFieldErrors().nextDueDate) {
+                                <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
+                            } @else if (form.hasError('nextDueAfterApplied') && (form.controls.nextDueDate.touched || form.touched)) {
+                                <small class="text-red-500">Sonraki uygulama tarihi ve saati, uygulama tarihinden sonra olmalıdır.</small>
+                            }
+                        </div>
+                    }
+                    @if (statusNum() === 2) {
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="nextDueDateCancelled" class="block text-sm font-medium text-muted-color mb-2">Planlı / sonraki tarih (opsiyonel)</label>
+                            <input id="nextDueDateCancelled" type="datetime-local" class="w-full p-inputtext p-component" formControlName="nextDueDate" />
+                            @if (apiFieldErrors().nextDueDate) {
+                                <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
+                            }
+                        </div>
+                    }
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
+                        @if (apiFieldErrors().notes) {
+                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                        }
                     </div>
                 </div>
 
@@ -219,6 +271,9 @@ export class VaccinationNewPageComponent implements OnInit {
     /** Bağlam başarıyla uygulandıysa API’ye iletilir; serbest oluşturmada null kalır. */
     private routeExaminationId: string | null = null;
 
+    /** Son bilinen durum — yalnızca kullanıcı `status` değiştirdiğinde tarih reseti için. */
+    private lastStatusForDateTransition: number | null = null;
+
     readonly contextFromRoute = signal(false);
     readonly applyingRouteContext = signal(false);
 
@@ -235,21 +290,48 @@ export class VaccinationNewPageComponent implements OnInit {
 
     readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
 
-    readonly form = this.fb.nonNullable.group({
-        clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }, Validators.required],
-        vaccineName: ['', Validators.required],
-        status: [0 as number | null, Validators.required],
-        appliedAtLocal: [''],
-        nextDueDate: [''],
-        notes: ['']
-    });
+    readonly form = this.fb.nonNullable.group(
+        {
+            clientId: ['', Validators.required],
+            petId: [{ value: '', disabled: true }, Validators.required],
+            vaccineName: ['', Validators.required],
+            status: [0 as number | null, Validators.required],
+            appliedAtLocal: [''],
+            nextDueDate: [''],
+            notes: ['']
+        },
+        { validators: [vaccinationNextDueAfterAppliedGroupValidator()] }
+    );
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
-        this.updateDateValidators(this.form.controls.status.value);
+        const initStatus = this.normalizeStatusNum(this.form.controls.status.value);
+        this.lastStatusForDateTransition = initStatus;
+        this.applyDateValidatorsForStatus(initStatus);
         this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((status) => {
-            this.updateDateValidators(status);
+            const next = this.normalizeStatusNum(status);
+            const prev = this.lastStatusForDateTransition;
+            if (prev !== null && prev !== next) {
+                const raw = this.form.getRawValue();
+                const patch = vaccinationStatusDateFieldsAfterTransition(
+                    prev as 0 | 1 | 2,
+                    next as 0 | 1 | 2,
+                    (raw.appliedAtLocal ?? '').trim(),
+                    (raw.nextDueDate ?? '').trim()
+                );
+                this.form.patchValue(
+                    { appliedAtLocal: patch.appliedAtLocal, nextDueDate: patch.nextDueDate },
+                    { emitEvent: false }
+                );
+            }
+            this.lastStatusForDateTransition = next;
+            this.applyDateValidatorsForStatus(next);
+        });
+        this.form.controls.appliedAtLocal.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            this.form.updateValueAndValidity({ emitEvent: false });
+        });
+        this.form.controls.nextDueDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            this.form.updateValueAndValidity({ emitEvent: false });
         });
         this.loadClients();
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
@@ -289,42 +371,15 @@ export class VaccinationNewPageComponent implements OnInit {
             this.submitError.set('Geçerli bir durum seçin.');
             return;
         }
-        const needsAppliedAt = status === 1;
-        const needsDueAt = status === 0;
-
-        let appliedAtUtc: string | undefined;
-        const appliedRaw = v.appliedAtLocal?.trim();
-        if (appliedRaw) {
-            const iso = dateTimeLocalInputToIsoUtc(appliedRaw);
-            if (!iso) {
-                this.submitError.set('Geçerli bir uygulama tarihi ve saati seçin.');
-                return;
-            }
-            appliedAtUtc = iso;
-        }
-        if (needsAppliedAt && !appliedAtUtc) {
-            this.submitError.set('Seçilen durum için uygulama tarihi / saati zorunludur.');
-            return;
-        }
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
             return;
         }
 
-        let dueAtUtc: string | undefined;
-        const nd = v.nextDueDate?.trim();
-        if (nd) {
-            // `type="date"` girdisi date-only semantiğindedir; UTC gün başına çevrilir.
-            const iso = dateOnlyInputToUtcIso(nd);
-            if (!iso) {
-                this.submitError.set('Geçerli bir sonraki tarih seçin.');
-                return;
-            }
-            dueAtUtc = iso;
-        }
-        if (needsDueAt && !dueAtUtc) {
-            this.submitError.set('Seçilen durum için sonraki tarih zorunludur.');
+        const dates = buildVaccinationAppliedDueForSubmit(status as 0 | 1 | 2, (v.appliedAtLocal ?? '').trim(), (v.nextDueDate ?? '').trim());
+        if (dates.errorMessage) {
+            this.submitError.set(dates.errorMessage);
             return;
         }
 
@@ -333,8 +388,8 @@ export class VaccinationNewPageComponent implements OnInit {
             petId: v.petId.trim(),
             examinationId: this.routeExaminationId,
             vaccineName: v.vaccineName.trim(),
-            appliedAtUtc: appliedAtUtc ?? null,
-            dueAtUtc: dueAtUtc ?? null,
+            appliedAtUtc: dates.appliedAtUtc,
+            dueAtUtc: dates.dueAtUtc,
             status,
             notes: v.notes.trim() || null
         };
@@ -508,22 +563,43 @@ export class VaccinationNewPageComponent implements OnInit {
         return e instanceof Error ? e.message : 'Kayıt oluşturulamadı.';
     }
 
-    private updateDateValidators(status: unknown): void {
-        const s = String(status ?? '').trim();
-        const needsAppliedAt = s === '1';
-        const needsDueAt = s === '0';
+    /** Yalnızca validatorlar; alan değerlerine dokunmaz. */
+    private applyDateValidatorsForStatus(s: number): void {
+        const needsAppliedAt = s === 1;
+        const needsPlannedDue = s === 0;
 
-        this.form.controls.appliedAtLocal.setValidators(needsAppliedAt ? [Validators.required] : []);
-        this.form.controls.nextDueDate.setValidators(needsDueAt ? [Validators.required] : []);
-
-        if (!needsAppliedAt) {
-            this.form.controls.appliedAtLocal.setValue('', { emitEvent: false });
-        }
-        if (!needsDueAt) {
-            this.form.controls.nextDueDate.setValue('', { emitEvent: false });
-        }
+        this.form.controls.appliedAtLocal.setValidators(
+            needsAppliedAt ? [Validators.required, vaccinationAppliedNotFutureValidator()] : []
+        );
+        this.form.controls.nextDueDate.setValidators(
+            needsPlannedDue ? [Validators.required, vaccinationPlannedNotPastValidator()] : []
+        );
 
         this.form.controls.appliedAtLocal.updateValueAndValidity({ emitEvent: false });
         this.form.controls.nextDueDate.updateValueAndValidity({ emitEvent: false });
+        this.form.updateValueAndValidity({ emitEvent: false });
+    }
+
+    private normalizeStatusNum(status: unknown): number {
+        const n = Number(status);
+        return Number.isFinite(n) && [0, 1, 2].includes(n) ? n : 0;
+    }
+
+    /** Şablon: seçilen durum kodu. */
+    protected statusNum(): number {
+        const n = Number(this.form.controls.status.value);
+        return Number.isFinite(n) ? n : -1;
+    }
+
+    protected plannedDateTimeMin(): string {
+        return minDateTimeLocalMinuteAfterNow();
+    }
+
+    protected maxAppliedInput(): string {
+        return localDateTimeLocalInputMaxNow();
+    }
+
+    protected minNextDueAfterApplied(): string {
+        return minDateTimeLocalMinuteAfter(this.form.controls.appliedAtLocal.value ?? '');
     }
 }
