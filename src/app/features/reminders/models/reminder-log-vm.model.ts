@@ -2,6 +2,9 @@ import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-ta
 
 export interface ReminderLogItemVm {
     id: string;
+    clinicId: string | null;
+    /** Gösterim: API `clinicName` veya klinik listesi eşlemesi; yoksa "—". */
+    clinicDisplay: string;
     reminderTypeLabel: string;
     sourceEntityTypeLabel: string;
     sourceEntityId: string | null;

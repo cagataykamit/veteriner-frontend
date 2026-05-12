@@ -78,8 +78,12 @@ export function mapReminderLogItemDtoToVm(dto: ReminderLogItemDto): ReminderLogI
     const sourceEntityTypeLabel = sourceEntityTypeLabelForDisplay(dto.sourceEntityType, dto.reminderType);
     const sourceEntityId = toTrimmedString(dto.sourceEntityId) || null;
     const relatedRecord = relatedRecordMeta(dto.sourceEntityType, dto.reminderType, sourceEntityId);
+    const clinicId = toTrimmedString(dto.clinicId) || null;
+    const clinicNameFromApi = toTrimmedString(dto.clinicName);
     return {
         id: dto.id,
+        clinicId,
+        clinicDisplay: clinicNameFromApi,
         reminderTypeLabel: reminderTypeLabel(dto.reminderType),
         sourceEntityTypeLabel,
         sourceEntityId,
@@ -190,17 +194,25 @@ function relatedRecordMeta(
     if (normalizedType === 0) {
         if (sourceEntityId) {
             return {
-                label: 'Randevuyu görüntüle',
+                label: 'Randevuya git',
                 route: ['/panel/appointments', sourceEntityId]
             };
         }
-        return { label: 'Randevu', route: null };
+        return { label: '—', route: null };
     }
     if (normalizedType === 1) {
-        return { label: 'Aşı', route: null };
+        if (sourceEntityId) {
+            return {
+                label: 'Aşı kaydına git',
+                route: ['/panel/vaccinations', sourceEntityId]
+            };
+        }
+        return { label: '—', route: null };
     }
-    return { label: 'İlgili kayıt', route: null };
+    return { label: '—', route: null };
 }
+
+const REMINDER_ERROR_DISPLAY_MAX = 240;
 
 function mapErrorDisplay(lastError: unknown): string {
     const text = toTrimmedString(lastError);
@@ -209,6 +221,9 @@ function mapErrorDisplay(lastError: unknown): string {
     }
     if (isLegacyUnverifiedDispatchError(text)) {
         return 'Gönderim doğrulanamadı';
+    }
+    if (text.length > REMINDER_ERROR_DISPLAY_MAX) {
+        return `${text.slice(0, REMINDER_ERROR_DISPLAY_MAX - 1)}…`;
     }
     return text;
 }

@@ -227,11 +227,12 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '70rem' }"
+                                [tableStyle]="{ 'min-width': '78rem' }"
                             >
                                 <ng-template #header>
                                     <tr>
                                         <th>Tarih</th>
+                                        <th>Klinik</th>
                                         <th>Tür</th>
                                         <th>Alıcı</th>
                                         <th>Durum</th>
@@ -242,6 +243,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 <ng-template #body let-row>
                                     <tr>
                                         <td>{{ formatDateTime(row.primaryDateUtc) }}</td>
+                                        <td class="break-words">{{ row.clinicDisplay }}</td>
                                         <td>{{ row.reminderTypeLabel }}</td>
                                         <td class="break-words">{{ row.recipientDisplay }}</td>
                                         <td class="whitespace-nowrap">
@@ -273,6 +275,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                             <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
                                         </span>
                                     </div>
+                                    <div class="text-sm mb-1 break-words"><span class="text-muted-color">Klinik: </span>{{ row.clinicDisplay }}</div>
                                     <div class="text-sm mb-1"><span class="text-muted-color">Tür: </span>{{ row.reminderTypeLabel }}</div>
                                     <div class="text-sm mb-1 break-words"><span class="text-muted-color">Alıcı: </span>{{ row.recipientDisplay }}</div>
                                     <div class="text-sm mb-1 break-words">
@@ -504,6 +507,28 @@ export class ReminderLogsPageComponent implements OnInit {
         );
     }
 
+    /** API `clinicName` veya `clinicId` → `ClinicsService` listesi ile gösterim adı; GUID gösterilmez. */
+    private enrichRowsWithClinicDisplay(items: ReminderLogItemVm[]): ReminderLogItemVm[] {
+        return items.map((row) => ({
+            ...row,
+            clinicDisplay: this.resolveClinicDisplay(row)
+        }));
+    }
+
+    private resolveClinicDisplay(row: ReminderLogItemVm): string {
+        const fromApi = row.clinicDisplay?.trim();
+        if (fromApi) {
+            return fromApi;
+        }
+        const id = row.clinicId?.trim();
+        if (!id) {
+            return '—';
+        }
+        const hit = this.clinicOptions().find((o) => o.value === id);
+        const label = hit?.label?.trim();
+        return label && label !== 'Tüm klinikler' ? label : '—';
+    }
+
     private loadFromServer(
         page: number,
         pageSize: number,
@@ -534,7 +559,7 @@ export class ReminderLogsPageComponent implements OnInit {
             })
             .subscribe({
                 next: (res) => {
-                    this.rows.set(res.items);
+                    this.rows.set(this.enrichRowsWithClinicDisplay(res.items));
                     this.totalItems.set(res.totalItems);
                     this.pageSize.set(res.pageSize);
                     this.currentPage.set(res.page);

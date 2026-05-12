@@ -5,6 +5,8 @@ export type ReminderSourceEntityTypeApi = 'Appointment' | 'Vaccination' | 0 | 1 
 export interface ReminderLogItemDto {
     id: string;
     clinicId: string | null;
+    /** Backend bazı sürümlerde dönebilir; yoksa `clinicId` ile istemci tarafında eşlenir. */
+    clinicName?: string | null;
     reminderType: ReminderTypeApi | null;
     sourceEntityType: ReminderSourceEntityTypeApi | null;
     sourceEntityId: string | null;
