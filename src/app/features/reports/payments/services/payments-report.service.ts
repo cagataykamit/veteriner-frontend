@@ -8,6 +8,7 @@ import { mapPaymentsReportDtoToVm } from '@/app/features/reports/payments/data/p
 import type { PaymentsReportDto } from '@/app/features/reports/payments/models/payments-report-api.model';
 import { paymentsReportQueryToHttpParams, type PaymentsReportQuery } from '@/app/features/reports/payments/models/payments-report-query.model';
 import type { PaymentsReportResultVm } from '@/app/features/reports/payments/models/payments-report.model';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
@@ -37,7 +38,7 @@ export class PaymentsReportService {
         const params = paymentsReportQueryToHttpParams(merged, { omitPaging: true });
         return this.api.getBlob(ApiEndpoints.reports.paymentsExport(), params).pipe(
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'CSV dışa aktarma başarısız.')))
+                throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
             )
         );
     }
@@ -48,7 +49,7 @@ export class PaymentsReportService {
         const params = paymentsReportQueryToHttpParams(merged, { omitPaging: true });
         return this.api.getBlob(ApiEndpoints.reports.paymentsExportXlsx(), params).pipe(
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Excel dışa aktarma başarısız.')))
+                throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
             )
         );
     }

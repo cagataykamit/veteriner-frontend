@@ -484,7 +484,7 @@ export class ExaminationsReportPageComponent implements OnInit {
                 this.exportError.set(null);
                 const blob = res.body;
                 if (!blob) {
-                    this.exportError.set(kind === 'xlsx' ? 'Excel yanıtı boş.' : 'CSV yanıtı boş.');
+                    this.exportError.set(this.copy.reportsExportResponseEmpty);
                     return;
                 }
                 const fromCd = fileNameFromContentDisposition(res.headers.get('Content-Disposition'));
@@ -494,7 +494,7 @@ export class ExaminationsReportPageComponent implements OnInit {
             },
             error: (e: Error) => {
                 this.exportKind.set(null);
-                this.exportError.set(e.message ?? (kind === 'xlsx' ? 'Excel indirilemedi.' : 'CSV indirilemedi.'));
+                this.exportError.set(e.message?.trim() || this.copy.reportsExportFailedFallback);
             }
         });
     }
