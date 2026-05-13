@@ -13,7 +13,13 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { PetsService } from '@/app/features/pets/services/pets.service';
 import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-my-clinics-to-select-options';
+import {
+    loadReportClientSelectOptions$,
+    loadReportPetLookupBundle$
+} from '@/app/features/reports/shared/report-client-pet-lookup';
 import { isReportUiClinicIdMisalignedWithJwt, isReportUiClinicIdUnknownToMyClinics } from '@/app/features/reports/shared/report-my-clinic.utils';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import type { AppointmentsReportQuery } from '@/app/features/reports/appointments/models/appointments-report-query.model';
@@ -41,6 +47,8 @@ type AppointmentsReportState = {
     toDate: string;
     status: string;
     clinicId: string;
+    clientId: string;
+    petId: string;
     page: number;
     pageSize: number;
 };
@@ -79,6 +87,9 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
         }
 
         <div class="card mb-4">
+            @if (lookupWarning()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ lookupWarning() }}</p>
+            }
             <p class="text-sm text-muted-color m-0 mb-4">{{ copy.appointmentsReportDefaultPeriodHint }}</p>
             <div class="grid grid-cols-12 gap-3 items-end">
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isFromDateActive())">
@@ -159,6 +170,55 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                         [placeholder]="copy.filterPlaceholderAll"
                         styleClass="w-full"
                         [showClear]="true"
+                    />
+                </div>
+                <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClientFilterActive())">
+                    <span id="lblApptRepClient" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClientFilterActive())">
+                        {{ copy.labelClient }}
+                        @if (isClientFilterActive()) {
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                Aktif
+                            </span>
+                        }
+                    </span>
+                    <p-select
+                        ariaLabelledBy="lblApptRepClient"
+                        inputId="apptRepClient"
+                        [options]="clientSelectOptions()"
+                        [(ngModel)]="clientIdFilter"
+                        (ngModelChange)="onClientFilterNgModelChange()"
+                        optionLabel="label"
+                        optionValue="value"
+                        [placeholder]="copy.filterPlaceholderAll"
+                        styleClass="w-full"
+                        [showClear]="true"
+                        [filter]="true"
+                        filterBy="label"
+                        [loading]="loadingClientOptions()"
+                    />
+                </div>
+                <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isPetFilterActive())">
+                    <span id="lblApptRepPet" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isPetFilterActive())">
+                        {{ copy.labelPet }}
+                        @if (isPetFilterActive()) {
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
+                                Aktif
+                            </span>
+                        }
+                    </span>
+                    <p-select
+                        ariaLabelledBy="lblApptRepPet"
+                        inputId="apptRepPet"
+                        [options]="petSelectOptions()"
+                        [(ngModel)]="petIdFilter"
+                        optionLabel="label"
+                        optionValue="value"
+                        [placeholder]="copy.filterPlaceholderAll"
+                        styleClass="w-full"
+                        [showClear]="true"
+                        [filter]="true"
+                        filterBy="label"
+                        [loading]="loadingPetOptions()"
                     />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isSearchActive())">
@@ -350,6 +410,8 @@ export class AppointmentsReportPageComponent implements OnInit {
     readonly reportTableRowTrackKey = reportTableRowTrackKey;
     private readonly reportService = inject(AppointmentsReportService);
     private readonly auth = inject(AuthService);
+    private readonly clientsService = inject(ClientsService);
+    private readonly petsService = inject(PetsService);
 
     readonly canExportReport = computed(() => this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM));
 
@@ -357,6 +419,7 @@ export class AppointmentsReportPageComponent implements OnInit {
     readonly exportKind = signal<'csv' | 'xlsx' | null>(null);
     readonly error = signal<string | null>(null);
     readonly exportError = signal<string | null>(null);
+    readonly lookupWarning = signal<string | null>(null);
     readonly report = signal<AppointmentsReportResultVm | null>(null);
 
     readonly pageSize = signal(25);
@@ -368,14 +431,22 @@ export class AppointmentsReportPageComponent implements OnInit {
     readonly activeToDate = signal('');
     readonly activeStatus = signal('');
     readonly activeClinicId = signal('');
+    readonly activeClientId = signal('');
+    readonly activePetId = signal('');
 
     fromDateInput = '';
     toDateInput = '';
     searchInput = '';
     statusFilter = '';
     clinicIdFilter = '';
+    clientIdFilter = '';
+    petIdFilter = '';
 
     readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
+    readonly loadingClientOptions = signal(false);
+    readonly loadingPetOptions = signal(false);
+    readonly clientSelectOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.filterPlaceholderAll, value: '' }]);
+    readonly petSelectOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.filterPlaceholderAll, value: '' }]);
 
     readonly statusOptions = [
         { label: PANEL_COPY.filterPlaceholderAll, value: '' },
@@ -414,7 +485,47 @@ export class AppointmentsReportPageComponent implements OnInit {
             this.first.set(0);
         }
         this.suppressNextLazy = true;
+        this.bootstrapClientPetLookups();
         this.bootstrapReportAfterMyClinics();
+    }
+
+    onClientFilterNgModelChange(): void {
+        this.reloadPetSelectOptions();
+    }
+
+    private bootstrapClientPetLookups(): void {
+        this.loadingClientOptions.set(true);
+        loadReportClientSelectOptions$(this.clientsService, this.copy.filterPlaceholderAll).subscribe({
+            next: (opts) => {
+                this.lookupWarning.set(null);
+                this.clientSelectOptions.set(opts);
+                this.loadingClientOptions.set(false);
+                this.reloadPetSelectOptions();
+            },
+            error: () => {
+                this.lookupWarning.set(this.copy.reportsClientPetLookupError);
+                this.loadingClientOptions.set(false);
+                this.reloadPetSelectOptions();
+            }
+        });
+    }
+
+    private reloadPetSelectOptions(): void {
+        this.loadingPetOptions.set(true);
+        loadReportPetLookupBundle$(this.petsService, this.copy.filterPlaceholderAll, this.clientIdFilter.trim() || undefined).subscribe({
+            next: ({ options, pets }) => {
+                this.petSelectOptions.set(options);
+                const pid = this.petIdFilter.trim();
+                if (pid && !pets.some((p) => p.id === pid)) {
+                    this.petIdFilter = '';
+                }
+                this.loadingPetOptions.set(false);
+            },
+            error: () => {
+                this.lookupWarning.set(this.copy.reportsClientPetLookupError);
+                this.loadingPetOptions.set(false);
+            }
+        });
     }
 
     applyFilters(): void {
@@ -437,6 +548,8 @@ export class AppointmentsReportPageComponent implements OnInit {
         this.activeToDate.set(to);
         this.activeStatus.set(this.statusFilter.trim());
         this.activeClinicId.set(this.clinicIdFilter.trim());
+        this.activeClientId.set(this.clientIdFilter.trim());
+        this.activePetId.set(this.petIdFilter.trim());
         this.stripJwtMisalignedReportClinicIfNeeded();
         this.first.set(0);
         this.currentPage.set(1);
@@ -448,9 +561,13 @@ export class AppointmentsReportPageComponent implements OnInit {
         this.searchInput = '';
         this.statusFilter = '';
         this.clinicIdFilter = '';
+        this.clientIdFilter = '';
+        this.petIdFilter = '';
         this.activeSearch.set('');
         this.activeStatus.set('');
         this.activeClinicId.set('');
+        this.activeClientId.set('');
+        this.activePetId.set('');
         this.bootstrapDefaultDates();
         this.activeFromDate.set(this.fromDateInput.trim());
         this.activeToDate.set(this.toDateInput.trim());
@@ -614,6 +731,8 @@ export class AppointmentsReportPageComponent implements OnInit {
         const toYmd = this.activeToDate().trim();
         const fromUtc = fromYmd ? dateOnlyInputToIstanbulStartUtcIso(fromYmd) : '';
         const toUtc = toYmd ? dateOnlyInputToIstanbulEndUtcIso(toYmd) : '';
+        const clientId = this.activeClientId().trim() || undefined;
+        const petId = this.activePetId().trim() || undefined;
         return {
             page,
             pageSize,
@@ -621,7 +740,9 @@ export class AppointmentsReportPageComponent implements OnInit {
             from: fromUtc || undefined,
             to: toUtc || undefined,
             status: this.activeStatus() || undefined,
-            clinicId
+            clinicId,
+            clientId,
+            petId
         };
     }
 
@@ -690,6 +811,14 @@ export class AppointmentsReportPageComponent implements OnInit {
         return !!this.activeClinicId().trim();
     }
 
+    isClientFilterActive(): boolean {
+        return !!this.activeClientId().trim();
+    }
+
+    isPetFilterActive(): boolean {
+        return !!this.activePetId().trim();
+    }
+
     filterBoxClass(active: boolean): string {
         return active
             ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
@@ -722,11 +851,15 @@ export class AppointmentsReportPageComponent implements OnInit {
             this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
             this.statusFilter = typeof parsed.status === 'string' ? parsed.status : '';
             this.clinicIdFilter = typeof parsed.clinicId === 'string' ? parsed.clinicId : '';
+            this.clientIdFilter = typeof parsed.clientId === 'string' ? parsed.clientId : '';
+            this.petIdFilter = typeof parsed.petId === 'string' ? parsed.petId : '';
             this.activeSearch.set(this.searchInput.trim());
             this.activeFromDate.set(this.fromDateInput.trim());
             this.activeToDate.set(this.toDateInput.trim());
             this.activeStatus.set(this.statusFilter.trim());
             this.activeClinicId.set(this.clinicIdFilter.trim());
+            this.activeClientId.set(this.clientIdFilter.trim());
+            this.activePetId.set(this.petIdFilter.trim());
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
@@ -744,6 +877,8 @@ export class AppointmentsReportPageComponent implements OnInit {
             toDate: this.toDateInput.trim(),
             status: this.statusFilter.trim(),
             clinicId: this.clinicIdFilter.trim(),
+            clientId: this.clientIdFilter.trim(),
+            petId: this.petIdFilter.trim(),
             page,
             pageSize
         };

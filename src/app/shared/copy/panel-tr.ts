@@ -32,6 +32,8 @@ export const PANEL_COPY = {
     reportsFilterDateTo: 'Bitiş tarihi',
     reportsFilterClinic: 'Klinik',
     reportsFilterSearch: 'Arama',
+    /** Müşteri/hayvan rapor filtreleri — liste yükleme uyarısı */
+    reportsClientPetLookupError: 'Müşteri veya hayvan seçenekleri yüklenemedi.',
     reportsClinicPanelDefault: 'Panel seçili klinik',
     reportsLoadingMessage: 'Rapor yükleniyor…',
     reportsLoadErrorFallback: 'Rapor verileri yüklenemedi.',
