@@ -47,7 +47,7 @@ import {
     subscriptionCheckoutStatusLabel,
     subscriptionCheckoutStatusSeverity
 } from '@/app/features/subscriptions/utils/subscription-checkout-status.utils';
-import { subscriptionPlanLabel } from '@/app/features/subscriptions/utils/subscription-plan.utils';
+import { subscriptionPlanLabel, subscriptionPlanRank } from '@/app/features/subscriptions/utils/subscription-plan.utils';
 import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/features/subscriptions/utils/subscription-status.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
@@ -189,8 +189,7 @@ interface ReturnBannerVm {
                         @if (canManageSubscriptionOperations(s)) {
                             <div class="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
                                 <p class="m-0 text-sm text-color">
-                                    Paket seçtiğinizde güvenli ödeme sağlayıcısına yönlendirilirsiniz. Ödeme sonucu işlendiğinde sistem otomatik güncellenir; bu
-                                    sayfaya döndüğünüzde durum yenilenir.
+                                    {{ subscriptionManageFlowHint() }}
                                 </p>
                             </div>
                         } @else {
@@ -282,6 +281,13 @@ interface ReturnBannerVm {
                                     <div>{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</div>
                                 </div>
                             </div>
+                            @if (pending.changeType === 'downgrade') {
+                                <p class="m-0 mb-3 text-sm text-muted-color">
+                                    Bu değişiklik ödeme gerektirmez. Mevcut dönem bitiminde
+                                    <span class="font-medium text-color">{{ subscriptionPlanLabel(pending.targetPlanCode, null) }}</span>
+                                    paketine geçilecektir.
+                                </p>
+                            }
                             @if (canManageSubscriptionOperations(s)) {
                                 <div class="flex items-center gap-2">
                                     <p-button
@@ -302,7 +308,7 @@ interface ReturnBannerVm {
                     </div>
                 }
 
-                @if (canManageSubscriptionOperations(s)) {
+                @if (showSubscriptionCheckoutCard()) {
                     <div class="col-span-12">
                         <div class="card mb-0">
                             <h5 class="mt-0 mb-3">Checkout oturumu</h5>
@@ -485,6 +491,21 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     readonly showManageFlowChrome = computed(() => {
         const s = this.summary();
         return !!s && this.canManageSubscriptionOperations(s);
+    });
+
+    /** Checkout kartı: dönem sonu düşürme beklerken boş “oturum yok” göstermemek için gizlenir (ödeme yok). */
+    readonly showSubscriptionCheckoutCard = computed(() => {
+        const s = this.summary();
+        if (!s || !this.canManageSubscriptionOperations(s)) {
+            return false;
+        }
+        if (this.checkoutLoading() || this.checkoutError() != null || this.checkoutSession() != null) {
+            return true;
+        }
+        if (s.pendingPlanChange?.changeType === 'downgrade') {
+            return false;
+        }
+        return true;
     });
 
     /**
@@ -829,9 +850,13 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         return value ? 'Evet' : 'Hayır';
     }
 
+    subscriptionManageFlowHint(): string {
+        return 'Paket yükseltmeleri güvenli ödeme sağlayıcısı üzerinden tamamlanır. Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır, ödeme adımı gerektirmez ve bekleyen plan olarak görünür.';
+    }
+
     pendingPlanChangeTypeLabel(type: PendingPlanChangeTypeKey): string {
         if (type === 'downgrade') {
-            return 'Düşürme (dönem sonu)';
+            return 'Dönem sonunda paket düşürme';
         }
         if (type === 'upgrade') {
             return 'Yükseltme';
@@ -897,8 +922,8 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     private isUpgradePlan(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): boolean {
-        const currentIdx = this.planRank(summary.planCode, summary);
-        const nextIdx = this.planRank(plan.code, summary);
+        const currentIdx = subscriptionPlanRank(summary.planCode);
+        const nextIdx = subscriptionPlanRank(plan.code);
         if (currentIdx === null || nextIdx === null) {
             return false;
         }
@@ -906,21 +931,12 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     private isDowngradePlan(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): boolean {
-        const currentIdx = this.planRank(summary.planCode, summary);
-        const nextIdx = this.planRank(plan.code, summary);
+        const currentIdx = subscriptionPlanRank(summary.planCode);
+        const nextIdx = subscriptionPlanRank(plan.code);
         if (currentIdx === null || nextIdx === null) {
             return false;
         }
         return nextIdx < currentIdx;
-    }
-
-    private planRank(code: string | null, summary: SubscriptionSummaryVm): number | null {
-        const c = code?.trim().toLowerCase();
-        if (!c) {
-            return null;
-        }
-        const idx = summary.availablePlans.findIndex((x) => x.code.trim().toLowerCase() === c);
-        return idx >= 0 ? idx : null;
     }
 
     private scheduleDowngrade(targetPlanCode: string): void {

@@ -53,7 +53,10 @@ const SUBSCRIPTION_WRITE_USER_MESSAGES: Record<string, string> = {
     'Subscriptions.CheckoutSessionNotFound': 'Checkout oturumu bulunamadı; işlemi yeniden başlatın.',
     'Subscriptions.PendingPlanChangeNotFound': 'Bekleyen plan değişikliği bulunamadı.',
     'Subscriptions.PendingPlanChangeNotCancelable': 'Bekleyen plan değişikliği artık iptal edilemiyor.',
-    'Subscriptions.DowngradeScheduleConflict': 'Bu plan geçişi şu an planlanamıyor. Özet bilgiyi yenileyip tekrar deneyin.'
+    'Subscriptions.DowngradeScheduleConflict': 'Bu plan geçişi şu an planlanamıyor. Özet bilgiyi yenileyip tekrar deneyin.',
+    'Billing.PlanPriceNotConfigured':
+        'Bu paket için ödeme yapılandırması tamamlanmamış. Lütfen daha sonra tekrar deneyin veya yöneticinizle iletişime geçin.',
+    'Subscriptions.UpgradePriceDiffInvalid': 'Paket yükseltme tutarı hesaplanamadı. Lütfen daha sonra tekrar deneyin.'
 };
 
 /** ProblemDetails / extensions üzerinden ham problem kodu (test ve rapor toparlama için). */

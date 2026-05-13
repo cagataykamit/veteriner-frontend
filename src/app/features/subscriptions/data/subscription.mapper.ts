@@ -54,17 +54,30 @@ function toRawNumberOrString(value: unknown): number | string | null {
     return null;
 }
 
+/** Backend `SubscriptionPlanChangeType`: Upgrade = 1, Downgrade = 2 (JSON sayı). */
 function parsePendingPlanChangeType(raw: unknown): PendingPlanChangeTypeKey {
     const v = toRawNumberOrString(raw);
     if (typeof v === 'number') {
-        if (v === 0) return 'downgrade';
-        if (v === 1) return 'upgrade';
+        if (v === 1) {
+            return 'upgrade';
+        }
+        if (v === 2) {
+            return 'downgrade';
+        }
         return 'unknown';
     }
     if (typeof v === 'string') {
-        const n = v.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (['downgrade', 'down', 'lower'].includes(n)) return 'downgrade';
-        if (['upgrade', 'up', 'higher'].includes(n)) return 'upgrade';
+        const t = v.trim();
+        if (/^-?\d+$/.test(t)) {
+            return parsePendingPlanChangeType(Number.parseInt(t, 10));
+        }
+        const n = t.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (['downgrade', 'down', 'lower'].includes(n)) {
+            return 'downgrade';
+        }
+        if (['upgrade', 'up', 'higher'].includes(n)) {
+            return 'upgrade';
+        }
     }
     return 'unknown';
 }
@@ -88,13 +101,19 @@ function parsePendingPlanChangeStatus(raw: unknown): PendingPlanChangeStatusKey 
     return 'unknown';
 }
 
+function readPendingPlanChangeTypeRaw(dto: PendingPlanChangeDto): unknown {
+    const o = dto as unknown as Record<string, unknown>;
+    return o['changeType'] ?? o['ChangeType'] ?? o['planChangeType'] ?? o['PlanChangeType'] ?? o['transitionType'] ?? o['TransitionType'];
+}
+
 export function mapPendingPlanChangeDtoToVm(dto: PendingPlanChangeDto | null | undefined): PendingPlanChangeVm | null {
     if (!dto) {
         return null;
     }
     const target = trimOrNull(dto.targetPlanCode);
     const current = trimOrNull(dto.currentPlanCode);
-    const changeTypeRaw = toRawNumberOrString(dto.changeType);
+    const changeTypeSource = readPendingPlanChangeTypeRaw(dto);
+    const changeTypeRaw = toRawNumberOrString(changeTypeSource);
     const statusRaw = toRawNumberOrString(dto.status);
     const effective = trimOrNull(dto.effectiveAtUtc);
     if (!target && !current && !effective && changeTypeRaw === null && statusRaw === null) {
@@ -104,7 +123,7 @@ export function mapPendingPlanChangeDtoToVm(dto: PendingPlanChangeDto | null | u
         currentPlanCode: current,
         targetPlanCode: target,
         changeTypeRaw,
-        changeType: parsePendingPlanChangeType(dto.changeType),
+        changeType: parsePendingPlanChangeType(changeTypeSource),
         statusRaw,
         status: parsePendingPlanChangeStatus(dto.status),
         effectiveAtUtc: effective
