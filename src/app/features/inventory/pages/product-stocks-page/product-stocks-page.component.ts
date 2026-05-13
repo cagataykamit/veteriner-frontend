@@ -25,7 +25,11 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { buildCsvFromStringRows, csvTextToUtf8BlobWithBom } from '@/app/shared/utils/csv-text.utils';
 import { localDateTimeYyyyMmDd_HHmmForFileName } from '@/app/shared/utils/date.utils';
 import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
-import { forkJoin, map, of, switchMap, type Observable } from 'rxjs';
+import {
+    fetchAllInventoryCsvExportPages$,
+    InventoryCsvExportRowLimitError
+} from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
+import type { Observable } from 'rxjs';
 
 type StocksListState = {
     search: string;
@@ -334,7 +338,6 @@ export class ProductStocksPageComponent implements OnInit {
 
     private suppressNextLazy = false;
     private lastLoadKey = '';
-    private readonly exportPageSize = 1000;
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
@@ -554,8 +557,12 @@ export class ProductStocksPageComponent implements OnInit {
                 triggerBlobDownload(blob, name);
                 this.exporting.set(false);
             },
-            error: () => {
+            error: (e: unknown) => {
                 this.exporting.set(false);
+                if (e instanceof InventoryCsvExportRowLimitError) {
+                    this.exportError.set('Dışa aktarılacak kayıt sayısı çok yüksek. Lütfen filtreleri daraltın.');
+                    return;
+                }
                 this.exportError.set('Stok durumu dışa aktarılamadı.');
             }
         });
@@ -570,31 +577,7 @@ export class ProductStocksPageComponent implements OnInit {
             isBelowMinimum: lowStockMode === 'low' ? true : undefined,
             productCategoryId: categoryId || undefined
         };
-        const pageSize = this.exportPageSize;
-        return this.stockService.list({ page: 1, pageSize, ...q }).pipe(
-            switchMap((first) => {
-                if (first.totalItems === 0) {
-                    return of([]);
-                }
-                const totalPages = Math.ceil(first.totalItems / pageSize);
-                const collected = [...first.items];
-                if (totalPages <= 1) {
-                    return of(collected.slice(0, first.totalItems));
-                }
-                const rest = [];
-                for (let p = 2; p <= totalPages; p++) {
-                    rest.push(this.stockService.list({ page: p, pageSize, ...q }));
-                }
-                return forkJoin(rest).pipe(
-                    map((pages) => {
-                        for (const pg of pages) {
-                            collected.push(...pg.items);
-                        }
-                        return collected.slice(0, first.totalItems);
-                    })
-                );
-            })
-        );
+        return fetchAllInventoryCsvExportPages$((page, pageSize) => this.stockService.list({ page, pageSize, ...q }));
     }
 
     private mapStockVmToCsvRow(row: ProductStockVm): string[] {
