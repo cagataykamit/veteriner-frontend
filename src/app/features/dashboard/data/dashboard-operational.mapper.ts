@@ -153,7 +153,8 @@ export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm
             'Geciken aşı takipleri',
             'Zamanı geçmiş aşı takiplerini kontrol edin.',
             'danger',
-            '/panel/vaccinations'
+            '/panel/vaccinations',
+            { overdue: 'true' }
         ),
         item(
             'upcoming7dVaccinations',

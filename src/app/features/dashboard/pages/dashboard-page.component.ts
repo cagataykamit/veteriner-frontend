@@ -118,6 +118,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                                     @if (alert.route) {
                                                         <a
                                                             [routerLink]="[alert.route]"
+                                                            [queryParams]="alert.queryParams ?? undefined"
                                                             pButton
                                                             type="button"
                                                             label="Git"

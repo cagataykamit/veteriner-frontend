@@ -208,7 +208,7 @@ export function mapPagedVaccinationsToVm(result: VaccinationListItemDtoPagedResu
 
 /**
  * GET `/api/v1/vaccinations` — canonical query:
- * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order`.
+ * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `Status`, `FromDate`, `ToDate`, `OnlyOverdue`, `Sort`, `Order`.
  */
 export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): HttpParams {
     let p = new HttpParams();
@@ -238,6 +238,9 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     }
     if (query.toDate?.trim()) {
         p = p.set('ToDate', query.toDate.trim());
+    }
+    if (query.onlyOverdue === true) {
+        p = p.set('OnlyOverdue', 'true');
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
