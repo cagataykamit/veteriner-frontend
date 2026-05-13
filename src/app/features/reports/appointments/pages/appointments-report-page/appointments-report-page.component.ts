@@ -25,7 +25,12 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { formatUtcIsoAsLocalDateTimeDisplay, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
+import {
+    dateOnlyInputToIstanbulEndUtcIso,
+    dateOnlyInputToIstanbulStartUtcIso,
+    formatUtcIsoAsLocalDateTimeDisplay,
+    localDateYyyyMmDd
+} from '@/app/shared/utils/date.utils';
 import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
 import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.utils';
 import { isReportRecoverableClinicConstraint403, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -605,12 +610,16 @@ export class AppointmentsReportPageComponent implements OnInit {
     private buildQuery(page: number, pageSize: number): AppointmentsReportQuery {
         const clinicRaw = this.activeClinicId();
         const clinicId = typeof clinicRaw === 'string' && clinicRaw.trim() ? clinicRaw.trim() : undefined;
+        const fromYmd = this.activeFromDate().trim();
+        const toYmd = this.activeToDate().trim();
+        const fromUtc = fromYmd ? dateOnlyInputToIstanbulStartUtcIso(fromYmd) : '';
+        const toUtc = toYmd ? dateOnlyInputToIstanbulEndUtcIso(toYmd) : '';
         return {
             page,
             pageSize,
             search: this.activeSearch() || undefined,
-            from: this.activeFromDate().trim() || undefined,
-            to: this.activeToDate().trim() || undefined,
+            from: fromUtc || undefined,
+            to: toUtc || undefined,
             status: this.activeStatus() || undefined,
             clinicId
         };
