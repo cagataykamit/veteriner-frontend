@@ -86,6 +86,9 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
             @if (lookupWarning()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ lookupWarning() }}</p>
             }
+            @if (dateFilterError()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ dateFilterError() }}</p>
+            }
             <p class="text-sm text-muted-color m-0 mb-4">{{ copy.examinationsReportDefaultPeriodHint }}</p>
             <div class="grid grid-cols-12 gap-3 items-end">
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isFromDateActive())">
@@ -410,6 +413,7 @@ export class ExaminationsReportPageComponent implements OnInit {
     readonly error = signal<string | null>(null);
     readonly exportError = signal<string | null>(null);
     readonly lookupWarning = signal<string | null>(null);
+    readonly dateFilterError = signal<string | null>(null);
     readonly report = signal<ExaminationsReportResultVm | null>(null);
 
     readonly pageSize = signal(25);
@@ -490,10 +494,11 @@ export class ExaminationsReportPageComponent implements OnInit {
 
     private reloadPetSelectOptions(): void {
         this.loadingPetOptions.set(true);
-        loadReportPetLookupBundle$(this.petsService, this.copy.filterPlaceholderAll, this.clientIdFilter.trim() || undefined).subscribe({
+        const clientId = (typeof this.clientIdFilter === 'string' ? this.clientIdFilter : '').trim();
+        loadReportPetLookupBundle$(this.petsService, this.copy.filterPlaceholderAll, clientId || undefined).subscribe({
             next: ({ options, pets }) => {
                 this.petSelectOptions.set(options);
-                const pid = this.petIdFilter.trim();
+                const pid = (typeof this.petIdFilter === 'string' ? this.petIdFilter : '').trim();
                 if (pid && !pets.some((p) => p.id === pid)) {
                     this.petIdFilter = '';
                 }
@@ -507,12 +512,20 @@ export class ExaminationsReportPageComponent implements OnInit {
     }
 
     applyFilters(): void {
-        let from = this.fromDateInput?.trim() ?? '';
-        let to = this.toDateInput?.trim() ?? '';
+        this.dateFilterError.set(null);
+        const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+
+        let from = safeTrim(this.fromDateInput);
+        let to = safeTrim(this.toDateInput);
+
+        if ((from && !to) || (!from && to)) {
+            this.dateFilterError.set(this.copy.reportsDateRangeBothRequired);
+            return;
+        }
         if (!from && !to) {
             this.bootstrapDefaultDates();
-            from = this.fromDateInput.trim();
-            to = this.toDateInput.trim();
+            from = safeTrim(this.fromDateInput);
+            to = safeTrim(this.toDateInput);
         }
         if (from && to && from > to) {
             const t = from;
@@ -521,12 +534,12 @@ export class ExaminationsReportPageComponent implements OnInit {
             this.fromDateInput = from;
             this.toDateInput = to;
         }
-        this.activeSearch.set(this.searchInput.trim());
+        this.activeSearch.set(safeTrim(this.searchInput));
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
-        this.activeClinicId.set(this.clinicIdFilter.trim());
-        this.activeClientId.set(this.clientIdFilter.trim());
-        this.activePetId.set(this.petIdFilter.trim());
+        this.activeClinicId.set(safeTrim(this.clinicIdFilter));
+        this.activeClientId.set(safeTrim(this.clientIdFilter));
+        this.activePetId.set(safeTrim(this.petIdFilter));
         this.stripJwtMisalignedReportClinicIfNeeded();
         this.first.set(0);
         this.currentPage.set(1);
@@ -535,6 +548,7 @@ export class ExaminationsReportPageComponent implements OnInit {
     }
 
     resetFilters(): void {
+        this.dateFilterError.set(null);
         this.searchInput = '';
         this.clinicIdFilter = '';
         this.clientIdFilter = '';
@@ -816,18 +830,28 @@ export class ExaminationsReportPageComponent implements OnInit {
                 sessionStorage.removeItem(EXAMINATIONS_REPORT_STATE_KEY);
                 return false;
             }
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
-            this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
-            this.clinicIdFilter = typeof parsed.clinicId === 'string' ? parsed.clinicId : '';
-            this.clientIdFilter = typeof parsed.clientId === 'string' ? parsed.clientId : '';
-            this.petIdFilter = typeof parsed.petId === 'string' ? parsed.petId : '';
-            this.activeSearch.set(this.searchInput.trim());
-            this.activeFromDate.set(this.fromDateInput.trim());
-            this.activeToDate.set(this.toDateInput.trim());
-            this.activeClinicId.set(this.clinicIdFilter.trim());
-            this.activeClientId.set(this.clientIdFilter.trim());
-            this.activePetId.set(this.petIdFilter.trim());
+            const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+            this.searchInput = safeTrim(parsed.search);
+            this.fromDateInput = safeTrim(parsed.fromDate);
+            this.toDateInput = safeTrim(parsed.toDate);
+            this.clinicIdFilter = safeTrim(parsed.clinicId);
+            this.clientIdFilter = safeTrim(parsed.clientId);
+            this.petIdFilter = safeTrim(parsed.petId);
+
+            const from = safeTrim(this.fromDateInput);
+            const to = safeTrim(this.toDateInput);
+            if ((from && !to) || (!from && to)) {
+                this.bootstrapDefaultDates();
+                this.fromDateInput = safeTrim(this.fromDateInput);
+                this.toDateInput = safeTrim(this.toDateInput);
+            }
+
+            this.activeSearch.set(safeTrim(this.searchInput));
+            this.activeFromDate.set(safeTrim(this.fromDateInput));
+            this.activeToDate.set(safeTrim(this.toDateInput));
+            this.activeClinicId.set(safeTrim(this.clinicIdFilter));
+            this.activeClientId.set(safeTrim(this.clientIdFilter));
+            this.activePetId.set(safeTrim(this.petIdFilter));
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
@@ -839,13 +863,14 @@ export class ExaminationsReportPageComponent implements OnInit {
     }
 
     private persistStateToSessionStorage(page: number, pageSize: number): void {
+        const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
         const state: ExaminationsReportState = {
-            search: this.searchInput.trim(),
-            fromDate: this.fromDateInput.trim(),
-            toDate: this.toDateInput.trim(),
-            clinicId: this.clinicIdFilter.trim(),
-            clientId: this.clientIdFilter.trim(),
-            petId: this.petIdFilter.trim(),
+            search: safeTrim(this.searchInput),
+            fromDate: safeTrim(this.fromDateInput),
+            toDate: safeTrim(this.toDateInput),
+            clinicId: safeTrim(this.clinicIdFilter),
+            clientId: safeTrim(this.clientIdFilter),
+            petId: safeTrim(this.petIdFilter),
             page,
             pageSize
         };
