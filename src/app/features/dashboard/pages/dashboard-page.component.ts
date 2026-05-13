@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin, fromEvent, map, take } from 'rxjs';
@@ -218,7 +218,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                     </div>
                 </div>
 
-                @if (canReadProducts) {
+                @if (showLowStockCard()) {
                     <div class="col-span-12">
                         <div class="card mb-0">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
@@ -234,8 +234,6 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                 <app-loading-state message="Düşük stok bilgileri yükleniyor…" />
                             } @else if (lowStockError()) {
                                 <p class="text-red-500 m-0 text-sm" role="alert">{{ lowStockError() }}</p>
-                            } @else if (lowStockRows().length === 0) {
-                                <app-empty-state message="Düşük stokta ürün yok." />
                             } @else {
                                 <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-3">
                                     @for (row of lowStockRows(); track row.id) {
@@ -891,6 +889,13 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
     readonly lowStockRows = signal<ProductStockVm[]>([]);
     readonly lowStockLoading = signal(false);
     readonly lowStockError = signal<string | null>(null);
+
+    /** Uyarı alanı: yalnızca yükleme, hata veya en az bir düşük stok satırı varken gösterilir. */
+    readonly showLowStockCard = computed(
+        () =>
+            this.canReadProducts &&
+            (this.lowStockLoading() || this.lowStockError() != null || this.lowStockRows().length > 0)
+    );
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
