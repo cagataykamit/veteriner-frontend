@@ -262,6 +262,7 @@ export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
     return {
         id: dto.id,
         clientId: dto.clientId?.trim() ? dto.clientId : null,
+        speciesId: firstTrimmed(dto.speciesId ?? undefined, readDtoString(dto, ['SpeciesId'])),
         name: str(dto.name),
         speciesName: speciesName(dto.speciesName),
         breed: canonicalBreedDisplay(dto),
@@ -321,6 +322,7 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
     return {
         id: dto.id,
         name: str(dto.name),
+        speciesId: dto.speciesId?.trim() ? dto.speciesId.trim() : null,
         speciesName: speciesName(dto.speciesName),
         breed: canonicalBreedDisplay(dto),
         gender: canonicalGenderRaw(dto),

@@ -38,13 +38,25 @@ export function rateLimitUserMessage(err: HttpErrorResponse): string {
     return 'Çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin.';
 }
 
+/** Kiracıda abonelik yok / yazma engeli — create (müşteri, hayvan, …) sırasında backend `detail` veya `extensions.code`. */
+const SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE =
+    'Kurum aboneliği bulunamadığı için yeni kayıt oluşturulamıyor. Hesap → Abonelik bölümünden paketinizi etkinleştirebilirsiniz; bu sayfaya erişiminiz yoksa kurum yöneticinizle iletişime geçin.';
+
 /** Abonelik / tenant yazma kilidi — backend `ProblemDetails` + `extensions.code`. */
 const SUBSCRIPTION_WRITE_USER_MESSAGES: Record<string, string> = {
     'Subscriptions.TenantReadOnly':
-        'Bu işletme salt okunur moddadır; yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik üzerinden devam edebilirsiniz.',
+        'Kurum aboneliği salt okunur durumda. Yeni kayıt oluşturmak için aboneliğinizi yenileyin. Yöneticiyseniz Hesap → Abonelik üzerinden devam edebilirsiniz.',
     'Subscriptions.TenantCancelled':
         'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik ekranından durumu yönetin.',
-    'Subscriptions.NotFound': 'Abonelik kaydı bulunamadı; bu işlem şu an yapılamıyor.',
+    'Subscriptions.NotFound': SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,
+    /** Kiracı bağlamında abonelik satırı yok (yazma guard) — müşteri oluşturma vb. */
+    'Subscriptions.TenantSubscriptionNotFound': SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,
+    SubscriptionsTenantSubscriptionNotFound: SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,
+    /** Alternatif backend adlandırması */
+    'Tenants.SubscriptionMissing': SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,
+    TenantsSubscriptionMissing: SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,
+    'Tenants.TenantSubscriptionNotFound': SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,
+    TenantsTenantSubscriptionNotFound: SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,
     'Subscriptions.PlanCodeInvalid': 'Seçilen paket kodu geçerli değil.',
     'Subscriptions.SamePlanAlreadyActive': 'Bu paket zaten aktif görünüyor; farklı bir paket seçin.',
     'Subscriptions.DowngradeMustBeScheduled': 'Bu paket düşürme işlemi dönem sonuna planlanmalıdır.',
@@ -159,7 +171,17 @@ const VACCINATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Vaccinations.DueAtMustBeAfterAppliedAt': 'Sonraki uygulama tarihi, uygulama tarihinden sonra olmalıdır.',
     VaccinationsDueAtMustBeAfterAppliedAt: 'Sonraki uygulama tarihi, uygulama tarihinden sonra olmalıdır.',
     'Vaccinations.ScheduledMustNotHaveAppliedAt': 'Planlanan kayıtta uygulama tarihi bulunmamalıdır.',
-    VaccinationsScheduledMustNotHaveAppliedAt: 'Planlanan kayıtta uygulama tarihi bulunmamalıdır.'
+    VaccinationsScheduledMustNotHaveAppliedAt: 'Planlanan kayıtta uygulama tarihi bulunmamalıdır.',
+    'VaccineDefinitions.NotFound': 'Seçilen aşı tanımı bulunamadı.',
+    VaccineDefinitionsNotFound: 'Seçilen aşı tanımı bulunamadı.',
+    'VaccineDefinitions.Inactive': 'Seçilen aşı tanımı aktif değil.',
+    VaccineDefinitionsInactive: 'Seçilen aşı tanımı aktif değil.',
+    'VaccineDefinitions.InvalidSpecies': 'Seçilen aşı tanımı bu hayvan türüyle uyumlu değil.',
+    VaccineDefinitionsInvalidSpecies: 'Seçilen aşı tanımı bu hayvan türüyle uyumlu değil.',
+    'VaccineDefinitions.CoreDefinitionCannotBeModified': 'Sistem tanımlı aşı kayıtları düzenlenemez.',
+    VaccineDefinitionsCoreDefinitionCannotBeModified: 'Sistem tanımlı aşı kayıtları düzenlenemez.',
+    'VaccineDefinitions.DuplicateCode': 'Bu aşı kodu zaten kullanılıyor.',
+    VaccineDefinitionsDuplicateCode: 'Bu aşı kodu zaten kullanılıyor.'
 };
 
 function vaccinationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
@@ -170,12 +192,63 @@ function vaccinationPanelProblemUserMessage(err: HttpErrorResponse): string | nu
     return VACCINATION_PANEL_PROBLEM_MESSAGES[code] ?? VACCINATION_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
-function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-    if (!code) {
+function lookupSubscriptionWriteMessageByCode(code: string): string | null {
+    const t = code.trim();
+    if (!t) {
         return null;
     }
-    return SUBSCRIPTION_WRITE_USER_MESSAGES[code] ?? null;
+    const direct = SUBSCRIPTION_WRITE_USER_MESSAGES[t];
+    if (direct) {
+        return direct;
+    }
+    const needle = t.replace(/\./g, '');
+    for (const [k, v] of Object.entries(SUBSCRIPTION_WRITE_USER_MESSAGES)) {
+        if (k.replace(/\./g, '') === needle) {
+            return v;
+        }
+    }
+    return null;
+}
+
+/**
+ * Kod yoksa bile: backend yalnızca Türkçe `detail` döndüğünde (ör. “Bu kiracı için abonelik kaydı bulunamadı.”)
+ * yazma guard mesajını üret.
+ */
+function subscriptionMissingFromProblemBody(err: HttpErrorResponse): string | null {
+    const body = err.error as unknown;
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return null;
+    }
+    const o = body as Record<string, unknown>;
+    const detail =
+        typeof o['detail'] === 'string' ? o['detail'] : typeof o['Detail'] === 'string' ? o['Detail'] : '';
+    const title =
+        typeof o['title'] === 'string' ? o['title'] : typeof o['Title'] === 'string' ? o['Title'] : '';
+    const blob = `${detail}\n${title}`.toLocaleLowerCase('tr-TR');
+    if (!blob.trim()) {
+        return null;
+    }
+    if (/abonelik\s+kayd[ıi]\s+bulunamad[ıi]/.test(blob)) {
+        return SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE;
+    }
+    if (/kirac[ıi]\s+için\s+abonelik/.test(blob) && /bulunamad[ıi]/.test(blob)) {
+        return SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE;
+    }
+    if (/abonelik\s+kayd[ıi].*bulunamad[ıi]/.test(blob) && /kirac[ıi]/.test(blob)) {
+        return SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE;
+    }
+    return null;
+}
+
+function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    if (code) {
+        const fromCode = lookupSubscriptionWriteMessageByCode(code);
+        if (fromCode) {
+            return fromCode;
+        }
+    }
+    return subscriptionMissingFromProblemBody(err);
 }
 
 /** Panel listeleri / formlar: ProblemDetails, düz metin ve HTTP durumuna göre anlamlı mesaj. */

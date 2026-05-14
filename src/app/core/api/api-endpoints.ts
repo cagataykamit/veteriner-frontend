@@ -77,6 +77,10 @@ export const ApiEndpoints = {
         list: () => `/api/v1/vaccinations`,
         byId: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}`
     },
+    /** FAZ 14C — aşı kataloğu; query: `Page`, `PageSize`, `search`, `speciesId`, `includeInactive`. */
+    vaccineDefinitions: {
+        list: () => `/api/v1/vaccine-definitions`
+    },
     payments: {
         /** Query: `Page`, `PageSize`, `Search`, `Method`, `FromDate`, `ToDate` (+ `ClientId`, `PetId`, `clinicId`). */
         list: () => `/api/v1/payments`,

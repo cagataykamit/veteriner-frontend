@@ -133,5 +133,12 @@ export const PANEL_COPY = {
     tenantInviteStatusDeclined: 'Reddedildi',
     /** Backend `Revoked` (2) — panelde “iptal edilmiş davet” anlamıyla. */
     tenantInviteStatusRevoked: 'İptal edildi',
-    tenantInviteStatusUnknown: 'Bilinmeyen durum'
+    tenantInviteStatusUnknown: 'Bilinmeyen durum',
+    /** Aşı formu — katalog seçimi (FAZ 14C) */
+    vaccinationFieldVaccine: 'Aşı',
+    vaccinationVaccinePlaceholder: 'Aşı seçin',
+    vaccinationVaccineDefinitionsLoadError: 'Aşı listesi yüklenemedi. Yetkinizi kontrol edin.',
+    vaccinationVaccineDefinitionRequired: 'Aşı seçimi zorunludur.',
+    vaccinationLegacyVaccineDefinitionHint:
+        'Bu eski kayıt katalogla eşleşmemiş olabilir. Güncellemek için aşı seçiniz.'
 } as const;

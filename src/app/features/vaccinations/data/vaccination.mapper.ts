@@ -51,6 +51,13 @@ function canonicalDueAt(dto: VaccinationListItemDto | VaccinationDetailDto): str
     return firstTrimmed(dto.dueAtUtc, readDtoString(dto, ['DueAtUtc']), nextDue);
 }
 
+function canonicalVaccineDefinitionId(dto: VaccinationDetailDto): string | null {
+    return firstTrimmed(
+        dto.vaccineDefinitionId as string | undefined,
+        readDtoString(dto, ['VaccineDefinitionId'])
+    );
+}
+
 function canonicalVaccineName(dto: VaccinationListItemDto | VaccinationDetailDto): string {
     return str(firstTrimmed(dto.vaccineName, readDtoString(dto, ['VaccineName'])));
 }
@@ -124,6 +131,7 @@ export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): Vacc
         petId: canonicalPetId(dto) ?? '',
         clientName: firstTrimmed(dto.clientName, readDtoString(dto, ['ClientName'])),
         petName: firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])),
+        vaccineDefinitionId: canonicalVaccineDefinitionId(dto),
         vaccineName: firstTrimmed(dto.vaccineName, readDtoString(dto, ['VaccineName'])) ?? '',
         appliedAtUtc: canonicalAppliedAt(dto),
         dueAtUtc: canonicalDueAt(dto),
@@ -150,7 +158,7 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
         clinicId,
         examinationId,
         petId: req.petId.trim(),
-        vaccineName: req.vaccineName.trim(),
+        vaccineDefinitionId: req.vaccineDefinitionId.trim(),
         status,
         appliedAtUtc,
         dueAtUtc,
@@ -173,7 +181,7 @@ export function mapUpdateVaccinationToApiBody(routeId: string, req: UpdateVaccin
         clinicId,
         petId: req.petId.trim(),
         examinationId: req.examinationId?.trim() ? req.examinationId.trim() : null,
-        vaccineName: req.vaccineName.trim(),
+        vaccineDefinitionId: req.vaccineDefinitionId.trim(),
         status,
         appliedAtUtc: req.appliedAtUtc?.trim() ? req.appliedAtUtc.trim() : null,
         dueAtUtc: req.dueAtUtc?.trim() ? req.dueAtUtc.trim() : null,

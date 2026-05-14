@@ -56,7 +56,7 @@ function resolveVaccinationUpsertNonFieldMessage(err: HttpErrorResponse): string
 export type VaccinationUpsertFormFieldKey =
     | 'clientId'
     | 'petId'
-    | 'vaccineName'
+    | 'vaccineDefinitionId'
     | 'appliedAtLocal'
     | 'nextDueDate'
     | 'status'
@@ -74,8 +74,9 @@ const FIELD_MAP: Record<string, VaccinationUpsertFormFieldKey> = {
     ownerid: 'clientId',
     petid: 'petId',
     animalid: 'petId',
-    vaccinename: 'vaccineName',
-    name: 'vaccineName',
+    vaccinedefinitionid: 'vaccineDefinitionId',
+    vaccineDefinitionId: 'vaccineDefinitionId',
+    vaccinename: 'vaccineDefinitionId',
     appliedatutc: 'appliedAtLocal',
     applicationdateutc: 'appliedAtLocal',
     appliedonutc: 'appliedAtLocal',

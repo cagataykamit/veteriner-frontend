@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    VACCINE_DEFINITIONS_READ_CLAIM,
     VACCINATIONS_CREATE_CLAIM,
     VACCINATIONS_READ_CLAIM,
     VACCINATIONS_UPDATE_CLAIM
@@ -26,7 +27,9 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
-            return auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && auth.hasOperationClaim(VACCINE_DEFINITIONS_READ_CLAIM)
+                ? true
+                : router.createUrlTree(['/notfound']);
         }],
         component: VaccinationNewPageComponent
     },
@@ -35,7 +38,9 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
-            return auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM) && auth.hasOperationClaim(VACCINE_DEFINITIONS_READ_CLAIM)
+                ? true
+                : router.createUrlTree(['/notfound']);
         }],
         component: VaccinationEditPageComponent
     },

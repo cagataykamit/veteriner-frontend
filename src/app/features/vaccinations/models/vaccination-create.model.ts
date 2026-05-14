@@ -8,7 +8,7 @@ export interface CreateVaccinationRequest {
     clinicId: string;
     petId: string;
     examinationId?: string | null;
-    vaccineName: string;
+    vaccineDefinitionId: string;
     status: number;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
@@ -20,7 +20,7 @@ export interface UpdateVaccinationRequest {
     clinicId: string;
     petId: string;
     examinationId?: string | null;
-    vaccineName: string;
+    vaccineDefinitionId: string;
     status: number;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;

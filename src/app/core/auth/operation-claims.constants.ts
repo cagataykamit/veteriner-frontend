@@ -57,6 +57,9 @@ export const VACCINATIONS_READ_CLAIM = 'Vaccinations.Read' as const;
 export const VACCINATIONS_CREATE_CLAIM = 'Vaccinations.Create' as const;
 export const VACCINATIONS_UPDATE_CLAIM = 'Vaccinations.Update' as const;
 
+/** Aşı tanımı kataloğu (dropdown / liste) */
+export const VACCINE_DEFINITIONS_READ_CLAIM = 'VaccineDefinitions.Read' as const;
+
 export const PAYMENTS_READ_CLAIM = 'Payments.Read' as const;
 export const PAYMENTS_CREATE_CLAIM = 'Payments.Create' as const;
 export const PAYMENTS_UPDATE_CLAIM = 'Payments.Update' as const;

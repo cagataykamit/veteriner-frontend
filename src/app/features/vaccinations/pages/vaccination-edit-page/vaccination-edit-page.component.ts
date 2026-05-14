@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationEditVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
+import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
+import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
 import {
     type VaccinationUpsertFieldErrors,
     type VaccinationUpsertFormFieldKey,
@@ -51,7 +52,6 @@ import {
         ReactiveFormsModule,
         RouterLink,
         ButtonModule,
-        InputTextModule,
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
@@ -77,6 +77,9 @@ import {
                 }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
+                }
+                @if (vaccineDefinitionsError()) {
+                    <p class="text-red-500 mt-0 mb-4" role="alert">{{ vaccineDefinitionsError() }}</p>
                 }
                 <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -124,12 +127,31 @@ import {
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="vaccineName" class="block text-sm font-medium text-muted-color mb-2">Aşı adı *</label>
-                            <input id="vaccineName" pInputText class="w-full" formControlName="vaccineName" />
-                            @if (apiFieldErrors().vaccineName) {
-                                <small class="text-red-500">{{ apiFieldErrors().vaccineName }}</small>
-                            } @else if (form.controls.vaccineName.invalid && form.controls.vaccineName.touched) {
-                                <small class="text-red-500">Aşı adı zorunludur.</small>
+                            <label for="vaccineDefinitionId" class="block text-sm font-medium text-muted-color mb-2"
+                                >{{ copy.vaccinationFieldVaccine }} *</label
+                            >
+                            <p-select
+                                inputId="vaccineDefinitionId"
+                                formControlName="vaccineDefinitionId"
+                                [options]="vaccineDefinitionOptions()"
+                                optionLabel="label"
+                                optionValue="value"
+                                [placeholder]="copy.vaccinationVaccinePlaceholder"
+                                [filter]="true"
+                                filterBy="label"
+                                [showClear]="true"
+                                styleClass="w-full"
+                                [loading]="vaccineDefinitionsLoading()"
+                            />
+                            @if (legacyMissingVaccineDefinition()) {
+                                <p class="text-amber-700 dark:text-amber-300 text-sm mt-2 mb-0" role="status">
+                                    {{ copy.vaccinationLegacyVaccineDefinitionHint }}
+                                </p>
+                            }
+                            @if (apiFieldErrors().vaccineDefinitionId) {
+                                <small class="text-red-500">{{ apiFieldErrors().vaccineDefinitionId }}</small>
+                            } @else if (form.controls.vaccineDefinitionId.invalid && form.controls.vaccineDefinitionId.touched) {
+                                <small class="text-red-500">{{ copy.vaccinationVaccineDefinitionRequired }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -234,7 +256,7 @@ import {
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || ro.mutationBlocked()"
+                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || vaccineDefinitionsLoading() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -255,6 +277,7 @@ export class VaccinationEditPageComponent implements OnInit {
 
     private readonly fb = inject(FormBuilder);
     private readonly vaccinationsService = inject(VaccinationsService);
+    private readonly vaccineDefinitionsService = inject(VaccineDefinitionsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
@@ -275,6 +298,16 @@ export class VaccinationEditPageComponent implements OnInit {
     readonly apiFieldErrors = signal<VaccinationUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
+    readonly vaccineDefinitionsLoading = signal(false);
+    readonly vaccineDefinitionsError = signal<string | null>(null);
+    readonly vaccineDefinitionRows = signal<VaccineDefinitionListItemVm[]>([]);
+    private readonly petIdToSpeciesId = signal<Record<string, string>>({});
+    readonly legacyMissingVaccineDefinition = signal(false);
+
+    readonly vaccineDefinitionOptions = computed(() =>
+        this.vaccineDefinitionRows().map((d) => ({ label: d.name, value: d.id }))
+    );
+
     private vaccinationId = '';
     private isInitializingClient = false;
     /** GET /vaccinations/:id — dropdown’larda eksik etiketleri tamamlamak için önbellek. */
@@ -289,7 +322,7 @@ export class VaccinationEditPageComponent implements OnInit {
         {
             clientId: ['', Validators.required],
             petId: [{ value: '', disabled: true }, Validators.required],
-            vaccineName: ['', Validators.required],
+            vaccineDefinitionId: ['', Validators.required],
             status: [0 as number | null, Validators.required],
             appliedAtLocal: [''],
             nextDueDate: [''],
@@ -302,7 +335,7 @@ export class VaccinationEditPageComponent implements OnInit {
         const fields: VaccinationUpsertFormFieldKey[] = [
             'clientId',
             'petId',
-            'vaccineName',
+            'vaccineDefinitionId',
             'status',
             'appliedAtLocal',
             'nextDueDate',
@@ -384,6 +417,7 @@ export class VaccinationEditPageComponent implements OnInit {
         this.vaccinationsService.getVaccinationForEditById(this.vaccinationId).subscribe({
             next: (x) => {
                 this.editVmCache = x;
+                this.legacyMissingVaccineDefinition.set(!(x.vaccineDefinitionId ?? '').trim());
                 this.isInitializingClient = true;
                 // clientId patch’i valueChanges tetiklemesin: pet sıfırlanmasın, loadPets tek kez ve petId ile gitsin.
                 const st = this.normalizeStatusNum(x.status ?? 0);
@@ -392,7 +426,7 @@ export class VaccinationEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        vaccineName: x.vaccineName,
+                        vaccineDefinitionId: (x.vaccineDefinitionId ?? '').trim(),
                         status: x.status ?? 0,
                         notes: x.notes,
                         appliedAtLocal: appliedForm,
@@ -449,7 +483,7 @@ export class VaccinationEditPageComponent implements OnInit {
             clinicId,
             petId: v.petId.trim(),
             examinationId: this.editVmCache?.examinationId ?? null,
-            vaccineName: v.vaccineName.trim(),
+            vaccineDefinitionId: v.vaccineDefinitionId.trim(),
             appliedAtUtc: dates.appliedAtUtc,
             dueAtUtc: dates.dueAtUtc,
             status,
@@ -505,6 +539,7 @@ export class VaccinationEditPageComponent implements OnInit {
                     items = filterPetsByClientId(items, clientId);
                 }
                 this.petOptions.set(petOptionsFromList(items));
+                this.mergePetSpeciesFromItems(items);
                 this.mergePetOptionFromCache();
                 if (selectedPetId) {
                     const exists = items.some((x) => x.id === selectedPetId);
@@ -517,6 +552,11 @@ export class VaccinationEditPageComponent implements OnInit {
                 }
                 this.loadingPets.set(false);
                 this.isInitializingClient = false;
+                const pid = this.form.getRawValue().petId?.trim();
+                if (pid) {
+                    const sp = this.petIdToSpeciesId()[pid];
+                    this.loadVaccineDefinitionsForSpecies(sp?.trim() ? sp : null);
+                }
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
@@ -525,6 +565,53 @@ export class VaccinationEditPageComponent implements OnInit {
                 this.isInitializingClient = false;
             }
         });
+    }
+
+    private loadVaccineDefinitionsForSpecies(speciesId: string | null): void {
+        this.vaccineDefinitionsLoading.set(true);
+        this.vaccineDefinitionsError.set(null);
+        this.vaccineDefinitionsService
+            .getVaccineDefinitions({
+                includeInactive: false,
+                page: 1,
+                pageSize: 200,
+                speciesId: speciesId?.trim() ? speciesId.trim() : undefined
+            })
+            .subscribe({
+                next: (r) => {
+                    this.vaccineDefinitionRows.set(r.items);
+                    this.vaccineDefinitionsLoading.set(false);
+                    this.sanitizeVaccineDefinitionSelection(r.items);
+                },
+                error: (e: unknown) => {
+                    this.vaccineDefinitionRows.set([]);
+                    this.vaccineDefinitionsLoading.set(false);
+                    this.vaccineDefinitionsError.set(
+                        e instanceof Error ? e.message : this.copy.vaccinationVaccineDefinitionsLoadError
+                    );
+                    this.form.controls.vaccineDefinitionId.setValue('');
+                }
+            });
+    }
+
+    private sanitizeVaccineDefinitionSelection(items: VaccineDefinitionListItemVm[]): void {
+        const allowed = new Set(items.map((i) => i.id));
+        const cur = this.form.controls.vaccineDefinitionId.value?.trim() ?? '';
+        if (cur && !allowed.has(cur)) {
+            this.form.controls.vaccineDefinitionId.setValue('');
+        }
+    }
+
+    private mergePetSpeciesFromItems(items: { id: string; speciesId: string | null }[]): void {
+        const m = { ...this.petIdToSpeciesId() };
+        for (const p of items) {
+            const id = p.id?.trim();
+            const sp = p.speciesId?.trim();
+            if (id && sp) {
+                m[id] = sp;
+            }
+        }
+        this.petIdToSpeciesId.set(m);
     }
 
     /** Liste sayfası (ör. 300) dışında kalan müşteri için API’den gelen adı seçenek olarak ekle. */

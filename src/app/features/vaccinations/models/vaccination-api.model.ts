@@ -14,6 +14,7 @@ export interface VaccinationListItemDto {
     clientId?: string | null;
     clinicId?: string | null;
     examinationId?: string | null;
+    vaccineDefinitionId?: string | null;
     vaccineName?: string | null;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
@@ -35,7 +36,7 @@ export interface VaccinationListItemDtoPagedResult {
 
 /**
  * GET /vaccinations/{id}
- * Beklenen çekirdek: id, clinicId?, clientId, clientName?, petId, petName?, vaccineName, status,
+ * Beklenen çekirdek: id, clinicId?, clientId, clientName?, petId, petName?, vaccineDefinitionId?, vaccineName (snapshot), status,
  * appliedAtUtc, dueAtUtc (liste: nextDueAtUtc), notes, examinationId?
  */
 export interface VaccinationDetailDto {
@@ -47,6 +48,7 @@ export interface VaccinationDetailDto {
     clientId: string;
     clinicId?: string | null;
     examinationId?: string | null;
+    vaccineDefinitionId?: string | null;
     vaccineName: string;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
@@ -58,14 +60,13 @@ export interface VaccinationDetailDto {
 
 /**
  * POST /vaccinations body — camelCase.
- * Varsayım: pet üzerinden müşteri ilişkisi kurulur; `clientId` çoğu API’de gönderilmez.
- * Backend `name` kullanıyorsa mapper’da `vaccineName` → `name` eşlemesi yapılır.
+ * `vaccineDefinitionId` zorunlu; `vaccineName` gönderilmez (sunucu snapshot doldurur).
  */
 export interface VaccinationCreateRequestDto {
     clinicId: string;
     petId: string;
     examinationId?: string | null;
-    vaccineName: string;
+    vaccineDefinitionId: string;
     status: number;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
@@ -77,7 +78,7 @@ export interface VaccinationUpdateRequestDto {
     clinicId: string;
     petId: string;
     examinationId?: string | null;
-    vaccineName: string;
+    vaccineDefinitionId: string;
     status: number;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;

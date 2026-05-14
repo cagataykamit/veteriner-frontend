@@ -42,6 +42,9 @@ export interface VaccinationEditVm {
     clientName: string | null;
     /** Preload’da dropdown etiketi; liste dışı hayvanlar için seçenek birleştirmede kullanılır. */
     petName: string | null;
+    /** Katalog kimliği; eski kayıtlarda null olabilir. */
+    vaccineDefinitionId: string | null;
+    /** Sunucu snapshot — salt görüntüleme. */
     vaccineName: string;
     appliedAtUtc: string | null;
     dueAtUtc: string | null;
