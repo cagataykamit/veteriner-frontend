@@ -47,15 +47,29 @@ export function mapSpeciesListResponseToVm(raw: unknown): SpeciesListItemVm[] {
     return items.map((x) => mapSpeciesListItemDtoToVm(x));
 }
 
+/** Panel tür listesi — tek istekte tüm katalog (client-side p-table paginator). */
+export const SPECIES_PANEL_LIST_PAGE_SIZE = 500;
+
 /**
  * GET `/api/v1/species` — lookup için `activeOnly: true` → Http query **`isActive=true`** (backend filtresi).
- * Parametre gönderilmezse tüm kayıtlar (ör. panel tür listesi).
+ * `page` + `pageSize` → panel listesi (`Page`, `PageSize`).
  */
-export function speciesListQueryToHttpParams(options?: { activeOnly?: boolean }): HttpParams | undefined {
+export function speciesListQueryToHttpParams(options?: {
+    activeOnly?: boolean;
+    page?: number;
+    pageSize?: number;
+}): HttpParams | undefined {
+    let params = new HttpParams();
+    let has = false;
     if (options?.activeOnly === true) {
-        return new HttpParams().set('isActive', 'true');
+        params = params.set('isActive', 'true');
+        has = true;
     }
-    return undefined;
+    if (options?.page != null && options?.pageSize != null) {
+        params = params.set('Page', String(options.page)).set('PageSize', String(options.pageSize));
+        has = true;
+    }
+    return has ? params : undefined;
 }
 
 export function extractCreatedSpeciesIdFromPostResponse(body: unknown): string | null {

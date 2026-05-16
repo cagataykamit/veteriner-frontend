@@ -8,6 +8,7 @@ import {
     mapSpeciesDetailDtoToVm,
     mapSpeciesListResponseToVm,
     mapSpeciesUpsertToApiBody,
+    SPECIES_PANEL_LIST_PAGE_SIZE,
     speciesListQueryToHttpParams
 } from '@/app/features/species/data/species.mapper';
 import type { SpeciesDetailDto } from '@/app/features/species/models/species-api.model';
@@ -24,8 +25,12 @@ export class SpeciesService {
      * `activeOnly: true` → istek **`isActive=true`** query ile gider (sunucu filtreler); istemci tarafında tekrar filtre yok.
      * Parametresiz / `activeOnly` yok → tam liste (panel tür listesi).
      */
-    getSpeciesList(options?: { activeOnly?: boolean }): Observable<SpeciesListItemVm[]> {
-        const params = speciesListQueryToHttpParams(options);
+    getSpeciesList(options?: { activeOnly?: boolean; panelList?: boolean }): Observable<SpeciesListItemVm[]> {
+        const params = speciesListQueryToHttpParams(
+            options?.panelList === true
+                ? { page: 1, pageSize: SPECIES_PANEL_LIST_PAGE_SIZE }
+                : { activeOnly: options?.activeOnly }
+        );
         return this.api.get<unknown>(ApiEndpoints.species.list(), params).pipe(
             map((raw) => mapSpeciesListResponseToVm(raw)),
             catchError((err: HttpErrorResponse) =>

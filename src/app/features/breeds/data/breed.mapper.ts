@@ -54,12 +54,17 @@ export function mapBreedUpdateToApiBody(id: string, req: BreedUpsertRequest): Br
     };
 }
 
+/** Panel ırk listesi — tek istekte tüm katalog (client-side p-table paginator). */
+export const BREEDS_PANEL_LIST_PAGE_SIZE = 500;
+
 /** GET `/api/v1/breeds` — sunucu tarafı filtre (lookup / panel listesi ile uyumlu). */
 export function breedListQueryToHttpParams(options?: {
     activeOnly?: boolean;
     speciesId?: string;
     /** Boş/whitespace gönderilmez. */
     search?: string;
+    page?: number;
+    pageSize?: number;
 }): HttpParams | undefined {
     let params = new HttpParams();
     let has = false;
@@ -75,6 +80,10 @@ export function breedListQueryToHttpParams(options?: {
     const q = options?.search?.trim();
     if (q) {
         params = params.set('search', q);
+        has = true;
+    }
+    if (options?.page != null && options?.pageSize != null) {
+        params = params.set('Page', String(options.page)).set('PageSize', String(options.pageSize));
         has = true;
     }
     return has ? params : undefined;

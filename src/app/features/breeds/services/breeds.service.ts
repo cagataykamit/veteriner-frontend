@@ -4,6 +4,7 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
+    BREEDS_PANEL_LIST_PAGE_SIZE,
     breedListQueryToHttpParams,
     extractCreatedBreedIdFromPostResponse,
     mapBreedCreateToApiBody,
@@ -20,8 +21,18 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 export class BreedsService {
     private readonly api = inject(ApiClient);
 
-    getBreedList(options?: { activeOnly?: boolean; speciesId?: string; search?: string }): Observable<BreedListItemVm[]> {
-        const params = breedListQueryToHttpParams(options);
+    getBreedList(options?: {
+        activeOnly?: boolean;
+        speciesId?: string;
+        search?: string;
+        panelList?: boolean;
+    }): Observable<BreedListItemVm[]> {
+        const params = breedListQueryToHttpParams({
+            activeOnly: options?.activeOnly,
+            speciesId: options?.speciesId,
+            search: options?.search,
+            ...(options?.panelList === true ? { page: 1, pageSize: BREEDS_PANEL_LIST_PAGE_SIZE } : {})
+        });
         return this.api.get<unknown>(ApiEndpoints.breeds.list(), params).pipe(
             map((raw) => mapBreedListResponseToVm(raw)),
             catchError((err: HttpErrorResponse) =>

@@ -57,17 +57,23 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3">
                             <div class="min-w-0">
                                 <h5 class="m-0">Türler</h5>
-                                @if (items().length > 0) {
-                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ items().length }} kayıt</span>
+                                @if (speciesRows().length > 0) {
+                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ speciesRows().length }} kayıt</span>
                                 }
                             </div>
                         </div>
                     </div>
-                    @if (items().length === 0) {
+                    @if (speciesRows().length === 0) {
                         <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
-                            <p-table [value]="items()" [tableStyle]="{ 'min-width': '60rem' }">
+                            <p-table
+                                [value]="speciesRows()"
+                                [paginator]="true"
+                                [rows]="10"
+                                [rowsPerPageOptions]="[5, 10, 20, 50]"
+                                [tableStyle]="{ 'min-width': '60rem' }"
+                            >
                                 <ng-template #header>
                                     <tr>
                                         <th>Ad</th>
@@ -100,7 +106,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
 
                         <div class="lg:hidden space-y-3">
-                            @for (row of items(); track row.id) {
+                            @for (row of speciesRows(); track row.id) {
                                 <div
                                     class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
                                 >
@@ -141,7 +147,7 @@ export class SpeciesListPageComponent implements OnInit {
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
-    readonly items = signal<SpeciesListItemVm[]>([]);
+    readonly speciesRows = signal<SpeciesListItemVm[]>([]);
 
     readonly activeLabel = (isActive: boolean) => (isActive ? 'Aktif' : 'Pasif');
     readonly activeSeverity = (isActive: boolean) => (isActive ? 'success' : 'secondary');
@@ -153,9 +159,9 @@ export class SpeciesListPageComponent implements OnInit {
     reload(): void {
         this.loading.set(true);
         this.error.set(null);
-        this.speciesService.getSpeciesList().subscribe({
+        this.speciesService.getSpeciesList({ panelList: true }).subscribe({
             next: (items) => {
-                this.items.set(items);
+                this.speciesRows.set(items);
                 this.loading.set(false);
             },
             error: (e: Error) => {
