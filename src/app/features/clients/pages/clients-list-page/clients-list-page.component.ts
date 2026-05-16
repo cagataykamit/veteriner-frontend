@@ -63,10 +63,10 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         </app-page-header>
 
         <div class="card">
-            @if (loading()) {
-                <app-loading-state message="Müşteri listesi yükleniyor…" />
-            } @else if (error()) {
+            @if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
+            } @else if (initialLoad() && loading()) {
+                <app-loading-state message="Müşteri listesi yükleniyor…" />
             } @else {
                 <div class="flex flex-col gap-4">
                     <div
@@ -123,9 +123,12 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                             [value]="displayedRows()"
                             [paginator]="true"
                             [rows]="pageSize()"
+                            [rowsPerPageOptions]="rowsPerPageOptions"
+                            [paginatorDropdownAppendTo]="'body'"
                             [totalRecords]="totalItems()"
                             [lazy]="true"
                             [first]="first()"
+                            [loading]="loading()"
                             (onLazyLoad)="onTableLazyLoad($event)"
                             [tableStyle]="{ 'min-width': '50rem' }"
                             [showCurrentPageReport]="true"
@@ -189,7 +192,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                             [first]="first()"
                             [showCurrentPageReport]="true"
                             currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="[10, 25, 50]"
+                            [rowsPerPageOptions]="rowsPerPageOptions"
                             (onPageChange)="onMobilePageChange($event)"
                         />
                     </div>
@@ -207,8 +210,11 @@ export class ClientsListPageComponent implements OnInit {
 
     private readonly clientsService = inject(ClientsService);
 
+    readonly rowsPerPageOptions = [10, 20, 25, 50];
+
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
     readonly loading = signal(true);
+    readonly initialLoad = signal(true);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<ClientListItemVm[]>([]);
@@ -241,6 +247,7 @@ export class ClientsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.first.set(0);
         this.currentPage.set(1);
+        this.suppressNextLazy = true;
         this.persistStateToSessionStorage(1, this.pageSize());
         this.loadFromServer(1, this.pageSize(), this.activeSearch());
     }
@@ -250,11 +257,13 @@ export class ClientsListPageComponent implements OnInit {
         this.activeSearch.set('');
         this.first.set(0);
         this.currentPage.set(1);
+        this.suppressNextLazy = true;
         this.clearStateFromSessionStorage();
         this.loadFromServer(1, this.pageSize(), '');
     }
 
     reload(): void {
+        this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), true);
     }
 
@@ -263,18 +272,38 @@ export class ClientsListPageComponent implements OnInit {
             this.suppressNextLazy = false;
             return;
         }
-        const rows = event.rows ?? 10;
-        const first = event.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
+        const rows = event.rows ?? this.pageSize();
+        const eventFirst = event.first ?? 0;
+        const rowsChanged = rows !== this.pageSize();
+
+        if (rowsChanged) {
+            this.first.set(0);
+            this.currentPage.set(1);
+            this.persistStateToSessionStorage(1, rows);
+            this.loadFromServer(1, rows, this.activeSearch());
+            return;
+        }
+
+        const page = Math.floor(eventFirst / rows) + 1;
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch());
     }
 
     onMobilePageChange(state: PaginatorState): void {
         const rows = state.rows ?? this.pageSize();
-        const first = state.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
+        const eventFirst = state.first ?? 0;
+        const rowsChanged = rows !== this.pageSize();
         this.suppressNextLazy = true;
+
+        if (rowsChanged) {
+            this.first.set(0);
+            this.currentPage.set(1);
+            this.persistStateToSessionStorage(1, rows);
+            this.loadFromServer(1, rows, this.activeSearch());
+            return;
+        }
+
+        const page = Math.floor(eventFirst / rows) + 1;
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch());
     }
@@ -301,6 +330,7 @@ export class ClientsListPageComponent implements OnInit {
                     this.currentPage.set(r.page);
                     this.first.set((r.page - 1) * r.pageSize);
                     this.persistStateToSessionStorage(r.page, r.pageSize);
+                    this.initialLoad.set(false);
                     this.loading.set(false);
                 },
                 error: (e: Error) => {
