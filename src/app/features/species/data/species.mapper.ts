@@ -48,7 +48,7 @@ export function mapSpeciesListResponseToVm(raw: unknown): SpeciesListItemVm[] {
 }
 
 /** Panel tür listesi — tek istekte tüm katalog (client-side p-table paginator). */
-export const SPECIES_PANEL_LIST_PAGE_SIZE = 500;
+export const SPECIES_PANEL_LIST_PAGE_SIZE = 200;
 
 /**
  * GET `/api/v1/species` — lookup için `activeOnly: true` → Http query **`isActive=true`** (backend filtresi).

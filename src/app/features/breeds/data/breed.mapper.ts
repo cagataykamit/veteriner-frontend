@@ -55,7 +55,7 @@ export function mapBreedUpdateToApiBody(id: string, req: BreedUpsertRequest): Br
 }
 
 /** Panel ırk listesi — tek istekte tüm katalog (client-side p-table paginator). */
-export const BREEDS_PANEL_LIST_PAGE_SIZE = 500;
+export const BREEDS_PANEL_LIST_PAGE_SIZE = 200;
 
 /** GET `/api/v1/breeds` — sunucu tarafı filtre (lookup / panel listesi ile uyumlu). */
 export function breedListQueryToHttpParams(options?: {
