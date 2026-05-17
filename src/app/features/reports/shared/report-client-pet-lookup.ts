@@ -5,7 +5,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { clientOptionsFromList, petOptionsFromList, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 
-const PAGE_SIZE = 400;
+const PAGE_SIZE = 200;
 
 /** Müşteri `p-select` — PetNew ile aynı liste çağrısı ölçüsü. */
 export function loadReportClientSelectOptions$(clientsService: ClientsService, emptyLabel: string): Observable<SelectOption[]> {

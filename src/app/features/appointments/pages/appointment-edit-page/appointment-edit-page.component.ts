@@ -570,7 +570,7 @@ export class AppointmentEditPageComponent implements OnInit {
     private loadClients(): void {
         this.loadingClients.set(true);
         this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
+        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.mergeClientOptionFromCache();
@@ -586,7 +586,7 @@ export class AppointmentEditPageComponent implements OnInit {
     private reloadClientsAndSelectClient(clientId: string): void {
         this.loadingClients.set(true);
         this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
+        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.mergeClientOptionFromCache();

@@ -201,7 +201,7 @@ export class ProductEditPageComponent implements OnInit {
 
     ngOnInit(): void {
         if (this.canReadCategories) {
-            this.categoryService.list({ page: 1, pageSize: 500, isActive: true }).subscribe({
+            this.categoryService.list({ page: 1, pageSize: 200, isActive: true }).subscribe({
                 next: (r) => {
                     this.categoryOptions.set((r.items ?? []).map(mapProductCategoryListItemVmToSelectOption));
                     this.categoriesLoaded.set(true);

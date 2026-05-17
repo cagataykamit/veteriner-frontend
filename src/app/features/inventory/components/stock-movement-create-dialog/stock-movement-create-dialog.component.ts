@@ -382,7 +382,7 @@ export class StockMovementCreateDialogComponent {
 
     private loadProducts(): void {
         this.productsLoading.set(true);
-        this.productService.getProducts({ page: 1, pageSize: 500, isActive: true }).subscribe({
+        this.productService.getProducts({ page: 1, pageSize: 200, isActive: true }).subscribe({
             next: (r) => {
                 this.productsLoading.set(false);
                 const opts = (r.items ?? []).map((p) => ({
