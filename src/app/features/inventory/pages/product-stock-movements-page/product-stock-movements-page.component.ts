@@ -203,6 +203,8 @@ type ProductStockMovementsListState = {
                                 [value]="displayedRows()"
                                 [paginator]="true"
                                 [rows]="pageSize()"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                [paginatorDropdownAppendTo]="'body'"
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
@@ -269,7 +271,7 @@ type ProductStockMovementsListState = {
                                 [first]="first()"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                                [rowsPerPageOptions]="[10, 25, 50]"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
                                 (onPageChange)="onMobilePageChange($event)"
                             />
                         </div>
@@ -312,6 +314,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
 
     readonly rawItems = signal<StockMovementVm[]>([]);
     readonly totalItems = signal(0);
+    readonly rowsPerPageOptions = [10, 20, 25, 50];
     readonly pageSize = signal(10);
     readonly first = signal(0);
     readonly currentPage = signal(1);
@@ -499,25 +502,47 @@ export class ProductStockMovementsPageComponent implements OnInit {
             this.suppressNextLazy = false;
             return;
         }
-        const rows = event.rows ?? 10;
-        const first = event.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
+        const rows = event.rows ?? this.pageSize();
+        const eventFirst = event.first ?? 0;
+        const rowsChanged = rows !== this.pageSize();
+
+        if (rowsChanged) {
+            this.first.set(0);
+            this.currentPage.set(1);
+            this.pageSize.set(rows);
+            this.persistStateToSessionStorage(1, rows);
+            this.reloadWithCurrentFilters(true);
+            return;
+        }
+
+        const page = Math.floor(eventFirst / rows) + 1;
         this.persistStateToSessionStorage(page, rows);
         this.currentPage.set(page);
         this.pageSize.set(rows);
-        this.first.set(first);
+        this.first.set(eventFirst);
         this.reloadWithCurrentFilters(true);
     }
 
     onMobilePageChange(state: PaginatorState): void {
         const rows = state.rows ?? this.pageSize();
-        const first = state.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
+        const eventFirst = state.first ?? 0;
+        const rowsChanged = rows !== this.pageSize();
         this.suppressNextLazy = true;
+
+        if (rowsChanged) {
+            this.first.set(0);
+            this.currentPage.set(1);
+            this.pageSize.set(rows);
+            this.persistStateToSessionStorage(1, rows);
+            this.reloadWithCurrentFilters(true);
+            return;
+        }
+
+        const page = Math.floor(eventFirst / rows) + 1;
         this.persistStateToSessionStorage(page, rows);
         this.currentPage.set(page);
         this.pageSize.set(rows);
-        this.first.set(first);
+        this.first.set(eventFirst);
         this.reloadWithCurrentFilters(true);
     }
 
