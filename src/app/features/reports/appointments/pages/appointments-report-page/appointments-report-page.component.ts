@@ -299,6 +299,8 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             [value]="displayedRows()"
                             [paginator]="true"
                             [rows]="pageSize()"
+                            [rowsPerPageOptions]="rowsPerPageOptions"
+                            [paginatorDropdownAppendTo]="'body'"
                             [totalRecords]="r.totalCount"
                             [lazy]="true"
                             [first]="first()"
@@ -399,7 +401,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             [first]="first()"
                             [showCurrentPageReport]="true"
                             currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="[10, 25, 50]"
+                            [rowsPerPageOptions]="rowsPerPageOptions"
                             (onPageChange)="onMobilePageChange($event)"
                         />
                     </div>
@@ -426,6 +428,7 @@ export class AppointmentsReportPageComponent implements OnInit {
     readonly dateFilterError = signal<string | null>(null);
     readonly report = signal<AppointmentsReportResultVm | null>(null);
 
+    readonly rowsPerPageOptions = [10, 20, 25, 50];
     readonly pageSize = signal(25);
     readonly first = signal(0);
     readonly currentPage = signal(1);
@@ -601,17 +604,37 @@ export class AppointmentsReportPageComponent implements OnInit {
             return;
         }
         const rows = event.rows ?? this.pageSize();
-        const f = event.first ?? 0;
-        const page = Math.floor(f / rows) + 1;
+        const eventFirst = event.first ?? 0;
+        const rowsChanged = rows !== this.pageSize();
+
+        if (rowsChanged) {
+            this.first.set(0);
+            this.currentPage.set(1);
+            this.persistStateToSessionStorage(1, rows);
+            this.loadFromServer(1, rows);
+            return;
+        }
+
+        const page = Math.floor(eventFirst / rows) + 1;
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows);
     }
 
     onMobilePageChange(state: PaginatorState): void {
         const rows = state.rows ?? this.pageSize();
-        const f = state.first ?? 0;
-        const page = Math.floor(f / rows) + 1;
+        const eventFirst = state.first ?? 0;
+        const rowsChanged = rows !== this.pageSize();
         this.suppressNextLazy = true;
+
+        if (rowsChanged) {
+            this.first.set(0);
+            this.currentPage.set(1);
+            this.persistStateToSessionStorage(1, rows);
+            this.loadFromServer(1, rows);
+            return;
+        }
+
+        const page = Math.floor(eventFirst / rows) + 1;
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows);
     }
