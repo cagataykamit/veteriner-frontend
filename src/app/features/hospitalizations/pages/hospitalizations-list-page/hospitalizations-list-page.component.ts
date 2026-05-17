@@ -217,6 +217,8 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                             [value]="displayedRows()"
                             [paginator]="true"
                             [rows]="pageSize()"
+                            [rowsPerPageOptions]="rowsPerPageOptions"
+                            [paginatorDropdownAppendTo]="'body'"
                             [totalRecords]="totalItems()"
                             [lazy]="true"
                             [first]="first()"
@@ -328,7 +330,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                             [first]="first()"
                             [showCurrentPageReport]="true"
                             currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="[10, 25, 50]"
+                            [rowsPerPageOptions]="rowsPerPageOptions"
                             (onPageChange)="onMobilePageChange($event)"
                         />
                     </div>
@@ -359,6 +361,7 @@ export class HospitalizationsListPageComponent implements OnInit {
 
     readonly rawItems = signal<HospitalizationListItemVm[]>([]);
     readonly totalItems = signal(0);
+    readonly rowsPerPageOptions = [10, 20, 25, 50];
     readonly pageSize = signal(10);
     readonly first = signal(0);
     readonly currentPage = signal(1);

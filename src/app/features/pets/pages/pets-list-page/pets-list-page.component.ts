@@ -480,7 +480,7 @@ export class PetsListPageComponent implements OnInit {
 
     private loadClientOptions(): void {
         this.loadingClients.set(true);
-        this.clientsService.getClients({ page: 1, pageSize: 300 }).subscribe({
+        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
             next: (r) => {
                 this.clientOptions.set(
                     r.items.map((c) => ({
