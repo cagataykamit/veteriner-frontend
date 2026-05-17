@@ -287,32 +287,29 @@ const VACCINATIONS_REPORT_STATE_KEY = 'panel:reports:vaccinations:listState';
                             [value]="displayedRows()"
                             [paginator]="true"
                             [rows]="pageSize()"
+                            [rowsPerPageOptions]="rowsPerPageOptions"
+                            [paginatorDropdownAppendTo]="'body'"
                             [totalRecords]="r.totalCount"
                             [lazy]="true"
                             [first]="first()"
                             (onLazyLoad)="onTableLazyLoad($event)"
-                            [tableStyle]="{ 'min-width': '92rem' }"
+                            [tableStyle]="{ 'min-width': '68rem' }"
                             [showCurrentPageReport]="true"
                             currentPageReportTemplate="{first} - {last} / {totalRecords}"
                         >
                             <ng-template #header>
                                 <tr>
-                                    <th>{{ copy.vaccinationsReportColVaccinationDate }}</th>
-                                    <th>{{ copy.reportsColClinic }}</th>
                                     <th>{{ copy.labelClient }}</th>
                                     <th>{{ copy.labelPet }}</th>
                                     <th>{{ copy.vaccinationsReportColVaccineName }}</th>
                                     <th>{{ copy.vaccinationsReportColStatus }}</th>
                                     <th>{{ copy.vaccinationsReportColAppliedAt }}</th>
                                     <th>{{ copy.vaccinationsReportColNextDue }}</th>
-                                    <th>{{ copy.reportsColNotes }}</th>
                                     <th style="width: 6rem"></th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr>
-                                    <td>{{ formatVaccinationDate(row.effectiveReportDateUtc) }}</td>
-                                    <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
                                     <td>
                                         @if (row.clientId) {
                                             <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
@@ -333,7 +330,6 @@ const VACCINATIONS_REPORT_STATE_KEY = 'panel:reports:vaccinations:listState';
                                     </td>
                                     <td>{{ formatUtcInstant(row.appliedAtUtc) }}</td>
                                     <td>{{ formatUtcInstant(row.dueAtUtc) }}</td>
-                                    <td class="max-w-[12rem] truncate" [title]="row.notes">{{ row.notes }}</td>
                                     <td>
                                         <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }}</a>
                                     </td>
@@ -345,10 +341,6 @@ const VACCINATIONS_REPORT_STATE_KEY = 'panel:reports:vaccinations:listState';
                     <div class="lg:hidden space-y-3">
                         @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
                             <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                <div class="text-sm text-muted-color mb-2">{{ formatVaccinationDate(row.effectiveReportDateUtc) }}</div>
-                                <div class="text-sm mb-1">
-                                    <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
-                                </div>
                                 <div class="text-sm mb-1">
                                     <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
                                     @if (row.clientId) {
@@ -377,11 +369,6 @@ const VACCINATIONS_REPORT_STATE_KEY = 'panel:reports:vaccinations:listState';
                                 <div class="text-sm text-muted-color mb-1">
                                     <span class="font-medium">{{ copy.vaccinationsReportColNextDue }}: </span>{{ formatUtcInstant(row.dueAtUtc) }}
                                 </div>
-                                @if (row.notes && row.notes !== '—') {
-                                    <div class="text-sm text-muted-color break-words mb-2">
-                                        <span class="font-medium">{{ copy.reportsColNotes }}: </span>{{ row.notes }}
-                                    </div>
-                                }
                                 <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
                                     <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }} →</a>
                                 </div>
@@ -396,7 +383,7 @@ const VACCINATIONS_REPORT_STATE_KEY = 'panel:reports:vaccinations:listState';
                             [first]="first()"
                             [showCurrentPageReport]="true"
                             currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="[10, 25, 50]"
+                            [rowsPerPageOptions]="rowsPerPageOptions"
                             (onPageChange)="onMobilePageChange($event)"
                         />
                     </div>
@@ -423,6 +410,7 @@ export class VaccinationsReportPageComponent implements OnInit {
     readonly dateFilterError = signal<string | null>(null);
     readonly report = signal<VaccinationsReportResultVm | null>(null);
 
+    readonly rowsPerPageOptions = [10, 20, 25, 50];
     readonly pageSize = signal(25);
     readonly first = signal(0);
     readonly currentPage = signal(1);
@@ -597,17 +585,37 @@ export class VaccinationsReportPageComponent implements OnInit {
             return;
         }
         const rows = event.rows ?? this.pageSize();
-        const f = event.first ?? 0;
-        const page = Math.floor(f / rows) + 1;
+        const eventFirst = event.first ?? 0;
+        const rowsChanged = rows !== this.pageSize();
+
+        if (rowsChanged) {
+            this.first.set(0);
+            this.currentPage.set(1);
+            this.persistStateToSessionStorage(1, rows);
+            this.loadFromServer(1, rows);
+            return;
+        }
+
+        const page = Math.floor(eventFirst / rows) + 1;
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows);
     }
 
     onMobilePageChange(state: PaginatorState): void {
         const rows = state.rows ?? this.pageSize();
-        const f = state.first ?? 0;
-        const page = Math.floor(f / rows) + 1;
+        const eventFirst = state.first ?? 0;
+        const rowsChanged = rows !== this.pageSize();
         this.suppressNextLazy = true;
+
+        if (rowsChanged) {
+            this.first.set(0);
+            this.currentPage.set(1);
+            this.persistStateToSessionStorage(1, rows);
+            this.loadFromServer(1, rows);
+            return;
+        }
+
+        const page = Math.floor(eventFirst / rows) + 1;
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows);
     }
