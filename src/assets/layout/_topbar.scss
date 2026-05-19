@@ -132,6 +132,54 @@
         white-space: nowrap;
     }
 
+    /** Çoklu klinik (veya henüz yüklenmemiş) trigger — native button reset + hover/focus durumları. */
+    .layout-topbar-clinic--interactive {
+        background: transparent;
+        border: 0;
+        margin: -0.25rem -0.5rem;
+        padding: 0.25rem 0.5rem;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        border-radius: var(--content-border-radius);
+        transition: background-color var(--element-transition-duration);
+
+        &:hover:not(:disabled),
+        &[aria-expanded='true'] {
+            background-color: var(--surface-hover);
+        }
+
+        &:focus-visible {
+            @include focused();
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    }
+
+    .layout-topbar-clinic .layout-topbar-clinic__caret {
+        font-size: 0.75rem;
+        flex-shrink: 0;
+        margin-left: 0.125rem;
+        opacity: 0.7;
+    }
+
+    .layout-topbar-clinic__caret--busy {
+        animation: layout-topbar-clinic-caret-pulse 1.1s ease-in-out infinite;
+    }
+
+    @keyframes layout-topbar-clinic-caret-pulse {
+        0%,
+        100% {
+            opacity: 0.4;
+        }
+        50% {
+            opacity: 1;
+        }
+    }
+
     .layout-topbar-menu-content {
         display: flex;
         gap: 1rem;
@@ -140,6 +188,68 @@
     .layout-config-menu {
         display: flex;
         gap: 1rem;
+    }
+}
+
+.layout-clinic-switcher-menu {
+    max-width: min(20rem, calc(100vw - 2rem));
+
+    .p-menuitem-content,
+    .p-menu-item-content {
+        overflow: visible;
+    }
+
+    .p-menuitem-link,
+    .p-menu-item-link {
+        align-items: center;
+        min-width: 12rem;
+        min-height: 2.5rem;
+        padding-block: 0.625rem;
+        line-height: 1.4;
+        overflow: visible;
+    }
+
+    .p-menuitem-text,
+    .p-menu-item-label {
+        min-width: 0;
+        padding-block: 0.0625rem;
+        line-height: 1.4;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .layout-clinic-switcher-menu__item--active {
+        > .p-menuitem-content,
+        > .p-menu-item-content {
+            background-color: color-mix(in srgb, var(--primary-color) 14%, transparent);
+            color: var(--text-color);
+        }
+
+        .p-menuitem-link,
+        .p-menu-item-link {
+            font-weight: 700;
+            color: var(--primary-color);
+
+            &:hover {
+                background-color: color-mix(in srgb, var(--primary-color) 18%, transparent);
+                color: var(--primary-color);
+            }
+        }
+
+        .p-menuitem-icon,
+        .p-menu-item-icon {
+            color: var(--primary-color);
+        }
+
+        &.p-disabled,
+        &.p-menuitem-disabled,
+        &.p-menu-item-disabled {
+            > .p-menuitem-content,
+            > .p-menu-item-content {
+                opacity: 0.75;
+            }
+        }
     }
 }
 

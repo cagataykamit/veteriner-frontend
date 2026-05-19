@@ -9,13 +9,14 @@ import { StyleClassModule } from 'primeng/styleclass';
 import { finalize } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
+import { AppClinicSwitcher } from './app-clinic-switcher.component';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator, MenuModule, ButtonModule, ConfirmDialogModule],
+    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator, AppClinicSwitcher, MenuModule, ButtonModule, ConfirmDialogModule],
     providers: [ConfirmationService],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -45,12 +46,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
         </div>
 
         <div class="layout-topbar-actions">
-            @if (auth.activeClinicLabel(); as clinicLabel) {
-                <div class="layout-topbar-clinic" [attr.title]="clinicLabel">
-                    <i class="pi pi-building"></i>
-                    <span class="layout-topbar-clinic-text">{{ clinicLabel }}</span>
-                </div>
-            }
+            <app-clinic-switcher />
 
             <div class="layout-config-menu">
                 <button type="button" class="layout-topbar-action" (click)="toggleDarkMode()">
@@ -87,7 +83,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                     #userMenu
                     [popup]="true"
                     [model]="userMenuItems"
-                    [appendTo]="layoutService.primePanelOverlayHost() ?? undefined"
+                    appendTo="body"
                 />
             </div>
 
