@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService, MenuItem } from 'primeng/api';
@@ -8,10 +8,19 @@ import { Menu, MenuModule } from 'primeng/menu';
 import { StyleClassModule } from 'primeng/styleclass';
 import { finalize } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { AppClinicSwitcher } from './app-clinic-switcher.component';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '@/app/layout/service/layout.service';
+
+/** Topbar user `p-menu` body overlay — clinic switcher menüsünden ayrı hedeflenir. */
+const TOPBAR_USER_MENU_OVERLAY_SELECTORS = [
+    '.layout-topbar-user-menu',
+    '.p-menu.p-menu-overlay.layout-topbar-user-menu',
+    '[data-pc-name="menu"].layout-topbar-user-menu'
+] as const;
+
+const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
+    '.p-menu-overlay, .p-connected-overlay, p-menu, p-motion';
 
 @Component({
     selector: 'app-topbar',
@@ -83,7 +92,9 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                     #userMenu
                     [popup]="true"
                     [model]="userMenuItems"
+                    styleClass="layout-topbar-user-menu"
                     appendTo="body"
+                    (onHide)="onUserMenuHide()"
                 />
             </div>
 
@@ -111,6 +122,7 @@ export class AppTopbar implements OnInit, OnDestroy {
     readonly layoutService = inject(LayoutService);
     readonly auth = inject(AuthService);
     private readonly router = inject(Router);
+    private readonly document = inject(DOCUMENT);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly userMenuRef = viewChild<Menu>('userMenu');
 
@@ -118,24 +130,58 @@ export class AppTopbar implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.userMenuItems = [
-            { label: 'Çıkış yap', icon: 'pi pi-sign-out', command: () => this.logoutCurrent() },
-            { label: 'Tüm oturumları kapat', icon: 'pi pi-ban', command: () => this.logoutAll() }
+            { label: 'Çıkış yap', icon: 'pi pi-sign-out', command: () => this.onUserMenuLogoutCurrent() },
+            { label: 'Tüm oturumları kapat', icon: 'pi pi-ban', command: () => this.onUserMenuLogoutAll() }
         ];
     }
 
     ngOnDestroy(): void {
-        // PrimeNG Menu destroy sırasında body’ye taşınan node bazen geri alınamıyor; sökümü garanti et.
-        this.purgeUserMenuOverlayFromDocument();
+        this.purgeTopbarUserMenuOverlay();
     }
 
-    private closeUserMenu(): void {
+    onUserMenuHide(): void {
+        this.purgeTopbarUserMenuOverlay();
+    }
+
+    private onUserMenuLogoutCurrent(): void {
+        this.purgeTopbarUserMenuOverlay();
+        queueMicrotask(() => this.logoutCurrent());
+    }
+
+    private onUserMenuLogoutAll(): void {
+        this.purgeTopbarUserMenuOverlay();
+        queueMicrotask(() => this.logoutAll());
+    }
+
+    /** Yalnız topbar user `p-menu` body overlay’ini hedefler; clinic switcher menüsüne dokunmaz. */
+    private purgeTopbarUserMenuOverlay(): void {
         this.userMenuRef()?.hide();
-    }
 
-    /** State + DOM: popup kapat ve body’de kalan `.p-menu.p-menu-overlay` orphan’ını kaldır. */
-    private purgeUserMenuOverlayFromDocument(): void {
-        this.closeUserMenu();
-        removeOrphanedPrimeMenuPopupsFromBody(document);
+        const doc = this.document;
+        const removed = new Set<Element>();
+
+        for (const selector of TOPBAR_USER_MENU_OVERLAY_SELECTORS) {
+            doc.querySelectorAll(selector).forEach((el) => {
+                const overlay =
+                    el.closest(TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS) ?? el;
+                if (!removed.has(overlay)) {
+                    removed.add(overlay);
+                    overlay.remove();
+                }
+            });
+        }
+
+        for (const child of Array.from(doc.body.children)) {
+            if (
+                child.matches('.layout-topbar-user-menu') ||
+                child.querySelector('.layout-topbar-user-menu')
+            ) {
+                if (!removed.has(child)) {
+                    removed.add(child);
+                    child.remove();
+                }
+            }
+        }
     }
 
     toggleDarkMode() {
@@ -146,25 +192,23 @@ export class AppTopbar implements OnInit, OnDestroy {
     }
 
     private logoutCurrent(): void {
-        this.purgeUserMenuOverlayFromDocument();
         this.auth
             .logoutCurrentSession()
-            .pipe(finalize(() => this.purgeUserMenuOverlayFromDocument()))
+            .pipe(finalize(() => this.purgeTopbarUserMenuOverlay()))
             .subscribe({
                 next: () => {
-                    removeOrphanedPrimeMenuPopupsFromBody(document);
+                    this.purgeTopbarUserMenuOverlay();
                     void this.router.navigate(['/auth/login'], { replaceUrl: true });
                 },
                 error: () => {
                     this.auth.logout();
-                    removeOrphanedPrimeMenuPopupsFromBody(document);
+                    this.purgeTopbarUserMenuOverlay();
                     void this.router.navigate(['/auth/login'], { replaceUrl: true });
                 }
             });
     }
 
     private logoutAll(): void {
-        this.purgeUserMenuOverlayFromDocument();
         this.confirmationService.confirm({
             header: 'Tüm oturumları kapat',
             message: 'Tüm cihazlardaki oturumlarınızı kapatmak istediğinize emin misiniz?',
@@ -173,19 +217,20 @@ export class AppTopbar implements OnInit, OnDestroy {
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',
+            reject: () => this.purgeTopbarUserMenuOverlay(),
             accept: () => {
-                this.purgeUserMenuOverlayFromDocument();
+                this.purgeTopbarUserMenuOverlay();
                 this.auth
                     .logoutAllSessions()
-                    .pipe(finalize(() => this.purgeUserMenuOverlayFromDocument()))
+                    .pipe(finalize(() => this.purgeTopbarUserMenuOverlay()))
                     .subscribe({
                         next: () => {
-                            removeOrphanedPrimeMenuPopupsFromBody(document);
+                            this.purgeTopbarUserMenuOverlay();
                             void this.router.navigate(['/auth/login'], { replaceUrl: true });
                         },
                         error: () => {
                             this.auth.logout();
-                            removeOrphanedPrimeMenuPopupsFromBody(document);
+                            this.purgeTopbarUserMenuOverlay();
                             void this.router.navigate(['/auth/login'], { replaceUrl: true });
                         }
                     });
