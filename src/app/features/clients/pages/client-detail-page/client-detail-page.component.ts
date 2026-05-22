@@ -16,7 +16,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -367,8 +367,7 @@ export class ClientDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
+    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly money = (amount: number | null, currency: string | null | undefined) =>
         formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
     readonly statusLabel = appointmentStatusLabel;

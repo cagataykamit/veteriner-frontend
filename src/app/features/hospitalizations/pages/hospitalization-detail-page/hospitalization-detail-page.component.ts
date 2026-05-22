@@ -14,7 +14,7 @@ import {
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { dateTimeLocalInputToIsoUtc, formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { dateTimeLocalInputToIsoUtc, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
@@ -148,9 +148,9 @@ import {
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Taburcu</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.dischargedAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.updatedAtUtc) }}</dd>
                             @if (row()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
@@ -270,8 +270,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
         notes: ['']
     });
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly canUpdateHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM);
     readonly canDischargeHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_DISCHARGE_CLAIM);
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);

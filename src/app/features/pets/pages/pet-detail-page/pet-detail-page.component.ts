@@ -18,7 +18,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -421,8 +421,8 @@ export class PetDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDateOnly = (v: string | null) => formatDateDisplay(v);
-    readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDateOnly = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
+    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly genderLabel = petGenderLabel;
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
 

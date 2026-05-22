@@ -15,7 +15,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateTimeDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
@@ -234,7 +234,7 @@ export class PaymentDetailPageComponent implements OnInit {
     private lastId: string | null = null;
 
     readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
     readonly typeDisplay = appointmentTypeDisplayLabel;
 

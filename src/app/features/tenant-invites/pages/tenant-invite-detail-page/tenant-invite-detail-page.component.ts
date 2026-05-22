@@ -15,7 +15,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
@@ -139,7 +139,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
 
     readonly joinUrl = signal<string>('');
 
-    readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly inviteStatusSeverity = (d: TenantInviteDetailVm) =>
         tenantInviteDisplayStatusSeverity(d.statusLifecycle, d.isCurrentMember);
 

@@ -10,7 +10,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
@@ -138,9 +138,9 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                         <h5 class="mt-0 mb-4">Kayıt bilgileri</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(vac()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(vac()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.updatedAtUtc) }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -174,7 +174,6 @@ export class VaccinationDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly canUpdateVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
     readonly statusLabel = vaccinationStatusLabel;

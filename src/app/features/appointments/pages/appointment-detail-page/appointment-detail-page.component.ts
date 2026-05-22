@@ -22,7 +22,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -236,9 +236,9 @@ import {
                         <h5 class="mt-0 mb-4">Kayıt bilgileri</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(appt()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(appt()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.updatedAtUtc) }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -271,7 +271,6 @@ export class AppointmentDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;

@@ -42,7 +42,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { catchError, forkJoin, of } from 'rxjs';
 
@@ -514,7 +514,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
         return list.filter((c) => !assigned.has(c.id));
     });
 
-    readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     formatConfirmed(v: boolean | null): string {
         if (v === true) {

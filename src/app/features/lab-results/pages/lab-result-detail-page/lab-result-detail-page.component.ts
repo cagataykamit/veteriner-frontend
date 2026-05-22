@@ -7,7 +7,7 @@ import { LabResultsService } from '@/app/features/lab-results/services/lab-resul
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -69,9 +69,9 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonuç tarihi</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.resultDateUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.updatedAtUtc) }}</dd>
                             @if (row()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
@@ -135,8 +135,7 @@ export class LabResultDetailPageComponent implements OnInit {
     readonly showSavedBanner = signal(false);
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     private labResultId = '';
 

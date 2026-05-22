@@ -7,7 +7,7 @@ import { TreatmentsService } from '@/app/features/treatments/services/treatments
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -117,9 +117,9 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Takip tarihi</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.followUpDateUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.updatedAtUtc) }}</dd>
                             @if (row()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
@@ -182,8 +182,8 @@ export class TreatmentDetailPageComponent implements OnInit {
     readonly showSavedBanner = signal(false);
     readonly canUpdateTreatment = this.auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM);
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
+    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     /** Reçete oluştur sayfasına taşınan tedavi bağlamı (treatmentId öncelikli parse). */
     prescriptionCreateQueryParams(): Record<string, string> {

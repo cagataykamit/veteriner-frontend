@@ -19,7 +19,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
@@ -588,9 +588,9 @@ export class ExaminationDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
-    readonly formatDt = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
+    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
+    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly money = (amount: number | null, currency: string | null | undefined) =>
         formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
