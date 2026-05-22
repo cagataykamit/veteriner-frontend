@@ -23,7 +23,7 @@ import {
     trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -368,7 +368,7 @@ export class ExaminationNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const examinedAtUtc = dateTimeLocalInputToIsoUtc(v.examinationDateLocal);
+        const examinedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.examinationDateLocal);
         if (!examinedAtUtc) {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
             return;

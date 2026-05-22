@@ -29,7 +29,10 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import {
+    fromIstanbulDateTimeLocalInputToUtcIso,
+    toIstanbulDateTimeLocalInputValue
+} from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
@@ -327,7 +330,7 @@ export class ExaminationEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        examinationDateLocal: toDateTimeLocalInput(x.examinedAtUtc),
+                        examinationDateLocal: toIstanbulDateTimeLocalInputValue(x.examinedAtUtc),
                         visitReason: x.visitReason,
                         notes: x.notes,
                         findings: x.findings,
@@ -360,7 +363,7 @@ export class ExaminationEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const examinedAtUtc = dateTimeLocalInputToIsoUtc(v.examinationDateLocal);
+        const examinedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.examinationDateLocal);
         if (!examinedAtUtc) {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
             return;
@@ -542,20 +545,4 @@ export class ExaminationEditPageComponent implements OnInit {
         }
         return e instanceof Error ? e.message : fallback;
     }
-}
-
-function toDateTimeLocalInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
 }
