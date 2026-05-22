@@ -8,6 +8,7 @@ import type {
 import type { CreateTreatmentRequest } from '@/app/features/treatments/models/treatment-create.model';
 import type { TreatmentsListQuery } from '@/app/features/treatments/models/treatment-query.model';
 import type { TreatmentDetailVm, TreatmentEditVm, TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
+import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 const EM = '—';
 
 function str(v: string | null | undefined): string {
@@ -121,19 +122,9 @@ export function mapTreatmentDetailDtoToVm(dto: TreatmentDetailDto): TreatmentDet
     };
 }
 
-/** yyyy-MM-dd UTC günü — detaydan takip tarihi için. */
+/** yyyy-MM-dd — Europe/Istanbul takvim günü (form `type="date"`). */
 function followUpDateToInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return toIstanbulDateInputValue(isoUtc);
 }
 
 export function mapTreatmentDetailDtoToEditVm(dto: TreatmentDetailDto): TreatmentEditVm {

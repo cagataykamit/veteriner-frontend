@@ -14,7 +14,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -242,8 +242,8 @@ export class TreatmentsListPageComponent implements OnInit {
     readonly displayedRows = computed(() => this.rawItems());
     readonly canCreateTreatment = this.auth.hasOperationClaim(TREATMENTS_CREATE_CLAIM);
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
+    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
+    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     private suppressNextLazy = false;
     private lastLoadKey = '';

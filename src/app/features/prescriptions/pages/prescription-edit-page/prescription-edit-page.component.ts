@@ -48,7 +48,11 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import {
+    dateOnlyInputToIstanbulStartUtcIso,
+    fromIstanbulDateTimeLocalInputToUtcIso,
+    toIstanbulDateTimeLocalInputValue
+} from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -441,7 +445,7 @@ export class PrescriptionEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        prescribedAtLocal: toDateTimeLocalInput(x.prescribedAtUtc),
+                        prescribedAtLocal: toIstanbulDateTimeLocalInputValue(x.prescribedAtUtc),
                         followUpDate: x.followUpDateInput ?? '',
                         title: x.title,
                         content: x.content,
@@ -475,12 +479,12 @@ export class PrescriptionEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const prescribedAtUtc = dateTimeLocalInputToIsoUtc(v.prescribedAtLocal);
+        const prescribedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.prescribedAtLocal);
         if (!prescribedAtUtc) {
             this.submitError.set('Geçerli bir reçete tarihi ve saati seçin.');
             return;
         }
-        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToUtcIso(v.followUpDate.trim()) : null;
+        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(v.followUpDate.trim()) : null;
         if (v.followUpDate?.trim() && !followUpDateUtc) {
             this.submitError.set('Takip tarihi geçersiz.');
             return;
@@ -794,20 +798,4 @@ export class PrescriptionEditPageComponent implements OnInit {
         }
         return e instanceof Error ? e.message : fallback;
     }
-}
-
-function toDateTimeLocalInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
 }

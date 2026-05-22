@@ -48,7 +48,7 @@ import {
 } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -463,12 +463,12 @@ export class PrescriptionNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const prescribedAtUtc = dateTimeLocalInputToIsoUtc(v.prescribedAtLocal);
+        const prescribedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.prescribedAtLocal);
         if (!prescribedAtUtc) {
             this.submitError.set('Geçerli bir reçete tarihi ve saati seçin.');
             return;
         }
-        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToUtcIso(v.followUpDate.trim()) : null;
+        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(v.followUpDate.trim()) : null;
         if (v.followUpDate?.trim() && !followUpDateUtc) {
             this.submitError.set('Takip tarihi geçersiz.');
             return;

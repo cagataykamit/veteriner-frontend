@@ -1,17 +1,17 @@
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { TreatmentDetailVm, TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 export function prescriptionExaminationSelectOption(ex: ExaminationListItemVm): SelectOption {
-    const dt = formatDateTimeDisplay(ex.examinedAtUtc);
+    const dt = formatUtcIsoAsLocalDateTimeDisplay(ex.examinedAtUtc);
     const vr = (ex.visitReason ?? '').trim() || '—';
     const short = vr.length > 56 ? `${vr.slice(0, 53)}…` : vr;
     return { value: ex.id, label: `${dt} · ${short}` };
 }
 
 export function prescriptionTreatmentSelectOption(t: TreatmentListItemVm): SelectOption {
-    const dt = formatDateTimeDisplay(t.treatmentDateUtc);
+    const dt = formatUtcIsoAsLocalDateTimeDisplay(t.treatmentDateUtc);
     const title = (t.title ?? '').trim() || '—';
     const short = title.length > 56 ? `${title.slice(0, 53)}…` : title;
     return { value: t.id, label: `${dt} · ${short}` };

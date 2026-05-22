@@ -8,6 +8,7 @@ import type {
 import type { CreatePrescriptionRequest } from '@/app/features/prescriptions/models/prescription-create.model';
 import type { PrescriptionsListQuery } from '@/app/features/prescriptions/models/prescription-query.model';
 import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
+import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 const EM = '—';
 
 function str(v: string | null | undefined): string {
@@ -128,17 +129,7 @@ export function mapPrescriptionDetailDtoToVm(dto: PrescriptionDetailDto): Prescr
 }
 
 function followUpDateToInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return toIstanbulDateInputValue(isoUtc);
 }
 
 export function mapPrescriptionDetailDtoToEditVm(dto: PrescriptionDetailDto): PrescriptionEditVm {

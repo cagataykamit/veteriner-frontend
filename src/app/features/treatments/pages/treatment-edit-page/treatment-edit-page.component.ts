@@ -42,7 +42,11 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import {
+    dateOnlyInputToIstanbulStartUtcIso,
+    fromIstanbulDateTimeLocalInputToUtcIso,
+    toIstanbulDateTimeLocalInputValue
+} from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -388,7 +392,7 @@ export class TreatmentEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        treatmentDateLocal: toDateTimeLocalInput(x.treatmentDateUtc),
+                        treatmentDateLocal: toIstanbulDateTimeLocalInputValue(x.treatmentDateUtc),
                         followUpDate: x.followUpDateInput ?? '',
                         title: x.title,
                         description: x.description,
@@ -422,12 +426,12 @@ export class TreatmentEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const treatmentDateUtc = dateTimeLocalInputToIsoUtc(v.treatmentDateLocal);
+        const treatmentDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.treatmentDateLocal);
         if (!treatmentDateUtc) {
             this.submitError.set('Geçerli bir tedavi tarihi ve saati seçin.');
             return;
         }
-        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToUtcIso(v.followUpDate.trim()) : null;
+        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(v.followUpDate.trim()) : null;
         if (v.followUpDate?.trim() && !followUpDateUtc) {
             this.submitError.set('Takip tarihi geçersiz.');
             return;
@@ -680,20 +684,4 @@ export class TreatmentEditPageComponent implements OnInit {
         }
         return e instanceof Error ? e.message : fallback;
     }
-}
-
-function toDateTimeLocalInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
 }

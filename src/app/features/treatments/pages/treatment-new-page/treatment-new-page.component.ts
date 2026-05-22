@@ -37,7 +37,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { dateOnlyInputToUtcIso, dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -387,12 +387,12 @@ export class TreatmentNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const treatmentDateUtc = dateTimeLocalInputToIsoUtc(v.treatmentDateLocal);
+        const treatmentDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.treatmentDateLocal);
         if (!treatmentDateUtc) {
             this.submitError.set('Geçerli bir tedavi tarihi ve saati seçin.');
             return;
         }
-        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToUtcIso(v.followUpDate.trim()) : null;
+        const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(v.followUpDate.trim()) : null;
         if (v.followUpDate?.trim() && !followUpDateUtc) {
             this.submitError.set('Takip tarihi geçersiz.');
             return;
