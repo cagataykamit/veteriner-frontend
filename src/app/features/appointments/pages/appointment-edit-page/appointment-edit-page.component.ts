@@ -34,7 +34,11 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { dateTimeLocalInputToIsoUtc, utcIsoStringToDateTimeLocalInput } from '@/app/shared/utils/date.utils';
+import {
+    fromIstanbulDateAndTimeToUtcIso,
+    toIstanbulDateInputValue,
+    toIstanbulTimeInputValue
+} from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
@@ -412,8 +416,8 @@ export class AppointmentEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        scheduledDate: this.extractDatePart(x.scheduledAtUtc),
-                        scheduledTime: this.extractTimePart(x.scheduledAtUtc),
+                        scheduledDate: toIstanbulDateInputValue(x.scheduledAtUtc),
+                        scheduledTime: toIstanbulTimeInputValue(x.scheduledAtUtc),
                         durationMinutes: x.durationMinutes,
                         appointmentType: x.appointmentType,
                         status: x.status,
@@ -448,7 +452,7 @@ export class AppointmentEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const scheduledAtUtc = this.combineLocalDateAndTimeToUtc(v.scheduledDate, v.scheduledTime);
+        const scheduledAtUtc = fromIstanbulDateAndTimeToUtcIso(v.scheduledDate, v.scheduledTime);
         if (!scheduledAtUtc) {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
             return;
@@ -724,31 +728,43 @@ export class AppointmentEditPageComponent implements OnInit {
         const date = this.form.controls.scheduledDate.value.trim();
         const duration = Math.trunc(Number(this.form.controls.durationMinutes.value));
         const interval = this.clinicSlotIntervalMinutes() ?? 15;
+        const legacy = this.legacyInitialTime?.trim() || null;
+
         if (!date || !Number.isFinite(duration) || duration < 5 || duration > 240 || interval <= 0) {
-            this.timeOptions.set([]);
-            this.form.controls.scheduledTime.setValue('', { emitEvent: false });
+            this.timeOptions.set(legacy ? [{ value: legacy, label: `Mevcut saat: ${legacy}` }] : []);
+            if (!legacy) {
+                this.form.controls.scheduledTime.setValue('', { emitEvent: false });
+            }
             return;
         }
+
+        if (this.workingHours.length === 0) {
+            this.timeOptions.set(legacy ? [{ value: legacy, label: `Mevcut saat: ${legacy}` }] : []);
+            return;
+        }
+
         const day = this.resolveWorkingDay(date);
         if (!day || day.isClosed) {
-            this.timeOptions.set([]);
-            this.form.controls.scheduledTime.setValue('', { emitEvent: false });
+            this.timeOptions.set(legacy ? [{ value: legacy, label: `Mevcut saat: ${legacy}` }] : []);
+            if (!legacy) {
+                this.form.controls.scheduledTime.setValue('', { emitEvent: false });
+            }
             return;
         }
+
         const options = this.buildTimeOptions(day, duration, interval);
-        const selected = this.form.controls.scheduledTime.value.trim();
-        if (selected && !options.some((o) => o.value === selected) && this.legacyInitialTime === selected) {
+        let selected = this.form.controls.scheduledTime.value.trim();
+        if (!selected && legacy) {
+            selected = legacy;
+            this.form.controls.scheduledTime.setValue(legacy, { emitEvent: false });
+        }
+        if (selected && !options.some((o) => o.value === selected)) {
             options.unshift({ value: selected, label: `Mevcut saat: ${selected}` });
         }
         this.timeOptions.set(options);
         if (selected && !options.some((o) => o.value === selected)) {
             this.form.controls.scheduledTime.setValue('', { emitEvent: false });
             this.legacyInitialTime = null;
-            return;
-        }
-        if (selected && this.legacyInitialTime && selected !== this.legacyInitialTime) {
-            this.legacyInitialTime = null;
-            this.rebuildTimeOptions();
         }
     }
 
@@ -800,44 +816,6 @@ export class AppointmentEditPageComponent implements OnInit {
             return null;
         }
         return h * 60 + mm;
-    }
-
-    private extractDatePart(utc: string | null): string {
-        const input = utcIsoStringToDateTimeLocalInput(utc);
-        return input.includes('T') ? input.split('T')[0] : '';
-    }
-
-    private extractTimePart(utc: string | null): string {
-        const input = utcIsoStringToDateTimeLocalInput(utc);
-        if (!input.includes('T')) {
-            return '';
-        }
-        const raw = input.split('T')[1] ?? '';
-        return raw.slice(0, 5);
-    }
-
-    private combineLocalDateAndTimeToUtc(dateYmd: string, timeHm: string): string | null {
-        const d = dateYmd.trim();
-        const t = timeHm.trim();
-        if (!d || !t) {
-            return null;
-        }
-        const m = t.match(/^(\d{2}):(\d{2})$/);
-        if (!m) {
-            return null;
-        }
-        const hours = Number(m[1]);
-        const minutes = Number(m[2]);
-        const local = new Date(`${d}T00:00:00`);
-        if (Number.isNaN(local.getTime())) {
-            return null;
-        }
-        local.setHours(hours, minutes, 0, 0);
-        const iso = dateTimeLocalInputToIsoUtc(`${d}T${t}`);
-        if (!iso) {
-            return null;
-        }
-        return new Date(iso).toISOString().replace(/\.\d{3}Z$/, '.000Z');
     }
 
     private returnContextQueryParams(): Record<string, string> | null {

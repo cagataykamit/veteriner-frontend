@@ -154,6 +154,76 @@ export function formatUtcToLocalTime(value: string | Date | null | undefined): s
     return formatUtcIsoAsLocalTimeDisplay(value);
 }
 
+/** UTC ISO → HTML `type="date"` (`yyyy-MM-dd`) — Europe/Istanbul duvar takvimi. */
+export function toIstanbulDateInputValue(value: string | null | undefined): string {
+    const d = parseUtcApiInstantIsoString(value);
+    if (!d) {
+        return '';
+    }
+    const p = getZonedWallParts(d.getTime(), DEFAULT_UTC_DISPLAY_TIME_ZONE);
+    return `${p.y}-${String(p.mo).padStart(2, '0')}-${String(p.d).padStart(2, '0')}`;
+}
+
+/** UTC ISO → form saat (`HH:mm`) — Europe/Istanbul duvar saati. */
+export function toIstanbulTimeInputValue(value: string | null | undefined): string {
+    const d = parseUtcApiInstantIsoString(value);
+    if (!d) {
+        return '';
+    }
+    const p = getZonedWallParts(d.getTime(), DEFAULT_UTC_DISPLAY_TIME_ZONE);
+    return `${String(p.h).padStart(2, '0')}:${String(p.mi).padStart(2, '0')}`;
+}
+
+/** UTC ISO → ayrı date + time form parçaları (Istanbul). */
+export function toIstanbulDateTimeInputParts(value: string | null | undefined): { date: string; time: string } {
+    return {
+        date: toIstanbulDateInputValue(value),
+        time: toIstanbulTimeInputValue(value)
+    };
+}
+
+/** Istanbul `yyyy-MM-dd` + `HH:mm` → UTC ISO (`…000Z`). */
+export function fromIstanbulDateAndTimeToUtcIso(date: string, time: string): string | null {
+    const ms = utcMsFromIstanbulWallDateTime(date, time);
+    if (ms === null) {
+        return null;
+    }
+    return new Date(ms).toISOString().replace(/\.\d{3}Z$/, '.000Z');
+}
+
+/** UTC ISO → HTML `datetime-local` (`yyyy-MM-ddTHH:mm`) — Europe/Istanbul. */
+export function toIstanbulDateTimeLocalInputValue(value: string | null | undefined): string {
+    const { date, time } = toIstanbulDateTimeInputParts(value);
+    if (!date || !time) {
+        return '';
+    }
+    return `${date}T${time}`;
+}
+
+/** `datetime-local` (`yyyy-MM-ddTHH:mm`, Istanbul duvar saati) → UTC ISO (`…000Z`). */
+export function fromIstanbulDateTimeLocalInputToUtcIso(value: string | null | undefined): string | null {
+    if (value == null || value === '') {
+        return null;
+    }
+    let s = value.trim();
+    if (!s) {
+        return null;
+    }
+    if (s.includes(' ') && !s.includes('T')) {
+        s = s.replace(' ', 'T');
+    }
+    const tIdx = s.indexOf('T');
+    if (tIdx < 0) {
+        return null;
+    }
+    const date = s.slice(0, tIdx);
+    const timeMatch = s.slice(tIdx + 1).match(/^(\d{2}):(\d{2})/);
+    if (!timeMatch) {
+        return null;
+    }
+    return fromIstanbulDateAndTimeToUtcIso(date, `${timeMatch[1]}:${timeMatch[2]}`);
+}
+
 /** Yerel Date -> UTC ISO (`toISOString`) */
 export function toUtcIsoFromLocalDate(value: Date | null | undefined): string | null {
     if (!value || Number.isNaN(value.getTime())) {
@@ -250,6 +320,64 @@ function addGregorianDaysToYmd(ymd: string, deltaDays: number): string | null {
 }
 
 type ZonedWallParts = { y: number; mo: number; d: number; h: number; mi: number; s: number; frac: number };
+
+/** İlk UTC anı — `timeZone` yerelinde `targetYmd` + `HH:mm` duvar saati (saniye 0). */
+function utcMsFromIstanbulWallDateTime(targetYmd: string, timeHm: string): number | null {
+    const parsed = parseYyyyMmDd(targetYmd);
+    if (!parsed) {
+        return null;
+    }
+    const tm = timeHm.trim().match(/^(\d{2}):(\d{2})$/);
+    if (!tm) {
+        return null;
+    }
+    const th = Number(tm[1]);
+    const tmi = Number(tm[2]);
+    if (!Number.isFinite(th) || !Number.isFinite(tmi) || th < 0 || th > 23 || tmi < 0 || tmi > 59) {
+        return null;
+    }
+    const ty = parsed.y;
+    const tmo = parsed.m;
+    const td = parsed.d;
+
+    const atOrAfterTarget = (utcMs: number): boolean => {
+        const p = getZonedWallParts(utcMs, DEFAULT_UTC_DISPLAY_TIME_ZONE);
+        if (p.y !== ty) {
+            return p.y > ty;
+        }
+        if (p.mo !== tmo) {
+            return p.mo > tmo;
+        }
+        if (p.d !== td) {
+            return p.d > td;
+        }
+        if (p.h !== th) {
+            return p.h > th;
+        }
+        if (p.mi !== tmi) {
+            return p.mi > tmi;
+        }
+        if (p.s !== 0) {
+            return p.s > 0;
+        }
+        return p.frac >= 0;
+    };
+
+    let lo = Date.UTC(parsed.y, parsed.m - 1, parsed.d - 2, 12, 0, 0, 0);
+    let hi = Date.UTC(parsed.y, parsed.m - 1, parsed.d + 2, 12, 0, 0, 0);
+    if (!atOrAfterTarget(hi)) {
+        return null;
+    }
+    while (lo < hi) {
+        const mid = Math.floor((lo + hi) / 2);
+        if (atOrAfterTarget(mid)) {
+            hi = mid;
+        } else {
+            lo = mid + 1;
+        }
+    }
+    return lo;
+}
 
 function getZonedWallParts(utcMs: number, timeZone: string): ZonedWallParts {
     const f = new Intl.DateTimeFormat('en-US', {

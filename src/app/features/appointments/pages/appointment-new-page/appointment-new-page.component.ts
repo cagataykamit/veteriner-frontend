@@ -27,7 +27,7 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
 import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
@@ -387,7 +387,7 @@ export class AppointmentNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const scheduledAtUtc = this.combineLocalDateAndTimeToUtc(v.scheduledDate, v.scheduledTime);
+        const scheduledAtUtc = fromIstanbulDateAndTimeToUtcIso(v.scheduledDate, v.scheduledTime);
         if (!scheduledAtUtc) {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
             return;
@@ -632,30 +632,6 @@ export class AppointmentNewPageComponent implements OnInit {
             return null;
         }
         return h * 60 + mm;
-    }
-
-    private combineLocalDateAndTimeToUtc(dateYmd: string, timeHm: string): string | null {
-        const d = dateYmd.trim();
-        const t = timeHm.trim();
-        if (!d || !t) {
-            return null;
-        }
-        const m = t.match(/^(\d{2}):(\d{2})$/);
-        if (!m) {
-            return null;
-        }
-        const hours = Number(m[1]);
-        const minutes = Number(m[2]);
-        const local = new Date(`${d}T00:00:00`);
-        if (Number.isNaN(local.getTime())) {
-            return null;
-        }
-        local.setHours(hours, minutes, 0, 0);
-        const iso = dateTimeLocalInputToIsoUtc(`${d}T${t}`);
-        if (!iso) {
-            return null;
-        }
-        return new Date(iso).toISOString().replace(/\.\d{3}Z$/, '.000Z');
     }
 
     private mapLoadError(e: unknown, fallback: string): string {
