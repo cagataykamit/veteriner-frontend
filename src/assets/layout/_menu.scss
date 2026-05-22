@@ -21,17 +21,7 @@
     margin: 0;
     padding: 0;
     list-style-type: none;
-    /* Gövde Lato iken menü sistem fontunda kalsın (Türkçe glif tutarlılığı) */
-    font-family:
-        'Segoe UI',
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        Roboto,
-        Arial,
-        sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-family: inherit;
 
     .layout-root-menuitem {
         > .layout-menuitem-root-text {

@@ -5,14 +5,7 @@ html {
 }
 
 body {
-    /* Lato: Türkçe için latin-ext yüklü kaynak (index.html); yedekler benzer metrikli sistem fontları */
-    font-family:
-        'Lato',
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        'Segoe UI',
-        sans-serif;
+    font-family: "Inter", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: var(--text-color);
     background-color: var(--surface-ground);
     margin: 0;
