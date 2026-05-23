@@ -1,5 +1,8 @@
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import {
+    fromIstanbulDateTimeLocalInputToUtcIso,
+    toIstanbulDateTimeLocalInputValue
+} from '@/app/shared/utils/date.utils';
 
 export type VaccinationWriteStatusNum = 0 | 1 | 2;
 
@@ -24,7 +27,7 @@ export function buildVaccinationAppliedDueForSubmit(
         if (!nextDueDateTrimmed) {
             return { appliedAtUtc: null, dueAtUtc: null, errorMessage: 'Planlanan uygulama tarihi ve saati zorunludur.' };
         }
-        const dueIso = dateTimeLocalInputToIsoUtc(nextDueDateTrimmed);
+        const dueIso = fromIstanbulDateTimeLocalInputToUtcIso(nextDueDateTrimmed);
         if (!dueIso) {
             return { appliedAtUtc: null, dueAtUtc: null, errorMessage: 'Geçerli bir planlanan uygulama tarihi ve saati seçin.' };
         }
@@ -38,7 +41,7 @@ export function buildVaccinationAppliedDueForSubmit(
         if (!appliedAtLocalTrimmed) {
             return { appliedAtUtc: null, dueAtUtc: null, errorMessage: 'Uygulama tarihi ve saati zorunludur.' };
         }
-        const appliedIso = dateTimeLocalInputToIsoUtc(appliedAtLocalTrimmed);
+        const appliedIso = fromIstanbulDateTimeLocalInputToUtcIso(appliedAtLocalTrimmed);
         if (!appliedIso) {
             return { appliedAtUtc: null, dueAtUtc: null, errorMessage: 'Geçerli bir uygulama tarihi ve saati seçin.' };
         }
@@ -48,7 +51,7 @@ export function buildVaccinationAppliedDueForSubmit(
         if (!nextDueDateTrimmed) {
             return { appliedAtUtc: appliedIso, dueAtUtc: null, errorMessage: null };
         }
-        const dueIso = dateTimeLocalInputToIsoUtc(nextDueDateTrimmed);
+        const dueIso = fromIstanbulDateTimeLocalInputToUtcIso(nextDueDateTrimmed);
         if (!dueIso) {
             return { appliedAtUtc: null, dueAtUtc: null, errorMessage: 'Geçerli bir sonraki uygulama tarihi ve saati seçin.' };
         }
@@ -64,7 +67,7 @@ export function buildVaccinationAppliedDueForSubmit(
 
     let dueIso: string | null = null;
     if (nextDueDateTrimmed) {
-        const d = dateTimeLocalInputToIsoUtc(nextDueDateTrimmed);
+        const d = fromIstanbulDateTimeLocalInputToUtcIso(nextDueDateTrimmed);
         if (!d) {
             return { appliedAtUtc: null, dueAtUtc: null, errorMessage: 'Geçerli bir tarih seçin.' };
         }
@@ -87,7 +90,7 @@ export function vaccinationPlannedNotPastValidator(): ValidatorFn {
         if (!v) {
             return null;
         }
-        const dueIso = dateTimeLocalInputToIsoUtc(v);
+        const dueIso = fromIstanbulDateTimeLocalInputToUtcIso(v);
         if (!dueIso) {
             return null;
         }
@@ -112,7 +115,7 @@ export function vaccinationAppliedNotFutureValidator(): ValidatorFn {
         if (!raw) {
             return null;
         }
-        const iso = dateTimeLocalInputToIsoUtc(raw);
+        const iso = fromIstanbulDateTimeLocalInputToUtcIso(raw);
         if (!iso) {
             return null;
         }
@@ -138,8 +141,8 @@ export function vaccinationNextDueAfterAppliedGroupValidator(): ValidatorFn {
         if (!next || !appliedRaw) {
             return null;
         }
-        const appliedIso = dateTimeLocalInputToIsoUtc(appliedRaw);
-        const nextIso = dateTimeLocalInputToIsoUtc(next);
+        const appliedIso = fromIstanbulDateTimeLocalInputToUtcIso(appliedRaw);
+        const nextIso = fromIstanbulDateTimeLocalInputToUtcIso(next);
         if (!appliedIso || !nextIso) {
             return null;
         }
@@ -150,26 +153,14 @@ export function vaccinationNextDueAfterAppliedGroupValidator(): ValidatorFn {
     };
 }
 
-/** `datetime-local` için bugünün anına kadar üst sınır (`YYYY-MM-DDTHH:mm`). */
+/** `datetime-local` için Istanbul duvar saatinde şu an (`YYYY-MM-DDTHH:mm`). */
 export function localDateTimeLocalInputMaxNow(): string {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
+    return toIstanbulDateTimeLocalInputValue(new Date().toISOString());
 }
 
-/** `datetime-local` min: mevcut andan 1 dakika sonrası (`YYYY-MM-DDTHH:mm`). */
+/** `datetime-local` min: Istanbul duvar saatinde andan 1 dakika sonrası (`YYYY-MM-DDTHH:mm`). */
 export function minDateTimeLocalMinuteAfterNow(): string {
-    const d = new Date(Date.now() + 60_000);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
+    return toIstanbulDateTimeLocalInputValue(new Date(Date.now() + 60_000).toISOString());
 }
 
 /** Uygulandı için boş alan varsayılanı: yereldeki şu an (`datetime-local` değeri). */
@@ -195,7 +186,7 @@ export function vaccinationStatusDateFieldsAfterTransition(
         if (!applied) {
             applied = currentLocalDateTimeLocalInput();
         } else {
-            const iso = dateTimeLocalInputToIsoUtc(applied);
+            const iso = fromIstanbulDateTimeLocalInputToUtcIso(applied);
             if (iso && new Date(iso).getTime() > Date.now()) {
                 applied = currentLocalDateTimeLocalInput();
             }
@@ -206,7 +197,7 @@ export function vaccinationStatusDateFieldsAfterTransition(
     if (next === 0) {
         applied = '';
         if (nextDue) {
-            const dueIso = dateTimeLocalInputToIsoUtc(nextDue);
+            const dueIso = fromIstanbulDateTimeLocalInputToUtcIso(nextDue);
             if (!dueIso || new Date(dueIso).getTime() <= Date.now()) {
                 nextDue = '';
             }
@@ -217,21 +208,16 @@ export function vaccinationStatusDateFieldsAfterTransition(
     return { appliedAtLocal: '', nextDueDate: '' };
 }
 
-/** Uygulamadan sonraki ilk dakika (`YYYY-MM-DDTHH:mm`); geçersizse boş. */
+/** Uygulamadan sonraki ilk dakika (`YYYY-MM-DDTHH:mm`, Istanbul); geçersizse boş. */
 export function minDateTimeLocalMinuteAfter(appliedLocalDateTime: string): string {
-    const appliedIso = dateTimeLocalInputToIsoUtc(appliedLocalDateTime.trim());
+    const appliedIso = fromIstanbulDateTimeLocalInputToUtcIso(appliedLocalDateTime.trim());
     if (!appliedIso) {
         return '';
     }
-    const d = new Date(new Date(appliedIso).getTime() + 60_000);
-    if (Number.isNaN(d.getTime())) {
+    const ms = new Date(appliedIso).getTime() + 60_000;
+    if (Number.isNaN(ms)) {
         return '';
     }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
+    return toIstanbulDateTimeLocalInputValue(new Date(ms).toISOString());
 }
 

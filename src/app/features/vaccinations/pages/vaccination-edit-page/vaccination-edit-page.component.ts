@@ -30,7 +30,7 @@ import {
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { utcIsoStringToDateTimeLocalInput } from '@/app/shared/utils/date.utils';
+import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import {
@@ -421,7 +421,7 @@ export class VaccinationEditPageComponent implements OnInit {
                 this.isInitializingClient = true;
                 // clientId patch’i valueChanges tetiklemesin: pet sıfırlanmasın, loadPets tek kez ve petId ile gitsin.
                 const st = this.normalizeStatusNum(x.status ?? 0);
-                const appliedForm = st === 1 ? utcIsoStringToDateTimeLocalInput(x.appliedAtUtc) : '';
+                const appliedForm = st === 1 ? toIstanbulDateTimeLocalInputValue(x.appliedAtUtc) : '';
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
@@ -430,7 +430,7 @@ export class VaccinationEditPageComponent implements OnInit {
                         status: x.status ?? 0,
                         notes: x.notes,
                         appliedAtLocal: appliedForm,
-                        nextDueDate: utcIsoStringToDateTimeLocalInput(x.dueAtUtc)
+                        nextDueDate: toIstanbulDateTimeLocalInputValue(x.dueAtUtc)
                     },
                     { emitEvent: false }
                 );
