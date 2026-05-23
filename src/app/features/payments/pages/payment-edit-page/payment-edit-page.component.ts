@@ -31,7 +31,10 @@ import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quic
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { amountToFormString, parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
-import { dateTimeLocalInputToIsoUtc, utcIsoStringToDateTimeLocalInput } from '@/app/shared/utils/date.utils';
+import {
+    fromIstanbulDateTimeLocalInputToUtcIso,
+    toIstanbulDateTimeLocalInputValue
+} from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -326,7 +329,7 @@ export class PaymentEditPageComponent implements OnInit {
                     amount: amountToFormString(x.amountStr),
                     currency: x.currency || 'TRY',
                     method: x.method ?? 'cash',
-                    paidAtLocal: utcIsoStringToDateTimeLocalInput(x.paidAtUtc),
+                    paidAtLocal: toIstanbulDateTimeLocalInputValue(x.paidAtUtc),
                     note: x.note
                 });
                 if (x.clientId) {
@@ -367,7 +370,7 @@ export class PaymentEditPageComponent implements OnInit {
         }
 
         const paidAtLocal = v.paidAtLocal?.trim() ?? '';
-        const paidAtUtc = dateTimeLocalInputToIsoUtc(paidAtLocal);
+        const paidAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(paidAtLocal);
         if (!paidAtUtc) {
             this.submitError.set('Geçerli bir ödeme tarihi / saati seçin.');
             return;
