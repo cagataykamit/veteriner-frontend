@@ -13,7 +13,11 @@ import type { StockMovementsListQuery } from '@/app/features/inventory/models/st
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
 import { formatStockQuantityDisplay } from '@/app/features/inventory/data/product-stock.mapper';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import {
+    dateOnlyInputToIstanbulEndUtcIso,
+    dateOnlyInputToIstanbulStartUtcIso,
+    formatUtcIsoAsLocalDateTimeDisplay
+} from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 const EM = '—';
@@ -123,22 +127,6 @@ export function movementKindSeverity(kind: MovementKind): StatusTagSeverity {
     }
 }
 
-function dateOnlyToUtcStartIso(dateStr: string): string | null {
-    const t = dateStr.trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) {
-        return null;
-    }
-    return `${t}T00:00:00.000Z`;
-}
-
-function dateOnlyToUtcEndIso(dateStr: string): string | null {
-    const t = dateStr.trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) {
-        return null;
-    }
-    return `${t}T23:59:59.999Z`;
-}
-
 function referenceLine(type: string | null | undefined, id: string | null | undefined): string {
     const tt = type?.trim();
     const ii = id?.trim();
@@ -233,13 +221,13 @@ export function stockMovementsListQueryToHttpParams(
         }
     }
     if (query.dateFromUtc?.trim()) {
-        const iso = dateOnlyToUtcStartIso(query.dateFromUtc);
+        const iso = dateOnlyInputToIstanbulStartUtcIso(query.dateFromUtc.trim());
         if (iso) {
             p = p.set('DateFromUtc', iso);
         }
     }
     if (query.dateToUtc?.trim()) {
-        const iso = dateOnlyToUtcEndIso(query.dateToUtc);
+        const iso = dateOnlyInputToIstanbulEndUtcIso(query.dateToUtc.trim());
         if (iso) {
             p = p.set('DateToUtc', iso);
         }

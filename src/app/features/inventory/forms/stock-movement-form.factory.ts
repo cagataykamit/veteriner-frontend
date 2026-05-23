@@ -1,6 +1,6 @@
 import { AbstractControl, FormBuilder, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import type {
     StockMovementFormMovementType,
     StockMovementUpsertFormValue
@@ -101,7 +101,7 @@ export function getStockMovementFormValue(form: StockMovementFormGroup): StockMo
             }
         }
     }
-    const iso = dateTimeLocalInputToIsoUtc(v.occurredAtUtcLocal?.trim() ?? '');
+    const iso = fromIstanbulDateTimeLocalInputToUtcIso(v.occurredAtUtcLocal?.trim() ?? '');
     const reasonT = v.reason?.trim() ?? '';
     const notesT = v.notes?.trim() ?? '';
     return {
@@ -111,7 +111,7 @@ export function getStockMovementFormValue(form: StockMovementFormGroup): StockMo
         quantity: qty,
         unitCost: unitCost !== null && Number.isFinite(unitCost) ? unitCost : null,
         reason: reasonT === '' ? null : reasonT,
-        occurredAtUtc: iso === '' ? null : iso,
+        occurredAtUtc: iso ?? null,
         notes: notesT === '' ? null : notesT
     };
 }
