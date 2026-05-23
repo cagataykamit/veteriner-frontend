@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
 import { ToastModule } from 'primeng/toast';
@@ -8,6 +9,7 @@ import { finalize } from 'rxjs';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { authFailureMessage } from '@/app/core/auth/auth-error.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { ClinicSwitcherRefreshService } from '@/app/layout/service/clinic-switcher-refresh.service';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
@@ -18,7 +20,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
  * - Tek orchestration: liste yükleme (lazy), menü aç/kapa, `selectClinic` çağrısı, post-switch refresh.
  * - Token/JWT parse YOK; tüm clinic state `AuthService` üzerinden okunur.
  * - localStorage'a doğrudan erişim YOK; tokenlar `auth.selectClinic` içinde persist edilir.
- * - `/me/clinics` çağrısı sadece ilk açılışta (lazy); sonraki açılışlar 120 sn TTL cache'inden döner.
+ * - `/me/clinics` çağrısı lazy veya `ClinicSwitcherRefreshService` ile force refresh; AuthService TTL cache bypass edilir.
  * - Tek kliniği olan kullanıcı için trigger tıklanmaz, mevcut statik görünüm korunur.
  *
  * Toast pattern: projenin mevcut feature componentlerindeki ile aynı (`providers: [MessageService]`
@@ -79,6 +81,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 export class AppClinicSwitcher implements OnDestroy {
     private readonly auth = inject(AuthService);
     private readonly messages = inject(MessageService);
+    private readonly clinicListRefresh = inject(ClinicSwitcherRefreshService);
+    private readonly destroyRef = inject(DestroyRef);
 
     private readonly menuRef = viewChild<Menu>('clinicMenu');
     private readonly triggerEl = viewChild<ElementRef<HTMLButtonElement>>('triggerBtn');
@@ -98,6 +102,12 @@ export class AppClinicSwitcher implements OnDestroy {
 
     /** Caret yalnız interaktif modda görünür; tek klinikse hint verilmez. */
     readonly showCaret = this.isInteractive;
+
+    constructor() {
+        this.clinicListRefresh.onRefreshRequested
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.reloadClinics(true));
+    }
 
     readonly menuItems = computed<MenuItem[]>(() => {
         const activeId = this.activeId();
@@ -124,7 +134,7 @@ export class AppClinicSwitcher implements OnDestroy {
             return;
         }
         if (!this.hasLoadedOnce()) {
-            this.loadMyClinics(() => {
+            this.reloadClinics(false, () => {
                 if (!this.isMulti()) {
                     return;
                 }
@@ -147,13 +157,13 @@ export class AppClinicSwitcher implements OnDestroy {
         this.menuRef()?.toggle(event);
     }
 
-    private loadMyClinics(then?: () => void): void {
+    private reloadClinics(forceRefresh = false, then?: () => void): void {
         if (this.loading()) {
             return;
         }
         this.loading.set(true);
         this.auth
-            .getMyClinics()
+            .getMyClinics(forceRefresh)
             .pipe(finalize(() => this.loading.set(false)))
             .subscribe({
                 next: (items) => {
@@ -162,6 +172,9 @@ export class AppClinicSwitcher implements OnDestroy {
                     then?.();
                 },
                 error: (e: unknown) => {
+                    if (forceRefresh) {
+                        return;
+                    }
                     this.showErrorToast(e, 'Klinikler yüklenemedi.');
                 }
             });
@@ -194,14 +207,7 @@ export class AppClinicSwitcher implements OnDestroy {
 
     /** Switch hatası sonrası liste paslı olabilir (klinik pasifleştirildi vb.) → force refresh. */
     private refreshClinicsListAfterError(): void {
-        this.auth.getMyClinics(true).subscribe({
-            next: (items) => {
-                this.clinics.set(sortClinicsByName(filterClinicsForSelection(items)));
-            },
-            error: () => {
-                /* sessiz: ana hata zaten kullanıcıya gösterildi. */
-            }
-        });
+        this.reloadClinics(true);
     }
 
     private showErrorToast(e: unknown, fallback: string): void {

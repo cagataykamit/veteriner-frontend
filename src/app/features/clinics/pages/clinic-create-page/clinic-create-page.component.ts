@@ -24,6 +24,7 @@ import {
     type ClinicUpsertFieldErrors
 } from '@/app/features/clinics/utils/clinic-upsert-validation-parse.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { ClinicSwitcherRefreshService } from '@/app/layout/service/clinic-switcher-refresh.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
@@ -183,6 +184,7 @@ export class ClinicCreatePageComponent {
     private readonly router = inject(Router);
     private readonly messages = inject(MessageService);
     private readonly fb = inject(FormBuilder);
+    private readonly clinicSwitcherRefresh = inject(ClinicSwitcherRefreshService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly phoneMax = CLINIC_PHONE_MAX;
@@ -241,6 +243,7 @@ export class ClinicCreatePageComponent {
         this.clinicsApi.createClinic(v).subscribe({
             next: ({ createdId }) => {
                 this.submitting.set(false);
+                this.clinicSwitcherRefresh.notifyClinicListChanged();
                 addTracedToast(this.messages, 'ClinicCreatePage', this.router.url, {
                     severity: 'success',
                     summary: 'Tamam',
