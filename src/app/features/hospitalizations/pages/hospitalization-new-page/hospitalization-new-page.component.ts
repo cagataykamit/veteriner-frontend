@@ -34,7 +34,7 @@ import {
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
@@ -301,13 +301,13 @@ export class HospitalizationNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const admittedAtUtc = dateTimeLocalInputToIsoUtc(v.admittedAtLocal);
+        const admittedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.admittedAtLocal);
         if (!admittedAtUtc) {
             this.submitError.set('Geçerli bir yatış tarihi ve saati seçin.');
             return;
         }
         const plannedRaw = v.plannedDischargeAtLocal?.trim();
-        const plannedDischargeAtUtc = plannedRaw ? dateTimeLocalInputToIsoUtc(plannedRaw) : null;
+        const plannedDischargeAtUtc = plannedRaw ? fromIstanbulDateTimeLocalInputToUtcIso(plannedRaw) : null;
         if (plannedRaw && !plannedDischargeAtUtc) {
             this.submitError.set('Planlı taburcu tarihi geçersiz.');
             return;

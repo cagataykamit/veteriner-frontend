@@ -39,7 +39,10 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import {
+    fromIstanbulDateTimeLocalInputToUtcIso,
+    toIstanbulDateTimeLocalInputValue
+} from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -385,7 +388,7 @@ export class LabResultEditPageComponent implements OnInit {
                     {
                         clientId: x.clientId,
                         petId: '',
-                        resultDateLocal: toDateTimeLocalInput(x.resultDateUtc),
+                        resultDateLocal: toIstanbulDateTimeLocalInputValue(x.resultDateUtc),
                         testName: x.testName,
                         resultText: x.resultText,
                         interpretation: x.interpretation,
@@ -419,7 +422,7 @@ export class LabResultEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const resultDateUtc = dateTimeLocalInputToIsoUtc(v.resultDateLocal);
+        const resultDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.resultDateLocal);
         if (!resultDateUtc) {
             this.submitError.set('Geçerli bir sonuç tarihi ve saati seçin.');
             return;
@@ -666,20 +669,4 @@ export class LabResultEditPageComponent implements OnInit {
         }
         return e instanceof Error ? e.message : fallback;
     }
-}
-
-function toDateTimeLocalInput(isoUtc: string | null): string {
-    if (!isoUtc?.trim()) {
-        return '';
-    }
-    const d = new Date(isoUtc);
-    if (Number.isNaN(d.getTime())) {
-        return '';
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${hh}:${mm}`;
 }

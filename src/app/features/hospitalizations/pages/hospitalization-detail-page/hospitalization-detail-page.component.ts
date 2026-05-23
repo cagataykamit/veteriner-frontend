@@ -14,7 +14,7 @@ import {
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { dateTimeLocalInputToIsoUtc, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
@@ -315,7 +315,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
             return;
         }
         const v = this.dischargeForm.getRawValue();
-        const dischargedAtUtc = dateTimeLocalInputToIsoUtc(v.dischargedAtLocal);
+        const dischargedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.dischargedAtLocal);
         if (!dischargedAtUtc) {
             this.dischargeSubmitError.set('Geçerli bir taburcu tarihi ve saati seçin.');
             return;

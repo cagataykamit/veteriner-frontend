@@ -35,7 +35,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { dateTimeLocalInputToIsoUtc } from '@/app/shared/utils/date.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -376,7 +376,7 @@ export class LabResultNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const resultDateUtc = dateTimeLocalInputToIsoUtc(v.resultDateLocal);
+        const resultDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.resultDateLocal);
         if (!resultDateUtc) {
             this.submitError.set('Geçerli bir sonuç tarihi ve saati seçin.');
             return;
