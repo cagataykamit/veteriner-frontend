@@ -7,7 +7,8 @@ export const appRoutes: Routes = [
     {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'panel'
+        loadComponent: () =>
+            import('./app/pages/public/public-home-page.component').then((m) => m.PublicHomePageComponent)
     },
     {
         path: 'panel',
