@@ -11,7 +11,7 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
 import type { PublicOwnerSignupRequestDto, PublicOwnerSignupResultDto } from '@/app/features/public/models/public-owner-signup-api.model';
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
-import { defByApiCode, parsePlanQueryParam, type PricingPlanDef } from '@/app/features/public/utils/pricing-plan.utils';
+import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/features/public/utils/pricing-plan.utils';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
@@ -51,29 +51,19 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                         } @else {
                             <div class="text-center mb-8">
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Hesap oluştur</div>
-                                <span class="text-muted-color font-medium">Paket seçiminizle işletmenizi tek adımda başlatın</span>
+                                <span class="text-muted-color font-medium">Deneme paketiyle işletmenizi tek adımda başlatın</span>
                             </div>
 
                             <div class="flex flex-col gap-6">
-                                @if (!selectedPlan()) {
-                                    <div
-                                        class="rounded-lg border border-amber-500/40 bg-amber-500/[0.08] p-4 text-sm text-surface-900 dark:text-surface-0"
-                                        role="status"
-                                    >
-                                        <p class="m-0 mb-2 font-medium">Önce bir paket seçmelisiniz.</p>
-                                        <p class="m-0 text-muted-color">
-                                            <a routerLink="/pricing" class="text-primary font-medium no-underline">Paketleri görüntüle</a>
-                                            ve denemeyi başlatın.
-                                        </p>
-                                    </div>
-                                } @else {
-                                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4">
-                                        <div class="text-xs text-muted-color uppercase tracking-wide mb-1">Seçilen paket</div>
-                                        <div class="font-semibold text-surface-900 dark:text-surface-0 text-lg mb-2">{{ selectedPlan()!.title }}</div>
-                                        <p class="text-sm text-muted-color m-0 mb-3">{{ selectedPlan()!.description }}</p>
-                                        <a routerLink="/pricing" class="text-primary font-medium no-underline text-sm">Farklı paket seç</a>
-                                    </div>
-                                }
+                                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4">
+                                    <div class="text-xs text-muted-color uppercase tracking-wide mb-1">Seçilen paket</div>
+                                    <div class="font-semibold text-surface-900 dark:text-surface-0 text-lg mb-2">{{ selectedPlan().title }}</div>
+                                    <p class="text-sm text-muted-color m-0 mb-3">{{ selectedPlan().description }}</p>
+                                    <p class="text-sm text-muted-color m-0 mb-3">
+                                        Deneme paketiyle başlayın. İsterseniz paketleri inceleyerek farklı bir planla devam edebilirsiniz.
+                                    </p>
+                                    <a routerLink="/pricing" class="text-primary font-medium no-underline text-sm">Paketleri inceleyin</a>
+                                </div>
 
                                 <div>
                                     <label for="tenantName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">İşletme / kurum adı *</label>
@@ -118,7 +108,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                     label="Hesabı oluştur"
                                     styleClass="w-full"
                                     [loading]="submitting()"
-                                    [disabled]="submitting() || !selectedPlan()"
+                                    [disabled]="submitting()"
                                     (onClick)="submit()"
                                 />
 
@@ -150,7 +140,7 @@ export class OwnerSignupPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
 
-    readonly selectedPlan = signal<PricingPlanDef | null>(null);
+    readonly selectedPlan = signal<PricingPlanDef>(resolveSignupPlan(null));
     readonly successResult = signal<PublicOwnerSignupResultDto | null>(null);
     /** Success sonrası login prefill için saklanır. */
     private readonly loginEmailAfterSuccess = signal<string>('');
@@ -172,7 +162,7 @@ export class OwnerSignupPageComponent implements OnInit {
             if (this.successResult()) {
                 return;
             }
-            this.selectedPlan.set(parsePlanQueryParam(q.get('plan')));
+            this.selectedPlan.set(resolveSignupPlan(q.get('plan')));
         });
     }
 
@@ -183,10 +173,6 @@ export class OwnerSignupPageComponent implements OnInit {
         this.formError.set(null);
 
         const plan = this.selectedPlan();
-        if (!plan) {
-            this.formError.set('Önce paket seçmelisiniz.');
-            return;
-        }
 
         const tenantName = this.tenantName?.trim() ?? '';
         const clinicName = this.clinicName?.trim() ?? '';
