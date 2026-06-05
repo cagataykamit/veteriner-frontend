@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
@@ -14,6 +16,7 @@ import {
 import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconfigurator';
 import { PublicFooterComponent } from './components/public-footer.component';
 import { PublicTopbarComponent } from './components/public-topbar.component';
+import { PUBLIC_HOME_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
 @Component({
@@ -538,6 +541,10 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
     `
 })
 export class PublicHomePageComponent implements OnInit {
+    private readonly title = inject(Title);
+    private readonly meta = inject(Meta);
+    private readonly document = inject(DOCUMENT);
+
     readonly features = PUBLIC_HOME_FEATURES;
     readonly stats = PUBLIC_HOME_STATS;
     readonly whyItems = PUBLIC_HOME_WHY;
@@ -549,7 +556,8 @@ export class PublicHomePageComponent implements OnInit {
     openFaqIndex: number | null = null;
 
     ngOnInit(): void {
-        removeOrphanedPrimeMenuPopupsFromBody(document);
+        setPublicPageMeta(this.title, this.meta, PUBLIC_HOME_PAGE_META, this.document);
+        removeOrphanedPrimeMenuPopupsFromBody(this.document);
     }
 
     toggleFaq(index: number): void {

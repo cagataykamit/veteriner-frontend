@@ -1,5 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { DOCUMENT } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -18,6 +20,7 @@ import {
 } from '@/app/core/auth/auth-error.utils';
 import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
+import { AUTH_LOGIN_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
 @Component({
@@ -141,6 +144,9 @@ export class Login implements OnInit {
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
+    private readonly title = inject(Title);
+    private readonly meta = inject(Meta);
+    private readonly document = inject(DOCUMENT);
 
     email: string = '';
 
@@ -165,7 +171,8 @@ export class Login implements OnInit {
     readonly inviteLoginHint = signal<string | null>(null);
 
     ngOnInit(): void {
-        removeOrphanedPrimeMenuPopupsFromBody(document);
+        setPublicPageMeta(this.title, this.meta, AUTH_LOGIN_PAGE_META);
+        removeOrphanedPrimeMenuPopupsFromBody(this.document);
         const q = this.route.snapshot.queryParamMap;
         if (q.get('reauth') === '1') {
             this.sessionRenewHint.set('Oturum süresi doldu veya oturum yenilenemedi. Lütfen tekrar giriş yapın.');

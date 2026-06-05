@@ -32,21 +32,13 @@ import { RippleModule } from 'primeng/ripple';
                     aria-label="Ana navigasyon"
                 >
                     @for (link of navLinks; track link.label) {
-                        @if (link.routerLink) {
-                            <a
-                                [routerLink]="link.routerLink"
-                                class="public-topbar-nav-link px-3 py-1.5 font-medium text-surface-700 no-underline dark:text-surface-300"
-                            >
-                                {{ link.label }}
-                            </a>
-                        } @else {
-                            <a
-                                [href]="link.href"
-                                class="public-topbar-nav-link px-3 py-1.5 font-medium text-surface-700 no-underline dark:text-surface-300"
-                            >
-                                {{ link.label }}
-                            </a>
-                        }
+                        <a
+                            [routerLink]="link.routerLink"
+                            [fragment]="link.fragment"
+                            class="public-topbar-nav-link px-3 py-1.5 font-medium text-surface-700 no-underline dark:text-surface-300"
+                        >
+                            {{ link.label }}
+                        </a>
                     }
                 </nav>
 
@@ -86,9 +78,9 @@ import { RippleModule } from 'primeng/ripple';
 })
 export class PublicTopbarComponent {
     readonly navLinks = [
-        { label: 'Özellikler', href: '#features' },
-        { label: 'Modüller', href: '#modules' },
-        { label: 'SSS', href: '#faq' },
-        { label: 'Paketler', routerLink: '/pricing' as const }
+        { label: 'Özellikler', routerLink: ['/'], fragment: 'features' },
+        { label: 'Modüller', routerLink: ['/'], fragment: 'modules' },
+        { label: 'SSS', routerLink: ['/'], fragment: 'faq' },
+        { label: 'Paketler', routerLink: ['/pricing'] }
     ];
 }

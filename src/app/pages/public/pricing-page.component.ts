@@ -1,10 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { PRICING_PLAN_DEFS } from '@/app/features/public/utils/pricing-plan.utils';
 import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconfigurator';
 import { PublicTopbarComponent } from '@/app/pages/public/components/public-topbar.component';
+import { PUBLIC_PRICING_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
 @Component({
@@ -161,9 +164,14 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
     `
 })
 export class PricingPageComponent implements OnInit {
+    private readonly title = inject(Title);
+    private readonly meta = inject(Meta);
+    private readonly document = inject(DOCUMENT);
+
     readonly plans = PRICING_PLAN_DEFS;
 
     ngOnInit(): void {
-        removeOrphanedPrimeMenuPopupsFromBody(document);
+        setPublicPageMeta(this.title, this.meta, PUBLIC_PRICING_PAGE_META, this.document);
+        removeOrphanedPrimeMenuPopupsFromBody(this.document);
     }
 }

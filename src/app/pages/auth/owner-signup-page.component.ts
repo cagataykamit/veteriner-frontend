@@ -1,4 +1,6 @@
+import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -12,6 +14,7 @@ import type { PublicOwnerSignupRequestDto, PublicOwnerSignupResultDto } from '@/
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
 import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/features/public/utils/pricing-plan.utils';
+import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
@@ -139,6 +142,9 @@ export class OwnerSignupPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly title = inject(Title);
+    private readonly meta = inject(Meta);
+    private readonly document = inject(DOCUMENT);
 
     readonly selectedPlan = signal<PricingPlanDef>(resolveSignupPlan(null));
     readonly successResult = signal<PublicOwnerSignupResultDto | null>(null);
@@ -157,7 +163,8 @@ export class OwnerSignupPageComponent implements OnInit {
     readonly formatDate = (v: string | null | undefined) => formatDateDisplay(v);
 
     ngOnInit(): void {
-        removeOrphanedPrimeMenuPopupsFromBody(document);
+        setPublicPageMeta(this.title, this.meta, AUTH_SIGNUP_PAGE_META);
+        removeOrphanedPrimeMenuPopupsFromBody(this.document);
         this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((q) => {
             if (this.successResult()) {
                 return;

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Veteriner SaaS">
+    <rect width="32" height="32" rx="8" fill="#1e293b" />
+    <path
+        fill="#f8fafc"
+        d="M8 26V12l8-6 8 6v14H8zm2-2h4v-6h4v6h4V13.5l-6-4.5-6 4.5V24z"
+    />
+</svg>
