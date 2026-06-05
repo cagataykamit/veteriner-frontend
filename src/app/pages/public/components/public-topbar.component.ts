@@ -68,11 +68,17 @@ import { RippleModule } from 'primeng/ripple';
         }
 
         .public-topbar-nav-link {
+            box-sizing: border-box;
+            border: 0 solid transparent;
+            font-weight: 500;
             transition: color 0.15s ease;
         }
 
-        .public-topbar-nav-link:hover {
+        .public-topbar-nav-link:hover,
+        .public-topbar-nav-link.router-link-active {
             color: var(--primary-color);
+            font-weight: 500;
+            border-width: 0;
         }
     `
 })

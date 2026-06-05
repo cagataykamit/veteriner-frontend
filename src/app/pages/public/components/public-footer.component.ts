@@ -36,17 +36,28 @@ import { RouterLink } from '@angular/router';
                             <p class="text-primary-contrast font-semibold text-sm m-0 mb-4">Keşfet</p>
                             <ul class="list-none p-0 m-0 space-y-2.5 text-sm">
                                 <li>
-                                    <a href="#features" class="text-primary-contrast/75 no-underline hover:text-primary-contrast transition-colors"
+                                    <a
+                                        routerLink="/"
+                                        fragment="features"
+                                        class="text-primary-contrast/75 no-underline hover:text-primary-contrast transition-colors"
                                         >Özellikler</a
                                     >
                                 </li>
                                 <li>
-                                    <a href="#modules" class="text-primary-contrast/75 no-underline hover:text-primary-contrast transition-colors"
+                                    <a
+                                        routerLink="/"
+                                        fragment="modules"
+                                        class="text-primary-contrast/75 no-underline hover:text-primary-contrast transition-colors"
                                         >Modüller</a
                                     >
                                 </li>
                                 <li>
-                                    <a href="#faq" class="text-primary-contrast/75 no-underline hover:text-primary-contrast transition-colors">SSS</a>
+                                    <a
+                                        routerLink="/"
+                                        fragment="faq"
+                                        class="text-primary-contrast/75 no-underline hover:text-primary-contrast transition-colors"
+                                        >SSS</a
+                                    >
                                 </li>
                             </ul>
                         </div>

@@ -2,6 +2,8 @@ html {
     height: 100%;
     font-size: 14px;
     line-height: 1.2;
+    /* Scrollbar görünürlüğü değişince (ör. /pricing ↔ /) içerik yatay kaymasın */
+    scrollbar-gutter: stable;
 }
 
 body {
