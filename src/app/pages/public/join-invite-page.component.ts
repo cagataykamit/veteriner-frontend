@@ -21,8 +21,8 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
     standalone: true,
     imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputTextModule, PasswordModule, AppFloatingConfigurator],
     template: `
-        <app-floating-configurator />
-        <div class="bg-surface-50 dark:bg-surface-950 min-h-screen min-w-screen py-10 px-4">
+        <app-floating-configurator [showPalette]="false" />
+        <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen min-w-screen py-10 px-4">
             <div class="max-w-lg mx-auto">
                 <div class="card mb-0">
                     @if (loading()) {
@@ -30,7 +30,7 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
                     } @else if (loadError(); as le) {
                         <h2 class="mt-0 mb-2 text-xl text-surface-900 dark:text-surface-0">Davet açılamadı</h2>
                         <p class="text-red-500 m-0 mb-4" role="alert">{{ le }}</p>
-                        <a routerLink="/auth/login" class="text-primary font-medium no-underline">Giriş sayfasına git</a>
+                        <a routerLink="/auth/login" class="public-brand-link no-underline">Giriş sayfasına git</a>
                     } @else if (successMode(); as sm) {
                         <h2 class="mt-0 mb-2 text-xl text-surface-900 dark:text-surface-0">
                             {{ sm === 'accept' ? 'Davet kabul edildi' : 'Hesap oluşturuldu' }}
@@ -74,10 +74,10 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
                                 <span class="text-xs font-medium px-2 py-1 rounded bg-surface-200 dark:bg-surface-700">Katılım kapalı</span>
                             }
                             @if (inv.requiresLogin) {
-                                <span class="text-xs font-medium px-2 py-1 rounded bg-primary-500/15 text-primary">Giriş gerekli</span>
+                                <span class="text-xs font-medium px-2 py-1 rounded public-brand-chip">Giriş gerekli</span>
                             }
                             @if (inv.requiresSignup) {
-                                <span class="text-xs font-medium px-2 py-1 rounded bg-primary-500/15 text-primary">Kayıt gerekli</span>
+                                <span class="text-xs font-medium px-2 py-1 rounded public-brand-chip">Kayıt gerekli</span>
                             }
                         </div>
 
@@ -91,7 +91,7 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
                         @if (auth.isAuthenticated() && inv.requiresSignup) {
                             <p class="text-sm text-muted-color m-0 mb-4">
                                 Bu bağlantı yeni hesap oluşturmayı gerektiriyor. Daveti kabul etmek için
-                                <button type="button" class="text-primary font-medium bg-transparent border-0 p-0 cursor-pointer underline" (click)="logoutForSignup(inv)">
+                                <button type="button" class="public-brand-link bg-transparent border-0 p-0 cursor-pointer underline" (click)="logoutForSignup(inv)">
                                     oturumu kapatıp
                                 </button>
                                 tekrar deneyin veya daveti gizli pencerede açın.
@@ -143,7 +143,7 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
                         }
 
                         <p class="text-center m-0 mt-6 mb-0">
-                            <a routerLink="/auth/login" class="text-primary font-medium no-underline text-sm">Giriş sayfası</a>
+                            <a routerLink="/auth/login" class="public-brand-link no-underline text-sm">Giriş sayfası</a>
                         </p>
                     }
                 </div>

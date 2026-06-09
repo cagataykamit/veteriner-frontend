@@ -15,6 +15,7 @@ import { PublicOwnerSignupService } from '@/app/features/public/services/public-
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
 import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/features/public/utils/pricing-plan.utils';
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
+import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
@@ -23,13 +24,20 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
     standalone: true,
     imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink, AppFloatingConfigurator],
     template: `
-        <app-floating-configurator />
-        <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
+        <app-floating-configurator [showPalette]="false" />
+        <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
-                <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
-                    <div class="w-full bg-surface-0 dark:bg-surface-900 py-12 px-8 sm:px-16" style="border-radius: 53px">
+                <div class="public-auth-card-frame">
+                    <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-12 px-8 sm:px-16">
                         @if (successResult(); as res) {
                             <div class="text-center mb-6">
+                                <img
+                                    [src]="brand.logoFull"
+                                    alt="Vetinity"
+                                    class="mb-6 h-12 w-auto mx-auto"
+                                    width="180"
+                                    height="48"
+                                />
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Kayıt tamamlandı</div>
                                 <span class="text-muted-color font-medium">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</span>
                             </div>
@@ -47,12 +55,19 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                     </div>
                                 </div>
                             </div>
-                            <p-button label="Giriş yap" styleClass="w-full mb-4" (onClick)="goToLogin()" />
+                            <p-button label="Giriş yap" styleClass="w-full mb-4 public-auth-submit" (onClick)="goToLogin()" />
                             <div class="text-center">
-                                <a routerLink="/pricing" class="text-primary font-medium no-underline text-sm">Paketlere dön</a>
+                                <a routerLink="/pricing" class="public-brand-link no-underline text-sm">Paketlere dön</a>
                             </div>
                         } @else {
                             <div class="text-center mb-8">
+                                <img
+                                    [src]="brand.logoFull"
+                                    alt="Vetinity"
+                                    class="mb-6 h-12 w-auto mx-auto"
+                                    width="180"
+                                    height="48"
+                                />
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Hesap oluştur</div>
                                 <span class="text-muted-color font-medium">Deneme paketiyle işletmenizi tek adımda başlatın</span>
                             </div>
@@ -65,7 +80,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                     <p class="text-sm text-muted-color m-0 mb-3">
                                         Deneme paketiyle başlayın. İsterseniz paketleri inceleyerek farklı bir planla devam edebilirsiniz.
                                     </p>
-                                    <a routerLink="/pricing" class="text-primary font-medium no-underline text-sm">Paketleri inceleyin</a>
+                                    <a routerLink="/pricing" class="public-brand-link no-underline text-sm">Paketleri inceleyin</a>
                                 </div>
 
                                 <div>
@@ -109,7 +124,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
                                 <p-button
                                     label="Hesabı oluştur"
-                                    styleClass="w-full"
+                                    styleClass="w-full public-auth-submit"
                                     [loading]="submitting()"
                                     [disabled]="submitting()"
                                     (onClick)="submit()"
@@ -126,7 +141,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 }
 
                                 <div class="text-center flex flex-col gap-2">
-                                    <a routerLink="/auth/login" class="text-primary font-medium no-underline">Zaten hesabınız var mı? Giriş yapın</a>
+                                    <a routerLink="/auth/login" class="public-brand-link no-underline">Zaten hesabınız var mı? Giriş yapın</a>
                                     <a routerLink="/pricing" class="text-muted-color font-medium no-underline text-sm">Paketlere dön</a>
                                 </div>
                             </div>
@@ -138,6 +153,8 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
     `
 })
 export class OwnerSignupPageComponent implements OnInit {
+    readonly brand = VETINITY_BRAND_LOGOS;
+
     private readonly signup = inject(PublicOwnerSignupService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);

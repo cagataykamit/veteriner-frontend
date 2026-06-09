@@ -1,0 +1,614 @@
+/* Public semantic palet — sabit Vetinity marka renkleri (PrimeNG primary'den bağımsız) */
+
+@mixin public-brand-vars {
+    --vetinity-navy: #0b1d3a;
+    --vetinity-teal: #0fa39a;
+    --vetinity-soft-teal: #7ed3ca;
+    --vetinity-bg-soft: #e6f6f5;
+    --vetinity-neutral: #d9dee5;
+
+    --public-primary: var(--vetinity-teal);
+    --public-accent-contrast: #ffffff;
+
+    /* Tek accent ailesi — logo, CTA, badge, ikon, kart vurguları */
+    --public-accent: var(--vetinity-teal);
+    --public-accent-strong: var(--vetinity-navy);
+    --public-accent-soft: color-mix(in srgb, var(--vetinity-soft-teal) 45%, var(--vetinity-bg-soft));
+    --public-accent-softer: var(--vetinity-bg-soft);
+    --public-accent-hover: color-mix(in srgb, var(--vetinity-teal) 82%, #000000);
+
+    /* Hero — navy tabanlı, teal vurgulu */
+    --public-hero-deep: #061224;
+    --public-hero-from: var(--vetinity-navy);
+    --public-hero-mid: color-mix(in srgb, var(--vetinity-navy) 78%, var(--vetinity-teal) 22%);
+    --public-hero-to: color-mix(in srgb, var(--vetinity-navy) 62%, var(--vetinity-teal) 38%);
+    --public-hero-glow: color-mix(in srgb, var(--vetinity-teal) 32%, transparent);
+    --public-hero-glow-soft: color-mix(in srgb, var(--vetinity-soft-teal) 24%, transparent);
+
+    /* Hero yüzey — yalnızca .public-theme-gradient-hero; CTA/footer paylaşmaz */
+    --public-hero-surface-deep: #061224;
+    --public-hero-surface-from: var(--vetinity-navy);
+    --public-hero-surface-mid: color-mix(in srgb, var(--vetinity-navy) 80%, var(--vetinity-teal) 20%);
+    --public-hero-surface-to: color-mix(in srgb, var(--vetinity-navy) 65%, var(--vetinity-teal) 35%);
+    --public-hero-surface-glow: color-mix(in srgb, var(--vetinity-teal) 26%, transparent);
+    --public-hero-surface-vignette: color-mix(in srgb, #020617 42%, transparent);
+
+    /* Açık zemin border ve vurgular */
+    --public-border: color-mix(in srgb, var(--vetinity-teal) 20%, var(--vetinity-neutral));
+    --public-border-emphasis: color-mix(in srgb, var(--vetinity-teal) 38%, var(--vetinity-neutral));
+
+    /* Koyu zemin üstü metin (nötr — kontrast sabit) */
+    --public-on-brand: #f8fafc;
+    --public-on-brand-muted: color-mix(in srgb, white 82%, transparent);
+    --public-on-brand-subtle: color-mix(in srgb, white 66%, transparent);
+    --public-on-hero-outline: color-mix(in srgb, white 42%, transparent);
+    --public-chip-bg: color-mix(in srgb, white 10%, transparent);
+    --public-chip-border: color-mix(in srgb, white 22%, transparent);
+    --public-on-hero-surface: color-mix(in srgb, white 8%, transparent);
+
+    /* Gölgeler — accent-strong tabanlı */
+    --public-shadow-hero: 0 28px 56px -20px color-mix(in srgb, var(--public-accent-strong) 48%, transparent);
+    --public-shadow-card: 0 14px 36px -14px color-mix(in srgb, var(--public-accent-strong) 24%, transparent);
+    --public-shadow-featured: 0 18px 44px -16px color-mix(in srgb, var(--public-accent-strong) 32%, transparent);
+    --public-shadow-icon: 0 10px 20px -6px color-mix(in srgb, var(--public-accent-strong) 30%, transparent);
+    --public-shadow-icon-sm: 0 4px 10px -4px color-mix(in srgb, var(--public-accent-strong) 22%, transparent);
+    --public-shadow-cta: 0 6px 18px -6px color-mix(in srgb, var(--public-accent-strong) 38%, transparent);
+
+    /* Önizleme barları — accent ailesi */
+    --public-accent-bar-h: color-mix(in srgb, var(--public-accent) 70%, transparent);
+    --public-accent-bar-m: color-mix(in srgb, var(--public-accent) 42%, transparent);
+    --public-accent-bar-l: color-mix(in srgb, var(--public-accent) 24%, transparent);
+}
+
+.public-page {
+    @include public-brand-vars;
+
+    /* Light mode hero — ferah mint/cyan zemin */
+    --public-hero-surface-deep: #f8fffe;
+    --public-hero-surface-from: #f8fffe;
+    --public-hero-surface-mid: #ecfeff;
+    --public-hero-surface-to: #e0f2fe;
+    --public-hero-surface-glow: color-mix(in srgb, var(--vetinity-teal) 14%, transparent);
+    --public-hero-surface-vignette: transparent;
+    --public-hero-glow: color-mix(in srgb, var(--vetinity-teal) 18%, transparent);
+    --public-hero-glow-soft: color-mix(in srgb, var(--vetinity-soft-teal) 32%, transparent);
+}
+
+.app-dark .public-page {
+    --public-hero-surface-deep: #061224;
+    --public-hero-surface-from: var(--vetinity-navy);
+    --public-hero-surface-mid: color-mix(in srgb, var(--vetinity-navy) 80%, var(--vetinity-teal) 20%);
+    --public-hero-surface-to: color-mix(in srgb, var(--vetinity-navy) 65%, var(--vetinity-teal) 35%);
+    --public-hero-surface-glow: color-mix(in srgb, var(--vetinity-teal) 26%, transparent);
+    --public-hero-surface-vignette: color-mix(in srgb, #020617 42%, transparent);
+    --public-hero-glow: color-mix(in srgb, var(--vetinity-teal) 32%, transparent);
+    --public-hero-glow-soft: color-mix(in srgb, var(--vetinity-soft-teal) 24%, transparent);
+}
+
+/* —— Hero / CTA band / Footer —— */
+
+.public-theme-gradient-hero {
+    background:
+        radial-gradient(ellipse 78% 62% at 86% 10%, var(--public-hero-surface-glow), transparent 46%),
+        radial-gradient(ellipse 100% 85% at 0% 100%, var(--public-hero-surface-vignette), transparent 58%),
+        radial-gradient(ellipse 68% 52% at 10% 92%, var(--public-hero-glow-soft), transparent 44%),
+        linear-gradient(
+            135deg,
+            var(--public-hero-surface-deep) 0%,
+            var(--public-hero-surface-mid) 45%,
+            var(--public-hero-surface-to) 100%
+        );
+    border: 1px solid color-mix(in srgb, var(--vetinity-teal) 16%, #e0f2fe);
+    box-shadow: 0 24px 56px -28px color-mix(in srgb, var(--vetinity-teal) 18%, transparent);
+}
+
+.app-dark .public-page .public-theme-gradient-hero {
+    background:
+        radial-gradient(ellipse 78% 62% at 86% 10%, var(--public-hero-surface-glow), transparent 46%),
+        radial-gradient(ellipse 100% 85% at 0% 100%, var(--public-hero-surface-vignette), transparent 58%),
+        radial-gradient(ellipse 68% 52% at 10% 92%, var(--public-hero-glow-soft), transparent 44%),
+        linear-gradient(
+            155deg,
+            var(--public-hero-surface-deep) 0%,
+            var(--public-hero-surface-from) 36%,
+            var(--public-hero-surface-mid) 72%,
+            var(--public-hero-surface-to) 100%
+        );
+    border-color: transparent;
+    box-shadow: var(--public-shadow-hero);
+}
+
+.public-theme-gradient-cta,
+.public-footer-gradient {
+    background: linear-gradient(
+        145deg,
+        var(--public-hero-deep) 0%,
+        var(--public-hero-from) 36%,
+        var(--public-hero-mid) 62%,
+        var(--public-hero-to) 100%
+    );
+}
+
+.public-theme-gradient-cta {
+    box-shadow: var(--public-shadow-hero);
+    border: 1px solid var(--public-on-hero-surface);
+}
+
+.public-footer-gradient {
+    box-shadow: var(--public-shadow-card);
+}
+
+.public-hero-glow-spot {
+    background: var(--public-hero-glow);
+}
+
+.public-hero-glow-spot-soft {
+    background: var(--public-hero-glow-soft);
+}
+
+/* —— Koyu zemin metin —— */
+
+.public-page .public-hero-badge {
+    background: color-mix(in srgb, var(--vetinity-teal) 10%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--vetinity-teal) 24%, transparent);
+    color: var(--vetinity-navy);
+}
+
+.app-dark .public-page .public-hero-badge {
+    background: var(--public-chip-bg);
+    border: 1px solid var(--public-chip-border);
+    color: var(--public-on-brand-muted);
+}
+
+.public-page .public-hero-title {
+    color: var(--vetinity-navy);
+}
+
+.app-dark .public-page .public-hero-title {
+    color: var(--public-on-brand);
+}
+
+.public-page .public-hero-lead {
+    color: #475569;
+}
+
+.app-dark .public-page .public-hero-lead {
+    color: var(--public-on-brand-muted);
+}
+
+/* Alt CTA band — koyu gradient üzeri metin (hero sınıflarından bağımsız) */
+.public-page .public-cta-title {
+    color: #ffffff;
+}
+
+.public-page .public-cta-lead {
+    color: color-mix(in srgb, white 80%, transparent);
+}
+
+.public-on-brand-text {
+    color: var(--public-on-brand);
+}
+
+.public-on-brand-muted {
+    color: var(--public-on-brand-muted);
+}
+
+.public-on-brand-subtle {
+    color: var(--public-on-brand-subtle);
+}
+
+/* —— Accent yüzeyler (logo, ikon kutusu, kart vurguları) —— */
+
+.public-accent-surface {
+    background: linear-gradient(145deg, var(--public-accent-strong), var(--public-accent));
+    color: var(--public-accent-contrast);
+}
+
+.public-theme-text {
+    color: var(--public-accent-strong);
+}
+
+.public-theme-dot {
+    background: var(--public-accent-bar-h);
+}
+
+.public-theme-bar-40 {
+    background: var(--public-accent-bar-h);
+}
+
+.public-theme-bar-25 {
+    background: var(--public-accent-bar-m);
+}
+
+.public-theme-bar-15 {
+    background: var(--public-accent-bar-l);
+}
+
+.public-theme-icon-box {
+    background: linear-gradient(145deg, var(--public-accent-strong), var(--public-accent));
+    color: var(--public-accent-contrast);
+}
+
+.public-theme-icon-shadow {
+    box-shadow: var(--public-shadow-icon);
+}
+
+.public-theme-icon-shadow-sm {
+    box-shadow: var(--public-shadow-icon-sm);
+}
+
+.public-theme-soft-bg {
+    background: var(--public-accent-soft);
+    color: var(--public-accent-strong);
+}
+
+.public-theme-soft-gradient {
+    background: linear-gradient(145deg, var(--public-accent-soft), var(--public-accent-softer));
+    color: var(--public-accent-strong);
+}
+
+.public-theme-feature-card:hover {
+    border-color: var(--public-border-emphasis);
+    box-shadow: var(--public-shadow-card);
+}
+
+.public-theme-module-card:hover {
+    border-color: var(--public-border-emphasis);
+    box-shadow: var(--public-shadow-card);
+    background: var(--public-accent-softer);
+}
+
+.public-theme-module-icon {
+    color: var(--public-accent-strong);
+}
+
+.public-theme-module-card:hover .public-theme-module-icon {
+    background: var(--public-accent-soft);
+}
+
+/* Dark mode — modül vitrini: zemin/border ayrışması + canlı teal ikon kapsülü */
+.app-dark .public-page .public-theme-module-card {
+    background: color-mix(in srgb, var(--vetinity-teal) 5%, var(--p-surface-800));
+    border-color: color-mix(in srgb, var(--vetinity-soft-teal) 18%, var(--p-surface-700));
+    box-shadow: 0 10px 24px -18px rgba(0, 0, 0, 0.65);
+}
+
+.app-dark .public-page .public-theme-module-card:hover,
+.app-dark .public-page .public-theme-module-card:focus-within {
+    background: color-mix(in srgb, var(--vetinity-teal) 11%, var(--p-surface-800));
+    border-color: color-mix(in srgb, var(--vetinity-teal) 48%, var(--p-surface-700));
+    box-shadow: 0 16px 32px -18px rgba(0, 0, 0, 0.75);
+    transform: translateY(-3px);
+}
+
+.app-dark .public-page .public-theme-module-icon {
+    background: color-mix(in srgb, var(--vetinity-teal) 20%, var(--p-surface-800));
+    color: var(--vetinity-soft-teal);
+}
+
+.app-dark .public-page .public-theme-module-card:hover .public-theme-module-icon,
+.app-dark .public-page .public-theme-module-card:focus-within .public-theme-module-icon {
+    background: color-mix(in srgb, var(--vetinity-teal) 32%, var(--p-surface-800));
+    color: #e9fffb;
+}
+
+/* —— Topbar —— */
+
+.public-topbar-logo {
+    background: linear-gradient(145deg, var(--public-accent-strong), var(--public-accent));
+    color: var(--public-accent-contrast);
+}
+
+.public-topbar-nav-link {
+    box-sizing: border-box;
+    border: 0 solid transparent;
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+
+.public-topbar-nav-link:hover,
+.public-topbar-nav-link.router-link-active {
+    color: var(--public-accent-strong);
+    font-weight: 500;
+    border-width: 0;
+}
+
+.public-page .public-topbar-login-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0.5rem 0.95rem;
+    border-radius: 0.625rem;
+    border: 1px solid rgba(15, 23, 42, 0.35);
+    background: rgba(255, 255, 255, 0.72);
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    line-height: 1;
+    box-sizing: border-box;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.public-page .public-topbar-login-outline:hover,
+.public-page .public-topbar-login-outline:focus-visible {
+    border-color: rgba(15, 23, 42, 0.55);
+    background: rgba(255, 255, 255, 0.95);
+    color: #0f172a;
+    outline: none;
+}
+
+/* Dark mode — topbar login outline kontrastı */
+.app-dark .public-page .public-topbar-login-outline {
+    color: rgba(248, 250, 252, 0.92);
+    border-color: rgba(248, 250, 252, 0.35);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.app-dark .public-page .public-topbar-login-outline:hover,
+.app-dark .public-page .public-topbar-login-outline:focus-visible {
+    color: #ffffff;
+    border-color: rgba(248, 250, 252, 0.55);
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+}
+
+/* —— Pricing —— */
+
+/* Başlık alanı — hafif mint/cyan glow */
+.pricing-header {
+    background: radial-gradient(
+        ellipse 70% 100% at 50% 0%,
+        color-mix(in srgb, var(--vetinity-teal) 9%, transparent),
+        transparent 72%
+    );
+}
+
+.pricing-plan-card {
+    border-color: color-mix(in srgb, var(--p-content-border-color) 75%, transparent);
+    box-shadow: 0 12px 32px -18px color-mix(in srgb, var(--vetinity-navy) 36%, transparent);
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.pricing-plan-card:hover {
+    border-color: var(--public-border-emphasis);
+    box-shadow: var(--public-shadow-card);
+    transform: translateY(-3px);
+}
+
+.pricing-plan-card--featured {
+    border-color: color-mix(in srgb, var(--vetinity-teal) 52%, transparent);
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--vetinity-teal) 6%, var(--p-surface-0)) 0%,
+        var(--p-surface-0) 46%
+    );
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--vetinity-teal) 22%, transparent),
+        var(--public-shadow-featured);
+}
+
+.pricing-plan-card--featured:hover {
+    border-color: color-mix(in srgb, var(--vetinity-teal) 68%, transparent);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--vetinity-teal) 30%, transparent),
+        var(--public-shadow-featured);
+}
+
+.app-dark .public-page .pricing-plan-card {
+    box-shadow: 0 12px 32px -18px rgba(0, 0, 0, 0.72);
+}
+
+.app-dark .public-page .pricing-plan-card--featured {
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--vetinity-teal) 10%, var(--p-surface-900)) 0%,
+        var(--p-surface-900) 50%
+    );
+}
+
+.pricing-featured-badge {
+    background: linear-gradient(
+        135deg,
+        var(--vetinity-teal),
+        color-mix(in srgb, var(--vetinity-teal) 68%, var(--vetinity-navy))
+    );
+    color: #ffffff;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--vetinity-teal) 55%, transparent);
+}
+
+.pricing-price-label {
+    color: var(--public-accent-strong);
+}
+
+.app-dark .public-page .pricing-price-label {
+    color: var(--vetinity-soft-teal);
+}
+
+.pricing-limit-icon {
+    background: linear-gradient(145deg, var(--public-accent-soft), var(--public-accent-softer));
+    color: var(--public-accent-strong);
+    box-shadow: var(--public-shadow-icon-sm);
+}
+
+.pricing-feature-check {
+    color: var(--public-accent);
+}
+
+/* —— Butonlar —— */
+
+.public-page .public-hero-cta-primary > a.p-button {
+    width: 100%;
+    background: var(--public-accent);
+    border-color: var(--public-accent);
+    color: var(--public-accent-contrast);
+    font-weight: 600;
+    box-shadow: var(--public-shadow-cta);
+}
+
+.public-page .public-hero-cta-primary > a.p-button:not(:disabled):hover {
+    background: var(--public-accent-hover);
+    border-color: var(--public-accent-hover);
+    color: var(--public-accent-contrast);
+}
+
+.app-dark .public-page .public-hero-cta-primary > a.p-button {
+    background: var(--public-on-brand);
+    border-color: var(--public-on-brand);
+    color: var(--public-accent-strong);
+}
+
+.app-dark .public-page .public-hero-cta-primary > a.p-button:not(:disabled):hover {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: var(--public-accent-strong);
+}
+
+.public-page .public-hero-cta-secondary > a.p-button {
+    width: 100%;
+    color: var(--public-accent-strong);
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid color-mix(in srgb, var(--vetinity-teal) 32%, var(--vetinity-navy));
+    font-weight: 600;
+}
+
+.public-page .public-hero-cta-secondary > a.p-button .p-button-label {
+    color: inherit;
+}
+
+.public-page .public-hero-cta-secondary > a.p-button:not(:disabled):hover,
+.public-page .public-hero-cta-secondary > a.p-button:focus-visible {
+    background: #ffffff;
+    border-color: color-mix(in srgb, var(--vetinity-teal) 45%, var(--vetinity-navy));
+    color: var(--public-accent-strong);
+}
+
+.app-dark .public-page .public-hero-cta-secondary > a.p-button {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.app-dark .public-page .public-hero-cta-secondary > a.p-button:not(:disabled):hover,
+.app-dark .public-page .public-hero-cta-secondary > a.p-button:focus-visible {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.72);
+    color: #ffffff;
+}
+
+.public-page a.public-cta-primary.p-button {
+    background: var(--public-on-brand) !important;
+    border-color: var(--public-on-brand) !important;
+    color: var(--public-accent-strong) !important;
+    font-weight: 600 !important;
+    box-shadow: var(--public-shadow-cta) !important;
+}
+
+.public-page a.public-cta-primary.p-button:hover {
+    background: #ffffff !important;
+    border-color: #ffffff !important;
+    color: var(--public-accent-strong) !important;
+}
+
+.public-page a.public-cta-secondary.p-button {
+    background: transparent !important;
+    border: 1.5px solid color-mix(in srgb, white 58%, transparent) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.public-page a.public-cta-secondary.p-button:hover,
+.public-page a.public-cta-secondary.p-button:focus-visible {
+    background: color-mix(in srgb, white 14%, transparent) !important;
+    border-color: color-mix(in srgb, white 72%, transparent) !important;
+    color: #ffffff !important;
+}
+
+.public-page a.public-topbar-cta.p-button,
+.public-page a.public-pricing-cta.p-button {
+    background: var(--public-accent) !important;
+    border-color: var(--public-accent) !important;
+    color: var(--public-accent-contrast) !important;
+}
+
+.public-page a.public-topbar-cta.p-button:hover,
+.public-page a.public-pricing-cta.p-button:hover {
+    background: var(--public-accent-hover) !important;
+    border-color: var(--public-accent-hover) !important;
+}
+
+.public-page a.public-pricing-cta.p-button {
+    box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--vetinity-teal) 55%, transparent) !important;
+}
+
+.public-page a.public-pricing-cta-outlined.p-button {
+    background: transparent !important;
+    border-color: var(--public-border) !important;
+    color: var(--public-accent-strong) !important;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease !important;
+}
+
+.public-page a.public-pricing-cta-outlined.p-button:hover {
+    background: var(--public-accent-softer) !important;
+    border-color: color-mix(in srgb, var(--vetinity-teal) 55%, transparent) !important;
+    box-shadow: var(--public-shadow-icon-sm) !important;
+}
+
+.app-dark .public-page a.public-pricing-cta-outlined.p-button {
+    color: var(--vetinity-soft-teal) !important;
+    border-color: color-mix(in srgb, var(--vetinity-soft-teal) 35%, transparent) !important;
+}
+
+.app-dark .public-page a.public-pricing-cta-outlined.p-button:hover {
+    background: color-mix(in srgb, var(--vetinity-teal) 14%, transparent) !important;
+    border-color: color-mix(in srgb, var(--vetinity-soft-teal) 55%, transparent) !important;
+}
+
+/* —— Auth / davet marka alanı —— */
+
+.public-auth-card-frame {
+    border-radius: 56px;
+    padding: 0.3rem;
+    background: linear-gradient(180deg, var(--vetinity-teal) 10%, transparent 30%);
+}
+
+.public-auth-card-inner {
+    border-radius: 53px;
+}
+
+.public-brand-link {
+    color: var(--vetinity-teal);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.public-brand-link:hover {
+    color: var(--public-accent-hover);
+}
+
+.public-brand-chip {
+    background: color-mix(in srgb, var(--vetinity-teal) 15%, transparent);
+    color: var(--vetinity-teal);
+}
+
+.public-page .public-auth-submit.p-button {
+    background: var(--vetinity-teal) !important;
+    border-color: var(--vetinity-teal) !important;
+    color: #ffffff !important;
+}
+
+.public-page .public-auth-submit.p-button:hover {
+    background: var(--public-accent-hover) !important;
+    border-color: var(--public-accent-hover) !important;
+}

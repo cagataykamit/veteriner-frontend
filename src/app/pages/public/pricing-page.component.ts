@@ -21,16 +21,16 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
         PublicTopbarComponent
     ],
     template: `
-        <div class="min-h-screen overflow-x-hidden bg-surface-0 dark:bg-surface-950">
+        <div class="public-page min-h-screen overflow-x-hidden bg-surface-50 dark:bg-surface-950">
             <app-public-topbar />
 
-            <main class="mx-auto max-w-6xl px-4 pb-10 pt-6 md:px-6 md:pb-14 md:pt-8">
-                <header class="mx-auto mb-6 max-w-2xl text-center md:mb-8">
+            <main class="mx-auto max-w-6xl px-4 pb-10 pt-2 md:px-6 md:pb-14 md:pt-3">
+                <header class="pricing-header mx-auto mb-6 max-w-2xl rounded-3xl px-4 pb-6 pt-5 text-center md:mb-8 md:pb-8 md:pt-6">
                     <h1 class="m-0 text-3xl font-bold leading-tight text-surface-900 dark:text-surface-0 md:text-4xl">Paketler</h1>
                     <p class="mt-3 text-base text-muted-color md:text-lg">Kliniğinizin büyüklüğüne göre uygun planı seçin.</p>
                 </header>
 
-                <div class="mt-8 grid grid-cols-1 gap-4 md:mt-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+                <div class="mt-6 grid grid-cols-1 gap-5 md:mt-8 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
                     @for (plan of plans; track plan.slug) {
                         <article
                             class="pricing-plan-card relative flex flex-col rounded-3xl border bg-surface-0 p-4 pt-7 md:p-5 md:pt-8 dark:bg-surface-900"
@@ -98,10 +98,10 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                             </div>
 
                             <!-- Özellik listesi — flex-1 ile altta CTA'ya yer açar -->
-                            <ul class="mb-4 flex-1 list-none space-y-1.5 p-0">
+                            <ul class="mb-5 flex-1 list-none space-y-2 p-0">
                                 @for (feature of plan.features; track feature) {
-                                    <li class="flex items-start gap-2 text-sm leading-5 text-surface-700 dark:text-surface-200">
-                                        <i class="pi pi-check-circle pricing-feature-check mt-0.5 shrink-0 text-xs" aria-hidden="true"></i>
+                                    <li class="flex items-start gap-2.5 text-sm leading-5 text-surface-700 dark:text-surface-200">
+                                        <i class="pi pi-check-circle pricing-feature-check mt-[3px] shrink-0 text-sm" aria-hidden="true"></i>
                                         <span>{{ feature }}</span>
                                     </li>
                                 }
@@ -114,8 +114,9 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 pButton
                                 pRipple
                                 label="Paketi seç"
-                                styleClass="w-full !font-semibold !py-2"
-                                [outlined]="!plan.recommended"
+                                [class.public-pricing-cta]="plan.recommended"
+                                [class.public-pricing-cta-outlined]="!plan.recommended"
+                                class="w-full !font-semibold !py-2"
                             ></a>
                         </article>
                     }
@@ -123,44 +124,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
             </main>
         </div>
-        <app-floating-configurator />
-    `,
-    styles: `
-        .pricing-plan-card {
-            border-color: var(--p-content-border-color);
-            transition:
-                border-color 0.2s ease,
-                box-shadow 0.2s ease,
-                transform 0.2s ease;
-        }
-
-        .pricing-plan-card:hover {
-            border-color: color-mix(in srgb, var(--primary-color) 35%, transparent);
-            box-shadow: 0 12px 32px -12px color-mix(in srgb, var(--primary-color) 18%, transparent);
-        }
-
-        .pricing-plan-card--featured {
-            border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
-            box-shadow: 0 16px 40px -16px color-mix(in srgb, var(--primary-color) 28%, transparent);
-        }
-
-        .pricing-featured-badge {
-            background: color-mix(in srgb, var(--primary-color) 12%, transparent);
-            color: var(--primary-color);
-        }
-
-        .pricing-price-label {
-            color: var(--primary-color);
-        }
-
-        .pricing-limit-icon {
-            background: color-mix(in srgb, var(--primary-color) 12%, transparent);
-            color: var(--primary-color);
-        }
-
-        .pricing-feature-check {
-            color: var(--primary-color);
-        }
+        <app-floating-configurator [showPalette]="false" />
     `
 })
 export class PricingPageComponent implements OnInit {

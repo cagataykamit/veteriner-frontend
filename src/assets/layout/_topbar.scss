@@ -54,6 +54,21 @@
             width: 3rem;
         }
 
+        .layout-topbar-logo-img {
+            display: block;
+            height: 2.5rem;
+            width: auto;
+            max-width: 10.5rem;
+            object-fit: contain;
+        }
+
+        .layout-topbar-logo-img--icon {
+            height: 2.75rem;
+            width: 2.75rem;
+            max-width: 2.75rem;
+            object-fit: contain;
+        }
+
         &:focus-visible {
             @include focused();
         }

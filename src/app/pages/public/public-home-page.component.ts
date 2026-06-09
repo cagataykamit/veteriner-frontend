@@ -31,12 +31,12 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
         PublicFooterComponent
     ],
     template: `
-        <div class="bg-surface-0 dark:bg-surface-950 min-h-screen overflow-x-hidden">
+        <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen overflow-x-hidden">
             <app-public-topbar />
 
             <main class="relative">
                 <!-- Hero — Genesis SaaS gradient container -->
-                <section class="pt-4 md:pt-6" aria-labelledby="public-home-hero-title">
+                <section class="pt-3 md:pt-6" aria-labelledby="public-home-hero-title">
                     <div class="max-w-6xl mx-auto px-4">
                         <div
                             class="relative overflow-hidden rounded-3xl lg:rounded-[2rem] public-theme-gradient-hero dark:shadow-black/40"
@@ -46,55 +46,56 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 aria-hidden="true"
                             >
                                 <div
-                                    class="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[min(720px,130%)] h-72 rounded-full border border-white/10 opacity-40"
+                                    class="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[min(720px,130%)] h-72 rounded-full border border-cyan-200/50 dark:border-white/10 opacity-40"
                                 ></div>
                                 <div
-                                    class="absolute top-8 right-8 w-40 h-40 rounded-full bg-white/5 blur-2xl"
+                                    class="absolute top-8 right-8 w-40 h-40 rounded-full public-hero-glow-spot blur-2xl"
                                 ></div>
                                 <div
-                                    class="absolute -top-12 -left-12 w-56 h-56 rounded-full bg-white/5 blur-3xl"
+                                    class="absolute -top-12 -left-12 w-56 h-56 rounded-full public-hero-glow-spot-soft blur-3xl"
                                 ></div>
                             </div>
 
-                            <div class="relative px-6 lg:px-12 pt-10 lg:pt-14 pb-10 lg:pb-12">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
-                                    <div class="text-center lg:text-left">
+                            <div class="relative px-5 md:px-6 lg:px-12 pt-8 pb-8 lg:pt-14 lg:pb-12">
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 lg:gap-12 items-center">
+                                    <div class="public-hero text-center lg:text-left">
                                         <span
-                                            class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-white/20 bg-white/10 text-primary-contrast/90 text-xs font-semibold uppercase tracking-wide mb-6"
+                                            class="public-hero-badge inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mb-4 md:mb-6"
                                         >
                                             <i class="pi pi-star-fill text-[10px]" aria-hidden="true"></i>
                                             Veteriner klinikleri için
                                         </span>
                                         <h1
                                             id="public-home-hero-title"
-                                            class="text-3xl md:text-4xl lg:text-5xl xl:text-[3.25rem] font-bold m-0 mb-5 leading-[1.12] tracking-tight bg-gradient-to-b from-white/95 to-white/80 bg-clip-text text-transparent"
+                                            class="public-hero-title text-[1.625rem] md:text-4xl lg:text-5xl xl:text-[3.25rem] font-bold m-0 mb-4 md:mb-5 leading-[1.14] md:leading-[1.12] tracking-tight"
                                         >
                                             Veteriner klinikleri için modern yönetim platformu
                                         </h1>
-                                        <p class="text-primary-contrast/70 text-base md:text-lg m-0 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                                        <p class="public-hero-lead text-[0.9375rem] md:text-lg m-0 mb-6 md:mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                                             Randevu, hasta kayıtları, muayene, tedavi, aşı, ödeme, stok ve rapor süreçlerini
                                             tek panelden yönetin.
                                         </p>
                                         <div
-                                            class="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3"
+                                            class="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-3"
                                         >
-                                            <a
-                                                routerLink="/auth/signup"
-                                                pButton
-                                                pRipple
-                                                label="Ücretsiz başla"
-                                                severity="contrast"
-                                                class="w-full sm:w-auto !font-semibold !shadow-lg"
-                                            ></a>
-                                            <a
-                                                routerLink="/auth/login"
-                                                pButton
-                                                pRipple
-                                                label="Giriş yap"
-                                                [outlined]="true"
-                                                severity="contrast"
-                                                class="w-full sm:w-auto"
-                                            ></a>
+                                            <div class="public-hero-cta-primary w-full sm:w-auto">
+                                                <a
+                                                    routerLink="/auth/signup"
+                                                    pButton
+                                                    pRipple
+                                                    label="Ücretsiz başla"
+                                                    class="w-full"
+                                                ></a>
+                                            </div>
+                                            <div class="public-hero-cta-secondary w-full sm:w-auto">
+                                                <a
+                                                    routerLink="/auth/login"
+                                                    pButton
+                                                    pRipple
+                                                    label="Giriş yap"
+                                                    class="w-full"
+                                                ></a>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -235,17 +236,17 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                             <span
                                 class="inline-block px-3.5 py-1 rounded-full border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 text-surface-900 dark:text-surface-0 text-sm font-medium shadow-sm mb-4"
                             >
-                                Neden bu SaaS?
+                                Neden Vetinity?
                             </span>
                             <h2
                                 id="public-home-why-title"
                                 class="text-surface-900 dark:text-surface-0 text-2xl md:text-4xl font-bold m-0 mb-4 leading-tight"
                             >
-                                Kurumsal ölçekte klinik yönetimi
+                                Büyüyen klinikler için güvenli yönetim altyapısı
                             </h2>
                             <p class="text-muted-color m-0 leading-relaxed text-base md:text-lg">
-                                Çok kiracılı yapı, klinik bazlı erişim ve rol tabanlı yetkilendirme ile ekip içinde güvenli
-                                çalışma. Operasyonel süreçler tek panelde, tutarlı tarih-saat standardı ile.
+                                Birden fazla kliniği, kullanıcı rollerini ve operasyon süreçlerini tek panelden yönetin.
+                                Klinik ekipleri güvenli erişimle çalışır, randevu ve hasta süreçleri daha düzenli takip edilir.
                             </p>
                         </div>
 
@@ -261,7 +262,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 </span>
                                 <div>
                                     <p class="text-surface-900 dark:text-surface-0 font-semibold m-0 text-sm">Güvenli altyapı</p>
-                                    <p class="text-muted-color text-xs m-0">Oturum, yetki ve klinik bağlamı</p>
+                                    <p class="text-muted-color text-xs m-0">Klinik, kullanıcı ve yetki yönetimi</p>
                                 </div>
                             </div>
                             <ul class="list-none p-0 m-0 space-y-3.5">
@@ -328,31 +329,32 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                         <div class="relative max-w-2xl mx-auto">
                             <h2
                                 id="public-home-cta-title"
-                                class="text-primary-contrast text-2xl md:text-4xl font-bold m-0 mb-4 leading-tight"
+                                class="public-cta-title text-2xl md:text-4xl font-bold m-0 mb-4 leading-tight"
                             >
                                 Kliniğinizi dijital olarak yönetmeye başlayın
                             </h2>
-                            <p class="text-primary-contrast/75 m-0 mb-8 text-base md:text-lg">
+                            <p class="public-cta-lead m-0 mb-8 text-base md:text-lg">
                                 Ücretsiz deneme ile kayıt olun veya paketleri inceleyerek size uygun planı seçin.
                             </p>
                             <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3">
-                                <a
-                                    routerLink="/auth/signup"
-                                    pButton
-                                    pRipple
-                                    label="Hemen başla"
-                                    severity="contrast"
-                                    class="w-full sm:w-auto !font-semibold !shadow-lg"
-                                ></a>
-                                <a
-                                    routerLink="/pricing"
-                                    pButton
-                                    pRipple
-                                    label="Paketleri gör"
-                                    [outlined]="true"
-                                    severity="contrast"
-                                    class="w-full sm:w-auto"
-                                ></a>
+                                <div class="public-hero-cta-primary w-full sm:w-auto">
+                                    <a
+                                        routerLink="/auth/signup"
+                                        pButton
+                                        pRipple
+                                        label="Hemen başla"
+                                        class="w-full"
+                                    ></a>
+                                </div>
+                                <div class="public-hero-cta-secondary w-full sm:w-auto">
+                                    <a
+                                        routerLink="/pricing"
+                                        pButton
+                                        pRipple
+                                        label="Paketleri gör"
+                                        class="w-full"
+                                    ></a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -398,7 +400,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                             Sık sorulan<br />sorular
                         </h2>
                         <p class="mx-auto mt-4 max-w-[640px] text-center text-base text-surface-500 dark:text-white/64 m-0">
-                            Veteriner SaaS platformu hakkında merak edilen konulara kısa yanıtlar.
+                            Vetinity platformu hakkında merak edilen konulara kısa yanıtlar.
                         </p>
 
                         <div class="mt-12 flex w-full flex-col gap-3">
@@ -441,104 +443,8 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
             <app-public-footer />
         </div>
-        <app-floating-configurator />
+        <app-floating-configurator [showPalette]="false" />
     `,
-    styles: `
-        .public-theme-text {
-            color: var(--primary-color);
-        }
-
-        .public-theme-dot {
-            background: color-mix(in srgb, var(--primary-color) 70%, transparent);
-        }
-
-        .public-theme-bar-40 {
-            background: color-mix(in srgb, var(--primary-color) 40%, transparent);
-        }
-
-        .public-theme-bar-25 {
-            background: color-mix(in srgb, var(--primary-color) 25%, transparent);
-        }
-
-        .public-theme-bar-15 {
-            background: color-mix(in srgb, var(--primary-color) 15%, transparent);
-        }
-
-        .public-theme-gradient-hero {
-            background: linear-gradient(
-                to bottom right,
-                var(--primary-color),
-                var(--primary-color),
-                color-mix(in srgb, var(--primary-color) 80%, transparent)
-            );
-            box-shadow: 0 25px 50px -12px color-mix(in srgb, var(--primary-color) 25%, transparent);
-        }
-
-        .public-theme-gradient-cta {
-            background: linear-gradient(
-                to bottom right,
-                var(--primary-color),
-                var(--primary-color),
-                color-mix(in srgb, var(--primary-color) 85%, transparent)
-            );
-            border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
-            box-shadow: 0 25px 50px -12px color-mix(in srgb, var(--primary-color) 25%, transparent);
-        }
-
-        .public-theme-icon-box {
-            background: linear-gradient(
-                to bottom right,
-                var(--primary-color),
-                color-mix(in srgb, var(--primary-color) 75%, transparent)
-            );
-            color: var(--primary-contrast-color);
-        }
-
-        .public-theme-icon-shadow {
-            box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--primary-color) 25%, transparent);
-        }
-
-        .public-theme-icon-shadow-sm {
-            box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--primary-color) 20%, transparent);
-        }
-
-        .public-theme-soft-bg {
-            background: color-mix(in srgb, var(--primary-color) 10%, transparent);
-            color: var(--primary-color);
-        }
-
-        .public-theme-soft-gradient {
-            background: linear-gradient(
-                to bottom right,
-                color-mix(in srgb, var(--primary-color) 15%, transparent),
-                color-mix(in srgb, var(--primary-color) 5%, transparent)
-            );
-            color: var(--primary-color);
-        }
-
-        .public-theme-feature-card:hover {
-            border-color: color-mix(in srgb, var(--primary-color) 35%, transparent);
-            box-shadow: 0 20px 25px -5px color-mix(in srgb, var(--primary-color) 5%, transparent);
-        }
-
-        .public-theme-module-card:hover {
-            border-color: color-mix(in srgb, var(--primary-color) 35%, transparent);
-            box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--primary-color) 10%, transparent);
-            background: color-mix(in srgb, var(--primary-color) 2%, transparent);
-        }
-
-        :host-context(.app-dark) .public-theme-module-card:hover {
-            background: color-mix(in srgb, var(--primary-color) 5%, transparent);
-        }
-
-        .public-theme-module-icon {
-            color: var(--primary-color);
-        }
-
-        .public-theme-module-card:hover .public-theme-module-icon {
-            background: color-mix(in srgb, var(--primary-color) 10%, transparent);
-        }
-    `
 })
 export class PublicHomePageComponent implements OnInit {
     private readonly title = inject(Title);

@@ -9,27 +9,27 @@ export interface PublicPageMetaOptions {
 }
 
 export const PUBLIC_HOME_PAGE_META: PublicPageMetaOptions = {
-    title: 'Veteriner SaaS — Klinik yönetim platformu',
+    title: 'Vetinity — Klinik yönetim platformu',
     description:
         'Veteriner klinikleri için randevu, hasta kayıtları, muayene, aşı, ödeme ve stok süreçlerini tek panelden yönetin. Çok klinikli yapı ve rol bazlı erişim.',
     canonicalPath: '/'
 };
 
 export const PUBLIC_PRICING_PAGE_META: PublicPageMetaOptions = {
-    title: 'Paketler — Veteriner SaaS',
+    title: 'Paketler — Vetinity',
     description:
         'Kliniğinizin büyüklüğüne göre Basic, Pro veya Premium paket seçin. Ücretsiz deneme ile başlayın; fiyat bilgisi yakında paylaşılacaktır.',
     canonicalPath: '/pricing'
 };
 
 export const AUTH_LOGIN_PAGE_META: PublicPageMetaOptions = {
-    title: 'Giriş yap — Veteriner SaaS',
-    description: 'Veteriner SaaS paneline giriş yapın.',
+    title: 'Giriş yap — Vetinity',
+    description: 'Vetinity paneline giriş yapın.',
     noindex: true
 };
 
 export const AUTH_SIGNUP_PAGE_META: PublicPageMetaOptions = {
-    title: 'Hesap oluştur — Veteriner SaaS',
+    title: 'Hesap oluştur — Vetinity',
     description: 'Veteriner kliniğiniz için ücretsiz deneme hesabı oluşturun.',
     noindex: true
 };

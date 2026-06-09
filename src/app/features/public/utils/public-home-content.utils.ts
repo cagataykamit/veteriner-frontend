@@ -107,12 +107,12 @@ export const PUBLIC_HOME_STATS: readonly PublicHomeStatDef[] = [
 ] as const;
 
 export const PUBLIC_HOME_WHY: readonly PublicHomeWhyDef[] = [
-    { text: 'Çok klinikli yapı — tek kurum altında birden fazla klinik' },
-    { text: 'Rol ve yetki yönetimi — Admin, klinik ve modül bazlı erişim' },
-    { text: 'Klinik bazlı erişim — aktif klinik bağlamında güvenli çalışma' },
-    { text: 'Güvenli panel deneyimi — oturum ve klinik seçimi akışı' },
-    { text: 'UTC / yerel saat standardı — tutarlı tarih-saat gösterimi' },
-    { text: 'Abonelik ve salt okunur guard altyapısı — kurumsal operasyon kontrolü' }
+    { text: 'Çok klinikli yapı — tek kurum altında birden fazla klinik yönetimi' },
+    { text: 'Rol bazlı erişim — ekip üyelerine görevine göre yetki verme' },
+    { text: 'Klinik bazlı çalışma — her kullanıcının doğru klinik verileriyle çalışması' },
+    { text: 'Güvenli panel deneyimi — oturum ve klinik seçimiyle kontrollü erişim' },
+    { text: 'Tutarlı tarih-saat gösterimi — randevu ve işlem kayıtlarında net zaman takibi' },
+    { text: 'Abonelik kontrolü — paket durumuna göre güvenli kullanım yönetimi' }
 ] as const;
 
 export const PUBLIC_HOME_MODULES: readonly PublicHomeModuleDef[] = [
