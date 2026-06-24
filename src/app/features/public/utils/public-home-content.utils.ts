@@ -48,12 +48,12 @@ export const PUBLIC_HOME_FEATURES: readonly PublicHomeFeatureDef[] = [
     },
     {
         title: 'Muayene ve tedavi takibi',
-        description: 'Muayene, tedavi ve reçete süreçlerini klinik bağlamında izleyin.',
+        description: 'Muayene, tedavi ve reçete süreçlerini tek akışta takip edin.',
         icon: 'pi pi-file-edit'
     },
     {
         title: 'Aşı ve hatırlatmalar',
-        description: 'Aşı planları, uygulama durumu ve hatırlatma altyapısı.',
+        description: 'Aşı planlarını, uygulama durumunu ve hatırlatmaları kolayca yönetin.',
         icon: 'pi pi-shield'
     },
     {
@@ -150,6 +150,6 @@ export const PUBLIC_HOME_FAQS: readonly PublicHomeFaqDef[] = [
     },
     {
         question: 'Veriler güvenli mi?',
-        answer: 'Panel oturum ve yetki kontrolleriyle korunur; klinik bağlamı JWT ile taşınır.'
+        answer: 'Vetinity’de kullanıcı erişimleri rol ve yetki kontrolleriyle sınırlandırılır. Kullanıcılar yalnızca yetkili oldukları klinik ve modül verilerine erişebilir.'
     }
 ] as const;

@@ -20,7 +20,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                         <div class="md:col-span-5">
                             <div class="mb-4">
                                 <img
-                                    [src]="brand.logoDark"
+                                    [src]="brand.compactLockupDark"
                                     alt="Vetinity"
                                     class="h-8 w-auto md:h-9"
                                     width="200"

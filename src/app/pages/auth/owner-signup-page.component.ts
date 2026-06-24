@@ -9,7 +9,6 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
-import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import type { PublicOwnerSignupRequestDto, PublicOwnerSignupResultDto } from '@/app/features/public/models/public-owner-signup-api.model';
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
@@ -22,9 +21,8 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink, AppFloatingConfigurator],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink],
     template: `
-        <app-floating-configurator [showPalette]="false" />
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
                 <div class="public-auth-card-frame">
@@ -34,9 +32,16 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 <img
                                     [src]="brand.logoFull"
                                     alt="Vetinity"
-                                    class="mb-6 h-12 w-auto mx-auto"
-                                    width="180"
-                                    height="48"
+                                    class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
+                                    width="120"
+                                    height="30"
+                                />
+                                <img
+                                    [src]="brand.logoFullDark"
+                                    alt="Vetinity"
+                                    class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
+                                    width="120"
+                                    height="30"
                                 />
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Kayıt tamamlandı</div>
                                 <span class="text-muted-color font-medium">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</span>
@@ -64,9 +69,16 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 <img
                                     [src]="brand.logoFull"
                                     alt="Vetinity"
-                                    class="mb-6 h-12 w-auto mx-auto"
-                                    width="180"
-                                    height="48"
+                                    class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
+                                    width="120"
+                                    height="30"
+                                />
+                                <img
+                                    [src]="brand.logoFullDark"
+                                    alt="Vetinity"
+                                    class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
+                                    width="120"
+                                    height="30"
                                 />
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Hesap oluştur</div>
                                 <span class="text-muted-color font-medium">Deneme paketiyle işletmenizi tek adımda başlatın</span>
@@ -84,7 +96,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 </div>
 
                                 <div>
-                                    <label for="tenantName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">İşletme / kurum adı *</label>
+                                    <label for="tenantName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Klinik / işletme adı *</label>
                                     <input pInputText id="tenantName" type="text" class="w-full" [(ngModel)]="tenantName" autocomplete="organization" />
                                 </div>
 
@@ -100,7 +112,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 </div>
 
                                 <div>
-                                    <label for="email" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">E-posta (owner) *</label>
+                                    <label for="email" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Yetkili e-posta *</label>
                                     <input pInputText id="email" type="email" class="w-full" [(ngModel)]="email" autocomplete="email" />
                                 </div>
 

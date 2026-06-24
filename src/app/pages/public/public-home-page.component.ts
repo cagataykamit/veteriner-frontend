@@ -13,7 +13,6 @@ import {
     PUBLIC_HOME_STATS,
     PUBLIC_HOME_WHY
 } from '@/app/features/public/utils/public-home-content.utils';
-import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconfigurator';
 import { PublicFooterComponent } from './components/public-footer.component';
 import { PublicTopbarComponent } from './components/public-topbar.component';
 import { PUBLIC_HOME_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
@@ -26,7 +25,6 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
         RouterLink,
         ButtonModule,
         RippleModule,
-        AppFloatingConfigurator,
         PublicTopbarComponent,
         PublicFooterComponent
     ],
@@ -194,27 +192,27 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                     class="max-w-6xl mx-auto px-4 mb-20 md:mb-28 scroll-mt-24"
                     aria-labelledby="public-home-features-title"
                 >
-                    <div class="flex flex-col items-center mb-12 md:mb-14">
+                    <div class="public-home-section-header mb-12 md:mb-14">
                         <span
-                            class="inline-flex items-center justify-center w-14 h-14 lg:w-16 lg:h-16 rounded-2xl lg:rounded-3xl public-theme-icon-box public-theme-icon-shadow mb-6"
+                            class="public-home-section-header-icon inline-flex items-center justify-center w-14 h-14 lg:w-16 lg:h-16 rounded-2xl lg:rounded-3xl public-theme-icon-box public-theme-icon-shadow"
                             aria-hidden="true"
                         >
                             <i class="pi pi-th-large text-xl lg:text-2xl"></i>
                         </span>
                         <h2
                             id="public-home-features-title"
-                            class="text-surface-900 dark:text-surface-0 text-2xl md:text-4xl font-bold m-0 mb-3 text-center max-w-lg"
+                            class="text-surface-900 dark:text-surface-0 text-2xl md:text-4xl font-bold text-center max-w-lg"
                         >
                             Özellikler
                         </h2>
-                        <p class="text-muted-color m-0 max-w-xl text-center text-base md:text-lg">
+                        <p class="text-muted-color max-w-xl text-center text-base md:text-lg">
                             Klinik operasyonlarınızı uçtan uca destekleyen modüller.
                         </p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                    <div class="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
                         @for (feature of features; track feature.title) {
                             <article
-                                class="group public-theme-feature-card rounded-3xl border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-6 md:p-7 h-full transition-all duration-200 dark:hover:shadow-black/25"
+                                class="group public-theme-feature-card flex h-full min-h-[220px] flex-col rounded-3xl border border-surface-200 bg-surface-0 p-6 transition-all duration-200 md:min-h-[240px] md:p-7 lg:min-h-[260px] dark:border-surface-700 dark:bg-surface-900 dark:hover:shadow-black/25"
                             >
                                 <span
                                     class="inline-flex items-center justify-center w-12 h-12 rounded-2xl public-theme-soft-gradient mb-5 transition-transform group-hover:scale-105"
@@ -230,7 +228,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                 </section>
 
                 <!-- Neden bu SaaS? — Genesis streamline düzeni -->
-                <section class="max-w-6xl mx-auto px-4 mb-20 md:mb-28" aria-labelledby="public-home-why-title">
+                <section class="public-home-why max-w-6xl mx-auto px-4 mb-20 md:mb-28" aria-labelledby="public-home-why-title">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                         <div>
                             <span
@@ -244,16 +242,18 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                             >
                                 Büyüyen klinikler için güvenli yönetim altyapısı
                             </h2>
-                            <p class="text-muted-color m-0 leading-relaxed text-base md:text-lg">
+                            <p class="public-why-lead text-muted-color m-0 leading-relaxed text-base md:text-lg">
                                 Birden fazla kliniği, kullanıcı rollerini ve operasyon süreçlerini tek panelden yönetin.
                                 Klinik ekipleri güvenli erişimle çalışır, randevu ve hasta süreçleri daha düzenli takip edilir.
                             </p>
                         </div>
 
                         <div
-                            class="rounded-3xl border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-6 md:p-8 shadow-xl shadow-surface-900/5 dark:shadow-black/25"
+                            class="public-why-card rounded-3xl border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-6 md:p-8 shadow-xl shadow-surface-900/5 dark:shadow-black/25"
                         >
-                            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-surface-200 dark:border-surface-700">
+                            <div
+                                class="public-why-card-header flex items-center gap-3 mb-6 pb-4 border-b border-surface-200 dark:border-surface-700"
+                            >
                                 <span
                                     class="inline-flex items-center justify-center w-11 h-11 rounded-2xl public-theme-soft-bg"
                                     aria-hidden="true"
@@ -262,13 +262,13 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 </span>
                                 <div>
                                     <p class="text-surface-900 dark:text-surface-0 font-semibold m-0 text-sm">Güvenli altyapı</p>
-                                    <p class="text-muted-color text-xs m-0">Klinik, kullanıcı ve yetki yönetimi</p>
+                                    <p class="public-why-card-subtitle text-muted-color text-xs m-0">Klinik, kullanıcı ve yetki yönetimi</p>
                                 </div>
                             </div>
                             <ul class="list-none p-0 m-0 space-y-3.5">
                                 @for (item of whyItems; track item.text) {
                                     <li class="flex items-start gap-3 text-surface-700 dark:text-surface-200 text-sm md:text-base">
-                                        <i class="pi pi-check-circle public-theme-text mt-0.5 shrink-0" aria-hidden="true"></i>
+                                        <i class="pi pi-check-circle public-why-check mt-0.5 shrink-0" aria-hidden="true"></i>
                                         <span>{{ item.text }}</span>
                                     </li>
                                 }
@@ -283,20 +283,20 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                     class="max-w-6xl mx-auto px-4 mb-20 md:mb-28 scroll-mt-24"
                     aria-labelledby="public-home-modules-title"
                 >
-                    <div class="flex flex-col items-center mb-10 md:mb-12">
+                    <div class="public-home-section-header mb-12 md:mb-14">
                         <span
-                            class="inline-flex items-center justify-center w-14 h-14 rounded-2xl public-theme-icon-box public-theme-icon-shadow mb-5"
+                            class="public-home-section-header-icon inline-flex items-center justify-center w-14 h-14 rounded-2xl public-theme-icon-box public-theme-icon-shadow"
                             aria-hidden="true"
                         >
                             <i class="pi pi-box text-xl"></i>
                         </span>
                         <h2
                             id="public-home-modules-title"
-                            class="text-surface-900 dark:text-surface-0 text-2xl md:text-4xl font-bold m-0 mb-3 text-center"
+                            class="text-surface-900 dark:text-surface-0 text-2xl md:text-4xl font-bold text-center"
                         >
                             Modül vitrini
                         </h2>
-                        <p class="text-muted-color m-0 text-center">Panelde kullanılabilen temel modüller.</p>
+                        <p class="text-muted-color text-center">Panelde kullanılabilen temel modüller.</p>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
                         @for (mod of modules; track mod.title) {
@@ -318,12 +318,12 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                 </section>
 
                 <!-- CTA — Genesis gradient kart -->
-                <section class="max-w-6xl mx-auto px-4 mb-20 md:mb-28" aria-labelledby="public-home-cta-title">
+                <section class="max-w-6xl mx-auto px-4 mb-12 md:mb-16" aria-labelledby="public-home-cta-title">
                     <div
-                        class="relative overflow-hidden rounded-3xl lg:rounded-[2rem] public-theme-gradient-cta p-8 md:p-14 text-center"
+                        class="public-final-cta-card relative overflow-hidden rounded-3xl lg:rounded-[2rem] public-theme-gradient-cta p-8 md:p-14 text-center"
                     >
                         <div
-                            class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_55%)]"
+                            class="public-final-cta-card-glow pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_55%)]"
                             aria-hidden="true"
                         ></div>
                         <div class="relative max-w-2xl mx-auto">
@@ -346,7 +346,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                         class="w-full"
                                     ></a>
                                 </div>
-                                <div class="public-hero-cta-secondary w-full sm:w-auto">
+                                <div class="public-hero-cta-secondary public-home-cta-secondary w-full sm:w-auto">
                                     <a
                                         routerLink="/pricing"
                                         pButton
@@ -362,7 +362,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
                 <!-- SSS — Genesis ölçü: 784×66.5px kart -->
                 <section id="faq" class="scroll-mt-24">
-                    <div class="mx-auto w-full max-w-[784px] px-4 md:px-0 mt-24 lg:mt-64 pb-16 lg:pb-24">
+                    <div class="mx-auto w-full max-w-[784px] px-4 md:px-0 mt-14 lg:mt-36 pb-16 lg:pb-24">
                         <div
                             class="w-14 h-14 lg:w-20 lg:h-20 flex items-center justify-center mx-auto rounded-2xl lg:rounded-3xl public-theme-icon-box public-theme-icon-shadow"
                             aria-hidden="true"
@@ -443,7 +443,6 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
             <app-public-footer />
         </div>
-        <app-floating-configurator [showPalette]="false" />
     `,
 })
 export class PublicHomePageComponent implements OnInit {

@@ -5,7 +5,6 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { PRICING_PLAN_DEFS } from '@/app/features/public/utils/pricing-plan.utils';
-import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconfigurator';
 import { PublicTopbarComponent } from '@/app/pages/public/components/public-topbar.component';
 import { PUBLIC_PRICING_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
@@ -17,7 +16,6 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
         RouterLink,
         ButtonModule,
         RippleModule,
-        AppFloatingConfigurator,
         PublicTopbarComponent
     ],
     template: `
@@ -30,7 +28,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                     <p class="mt-3 text-base text-muted-color md:text-lg">Kliniğinizin büyüklüğüne göre uygun planı seçin.</p>
                 </header>
 
-                <div class="mt-6 grid grid-cols-1 gap-5 md:mt-8 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+                <div class="mt-6 grid grid-cols-1 gap-7 md:mt-8 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-5">
                     @for (plan of plans; track plan.slug) {
                         <article
                             class="pricing-plan-card relative flex flex-col rounded-3xl border bg-surface-0 p-4 pt-7 md:p-5 md:pt-8 dark:bg-surface-900"
@@ -67,9 +65,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
                             <!-- Limit kutuları -->
                             <div class="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                <div
-                                    class="flex items-center gap-2.5 rounded-xl border border-surface-200 bg-surface-50 px-2.5 py-2 dark:border-surface-700 dark:bg-surface-950"
-                                >
+                                <div class="pricing-limit-box flex items-center gap-2.5 rounded-xl px-2.5 py-2">
                                     <span
                                         class="pricing-limit-icon inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
                                         aria-hidden="true"
@@ -81,9 +77,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                         <div class="text-xs font-semibold text-surface-900 dark:text-surface-0">{{ plan.userLimitLabel }}</div>
                                     </div>
                                 </div>
-                                <div
-                                    class="flex items-center gap-2.5 rounded-xl border border-surface-200 bg-surface-50 px-2.5 py-2 dark:border-surface-700 dark:bg-surface-950"
-                                >
+                                <div class="pricing-limit-box flex items-center gap-2.5 rounded-xl px-2.5 py-2">
                                     <span
                                         class="pricing-limit-icon inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
                                         aria-hidden="true"
@@ -124,7 +118,6 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
             </main>
         </div>
-        <app-floating-configurator [showPalette]="false" />
     `
 })
 export class PricingPageComponent implements OnInit {

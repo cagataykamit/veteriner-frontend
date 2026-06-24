@@ -19,6 +19,16 @@
     </head>
 
     <body>
+        <script>
+            (function () {
+                try {
+                    var theme = localStorage.getItem('vetinity-theme');
+                    if (theme === 'dark' || localStorage.getItem('vetinity.darkTheme') === 'true') {
+                        document.documentElement.classList.add('app-dark');
+                    }
+                } catch (e) {}
+            })();
+        </script>
         <app-root></app-root>
     </body>
 </html>

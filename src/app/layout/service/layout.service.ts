@@ -17,6 +17,14 @@ interface LayoutState {
     activePath: string | null;
 }
 
+export type VetinityThemePreference = 'light' | 'dark';
+
+/** Kullanıcı dark/light tercihi — palette ile karıştırılmaz */
+export const VETINITY_THEME_STORAGE_KEY = 'vetinity-theme';
+
+/** @deprecated Eski boolean kayıt; okuma geriye dönük uyumluluk için */
+const LEGACY_DARK_THEME_STORAGE_KEY = 'vetinity.darkTheme';
+
 @Injectable({
     providedIn: 'root'
 })
@@ -39,8 +47,6 @@ export class LayoutService {
     });
 
     theme = computed(() => (this.layoutConfig().darkTheme ? 'light' : 'dark'));
-
-    isSidebarActive = computed(() => this.layoutState().overlayMenuActive || this.layoutState().mobileMenuActive);
 
     isDarkTheme = computed(() => this.layoutConfig().darkTheme);
 
@@ -65,16 +71,63 @@ export class LayoutService {
     private initialized = false;
 
     constructor() {
+        const storedTheme = this.readStoredTheme();
+        if (storedTheme !== null) {
+            this.layoutConfig.update((state) => ({ ...state, darkTheme: storedTheme === 'dark' }));
+        }
+        this.applyDarkModeClass(this.layoutConfig().darkTheme);
+
         effect(() => {
             const config = this.layoutConfig();
 
-            if (!this.initialized || !config) {
+            if (!this.initialized) {
                 this.initialized = true;
                 return;
             }
 
+            this.persistStoredTheme(config.darkTheme);
             this.handleDarkModeTransition(config);
         });
+    }
+
+    setDarkTheme(enabled: boolean): void {
+        if (this.layoutConfig().darkTheme === enabled) {
+            return;
+        }
+        this.layoutConfig.update((config) => ({ ...config, darkTheme: enabled }));
+    }
+
+    toggleDarkMode(): void {
+        this.setDarkTheme(!this.layoutConfig().darkTheme);
+    }
+
+    private readStoredTheme(): VetinityThemePreference | null {
+        try {
+            const value = localStorage.getItem(VETINITY_THEME_STORAGE_KEY);
+            if (value === 'dark' || value === 'light') {
+                return value;
+            }
+
+            const legacy = localStorage.getItem(LEGACY_DARK_THEME_STORAGE_KEY);
+            if (legacy === 'true') {
+                return 'dark';
+            }
+            if (legacy === 'false') {
+                return 'light';
+            }
+
+            return null;
+        } catch {
+            return null;
+        }
+    }
+
+    private persistStoredTheme(darkTheme: boolean): void {
+        try {
+            localStorage.setItem(VETINITY_THEME_STORAGE_KEY, darkTheme ? 'dark' : 'light');
+        } catch {
+            // Storage kullanılamasa bile çalışma anında tema uygulanmaya devam etsin.
+        }
     }
 
     private handleDarkModeTransition(config: LayoutConfig): void {
@@ -83,23 +136,18 @@ export class LayoutService {
         if (supportsViewTransition) {
             this.startViewTransition(config);
         } else {
-            this.toggleDarkMode(config);
+            this.applyDarkModeClass(config.darkTheme);
         }
     }
 
     private startViewTransition(config: LayoutConfig): void {
         document.startViewTransition(() => {
-            this.toggleDarkMode(config);
+            this.applyDarkModeClass(config.darkTheme);
         });
     }
 
-    toggleDarkMode(config?: LayoutConfig): void {
-        const _config = config || this.layoutConfig();
-        if (_config.darkTheme) {
-            document.documentElement.classList.add('app-dark');
-        } else {
-            document.documentElement.classList.remove('app-dark');
-        }
+    private applyDarkModeClass(enabled: boolean): void {
+        document.documentElement.classList.toggle('app-dark', enabled);
     }
 
     onMenuToggle() {
@@ -128,5 +176,25 @@ export class LayoutService {
 
     isMobile() {
         return !this.isDesktop();
+    }
+}
+
+/** `index.html` inline bootstrap — Angular yüklenmeden önce göz kırpmayı azaltır */
+export function readVetinityThemePreferenceFromStorage(): VetinityThemePreference | null {
+    try {
+        const value = localStorage.getItem(VETINITY_THEME_STORAGE_KEY);
+        if (value === 'dark' || value === 'light') {
+            return value;
+        }
+        const legacy = localStorage.getItem(LEGACY_DARK_THEME_STORAGE_KEY);
+        if (legacy === 'true') {
+            return 'dark';
+        }
+        if (legacy === 'false') {
+            return 'light';
+        }
+        return null;
+    } catch {
+        return null;
     }
 }

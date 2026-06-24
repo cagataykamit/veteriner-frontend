@@ -134,6 +134,16 @@
     border: 1px solid var(--public-on-hero-surface);
 }
 
+/* Dark mode — alt CTA kartı: sol kenar açık çizgi (border + overlay + gradient stop) */
+.app-dark .public-page .public-final-cta-card {
+    border: none;
+    background: linear-gradient(135deg, #07152b 0%, #0f2f3a 55%, #155e68 100%);
+}
+
+.app-dark .public-page .public-final-cta-card-glow {
+    display: none;
+}
+
 .public-footer-gradient {
     box-shadow: var(--public-shadow-card);
 }
@@ -206,6 +216,32 @@
 
 .public-theme-text {
     color: var(--public-accent-strong);
+}
+
+/* —— Neden Vetinity? —— */
+
+.public-why-check {
+    color: var(--public-accent-strong);
+}
+
+.app-dark .public-page .public-home-why .public-why-lead {
+    color: color-mix(in srgb, var(--vetinity-soft-teal) 28%, var(--p-text-muted-color));
+}
+
+.app-dark .public-page .public-why-card {
+    border-color: color-mix(in srgb, var(--vetinity-soft-teal) 24%, var(--p-surface-700));
+}
+
+.app-dark .public-page .public-why-card-header {
+    border-color: color-mix(in srgb, var(--vetinity-soft-teal) 20%, var(--p-surface-700));
+}
+
+.app-dark .public-page .public-why-card-subtitle {
+    color: color-mix(in srgb, var(--vetinity-soft-teal) 55%, white);
+}
+
+.app-dark .public-page .public-why-check {
+    color: #5eead4;
 }
 
 .public-theme-dot {
@@ -357,6 +393,103 @@
     outline: none;
 }
 
+/* Public topbar tema toggle — net icon button (mobil + desktop) */
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded {
+    padding: 0 !important;
+    flex-shrink: 0;
+    opacity: 1 !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.16) !important;
+    color: #0f172a !important;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08) !important;
+}
+
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded .p-button-icon {
+    font-size: 1.05rem;
+    color: #0f172a !important;
+}
+
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):hover,
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):active,
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):focus-visible {
+    background: #f8fafc !important;
+    border-color: rgba(15, 23, 42, 0.22) !important;
+    color: #0f172a !important;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12) !important;
+}
+
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):hover .p-button-icon,
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):active .p-button-icon,
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):focus-visible .p-button-icon {
+    color: #0f172a !important;
+}
+
+.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+}
+
+.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded .p-button-icon {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):hover,
+.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):active,
+.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):focus-visible {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-color: rgba(255, 255, 255, 0.28) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32) !important;
+}
+
+.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):hover .p-button-icon,
+.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):active .p-button-icon,
+.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):focus-visible .p-button-icon {
+    color: #ffffff !important;
+}
+
+@media (min-width: 768px) {
+    .public-page .public-topbar-theme-toggle.p-button.p-button-rounded {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        min-width: 2.5rem !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .public-page .public-topbar-theme-toggle-mobile.p-button.p-button-rounded {
+        width: 2.375rem !important;
+        height: 2.375rem !important;
+        min-width: 2.375rem !important;
+    }
+}
+
+/* —— Public home section headers (Özellikler, Modül vitrini) —— */
+
+.public-page .public-home-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 0.75rem;
+    padding-top: 2rem;
+}
+
+.public-page .public-home-section-header > .public-home-section-header-icon,
+.public-page .public-home-section-header > h2,
+.public-page .public-home-section-header > p {
+    margin-block: 0;
+    margin-inline: 0;
+}
+
+@media (min-width: 768px) {
+    .public-page .public-home-section-header {
+        row-gap: 1rem;
+        padding-top: 0;
+    }
+}
+
 /* —— Pricing —— */
 
 /* Başlık alanı — hafif mint/cyan glow */
@@ -371,16 +504,47 @@
 .pricing-plan-card {
     border-color: color-mix(in srgb, var(--p-content-border-color) 75%, transparent);
     box-shadow: 0 12px 32px -18px color-mix(in srgb, var(--vetinity-navy) 36%, transparent);
+    transform: none;
     transition:
         border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        transform 0.2s ease;
+        box-shadow 0.2s ease;
 }
 
-.pricing-plan-card:hover {
-    border-color: var(--public-border-emphasis);
-    box-shadow: var(--public-shadow-card);
-    transform: translateY(-3px);
+/* Basic / Premium — hafif premium shadow, Pro kadar baskın değil */
+.pricing-plan-card:not(.pricing-plan-card--featured) {
+    box-shadow:
+        0 10px 28px -14px color-mix(in srgb, var(--vetinity-navy) 28%, transparent),
+        0 4px 10px -6px color-mix(in srgb, var(--vetinity-navy) 9%, transparent);
+}
+
+/* Mobil light — Basic/Premium kenarları açık zemin üzerinde net; Pro kadar baskın değil */
+@media (max-width: 767.98px) {
+    html:not(.app-dark) .public-page .pricing-plan-card:not(.pricing-plan-card--featured) {
+        border: 1px solid rgba(15, 23, 42, 0.14);
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .pricing-plan-card {
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .pricing-plan-card:hover {
+        border-color: var(--public-border-emphasis);
+        box-shadow: var(--public-shadow-card);
+        transform: translateY(-3px);
+    }
+
+    .pricing-plan-card--featured:hover {
+        border-color: color-mix(in srgb, var(--vetinity-teal) 68%, transparent);
+        box-shadow:
+            0 0 0 1px color-mix(in srgb, var(--vetinity-teal) 30%, transparent),
+            var(--public-shadow-featured);
+    }
 }
 
 .pricing-plan-card--featured {
@@ -392,13 +556,6 @@
     );
     box-shadow:
         0 0 0 1px color-mix(in srgb, var(--vetinity-teal) 22%, transparent),
-        var(--public-shadow-featured);
-}
-
-.pricing-plan-card--featured:hover {
-    border-color: color-mix(in srgb, var(--vetinity-teal) 68%, transparent);
-    box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--vetinity-teal) 30%, transparent),
         var(--public-shadow-featured);
 }
 
@@ -437,6 +594,16 @@
     background: linear-gradient(145deg, var(--public-accent-soft), var(--public-accent-softer));
     color: var(--public-accent-strong);
     box-shadow: var(--public-shadow-icon-sm);
+}
+
+.pricing-limit-box {
+    border: 1px solid color-mix(in srgb, var(--p-content-border-color) 85%, transparent);
+    background: var(--p-surface-50);
+}
+
+.app-dark .public-page .pricing-limit-box {
+    border-color: color-mix(in srgb, var(--p-surface-600) 42%, transparent);
+    background: color-mix(in srgb, var(--p-surface-800) 58%, var(--p-surface-900));
 }
 
 .pricing-feature-check {
@@ -489,6 +656,20 @@
     background: #ffffff;
     border-color: color-mix(in srgb, var(--vetinity-teal) 45%, var(--vetinity-navy));
     color: var(--public-accent-strong);
+}
+
+/* Light mode — alt CTA "Paketleri gör" (yalnızca public-home-cta-secondary) */
+.public-page .public-home-cta-secondary > a.p-button {
+    background: #ffffff;
+    color: var(--vetinity-navy);
+    border-color: transparent;
+}
+
+.public-page .public-home-cta-secondary > a.p-button:not(:disabled):hover,
+.public-page .public-home-cta-secondary > a.p-button:focus-visible {
+    background: #f8fafc;
+    color: var(--vetinity-navy);
+    border-color: transparent;
 }
 
 .app-dark .public-page .public-hero-cta-secondary > a.p-button {
@@ -609,6 +790,28 @@
 }
 
 .public-page .public-auth-submit.p-button:hover {
+    background: var(--public-accent-hover) !important;
+    border-color: var(--public-accent-hover) !important;
+}
+
+/* —— 404 Not Found — Vetinity marka renkleri (PrimeNG primary'den bağımsız) —— */
+
+.public-notfound-code {
+    color: var(--vetinity-teal);
+}
+
+.public-notfound-icon-box {
+    border: 2px solid color-mix(in srgb, var(--vetinity-teal) 55%, transparent);
+    color: var(--vetinity-teal);
+}
+
+.public-page .public-notfound-submit.p-button {
+    background: var(--vetinity-teal) !important;
+    border-color: var(--vetinity-teal) !important;
+    color: #ffffff !important;
+}
+
+.public-page .public-notfound-submit.p-button:not(:disabled):hover {
     background: var(--public-accent-hover) !important;
     border-color: var(--public-accent-hover) !important;
 }

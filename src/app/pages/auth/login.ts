@@ -11,7 +11,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { RouterLink } from '@angular/router';
-import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService, type ClinicResolutionDecision } from '@/app/core/auth/auth.service';
 import {
     AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE,
@@ -34,22 +33,27 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
         PasswordModule,
         FormsModule,
         RippleModule,
-        RouterLink,
-        AppFloatingConfigurator
+        RouterLink
     ],
     template: `
-        <app-floating-configurator [showPalette]="false" />
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
-            <div class="flex flex-col items-center justify-center">
+            <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
                 <div class="public-auth-card-frame">
                     <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20">
                         <div class="text-center mb-8">
                             <img
                                 [src]="brand.logoFull"
                                 alt="Vetinity"
-                                class="mb-8 h-12 w-auto mx-auto"
-                                width="180"
-                                height="48"
+                                class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
+                                width="120"
+                                height="30"
+                            />
+                            <img
+                                [src]="brand.logoFullDark"
+                                alt="Vetinity"
+                                class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
+                                width="120"
+                                height="30"
                             />
                             <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Vetinity paneline giriş</div>
                             <span class="text-muted-color font-medium">Hesabınızla giriş yapın</span>

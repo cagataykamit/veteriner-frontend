@@ -185,10 +185,7 @@ export class AppTopbar implements OnInit, OnDestroy {
     }
 
     toggleDarkMode() {
-        this.layoutService.layoutConfig.update((state) => ({
-            ...state,
-            darkTheme: !state.darkTheme
-        }));
+        this.layoutService.toggleDarkMode();
     }
 
     private logoutCurrent(): void {
