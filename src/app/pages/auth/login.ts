@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
@@ -22,6 +22,17 @@ import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AUTH_LOGIN_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
+import { problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { parseValidationFieldErrors, type FieldErrors } from '@/app/shared/utils/validation-error-parse.utils';
+
+const LOGIN_INVALID_CREDENTIALS_MESSAGE = 'E-posta veya şifre hatalı.';
+
+type LoginFieldKey = 'email' | 'password';
+
+const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
+    email: 'email',
+    password: 'password'
+};
 
 @Component({
     selector: 'app-login',
@@ -79,38 +90,68 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                             }
                         </div>
 
-                        <div>
-                            <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">E-posta</label>
-                            <input pInputText id="email1" type="text" placeholder="E-posta adresiniz" class="w-full md:w-120 mb-8" [(ngModel)]="email" />
+                        <form (ngSubmit)="onSubmit(loginForm)" autocomplete="on" #loginForm="ngForm">
+                            <div class="mb-8">
+                                <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">E-posta</label>
+                                <input
+                                    pInputText
+                                    id="email1"
+                                    type="email"
+                                    name="email"
+                                    #emailCtrl="ngModel"
+                                    placeholder="E-posta adresiniz"
+                                    class="w-full md:w-120"
+                                    [(ngModel)]="email"
+                                    required
+                                    email
+                                />
+                                @if (apiFieldErrors().email) {
+                                    <small class="text-red-500 block mt-2">{{ apiFieldErrors().email }}</small>
+                                } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
+                                    @if (emailCtrl.errors?.['required']) {
+                                        <small class="text-red-500 block mt-2">E-posta zorunlu</small>
+                                    } @else if (emailCtrl.errors?.['email']) {
+                                        <small class="text-red-500 block mt-2">Geçerli bir e-posta girin</small>
+                                    }
+                                }
+                            </div>
 
-                            <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Şifre</label>
-                            <p-password
-                                inputId="password1"
-                                [(ngModel)]="password"
-                                placeholder="Şifreniz"
-                                [toggleMask]="true"
-                                styleClass="mb-4"
-                                [fluid]="true"
-                                [feedback]="false"
-                            ></p-password>
+                            <div class="mb-4">
+                                <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Şifre</label>
+                                <p-password
+                                    inputId="password1"
+                                    name="password"
+                                    #passwordCtrl="ngModel"
+                                    [(ngModel)]="password"
+                                    placeholder="Şifreniz"
+                                    [toggleMask]="true"
+                                    [fluid]="true"
+                                    [feedback]="false"
+                                    [required]="true"
+                                ></p-password>
+                                @if (apiFieldErrors().password) {
+                                    <small class="text-red-500 block mt-2">{{ apiFieldErrors().password }}</small>
+                                } @else if (passwordCtrl.invalid && (passwordCtrl.touched || formSubmitAttempted())) {
+                                    @if (passwordCtrl.errors?.['required']) {
+                                        <small class="text-red-500 block mt-2">Şifre zorunlu</small>
+                                    }
+                                }
+                            </div>
 
                             <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                                 <div class="flex items-center">
-                                    <p-checkbox [(ngModel)]="checked" inputId="rememberme1" binary class="mr-2"></p-checkbox>
+                                    <p-checkbox [(ngModel)]="checked" name="rememberMe" inputId="rememberme1" binary class="mr-2"></p-checkbox>
                                     <label for="rememberme1">Beni hatırla</label>
                                 </div>
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer public-brand-link">Şifremi unuttum</span>
                             </div>
                             <p-button
+                                type="submit"
                                 label="Giriş yap"
                                 styleClass="w-full public-auth-submit"
                                 [loading]="signInLoading()"
                                 [disabled]="signInLoading()"
-                                (onClick)="signIn()"
                             ></p-button>
-                            <div class="text-center mt-4">
-                                <a routerLink="/pricing" class="public-brand-link no-underline text-sm">Hesap oluştur</a>
-                            </div>
                             @if (loginError()) {
                                 <div class="flex justify-center w-full mt-3 mb-0">
                                     <div
@@ -128,7 +169,10 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                     </div>
                                 </div>
                             }
-                        </div>
+                            <div class="text-center mt-4">
+                                <a routerLink="/pricing" class="public-brand-link no-underline text-sm">Hesap oluştur</a>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -152,6 +196,10 @@ export class Login implements OnInit {
     checked: boolean = false;
 
     readonly signInLoading = signal(false);
+
+    readonly formSubmitAttempted = signal(false);
+
+    readonly apiFieldErrors = signal<FieldErrors<LoginFieldKey>>({});
 
     readonly loginError = signal<string | null>(null);
 
@@ -215,16 +263,23 @@ export class Login implements OnInit {
         }
     }
 
-    signIn(): void {
+    onSubmit(loginForm: NgForm): void {
         if (this.signInLoading()) {
             return;
         }
+        this.formSubmitAttempted.set(true);
         this.loginError.set(null);
+        this.apiFieldErrors.set({});
         this.sessionRenewHint.set(null);
         this.inviteLoginHint.set(null);
+        if (loginForm.invalid) {
+            loginForm.control.markAllAsTouched();
+            return;
+        }
         const email = this.email?.trim() ?? '';
-        if (!email || !this.password) {
-            this.loginError.set('E-posta ve şifre zorunludur.');
+        if (!email) {
+            loginForm.controls['email']?.setErrors({ required: true });
+            loginForm.controls['email']?.markAsTouched();
             return;
         }
         this.signInLoading.set(true);
@@ -240,17 +295,60 @@ export class Login implements OnInit {
                         this.loginError.set('Sunucu yanıtı geçersiz: oturum anahtarı alınamadı.');
                         return;
                     }
+                    this.loginError.set(null);
                     this.resolveClinicStepAfterLogin();
                 },
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
                     if (http) {
-                        this.loginError.set(loginFailureMessage(http));
+                        this.handleLoginHttpError(http);
                         return;
                     }
                     this.loginError.set('Giriş başarısız.');
                 }
             });
+    }
+
+    private handleLoginHttpError(http: HttpErrorResponse): void {
+        const fieldErrors = parseValidationFieldErrors<LoginFieldKey>(http.error, {
+            fieldMap: LOGIN_VALIDATION_FIELD_MAP
+        });
+        if (Object.keys(fieldErrors).length > 0) {
+            this.apiFieldErrors.set(fieldErrors);
+            this.loginError.set(null);
+            return;
+        }
+        this.apiFieldErrors.set({});
+        this.loginError.set(this.resolveLoginHttpError(http));
+    }
+
+    private resolveLoginHttpError(http: HttpErrorResponse): string {
+        if (http.status === 401) {
+            return LOGIN_INVALID_CREDENTIALS_MESSAGE;
+        }
+        const message = loginFailureMessage(http);
+        if (http.status === 400 && this.shouldTreatAsInvalidCredentials(http, message)) {
+            return LOGIN_INVALID_CREDENTIALS_MESSAGE;
+        }
+        return message;
+    }
+
+    private shouldTreatAsInvalidCredentials(http: HttpErrorResponse, message: string): boolean {
+        if (message === LOGIN_INVALID_CREDENTIALS_MESSAGE) {
+            return true;
+        }
+        const code = problemCodeFromHttpError(http)?.trim() ?? '';
+        if (code.startsWith('Auth.Unauthorized.')) {
+            return true;
+        }
+        const normalized = message.toLocaleLowerCase('tr-TR');
+        if (/gönderilen bilgiler doğrulanamadı/.test(normalized)) {
+            return true;
+        }
+        if (/aşağıdaki alanları kontrol edin/.test(normalized)) {
+            return true;
+        }
+        return false;
     }
 
     private resolveClinicStepAfterLogin(): void {
