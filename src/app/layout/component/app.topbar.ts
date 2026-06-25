@@ -1,5 +1,5 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, viewChild } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -35,10 +35,9 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
             </button>
             <a class="layout-topbar-logo" routerLink="/">
                 <img
-                    [src]="panelLogoSrc()"
-                    alt="Vetinity"
+                    [src]="logoSrc"
+                    [alt]="logoAlt"
                     class="layout-topbar-logo-img"
-                    [class.layout-topbar-logo-img--icon]="panelLogoIsIcon()"
                     width="168"
                     height="40"
                 />
@@ -110,7 +109,8 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
     <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />`
 })
 export class AppTopbar implements OnInit, OnDestroy {
-    readonly brand = VETINITY_BRAND_LOGOS;
+    readonly logoSrc = VETINITY_BRAND_LOGOS.compactLockup;
+    readonly logoAlt = 'Vetinity';
     readonly layoutService = inject(LayoutService);
     readonly auth = inject(AuthService);
     private readonly router = inject(Router);
@@ -119,14 +119,6 @@ export class AppTopbar implements OnInit, OnDestroy {
     private readonly userMenuRef = viewChild<Menu>('userMenu');
 
     userMenuItems: MenuItem[] = [];
-
-    readonly panelLogoIsIcon = computed(
-        () => this.layoutService.layoutState().staticMenuDesktopInactive || !this.layoutService.isDesktop()
-    );
-
-    readonly panelLogoSrc = computed(() =>
-        this.panelLogoIsIcon() ? this.brand.icon : this.brand.compactLockup
-    );
 
     ngOnInit(): void {
         this.userMenuItems = [
