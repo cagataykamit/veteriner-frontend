@@ -20,8 +20,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
  * - Tek orchestration: liste yükleme (lazy), menü aç/kapa, `selectClinic` çağrısı, post-switch refresh.
  * - Token/JWT parse YOK; tüm clinic state `AuthService` üzerinden okunur.
  * - localStorage'a doğrudan erişim YOK; tokenlar `auth.selectClinic` içinde persist edilir.
- * - `/me/clinics` çağrısı lazy veya `ClinicSwitcherRefreshService` ile force refresh; AuthService TTL cache bypass edilir.
- * - Tek kliniği olan kullanıcı için trigger tıklanmaz, mevcut statik görünüm korunur.
+ * - `/me/clinics` mount'ta sessiz yüklenir; tek klinikte button DOM'a girmez, dropdown açılmaz.
  *
  * Toast pattern: projenin mevcut feature componentlerindeki ile aynı (`providers: [MessageService]`
  * + `<p-toast position="top-right" />` + `addTracedToast`).
@@ -37,27 +36,24 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
         @if (activeLabel(); as label) {
             <div class="layout-topbar-clinic-host">
-                @if (isInteractive()) {
+                @if (canOpenClinicSwitcher()) {
                     <button
                         #triggerBtn
                         type="button"
-                        class="layout-topbar-clinic layout-topbar-clinic--interactive"
-                        [attr.aria-haspopup]="'true'"
+                        class="layout-topbar-clinic layout-topbar-clinic-trigger"
+                        aria-haspopup="true"
                         [attr.aria-expanded]="menuOpen()"
                         [attr.aria-label]="'Aktif klinik: ' + label + ' (değiştirmek için tıklayın)'"
                         [attr.title]="label"
-                        [disabled]="submitting()"
-                        (click)="onTriggerClick($event)"
+                        (click)="onClinicTriggerClick($event)"
                     >
                         <i class="pi pi-building" aria-hidden="true"></i>
                         <span class="layout-topbar-clinic-text">{{ label }}</span>
-                        @if (showCaret()) {
-                            <i
-                                class="pi pi-angle-down layout-topbar-clinic__caret"
-                                [class.layout-topbar-clinic__caret--busy]="loading() || submitting()"
-                                aria-hidden="true"
-                            ></i>
-                        }
+                        <i
+                            class="pi pi-angle-down layout-topbar-clinic__caret"
+                            [class.layout-topbar-clinic__caret--busy]="loading() || submitting()"
+                            aria-hidden="true"
+                        ></i>
                     </button>
                     <p-menu
                         #clinicMenu
@@ -69,7 +65,13 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         (onHide)="menuOpen.set(false)"
                     />
                 } @else {
-                    <span class="layout-topbar-clinic" [attr.title]="label">
+                    <span
+                        class="layout-topbar-clinic layout-topbar-clinic-trigger layout-topbar-clinic-trigger--readonly"
+                        [attr.title]="label"
+                        [attr.aria-label]="'Aktif klinik: ' + label"
+                        aria-disabled="true"
+                        tabindex="-1"
+                    >
                         <i class="pi pi-building" aria-hidden="true"></i>
                         <span class="layout-topbar-clinic-text">{{ label }}</span>
                     </span>
@@ -95,18 +97,17 @@ export class AppClinicSwitcher implements OnDestroy {
 
     readonly activeId = computed(() => this.auth.getJwtClinicId());
     readonly activeLabel = this.auth.activeClinicLabel;
-    readonly isMulti = computed(() => this.clinics().length > 1);
 
-    /** Henüz yüklenmediyse keşif için tıklanabilir; yüklenmişse yalnızca çoklu klinik için aktif. */
-    readonly isInteractive = computed(() => !this.hasLoadedOnce() || this.isMulti());
-
-    /** Caret yalnız interaktif modda görünür; tek klinikse hint verilmez. */
-    readonly showCaret = this.isInteractive;
+    /** Yalnızca birden fazla klinik varken dropdown açılabilir. */
+    readonly canOpenClinicSwitcher = computed(() => this.clinics().length > 1);
 
     constructor() {
         this.clinicListRefresh.onRefreshRequested
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.reloadClinics(true));
+
+        // Tek klinik kullanıcı tıklamadan önce liste bilinir; button yalnızca çoklu klinikte render edilir.
+        this.reloadClinics(false);
     }
 
     readonly menuItems = computed<MenuItem[]>(() => {
@@ -129,32 +130,34 @@ export class AppClinicSwitcher implements OnDestroy {
         removeOrphanedPrimeMenuPopupsFromBody(document);
     }
 
-    onTriggerClick(event: Event): void {
-        if (this.submitting()) {
+    onClinicTriggerClick(event: MouseEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (this.submitting() || !this.canOpenClinicSwitcher()) {
             return;
         }
+
         if (!this.hasLoadedOnce()) {
             this.reloadClinics(false, () => {
-                if (!this.isMulti()) {
+                if (!this.canOpenClinicSwitcher()) {
                     return;
                 }
-                // PrimeNG `Menu.show(event)` `event.currentTarget`'a güvenir; orijinal MouseEvent
-                // async HTTP cevabı geldiğinde tarayıcı tarafından `currentTarget = null`'a düşürülmüş
-                // olur ve menü body fallback ile `left: 0`'da açılır. Canlı buton referansını
-                // synthetic event olarak geçerek doğru hizalama sağlanır.
-                const target = this.triggerEl()?.nativeElement;
-                if (!target) {
-                    return;
-                }
-                const menuEvent: { currentTarget: HTMLElement } = { currentTarget: target };
-                this.menuRef()?.show(menuEvent);
+                this.showClinicMenuFromTrigger();
             });
             return;
         }
-        if (!this.isMulti()) {
+
+        this.menuRef()?.toggle(event);
+    }
+
+    /** PrimeNG `Menu.show` async callback'te orijinal `currentTarget` null olabilir; canlı trigger kullan. */
+    private showClinicMenuFromTrigger(): void {
+        const target = this.triggerEl()?.nativeElement;
+        if (!target) {
             return;
         }
-        this.menuRef()?.toggle(event);
+        this.menuRef()?.show({ currentTarget: target });
     }
 
     private reloadClinics(forceRefresh = false, then?: () => void): void {
@@ -169,6 +172,9 @@ export class AppClinicSwitcher implements OnDestroy {
                 next: (items) => {
                     this.clinics.set(sortClinicsByName(filterClinicsForSelection(items)));
                     this.hasLoadedOnce.set(true);
+                    if (!this.canOpenClinicSwitcher()) {
+                        this.menuRef()?.hide();
+                    }
                     then?.();
                 },
                 error: (e: unknown) => {

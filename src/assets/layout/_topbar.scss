@@ -147,8 +147,8 @@
         white-space: nowrap;
     }
 
-    /** Çoklu klinik (veya henüz yüklenmemiş) trigger — native button reset + hover/focus durumları. */
-    .layout-topbar-clinic--interactive {
+    /** Klinik seçici trigger — native button reset + hover/focus; tek klinik readonly aynı tabanı paylaşır. */
+    .layout-topbar-clinic-trigger {
         background: transparent;
         border: 0;
         margin: -0.25rem -0.5rem;
@@ -159,19 +159,20 @@
         border-radius: var(--content-border-radius);
         transition: background-color var(--element-transition-duration);
 
-        &:hover:not(:disabled),
+        &:hover:not(.layout-topbar-clinic-trigger--readonly),
         &[aria-expanded='true'] {
             background-color: var(--surface-hover);
         }
 
-        &:focus-visible {
+        &:focus-visible:not(.layout-topbar-clinic-trigger--readonly) {
             @include focused();
         }
+    }
 
-        &:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
+    .layout-topbar-clinic-trigger--readonly {
+        cursor: default;
+        pointer-events: none;
+        opacity: 1;
     }
 
     .layout-topbar-clinic .layout-topbar-clinic__caret {
