@@ -6,62 +6,87 @@ import { ActivatedRoute, Navigation, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
-import { AppFloatingConfigurator } from '@/app/layout/component/app.floatingconfigurator';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE, authFailureMessage } from '@/app/core/auth/auth-error.utils';
 import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
+import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 
 @Component({
     selector: 'app-select-clinic-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, SelectModule, AppFloatingConfigurator],
+    imports: [CommonModule, FormsModule, ButtonModule, SelectModule],
     template: `
-        <app-floating-configurator />
-        <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
-            <div class="w-full max-w-xl px-4">
-                <div class="card">
-                    <h2 class="mt-0 mb-2 text-2xl">Klinik Seçimi</h2>
-                    <p class="mt-0 mb-4 text-muted-color">Devam etmek için aktif kliniği seçin.</p>
-
-                    @if (loading()) {
-                        <p class="m-0 text-muted-color">Klinikler yükleniyor…</p>
-                    } @else if (clinics().length === 0) {
-                        <p class="m-0 text-red-500">{{ noClinicsMessage }}</p>
-                    } @else {
-                        <label for="clinicSelect" class="block text-sm font-medium text-muted-color mb-2">Aktif klinik</label>
-                        <p-select
-                            inputId="clinicSelect"
-                            [options]="clinics()"
-                            [(ngModel)]="selectedClinicId"
-                            optionLabel="name"
-                            optionValue="id"
-                            placeholder="Klinik seçin"
-                            [showClear]="false"
-                            styleClass="w-full"
-                            [disabled]="submitting()"
-                        />
-                        <div class="flex gap-2 mt-4">
-                            <p-button
-                                type="button"
-                                label="Devam et"
-                                icon="pi pi-check"
-                                [disabled]="!selectedClinicId || submitting()"
-                                [loading]="submitting()"
-                                (onClick)="onContinue()"
+        <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
+            <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
+                <div class="public-auth-card-frame">
+                    <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20">
+                        <div class="text-center mb-8">
+                            <img
+                                [src]="brand.logoFull"
+                                alt="Vetinity"
+                                class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
+                                width="120"
+                                height="30"
                             />
+                            <img
+                                [src]="brand.logoFullDark"
+                                alt="Vetinity"
+                                class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
+                                width="120"
+                                height="30"
+                            />
+                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Klinik Seçimi</div>
+                            <span class="text-muted-color font-medium">Devam etmek için çalışacağınız kliniği seçin.</span>
                         </div>
-                    }
 
-                    @if (error()) {
-                        <p class="mt-4 mb-0 text-red-500" role="alert">{{ error() }}</p>
-                    }
+                        @if (loading()) {
+                            <p class="m-0 text-center text-muted-color">Klinikler yükleniyor…</p>
+                        } @else if (clinics().length === 0) {
+                            <p class="m-0 text-center text-red-500">{{ noClinicsMessage }}</p>
+                        } @else {
+                            <div class="mx-auto w-full max-w-[25rem]">
+                                <div class="mb-8">
+                                    <label for="clinicSelect" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">
+                                        Aktif klinik
+                                    </label>
+                                    <p-select
+                                        inputId="clinicSelect"
+                                        [options]="clinics()"
+                                        [(ngModel)]="selectedClinicId"
+                                        optionLabel="name"
+                                        optionValue="id"
+                                        placeholder="Klinik seçin"
+                                        [showClear]="false"
+                                        styleClass="w-full"
+                                        [fluid]="true"
+                                        [disabled]="submitting()"
+                                    />
+                                </div>
+                                <p-button
+                                    type="button"
+                                    label="Devam et"
+                                    icon="pi pi-check"
+                                    styleClass="w-full public-auth-submit"
+                                    [disabled]="!selectedClinicId || submitting()"
+                                    [loading]="submitting()"
+                                    (onClick)="onContinue()"
+                                />
+                            </div>
+                        }
+
+                        @if (error()) {
+                            <p class="mt-4 mb-0 text-center text-red-500" role="alert">{{ error() }}</p>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
     `
 })
 export class SelectClinicPage implements OnInit {
+    readonly brand = VETINITY_BRAND_LOGOS;
+
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);

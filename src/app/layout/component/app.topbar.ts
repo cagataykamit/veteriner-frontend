@@ -10,7 +10,6 @@ import { finalize } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { AppClinicSwitcher } from './app-clinic-switcher.component';
-import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
 /** Topbar user `p-menu` body overlay — clinic switcher menüsünden ayrı hedeflenir. */
@@ -26,7 +25,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator, AppClinicSwitcher, MenuModule, ButtonModule, ConfirmDialogModule],
+    imports: [RouterModule, CommonModule, StyleClassModule, AppClinicSwitcher, MenuModule, ButtonModule, ConfirmDialogModule],
     providers: [ConfirmationService],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -51,21 +50,6 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
                 <button type="button" class="layout-topbar-action" (click)="toggleDarkMode()">
                     <i [ngClass]="{ 'pi ': true, 'pi-moon': layoutService.isDarkTheme(), 'pi-sun': !layoutService.isDarkTheme() }"></i>
                 </button>
-                <div class="relative">
-                    <button
-                        type="button"
-                        class="layout-topbar-action layout-topbar-action-highlight"
-                        pStyleClass="@next"
-                        enterFromClass="hidden"
-                        enterActiveClass="animate-scalein"
-                        leaveToClass="hidden"
-                        leaveActiveClass="animate-fadeout"
-                        [hideOnOutsideClick]="true"
-                    >
-                        <i class="pi pi-palette"></i>
-                    </button>
-                    <app-configurator />
-                </div>
             </div>
 
             <div class="relative">

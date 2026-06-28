@@ -21,7 +21,7 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
     standalone: true,
     imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputTextModule, PasswordModule, AppFloatingConfigurator],
     template: `
-        <app-floating-configurator [showPalette]="false" />
+        <app-floating-configurator />
         <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen min-w-screen py-10 px-4">
             <div class="max-w-lg mx-auto">
                 <div class="card mb-0">

@@ -8,7 +8,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
     selector: 'app-notfound',
     standalone: true,
     imports: [RouterModule, AppFloatingConfigurator, ButtonModule],
-    template: ` <app-floating-configurator [showPalette]="false" />
+    template: ` <app-floating-configurator />
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen overflow-hidden">
             <div class="flex flex-col items-center justify-center">
                 <div class="public-auth-card-frame">
