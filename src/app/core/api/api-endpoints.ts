@@ -13,6 +13,7 @@ export const ApiEndpoints = {
     },
     me: {
         clinics: () => `/api/v1/me/clinics`,
+        accountSummary: () => `/api/v1/me/account-summary`,
         changePassword: () => `/api/v1/me/change-password`
     },
     password: {

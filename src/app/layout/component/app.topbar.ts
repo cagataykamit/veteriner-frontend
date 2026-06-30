@@ -106,7 +106,7 @@ export class AppTopbar implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.userMenuItems = [
-            { label: 'Şifre Değiştir', icon: 'pi pi-lock', routerLink: ['/panel/settings/account'] },
+            { label: 'Hesabım', icon: 'pi pi-user', routerLink: ['/panel/settings/account'] },
             { label: 'Çıkış yap', icon: 'pi pi-sign-out', command: () => this.onUserMenuLogoutCurrent() },
             { label: 'Tüm oturumları kapat', icon: 'pi pi-ban', command: () => this.onUserMenuLogoutAll() }
         ];
