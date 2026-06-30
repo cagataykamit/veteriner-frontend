@@ -19,6 +19,7 @@ import { subscriptionStatusLabel } from '@/app/features/subscriptions/utils/subs
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { OrganizationBillingProfileSectionComponent } from '@/app/features/organization/components/organization-billing-profile-section/organization-billing-profile-section.component';
 
 @Component({
     selector: 'app-organization-settings-page',
@@ -32,83 +33,79 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         ToastModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        OrganizationBillingProfileSectionComponent
     ],
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header
-            title="Kurum Bilgileri"
-            subtitle="Hesap"
-            description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın."
-        />
 
-        @if (loading()) {
-            <app-loading-state message="Kurum bilgileri yükleniyor…" />
-        } @else if (error(); as err) {
-            <div class="card">
-                <app-error-state title="Kurum bilgileri alınamadı" [detail]="err" (retry)="reload()" />
-            </div>
-        } @else if (summary(); as s) {
-            <div class="card mb-4">
-                <h5 class="mt-0 mb-3">Özet</h5>
-                <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 text-sm">
-                    <div class="md:col-span-2">
-                        <dt class="text-muted-color font-medium m-0 mb-1">Kurum adı</dt>
-                        <dd class="m-0 text-base font-medium break-words">{{ s.tenantName }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">Abonelik durumu (özet)</dt>
-                        <dd class="m-0">
-                            {{ statusLabel(s.status) }} · {{ planSummary(s) }}
-                        </dd>
-                    </div>
-                </dl>
-                <p class="text-sm text-muted-color mt-4 mb-0">
-                    Faturalama, paket yükseltme ve deneme bilgileri
-                    <a routerLink="/panel/settings/subscription" class="text-primary font-medium no-underline">Abonelik</a>
-                    ekranındadır; burada yalnızca kurum adı düzenlenir.
-                </p>
-            </div>
+        <div class="w-full max-w-5xl mx-auto">
+            <app-page-header
+                title="Kurum Bilgileri"
+                subtitle="Hesap"
+                description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın."
+            />
 
-            <div class="card">
-                <h5 class="mt-0 mb-4">Kurum adını düzenle</h5>
-                @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        Bu kurum salt okunur moddadır; kurum adı güncellenemez.
-                    </p>
-                }
-                @if (formError()) {
-                    <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
-                }
-                <form [formGroup]="form" (ngSubmit)="onSave()">
-                    <div class="grid grid-cols-12 gap-4">
-                        <div class="col-span-12 md:col-span-8">
-                            <label for="orgTenantName" class="block text-sm font-medium text-muted-color mb-2">Kurum adı *</label>
-                            <input
-                                id="orgTenantName"
-                                pInputText
-                                class="w-full"
-                                formControlName="tenantName"
-                                autocomplete="organization"
-                            />
-                            @if (form.controls.tenantName.invalid && form.controls.tenantName.touched) {
-                                <small class="text-red-500">Kurum adı en az bir karakter içermelidir.</small>
-                            }
+            @if (loading()) {
+                <app-loading-state message="Kurum bilgileri yükleniyor…" />
+            } @else if (error(); as err) {
+                <div class="card mb-0">
+                    <app-error-state title="Kurum bilgileri alınamadı" [detail]="err" (retry)="reload()" />
+                </div>
+            } @else if (summary(); as s) {
+                <div class="flex flex-col gap-4">
+                    <div class="card mb-0">
+                        <h5 class="mt-0 mb-4">Kurum Bilgileri</h5>
+                        @if (ro.mutationBlocked()) {
+                            <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3 max-w-3xl" role="status">
+                                Bu kurum salt okunur moddadır; kurum adı güncellenemez.
+                            </p>
+                        }
+                        @if (formError()) {
+                            <p class="text-red-500 text-sm mb-3 m-0 max-w-3xl" role="alert">{{ formError() }}</p>
+                        }
+                        <form [formGroup]="form" (ngSubmit)="onSave()" class="max-w-3xl">
+                            <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <label for="orgTenantName" class="block text-sm font-medium text-muted-color mb-2">Kurum adı *</label>
+                                    <input
+                                        id="orgTenantName"
+                                        pInputText
+                                        class="w-full"
+                                        formControlName="tenantName"
+                                        autocomplete="organization"
+                                    />
+                                    @if (form.controls.tenantName.invalid && form.controls.tenantName.touched) {
+                                        <small class="text-red-500">Kurum adı en az bir karakter içermelidir.</small>
+                                    }
+                                </div>
+                                <p-button
+                                    type="submit"
+                                    label="Kaydet"
+                                    icon="pi pi-save"
+                                    styleClass="shrink-0 w-full sm:w-auto"
+                                    [loading]="saving()"
+                                    [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"
+                                />
+                            </div>
+                        </form>
+
+                        <div class="mt-4 max-w-3xl">
+                            <div class="text-sm text-muted-color mb-1">Abonelik durumu</div>
+                            <div class="text-sm font-medium">{{ statusLabel(s.status) }} · {{ planSummary(s) }}</div>
+                            <p class="text-sm text-muted-color mt-3 mb-0">
+                                Faturalama ve paket işlemleri
+                                <a routerLink="/panel/settings/subscription" class="text-primary font-medium no-underline">Abonelik</a>
+                                ekranındadır.
+                            </p>
                         </div>
                     </div>
-                    <div class="mt-4 mb-0">
-                        <p-button
-                            type="submit"
-                            label="Kaydet"
-                            icon="pi pi-save"
-                            [loading]="saving()"
-                            [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"
-                        />
-                    </div>
-                </form>
-            </div>
-        }
+
+                    <app-organization-billing-profile-section />
+                </div>
+            }
+        </div>
     `
 })
 export class OrganizationSettingsPageComponent implements OnInit {

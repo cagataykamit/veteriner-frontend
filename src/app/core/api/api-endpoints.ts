@@ -16,6 +16,10 @@ export const ApiEndpoints = {
         accountSummary: () => `/api/v1/me/account-summary`,
         changePassword: () => `/api/v1/me/change-password`
     },
+    /** Kiracı firma / fatura profili — panel JWT kiracı bağlamında. */
+    organization: {
+        billingProfile: () => `/api/v1/organization/billing-profile`
+    },
     password: {
         requestReset: () => `/api/v1/password/request-reset`,
         confirmReset: () => `/api/v1/password/confirm`
