@@ -40,32 +40,31 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
     template: `
         <p-toast position="bottom-right" />
 
-        <div class="w-full max-w-5xl mx-auto">
-            <app-page-header
-                title="Kurum Bilgileri"
-                subtitle="Hesap"
-                description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın."
-            />
+        <app-page-header
+            title="Kurum Bilgileri"
+            subtitle="Hesap"
+            description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın."
+        />
 
-            @if (loading()) {
-                <app-loading-state message="Kurum bilgileri yükleniyor…" />
-            } @else if (error(); as err) {
+        @if (loading()) {
+            <app-loading-state message="Kurum bilgileri yükleniyor…" />
+        } @else if (error(); as err) {
+            <div class="card mb-0">
+                <app-error-state title="Kurum bilgileri alınamadı" [detail]="err" (retry)="reload()" />
+            </div>
+        } @else if (summary(); as s) {
+            <div class="flex flex-col gap-6">
                 <div class="card mb-0">
-                    <app-error-state title="Kurum bilgileri alınamadı" [detail]="err" (retry)="reload()" />
-                </div>
-            } @else if (summary(); as s) {
-                <div class="flex flex-col gap-4">
-                    <div class="card mb-0">
-                        <h5 class="mt-0 mb-4">Kurum Bilgileri</h5>
-                        @if (ro.mutationBlocked()) {
-                            <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3 max-w-3xl" role="status">
-                                Bu kurum salt okunur moddadır; kurum adı güncellenemez.
-                            </p>
-                        }
-                        @if (formError()) {
-                            <p class="text-red-500 text-sm mb-3 m-0 max-w-3xl" role="alert">{{ formError() }}</p>
-                        }
-                        <form [formGroup]="form" (ngSubmit)="onSave()" class="max-w-3xl">
+                    <h5 class="mt-0 mb-4">Kurum Bilgileri</h5>
+                    @if (ro.mutationBlocked()) {
+                        <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">
+                            Bu kurum salt okunur moddadır; kurum adı güncellenemez.
+                        </p>
+                    }
+                    @if (formError()) {
+                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
+                    }
+                    <form [formGroup]="form" (ngSubmit)="onSave()">
                             <div class="flex flex-col sm:flex-row sm:items-end gap-3">
                                 <div class="flex-1 min-w-0">
                                     <label for="orgTenantName" class="block text-sm font-medium text-muted-color mb-2">Kurum adı *</label>
@@ -89,23 +88,22 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
                                     [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"
                                 />
                             </div>
-                        </form>
+                    </form>
 
-                        <div class="mt-4 max-w-3xl">
-                            <div class="text-sm text-muted-color mb-1">Abonelik durumu</div>
-                            <div class="text-sm font-medium">{{ statusLabel(s.status) }} · {{ planSummary(s) }}</div>
-                            <p class="text-sm text-muted-color mt-3 mb-0">
-                                Faturalama ve paket işlemleri
-                                <a routerLink="/panel/settings/subscription" class="text-primary font-medium no-underline">Abonelik</a>
-                                ekranındadır.
-                            </p>
-                        </div>
+                    <div class="mt-4">
+                        <div class="text-sm text-muted-color mb-1">Abonelik durumu</div>
+                        <div class="text-sm font-medium">{{ statusLabel(s.status) }} · {{ planSummary(s) }}</div>
+                        <p class="text-sm text-muted-color mt-3 mb-0">
+                            Faturalama ve paket işlemleri
+                            <a routerLink="/panel/settings/subscription" class="text-primary font-medium no-underline">Abonelik</a>
+                            ekranındadır.
+                        </p>
                     </div>
-
-                    <app-organization-billing-profile-section />
                 </div>
-            }
-        </div>
+
+                <app-organization-billing-profile-section />
+            </div>
+        }
     `
 })
 export class OrganizationSettingsPageComponent implements OnInit {

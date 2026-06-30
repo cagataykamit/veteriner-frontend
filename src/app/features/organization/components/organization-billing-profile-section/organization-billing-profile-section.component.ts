@@ -50,7 +50,7 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
     template: `
         <div class="card mb-0">
             <h5 class="mt-0 mb-2">Firma / Fatura Bilgileri</h5>
-            <p class="text-sm text-muted-color mt-0 mb-4 max-w-2xl">
+            <p class="text-sm text-muted-color mt-0 mb-4">
                 Kurum adı Vetinity içinde görünen addır. Aşağıdaki bilgiler fatura ve e-belge süreçleri için kullanılacaktır.
             </p>
 
@@ -72,7 +72,7 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                     </p>
                 }
 
-                <form [formGroup]="form" (ngSubmit)="onSave()" class="max-w-3xl">
+                <form [formGroup]="form" (ngSubmit)="onSave()">
                     <h6 class="mt-0 mb-3 text-sm font-semibold text-surface-900 dark:text-surface-0">Firma Bilgileri</h6>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">
                         <div>
