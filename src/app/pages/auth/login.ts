@@ -55,7 +55,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                             <img
                                 [src]="brand.logoFull"
                                 alt="Vetinity"
-                                class="public-auth-logo dark:hidden"
+                                class="public-auth-logo block dark:hidden"
                                 width="120"
                                 height="30"
                             />

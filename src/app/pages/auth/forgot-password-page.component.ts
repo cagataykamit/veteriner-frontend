@@ -40,7 +40,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                                 <img
                                     [src]="brand.logoFull"
                                     alt="Vetinity"
-                                    class="public-auth-logo dark:hidden"
+                                    class="public-auth-logo block dark:hidden"
                                     width="120"
                                     height="30"
                                 />
@@ -66,7 +66,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                                 <img
                                     [src]="brand.logoFull"
                                     alt="Vetinity"
-                                    class="public-auth-logo dark:hidden"
+                                    class="public-auth-logo block dark:hidden"
                                     width="120"
                                     height="30"
                                 />
