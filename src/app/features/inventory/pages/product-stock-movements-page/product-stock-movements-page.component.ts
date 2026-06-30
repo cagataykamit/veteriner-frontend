@@ -65,7 +65,7 @@ type ProductStockMovementsListState = {
         AppStatusTagComponent
     ],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
 
         <a [routerLink]="productDetailLink()" class="text-primary font-medium no-underline inline-block mb-4">← Ürün detayına dön</a>
 

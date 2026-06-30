@@ -79,7 +79,7 @@ interface ReturnBannerVm {
     ],
     providers: [MessageService],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
         <app-page-header title="Abonelik" subtitle="Paket & Abonelik" [description]="subscriptionHeaderDescription()" />
 
         @if (postCheckoutSyncing() && !error() && showManageFlowChrome()) {

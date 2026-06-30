@@ -63,7 +63,7 @@ import { catchError, forkJoin, of } from 'rxjs';
     ],
     providers: [MessageService],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
         <app-page-header
             title="Üye detayı"
             subtitle="Hesap"

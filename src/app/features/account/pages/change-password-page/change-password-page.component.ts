@@ -79,7 +79,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, PasswordModule, ToastModule],
     providers: [MessageService],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
 
         <div class="flex justify-center w-full">
             <div

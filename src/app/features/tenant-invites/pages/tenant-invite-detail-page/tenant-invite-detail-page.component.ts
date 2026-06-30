@@ -34,7 +34,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     ],
     providers: [MessageService],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
         <app-page-header title="Davet detayı" subtitle="Hesap" description="Davet bilgileri (salt okunur).">
             <a actions routerLink="/panel/settings/invites/list" pButton type="button" label="Listeye dön" icon="pi pi-arrow-left" class="p-button-secondary"></a>
         </app-page-header>

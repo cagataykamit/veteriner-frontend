@@ -43,7 +43,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     ],
     providers: [MessageService],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
         <a routerLink="/panel/settings/clinics" class="text-primary font-medium no-underline inline-block mb-4">← Klinik listesine dön</a>
 
         <app-page-header

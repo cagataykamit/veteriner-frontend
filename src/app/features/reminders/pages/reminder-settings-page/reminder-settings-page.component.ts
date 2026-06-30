@@ -38,7 +38,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     ],
     providers: [MessageService],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
         <app-page-header title="Hatırlatmalar" subtitle="Hesap" description="Randevu ve aşı hatırlatma ayarlarını yönetin." />
 
         @if (loading()) {

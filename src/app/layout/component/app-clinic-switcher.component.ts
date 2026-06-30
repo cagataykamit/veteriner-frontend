@@ -23,7 +23,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
  * - `/me/clinics` mount'ta sessiz yüklenir; tek klinikte button DOM'a girmez, dropdown açılmaz.
  *
  * Toast pattern: projenin mevcut feature componentlerindeki ile aynı (`providers: [MessageService]`
- * + `<p-toast position="top-right" />` + `addTracedToast`).
+ * + `<p-toast position="bottom-right" />` + `addTracedToast`).
  */
 @Component({
     selector: 'app-clinic-switcher',
@@ -32,7 +32,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     providers: [MessageService],
     host: { class: 'app-clinic-switcher' },
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
 
         @if (activeLabel(); as label) {
             <div class="layout-topbar-clinic-host">

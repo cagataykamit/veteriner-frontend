@@ -69,7 +69,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         AppStatusTagComponent
     ],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
 
         <a routerLink="/panel/products" class="text-primary font-medium no-underline inline-block mb-4">← Ürünler</a>
 

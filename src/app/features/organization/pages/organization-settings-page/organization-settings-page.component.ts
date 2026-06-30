@@ -36,7 +36,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     ],
     providers: [MessageService],
     template: `
-        <p-toast position="top-right" />
+        <p-toast position="bottom-right" />
         <app-page-header
             title="Kurum Bilgileri"
             subtitle="Hesap"
