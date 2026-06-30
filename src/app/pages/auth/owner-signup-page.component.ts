@@ -17,6 +17,10 @@ import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
+import {
+    PASSWORD_POLICY_HINT,
+    validateStrongPasswordValue
+} from '@/app/core/validation/password-policy.util';
 
 @Component({
     selector: 'app-owner-signup-page',
@@ -118,6 +122,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
                                 <div>
                                     <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Şifre *</label>
+                                    <p class="text-sm text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
                                     <p-password
                                         id="password"
                                         [(ngModel)]="password"
@@ -125,8 +130,11 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                         [toggleMask]="true"
                                         styleClass="w-full"
                                         [fluid]="true"
-                                        [feedback]="true"
+                                        [feedback]="false"
                                     />
+                                    @if (passwordFieldError()) {
+                                        <small class="text-red-500 block mt-2">{{ passwordFieldError() }}</small>
+                                    }
                                 </div>
 
                                 <p class="text-sm text-muted-color m-0">
@@ -188,6 +196,8 @@ export class OwnerSignupPageComponent implements OnInit {
 
     readonly submitting = signal(false);
     readonly formError = signal<string | null>(null);
+    readonly passwordFieldError = signal<string | null>(null);
+    readonly passwordPolicyHint = PASSWORD_POLICY_HINT;
 
     readonly formatDate = (v: string | null | undefined) => formatDateDisplay(v);
 
@@ -207,6 +217,7 @@ export class OwnerSignupPageComponent implements OnInit {
             return;
         }
         this.formError.set(null);
+        this.passwordFieldError.set(null);
 
         const plan = this.selectedPlan();
 
@@ -218,6 +229,15 @@ export class OwnerSignupPageComponent implements OnInit {
 
         if (!tenantName || !clinicName || !clinicCity || !email || !password) {
             this.formError.set('Tüm zorunlu alanları doldurun.');
+            if (!password) {
+                this.passwordFieldError.set(validateStrongPasswordValue(''));
+            }
+            return;
+        }
+
+        const passwordPolicyError = validateStrongPasswordValue(password);
+        if (passwordPolicyError) {
+            this.passwordFieldError.set(passwordPolicyError);
             return;
         }
 

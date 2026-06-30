@@ -47,27 +47,27 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
         RouterLink
     ],
     template: `
-        <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
-            <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
+        <div class="public-page public-auth-page">
+            <div class="public-auth-shell">
                 <div class="public-auth-card-frame">
-                    <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20">
-                        <div class="text-center mb-8">
+                    <div class="public-auth-card-inner">
+                        <div class="public-auth-header">
                             <img
                                 [src]="brand.logoFull"
                                 alt="Vetinity"
-                                class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
+                                class="public-auth-logo dark:hidden"
                                 width="120"
                                 height="30"
                             />
                             <img
                                 [src]="brand.logoFullDark"
                                 alt="Vetinity"
-                                class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
+                                class="public-auth-logo hidden dark:block"
                                 width="120"
                                 height="30"
                             />
-                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Vetinity paneline giriş</div>
-                            <span class="text-muted-color font-medium">Hesabınızla giriş yapın</span>
+                            <div class="public-auth-title">Vetinity paneline giriş</div>
+                            <span class="public-auth-subtitle">Hesabınızla giriş yapın</span>
                             @if (sessionRenewHint()) {
                                 <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium public-brand-link" role="status">
                                     {{ sessionRenewHint() }}
@@ -90,9 +90,9 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                             }
                         </div>
 
-                        <form (ngSubmit)="onSubmit(loginForm)" autocomplete="on" #loginForm="ngForm">
-                            <div class="mb-8">
-                                <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">E-posta</label>
+                        <form (ngSubmit)="onSubmit(loginForm)" autocomplete="on" #loginForm="ngForm" class="public-auth-form">
+                            <div class="public-auth-field-primary">
+                                <label for="email1" class="public-auth-label">E-posta</label>
                                 <input
                                     pInputText
                                     id="email1"
@@ -100,7 +100,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                     name="email"
                                     #emailCtrl="ngModel"
                                     placeholder="E-posta adresiniz"
-                                    class="w-full md:w-120"
+                                    class="public-auth-control"
                                     [(ngModel)]="email"
                                     required
                                     email
@@ -116,8 +116,8 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                 }
                             </div>
 
-                            <div class="mb-4">
-                                <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Şifre</label>
+                            <div class="public-auth-field-secondary">
+                                <label for="password1" class="public-auth-label-password">Şifre</label>
                                 <p-password
                                     inputId="password1"
                                     name="password"
@@ -138,12 +138,12 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                 }
                             </div>
 
-                            <div class="flex items-center justify-between mt-2 mb-8 gap-8">
+                            <div class="public-auth-options-row">
                                 <div class="flex items-center">
                                     <p-checkbox [(ngModel)]="checked" name="rememberMe" inputId="rememberme1" binary class="mr-2"></p-checkbox>
                                     <label for="rememberme1">Beni hatırla</label>
                                 </div>
-                                <span class="font-medium no-underline ml-2 text-right cursor-pointer public-brand-link">Şifremi unuttum</span>
+                                <a routerLink="/auth/forgot-password" class="font-medium no-underline ml-2 text-right cursor-pointer public-brand-link">Şifremi unuttum</a>
                             </div>
                             <p-button
                                 type="submit"
@@ -153,23 +153,14 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                 [disabled]="signInLoading()"
                             ></p-button>
                             @if (loginError()) {
-                                <div class="flex justify-center w-full mt-3 mb-0">
-                                    <div
-                                        class="inline-flex items-center justify-center gap-1.5 max-w-max rounded-sm border-l-[3px] border-l-red-400/75 bg-red-500/[0.06] py-1.5 pl-2.5 pr-2.5 text-center dark:border-l-red-500/45 dark:bg-red-500/[0.08]"
-                                        role="alert"
-                                        aria-live="assertive"
-                                    >
-                                        <i
-                                            class="pi pi-info-circle shrink-0 text-[0.6875rem] text-red-600/75 dark:text-red-400/70"
-                                            aria-hidden="true"
-                                        ></i>
-                                        <span class="text-sm font-medium leading-tight text-red-950 dark:text-red-100">{{
-                                            loginError()
-                                        }}</span>
+                                <div class="public-auth-alert" role="alert" aria-live="assertive">
+                                    <div class="public-auth-alert-box">
+                                        <i class="pi pi-info-circle shrink-0 text-[0.6875rem] text-red-600/75 dark:text-red-400/70" aria-hidden="true"></i>
+                                        <span class="public-auth-alert-text">{{ loginError() }}</span>
                                     </div>
                                 </div>
                             }
-                            <div class="text-center mt-4">
+                            <div class="public-auth-footer-link">
                                 <a routerLink="/pricing" class="public-brand-link no-underline text-sm">Hesap oluştur</a>
                             </div>
                         </form>

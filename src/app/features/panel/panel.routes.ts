@@ -32,6 +32,7 @@ export default [
     },
     { path: 'settings/clinics', loadChildren: () => import('../clinics/routes/clinics.routes') },
     { path: 'settings/reminders', loadChildren: () => import('../reminders/routes/reminders.routes') },
+    { path: 'settings/account', loadChildren: () => import('../account/routes/account.routes') },
     {
         path: 'settings/members',
         loadChildren: () => import('../tenant-members/routes/tenant-members.routes'),

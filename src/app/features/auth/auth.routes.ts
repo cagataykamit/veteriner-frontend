@@ -4,12 +4,16 @@ import { Router } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { guestGuard } from '@/app/core/auth/guest.guard';
 import { Login } from '@/app/pages/auth/login';
+import { ForgotPasswordPageComponent } from '@/app/pages/auth/forgot-password-page.component';
+import { ResetPasswordPageComponent } from '@/app/pages/auth/reset-password-page.component';
 import { OwnerSignupPageComponent } from '@/app/pages/auth/owner-signup-page.component';
 import { SelectClinicPage } from '@/app/pages/auth/select-clinic';
 
 export default [
     { path: '', pathMatch: 'full', redirectTo: 'login' },
     { path: 'login', canActivate: [guestGuard], component: Login },
+    { path: 'forgot-password', canActivate: [guestGuard], component: ForgotPasswordPageComponent },
+    { path: 'reset-password', component: ResetPasswordPageComponent },
     { path: 'signup', canActivate: [guestGuard], component: OwnerSignupPageComponent },
     {
         path: 'select-clinic',

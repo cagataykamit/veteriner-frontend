@@ -14,6 +14,10 @@ import { publicInviteFailureMessage } from '@/app/features/public/utils/public-i
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
+import {
+    PASSWORD_POLICY_HINT,
+    validateStrongPasswordValue
+} from '@/app/core/validation/password-policy.util';
 import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils';
 
 @Component({
@@ -110,15 +114,19 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
 
                         @if (!auth.isAuthenticated() && inv.requiresSignup && !inv.isExpired && inv.canJoin) {
                             <label for="invPw" class="block text-sm font-medium mb-2">Şifre belirleyin</label>
+                            <p class="text-xs text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
                             <p-password
                                 id="invPw"
                                 [(ngModel)]="invitePassword"
                                 [fluid]="true"
                                 [toggleMask]="true"
-                                [feedback]="true"
+                                [feedback]="false"
                                 styleClass="w-full mb-3"
                                 placeholder="Şifre"
                             />
+                            @if (passwordFieldError()) {
+                                <p class="text-red-500 text-sm m-0 mb-3" role="alert">{{ passwordFieldError() }}</p>
+                            }
                             <p-button
                                 label="Hesap oluştur ve katıl"
                                 styleClass="w-full"
@@ -164,6 +172,8 @@ export class JoinInvitePageComponent implements OnInit {
     readonly actionError = signal<string | null>(null);
     readonly actionLoading = signal(false);
     readonly successMode = signal<'accept' | 'signup' | null>(null);
+    readonly passwordFieldError = signal<string | null>(null);
+    readonly passwordPolicyHint = PASSWORD_POLICY_HINT;
 
     invitePassword = '';
 
@@ -235,9 +245,11 @@ export class JoinInvitePageComponent implements OnInit {
 
     onSignupAndAccept(inv: PublicInviteVm): void {
         this.actionError.set(null);
+        this.passwordFieldError.set(null);
         const pw = this.invitePassword ?? '';
-        if (!pw) {
-            this.actionError.set('Şifre zorunludur.');
+        const passwordPolicyError = validateStrongPasswordValue(pw);
+        if (passwordPolicyError) {
+            this.passwordFieldError.set(passwordPolicyError);
             return;
         }
         this.actionLoading.set(true);
@@ -256,6 +268,7 @@ export class JoinInvitePageComponent implements OnInit {
         this.vm.set(null);
         this.successMode.set(null);
         this.actionError.set(null);
+        this.passwordFieldError.set(null);
         this.invitePassword = '';
         this.invites.getInviteByToken(token).subscribe({
             next: (v) => {

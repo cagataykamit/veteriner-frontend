@@ -12,7 +12,12 @@ export const ApiEndpoints = {
         logoutAll: () => `/api/v1/Auth/logout-all`
     },
     me: {
-        clinics: () => `/api/v1/me/clinics`
+        clinics: () => `/api/v1/me/clinics`,
+        changePassword: () => `/api/v1/me/change-password`
+    },
+    password: {
+        requestReset: () => `/api/v1/password/request-reset`,
+        confirmReset: () => `/api/v1/password/confirm`
     },
     /** Panel JWT kiracı bağlamında klinik rehberi; `me.clinics` kişisel üyelik listesidir. */
     clinics: {
