@@ -28,7 +28,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
     {
         slug: 'basic',
         apiCode: 'Basic',
-        title: 'Basic',
+        title: 'Temel',
         description: 'Tek klinik ve küçük ekip için temel veteriner operasyon yönetimi.',
         priceLabel: 'Fiyat yakında',
         billingPeriodLabel: '',
@@ -60,7 +60,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         recommended: true,
         trialDays: 14,
         features: [
-            'Basic paketteki tüm modüller',
+            'Temel paketteki tüm modüller',
             'Çok klinikli yapı ve klinik seçimi',
             'Rol bazlı yetkilendirme',
             'Gelişmiş operasyon raporları',
@@ -122,4 +122,18 @@ export function defByApiCode(code: string | null | undefined): PricingPlanDef | 
         return null;
     }
     return PRICING_PLAN_DEFS.find((d) => d.apiCode === t) ?? null;
+}
+
+/** Backend `planCode`, slug veya görünen ad — büyük/küçük harf duyarsız. */
+export function defByPlanKey(code: string | null | undefined): PricingPlanDef | null {
+    const slug = parsePlanQueryParam(code);
+    if (slug) {
+        return slug;
+    }
+    const byApi = defByApiCode(code);
+    if (byApi) {
+        return byApi;
+    }
+    const normalized = (code ?? '').trim().toLowerCase();
+    return PRICING_PLAN_DEFS.find((d) => d.apiCode.toLowerCase() === normalized) ?? null;
 }

@@ -18,7 +18,7 @@ export const PUBLIC_HOME_PAGE_META: PublicPageMetaOptions = {
 export const PUBLIC_PRICING_PAGE_META: PublicPageMetaOptions = {
     title: 'Paketler — Vetinity',
     description:
-        'Kliniğinizin büyüklüğüne göre Basic, Pro veya Premium paket seçin. Ücretsiz deneme ile başlayın; fiyat bilgisi yakında paylaşılacaktır.',
+        'Kliniğinizin büyüklüğüne göre Temel, Pro veya Premium paket seçin. Ücretsiz deneme ile başlayın; fiyat bilgisi yakında paylaşılacaktır.',
     canonicalPath: '/pricing'
 };
 

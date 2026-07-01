@@ -24,11 +24,7 @@ import type {
 import type { SubscriptionSummaryRequestOptions } from '@/app/features/subscriptions/services/subscriptions.service';
 import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
-import {
-    expectsHostedCheckoutUrl,
-    shouldOfferManualCheckoutFinalize,
-    subscriptionCheckoutProviderDisplayLabel
-} from '@/app/features/subscriptions/utils/subscription-checkout-provider.utils';
+import { shouldOfferManualCheckoutFinalize } from '@/app/features/subscriptions/utils/subscription-checkout-provider.utils';
 import {
     hasSubscriptionCheckoutReturnQuery,
     parseSubscriptionCheckoutReturn,
@@ -47,7 +43,11 @@ import {
     subscriptionCheckoutStatusLabel,
     subscriptionCheckoutStatusSeverity
 } from '@/app/features/subscriptions/utils/subscription-checkout-status.utils';
-import { subscriptionPlanLabel, subscriptionPlanRank } from '@/app/features/subscriptions/utils/subscription-plan.utils';
+import {
+    subscriptionPlanLabel,
+    subscriptionPlanLimitLabels,
+    subscriptionPlanRank
+} from '@/app/features/subscriptions/utils/subscription-plan.utils';
 import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/features/subscriptions/utils/subscription-status.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
@@ -135,7 +135,6 @@ interface ReturnBannerVm {
                             <div class="min-w-0">
                                 <div class="text-muted-color text-sm mb-1">Kurum</div>
                                 <div class="font-medium break-words">{{ s.tenantName }}</div>
-                                <div class="text-xs text-muted-color mt-1 break-all">{{ s.tenantId || '—' }}</div>
                             </div>
                             <div class="min-w-0">
                                 <div class="text-muted-color text-sm mb-1">Mevcut plan</div>
@@ -154,17 +153,19 @@ interface ReturnBannerVm {
                         <h5 class="mt-0 mb-4">Dönem bilgisi</h5>
                         <div class="flex flex-col gap-3">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-muted-color">Dönem başlangıcı</span>
-                                <span class="font-medium text-right">{{ formatDate(s.currentPeriodStartUtc || s.trialStartsAtUtc) }}</span>
+                                <span class="text-muted-color">{{ periodStartLabel(s) }}</span>
+                                <span class="font-medium text-right">{{ formatDate(periodStartDate(s)) }}</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-muted-color">Dönem sonu</span>
-                                <span class="font-medium text-right">{{ formatDate(s.currentPeriodEndUtc || s.trialEndsAtUtc) }}</span>
+                                <span class="text-muted-color">{{ periodEndLabel(s) }}</span>
+                                <span class="font-medium text-right">{{ formatDate(periodEndDate(s)) }}</span>
                             </div>
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-muted-color">Sonraki yenileme</span>
-                                <span class="font-medium text-right">{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc || s.trialEndsAtUtc) }}</span>
-                            </div>
+                            @if (!isTrialingSubscription(s)) {
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-muted-color">Sonraki yenileme</span>
+                                    <span class="font-medium text-right">{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</span>
+                                </div>
+                            }
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-muted-color">{{ remainingDaysRowLabel(s) }}</span>
                                 <span class="font-medium text-right">{{ daysRemainingText(s.daysRemaining) }}</span>
@@ -188,16 +189,11 @@ interface ReturnBannerVm {
                         </div>
                         @if (canManageSubscriptionOperations(s)) {
                             <div class="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
-                                <p class="m-0 text-sm text-color">
-                                    {{ subscriptionManageFlowHint() }}
-                                </p>
+                                <p class="m-0 text-sm text-color">{{ subscriptionManageFlowHint() }}</p>
                             </div>
                         } @else {
                             <div class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
-                                <p class="m-0 text-sm text-color">
-                                    Bu hesapta abonelik bilgileri yalnızca görüntülenebilir. Plan değişikliği veya ödeme işlemleri için kurum yöneticinizle iletişime
-                                    geçin.
-                                </p>
+                                <p class="m-0 text-sm text-color">Plan değişikliği için kurum yöneticinizle iletişime geçin.</p>
                             </div>
                         }
                     </div>
@@ -223,8 +219,17 @@ interface ReturnBannerVm {
                                         @if (plan.description) {
                                             <p class="mt-2 mb-0 text-sm text-color break-words">{{ plan.description }}</p>
                                         }
-                                        @if (plan.maxUsers !== null) {
-                                            <p class="mt-2 mb-0 text-xs text-muted-color">Maks. kullanıcı: {{ plan.maxUsers }}</p>
+                                        @if (planLimitLabels(plan.code); as limits) {
+                                            <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                <div class="rounded-lg bg-surface-100 dark:bg-surface-800 px-2.5 py-2">
+                                                    <div class="text-[10px] font-medium uppercase tracking-wide text-muted-color">Kullanıcı</div>
+                                                    <div class="text-xs font-semibold text-color">{{ limits.userLimitLabel }}</div>
+                                                </div>
+                                                <div class="rounded-lg bg-surface-100 dark:bg-surface-800 px-2.5 py-2">
+                                                    <div class="text-[10px] font-medium uppercase tracking-wide text-muted-color">Klinik</div>
+                                                    <div class="text-xs font-semibold text-color">{{ limits.clinicLimitLabel }}</div>
+                                                </div>
+                                            </div>
                                         }
                                         @if (canManageSubscriptionOperations(s) && !isCurrentPlan(plan, s)) {
                                             <div class="mt-3">
@@ -266,33 +271,41 @@ interface ReturnBannerVm {
                                 </div>
                                 <div>
                                     <div class="text-muted-color mb-1">Geçiş türü</div>
-                                    <div>{{ pendingPlanChangeTypeLabel(pending.changeType) }}</div>
+                                    <div>{{ pendingPlanChangeTypeLabel(pending.changeType, s) }}</div>
                                 </div>
                                 <div>
                                     <div class="text-muted-color mb-1">Durum</div>
                                     <div>{{ pendingPlanChangeStatusLabel(pending.status) }}</div>
                                 </div>
                                 <div>
-                                    <div class="text-muted-color mb-1">Uygulanma tarihi</div>
-                                    <div>{{ formatDate(pending.effectiveAtUtc || s.currentPeriodEndUtc || s.nextBillingAtUtc) }}</div>
+                                    <div class="text-muted-color mb-1">{{ pendingPlanChangeEffectiveDateLabel(s) }}</div>
+                                    <div>{{ formatDate(pendingPlanChangeEffectiveDate(pending, s)) }}</div>
                                 </div>
-                                <div>
-                                    <div class="text-muted-color mb-1">Sonraki yenileme</div>
-                                    <div>{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</div>
-                                </div>
+                                @if (!isTrialingSubscription(s)) {
+                                    <div>
+                                        <div class="text-muted-color mb-1">Sonraki yenileme</div>
+                                        <div>{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</div>
+                                    </div>
+                                }
                             </div>
                             @if (pending.changeType === 'downgrade') {
                                 <p class="m-0 mb-3 text-sm text-muted-color">
-                                    Bu değişiklik ödeme gerektirmez. Mevcut dönem bitiminde
-                                    <span class="font-medium text-color">{{ subscriptionPlanLabel(pending.targetPlanCode, null) }}</span>
-                                    paketine geçilecektir.
+                                    @if (isTrialingSubscription(s)) {
+                                        Bu değişiklik ödeme gerektirmez. Deneme süreniz bittiğinde
+                                        <span class="font-medium text-color">{{ subscriptionPlanLabel(pending.targetPlanCode, null) }}</span>
+                                        paketiyle devam edilecektir.
+                                    } @else {
+                                        Bu değişiklik ödeme gerektirmez. Mevcut dönem bitiminde
+                                        <span class="font-medium text-color">{{ subscriptionPlanLabel(pending.targetPlanCode, null) }}</span>
+                                        paketine geçilecektir.
+                                    }
                                 </p>
                             }
                             @if (canManageSubscriptionOperations(s)) {
                                 <div class="flex items-center gap-2">
                                     <p-button
                                         type="button"
-                                        label="Bekleyen geçişi iptal et"
+                                        [label]="pendingPlanChangeCancelLabel(s)"
                                         icon="pi pi-times"
                                         severity="secondary"
                                         [loading]="pendingCancelLoading()"
@@ -311,9 +324,9 @@ interface ReturnBannerVm {
                 @if (showSubscriptionCheckoutCard()) {
                     <div class="col-span-12">
                         <div class="card mb-0">
-                            <h5 class="mt-0 mb-3">Checkout oturumu</h5>
+                            <h5 class="mt-0 mb-3">Ödeme durumu</h5>
                             @if (checkoutLoading()) {
-                                <app-loading-state message="Checkout oturumu işleniyor…" />
+                                <app-loading-state message="Ödeme durumu yükleniyor…" />
                             } @else if (checkoutError()) {
                                 <app-error-state [detail]="checkoutError()!" (retry)="retryCheckout()" />
                             } @else if (checkoutSession(); as session) {
@@ -327,39 +340,19 @@ interface ReturnBannerVm {
                                         <app-status-tag [label]="checkoutStatusLabel(session)" [severity]="checkoutStatusSeverity(session)" />
                                     </div>
                                     <div>
-                                        <div class="text-muted-color mb-1">Oturum ID</div>
-                                        <div class="font-mono text-xs break-all">{{ session.checkoutSessionId }}</div>
-                                    </div>
-                                    <div>
                                         <div class="text-muted-color mb-1">Süre sonu</div>
                                         <div>{{ formatDateTime(session.expiresAtUtc) }}</div>
                                     </div>
-                                    <div>
-                                        <div class="text-muted-color mb-1">Provider</div>
-                                        <div>{{ providerDisplayLabel(session.provider) }}</div>
-                                    </div>
-                                    @if (session.externalReference) {
-                                        <div class="md:col-span-2">
-                                            <div class="text-muted-color mb-1">Harici referans</div>
-                                            <div class="font-mono text-xs break-all">{{ session.externalReference }}</div>
-                                        </div>
-                                    }
                                     <div class="md:col-span-2">
-                                        <div class="text-muted-color mb-1">Ödeme bağlantısı</div>
+                                        <div class="text-muted-color mb-1">Ödeme</div>
                                         @if (session.checkoutUrl) {
                                             <p class="m-0 text-sm text-color">
-                                                Ödeme sağlayıcısına yönlendirileceksiniz. Dönüşte bu sayfa abonelik durumunu yeniler.
+                                                Güvenli ödeme sayfasına yönlendirileceksiniz. Ödeme tamamlandığında bu sayfaya döneceksiniz.
                                             </p>
-                                        } @else if (session.provider === 'manual') {
-                                            <span class="text-muted-color"
-                                                >Bu oturum için yönlendirme URL’si yok (manuel / test senaryosu).</span
-                                            >
-                                        } @else if (expectsHostedCheckoutUrl(session.provider)) {
-                                            <span class="text-muted-color"
-                                                >Ödeme sağlayıcısı için bağlantı bekleniyordu; şu an URL dönmedi. Yapılandırmayı veya oturumu kontrol edin.</span
-                                            >
                                         } @else {
-                                            <span class="text-muted-color">Bu oturum için ödeme bağlantısı yok.</span>
+                                            <span class="text-muted-color text-sm"
+                                                >Ödeme bağlantısı henüz hazır değil. Durumu yenileyerek tekrar deneyin.</span
+                                            >
                                         }
                                     </div>
                                     @if (session.proratedChargeMinor !== null || session.prorationRatio !== null) {
@@ -402,7 +395,7 @@ interface ReturnBannerVm {
                                     @if (shouldOfferManualCheckoutFinalize(session)) {
                                         <p-button
                                             type="button"
-                                            label="Manuel aktivasyon (test / fallback)"
+                                            label="Ödemeyi tamamla"
                                             icon="pi pi-check"
                                             severity="secondary"
                                             [loading]="finalizing()"
@@ -411,17 +404,13 @@ interface ReturnBannerVm {
                                         />
                                     }
                                 </div>
-                                @if (shouldOfferManualCheckoutFinalize(session)) {
-                                    <p class="text-xs text-muted-color mt-3 mb-0">
-                                        Bu düğme gerçek kart ödemesi olmadan kurumu aktifleştirir; yalnızca Manual provider veya geliştirme fallback’ı içindir.
-                                        Hosted ödeme sağlayıcısı kullanıldığında tamamlama genelde ödeme + webhook ile olur.
+                                @if (!session.canContinue) {
+                                    <p class="text-sm text-muted-color mt-3 mb-0">
+                                        Bu ödeme işlemi artık devam ettirilemiyor. Plan değişikliğini yeniden başlatabilirsiniz.
                                     </p>
                                 }
-                                @if (!session.canContinue) {
-                                    <p class="text-sm text-muted-color mt-3 mb-0">Bu oturum için devam aksiyonu kapalı. Yeni checkout başlatın.</p>
-                                }
                             } @else {
-                                <p class="text-sm text-muted-color m-0">Henüz bir checkout oturumu başlatılmadı.</p>
+                                <p class="text-sm text-muted-color m-0">Henüz başlatılmış bir ödeme işlemi bulunmuyor.</p>
                             }
                         </div>
                     </div>
@@ -432,9 +421,14 @@ interface ReturnBannerVm {
                         <div class="card mb-0">
                             <h5 class="mt-0 mb-3">Bilgi</h5>
                             <ul class="m-0 pl-4 text-sm text-muted-color flex flex-col gap-1">
-                                <li>Ödeme hosted ödeme sağlayıcısı üzerinden yapılır; uygulama kart formu toplamaz.</li>
-                                <li>Başarılı dönüşten sonra durum birkaç saniye gecikmeli güncellenebilir (webhook).</li>
-                                <li>Manuel aktivasyon yalnızca test veya Manual provider için gösterilir.</li>
+                                @if (isTrialingSubscription(s)) {
+                                    <li>Deneme süreniz boyunca plan değişiklikleri ödeme gerektirmez.</li>
+                                    <li>Seçtiğiniz paket deneme süreniz bittiğinde geçerli olur.</li>
+                                } @else {
+                                    <li>Ödeme işlemleri güvenli ödeme altyapısı üzerinden tamamlanır.</li>
+                                    <li>Plan değişiklikleri ödeme tamamlandıktan sonra otomatik olarak aboneliğinize yansıtılır.</li>
+                                    <li>Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır.</li>
+                                }
                             </ul>
                         </div>
                     </div>
@@ -476,16 +470,9 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     /** Uyarı banner’ındaki “Durumu yenile” — tam sayfa loading olmadan özet + checkout yeniler. */
     readonly subscriptionRefreshLoading = signal(false);
 
-    /** Özet yüklenene kadar nötr; yüklendikten sonra Manage ile ikinci satır metni. */
-    readonly subscriptionHeaderDescription = computed(() => {
-        const s = this.summary();
-        if (!s) {
-            return 'Kurum abonelik özeti.';
-        }
-        return this.canManageSubscriptionOperations(s)
-            ? 'Kurum abonelik özeti ve paket aktivasyon akışı.'
-            : 'Kurum abonelik özeti ve mevcut paket bilgileri.';
-    });
+    readonly subscriptionHeaderDescription = computed(
+        () => 'Kurum abonelik özetinizi, mevcut paketinizi ve plan değişikliği işlemlerinizi görüntüleyin.'
+    );
 
     /** Hosted checkout / plan aksiyonu kromu — yalnızca yönetim yetkisi olan kullanıcıya gösterilir. */
     readonly showManageFlowChrome = computed(() => {
@@ -536,9 +523,8 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     readonly formatDate = (v: string | null | undefined) => formatDateDisplay(v);
     readonly formatDateTime = (v: string | null | undefined) => formatDateTimeDisplay(v);
     readonly shouldOfferManualCheckoutFinalize = shouldOfferManualCheckoutFinalize;
-    readonly providerDisplayLabel = subscriptionCheckoutProviderDisplayLabel;
-    readonly expectsHostedCheckoutUrl = expectsHostedCheckoutUrl;
     readonly subscriptionPlanLabel = subscriptionPlanLabel;
+    readonly planLimitLabels = subscriptionPlanLimitLabels;
 
     ngOnInit(): void {
         const params = this.route.snapshot.queryParamMap;
@@ -685,7 +671,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 return 'Bu paketi aktifleştir';
             }
             if (this.isDowngradePlan(plan, summary)) {
-                return 'Dönem sonunda bu pakete geç';
+                return this.isTrialingSubscription(summary) ? 'Deneme bitiminde bu pakete geç' : 'Dönem sonunda bu pakete geç';
             }
             if (this.isUpgradePlan(plan, summary)) {
                 return 'Hemen yükselt';
@@ -754,7 +740,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 this.checkoutLoading.set(false);
             },
             error: (e: unknown) => {
-                this.checkoutError.set(e instanceof Error ? e.message : 'Checkout oturumu yüklenemedi.');
+                this.checkoutError.set(e instanceof Error ? e.message : 'Ödeme durumu yüklenemedi.');
                 this.checkoutLoading.set(false);
             }
         });
@@ -825,7 +811,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             error: (e: unknown) => {
                 this.planActionLoadingCode.set(null);
                 this.checkoutLoading.set(false);
-                this.checkoutError.set(e instanceof Error ? e.message : 'Checkout oturumu başlatılamadı.');
+                this.checkoutError.set(e instanceof Error ? e.message : 'Ödeme işlemi başlatılamadı.');
             }
         });
     }
@@ -839,7 +825,34 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     /** API `daysRemaining`; deneme dışında etiket genel tutulur (backend alanı semantiği). */
     remainingDaysRowLabel(s: SubscriptionSummaryVm): string {
-        return s.status === 'trialing' ? 'Deneme kalan günü' : 'Kalan gün';
+        return this.isTrialingSubscription(s) ? 'Kalan deneme süresi' : 'Kalan gün';
+    }
+
+    periodStartLabel(s: SubscriptionSummaryVm): string {
+        return this.isTrialingSubscription(s) ? 'Deneme başlangıcı' : 'Dönem başlangıcı';
+    }
+
+    periodEndLabel(s: SubscriptionSummaryVm): string {
+        return this.isTrialingSubscription(s) ? 'Deneme bitişi' : 'Dönem sonu';
+    }
+
+    periodStartDate(s: SubscriptionSummaryVm): string | null | undefined {
+        return this.isTrialingSubscription(s) ? s.trialStartsAtUtc || s.currentPeriodStartUtc : s.currentPeriodStartUtc || s.trialStartsAtUtc;
+    }
+
+    periodEndDate(s: SubscriptionSummaryVm): string | null | undefined {
+        return this.isTrialingSubscription(s) ? s.trialEndsAtUtc || s.currentPeriodEndUtc : s.currentPeriodEndUtc || s.trialEndsAtUtc;
+    }
+
+    pendingPlanChangeEffectiveDateLabel(s: SubscriptionSummaryVm): string {
+        return this.isTrialingSubscription(s) ? 'Deneme bitişi' : 'Uygulanma tarihi';
+    }
+
+    pendingPlanChangeEffectiveDate(pending: PendingPlanChangeVm, s: SubscriptionSummaryVm): string | null | undefined {
+        if (this.isTrialingSubscription(s)) {
+            return pending.effectiveAtUtc || s.trialEndsAtUtc || s.currentPeriodEndUtc;
+        }
+        return pending.effectiveAtUtc || s.currentPeriodEndUtc || s.nextBillingAtUtc;
     }
 
     tenantAccessModeLabel(isReadOnly: boolean): string {
@@ -851,12 +864,26 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     subscriptionManageFlowHint(): string {
-        return 'Paket yükseltmeleri güvenli ödeme sağlayıcısı üzerinden tamamlanır. Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır, ödeme adımı gerektirmez ve bekleyen plan olarak görünür.';
+        return 'Paket yükseltmeleri güvenli ödeme adımıyla tamamlanır. Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır.';
     }
 
-    pendingPlanChangeTypeLabel(type: PendingPlanChangeTypeKey): string {
+    isTrialingSubscription(summary: SubscriptionSummaryVm): boolean {
+        return summary.status === 'trialing';
+    }
+
+    pendingPlanChangeCancelLabel(summary: SubscriptionSummaryVm): string {
+        return this.isTrialingSubscription(summary) ? 'Plan değişikliğini iptal et' : 'Bekleyen geçişi iptal et';
+    }
+
+    scheduledPlanChangeSuccessMessage(summary: SubscriptionSummaryVm): string {
+        return this.isTrialingSubscription(summary)
+            ? 'Plan değişikliği deneme bitimine planlandı.'
+            : 'Paket düşürme dönem sonuna planlandı.';
+    }
+
+    pendingPlanChangeTypeLabel(type: PendingPlanChangeTypeKey, summary: SubscriptionSummaryVm): string {
         if (type === 'downgrade') {
-            return 'Dönem sonunda paket düşürme';
+            return this.isTrialingSubscription(summary) ? 'Deneme bitiminde plan değişikliği' : 'Dönem sonunda paket düşürme';
         }
         if (type === 'upgrade') {
             return 'Yükseltme';
@@ -951,7 +978,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             next: () => {
                 this.schedulingDowngradeCode.set(null);
                 this.checkoutSession.set(null);
-                this.reload(() => this.planActionInfo.set('Paket düşürme dönem sonuna planlandı.'));
+                this.reload(() => this.planActionInfo.set(this.scheduledPlanChangeSuccessMessage(sum)));
             },
             error: (e: unknown) => {
                 this.schedulingDowngradeCode.set(null);
@@ -967,7 +994,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             this.returnBanner.set({
                 severity: 'warn',
                 title: 'Ödeme sayfasından ayrıldınız veya işlemi iptal ettiniz.',
-                detail: 'Aynı oturuma devam etmek için aşağıdan ödeme akışına dönebilir veya yeni checkout başlatabilirsiniz.'
+                detail: 'Aynı ödeme işlemine devam edebilir veya plan değişikliğini yeniden başlatabilirsiniz.'
             });
             const sessionId = parsed.sessionId ?? readStoredCheckoutSessionId();
             if (sessionId) {
@@ -981,8 +1008,8 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             if (!sessionId) {
                 this.returnBanner.set({
                     severity: 'warn',
-                    title: 'Dönüş algılandı ancak oturum kimliği bulunamadı.',
-                    detail: 'Checkout’u bu sayfadan yeniden başlatın.',
+                    title: 'Ödeme dönüşü algılandı ancak işlem bilgisi bulunamadı.',
+                    detail: 'Plan değişikliğini bu sayfadan yeniden başlatabilirsiniz.',
                     showRefreshCta: true
                 });
                 return;
@@ -1002,7 +1029,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 this.checkoutLoading.set(false);
             },
             error: (e: unknown) => {
-                this.checkoutError.set(e instanceof Error ? e.message : 'Checkout oturumu yüklenemedi.');
+                this.checkoutError.set(e instanceof Error ? e.message : 'Ödeme durumu yüklenemedi.');
                 this.checkoutLoading.set(false);
             }
         });
@@ -1045,14 +1072,14 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                     if (session.status === 'cancelled') {
                         this.returnBanner.set({
                             severity: 'secondary',
-                            title: 'Checkout oturumu iptal veya kapatılmış görünüyor.',
+                            title: 'Ödeme işlemi iptal edilmiş veya sonlandırılmış görünüyor.',
                             showRefreshCta: true
                         });
                     } else {
                         this.returnBanner.set({
                             severity: 'error',
-                            title: 'Ödeme veya oturum tamamlanamadı.',
-                            detail: 'Gerekirse aşağıdan yeni bir checkout başlatın.',
+                            title: 'Ödeme tamamlanamadı.',
+                            detail: 'Gerekirse plan değişikliğini yeniden başlatabilirsiniz.',
                             showRefreshCta: true
                         });
                     }

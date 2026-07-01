@@ -146,7 +146,7 @@ export const PUBLIC_HOME_FAQS: readonly PublicHomeFaqDef[] = [
     },
     {
         question: 'Deneme süreci veya paketler var mı?',
-        answer: 'Basic, Pro ve Premium paketleri inceleyebilir; ücretsiz deneme ile kayıt olabilirsiniz.'
+        answer: 'Temel, Pro ve Premium paketleri inceleyebilir; ücretsiz deneme ile kayıt olabilirsiniz.'
     },
     {
         question: 'Veriler güvenli mi?',

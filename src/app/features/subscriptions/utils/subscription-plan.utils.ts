@@ -1,3 +1,5 @@
+import { defByPlanKey } from '@/app/features/public/utils/pricing-plan.utils';
+
 const PLAN_LABELS: Record<string, string> = {
     basic: 'Temel',
     pro: 'Pro',
@@ -49,4 +51,21 @@ export function subscriptionPlanLabel(code: string | null | undefined, name: str
     }
 
     return '—';
+}
+
+export interface SubscriptionPlanLimitLabels {
+    readonly userLimitLabel: string;
+    readonly clinicLimitLabel: string;
+}
+
+/** Public paket tanımıyla hizalı kullanıcı / klinik limit etiketleri. */
+export function subscriptionPlanLimitLabels(code: string | null | undefined): SubscriptionPlanLimitLabels | null {
+    const def = defByPlanKey(code);
+    if (!def) {
+        return null;
+    }
+    return {
+        userLimitLabel: def.userLimitLabel,
+        clinicLimitLabel: def.clinicLimitLabel
+    };
 }
