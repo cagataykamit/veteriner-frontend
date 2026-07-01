@@ -64,7 +64,8 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
                     @if (formError()) {
                         <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
                     }
-                    <form [formGroup]="form" (ngSubmit)="onSave()">
+                    <div class="w-full max-w-xl">
+                        <form [formGroup]="form" (ngSubmit)="onSave()">
                             <div class="flex flex-col sm:flex-row sm:items-end gap-3">
                                 <div class="flex-1 min-w-0">
                                     <label for="orgTenantName" class="block text-sm font-medium text-muted-color mb-2">Kurum adı *</label>
@@ -88,9 +89,9 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
                                     [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"
                                 />
                             </div>
-                    </form>
+                        </form>
 
-                    <div class="mt-4">
+                        <div class="mt-4">
                         <div class="text-sm text-muted-color mb-1">Abonelik durumu</div>
                         <div class="text-sm font-medium">{{ statusLabel(s.status) }} · {{ planSummary(s) }}</div>
                         <p class="text-sm text-muted-color mt-3 mb-0">
@@ -98,6 +99,7 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
                             <a routerLink="/panel/settings/subscription" class="text-primary font-medium no-underline">Abonelik</a>
                             ekranındadır.
                         </p>
+                        </div>
                     </div>
                 </div>
 
