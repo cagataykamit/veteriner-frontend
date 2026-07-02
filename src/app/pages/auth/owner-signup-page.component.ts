@@ -33,20 +33,22 @@ import {
                     <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-12 px-8 sm:px-16">
                         @if (successResult(); as res) {
                             <div class="text-center mb-6">
-                                <img
-                                    [src]="brand.logoFull"
-                                    alt="Vetinity"
-                                    class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
-                                    width="120"
-                                    height="30"
-                                />
-                                <img
-                                    [src]="brand.logoFullDark"
-                                    alt="Vetinity"
-                                    class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
-                                    width="120"
-                                    height="30"
-                                />
+                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex mb-6">
+                                    <img
+                                        [src]="brand.logoFull"
+                                        alt="Vetinity"
+                                        class="h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
+                                        width="120"
+                                        height="30"
+                                    />
+                                    <img
+                                        [src]="brand.logoFullDark"
+                                        alt="Vetinity"
+                                        class="hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
+                                        width="120"
+                                        height="30"
+                                    />
+                                </a>
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Kayıt tamamlandı</div>
                                 <span class="text-muted-color font-medium">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</span>
                             </div>
@@ -70,20 +72,22 @@ import {
                             </div>
                         } @else {
                             <div class="text-center mb-8">
-                                <img
-                                    [src]="brand.logoFull"
-                                    alt="Vetinity"
-                                    class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
-                                    width="120"
-                                    height="30"
-                                />
-                                <img
-                                    [src]="brand.logoFullDark"
-                                    alt="Vetinity"
-                                    class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
-                                    width="120"
-                                    height="30"
-                                />
+                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex mb-6">
+                                    <img
+                                        [src]="brand.logoFull"
+                                        alt="Vetinity"
+                                        class="h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
+                                        width="120"
+                                        height="30"
+                                    />
+                                    <img
+                                        [src]="brand.logoFullDark"
+                                        alt="Vetinity"
+                                        class="hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
+                                        width="120"
+                                        height="30"
+                                    />
+                                </a>
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Hesap oluştur</div>
                                 <span class="text-muted-color font-medium">Deneme paketiyle işletmenizi tek adımda başlatın</span>
                             </div>

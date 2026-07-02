@@ -37,20 +37,22 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                     <div class="public-auth-card-inner">
                         @if (submitted()) {
                             <div class="public-auth-header">
-                                <img
-                                    [src]="brand.logoFull"
-                                    alt="Vetinity"
-                                    class="public-auth-logo block dark:hidden"
-                                    width="120"
-                                    height="30"
-                                />
-                                <img
-                                    [src]="brand.logoFullDark"
-                                    alt="Vetinity"
-                                    class="public-auth-logo hidden dark:block"
-                                    width="120"
-                                    height="30"
-                                />
+                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
+                                    <img
+                                        [src]="brand.logoFull"
+                                        alt="Vetinity"
+                                        class="public-auth-logo block dark:hidden"
+                                        width="120"
+                                        height="30"
+                                    />
+                                    <img
+                                        [src]="brand.logoFullDark"
+                                        alt="Vetinity"
+                                        class="public-auth-logo hidden dark:block"
+                                        width="120"
+                                        height="30"
+                                    />
+                                </a>
                                 <div class="public-auth-title">E-posta gönderildi</div>
                                 <span class="public-auth-subtitle">{{ successMessage }}</span>
                             </div>
@@ -63,20 +65,22 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                             </div>
                         } @else {
                             <div class="public-auth-header">
-                                <img
-                                    [src]="brand.logoFull"
-                                    alt="Vetinity"
-                                    class="public-auth-logo block dark:hidden"
-                                    width="120"
-                                    height="30"
-                                />
-                                <img
-                                    [src]="brand.logoFullDark"
-                                    alt="Vetinity"
-                                    class="public-auth-logo hidden dark:block"
-                                    width="120"
-                                    height="30"
-                                />
+                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
+                                    <img
+                                        [src]="brand.logoFull"
+                                        alt="Vetinity"
+                                        class="public-auth-logo block dark:hidden"
+                                        width="120"
+                                        height="30"
+                                    />
+                                    <img
+                                        [src]="brand.logoFullDark"
+                                        alt="Vetinity"
+                                        class="public-auth-logo hidden dark:block"
+                                        width="120"
+                                        height="30"
+                                    />
+                                </a>
                                 <div class="public-auth-title">Şifremi Unuttum</div>
                                 <span class="public-auth-subtitle">E-posta adresini gir, şifre sıfırlama bağlantısı gönderelim.</span>
                             </div>
