@@ -1,7 +1,10 @@
 import { FormBuilder } from '@angular/forms';
 import type { FormControl, FormGroup } from '@angular/forms';
 import type { OrganizationBillingProfileUpsertFormValue } from '@/app/features/organization/forms/organization-billing-profile-upsert-form.model';
-import { billingProfileFieldValidators } from '@/app/features/organization/utils/organization-billing-profile.validation.utils';
+import {
+    billingProfileFieldValidators,
+    sanitizeTaxNumberValue
+} from '@/app/features/organization/utils/organization-billing-profile.validation.utils';
 
 export type OrganizationBillingProfileUpsertFormGroup = FormGroup<{
     [K in keyof OrganizationBillingProfileUpsertFormValue]: FormControl<OrganizationBillingProfileUpsertFormValue[K]>;
@@ -30,5 +33,9 @@ export function createOrganizationBillingProfileUpsertFormGroup(
 export function getOrganizationBillingProfileUpsertFormValue(
     form: OrganizationBillingProfileUpsertFormGroup
 ): OrganizationBillingProfileUpsertFormValue {
-    return form.getRawValue();
+    const raw = form.getRawValue();
+    return {
+        ...raw,
+        taxNumber: sanitizeTaxNumberValue(raw.taxNumber)
+    };
 }

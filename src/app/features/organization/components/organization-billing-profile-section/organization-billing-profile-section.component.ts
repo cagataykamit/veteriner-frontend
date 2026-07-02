@@ -22,7 +22,8 @@ import type { OrganizationBillingProfileFormFieldKey } from '@/app/features/orga
 import { OrganizationBillingProfileService } from '@/app/features/organization/services/organization-billing-profile.service';
 import {
     billingProfileFieldErrorMessage,
-    ORG_BILLING_PROFILE_FIELD_MAP
+    ORG_BILLING_PROFILE_FIELD_MAP,
+    sanitizeTaxNumberValue
 } from '@/app/features/organization/utils/organization-billing-profile.validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -98,6 +99,7 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                                 formControlName="taxNumber"
                                 inputmode="numeric"
                                 autocomplete="off"
+                                (input)="onTaxNumberInput()"
                             />
                             @if (fieldMessage('taxNumber'); as msg) {
                                 <small class="text-red-500">{{ msg }}</small>
@@ -105,7 +107,14 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                         </div>
                         <div>
                             <label for="billingCompanyPhone" class="block text-sm font-medium text-muted-color mb-2">Firma telefon numarası</label>
-                            <input id="billingCompanyPhone" pInputText class="w-full" formControlName="companyPhone" autocomplete="tel" />
+                            <input
+                                id="billingCompanyPhone"
+                                pInputText
+                                class="w-full"
+                                formControlName="companyPhone"
+                                inputmode="tel"
+                                autocomplete="tel"
+                            />
                             @if (fieldMessage('companyPhone'); as msg) {
                                 <small class="text-red-500">{{ msg }}</small>
                             }
@@ -224,6 +233,14 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
             return null;
         }
         return billingProfileFieldErrorMessage(field, control.errors);
+    }
+
+    onTaxNumberInput(): void {
+        const control = this.form.controls.taxNumber;
+        const sanitized = sanitizeTaxNumberValue(control.value);
+        if (sanitized !== control.value) {
+            control.setValue(sanitized);
+        }
     }
 
     onSave(): void {
