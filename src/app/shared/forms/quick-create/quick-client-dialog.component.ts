@@ -27,7 +27,7 @@ import { InputTextModule } from 'primeng/inputtext';
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
     template: `
         <p-dialog
-            header="Yeni müşteri"
+            header="Yeni müşteri ekle"
             [modal]="true"
             [dismissableMask]="true"
             [style]="{ width: 'min(520px, 95vw)' }"
@@ -81,7 +81,7 @@ import { InputTextModule } from 'primeng/inputtext';
                 <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
                 <p-button
                     type="button"
-                    label="Kaydet"
+                    label="Müşteriyi kaydet"
                     icon="pi pi-check"
                     [loading]="submitting()"
                     [disabled]="form.invalid || submitting()"

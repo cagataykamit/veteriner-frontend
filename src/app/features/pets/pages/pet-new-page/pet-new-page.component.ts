@@ -9,7 +9,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { BREEDS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { BREEDS_CREATE_CLAIM, CLIENTS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
@@ -26,6 +26,7 @@ import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.ut
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { clientOptionsFromList, trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick-breed-dialog.component';
+import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -44,7 +45,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         SelectModule,
         AppPageHeaderComponent,
         QuickSpeciesDialogComponent,
-        QuickBreedDialogComponent
+        QuickBreedDialogComponent,
+        QuickClientDialogComponent
     ],
     template: `
         <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
@@ -81,6 +83,18 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Müşteri seçimi zorunludur.</small>
+                        }
+                        @if (canShowNewClientLink()) {
+                            <div class="mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Yeni müşteri ekle"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickClientOpen.set(true)"
+                                />
+                            </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -284,6 +298,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             [speciesLabel]="quickBreedSpeciesLabelForDialog()"
             (breedCreated)="onQuickBreedCreated($event)"
         />
+        <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
     `
 })
 export class PetNewPageComponent implements OnInit {
@@ -306,6 +321,9 @@ export class PetNewPageComponent implements OnInit {
     readonly canShowQuickBreedButton = (): boolean =>
         this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM) && !this.ro.mutationBlocked();
 
+    readonly canShowNewClientLink = (): boolean =>
+        this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM) && !this.ro.mutationBlocked();
+
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
@@ -321,6 +339,7 @@ export class PetNewPageComponent implements OnInit {
 
     readonly quickSpeciesOpen = signal(false);
     readonly quickBreedOpen = signal(false);
+    readonly quickClientOpen = signal(false);
 
     readonly genderOptions = [...PET_GENDER_FORM_OPTIONS];
 
@@ -375,6 +394,14 @@ export class PetNewPageComponent implements OnInit {
 
     goList(): void {
         void this.router.navigate(['/panel/pets']);
+    }
+
+    onQuickClientCreated(clientId: string): void {
+        const id = clientId.trim();
+        if (!id) {
+            return;
+        }
+        this.reloadClientsAndSelectClient(id);
     }
 
     onQuickSpeciesCreated(speciesId: string): void {
@@ -450,6 +477,22 @@ export class PetNewPageComponent implements OnInit {
             next: (r) => {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.loadingClients.set(false);
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
+                this.loadingClients.set(false);
+            }
+        });
+    }
+
+    private reloadClientsAndSelectClient(clientId: string): void {
+        this.loadingClients.set(true);
+        this.selectionError.set(null);
+        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
+            next: (r) => {
+                this.clientOptions.set(clientOptionsFromList(r.items));
+                this.loadingClients.set(false);
+                this.form.controls.clientId.setValue(clientId, { emitEvent: true });
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
