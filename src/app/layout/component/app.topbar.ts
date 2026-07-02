@@ -5,7 +5,6 @@ import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Menu, MenuModule } from 'primeng/menu';
-import { StyleClassModule } from 'primeng/styleclass';
 import { finalize } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
@@ -25,7 +24,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, StyleClassModule, AppClinicSwitcher, MenuModule, ButtonModule, ConfirmDialogModule],
+    imports: [RouterModule, CommonModule, AppClinicSwitcher, MenuModule, ButtonModule, ConfirmDialogModule],
     providers: [ConfirmationService],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -70,23 +69,6 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
                     appendTo="body"
                     (onHide)="onUserMenuHide()"
                 />
-            </div>
-
-            <button class="layout-topbar-menu-button layout-topbar-action" pStyleClass="@next" enterFromClass="hidden" enterActiveClass="animate-scalein" leaveToClass="hidden" leaveActiveClass="animate-fadeout" [hideOnOutsideClick]="true">
-                <i class="pi pi-ellipsis-v"></i>
-            </button>
-
-            <div class="layout-topbar-menu hidden lg:block">
-                <div class="layout-topbar-menu-content">
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-calendar"></i>
-                        <span>Takvim</span>
-                    </button>
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-inbox"></i>
-                        <span>Mesajlar</span>
-                    </button>
-                </div>
             </div>
         </div>
     </div>
