@@ -27,6 +27,9 @@ import { parseValidationFieldErrors, type FieldErrors } from '@/app/shared/utils
 
 const LOGIN_INVALID_CREDENTIALS_MESSAGE = 'E-posta veya şifre hatalı.';
 
+const REMEMBERED_EMAIL_STORAGE_KEY = 'veteriner.auth.remembered_email';
+const REMEMBER_ME_STORAGE_KEY = 'veteriner.auth.remember_me';
+
 type LoginFieldKey = 'email' | 'password';
 
 const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
@@ -140,7 +143,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
 
                             <div class="public-auth-options-row">
                                 <div class="flex items-center">
-                                    <p-checkbox [(ngModel)]="checked" name="rememberMe" inputId="rememberme1" binary class="mr-2"></p-checkbox>
+                                    <p-checkbox [(ngModel)]="rememberMe" name="rememberMe" inputId="rememberme1" binary class="mr-2"></p-checkbox>
                                     <label for="rememberme1">Beni hatırla</label>
                                 </div>
                                 <a routerLink="/auth/forgot-password" class="font-medium no-underline ml-2 text-right cursor-pointer public-brand-link">Şifremi unuttum</a>
@@ -184,7 +187,7 @@ export class Login implements OnInit {
 
     password: string = '';
 
-    checked: boolean = false;
+    rememberMe: boolean = false;
 
     readonly signInLoading = signal(false);
 
@@ -209,6 +212,7 @@ export class Login implements OnInit {
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, AUTH_LOGIN_PAGE_META);
         removeOrphanedPrimeMenuPopupsFromBody(this.document);
+        this.loadRememberedLogin();
         const q = this.route.snapshot.queryParamMap;
         if (q.get('reauth') === '1') {
             this.sessionRenewHint.set('Oturum süresi doldu veya oturum yenilenemedi. Lütfen tekrar giriş yapın.');
@@ -286,6 +290,7 @@ export class Login implements OnInit {
                         this.loginError.set('Sunucu yanıtı geçersiz: oturum anahtarı alınamadı.');
                         return;
                     }
+                    this.persistRememberedLogin(email, this.rememberMe);
                     this.loginError.set(null);
                     this.resolveClinicStepAfterLogin();
                 },
@@ -405,5 +410,44 @@ export class Login implements OnInit {
             },
             state: { clinics }
         });
+    }
+
+    private loadRememberedLogin(): void {
+        if (typeof localStorage === 'undefined') {
+            return;
+        }
+        try {
+            const rememberMe = localStorage.getItem(REMEMBER_ME_STORAGE_KEY) === '1';
+            this.rememberMe = rememberMe;
+            if (!rememberMe) {
+                return;
+            }
+            const storedEmail = localStorage.getItem(REMEMBERED_EMAIL_STORAGE_KEY)?.trim() ?? '';
+            if (storedEmail) {
+                this.email = storedEmail;
+            }
+        } catch {
+            // private mode / storage disabled
+        }
+    }
+
+    private persistRememberedLogin(email: string, rememberMe: boolean): void {
+        if (typeof localStorage === 'undefined') {
+            return;
+        }
+        try {
+            if (rememberMe) {
+                const trimmed = email.trim();
+                if (trimmed) {
+                    localStorage.setItem(REMEMBERED_EMAIL_STORAGE_KEY, trimmed);
+                    localStorage.setItem(REMEMBER_ME_STORAGE_KEY, '1');
+                }
+                return;
+            }
+            localStorage.removeItem(REMEMBERED_EMAIL_STORAGE_KEY);
+            localStorage.removeItem(REMEMBER_ME_STORAGE_KEY);
+        } catch {
+            // private mode / storage disabled
+        }
     }
 }
