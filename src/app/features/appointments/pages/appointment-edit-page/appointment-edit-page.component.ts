@@ -24,6 +24,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
 import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
+import { APPOINTMENT_NOTES_MAX_LENGTH } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import {
     clientOptionsFromList,
@@ -242,6 +243,8 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                             @if (apiFieldErrors().notes) {
                                 <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                            } @else if (form.controls.notes.invalid && form.controls.notes.touched) {
+                                <small class="text-red-500">Notlar en fazla {{ notesMaxLength }} karakter olabilir.</small>
                             }
                         </div>
                     </div>
@@ -320,6 +323,7 @@ export class AppointmentEditPageComponent implements OnInit {
     private legacyInitialTime: string | null = null;
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
+    readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
 
     readonly canCancelAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CANCEL_CLAIM);
     readonly canCompleteAppointment = this.auth.hasOperationClaim(APPOINTMENTS_COMPLETE_CLAIM);
@@ -347,7 +351,7 @@ export class AppointmentEditPageComponent implements OnInit {
         ]),
         appointmentType: this.fb.control<number | null>(null, Validators.required),
         status: this.fb.control<number | null>(null, Validators.required),
-        notes: this.fb.nonNullable.control('')
+        notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH))
     });
 
     constructor() {

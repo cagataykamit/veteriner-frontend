@@ -22,10 +22,18 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import {
     clientOptionsFromList,
     filterPetsByClientId,
+    isStalePetListResponse,
     petOptionsFromList,
     trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
+import {
+    APPOINTMENT_NOTES_MAX_LENGTH,
+    appointmentCreatePastDateValidator,
+    filterFutureIstanbulTimeOptions,
+    isIstanbulDateTimeInPast,
+    istanbulTodayYmd
+} from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
@@ -85,7 +93,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         @if (apiFieldErrors().clientId) {
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-red-500">Müşteri seçimi zorunludur.</small>
                         }
                         <div class="flex flex-wrap gap-2 align-items-center mt-2">
                             <p-button
@@ -117,7 +125,14 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         @if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-red-500">Hayvan seçimi zorunludur.</small>
+                        } @else if (
+                            !loadingPets() &&
+                            form.controls.clientId.value &&
+                            !form.controls.petId.disabled &&
+                            petOptions().length === 0
+                        ) {
+                            <small class="text-muted-color">Bu müşteriye kayıtlı hayvan yok. Aşağıdaki bağlantıdan yeni hayvan ekleyebilirsiniz.</small>
                         }
                         <div class="flex flex-wrap gap-2 align-items-center mt-2">
                             <p-button
@@ -133,7 +148,18 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
-                        <input id="scheduledDate" type="date" class="w-full p-inputtext p-component" formControlName="scheduledDate" />
+                        <input
+                            id="scheduledDate"
+                            type="date"
+                            class="w-full p-inputtext p-component"
+                            formControlName="scheduledDate"
+                            [min]="minScheduledDate()"
+                        />
+                        @if (form.controls.scheduledDate.hasError('pastDate') && form.controls.scheduledDate.touched) {
+                            <small class="text-red-500">Geçmiş bir tarih seçilemez.</small>
+                        } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
+                            <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="scheduledTime" class="block text-sm font-medium text-muted-color mb-2">Randevu saati *</label>
@@ -149,10 +175,10 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         />
                         @if (apiFieldErrors().scheduledAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                        } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
-                            <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
                         } @else if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
                             <small class="text-red-500">Randevu saati seçilmelidir.</small>
+                        } @else if (workingHoursLoadError(); as whErr) {
+                            <small class="text-red-500">{{ whErr }}</small>
                         } @else if (form.controls.scheduledDate.value && timeOptions().length === 0) {
                             <small class="text-amber-600">Seçilen gün için uygun randevu saati bulunmuyor.</small>
                         }
@@ -192,7 +218,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         @if (apiFieldErrors().appointmentType) {
                             <small class="text-red-500">{{ apiFieldErrors().appointmentType }}</small>
                         } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-red-500">Randevu Türü seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -216,6 +242,8 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                         @if (apiFieldErrors().notes) {
                             <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                        } @else if (form.controls.notes.invalid && form.controls.notes.touched) {
+                            <small class="text-red-500">Notlar en fazla {{ notesMaxLength }} karakter olabilir.</small>
                         }
                     </div>
                 </div>
@@ -230,7 +258,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         label="Kaydet"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients() || ro.mutationBlocked() || timeOptions().length === 0"
+                        [disabled]="form.invalid || submitting() || loadingClients() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"
                     />
                     <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -276,11 +304,12 @@ export class AppointmentNewPageComponent implements OnInit {
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
+    readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
 
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
-        scheduledDate: this.fb.nonNullable.control('', Validators.required),
+        scheduledDate: this.fb.nonNullable.control('', [Validators.required, appointmentCreatePastDateValidator()]),
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
         durationMinutes: this.fb.nonNullable.control<number | string>(30, [
             Validators.required,
@@ -290,7 +319,7 @@ export class AppointmentNewPageComponent implements OnInit {
         ]),
         appointmentType: this.fb.control<number | null>(null, Validators.required),
         status: this.fb.control<number | null>(0),
-        notes: this.fb.nonNullable.control('')
+        notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH))
     });
 
     constructor() {
@@ -349,6 +378,10 @@ export class AppointmentNewPageComponent implements OnInit {
         void this.router.navigate(['/panel/appointments']);
     }
 
+    minScheduledDate(): string {
+        return istanbulTodayYmd();
+    }
+
     petQuickAddDisabled(): boolean {
         return (
             this.ro.mutationBlocked() ||
@@ -390,6 +423,11 @@ export class AppointmentNewPageComponent implements OnInit {
         const scheduledAtUtc = fromIstanbulDateAndTimeToUtcIso(v.scheduledDate, v.scheduledTime);
         if (!scheduledAtUtc) {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
+            return;
+        }
+        if (isIstanbulDateTimeInPast(v.scheduledDate, v.scheduledTime)) {
+            this.form.markAllAsTouched();
+            this.submitError.set('Geçmiş bir tarih veya saat seçilemez.');
             return;
         }
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
@@ -478,13 +516,17 @@ export class AppointmentNewPageComponent implements OnInit {
     }
 
     private loadPetsForClient(clientId: string, selectPetId?: string): void {
+        const cid = clientId.trim();
         this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
+        this.petsService.getPets({ page: 1, pageSize: 200, clientId: cid }).subscribe({
             next: (r) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, cid)) {
+                    return;
+                }
                 let items = r.items;
                 const anyClientId = items.some((p) => (p.clientId ?? '').trim());
                 if (anyClientId) {
-                    items = filterPetsByClientId(items, clientId);
+                    items = filterPetsByClientId(items, cid);
                 }
                 this.petOptions.set(petOptionsFromList(items));
                 const want = selectPetId?.trim();
@@ -529,7 +571,7 @@ export class AppointmentNewPageComponent implements OnInit {
         const clinicId = this.auth.getClinicId()?.trim();
         if (!clinicId) {
             this.workingHours = [];
-            this.workingHoursLoadError.set(null);
+            this.workingHoursLoadError.set('Çalışma saatleri alınamadı.');
             this.rebuildTimeOptions();
             return;
         }
@@ -542,7 +584,7 @@ export class AppointmentNewPageComponent implements OnInit {
             },
             error: () => {
                 this.workingHours = [];
-                this.workingHoursLoadError.set(null);
+                this.workingHoursLoadError.set('Çalışma saatleri alınamadı.');
                 this.rebuildTimeOptions();
             }
         });
@@ -576,7 +618,7 @@ export class AppointmentNewPageComponent implements OnInit {
             }
             return;
         }
-        const options = this.buildTimeOptions(day, duration, interval);
+        const options = filterFutureIstanbulTimeOptions(date, this.buildTimeOptions(day, duration, interval));
         this.timeOptions.set(options);
         const selected = this.form.controls.scheduledTime.value.trim();
         if (selected && !options.some((o) => o.value === selected)) {
