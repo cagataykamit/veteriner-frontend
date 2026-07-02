@@ -46,6 +46,10 @@ export interface PetDetailDto {
     /** Eski okuma yedeği. */
     color?: string | null;
     weight?: number | null;
+    microchipNumber?: string | null;
+    passportOrTagNumber?: string | null;
+    specialProtocolNumber?: string | null;
+    isNeutered?: boolean | null;
     notes?: string | null;
     ownerId?: string | null;
     /** Yeni contract: sahip metin alanları (öncelikli okuma). */
@@ -164,5 +168,9 @@ export interface PetCreateRequestDto {
     birthDate?: string | null;
     colorId?: string | null;
     weight?: number | null;
+    microchipNumber?: string | null;
+    passportOrTagNumber?: string | null;
+    specialProtocolNumber?: string | null;
+    isNeutered?: boolean | null;
     notes?: string | null;
 }

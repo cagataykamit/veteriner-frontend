@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -41,6 +42,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         ReactiveFormsModule,
         RouterLink,
         ButtonModule,
+        CheckboxModule,
         InputTextModule,
         SelectModule,
         AppPageHeaderComponent,
@@ -217,6 +219,42 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 }
                             }
                         </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="microchipNumber" class="block text-sm font-medium text-muted-color mb-2">Çip numarası</label>
+                            <input id="microchipNumber" pInputText class="w-full" formControlName="microchipNumber" maxlength="50" />
+                            @if (apiFieldErrors().microchipNumber) {
+                                <small class="text-red-500">{{ apiFieldErrors().microchipNumber }}</small>
+                            } @else if (form.controls.microchipNumber.invalid && form.controls.microchipNumber.touched) {
+                                <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="passportOrTagNumber" class="block text-sm font-medium text-muted-color mb-2">Karne / Küpe no</label>
+                            <input id="passportOrTagNumber" pInputText class="w-full" formControlName="passportOrTagNumber" maxlength="50" />
+                            @if (apiFieldErrors().passportOrTagNumber) {
+                                <small class="text-red-500">{{ apiFieldErrors().passportOrTagNumber }}</small>
+                            } @else if (form.controls.passportOrTagNumber.invalid && form.controls.passportOrTagNumber.touched) {
+                                <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="specialProtocolNumber" class="block text-sm font-medium text-muted-color mb-2">Özel protokol no</label>
+                            <input id="specialProtocolNumber" pInputText class="w-full" formControlName="specialProtocolNumber" maxlength="50" />
+                            @if (apiFieldErrors().specialProtocolNumber) {
+                                <small class="text-red-500">{{ apiFieldErrors().specialProtocolNumber }}</small>
+                            } @else if (form.controls.specialProtocolNumber.invalid && form.controls.specialProtocolNumber.touched) {
+                                <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6 flex items-end">
+                            <div class="flex items-center gap-2 pb-2">
+                                <p-checkbox formControlName="isNeutered" [binary]="true" inputId="isNeutered" />
+                                <label class="text-sm cursor-pointer mb-0" for="isNeutered">Kısırlaştırılmış mı?</label>
+                            </div>
+                            @if (apiFieldErrors().isNeutered) {
+                                <small class="text-red-500 block w-full">{{ apiFieldErrors().isNeutered }}</small>
+                            }
+                        </div>
                         <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
@@ -319,6 +357,10 @@ export class PetEditPageComponent implements OnInit {
             'birthDate',
             'colorId',
             'weightStr',
+            'microchipNumber',
+            'passportOrTagNumber',
+            'specialProtocolNumber',
+            'isNeutered',
             'notes'
         ];
         for (const f of fields) {
@@ -386,6 +428,10 @@ export class PetEditPageComponent implements OnInit {
                         birthDate: pet.birthDateInput,
                         colorId: pet.colorId,
                         weightStr: pet.weightStr,
+                        microchipNumber: pet.microchipNumber,
+                        passportOrTagNumber: pet.passportOrTagNumber,
+                        specialProtocolNumber: pet.specialProtocolNumber,
+                        isNeutered: pet.isNeutered,
                         notes: pet.notes
                     },
                     { emitEvent: false }

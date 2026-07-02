@@ -12,5 +12,9 @@ export interface PetUpsertFormValue {
     colorId: string;
     /** `type="number"` ile bazen `number` döner. */
     weightStr: string | number;
+    microchipNumber: string;
+    passportOrTagNumber: string;
+    specialProtocolNumber: string;
+    isNeutered: boolean;
     notes: string;
 }

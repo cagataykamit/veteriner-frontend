@@ -18,5 +18,9 @@ export interface CreatePetRequest {
     /** Ref-data PetColors kimliği — boşsa gönderilmez */
     colorId?: string;
     weight?: number | null;
+    microchipNumber?: string;
+    passportOrTagNumber?: string;
+    specialProtocolNumber?: string;
+    isNeutered?: boolean;
     notes?: string;
 }

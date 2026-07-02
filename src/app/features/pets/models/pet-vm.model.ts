@@ -22,6 +22,10 @@ export interface PetDetailVm {
     birthDate: string | null;
     colorName: string;
     weight: string;
+    microchipNumber: string;
+    passportOrTagNumber: string;
+    specialProtocolNumber: string;
+    isNeutered: string;
     notes: string;
     /** Müteri detay rotası — `ownerId` veya `clientId`. */
     ownerId: string | null;
@@ -133,5 +137,9 @@ export interface PetEditVm {
     /** Katalogda yoksa seçici etiketi (sentetik seçenek). */
     colorName: string | null;
     weightStr: string;
+    microchipNumber: string;
+    passportOrTagNumber: string;
+    specialProtocolNumber: string;
+    isNeutered: boolean;
     notes: string;
 }

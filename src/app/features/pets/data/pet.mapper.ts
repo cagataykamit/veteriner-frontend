@@ -62,6 +62,42 @@ function readDtoString(dto: PetListItemDto | PetDetailDto, keys: string[]): stri
     return null;
 }
 
+function readDtoBoolean(dto: PetDetailDto, keys: string[]): boolean | null {
+    const o = dto as unknown as Record<string, unknown>;
+    for (const k of keys) {
+        const v = o[k];
+        if (typeof v === 'boolean') {
+            return v;
+        }
+    }
+    return null;
+}
+
+function formatBooleanYesNo(v: boolean | null | undefined): string {
+    if (v === true) {
+        return 'Evet';
+    }
+    if (v === false) {
+        return 'Hayır';
+    }
+    return EM;
+}
+
+function canonicalPetIdentityString(dto: PetDetailDto, camelKey: keyof PetDetailDto, pascalKey: string): string {
+    const direct = dto[camelKey];
+    if (typeof direct === 'string' && direct.trim()) {
+        return direct.trim();
+    }
+    return readDtoString(dto, [pascalKey]) ?? '';
+}
+
+function canonicalPetIsNeutered(dto: PetDetailDto): boolean | null {
+    if (dto.isNeutered === true || dto.isNeutered === false) {
+        return dto.isNeutered;
+    }
+    return readDtoBoolean(dto, ['IsNeutered']);
+}
+
 function canonicalBreedId(dto: PetListItemDto | PetDetailDto): string {
     return firstTrimmed(dto.breedId, readDtoString(dto, ['BreedId'])) ?? '';
 }
@@ -188,6 +224,9 @@ export function mapPetUpsertFormToCreateRequest(
     const breedLabel = resolvePetBreedWriteLabel(v.breedId, breedOptions);
     const birthRaw = trimFormText(v.birthDate);
     const notesRaw = trimFormText(v.notes);
+    const microchipRaw = trimFormText(v.microchipNumber);
+    const passportRaw = trimFormText(v.passportOrTagNumber);
+    const protocolRaw = trimFormText(v.specialProtocolNumber);
     return {
         clientId: v.clientId.trim(),
         name: v.name.trim(),
@@ -198,6 +237,10 @@ export function mapPetUpsertFormToCreateRequest(
         birthDateInput: birthRaw || undefined,
         colorId: v.colorId.trim() || undefined,
         weight: wNum,
+        microchipNumber: microchipRaw || undefined,
+        passportOrTagNumber: passportRaw || undefined,
+        specialProtocolNumber: protocolRaw || undefined,
+        isNeutered: v.isNeutered,
         notes: notesRaw || undefined
     };
 }
@@ -253,6 +296,19 @@ export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDt
     if (notes) {
         body.notes = notes;
     }
+    const microchip = trimFormText(req.microchipNumber);
+    if (microchip) {
+        body.microchipNumber = microchip;
+    }
+    const passport = trimFormText(req.passportOrTagNumber);
+    if (passport) {
+        body.passportOrTagNumber = passport;
+    }
+    const protocol = trimFormText(req.specialProtocolNumber);
+    if (protocol) {
+        body.specialProtocolNumber = protocol;
+    }
+    body.isNeutered = req.isNeutered ?? false;
     return body;
 }
 
@@ -329,6 +385,10 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
         birthDate: canonicalPetBirthDateRead(dto),
         colorName: canonicalColorDisplayName(dto),
         weight: weightStr,
+        microchipNumber: str(canonicalPetIdentityString(dto, 'microchipNumber', 'MicrochipNumber')),
+        passportOrTagNumber: str(canonicalPetIdentityString(dto, 'passportOrTagNumber', 'PassportOrTagNumber')),
+        specialProtocolNumber: str(canonicalPetIdentityString(dto, 'specialProtocolNumber', 'SpecialProtocolNumber')),
+        isNeutered: formatBooleanYesNo(canonicalPetIsNeutered(dto)),
         notes: dto.notes != null && dto.notes.trim().length > 0 ? dto.notes : EM,
         ownerId: canonicalPetDetailOwnerNavId(dto),
         clientName: canonicalPetDetailOwnerName(dto),
@@ -375,6 +435,10 @@ export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
             firstTrimmed(dto.colorName, readDtoString(dto, ['ColorName']), dto.color, readDtoString(dto, ['Color'])) ??
             null,
         weightStr,
+        microchipNumber: canonicalPetIdentityString(dto, 'microchipNumber', 'MicrochipNumber'),
+        passportOrTagNumber: canonicalPetIdentityString(dto, 'passportOrTagNumber', 'PassportOrTagNumber'),
+        specialProtocolNumber: canonicalPetIdentityString(dto, 'specialProtocolNumber', 'SpecialProtocolNumber'),
+        isNeutered: canonicalPetIsNeutered(dto) ?? false,
         notes: dto.notes?.trim() ?? ''
     };
 }

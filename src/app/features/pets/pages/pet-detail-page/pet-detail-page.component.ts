@@ -98,6 +98,14 @@ const EM = '—';
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.colorName }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Ağırlık</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.weight }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Çip numarası</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.microchipNumber }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Karne / Küpe no</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.passportOrTagNumber }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Özel protokol no</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.specialProtocolNumber }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Kısırlaştırılmış mı?</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.isNeutered }}</dd>
                         </dl>
                     </div>
                 </div>

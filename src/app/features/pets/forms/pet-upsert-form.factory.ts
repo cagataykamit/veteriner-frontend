@@ -21,6 +21,10 @@ export function createPetUpsertFormGroup(fb: FormBuilder): PetUpsertFormGroup {
         birthDate: fb.nonNullable.control('', petBirthDateValidator()),
         colorId: fb.nonNullable.control(''),
         weightStr: fb.nonNullable.control<string | number>('', petWeightStrValidator()),
+        microchipNumber: fb.nonNullable.control('', Validators.maxLength(50)),
+        passportOrTagNumber: fb.nonNullable.control('', Validators.maxLength(50)),
+        specialProtocolNumber: fb.nonNullable.control('', Validators.maxLength(50)),
+        isNeutered: fb.nonNullable.control(false),
         notes: fb.nonNullable.control('')
     });
 }
