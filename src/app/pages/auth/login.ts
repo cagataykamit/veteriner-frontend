@@ -55,20 +55,22 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                 <div class="public-auth-card-frame">
                     <div class="public-auth-card-inner">
                         <div class="public-auth-header">
-                            <img
-                                [src]="brand.logoFull"
-                                alt="Vetinity"
-                                class="public-auth-logo block dark:hidden"
-                                width="120"
-                                height="30"
-                            />
-                            <img
-                                [src]="brand.logoFullDark"
-                                alt="Vetinity"
-                                class="public-auth-logo hidden dark:block"
-                                width="120"
-                                height="30"
-                            />
+                            <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
+                                <img
+                                    [src]="brand.logoFull"
+                                    alt="Vetinity"
+                                    class="public-auth-logo block dark:hidden"
+                                    width="120"
+                                    height="30"
+                                />
+                                <img
+                                    [src]="brand.logoFullDark"
+                                    alt="Vetinity"
+                                    class="public-auth-logo hidden dark:block"
+                                    width="120"
+                                    height="30"
+                                />
+                            </a>
                             <div class="public-auth-title">Vetinity paneline giriş</div>
                             <span class="public-auth-subtitle">Hesabınızla giriş yapın</span>
                             @if (sessionRenewHint()) {
