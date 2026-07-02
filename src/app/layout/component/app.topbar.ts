@@ -1,5 +1,5 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit, viewChild } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -34,7 +34,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
             </button>
             <a class="layout-topbar-logo" routerLink="/">
                 <img
-                    [src]="logoSrc"
+                    [src]="logoSrc()"
                     [alt]="logoAlt"
                     class="layout-topbar-logo-img"
                     width="168"
@@ -93,9 +93,15 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
     <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />`
 })
 export class AppTopbar implements OnInit, OnDestroy {
-    readonly logoSrc = VETINITY_BRAND_LOGOS.compactLockup;
     readonly logoAlt = 'Vetinity';
     readonly layoutService = inject(LayoutService);
+
+    readonly logoSrc = computed(() =>
+        this.layoutService.layoutConfig().darkTheme
+            ? VETINITY_BRAND_LOGOS.compactLockupDark
+            : VETINITY_BRAND_LOGOS.compactLockup
+    );
+
     readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly document = inject(DOCUMENT);
