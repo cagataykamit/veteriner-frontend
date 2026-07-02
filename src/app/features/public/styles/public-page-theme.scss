@@ -58,6 +58,11 @@
     --public-accent-bar-h: color-mix(in srgb, var(--public-accent) 70%, transparent);
     --public-accent-bar-m: color-mix(in srgb, var(--public-accent) 42%, transparent);
     --public-accent-bar-l: color-mix(in srgb, var(--public-accent) 24%, transparent);
+
+    /* Topbar nav — hover/focus/active kontrastı */
+    --public-topbar-nav-hover-color: var(--public-accent-strong);
+    --public-topbar-nav-hover-bg: color-mix(in srgb, var(--public-accent) 10%, transparent);
+    --public-topbar-nav-focus-ring: color-mix(in srgb, var(--public-accent) 38%, transparent);
 }
 
 .public-page {
@@ -75,6 +80,10 @@
 }
 
 .app-dark .public-page {
+    --public-topbar-nav-hover-color: var(--vetinity-soft-teal);
+    --public-topbar-nav-hover-bg: color-mix(in srgb, var(--vetinity-teal) 14%, transparent);
+    --public-topbar-nav-focus-ring: color-mix(in srgb, var(--vetinity-soft-teal) 42%, transparent);
+
     --public-hero-surface-deep: #061224;
     --public-hero-surface-from: var(--vetinity-navy);
     --public-hero-surface-mid: color-mix(in srgb, var(--vetinity-navy) 80%, var(--vetinity-teal) 20%);
@@ -335,18 +344,35 @@
     color: var(--public-accent-contrast);
 }
 
-.public-topbar-nav-link {
+.public-page .public-topbar-nav-link {
     box-sizing: border-box;
     border: 0 solid transparent;
+    border-radius: 0.375rem;
     font-weight: 500;
-    transition: color 0.15s ease;
+    transition:
+        color 0.15s ease,
+        background-color 0.15s ease,
+        box-shadow 0.15s ease;
 }
 
-.public-topbar-nav-link:hover,
-.public-topbar-nav-link.router-link-active {
-    color: var(--public-accent-strong);
+.public-page .public-topbar-nav-link:hover,
+.public-page .public-topbar-nav-link.router-link-active {
+    color: var(--public-topbar-nav-hover-color);
     font-weight: 500;
     border-width: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .public-page .public-topbar-nav-link:hover {
+        background-color: var(--public-topbar-nav-hover-bg);
+    }
+}
+
+.public-page .public-topbar-nav-link:focus-visible {
+    color: var(--public-topbar-nav-hover-color);
+    background-color: var(--public-topbar-nav-hover-bg);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--public-topbar-nav-focus-ring);
 }
 
 .public-page .public-topbar-login-outline {
