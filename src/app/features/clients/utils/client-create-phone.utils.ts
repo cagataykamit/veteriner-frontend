@@ -1,8 +1,7 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-/** Yerel doğrulama: biçim / uzunluk / harf vb. */
-export const CLIENT_CREATE_PHONE_MSG_INVALID =
-    'Telefon numarası geçerli değil. Türkiye cep telefonu olarak 05XXXXXXXXX, 5XXXXXXXXX veya +90XXXXXXXXXX formatında girin.';
+/** Yerel doğrulama + API alan mesajı eşlemesi. */
+export const CLIENT_CREATE_PHONE_MSG_INVALID = 'Geçerli bir telefon numarası girin.';
 
 /**
  * Sadece rakamlar — 10 hane (5…), 11 hane (05…) veya 12 hane (905…).

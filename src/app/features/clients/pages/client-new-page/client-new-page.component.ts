@@ -2,21 +2,23 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
+import { mapClientUpsertFormValueToCreateRequest } from '@/app/features/clients/data/client.mapper';
+import {
+    createClientUpsertFormGroup,
+    getClientUpsertFormValue
+} from '@/app/features/clients/forms/client-upsert-form.factory';
+import { CLIENT_UPSERT_FORM_FIELDS } from '@/app/features/clients/forms/client-upsert-form.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import {
     type ClientCreateFieldErrors,
     type ClientCreateFormFieldKey,
     parseClientCreateHttpError
 } from '@/app/features/clients/utils/client-create-validation-parse.utils';
-import {
-    CLIENT_CREATE_PHONE_MSG_INVALID,
-    turkishMobilePhoneValidator
-} from '@/app/features/clients/utils/client-create-phone.utils';
+import { clientUpsertFieldErrorMessage } from '@/app/features/clients/utils/client-upsert.validation.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
@@ -42,39 +44,29 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     <div class="col-span-12 md:col-span-6">
                         <label for="fullName" class="block text-sm font-medium text-muted-color mb-2">Ad soyad *</label>
                         <input id="fullName" pInputText class="w-full" formControlName="fullName" />
-                        @if (apiFieldErrors().fullName) {
-                            <small class="text-red-500">{{ apiFieldErrors().fullName }}</small>
-                        } @else if (form.controls.fullName.invalid && form.controls.fullName.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                        @if (fieldMessage('fullName'); as msg) {
+                            <small class="text-red-500">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
                         <input id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
-                        @if (apiFieldErrors().phone) {
-                            <small class="text-red-500">{{ apiFieldErrors().phone }}</small>
-                        } @else if (form.controls.phone.invalid && form.controls.phone.touched) {
-                            @if (form.controls.phone.hasError('phoneInvalidChars') ||
-                                form.controls.phone.hasError('phoneInvalidFormat')
-                            ) {
-                                <small class="text-red-500">{{ phoneMsgInvalid }}</small>
-                            }
+                        @if (fieldMessage('phone'); as msg) {
+                            <small class="text-red-500">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="email" class="block text-sm font-medium text-muted-color mb-2">E-posta</label>
                         <input id="email" type="email" pInputText class="w-full" formControlName="email" />
-                        @if (apiFieldErrors().email) {
-                            <small class="text-red-500">{{ apiFieldErrors().email }}</small>
-                        } @else if (form.controls.email.invalid && form.controls.email.touched) {
-                            <small class="text-red-500">Geçerli e-posta girin.</small>
+                        @if (fieldMessage('email'); as msg) {
+                            <small class="text-red-500">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="address" class="block text-sm font-medium text-muted-color mb-2">Adres</label>
                         <textarea id="address" rows="2" class="w-full p-inputtext p-component" formControlName="address"></textarea>
-                        @if (apiFieldErrors().address) {
-                            <small class="text-red-500">{{ apiFieldErrors().address }}</small>
+                        @if (fieldMessage('address'); as msg) {
+                            <small class="text-red-500">{{ msg }}</small>
                         }
                     </div>
                 </div>
@@ -107,8 +99,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 export class ClientNewPageComponent {
     readonly copy = PANEL_COPY;
 
-    readonly phoneMsgInvalid = CLIENT_CREATE_PHONE_MSG_INVALID;
-
     private readonly fb = inject(FormBuilder);
     private readonly clientsService = inject(ClientsService);
     private readonly router = inject(Router);
@@ -119,16 +109,10 @@ export class ClientNewPageComponent {
     /** Sunucu / ValidationProblemDetails alan mesajları — input altında gösterilir. */
     readonly apiFieldErrors = signal<ClientCreateFieldErrors>({});
 
-    readonly form = this.fb.nonNullable.group({
-        fullName: ['', Validators.required],
-        phone: ['', turkishMobilePhoneValidator()],
-        email: ['', Validators.email],
-        address: ['']
-    });
+    readonly form = createClientUpsertFormGroup(this.fb);
 
     constructor() {
-        const fields: ClientCreateFormFieldKey[] = ['fullName', 'phone', 'email', 'address'];
-        for (const f of fields) {
+        for (const f of CLIENT_UPSERT_FORM_FIELDS) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
                 if (cur[f]) {
@@ -138,6 +122,18 @@ export class ClientNewPageComponent {
                 }
             });
         }
+    }
+
+    fieldMessage(field: ClientCreateFormFieldKey): string | null {
+        const api = this.apiFieldErrors()[field];
+        if (api) {
+            return api;
+        }
+        const control = this.form.controls[field];
+        if (!control.invalid || !control.touched) {
+            return null;
+        }
+        return clientUpsertFieldErrorMessage(field, control.errors);
     }
 
     goList(): void {
@@ -152,13 +148,7 @@ export class ClientNewPageComponent {
             return;
         }
 
-        const v = this.form.getRawValue();
-        const payload: CreateClientRequest = {
-            fullName: v.fullName,
-            phone: v.phone.trim() || undefined,
-            email: v.email.trim() || undefined,
-            address: v.address.trim() || undefined
-        };
+        const payload = mapClientUpsertFormValueToCreateRequest(getClientUpsertFormValue(this.form));
 
         this.submitting.set(true);
         this.clientsService.createClient(payload).subscribe({

@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { CLIENT_CREATE_PHONE_MSG_INVALID } from '@/app/features/clients/utils/client-create-phone.utils';
+import { CLIENT_UPSERT_MSG_EMAIL_INVALID } from '@/app/features/clients/utils/client-upsert.validation.utils';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromClientCreateHttpError } from '@/app/features/clients/utils/client-create-error.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -47,7 +48,7 @@ function normalizeFieldMessage(formKey: ClientCreateFormFieldKey, message: strin
         }
     }
     if (formKey === 'email' && /not a valid email|invalid email|email.*not valid/i.test(m)) {
-        return 'Geçerli e-posta girin.';
+        return CLIENT_UPSERT_MSG_EMAIL_INVALID;
     }
     return m;
 }

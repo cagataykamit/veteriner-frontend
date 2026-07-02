@@ -16,6 +16,7 @@ import type {
     ClientRecentExaminationSummaryItemDto,
     ClientRecentSummaryDto
 } from '@/app/features/clients/models/client-api.model';
+import type { ClientUpsertFormValue } from '@/app/features/clients/forms/client-upsert-form.model';
 import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
 import type {
     ClientDetailVm,
@@ -89,6 +90,16 @@ function pickIdString(v: unknown): string | null {
         return String(v);
     }
     return null;
+}
+
+/** Ortak upsert form → servis isteği. */
+export function mapClientUpsertFormValueToCreateRequest(value: ClientUpsertFormValue): CreateClientRequest {
+    return {
+        fullName: value.fullName.trim(),
+        phone: value.phone.trim() || undefined,
+        email: value.email.trim() || undefined,
+        address: value.address.trim() || undefined
+    };
 }
 
 /** Create form → API body; backend’in istemediği alanlar burada çıkarılır (Swagger ile hizalanır). */
