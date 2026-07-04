@@ -164,7 +164,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         <input
                             id="prescribedAtLocal"
                             type="datetime-local"
-                            class="w-full p-inputtext p-component"
+                            class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="prescribedAtLocal"
                         />
                         @if (form.controls.prescribedAtLocal.invalid && form.controls.prescribedAtLocal.touched) {

@@ -163,7 +163,7 @@ type SelectOption = { label: string; value: string };
 
                 <div>
                     <label for="smcOccurred" class="block text-sm font-medium text-muted-color mb-2">İşlem zamanı</label>
-                    <input id="smcOccurred" type="datetime-local" class="w-full p-inputtext p-component" formControlName="occurredAtUtcLocal" />
+                    <input id="smcOccurred" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="occurredAtUtcLocal" />
                     <p class="text-xs text-muted-color mt-1 mb-0">Boş bırakılırsa sunucu varsayılanını kullanır.</p>
                 </div>
 

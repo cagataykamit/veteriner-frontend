@@ -133,7 +133,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <input
                                 id="admittedAtLocal"
                                 type="datetime-local"
-                                class="w-full p-inputtext p-component"
+                                class="w-full md:max-w-96 p-inputtext p-component"
                                 formControlName="admittedAtLocal"
                             />
                             @if (apiFieldErrors().admittedAtLocal) {
@@ -147,7 +147,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <input
                                 id="plannedDischargeAtLocal"
                                 type="datetime-local"
-                                class="w-full p-inputtext p-component"
+                                class="w-full md:max-w-96 p-inputtext p-component"
                                 formControlName="plannedDischargeAtLocal"
                             />
                             @if (apiFieldErrors().plannedDischargeAtLocal) {

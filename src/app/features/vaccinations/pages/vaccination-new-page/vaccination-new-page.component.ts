@@ -178,7 +178,7 @@ import {
                             <input
                                 id="appliedAtLocal"
                                 type="datetime-local"
-                                class="w-full p-inputtext p-component"
+                                class="w-full md:max-w-96 p-inputtext p-component"
                                 formControlName="appliedAtLocal"
                                 [attr.max]="maxAppliedInput()"
                             />
@@ -197,7 +197,7 @@ import {
                             <input
                                 id="nextDueDateScheduled"
                                 type="datetime-local"
-                                class="w-full p-inputtext p-component"
+                                class="w-full md:max-w-96 p-inputtext p-component"
                                 formControlName="nextDueDate"
                                 [attr.min]="plannedDateTimeMin()"
                             />
@@ -217,7 +217,7 @@ import {
                             <input
                                 id="nextDueDateApplied"
                                 type="datetime-local"
-                                class="w-full p-inputtext p-component"
+                                class="w-full md:max-w-96 p-inputtext p-component"
                                 formControlName="nextDueDate"
                                 [attr.min]="minNextDueAfterApplied()"
                             />
@@ -232,7 +232,7 @@ import {
                     @if (statusNum() === 2) {
                         <div class="col-span-12 md:col-span-6">
                             <label for="nextDueDateCancelled" class="block text-sm font-medium text-muted-color mb-2">Planlı / sonraki tarih (opsiyonel)</label>
-                            <input id="nextDueDateCancelled" type="datetime-local" class="w-full p-inputtext p-component" formControlName="nextDueDate" />
+                            <input id="nextDueDateCancelled" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="nextDueDate" />
                             @if (apiFieldErrors().nextDueDate) {
                                 <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
                             }

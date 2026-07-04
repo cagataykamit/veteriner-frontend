@@ -213,7 +213,7 @@ import {
                         <input
                             id="dischargedAtLocal"
                             type="datetime-local"
-                            class="w-full p-inputtext p-component"
+                            class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="dischargedAtLocal"
                         />
                         @if (dischargeForm.controls.dischargedAtLocal.invalid && dischargeForm.controls.dischargedAtLocal.touched) {

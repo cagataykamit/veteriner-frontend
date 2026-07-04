@@ -149,7 +149,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         <input
                             id="treatmentDateLocal"
                             type="datetime-local"
-                            class="w-full p-inputtext p-component"
+                            class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="treatmentDateLocal"
                         />
                         @if (form.controls.treatmentDateLocal.invalid && form.controls.treatmentDateLocal.touched) {

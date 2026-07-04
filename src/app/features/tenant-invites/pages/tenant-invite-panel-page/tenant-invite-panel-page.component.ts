@@ -109,7 +109,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="inviteExpires" class="block text-sm font-medium text-muted-color mb-2">Son geçerlilik (isteğe bağlı)</label>
-                            <input id="inviteExpires" type="datetime-local" class="w-full p-inputtext p-component" formControlName="expiresAtLocal" />
+                            <input id="inviteExpires" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="expiresAtLocal" />
                             <small class="text-muted-color">Boş bırakılırsa backend varsayılanını kullanır.</small>
                         </div>
                     </div>

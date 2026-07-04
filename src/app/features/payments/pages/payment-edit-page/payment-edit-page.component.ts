@@ -180,7 +180,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-4">
                             <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
-                            <input id="paidAtLocal" type="datetime-local" class="w-full p-inputtext p-component" formControlName="paidAtLocal" />
+                            <input id="paidAtLocal" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="paidAtLocal" />
                             @if (form.controls.paidAtLocal.invalid && form.controls.paidAtLocal.touched) {
                                 <small class="text-red-500">Zorunlu alan.</small>
                             } @else if (apiFieldErrors().paidAtLocal) {
