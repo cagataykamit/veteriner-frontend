@@ -182,7 +182,8 @@ import { EXAMINATION_TIME_SELECT_OPTIONS } from '@/app/features/examinations/uti
                             optionValue="value"
                             placeholder="Muayene saati seçin"
                             [showClear]="true"
-                            styleClass="w-full"
+                            styleClass="w-full vet-time-select"
+                            panelStyleClass="vet-time-select-panel"
                         />
                         @if (form.controls.examinationTime.invalid && form.controls.examinationTime.touched) {
                             <small class="text-red-500">Muayene saati seçilmelidir.</small>

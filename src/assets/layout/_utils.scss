@@ -32,3 +32,15 @@ input[type='time'] ~ small.text-red-500 {
     display: block;
     margin-top: 0.25rem;
 }
+
+/* Muayene / randevu saati p-select — tabular rakamlarla optik hizalama */
+.vet-time-select .p-select-label {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+}
+
+.vet-time-select-panel .p-select-option,
+.vet-time-select-panel .p-select-option-label {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+}

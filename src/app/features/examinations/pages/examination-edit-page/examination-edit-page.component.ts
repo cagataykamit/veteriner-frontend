@@ -168,7 +168,8 @@ import { examinationTimeSelectOptionsWithLegacy } from '@/app/features/examinati
                                 optionValue="value"
                                 placeholder="Muayene saati seçin"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                styleClass="w-full vet-time-select"
+                                panelStyleClass="vet-time-select-panel"
                             />
                             @if (apiFieldErrors().examinationTime) {
                                 <small class="text-red-500">{{ apiFieldErrors().examinationTime }}</small>

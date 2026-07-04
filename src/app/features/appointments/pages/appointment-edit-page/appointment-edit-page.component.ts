@@ -172,7 +172,8 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                                 optionValue="value"
                                 placeholder="Randevu saati seçin"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                styleClass="w-full vet-time-select"
+                                panelStyleClass="vet-time-select-panel"
                                 [disabled]="timeOptions().length === 0 || !!workingHoursLoadError()"
                             />
                             @if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
