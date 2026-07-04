@@ -175,7 +175,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
-                            <input id="followUpDate" type="date" class="w-full p-inputtext p-component" formControlName="followUpDate" />
+                            <input id="followUpDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="followUpDate" />
                             @if (apiFieldErrors().followUpDate) {
                                 <small class="text-red-500">{{ apiFieldErrors().followUpDate }}</small>
                             }

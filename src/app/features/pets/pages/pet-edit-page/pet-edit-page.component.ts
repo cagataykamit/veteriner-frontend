@@ -182,7 +182,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="birthDate" class="block text-sm font-medium text-muted-color mb-2">Doğum tarihi</label>
-                            <input id="birthDate" type="date" class="w-full p-inputtext p-component" formControlName="birthDate" />
+                            <input id="birthDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="birthDate" />
                             @if (apiFieldErrors().birthDate) {
                                 <small class="text-red-500">{{ apiFieldErrors().birthDate }}</small>
                             } @else if (form.controls.birthDate.invalid && form.controls.birthDate.touched) {

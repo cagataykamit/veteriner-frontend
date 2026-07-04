@@ -166,8 +166,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                             </label>
                             <input
                                 id="remLogFrom"
-                                type="date"
-                                class="w-full p-inputtext p-component"
+                                type="date" class="w-full md:max-w-64 p-inputtext p-component"
                                 [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
                                 [(ngModel)]="fromDateInput"
                             />
@@ -194,8 +193,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                             </label>
                             <input
                                 id="remLogTo"
-                                type="date"
-                                class="w-full p-inputtext p-component"
+                                type="date" class="w-full md:max-w-64 p-inputtext p-component"
                                 [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
                                 [(ngModel)]="toDateInput"
                             />

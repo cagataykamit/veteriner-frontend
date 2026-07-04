@@ -150,12 +150,13 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
                         <input
                             id="scheduledDate"
-                            type="date"
-                            class="w-full p-inputtext p-component"
+                            type="date" class="w-full md:max-w-64 p-inputtext p-component"
                             formControlName="scheduledDate"
                             [min]="minScheduledDate()"
                         />
-                        @if (form.controls.scheduledDate.hasError('pastDate') && form.controls.scheduledDate.touched) {
+                        @if (apiFieldErrors().scheduledAtLocal) {
+                            <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
+                        } @else if (form.controls.scheduledDate.hasError('pastDate') && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">Geçmiş bir tarih seçilemez.</small>
                         } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
@@ -173,9 +174,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                             [showClear]="true"
                             styleClass="w-full"
                         />
-                        @if (apiFieldErrors().scheduledAtLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                        } @else if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
+                        @if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
                             <small class="text-red-500">Randevu saati seçilmelidir.</small>
                         } @else if (workingHoursLoadError(); as whErr) {
                             <small class="text-red-500">{{ whErr }}</small>

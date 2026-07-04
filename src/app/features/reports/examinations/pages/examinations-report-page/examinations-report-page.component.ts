@@ -102,8 +102,7 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
                     </label>
                     <input
                         id="examRepFrom"
-                        type="date"
-                        class="w-full p-inputtext p-component"
+                        type="date" class="w-full md:max-w-64 p-inputtext p-component"
                         [ngClass]="activeInputClass(isFromDateActive())"
                         [(ngModel)]="fromDateInput"
                     />
@@ -119,8 +118,7 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
                     </label>
                     <input
                         id="examRepTo"
-                        type="date"
-                        class="w-full p-inputtext p-component"
+                        type="date" class="w-full md:max-w-64 p-inputtext p-component"
                         [ngClass]="activeInputClass(isToDateActive())"
                         [(ngModel)]="toDateInput"
                     />

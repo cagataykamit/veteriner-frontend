@@ -155,7 +155,12 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
-                            <input id="scheduledDate" type="date" class="w-full p-inputtext p-component" formControlName="scheduledDate" />
+                            <input id="scheduledDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="scheduledDate" />
+                            @if (apiFieldErrors().scheduledAtLocal) {
+                                <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
+                            } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
+                                <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
+                            }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="scheduledTime" class="block text-sm font-medium text-muted-color mb-2">Randevu saati *</label>
@@ -170,11 +175,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                                 styleClass="w-full"
                                 [disabled]="timeOptions().length === 0 || !!workingHoursLoadError()"
                             />
-                            @if (apiFieldErrors().scheduledAtLocal) {
-                                <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                            } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
-                                <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
-                            } @else if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
+                            @if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
                                 <small class="text-red-500">Randevu saati seçilmelidir.</small>
                             } @else if (workingHoursLoadError(); as whErr) {
                                 <small class="text-red-500">{{ whErr }}</small>
