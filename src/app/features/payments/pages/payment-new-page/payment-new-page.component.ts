@@ -31,6 +31,11 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import {
+    DATETIME_LOCAL_INPUT_MAX,
+    DATETIME_LOCAL_INPUT_MIN,
+    dateTimeYearRangeValidator
+} from '@/app/shared/utils/date-input-validation.utils';
 import { parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -177,8 +182,10 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
-                        <input id="paidAtLocal" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="paidAtLocal" />
-                        @if (form.controls.paidAtLocal.invalid && form.controls.paidAtLocal.touched) {
+                        <input id="paidAtLocal" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="paidAtLocal" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                        @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (form.controls.paidAtLocal.invalid && form.controls.paidAtLocal.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().paidAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().paidAtLocal }}</small>
@@ -220,6 +227,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class PaymentNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
+    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly paymentsService = inject(PaymentsService);
@@ -264,7 +273,7 @@ export class PaymentNewPageComponent implements OnInit {
         amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
         currency: ['TRY', Validators.required],
         method: ['cash', Validators.required],
-        paidAtLocal: ['', Validators.required],
+        paidAtLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
         note: ['']
     });
 

@@ -139,6 +139,8 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                 <input
                                     id="rxFrom"
                                     type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                                    min="1900-01-01"
+                                    max="9999-12-31"
                                     [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
                                     [(ngModel)]="fromDateInput"
                                 />
@@ -166,6 +168,8 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                 <input
                                     id="rxTo"
                                     type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                                    min="1900-01-01"
+                                    max="9999-12-31"
                                     [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
                                     [(ngModel)]="toDateInput"
                                 />

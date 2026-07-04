@@ -36,6 +36,7 @@ import {
 } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
+import { DATE_INPUT_MAX, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
 import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
@@ -153,8 +154,11 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                             type="date" class="w-full md:max-w-64 p-inputtext p-component"
                             formControlName="scheduledDate"
                             [min]="minScheduledDate()"
+                            [max]="dateInputMax"
                         />
-                        @if (apiFieldErrors().scheduledAtLocal) {
+                        @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (apiFieldErrors().scheduledAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
                         } @else if (form.controls.scheduledDate.hasError('pastDate') && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">Geçmiş bir tarih seçilemez.</small>
@@ -274,6 +278,8 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
     `
 })
 export class AppointmentNewPageComponent implements OnInit {
+    protected readonly dateInputMax = DATE_INPUT_MAX;
+
     private readonly fb = inject(FormBuilder);
     private readonly appointmentsService = inject(AppointmentsService);
     private readonly clientsService = inject(ClientsService);
@@ -309,7 +315,11 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
-        scheduledDate: this.fb.nonNullable.control('', [Validators.required, appointmentCreatePastDateValidator()]),
+        scheduledDate: this.fb.nonNullable.control('', [
+            Validators.required,
+            appointmentCreatePastDateValidator(),
+            dateYearRangeValidator()
+        ]),
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
         durationMinutes: this.fb.nonNullable.control<number | string>(30, [
             Validators.required,

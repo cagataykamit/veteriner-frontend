@@ -1,5 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { dateOnlyInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { validateDateInputYearRange } from '@/app/shared/utils/date-input-validation.utils';
 
 /** Boş değilse kilo sayısal ve makul aralıkta olmalı (backend kesin doğrular). */
 export function petWeightStrValidator(): ValidatorFn {
@@ -27,11 +27,7 @@ export function petBirthDateValidator(): ValidatorFn {
         if (v === '') {
             return null;
         }
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) {
-            return { birthDateInvalid: true };
-        }
-        const iso = dateOnlyInputToUtcIso(v);
-        if (!iso) {
+        if (validateDateInputYearRange(v)) {
             return { birthDateInvalid: true };
         }
         return null;

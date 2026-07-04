@@ -15,6 +15,11 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import {
+    DATETIME_LOCAL_INPUT_MAX,
+    DATETIME_LOCAL_INPUT_MIN,
+    dateTimeYearRangeValidator
+} from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
@@ -215,8 +220,12 @@ import {
                             type="datetime-local"
                             class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="dischargedAtLocal"
+                            [min]="datetimeLocalInputMin"
+                            [max]="datetimeLocalInputMax"
                         />
-                        @if (dischargeForm.controls.dischargedAtLocal.invalid && dischargeForm.controls.dischargedAtLocal.touched) {
+                        @if (dischargeForm.controls.dischargedAtLocal.hasError('dateYearInvalid') && dischargeForm.controls.dischargedAtLocal.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (dischargeForm.controls.dischargedAtLocal.invalid && dischargeForm.controls.dischargedAtLocal.touched) {
                             <small class="text-red-500">Zorunlu.</small>
                         } @else if (dischargeFieldErrors().dischargedAtLocal) {
                             <small class="text-red-500">{{ dischargeFieldErrors().dischargedAtLocal }}</small>
@@ -248,6 +257,8 @@ import {
     `
 })
 export class HospitalizationDetailPageComponent implements OnInit {
+    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
+    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     private readonly route = inject(ActivatedRoute);
     private readonly hospitalizationsService = inject(HospitalizationsService);
     private readonly fb = inject(FormBuilder);
@@ -266,7 +277,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     readonly dischargeFieldErrors = signal<HospitalizationDischargeFieldErrors>({});
 
     readonly dischargeForm = this.fb.nonNullable.group({
-        dischargedAtLocal: ['', Validators.required],
+        dischargedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
         notes: ['']
     });
 

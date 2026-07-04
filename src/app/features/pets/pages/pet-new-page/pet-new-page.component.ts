@@ -30,6 +30,7 @@ import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quic
 import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { DATE_INPUT_MAX, DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -185,7 +186,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="birthDate" class="block text-sm font-medium text-muted-color mb-2">Doğum tarihi</label>
-                        <input id="birthDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="birthDate" />
+                        <input id="birthDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="birthDate" [min]="dateInputMin" [max]="dateInputMax" />
                         @if (apiFieldErrors().birthDate) {
                             <small class="text-red-500">{{ apiFieldErrors().birthDate }}</small>
                         } @else if (form.controls.birthDate.invalid && form.controls.birthDate.touched) {
@@ -303,6 +304,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class PetNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    protected readonly dateInputMin = DATE_INPUT_MIN;
+    protected readonly dateInputMax = DATE_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly petsService = inject(PetsService);

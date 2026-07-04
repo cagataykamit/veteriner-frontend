@@ -40,6 +40,11 @@ import {
     toIstanbulDateInputValue,
     toIstanbulTimeInputValue
 } from '@/app/shared/utils/date.utils';
+import {
+    DATE_INPUT_MAX,
+    DATE_INPUT_MIN,
+    dateYearRangeValidator
+} from '@/app/shared/utils/date-input-validation.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
@@ -155,8 +160,10 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
-                            <input id="scheduledDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="scheduledDate" />
-                            @if (apiFieldErrors().scheduledAtLocal) {
+                            <input id="scheduledDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="scheduledDate" [min]="dateInputMin" [max]="dateInputMax" />
+                            @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
+                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            } @else if (apiFieldErrors().scheduledAtLocal) {
                                 <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
                             } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
                                 <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
@@ -286,6 +293,8 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
 })
 export class AppointmentEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    protected readonly dateInputMin = DATE_INPUT_MIN;
+    protected readonly dateInputMax = DATE_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly appointmentsService = inject(AppointmentsService);
@@ -343,7 +352,7 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
-        scheduledDate: this.fb.nonNullable.control('', Validators.required),
+        scheduledDate: this.fb.nonNullable.control('', [Validators.required, dateYearRangeValidator()]),
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
         durationMinutes: this.fb.nonNullable.control<number | string>(30, [
             Validators.required,

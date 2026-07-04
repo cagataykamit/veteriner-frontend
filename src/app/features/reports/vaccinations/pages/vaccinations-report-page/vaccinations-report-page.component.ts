@@ -103,6 +103,8 @@ const VACCINATIONS_REPORT_STATE_KEY = 'panel:reports:vaccinations:listState';
                     <input
                         id="vacRepFrom"
                         type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                        min="1900-01-01"
+                        max="9999-12-31"
                         [ngClass]="activeInputClass(isFromDateActive())"
                         [(ngModel)]="fromDateInput"
                     />
@@ -119,6 +121,8 @@ const VACCINATIONS_REPORT_STATE_KEY = 'panel:reports:vaccinations:listState';
                     <input
                         id="vacRepTo"
                         type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                        min="1900-01-01"
+                        max="9999-12-31"
                         [ngClass]="activeInputClass(isToDateActive())"
                         [(ngModel)]="toDateInput"
                     />

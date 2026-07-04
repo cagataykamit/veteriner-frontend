@@ -53,6 +53,14 @@ import {
     fromIstanbulDateTimeLocalInputToUtcIso,
     toIstanbulDateTimeLocalInputValue
 } from '@/app/shared/utils/date.utils';
+import {
+    DATE_INPUT_MAX,
+    DATE_INPUT_MIN,
+    DATETIME_LOCAL_INPUT_MAX,
+    DATETIME_LOCAL_INPUT_MIN,
+    dateTimeYearRangeValidator,
+    dateYearRangeValidator
+} from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -166,8 +174,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 type="datetime-local"
                                 class="w-full md:max-w-96 p-inputtext p-component"
                                 formControlName="prescribedAtLocal"
+                                [min]="datetimeLocalInputMin"
+                                [max]="datetimeLocalInputMax"
                             />
-                            @if (apiFieldErrors().prescribedAtLocal) {
+                            @if (form.controls.prescribedAtLocal.hasError('dateYearInvalid') && form.controls.prescribedAtLocal.touched) {
+                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            } @else if (apiFieldErrors().prescribedAtLocal) {
                                 <small class="text-red-500">{{ apiFieldErrors().prescribedAtLocal }}</small>
                             } @else if (form.controls.prescribedAtLocal.invalid && form.controls.prescribedAtLocal.touched) {
                                 <small class="text-red-500">Reçete tarihi zorunludur.</small>
@@ -175,8 +187,10 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
-                            <input id="followUpDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="followUpDate" />
-                            @if (apiFieldErrors().followUpDate) {
+                            <input id="followUpDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="followUpDate" [min]="dateInputMin" [max]="dateInputMax" />
+                            @if (form.controls.followUpDate.hasError('dateYearInvalid') && form.controls.followUpDate.touched) {
+                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            } @else if (apiFieldErrors().followUpDate) {
                                 <small class="text-red-500">{{ apiFieldErrors().followUpDate }}</small>
                             }
                         </div>
@@ -282,6 +296,10 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class PrescriptionEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    protected readonly dateInputMin = DATE_INPUT_MIN;
+    protected readonly dateInputMax = DATE_INPUT_MAX;
+    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
+    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
@@ -325,8 +343,8 @@ export class PrescriptionEditPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        prescribedAtLocal: ['', Validators.required],
-        followUpDate: [''],
+        prescribedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
+        followUpDate: ['', dateYearRangeValidator()],
         examinationId: [''],
         treatmentId: [''],
         title: ['', Validators.required],

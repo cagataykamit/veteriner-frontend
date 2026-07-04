@@ -24,6 +24,11 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
+import {
+    DATE_INPUT_MAX,
+    DATE_INPUT_MIN,
+    dateYearRangeValidator
+} from '@/app/shared/utils/date-input-validation.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -165,8 +170,12 @@ import { EXAMINATION_TIME_SELECT_OPTIONS } from '@/app/features/examinations/uti
                             type="date"
                             class="w-full md:max-w-64 p-inputtext p-component"
                             formControlName="examinationDate"
+                            [min]="dateInputMin"
+                            [max]="dateInputMax"
                         />
-                        @if (form.controls.examinationDate.invalid && form.controls.examinationDate.touched) {
+                        @if (form.controls.examinationDate.hasError('dateYearInvalid') && form.controls.examinationDate.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (form.controls.examinationDate.invalid && form.controls.examinationDate.touched) {
                             <small class="text-red-500">Muayene tarihi seçilmelidir.</small>
                         } @else if (apiFieldErrors().examinationDate) {
                             <small class="text-red-500">{{ apiFieldErrors().examinationDate }}</small>
@@ -253,6 +262,8 @@ import { EXAMINATION_TIME_SELECT_OPTIONS } from '@/app/features/examinations/uti
 })
 export class ExaminationNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    protected readonly dateInputMin = DATE_INPUT_MIN;
+    protected readonly dateInputMax = DATE_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly examinationsService = inject(ExaminationsService);
@@ -287,7 +298,7 @@ export class ExaminationNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        examinationDate: ['', Validators.required],
+        examinationDate: ['', [Validators.required, dateYearRangeValidator()]],
         examinationTime: ['', Validators.required],
         visitReason: ['', Validators.required],
         notes: [''],

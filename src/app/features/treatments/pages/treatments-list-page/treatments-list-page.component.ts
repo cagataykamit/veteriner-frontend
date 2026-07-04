@@ -89,11 +89,11 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6">
                                 <label for="trFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
-                                <input id="trFrom" type="date" class="w-full md:max-w-64 p-inputtext p-component" [(ngModel)]="fromDateInput" />
+                                <input id="trFrom" type="date" class="w-full md:max-w-64 p-inputtext p-component" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="trTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
-                                <input id="trTo" type="date" class="w-full md:max-w-64 p-inputtext p-component" [(ngModel)]="toDateInput" />
+                                <input id="trTo" type="date" class="w-full md:max-w-64 p-inputtext p-component" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
                             </div>
                         </div>
                     </div>

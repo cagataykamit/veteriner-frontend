@@ -111,6 +111,8 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                     <input
                         id="apptRepFrom"
                         type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                        min="1900-01-01"
+                        max="9999-12-31"
                         [ngClass]="activeInputClass(isFromDateActive())"
                         [(ngModel)]="fromDateInput"
                     />
@@ -127,6 +129,8 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                     <input
                         id="apptRepTo"
                         type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                        min="1900-01-01"
+                        max="9999-12-31"
                         [ngClass]="activeInputClass(isToDateActive())"
                         [(ngModel)]="toDateInput"
                     />

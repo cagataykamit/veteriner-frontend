@@ -16,6 +16,11 @@ import { tenantInvitePanelFailureMessage } from '@/app/features/tenant-invites/u
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateTimeLocalInputToIsoUtc, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import {
+    DATETIME_LOCAL_INPUT_MAX,
+    DATETIME_LOCAL_INPUT_MIN,
+    dateTimeYearRangeValidator
+} from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -109,7 +114,10 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="inviteExpires" class="block text-sm font-medium text-muted-color mb-2">Son geçerlilik (isteğe bağlı)</label>
-                            <input id="inviteExpires" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="expiresAtLocal" />
+                            <input id="inviteExpires" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="expiresAtLocal" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                            @if (form.controls.expiresAtLocal.hasError('dateYearInvalid') && form.controls.expiresAtLocal.touched) {
+                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            }
                             <small class="text-muted-color">Boş bırakılırsa backend varsayılanını kullanır.</small>
                         </div>
                     </div>
@@ -194,6 +202,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     `
 })
 export class TenantInvitePanelPageComponent implements OnInit {
+    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
+    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     /** Şablonda join URL üretimi için (import doğrudan şablonda kullanılamaz). */
     readonly buildInviteLink = buildPublicJoinInviteUrl;
 
@@ -229,7 +239,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
         email: ['', [Validators.required, Validators.email]],
         clinicId: ['', Validators.required],
         operationClaimId: ['', Validators.required],
-        expiresAtLocal: ['']
+        expiresAtLocal: ['', dateTimeYearRangeValidator()]
     });
 
     ngOnInit(): void {

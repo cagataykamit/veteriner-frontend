@@ -1,4 +1,5 @@
 import { AbstractControl, FormBuilder, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import type {
@@ -71,7 +72,7 @@ export function createStockMovementFormGroup(fb: FormBuilder) {
         quantity: [null as number | null, [Validators.required, stockMovementQuantityValidator()]],
         unitCost: [null as number | null, optionalNonNegativeValidator()],
         reason: [''],
-        occurredAtUtcLocal: [''],
+        occurredAtUtcLocal: ['', dateTimeYearRangeValidator()],
         notes: ['']
     });
 }

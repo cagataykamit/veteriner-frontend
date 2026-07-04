@@ -184,6 +184,8 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                 <input
                                     id="apptFrom"
                                     type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                                    min="1900-01-01"
+                                    max="9999-12-31"
                                     [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
                                     [(ngModel)]="fromDateInput"
                                 />
@@ -211,6 +213,8 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                 <input
                                     id="apptTo"
                                     type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                                    min="1900-01-01"
+                                    max="9999-12-31"
                                     [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
                                     [(ngModel)]="toDateInput"
                                 />

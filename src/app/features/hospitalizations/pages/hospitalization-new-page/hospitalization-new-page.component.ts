@@ -35,6 +35,11 @@ import {
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import {
+    DATETIME_LOCAL_INPUT_MAX,
+    DATETIME_LOCAL_INPUT_MIN,
+    dateTimeYearRangeValidator
+} from '@/app/shared/utils/date-input-validation.utils';
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
@@ -121,8 +126,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             type="datetime-local"
                             class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="admittedAtLocal"
+                            [min]="datetimeLocalInputMin"
+                            [max]="datetimeLocalInputMax"
                         />
-                        @if (form.controls.admittedAtLocal.invalid && form.controls.admittedAtLocal.touched) {
+                        @if (form.controls.admittedAtLocal.hasError('dateYearInvalid') && form.controls.admittedAtLocal.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (form.controls.admittedAtLocal.invalid && form.controls.admittedAtLocal.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().admittedAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().admittedAtLocal }}</small>
@@ -135,8 +144,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             type="datetime-local"
                             class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="plannedDischargeAtLocal"
+                            [min]="datetimeLocalInputMin"
+                            [max]="datetimeLocalInputMax"
                         />
-                        @if (apiFieldErrors().plannedDischargeAtLocal) {
+                        @if (form.controls.plannedDischargeAtLocal.hasError('dateYearInvalid') && form.controls.plannedDischargeAtLocal.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (apiFieldErrors().plannedDischargeAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().plannedDischargeAtLocal }}</small>
                         }
                     </div>
@@ -197,6 +210,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class HospitalizationNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
+    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly hospitalizationsService = inject(HospitalizationsService);
@@ -227,8 +242,8 @@ export class HospitalizationNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        admittedAtLocal: ['', Validators.required],
-        plannedDischargeAtLocal: [''],
+        admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
+        plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
         examinationId: [''],
         reason: ['', Validators.required],
         notes: ['']

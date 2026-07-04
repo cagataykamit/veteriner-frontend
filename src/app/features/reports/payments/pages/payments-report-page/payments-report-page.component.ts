@@ -106,6 +106,8 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                     <input
                         id="repFrom"
                         type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                        min="1900-01-01"
+                        max="9999-12-31"
                         [ngClass]="activeInputClass(isFromDateActive())"
                         [(ngModel)]="fromDateInput"
                     />
@@ -122,6 +124,8 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                     <input
                         id="repTo"
                         type="date" class="w-full md:max-w-64 p-inputtext p-component"
+                        min="1900-01-01"
+                        max="9999-12-31"
                         [ngClass]="activeInputClass(isToDateActive())"
                         [(ngModel)]="toDateInput"
                     />
