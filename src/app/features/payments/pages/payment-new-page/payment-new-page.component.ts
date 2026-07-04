@@ -33,9 +33,14 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import {
     DATETIME_LOCAL_INPUT_MAX,
-    DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator
+    dateTimeYearRangeValidator,
+    effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
+import {
+    PAYMENT_DATE_TOO_FAR_PAST_MESSAGE,
+    paymentDateNotTooFarPastValidator,
+    paymentDateTimeLocalMinAllowed
+} from '@/app/features/payments/utils/payment-date-validation.utils';
 import { parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -182,13 +187,15 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
-                        <input id="paidAtLocal" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="paidAtLocal" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                        <input id="paidAtLocal" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="paidAtLocal" [min]="paymentDateMinAllowed()" [max]="datetimeLocalInputMax" />
                         @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
-                        } @else if (form.controls.paidAtLocal.invalid && form.controls.paidAtLocal.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched) {
+                            <small class="text-red-500 block">{{ paymentDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().paidAtLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().paidAtLocal }}</small>
+                            <small class="text-red-500 block">{{ apiFieldErrors().paidAtLocal }}</small>
+                        } @else if (form.controls.paidAtLocal.invalid && form.controls.paidAtLocal.touched) {
+                            <small class="text-red-500 block">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -227,8 +234,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class PaymentNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
-    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
     protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
+    protected readonly paymentDateTooFarPastMessage = PAYMENT_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
     private readonly paymentsService = inject(PaymentsService);
@@ -273,7 +280,7 @@ export class PaymentNewPageComponent implements OnInit {
         amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
         currency: ['TRY', Validators.required],
         method: ['cash', Validators.required],
-        paidAtLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
+        paidAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), paymentDateNotTooFarPastValidator()]],
         note: ['']
     });
 
@@ -338,6 +345,10 @@ export class PaymentNewPageComponent implements OnInit {
         this.loadPetsForClient(cid, pid);
     }
 
+    paymentDateMinAllowed(): string {
+        return effectiveDateTimeLocalInputMin(paymentDateTimeLocalMinAllowed());
+    }
+
     goList(): void {
         void this.router.navigate(['/panel/payments']);
     }
@@ -392,7 +403,7 @@ export class PaymentNewPageComponent implements OnInit {
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePaymentUpsertHttpError(e);
                     this.apiFieldErrors.set(parsed.fieldErrors);
-                    this.submitError.set(parsed.summaryMessage);
+                    this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
                     return;
                 }
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');

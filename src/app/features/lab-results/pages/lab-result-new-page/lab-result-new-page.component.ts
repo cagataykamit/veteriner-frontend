@@ -38,9 +38,14 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import {
     DATETIME_LOCAL_INPUT_MAX,
-    DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator
+    dateTimeYearRangeValidator,
+    effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
+import {
+    LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE,
+    labResultDateNotTooFarPastValidator,
+    labResultDateTimeLocalMinAllowed
+} from '@/app/features/lab-results/utils/lab-result-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -154,15 +159,17 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             type="datetime-local"
                             class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="resultDateLocal"
-                            [min]="datetimeLocalInputMin"
+                            [min]="labResultDateMinAllowed()"
                             [max]="datetimeLocalInputMax"
                         />
                         @if (form.controls.resultDateLocal.hasError('dateYearInvalid') && form.controls.resultDateLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
-                        } @else if (form.controls.resultDateLocal.invalid && form.controls.resultDateLocal.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (form.controls.resultDateLocal.hasError('labResultDateTooFarPast') && form.controls.resultDateLocal.touched) {
+                            <small class="text-red-500 block">{{ labResultDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().resultDateLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().resultDateLocal }}</small>
+                            <small class="text-red-500 block">{{ apiFieldErrors().resultDateLocal }}</small>
+                        } @else if (form.controls.resultDateLocal.invalid && form.controls.resultDateLocal.touched) {
+                            <small class="text-red-500 block">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -245,8 +252,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class LabResultNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
-    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
     protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
+    protected readonly labResultDateTooFarPastMessage = LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
     private readonly labResultsService = inject(LabResultsService);
@@ -278,7 +285,7 @@ export class LabResultNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        resultDateLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
+        resultDateLocal: ['', [Validators.required, dateTimeYearRangeValidator(), labResultDateNotTooFarPastValidator()]],
         examinationId: [''],
         testName: ['', Validators.required],
         resultText: ['', Validators.required],
@@ -344,6 +351,10 @@ export class LabResultNewPageComponent implements OnInit {
         } else {
             this.form.controls.examinationId.enable({ emitEvent: false });
         }
+    }
+
+    labResultDateMinAllowed(): string {
+        return effectiveDateTimeLocalInputMin(labResultDateTimeLocalMinAllowed());
     }
 
     goList(): void {
@@ -421,7 +432,7 @@ export class LabResultNewPageComponent implements OnInit {
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseLabResultUpsertHttpError(e);
                     this.apiFieldErrors.set(parsed.fieldErrors);
-                    this.submitError.set(parsed.summaryMessage);
+                    this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
                     return;
                 }
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');

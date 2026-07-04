@@ -38,8 +38,14 @@ import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.
 import {
     DATETIME_LOCAL_INPUT_MAX,
     DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator
+    dateTimeYearRangeValidator,
+    effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
+import {
+    HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE,
+    hospitalizationDateNotTooFarPastValidator,
+    hospitalizationDateTimeLocalMinAllowed
+} from '@/app/features/hospitalizations/utils/hospitalization-date-validation.utils';
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
@@ -126,15 +132,17 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             type="datetime-local"
                             class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="admittedAtLocal"
-                            [min]="datetimeLocalInputMin"
+                            [min]="hospitalizationDateMinAllowed()"
                             [max]="datetimeLocalInputMax"
                         />
                         @if (form.controls.admittedAtLocal.hasError('dateYearInvalid') && form.controls.admittedAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
-                        } @else if (form.controls.admittedAtLocal.invalid && form.controls.admittedAtLocal.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (form.controls.admittedAtLocal.hasError('hospitalizationDateTooFarPast') && form.controls.admittedAtLocal.touched) {
+                            <small class="text-red-500 block">{{ hospitalizationDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().admittedAtLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().admittedAtLocal }}</small>
+                            <small class="text-red-500 block">{{ apiFieldErrors().admittedAtLocal }}</small>
+                        } @else if (form.controls.admittedAtLocal.invalid && form.controls.admittedAtLocal.touched) {
+                            <small class="text-red-500 block">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -212,6 +220,7 @@ export class HospitalizationNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
     protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
+    protected readonly hospitalizationDateTooFarPastMessage = HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
     private readonly hospitalizationsService = inject(HospitalizationsService);
@@ -242,7 +251,7 @@ export class HospitalizationNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
+        admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), hospitalizationDateNotTooFarPastValidator()]],
         plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
         examinationId: [''],
         reason: ['', Validators.required],
@@ -303,6 +312,10 @@ export class HospitalizationNewPageComponent implements OnInit {
         }
     }
 
+    hospitalizationDateMinAllowed(): string {
+        return effectiveDateTimeLocalInputMin(hospitalizationDateTimeLocalMinAllowed());
+    }
+
     goList(): void {
         void this.router.navigate(['/panel/hospitalizations']);
     }
@@ -355,7 +368,7 @@ export class HospitalizationNewPageComponent implements OnInit {
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseHospitalizationUpsertHttpError(e);
                     this.apiFieldErrors.set(parsed.fieldErrors);
-                    this.submitError.set(parsed.summaryMessage);
+                    this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
                     return;
                 }
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');

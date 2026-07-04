@@ -53,10 +53,15 @@ import {
     DATE_INPUT_MAX,
     DATE_INPUT_MIN,
     DATETIME_LOCAL_INPUT_MAX,
-    DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator,
-    dateYearRangeValidator
+    dateYearRangeValidator,
+    effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
+import {
+    PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE,
+    prescriptionDateNotTooFarPastValidator,
+    prescriptionDateTimeLocalMinAllowed
+} from '@/app/features/prescriptions/utils/prescription-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -174,15 +179,17 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             type="datetime-local"
                             class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="prescribedAtLocal"
-                            [min]="datetimeLocalInputMin"
+                            [min]="prescriptionDateMinAllowed()"
                             [max]="datetimeLocalInputMax"
                         />
                         @if (form.controls.prescribedAtLocal.hasError('dateYearInvalid') && form.controls.prescribedAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
-                        } @else if (form.controls.prescribedAtLocal.invalid && form.controls.prescribedAtLocal.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                        } @else if (form.controls.prescribedAtLocal.hasError('prescriptionDateTooFarPast') && form.controls.prescribedAtLocal.touched) {
+                            <small class="text-red-500 block">{{ prescriptionDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().prescribedAtLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().prescribedAtLocal }}</small>
+                            <small class="text-red-500 block">{{ apiFieldErrors().prescribedAtLocal }}</small>
+                        } @else if (form.controls.prescribedAtLocal.invalid && form.controls.prescribedAtLocal.touched) {
+                            <small class="text-red-500 block">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -288,8 +295,8 @@ export class PrescriptionNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
     protected readonly dateInputMax = DATE_INPUT_MAX;
-    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
     protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
+    protected readonly prescriptionDateTooFarPastMessage = PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
     private readonly prescriptionsService = inject(PrescriptionsService);
@@ -327,7 +334,7 @@ export class PrescriptionNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        prescribedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
+        prescribedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), prescriptionDateNotTooFarPastValidator()]],
         followUpDate: ['', dateYearRangeValidator()],
         examinationId: [''],
         treatmentId: [''],
@@ -429,6 +436,10 @@ export class PrescriptionNewPageComponent implements OnInit {
         }
     }
 
+    prescriptionDateMinAllowed(): string {
+        return effectiveDateTimeLocalInputMin(prescriptionDateTimeLocalMinAllowed());
+    }
+
     goList(): void {
         void this.router.navigate(['/panel/prescriptions']);
     }
@@ -526,7 +537,7 @@ export class PrescriptionNewPageComponent implements OnInit {
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePrescriptionUpsertHttpError(e);
                     this.apiFieldErrors.set(parsed.fieldErrors);
-                    this.submitError.set(parsed.summaryMessage);
+                    this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
                     return;
                 }
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
