@@ -38,6 +38,19 @@ import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examinati
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import {
+    DATE_INPUT_MAX,
+    DATE_INPUT_MIN,
+    DATETIME_LOCAL_INPUT_MAX,
+    dateTimeYearRangeValidator,
+    dateYearRangeValidator,
+    effectiveDateTimeLocalInputMin
+} from '@/app/shared/utils/date-input-validation.utils';
+import {
+    TREATMENT_DATE_TOO_FAR_PAST_MESSAGE,
+    treatmentDateNotTooFarPastValidator,
+    treatmentDateTimeLocalMinAllowed
+} from '@/app/features/treatments/utils/treatment-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -151,11 +164,17 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             type="datetime-local"
                             class="w-full md:max-w-96 p-inputtext p-component"
                             formControlName="treatmentDateLocal"
+                            [min]="treatmentDateMinAllowed()"
+                            [max]="datetimeLocalInputMax"
                         />
-                        @if (form.controls.treatmentDateLocal.invalid && form.controls.treatmentDateLocal.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                        @if (form.controls.treatmentDateLocal.hasError('dateYearInvalid') && form.controls.treatmentDateLocal.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (form.controls.treatmentDateLocal.hasError('treatmentDateTooFarPast') && form.controls.treatmentDateLocal.touched) {
+                            <small class="text-red-500 block">{{ treatmentDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().treatmentDateLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().treatmentDateLocal }}</small>
+                            <small class="text-red-500 block">{{ apiFieldErrors().treatmentDateLocal }}</small>
+                        } @else if (form.controls.treatmentDateLocal.invalid && form.controls.treatmentDateLocal.touched) {
+                            <small class="text-red-500 block">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -204,8 +223,10 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
-                        <input id="followUpDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="followUpDate" />
-                        @if (apiFieldErrors().followUpDate) {
+                        <input id="followUpDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="followUpDate" [min]="dateInputMin" [max]="dateInputMax" />
+                        @if (form.controls.followUpDate.hasError('dateYearInvalid') && form.controls.followUpDate.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (apiFieldErrors().followUpDate) {
                             <small class="text-red-500">{{ apiFieldErrors().followUpDate }}</small>
                         }
                     </div>
@@ -238,6 +259,10 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class TreatmentNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    protected readonly dateInputMin = DATE_INPUT_MIN;
+    protected readonly dateInputMax = DATE_INPUT_MAX;
+    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
+    protected readonly treatmentDateTooFarPastMessage = TREATMENT_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
     private readonly treatmentsService = inject(TreatmentsService);
@@ -269,9 +294,9 @@ export class TreatmentNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        treatmentDateLocal: ['', Validators.required],
+        treatmentDateLocal: ['', [Validators.required, dateTimeYearRangeValidator(), treatmentDateNotTooFarPastValidator()]],
         examinationId: [''],
-        followUpDate: [''],
+        followUpDate: ['', dateYearRangeValidator()],
         title: ['', Validators.required],
         description: ['', Validators.required],
         notes: ['']
@@ -378,6 +403,10 @@ export class TreatmentNewPageComponent implements OnInit {
         this.loadPetsForClient(cid, pid);
     }
 
+    treatmentDateMinAllowed(): string {
+        return effectiveDateTimeLocalInputMin(treatmentDateTimeLocalMinAllowed());
+    }
+
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
@@ -389,7 +418,8 @@ export class TreatmentNewPageComponent implements OnInit {
         const v = this.form.getRawValue();
         const treatmentDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.treatmentDateLocal);
         if (!treatmentDateUtc) {
-            this.submitError.set('Geçerli bir tedavi tarihi ve saati seçin.');
+            this.apiFieldErrors.set({ treatmentDateLocal: 'Geçerli bir tedavi tarihi ve saati seçin.' });
+            this.form.controls.treatmentDateLocal.markAsTouched();
             return;
         }
         const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(v.followUpDate.trim()) : null;
@@ -431,7 +461,7 @@ export class TreatmentNewPageComponent implements OnInit {
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseTreatmentUpsertHttpError(e);
                     this.apiFieldErrors.set(parsed.fieldErrors);
-                    this.submitError.set(parsed.summaryMessage);
+                    this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
                     return;
                 }
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
