@@ -8,7 +8,8 @@ const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 export type ExaminationUpsertFormFieldKey =
     | 'clientId'
     | 'petId'
-    | 'examinationDateLocal'
+    | 'examinationDate'
+    | 'examinationTime'
     | 'visitReason'
     | 'notes'
     | 'findings'
@@ -27,9 +28,9 @@ const FIELD_MAP: Record<string, ExaminationUpsertFormFieldKey> = {
     ownerid: 'clientId',
     petid: 'petId',
     animalid: 'petId',
-    examinedatutc: 'examinationDateLocal',
-    examinationdateutc: 'examinationDateLocal',
-    scheduledatutc: 'examinationDateLocal',
+    examinedatutc: 'examinationDate',
+    examinationdateutc: 'examinationDate',
+    scheduledatutc: 'examinationDate',
     visitreason: 'visitReason',
     /** Eski/alias hata kodları — gövdeye `complaint` gönderilmiyor. */
     complaint: 'visitReason',

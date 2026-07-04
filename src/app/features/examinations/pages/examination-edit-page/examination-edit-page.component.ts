@@ -30,14 +30,15 @@ import {
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import {
-    fromIstanbulDateTimeLocalInputToUtcIso,
-    toIstanbulDateTimeLocalInputValue
+    fromIstanbulDateAndTimeToUtcIso,
+    toIstanbulDateTimeInputParts
 } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { examinationTimeSelectOptionsWithLegacy } from '@/app/features/examinations/utils/examination-time-options.utils';
 
 @Component({
     selector: 'app-examination-edit-page',
@@ -144,17 +145,35 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             </div>
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="examinationDateLocal" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi / saati *</label>
+                            <label for="examinationDate" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi *</label>
                             <input
-                                id="examinationDateLocal"
-                                type="datetime-local"
-                                class="w-full p-inputtext p-component"
-                                formControlName="examinationDateLocal"
+                                id="examinationDate"
+                                type="date"
+                                class="w-full md:max-w-64 p-inputtext p-component"
+                                formControlName="examinationDate"
                             />
-                            @if (apiFieldErrors().examinationDateLocal) {
-                                <small class="text-red-500">{{ apiFieldErrors().examinationDateLocal }}</small>
-                            } @else if (form.controls.examinationDateLocal.invalid && form.controls.examinationDateLocal.touched) {
-                                <small class="text-red-500">Muayene tarihi zorunludur.</small>
+                            @if (apiFieldErrors().examinationDate) {
+                                <small class="text-red-500">{{ apiFieldErrors().examinationDate }}</small>
+                            } @else if (form.controls.examinationDate.invalid && form.controls.examinationDate.touched) {
+                                <small class="text-red-500">Muayene tarihi seçilmelidir.</small>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="examinationTime" class="block text-sm font-medium text-muted-color mb-2">Muayene saati *</label>
+                            <p-select
+                                inputId="examinationTime"
+                                formControlName="examinationTime"
+                                [options]="timeOptions()"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Muayene saati seçin"
+                                [showClear]="true"
+                                styleClass="w-full"
+                            />
+                            @if (apiFieldErrors().examinationTime) {
+                                <small class="text-red-500">{{ apiFieldErrors().examinationTime }}</small>
+                            } @else if (form.controls.examinationTime.invalid && form.controls.examinationTime.touched) {
+                                <small class="text-red-500">Muayene saati seçilmelidir.</small>
                             }
                         </div>
                         <div class="col-span-12">
@@ -256,10 +275,13 @@ export class ExaminationEditPageComponent implements OnInit {
     private isInitializingClient = false;
     private editVmCache: ExaminationEditVm | null = null;
 
+    readonly timeOptions = signal<SelectOption[]>([]);
+
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        examinationDateLocal: ['', Validators.required],
+        examinationDate: ['', Validators.required],
+        examinationTime: ['', Validators.required],
         visitReason: ['', Validators.required],
         notes: [''],
         findings: ['', Validators.required],
@@ -270,7 +292,8 @@ export class ExaminationEditPageComponent implements OnInit {
         const fields: ExaminationUpsertFormFieldKey[] = [
             'clientId',
             'petId',
-            'examinationDateLocal',
+            'examinationDate',
+            'examinationTime',
             'visitReason',
             'notes',
             'findings',
@@ -326,11 +349,14 @@ export class ExaminationEditPageComponent implements OnInit {
             next: (x) => {
                 this.editVmCache = x;
                 this.isInitializingClient = true;
+                const { date, time } = toIstanbulDateTimeInputParts(x.examinedAtUtc);
+                this.timeOptions.set(examinationTimeSelectOptionsWithLegacy(time));
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
                         petId: '',
-                        examinationDateLocal: toIstanbulDateTimeLocalInputValue(x.examinedAtUtc),
+                        examinationDate: date,
+                        examinationTime: time,
                         visitReason: x.visitReason,
                         notes: x.notes,
                         findings: x.findings,
@@ -363,7 +389,7 @@ export class ExaminationEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const examinedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.examinationDateLocal);
+        const examinedAtUtc = fromIstanbulDateAndTimeToUtcIso(v.examinationDate, v.examinationTime);
         if (!examinedAtUtc) {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
             return;
