@@ -43,6 +43,10 @@ import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/ut
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import {
+    canShowQuickClientCreateButton,
+    canShowQuickPetCreateButton
+} from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 
 @Component({
@@ -96,17 +100,18 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Müşteri seçimi zorunludur.</small>
                         }
-                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                            <p-button
-                                type="button"
-                                label="Yeni müşteri"
-                                icon="pi pi-user-plus"
-                                [text]="true"
-                                styleClass="p-0"
-                                [disabled]="ro.mutationBlocked()"
-                                (onClick)="quickClientOpen.set(true)"
-                            />
-                        </div>
+                        @if (canShowQuickClientCreate()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Yeni müşteri"
+                                    icon="pi pi-user-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickClientOpen.set(true)"
+                                />
+                            </div>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
@@ -135,17 +140,19 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         ) {
                             <small class="text-muted-color">Bu müşteriye kayıtlı hayvan yok. Aşağıdaki bağlantıdan yeni hayvan ekleyebilirsiniz.</small>
                         }
-                        <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                            <p-button
-                                type="button"
-                                label="Bu müşteri için yeni hayvan"
-                                icon="pi pi-plus"
-                                [text]="true"
-                                styleClass="p-0"
-                                [disabled]="petQuickAddDisabled()"
-                                (onClick)="quickPetOpen.set(true)"
-                            />
-                        </div>
+                        @if (canShowQuickPetCreate()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Bu müşteri için yeni hayvan"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    [disabled]="petQuickAddDisabled()"
+                                    (onClick)="quickPetOpen.set(true)"
+                                />
+                            </div>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
@@ -307,6 +314,10 @@ export class AppointmentNewPageComponent implements OnInit {
 
     readonly quickClientOpen = signal(false);
     readonly quickPetOpen = signal(false);
+
+    readonly canShowQuickClientCreate = (): boolean => canShowQuickClientCreateButton(this.auth, this.ro, false);
+
+    readonly canShowQuickPetCreate = (): boolean => canShowQuickPetCreateButton(this.auth, this.ro, false);
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];

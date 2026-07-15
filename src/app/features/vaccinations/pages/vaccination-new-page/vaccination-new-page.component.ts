@@ -16,9 +16,17 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import {
     clientOptionsFromList,
     filterPetsByClientId,
+    isStalePetListResponse,
     petOptionsFromList,
+    trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
+import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import {
+    canShowQuickClientCreateButton,
+    canShowQuickPetCreateButton
+} from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
+import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import {
     parseVaccinationCreateRouteContext,
     type VaccinationCreateRouteContext
@@ -58,7 +66,9 @@ import {
         RouterLink,
         ButtonModule,
         SelectModule,
-        AppPageHeaderComponent
+        AppPageHeaderComponent,
+        QuickClientDialogComponent,
+        QuickPetDialogComponent
     ],
     template: `
         <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
@@ -105,11 +115,17 @@ import {
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        @if (!contextFromRoute() && !ro.mutationBlocked()) {
-                            <p class="text-muted-color text-sm mt-2 mb-0">
-                                Aradığınız kayıt yoksa
-                                <a routerLink="/panel/clients/new" class="text-primary font-medium no-underline">Yeni Müşteri</a>.
-                            </p>
+                        @if (canShowQuickClientCreate()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Yeni müşteri"
+                                    icon="pi pi-user-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickClientOpen.set(true)"
+                                />
+                            </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -132,11 +148,18 @@ import {
                         } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
-                        @if (!contextFromRoute() && !ro.mutationBlocked()) {
-                            <p class="text-muted-color text-sm mt-2 mb-0">
-                                <a routerLink="/panel/pets/new" class="text-primary font-medium no-underline">Yeni Hayvan</a>
-                                — bu müşteri için hayvan ekleyebilirsiniz.
-                            </p>
+                        @if (canShowQuickPetCreate()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Bu müşteri için yeni hayvan"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    [disabled]="petQuickAddDisabled()"
+                                    (onClick)="quickPetOpen.set(true)"
+                                />
+                            </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -295,6 +318,13 @@ import {
                 </div>
             </form>
         </div>
+
+        <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
+        <app-quick-pet-dialog
+            [(visible)]="quickPetOpen"
+            [ownerClientId]="quickPetOwnerClientId()"
+            (petCreated)="onQuickPetCreated($event)"
+        />
     `
 })
 export class VaccinationNewPageComponent implements OnInit {
@@ -344,6 +374,15 @@ export class VaccinationNewPageComponent implements OnInit {
     );
 
     readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
+
+    readonly quickClientOpen = signal(false);
+    readonly quickPetOpen = signal(false);
+
+    readonly canShowQuickClientCreate = (): boolean =>
+        canShowQuickClientCreateButton(this.auth, this.ro, this.contextFromRoute());
+
+    readonly canShowQuickPetCreate = (): boolean =>
+        canShowQuickPetCreateButton(this.auth, this.ro, this.contextFromRoute());
 
     readonly form = this.fb.nonNullable.group(
         {
@@ -471,6 +510,40 @@ export class VaccinationNewPageComponent implements OnInit {
         void this.router.navigate(['/panel/vaccinations']);
     }
 
+    petQuickAddDisabled(): boolean {
+        if (this.contextFromRoute()) {
+            return true;
+        }
+        return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
+    }
+
+    quickPetOwnerClientId(): string {
+        return trimClientIdControlValue(this.form.getRawValue().clientId);
+    }
+
+    onQuickClientCreated(clientId: string): void {
+        if (this.contextFromRoute()) {
+            return;
+        }
+        const id = clientId.trim();
+        if (!id) {
+            return;
+        }
+        this.reloadClientsAndSelectClient(id);
+    }
+
+    onQuickPetCreated(petId: string): void {
+        if (this.contextFromRoute()) {
+            return;
+        }
+        const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
+        const pid = petId.trim();
+        if (!cid || !pid) {
+            return;
+        }
+        this.loadPetsForClient(cid, pid);
+    }
+
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
@@ -535,6 +608,22 @@ export class VaccinationNewPageComponent implements OnInit {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.loadingClients.set(false);
                 this.tryApplyVaccinationRouteContext();
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
+                this.loadingClients.set(false);
+            }
+        });
+    }
+
+    private reloadClientsAndSelectClient(clientId: string): void {
+        this.loadingClients.set(true);
+        this.selectionError.set(null);
+        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
+            next: (r) => {
+                this.clientOptions.set(clientOptionsFromList(r.items));
+                this.loadingClients.set(false);
+                this.form.controls.clientId.setValue(clientId, { emitEvent: true });
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
@@ -647,10 +736,14 @@ export class VaccinationNewPageComponent implements OnInit {
         this.loadVaccineDefinitionsForSpecies(sp ? sp : null);
     }
 
-    private loadPetsForClient(clientId: string): void {
+    private loadPetsForClient(clientId: string, selectPetId?: string): void {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
             next: (r) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    this.loadingPets.set(false);
+                    return;
+                }
                 let items = r.items;
                 const anyClientId = items.some((p) => (p.clientId ?? '').trim());
                 if (anyClientId) {
@@ -658,6 +751,13 @@ export class VaccinationNewPageComponent implements OnInit {
                 }
                 this.petOptions.set(petOptionsFromList(items));
                 this.mergePetSpeciesFromItems(items);
+                const want = selectPetId?.trim();
+                if (want) {
+                    const exists = items.some((p) => p.id === want);
+                    if (exists) {
+                        this.form.controls.petId.setValue(want, { emitEvent: true });
+                    }
+                }
                 this.loadingPets.set(false);
                 const pid = this.form.getRawValue().petId?.trim();
                 if (pid) {
@@ -666,6 +766,10 @@ export class VaccinationNewPageComponent implements OnInit {
                 }
             },
             error: (e: unknown) => {
+                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+                    this.loadingPets.set(false);
+                    return;
+                }
                 this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
                 this.petOptions.set([]);
                 this.loadingPets.set(false);

@@ -32,6 +32,12 @@ import {
     trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
+import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import {
+    canShowQuickClientCreateButton,
+    canShowQuickPetCreateButton
+} from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
+import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
@@ -59,7 +65,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent
+        AppPageHeaderComponent,
+        QuickClientDialogComponent,
+        QuickPetDialogComponent
     ],
     template: `
         <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
@@ -103,6 +111,18 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         } @else if (apiFieldErrors().clientId) {
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         }
+                        @if (canShowQuickClientCreate()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Yeni müşteri"
+                                    icon="pi pi-user-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickClientOpen.set(true)"
+                                />
+                            </div>
+                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
@@ -123,6 +143,19 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <small class="text-red-500">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
+                        }
+                        @if (canShowQuickPetCreate()) {
+                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Bu müşteri için yeni hayvan"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    [disabled]="petQuickAddDisabled()"
+                                    (onClick)="quickPetOpen.set(true)"
+                                />
+                            </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -214,6 +247,13 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 </div>
             </form>
         </div>
+
+        <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
+        <app-quick-pet-dialog
+            [(visible)]="quickPetOpen"
+            [ownerClientId]="quickPetOwnerClientId()"
+            (petCreated)="onQuickPetCreated($event)"
+        />
     `
 })
 export class HospitalizationNewPageComponent implements OnInit {
@@ -259,6 +299,15 @@ export class HospitalizationNewPageComponent implements OnInit {
     });
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
+
+    readonly quickClientOpen = signal(false);
+    readonly quickPetOpen = signal(false);
+
+    readonly canShowQuickClientCreate = (): boolean =>
+        canShowQuickClientCreateButton(this.auth, this.ro, this.contextFromExamination());
+
+    readonly canShowQuickPetCreate = (): boolean =>
+        canShowQuickPetCreateButton(this.auth, this.ro, this.contextFromExamination());
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
@@ -318,6 +367,40 @@ export class HospitalizationNewPageComponent implements OnInit {
 
     goList(): void {
         void this.router.navigate(['/panel/hospitalizations']);
+    }
+
+    petQuickAddDisabled(): boolean {
+        if (this.contextFromExamination()) {
+            return true;
+        }
+        return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
+    }
+
+    quickPetOwnerClientId(): string {
+        return trimClientIdControlValue(this.form.getRawValue().clientId);
+    }
+
+    onQuickClientCreated(clientId: string): void {
+        if (this.contextFromExamination()) {
+            return;
+        }
+        const id = clientId.trim();
+        if (!id) {
+            return;
+        }
+        this.reloadClientsAndSelectClient(id);
+    }
+
+    onQuickPetCreated(petId: string): void {
+        if (this.contextFromExamination()) {
+            return;
+        }
+        const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
+        const pid = petId.trim();
+        if (!cid || !pid) {
+            return;
+        }
+        this.loadPetsForClient(cid, pid);
     }
 
     onSubmit(): void {
@@ -384,6 +467,22 @@ export class HospitalizationNewPageComponent implements OnInit {
                 this.clientOptions.set(clientOptionsFromList(r.items));
                 this.loadingClients.set(false);
                 this.tryApplyExaminationRouteContext();
+            },
+            error: (e: unknown) => {
+                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
+                this.loadingClients.set(false);
+            }
+        });
+    }
+
+    private reloadClientsAndSelectClient(clientId: string): void {
+        this.loadingClients.set(true);
+        this.selectionError.set(null);
+        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
+            next: (r) => {
+                this.clientOptions.set(clientOptionsFromList(r.items));
+                this.loadingClients.set(false);
+                this.form.controls.clientId.setValue(clientId, { emitEvent: true });
             },
             error: (e: unknown) => {
                 this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));

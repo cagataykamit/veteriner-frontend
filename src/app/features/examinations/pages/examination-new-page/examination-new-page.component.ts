@@ -33,6 +33,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import {
+    canShowQuickClientCreateButton,
+    canShowQuickPetCreateButton
+} from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import { parseAppointmentExaminationRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -115,13 +119,12 @@ import { EXAMINATION_TIME_SELECT_OPTIONS } from '@/app/features/examinations/uti
                         } @else if (apiFieldErrors().clientId) {
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         }
-                        @if (!contextFromAppointment()) {
+                        @if (canShowQuickClientCreate()) {
                             <div class="flex flex-wrap gap-2 align-items-center mt-2">
                                 <p-button
                                     type="button"
                                     label="Yeni müşteri"
                                     icon="pi pi-user-plus"
-                                    [disabled]="ro.mutationBlocked()"
                                     [text]="true"
                                     styleClass="p-0"
                                     (onClick)="quickClientOpen.set(true)"
@@ -149,7 +152,7 @@ import { EXAMINATION_TIME_SELECT_OPTIONS } from '@/app/features/examinations/uti
                         } @else if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
-                        @if (!contextFromAppointment()) {
+                        @if (canShowQuickPetCreate()) {
                             <div class="flex flex-wrap gap-2 align-items-center mt-2">
                                 <p-button
                                     type="button"
@@ -310,6 +313,12 @@ export class ExaminationNewPageComponent implements OnInit {
 
     readonly quickClientOpen = signal(false);
     readonly quickPetOpen = signal(false);
+
+    readonly canShowQuickClientCreate = (): boolean =>
+        canShowQuickClientCreateButton(this.auth, this.ro, this.contextFromAppointment());
+
+    readonly canShowQuickPetCreate = (): boolean =>
+        canShowQuickPetCreateButton(this.auth, this.ro, this.contextFromAppointment());
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');

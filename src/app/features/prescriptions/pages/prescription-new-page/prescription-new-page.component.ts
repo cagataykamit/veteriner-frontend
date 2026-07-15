@@ -40,6 +40,10 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import {
+    canShowQuickClientCreateButton,
+    canShowQuickPetCreateButton
+} from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import {
     parseExaminationCreateRouteContext,
@@ -124,13 +128,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         } @else if (apiFieldErrors().clientId) {
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         }
-                        @if (!prescriptionContextLocked()) {
+                        @if (canShowQuickClientCreate()) {
                             <div class="flex flex-wrap gap-2 align-items-center mt-2">
                                 <p-button
                                     type="button"
                                     label="Yeni müşteri"
                                     icon="pi pi-user-plus"
-                                    [disabled]="ro.mutationBlocked()"
                                     [text]="true"
                                     styleClass="p-0"
                                     (onClick)="quickClientOpen.set(true)"
@@ -158,7 +161,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         } @else if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
-                        @if (!prescriptionContextLocked()) {
+                        @if (canShowQuickPetCreate()) {
                             <div class="flex flex-wrap gap-2 align-items-center mt-2">
                                 <p-button
                                     type="button"
@@ -347,6 +350,12 @@ export class PrescriptionNewPageComponent implements OnInit {
 
     readonly quickClientOpen = signal(false);
     readonly quickPetOpen = signal(false);
+
+    readonly canShowQuickClientCreate = (): boolean =>
+        canShowQuickClientCreateButton(this.auth, this.ro, this.prescriptionContextLocked());
+
+    readonly canShowQuickPetCreate = (): boolean =>
+        canShowQuickPetCreateButton(this.auth, this.ro, this.prescriptionContextLocked());
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
