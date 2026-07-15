@@ -15,8 +15,9 @@ import {
     parseBreedUpsertHttpError
 } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { SpeciesService } from '@/app/features/species/services/species.service';
+import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -36,7 +37,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        QuickSpeciesDialogComponent
     ],
     template: `
         <a routerLink="/panel/breeds" class="text-primary font-medium no-underline inline-block mb-4">← Irk listesine dön</a>
@@ -83,6 +85,18 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
                         } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
                             <small class="text-red-500">Tür seçimi zorunludur.</small>
+                        }
+                        @if (canShowQuickSpeciesButton()) {
+                            <div class="mt-2">
+                                <p-button
+                                    type="button"
+                                    label="Yeni tür ekle"
+                                    icon="pi pi-plus"
+                                    [text]="true"
+                                    styleClass="p-0"
+                                    (onClick)="quickSpeciesOpen.set(true)"
+                                />
+                            </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -139,6 +153,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 </div>
             </form>
         </div>
+
+        <app-quick-species-dialog [(visible)]="quickSpeciesOpen" (speciesCreated)="onQuickSpeciesCreated($event)" />
         }
     `
 })
@@ -152,6 +168,9 @@ export class BreedFormPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
+    readonly canShowQuickSpeciesButton = (): boolean =>
+        !this.editing() && this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked();
+
     readonly editing = signal(false);
     readonly loading = signal(false);
     readonly loadError = signal<string | null>(null);
@@ -161,6 +180,7 @@ export class BreedFormPageComponent implements OnInit {
     readonly apiFieldErrors = signal<BreedUpsertFieldErrors>({});
     readonly currentId = signal<string | null>(null);
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
+    readonly quickSpeciesOpen = signal(false);
 
     /** Düzenlemede pasif tür seçeneklere eklenir; tür listesi yüklendikten sonra tekrar merge için tutulur. */
     private breedDetailForMerge: BreedDetailVm | null = null;
@@ -267,6 +287,14 @@ export class BreedFormPageComponent implements OnInit {
         void this.router.navigate(['/panel/breeds']);
     }
 
+    onQuickSpeciesCreated(speciesId: string): void {
+        const id = speciesId.trim();
+        if (!id) {
+            return;
+        }
+        this.reloadSpeciesAndSelect(id);
+    }
+
     private mergeSpeciesOptionFromDetail(vm: BreedDetailVm): void {
         const sid = vm.speciesId?.trim();
         if (!sid) {
@@ -297,12 +325,7 @@ export class BreedFormPageComponent implements OnInit {
         this.loadingSpecies.set(true);
         this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
             next: (items) => {
-                this.speciesOptions.set(
-                    items.map((x) => ({
-                        label: x.name || '-',
-                        value: x.id
-                    }))
-                );
+                this.speciesOptions.set(this.mapSpeciesOptions(items));
                 if (this.breedDetailForMerge) {
                     this.mergeSpeciesOptionFromDetail(this.breedDetailForMerge);
                 }
@@ -313,6 +336,32 @@ export class BreedFormPageComponent implements OnInit {
                 this.loadingSpecies.set(false);
             }
         });
+    }
+
+    private reloadSpeciesAndSelect(speciesId: string): void {
+        const id = speciesId.trim();
+        if (!id) {
+            return;
+        }
+        this.loadingSpecies.set(true);
+        this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
+            next: (items) => {
+                this.speciesOptions.set(this.mapSpeciesOptions(items));
+                this.loadingSpecies.set(false);
+                this.form.controls.speciesId.setValue(id, { emitEvent: false });
+            },
+            error: (e: unknown) => {
+                this.submitError.set(panelHttpFailureMessage(e, 'Tür listesi yüklenemedi.'));
+                this.loadingSpecies.set(false);
+            }
+        });
+    }
+
+    private mapSpeciesOptions(items: { id: string; name: string }[]): { label: string; value: string }[] {
+        return items.map((x) => ({
+            label: x.name || '-',
+            value: x.id
+        }));
     }
 
     private onSubmitError(e: unknown): void {
