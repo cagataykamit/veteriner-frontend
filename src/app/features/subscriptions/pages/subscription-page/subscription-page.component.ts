@@ -49,6 +49,14 @@ import {
     subscriptionPlanRank
 } from '@/app/features/subscriptions/utils/subscription-plan.utils';
 import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/features/subscriptions/utils/subscription-status.utils';
+import {
+    expiredReadOnlyBannerMessage,
+    isActiveTrialingSubscription,
+    isExpiredReadOnlySubscription,
+    isRenewalCheckoutContext,
+    isSubscriptionPeriodEndPast,
+    shouldShowMisleadingNextRenewal
+} from '@/app/features/subscriptions/utils/subscription-access.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 type ReturnBannerSeverity = 'info' | 'success' | 'warn' | 'secondary' | 'error';
@@ -81,6 +89,17 @@ interface ReturnBannerVm {
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Abonelik" subtitle="Paket & Abonelik" [description]="subscriptionHeaderDescription()" />
+
+        @if (summary(); as s) {
+            @if (isExpiredReadOnlySubscription(s)) {
+                <div
+                    class="card mb-4 border-round bg-amber-50 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-800/60"
+                    role="status"
+                >
+                    <p class="m-0 text-sm text-color font-medium">{{ expiredReadOnlyBannerMessage(s) }}</p>
+                </div>
+            }
+        }
 
         @if (postCheckoutSyncing() && !error() && showManageFlowChrome()) {
             <div class="card mb-4 border-round bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
@@ -160,15 +179,20 @@ interface ReturnBannerVm {
                                 <span class="text-muted-color">{{ periodEndLabel(s) }}</span>
                                 <span class="font-medium text-right">{{ formatDate(periodEndDate(s)) }}</span>
                             </div>
-                            @if (!isTrialingSubscription(s)) {
+                            @if (shouldShowMisleadingNextRenewal(s)) {
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-muted-color">Sonraki yenileme</span>
                                     <span class="font-medium text-right">{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</span>
                                 </div>
+                            } @else if (!isTrialingSubscription(s) && (isExpiredReadOnlySubscription(s) || isSubscriptionPeriodEndPast(s))) {
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-muted-color">Yenileme bekliyor</span>
+                                    <span class="font-medium text-right">{{ nextRenewalWaitingText(s) }}</span>
+                                </div>
                             }
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-muted-color">{{ remainingDaysRowLabel(s) }}</span>
-                                <span class="font-medium text-right">{{ daysRemainingText(s.daysRemaining) }}</span>
+                                <span class="font-medium text-right">{{ daysRemainingText(s.daysRemaining, s) }}</span>
                             </div>
                         </div>
                     </div>
@@ -231,11 +255,11 @@ interface ReturnBannerVm {
                                                 </div>
                                             </div>
                                         }
-                                        @if (canManageSubscriptionOperations(s) && !isCurrentPlan(plan, s)) {
+                                        @if (canManageSubscriptionOperations(s) && shouldShowPlanAction(plan, s)) {
                                             <div class="mt-3">
                                                 <p-button
                                                     type="button"
-                                                    [label]="planActionLabel(plan)"
+                                                    [label]="planActionLabel(plan, s)"
                                                     icon="pi pi-arrow-right"
                                                     [loading]="planActionLoadingCode() === plan.code || schedulingDowngradeCode() === plan.code"
                                                     [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing()"
@@ -281,10 +305,15 @@ interface ReturnBannerVm {
                                     <div class="text-muted-color mb-1">{{ pendingPlanChangeEffectiveDateLabel(s) }}</div>
                                     <div>{{ formatDate(pendingPlanChangeEffectiveDate(pending, s)) }}</div>
                                 </div>
-                                @if (!isTrialingSubscription(s)) {
+                                @if (shouldShowMisleadingNextRenewal(s)) {
                                     <div>
                                         <div class="text-muted-color mb-1">Sonraki yenileme</div>
                                         <div>{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</div>
+                                    </div>
+                                } @else if (!isTrialingSubscription(s) && (isExpiredReadOnlySubscription(s) || isSubscriptionPeriodEndPast(s))) {
+                                    <div>
+                                        <div class="text-muted-color mb-1">Yenileme bekliyor</div>
+                                        <div>{{ nextRenewalWaitingText(s) }}</div>
                                     </div>
                                 }
                             </div>
@@ -337,17 +366,17 @@ interface ReturnBannerVm {
                                     </div>
                                     <div>
                                         <div class="text-muted-color mb-1">Durum</div>
-                                        <app-status-tag [label]="checkoutStatusLabel(session)" [severity]="checkoutStatusSeverity(session)" />
+                                        <app-status-tag [label]="checkoutStatusLabel(session, s)" [severity]="checkoutStatusSeverity(session)" />
                                     </div>
                                     <div>
-                                        <div class="text-muted-color mb-1">Süre sonu</div>
+                                        <div class="text-muted-color mb-1">Ödeme oturumu sonu</div>
                                         <div>{{ formatDateTime(session.expiresAtUtc) }}</div>
                                     </div>
                                     <div class="md:col-span-2">
                                         <div class="text-muted-color mb-1">Ödeme</div>
                                         @if (session.checkoutUrl) {
                                             <p class="m-0 text-sm text-color">
-                                                Güvenli ödeme sayfasına yönlendirileceksiniz. Ödeme tamamlandığında bu sayfaya döneceksiniz.
+                                                Güvenli ödeme sayfasına yönlendirileceksiniz. Ödemeniz iyzico altyapısı üzerinden tamamlanır ve işlem sonrası bu sayfaya döneceksiniz.
                                             </p>
                                         } @else {
                                             <span class="text-muted-color text-sm"
@@ -357,16 +386,25 @@ interface ReturnBannerVm {
                                     </div>
                                     @if (session.proratedChargeMinor !== null || session.prorationRatio !== null) {
                                         <div class="md:col-span-2 p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
-                                            <p class="m-0 text-sm text-color">
-                                                Kalan dönem için hesaplanan fark:
-                                                <span class="font-medium">{{
-                                                    formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode)
-                                                }}</span>
-                                                @if (session.prorationRatio !== null) {
-                                                    <span> (oran: {{ prorationPercentText(session.prorationRatio) }})</span>
-                                                }
-                                            </p>
-                                            <p class="m-0 mt-1 text-xs text-muted-color">Bir sonraki yenileme tarihi değişmez.</p>
+                                            @if (isRenewalCheckoutContext(s)) {
+                                                <p class="m-0 text-sm text-color">
+                                                    Ödenecek tutar:
+                                                    <span class="font-medium">{{
+                                                        formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode)
+                                                    }}</span>
+                                                </p>
+                                            } @else {
+                                                <p class="m-0 text-sm text-color">
+                                                    Kalan dönem için hesaplanan fark:
+                                                    <span class="font-medium">{{
+                                                        formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode)
+                                                    }}</span>
+                                                    @if (session.prorationRatio !== null) {
+                                                        <span> (oran: {{ prorationPercentText(session.prorationRatio) }})</span>
+                                                    }
+                                                </p>
+                                                <p class="m-0 mt-1 text-xs text-muted-color">Bir sonraki yenileme tarihi değişmez.</p>
+                                            }
                                         </div>
                                     }
                                 </div>
@@ -410,7 +448,19 @@ interface ReturnBannerVm {
                                     </p>
                                 }
                             } @else {
-                                <p class="text-sm text-muted-color m-0">Henüz başlatılmış bir ödeme işlemi bulunmuyor.</p>
+                                <p class="text-sm text-muted-color m-0 mb-0">Henüz başlatılmış bir ödeme işlemi bulunmuyor.</p>
+                                @if (isExpiredReadOnlySubscription(s)) {
+                                    <div class="mt-3">
+                                        <p-button
+                                            type="button"
+                                            label="Ödeme başlat"
+                                            icon="pi pi-credit-card"
+                                            [loading]="planActionLoadingCode() === s.planCode || checkoutLoading()"
+                                            [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing() || !s.planCode"
+                                            (onClick)="startPaymentForCurrentPlan()"
+                                        />
+                                    </div>
+                                }
                             }
                         </div>
                     </div>
@@ -425,9 +475,11 @@ interface ReturnBannerVm {
                                     <li>Deneme süreniz boyunca plan değişiklikleri ödeme gerektirmez.</li>
                                     <li>Seçtiğiniz paket deneme süreniz bittiğinde geçerli olur.</li>
                                 } @else {
-                                    <li>Ödeme işlemleri güvenli ödeme altyapısı üzerinden tamamlanır.</li>
+                                    <li>Ödemeler iyzico altyapısı üzerinden güvenli şekilde tamamlanır.</li>
                                     <li>Plan değişiklikleri ödeme tamamlandıktan sonra otomatik olarak aboneliğinize yansıtılır.</li>
-                                    <li>Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır.</li>
+                                    @if (!isRenewalCheckoutContext(s)) {
+                                        <li>Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır.</li>
+                                    }
                                 }
                             </ul>
                         </div>
@@ -480,11 +532,14 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         return !!s && this.canManageSubscriptionOperations(s);
     });
 
-    /** Checkout kartı: dönem sonu düşürme beklerken boş “oturum yok” göstermemek için gizlenir (ödeme yok). */
+    /** Checkout kartı: dönem sonu düşürme beklerken boş “oturum yok” göstermemek için gizlenir (ödeme yok). Salt okunur/yenileme gerekli durumda her zaman gösterilir. */
     readonly showSubscriptionCheckoutCard = computed(() => {
         const s = this.summary();
         if (!s || !this.canManageSubscriptionOperations(s)) {
             return false;
+        }
+        if (isExpiredReadOnlySubscription(s)) {
+            return true;
         }
         if (this.checkoutLoading() || this.checkoutError() != null || this.checkoutSession() != null) {
             return true;
@@ -525,6 +580,11 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     readonly shouldOfferManualCheckoutFinalize = shouldOfferManualCheckoutFinalize;
     readonly subscriptionPlanLabel = subscriptionPlanLabel;
     readonly planLimitLabels = subscriptionPlanLimitLabels;
+    readonly isExpiredReadOnlySubscription = isExpiredReadOnlySubscription;
+    readonly expiredReadOnlyBannerMessage = expiredReadOnlyBannerMessage;
+    readonly isSubscriptionPeriodEndPast = isSubscriptionPeriodEndPast;
+    readonly shouldShowMisleadingNextRenewal = shouldShowMisleadingNextRenewal;
+    readonly isRenewalCheckoutContext = isRenewalCheckoutContext;
 
     ngOnInit(): void {
         const params = this.route.snapshot.queryParamMap;
@@ -664,11 +724,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         return session.targetPlanCode.trim().toLowerCase() === plan.code.trim().toLowerCase();
     }
 
-    planActionLabel(plan: SubscriptionPlanVm): string {
+    planActionLabel(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): string {
         if (!this.hasOpenSessionForPlan(plan)) {
-            const summary = this.summary();
-            if (!summary) {
-                return 'Bu paketi aktifleştir';
+            if (isExpiredReadOnlySubscription(summary)) {
+                return this.isCurrentPlan(plan, summary) ? 'Aboneliği yenile' : 'Bu paketle devam et';
             }
             if (this.isDowngradePlan(plan, summary)) {
                 return this.isTrialingSubscription(summary) ? 'Deneme bitiminde bu pakete geç' : 'Dönem sonunda bu pakete geç';
@@ -680,6 +739,13 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         }
         const url = this.checkoutSession()?.checkoutUrl?.trim();
         return url ? 'Ödemeye devam et' : 'Durumu yenile';
+    }
+
+    shouldShowPlanAction(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): boolean {
+        if (isExpiredReadOnlySubscription(summary)) {
+            return true;
+        }
+        return !this.isCurrentPlan(plan, summary);
     }
 
     onPlanAction(plan: SubscriptionPlanVm): void {
@@ -699,6 +765,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 return;
             }
             this.refreshCheckout();
+            return;
+        }
+        if (isExpiredReadOnlySubscription(summary)) {
+            this.startCheckout(plan.code);
             return;
         }
         if (this.isDowngradePlan(plan, summary)) {
@@ -771,8 +841,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         });
     }
 
-    checkoutStatusLabel(session: SubscriptionCheckoutSessionVm): string {
-        return subscriptionCheckoutStatusLabel(session.status);
+    checkoutStatusLabel(session: SubscriptionCheckoutSessionVm, summary: SubscriptionSummaryVm): string {
+        return subscriptionCheckoutStatusLabel(session.status, {
+            renewalCheckout: isRenewalCheckoutContext(summary)
+        });
     }
 
     checkoutStatusSeverity(session: SubscriptionCheckoutSessionVm) {
@@ -811,16 +883,37 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             error: (e: unknown) => {
                 this.planActionLoadingCode.set(null);
                 this.checkoutLoading.set(false);
-                this.checkoutError.set(e instanceof Error ? e.message : 'Ödeme işlemi başlatılamadı.');
+                const message = e instanceof Error ? e.message : 'Ödeme işlemi başlatılamadı.';
+                this.checkoutError.set(message);
+                this.planActionError.set(message);
             }
         });
     }
 
-    daysRemainingText(days: number | null): string {
+    startPaymentForCurrentPlan(): void {
+        const summary = this.summary();
+        const planCode = summary?.planCode?.trim();
+        if (!summary || !planCode || !this.canManageSubscriptionOperations(summary)) {
+            return;
+        }
+        this.startCheckout(planCode);
+    }
+
+    daysRemainingText(days: number | null, summary?: SubscriptionSummaryVm): string {
         if (days === null) {
             return '—';
         }
+        if (summary && isExpiredReadOnlySubscription(summary) && days === 0) {
+            return 'Süre doldu';
+        }
         return `${days} gün`;
+    }
+
+    nextRenewalWaitingText(summary: SubscriptionSummaryVm): string {
+        if (isExpiredReadOnlySubscription(summary)) {
+            return 'Süre doldu';
+        }
+        return this.formatDate(summary.nextBillingAtUtc || summary.currentPeriodEndUtc);
     }
 
     /** API `daysRemaining`; deneme dışında etiket genel tutulur (backend alanı semantiği). */
@@ -833,6 +926,9 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     periodEndLabel(s: SubscriptionSummaryVm): string {
+        if (isExpiredReadOnlySubscription(s)) {
+            return 'Süre bitişi';
+        }
         return this.isTrialingSubscription(s) ? 'Deneme bitişi' : 'Dönem sonu';
     }
 
@@ -864,11 +960,15 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     subscriptionManageFlowHint(): string {
+        const summary = this.summary();
+        if (summary && isExpiredReadOnlySubscription(summary)) {
+            return 'Aboneliğinizi yenilemek için mevcut paketinizde veya istediğiniz pakette ödeme adımını başlatın.';
+        }
         return 'Paket yükseltmeleri güvenli ödeme adımıyla tamamlanır. Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır.';
     }
 
     isTrialingSubscription(summary: SubscriptionSummaryVm): boolean {
-        return summary.status === 'trialing';
+        return isActiveTrialingSubscription(summary);
     }
 
     pendingPlanChangeCancelLabel(summary: SubscriptionSummaryVm): string {

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
@@ -24,7 +24,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 }
                             </p>
                         </div>
-                        @if (ctx.showReadOnlyBannerSubscriptionActions()) {
+                        @if (showBannerSubscriptionLinks()) {
                             <div class="flex flex-wrap gap-2 shrink-0">
                                 <a
                                     routerLink="/panel/settings/subscription"
@@ -53,6 +53,15 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class AppReadOnlyBannerComponent {
     readonly ctx = inject(TenantReadOnlyContextService);
+    private readonly router = inject(Router);
+
+    readonly showBannerSubscriptionLinks = computed(
+        () => this.ctx.showReadOnlyBannerSubscriptionActions() && !this.isOnSubscriptionPage()
+    );
+
+    private isOnSubscriptionPage(): boolean {
+        return this.router.url.includes('/panel/settings/subscription');
+    }
 
     /** Öncelik: backend `message`; yoksa rol bazlı sabit metin. */
     detailLine(): string | null {

@@ -81,7 +81,18 @@ export function parseSubscriptionCheckoutStatus(raw: unknown): SubscriptionCheck
     return 'unknown';
 }
 
-export function subscriptionCheckoutStatusLabel(status: SubscriptionCheckoutStatusKey): string {
+export interface SubscriptionCheckoutStatusLabelOptions {
+    /** Expired/read-only yenileme checkout'unda kullanıcı dostu etiketler. */
+    readonly renewalCheckout?: boolean;
+}
+
+export function subscriptionCheckoutStatusLabel(
+    status: SubscriptionCheckoutStatusKey,
+    options?: SubscriptionCheckoutStatusLabelOptions
+): string {
+    if (options?.renewalCheckout && status === 'redirect_ready') {
+        return 'Ödeme bekliyor';
+    }
     return byKey.get(status)?.label ?? 'Bilinmiyor';
 }
 
