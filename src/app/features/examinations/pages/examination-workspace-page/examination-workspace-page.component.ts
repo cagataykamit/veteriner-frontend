@@ -378,41 +378,43 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                         </div>
                     </div>
 
-                    @if (conflict()) {
-                        <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mb-4" role="alert">
-                            <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
-                            <div class="flex flex-wrap gap-4 items-center mt-3">
-                                <a
-                                    [routerLink]="['/panel/examinations', examinationId]"
-                                    target="_blank"
-                                    rel="noopener"
-                                    class="text-primary font-medium no-underline"
-                                    >Güncel kaydı yeni sekmede aç →</a
-                                >
-                                <p-button
-                                    type="button"
-                                    label="Yazdıklarımı atıp güncel kaydı yükle"
-                                    icon="pi pi-refresh"
-                                    severity="secondary"
-                                    size="small"
-                                    (onClick)="discardAndReload()"
-                                />
+                    <div class="card">
+                        @if (conflict()) {
+                            <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mb-4" role="alert">
+                                <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
+                                <div class="flex flex-wrap gap-4 items-center mt-3">
+                                    <a
+                                        [routerLink]="['/panel/examinations', examinationId]"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="text-primary font-medium no-underline"
+                                        >Güncel kaydı yeni sekmede aç →</a
+                                    >
+                                    <p-button
+                                        type="button"
+                                        label="Yazdıklarımı atıp güncel kaydı yükle"
+                                        icon="pi pi-refresh"
+                                        severity="secondary"
+                                        size="small"
+                                        (onClick)="discardAndReload()"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    } @else if (submitError()) {
-                        <p class="text-red-500 mt-0 mb-4" role="alert">{{ submitError() }}</p>
-                    }
+                        } @else if (submitError()) {
+                            <p class="text-red-500 mt-0 mb-4" role="alert">{{ submitError() }}</p>
+                        }
 
-                    <div class="flex flex-wrap gap-2">
-                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="saveDisabled()" />
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonCancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            (onClick)="onCancel()"
-                            [disabled]="submitting()"
-                        />
+                        <div class="flex flex-wrap gap-2">
+                            <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="saveDisabled()" />
+                            <p-button
+                                type="button"
+                                [label]="copy.buttonCancel"
+                                icon="pi pi-times"
+                                severity="secondary"
+                                (onClick)="onCancel()"
+                                [disabled]="submitting()"
+                            />
+                        </div>
                     </div>
                 </form>
             }
