@@ -358,7 +358,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                         }
                     </div>
 
-                    <div class="card mb-4">
+                    <div class="card">
                         <h5 class="mt-0 mb-4">Plan / tedavi planı</h5>
                         <div class="grid grid-cols-12 gap-4">
                             <div class="col-span-12">
@@ -376,11 +376,8 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                 }
                             </div>
                         </div>
-                    </div>
-
-                    <div class="card">
                         @if (conflict()) {
-                            <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mb-4" role="alert">
+                            <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
                                 <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
                                 <div class="flex flex-wrap gap-4 items-center mt-3">
                                     <a
@@ -401,10 +398,9 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                 </div>
                             </div>
                         } @else if (submitError()) {
-                            <p class="text-red-500 mt-0 mb-4" role="alert">{{ submitError() }}</p>
+                            <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
                         }
-
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2 mt-4">
                             <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="saveDisabled()" />
                             <p-button
                                 type="button"
