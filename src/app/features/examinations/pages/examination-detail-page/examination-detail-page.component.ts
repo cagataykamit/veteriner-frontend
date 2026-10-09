@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type {
@@ -21,6 +23,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -36,14 +39,13 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        ToastModule
     ],
+    providers: [MessageService],
     template: `
+        <p-toast position="bottom-right" />
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
-
-        @if (showSavedBanner()) {
-            <p class="mb-4 m-0 text-sm font-medium">Muayene kaydedildi.</p>
-        }
 
         @if (loading()) {
             <app-loading-state message="Muayene yükleniyor…" />
@@ -598,10 +600,10 @@ export class ExaminationDetailPageComponent implements OnInit {
     private readonly examinationsService = inject(ExaminationsService);
     private readonly related = inject(DetailRelatedSummariesService);
     private readonly auth = inject(AuthService);
+    private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
-    readonly showSavedBanner = signal(false);
 
     /** Mapper boş metin için kullandığı EM ile aynı. */
     readonly emptyMark = '—';
@@ -658,7 +660,11 @@ export class ExaminationDetailPageComponent implements OnInit {
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
-            this.showSavedBanner.set(true);
+            addTracedToast(this.messages, 'ExaminationDetailPage', this.router.url, {
+                severity: 'success',
+                summary: 'Tamam',
+                detail: 'Muayene kaydedildi.'
+            });
             void this.router.navigate([], {
                 relativeTo: this.route,
                 queryParams: { saved: null },

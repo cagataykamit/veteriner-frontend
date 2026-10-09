@@ -1,8 +1,9 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { of, Subject, throwError } from 'rxjs';
+import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
@@ -44,7 +45,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
     let fixture: ComponentFixture<ExaminationWorkspacePageComponent>;
     let cmp: ExaminationWorkspacePageComponent;
     let service: jasmine.SpyObj<ExaminationsService>;
-    let toastAdd: jasmine.Spy;
+    let navigate: jasmine.Spy;
 
     beforeEach(async () => {
         service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', [
@@ -58,6 +59,9 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
             imports: [ExaminationWorkspacePageComponent],
             providers: [
                 provideRouter([]),
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: API_BASE_URL, useValue: 'http://api.test' },
                 { provide: ExaminationsService, useValue: service },
                 {
                     provide: ActivatedRoute,
@@ -80,13 +84,13 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
                 { provide: AppointmentsService, useValue: {} },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: PetsService, useValue: { getPetById: () => of({ name: 'Pamuk', speciesName: 'Kedi', breed: 'Van', birthDate: null }) } },
-                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '555', email: '—' }) } }
+                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '555', email: '—' }), getClients: () => of({ items: [] }) } }
             ]
         }).compileComponents();
 
         fixture = TestBed.createComponent(ExaminationWorkspacePageComponent);
         cmp = fixture.componentInstance;
-        toastAdd = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
+        navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
         fixture.detectChanges();
     });
 
@@ -109,18 +113,6 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(payload.clinicId).toBe('clinic-1');
         expect(payload.petId).toBe('pet-1');
         expect(payload.anamnesis).toBe('3 gündür az yiyor');
-    });
-
-    it('başarılı kayıtta dönen yeni rowVersion sonraki PUT a taşınır', () => {
-        service.updateExamination.and.returnValue(of({ id: 'e1', rowVersion: 'V2' }));
-        typeNote('a');
-        cmp.onSubmit();
-        cmp.form.controls.plan.setValue('ikinci kayıt');
-        cmp.onSubmit();
-
-        expect(service.updateExamination.calls.count()).toBe(2);
-        expect(service.updateExamination.calls.argsFor(1)[1].rowVersion).toBe('V2');
-        expect(toastAdd).toHaveBeenCalledTimes(2);
     });
 
     it('409 çakışmasında yazılan metin korunur, uyarı gösterilir, rowVersion sessizce yenilenmez', () => {
@@ -193,7 +185,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(payload.notes).toBe('eski not');
     });
 
-    it('kayıttaki tüm vitaller boşaltılırsa clearVitals:true gider; sonraki kayıtta yinelenmez', () => {
+    it('kayıttaki tüm vitaller boşaltılırsa clearVitals:true gider', () => {
         service.getExaminationForEditById.and.returnValue(of(editVm({ weightKg: 4.25, temperatureC: 38.6 })));
         cmp.reload();
         service.updateExamination.and.returnValue(of({ id: 'e1', rowVersion: 'V2' }));
@@ -203,10 +195,6 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         const first = service.updateExamination.calls.argsFor(0)[1];
         expect(first.clearVitals).toBeTrue();
         expect(first.weightKg).toBeNull();
-
-        cmp.form.controls.plan.setValue('sonraki');
-        cmp.onSubmit();
-        expect(service.updateExamination.calls.argsFor(1)[1].clearVitals).toBeFalse();
     });
 
     it('tek vitali silmek (diğeri kalırken) engellenir ve kayıt gönderilmez', () => {
@@ -232,34 +220,25 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(payload.weightKg).toBe(5);
     });
 
-    it('başarılı güncellemede aynı ekranda kalınır, başarı toast ı gösterilir, form temiz ve sürüm güncel olur', () => {
-        const navigate = spyOn(TestBed.inject(Router), 'navigate');
+    it('başarılı güncellemede muayene detayına ?saved=1 ile yönlenir', () => {
         service.updateExamination.and.returnValue(of({ id: 'e1', rowVersion: 'V2' }));
         typeNote('yeni anamnez');
-        cmp.form.markAsDirty();
-        expect(cmp.saveDisabled()).toBeFalse();
         cmp.onSubmit();
 
-        expect(toastAdd).toHaveBeenCalledOnceWith(jasmine.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' }));
-        expect(navigate).not.toHaveBeenCalled();
-        expect(cmp.form.pristine).toBeTrue();
-        expect(cmp.current!.rowVersion).toBe('V2');
-        expect(cmp.form.controls.anamnesis.value).toBe('yeni anamnez');
-        // Değişiklik yokken tekrar kaydetmek kapalıdır (çift kayıt önlemi).
-        expect(cmp.saveDisabled()).toBeTrue();
+        expect(navigate).toHaveBeenCalledOnceWith(['/panel/examinations', 'e1'], { queryParams: { saved: '1' } });
     });
 
-    it('kayıt sürerken ikinci gönderim yoksayılır', () => {
+    it('kayıt sürerken ikinci gönderim yoksayılır; başarıdan sonra da yeniden gönderilmez', () => {
         const inFlight = new Subject<{ id: string; rowVersion: string }>();
         service.updateExamination.and.returnValue(inFlight);
         typeNote('x');
         cmp.onSubmit();
         cmp.onSubmit();
-
-        expect(service.updateExamination).toHaveBeenCalledTimes(1);
         inFlight.next({ id: 'e1', rowVersion: 'V2' });
         inFlight.complete();
-        expect(toastAdd).toHaveBeenCalledTimes(1);
+        cmp.onSubmit();
+
+        expect(service.updateExamination).toHaveBeenCalledTimes(1);
     });
 
     for (const [name, err] of [
@@ -267,30 +246,37 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         ['409', httpError(409, 'Examinations.ConcurrencyConflict')],
         ['ağ', httpError(0)]
     ] as const) {
-        it(`${name} hatasında başarı toast ı çıkmaz, açık mesaj gösterilir, form kirli ve metin korunur`, () => {
+        it(`${name} hatasında formda kalınır, satır içi mesaj gösterilir ve metin korunur`, () => {
             service.updateExamination.and.returnValue(throwError(() => err));
             typeNote('korunmalı');
-            cmp.form.markAsDirty();
             cmp.onSubmit();
 
-            expect(toastAdd).not.toHaveBeenCalled();
+            expect(navigate).not.toHaveBeenCalled();
             expect(cmp.submitError()).toBeTruthy();
-            expect(cmp.form.dirty).toBeTrue();
             expect(cmp.form.controls.anamnesis.value).toBe('korunmalı');
             expect(cmp.saveDisabled()).toBeFalse();
         });
     }
 
-    it('oluşturma sonrası ?saved=1 ile açılan çalışma alanı başarı toast ı gösterir ve işareti URL den kaldırır', () => {
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
-        const route = TestBed.inject(ActivatedRoute) as unknown as { snapshot: { queryParamMap: unknown } };
-        route.snapshot.queryParamMap = convertToParamMap({ saved: '1' });
-        const f2 = TestBed.createComponent(ExaminationWorkspacePageComponent);
-        const add2 = spyOn(f2.debugElement.injector.get(MessageService), 'add');
-        f2.detectChanges();
+    it('yeni muayene başarıyla oluşturulunca detaya ?saved=1 ile yönlenir', () => {
+        const route = TestBed.inject(ActivatedRoute) as unknown as {
+            snapshot: { paramMap: unknown; routeConfig: { path: string } };
+        };
+        route.snapshot.paramMap = convertToParamMap({});
+        route.snapshot.routeConfig = { path: 'new' };
+        service.createExamination.and.returnValue(of({ id: 'n1', rowVersion: 'A' }));
+        const created = TestBed.createComponent(ExaminationWorkspacePageComponent);
+        created.detectChanges();
+        const c = created.componentInstance;
 
-        expect(add2).toHaveBeenCalledOnceWith(jasmine.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' }));
-        expect(navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: { saved: null }, replaceUrl: true }));
+        c.selectionForm.controls.clientId.setValue('client-1', { emitEvent: false });
+        c.selectionForm.controls.petId.enable({ emitEvent: false });
+        c.selectionForm.controls.petId.setValue('pet-1', { emitEvent: false });
+        c.form.patchValue({ examinationDate: '2026-10-08', examinationTime: '13:30', visitReason: 'Kontrol' });
+        c.onSubmit();
+
+        expect(service.createExamination).toHaveBeenCalledTimes(1);
+        expect(navigate).toHaveBeenCalledWith(['/panel/examinations', 'n1'], { queryParams: { saved: '1' } });
     });
 
     it('findings boş olsa da form geçerlidir; tek zorunlu klinik alan visitReason dır', () => {
