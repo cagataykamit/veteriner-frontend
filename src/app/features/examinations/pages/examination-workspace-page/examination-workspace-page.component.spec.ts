@@ -1,7 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
@@ -43,6 +44,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
     let fixture: ComponentFixture<ExaminationWorkspacePageComponent>;
     let cmp: ExaminationWorkspacePageComponent;
     let service: jasmine.SpyObj<ExaminationsService>;
+    let toastAdd: jasmine.Spy;
 
     beforeEach(async () => {
         service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', [
@@ -84,6 +86,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
 
         fixture = TestBed.createComponent(ExaminationWorkspacePageComponent);
         cmp = fixture.componentInstance;
+        toastAdd = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
         fixture.detectChanges();
     });
 
@@ -117,7 +120,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
 
         expect(service.updateExamination.calls.count()).toBe(2);
         expect(service.updateExamination.calls.argsFor(1)[1].rowVersion).toBe('V2');
-        expect(cmp.savedBanner()).toBeTrue();
+        expect(toastAdd).toHaveBeenCalledTimes(2);
     });
 
     it('409 çakışmasında yazılan metin korunur, uyarı gösterilir, rowVersion sessizce yenilenmez', () => {
@@ -227,6 +230,67 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         const payload = service.updateExamination.calls.mostRecent().args[1];
         expect(payload.clearVitals).toBeFalse();
         expect(payload.weightKg).toBe(5);
+    });
+
+    it('başarılı güncellemede aynı ekranda kalınır, başarı toast ı gösterilir, form temiz ve sürüm güncel olur', () => {
+        const navigate = spyOn(TestBed.inject(Router), 'navigate');
+        service.updateExamination.and.returnValue(of({ id: 'e1', rowVersion: 'V2' }));
+        typeNote('yeni anamnez');
+        cmp.form.markAsDirty();
+        expect(cmp.saveDisabled()).toBeFalse();
+        cmp.onSubmit();
+
+        expect(toastAdd).toHaveBeenCalledOnceWith(jasmine.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' }));
+        expect(navigate).not.toHaveBeenCalled();
+        expect(cmp.form.pristine).toBeTrue();
+        expect(cmp.current!.rowVersion).toBe('V2');
+        expect(cmp.form.controls.anamnesis.value).toBe('yeni anamnez');
+        // Değişiklik yokken tekrar kaydetmek kapalıdır (çift kayıt önlemi).
+        expect(cmp.saveDisabled()).toBeTrue();
+    });
+
+    it('kayıt sürerken ikinci gönderim yoksayılır', () => {
+        const inFlight = new Subject<{ id: string; rowVersion: string }>();
+        service.updateExamination.and.returnValue(inFlight);
+        typeNote('x');
+        cmp.onSubmit();
+        cmp.onSubmit();
+
+        expect(service.updateExamination).toHaveBeenCalledTimes(1);
+        inFlight.next({ id: 'e1', rowVersion: 'V2' });
+        inFlight.complete();
+        expect(toastAdd).toHaveBeenCalledTimes(1);
+    });
+
+    for (const [name, err] of [
+        ['400', new HttpErrorResponse({ status: 400, error: { extensions: { code: 'Examinations.Validation' }, detail: 'Geçersiz istek' } })],
+        ['409', httpError(409, 'Examinations.ConcurrencyConflict')],
+        ['ağ', httpError(0)]
+    ] as const) {
+        it(`${name} hatasında başarı toast ı çıkmaz, açık mesaj gösterilir, form kirli ve metin korunur`, () => {
+            service.updateExamination.and.returnValue(throwError(() => err));
+            typeNote('korunmalı');
+            cmp.form.markAsDirty();
+            cmp.onSubmit();
+
+            expect(toastAdd).not.toHaveBeenCalled();
+            expect(cmp.submitError()).toBeTruthy();
+            expect(cmp.form.dirty).toBeTrue();
+            expect(cmp.form.controls.anamnesis.value).toBe('korunmalı');
+            expect(cmp.saveDisabled()).toBeFalse();
+        });
+    }
+
+    it('oluşturma sonrası ?saved=1 ile açılan çalışma alanı başarı toast ı gösterir ve işareti URL den kaldırır', () => {
+        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const route = TestBed.inject(ActivatedRoute) as unknown as { snapshot: { queryParamMap: unknown } };
+        route.snapshot.queryParamMap = convertToParamMap({ saved: '1' });
+        const f2 = TestBed.createComponent(ExaminationWorkspacePageComponent);
+        const add2 = spyOn(f2.debugElement.injector.get(MessageService), 'add');
+        f2.detectChanges();
+
+        expect(add2).toHaveBeenCalledOnceWith(jasmine.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' }));
+        expect(navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: { saved: null }, replaceUrl: true }));
     });
 
     it('findings boş olsa da form geçerlidir; tek zorunlu klinik alan visitReason dır', () => {

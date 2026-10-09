@@ -6,7 +6,9 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
+import { ToastModule } from 'primeng/toast';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
@@ -52,6 +54,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MAX, DATE_INPUT_MIN, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { toIstanbulDateTimeInputParts, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 
 function requiredTrimmed(c: AbstractControl): ValidationErrors | null {
@@ -96,9 +99,12 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         AppErrorStateComponent,
         ExaminationPatientHeaderComponent,
         QuickClientDialogComponent,
-        QuickPetDialogComponent
+        QuickPetDialogComponent,
+        ToastModule
     ],
+    providers: [MessageService],
     template: `
+        <p-toast position="bottom-right" />
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
 
         @if (loading()) {
@@ -120,9 +126,6 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                 </div>
             </app-page-header>
 
-            @if (savedBanner()) {
-                <p class="mb-4 mt-0 text-sm font-medium" role="status">Muayene kaydedildi.</p>
-            }
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
                     İşletme salt okunur moddadır; değişiklik kaydedilemez.
@@ -442,6 +445,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     /** `:id/edit` rotası → düzenleme; `new` → oluşturma. */
@@ -457,7 +461,6 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     readonly conflict = signal(false);
     /** PUT başarılı ama yanıtta yeni sürüm yok: eski sürümle tekrar kaydedilmez. */
     readonly versionLost = signal(false);
-    readonly savedBanner = signal(false);
     readonly selectionError = signal<string | null>(null);
     readonly apiFieldErrors = signal<ExaminationUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
@@ -546,7 +549,14 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
         this.isEdit = this.route.snapshot.routeConfig?.path?.includes(':id') === true;
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
-            this.savedBanner.set(true);
+            this.notifySaved();
+            // Sayfa yenilendiğinde aynı bildirimin tekrarlanmaması için işaret parametresini kaldır.
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { saved: null },
+                queryParamsHandling: 'merge',
+                replaceUrl: true
+            });
         }
         if (this.isEdit) {
             if (!id) {
@@ -566,7 +576,8 @@ export class ExaminationWorkspacePageComponent implements OnInit {
             (!this.isEdit && (this.selectionForm.invalid || this.loadingClients() || this.applyingRouteContext())) ||
             this.submitting() ||
             this.ro.mutationBlocked() ||
-            this.versionLost()
+            this.versionLost() ||
+            (this.isEdit && this.form.pristine)
         );
     }
 
@@ -629,6 +640,9 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     }
 
     onSubmit(): void {
+        if (this.submitting()) {
+            return;
+        }
         this.submitError.set(null);
         this.conflict.set(false);
         this.apiFieldErrors.set({});
@@ -692,7 +706,9 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         this.examinationsService.updateExamination(this.examinationId, payload).subscribe({
             next: (res) => {
                 this.submitting.set(false);
-                this.savedBanner.set(true);
+                this.notifySaved();
+                this.form.markAsPristine();
+                this.form.markAsUntouched();
                 if (res.rowVersion) {
                     this.current = {
                         ...current,
@@ -712,6 +728,15 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                 }
             },
             error: (e: unknown) => this.handleSubmitError(e, 'Kayıt sırasında hata oluştu.')
+        });
+    }
+
+    /** Kayıt sonrası kullanıcıya görünür geri bildirim (projedeki toast deseni). */
+    private notifySaved(): void {
+        addTracedToast(this.messages, 'ExaminationWorkspacePage', this.router.url, {
+            severity: 'success',
+            summary: 'Tamam',
+            detail: 'Muayene kaydedildi.'
         });
     }
 
