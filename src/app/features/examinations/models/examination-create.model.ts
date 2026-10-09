@@ -33,11 +33,22 @@ export interface CreateExaminationRequest extends ExaminationContentInput {
 }
 
 export interface UpdateExaminationRequest extends ExaminationContentInput {
+    /** Boşaltılan alan `""` olarak gider; `null`/yok mevcut değeri korurdu. */
+    anamnesis: string;
+    findings: string;
+    assessment: string;
+    plan: string;
+    notes: string;
     /** GET'ten gelen (veya son başarılı yazmadan dönen) sürüm — zorunlu. */
     rowVersion: string;
     /** Kaydın mevcut değerleri; değiştirilemez, form input'u değildir. */
     clinicId: string;
     petId: string;
+    /**
+     * Tüm vital değerler bilinçli boşaltıldıysa (kayıtta vital varken) `true`; bu durumda
+     * vital alanları `null` olmalıdır. Sözleşme: `clearVitals` ile vital değer birlikte gitmez.
+     */
+    clearVitals: boolean;
     /** Mevcut bağlantı varsa aynı değer; yoksa gönderilmez. */
     appointmentId?: string | null;
 }

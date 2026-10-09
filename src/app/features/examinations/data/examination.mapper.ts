@@ -5,6 +5,7 @@ import type {
     ExaminationListItemDtoPagedResult,
     ExaminationRelatedHospitalizationItemDto,
     ExaminationRelatedSummaryDto,
+    ExaminationUpdateRequestDto,
     ExaminationUpsertRequestDto,
     ExaminationWriteResultDto
 } from '@/app/features/examinations/models/examination-api.model';
@@ -465,15 +466,26 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     return p;
 }
 
-function hasAnyVital(v: ExaminationVitalsInput): boolean {
-    return (
-        v.weightKg != null || v.temperatureC != null || v.heartRateBpm != null || v.respiratoryRatePerMin != null
-    );
+type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRatePerMin';
+type VitalValues = Pick<ExaminationVitalsInput, VitalKey>;
+
+const VITAL_KEYS: ReadonlyArray<VitalKey> = ['weightKg', 'temperatureC', 'heartRateBpm', 'respiratoryRatePerMin'];
+
+export function hasAnyVital(v: VitalValues): boolean {
+    return VITAL_KEYS.some((k) => v[k] != null);
+}
+
+/**
+ * Kayıtta dolu bir vital boşaltıldı ama başka vital kaldı mı?
+ * Sözleşme tek vitali silmeyi desteklemez (yalnızca `clearVitals` ile tümü); `null` gönderilirse eski değer korunur.
+ */
+export function isPartialVitalClear(form: VitalValues, current: VitalValues): boolean {
+    return hasAnyVital(form) && VITAL_KEYS.some((k) => current[k] != null && form[k] == null);
 }
 
 function contentFields(
-    req: CreateExaminationRequest | UpdateExaminationRequest
-): Omit<ExaminationUpsertRequestDto, 'appointmentId' | 'clinicId' | 'petId' | 'rowVersion'> {
+    req: CreateExaminationRequest
+): Omit<ExaminationUpsertRequestDto, 'appointmentId' | 'clinicId' | 'petId'> {
     return {
         examinedAtUtc: req.examinedAtUtc,
         visitReason: req.visitReason.trim(),
@@ -500,17 +512,49 @@ export function mapCreateExaminationToApiBody(req: CreateExaminationRequest): Ex
     };
 }
 
-/** PUT gövdesi: `rowVersion` zorunlu; `appointmentId` yalnızca mevcut değerle aynı gider (veya hiç gitmez). */
-export function mapUpdateExaminationToApiBody(req: UpdateExaminationRequest): ExaminationUpsertRequestDto {
-    const body: ExaminationUpsertRequestDto = {
+/**
+ * PUT gövdesi (kısmi güncelleme sözleşmesi):
+ * - metin alanları her zaman string gider; boşaltılan alan `""` olur (null mevcut değeri korurdu);
+ * - vitaller: dolu olanlar gider, boş olanlar hiç gönderilmez; tümü bilinçli boşaltıldıysa yalnızca `clearVitals: true`
+ *   (vital değerlerle birlikte asla);
+ * - `appointmentId` yalnızca mevcut değerle aynı gider (veya hiç gitmez).
+ */
+export function mapUpdateExaminationToApiBody(req: UpdateExaminationRequest): ExaminationUpdateRequestDto {
+    const body: ExaminationUpdateRequestDto = {
         clinicId: req.clinicId.trim(),
         petId: req.petId.trim(),
-        ...contentFields(req),
+        examinedAtUtc: req.examinedAtUtc,
+        visitReason: req.visitReason.trim(),
+        anamnesis: req.anamnesis.trim(),
+        findings: req.findings.trim(),
+        assessment: req.assessment.trim(),
+        plan: req.plan.trim(),
+        notes: req.notes.trim(),
         rowVersion: req.rowVersion
     };
     const appt = trimmedOrNull(req.appointmentId);
     if (appt) {
         body.appointmentId = appt;
+    }
+    if (req.clearVitals) {
+        body.clearVitals = true;
+        return body;
+    }
+    if (req.weightKg != null) {
+        body.weightKg = req.weightKg;
+    }
+    if (req.temperatureC != null) {
+        body.temperatureC = req.temperatureC;
+    }
+    if (req.heartRateBpm != null) {
+        body.heartRateBpm = req.heartRateBpm;
+    }
+    if (req.respiratoryRatePerMin != null) {
+        body.respiratoryRatePerMin = req.respiratoryRatePerMin;
+    }
+    const measuredAt = hasAnyVital(req) ? trimmedOrNull(req.vitalsMeasuredAtUtc) : null;
+    if (measuredAt) {
+        body.vitalsMeasuredAtUtc = measuredAt;
     }
     return body;
 }
@@ -569,12 +613,16 @@ export function mapExaminationFormToCreateRequest(
 /** Form → update isteği. Bağlam (`clinicId`, `petId`, `appointmentId`, `rowVersion`) kayıttan gelir. */
 export function mapExaminationFormToUpdateRequest(
     f: ExaminationWorkspaceFormValue,
-    current: Pick<ExaminationEditVm, 'clinicId' | 'petId' | 'appointmentId' | 'rowVersion' | 'vitalsMeasuredAtUtc'>
+    current: Pick<
+        ExaminationEditVm,
+        'clinicId' | 'petId' | 'appointmentId' | 'rowVersion' | 'vitalsMeasuredAtUtc' | VitalKey
+    >
 ): UpdateExaminationRequest | null {
     const examinedAtUtc = fromIstanbulDateAndTimeToUtcIso(f.examinationDate, f.examinationTime);
     if (!examinedAtUtc) {
         return null;
     }
+    const vitals = vitalsFromForm(f, current.vitalsMeasuredAtUtc);
     return {
         clinicId: current.clinicId,
         petId: current.petId,
@@ -587,6 +635,8 @@ export function mapExaminationFormToUpdateRequest(
         assessment: f.assessment,
         plan: f.plan,
         notes: f.notes,
-        ...vitalsFromForm(f, current.vitalsMeasuredAtUtc)
+        // Kayıtta vital varken hepsi boşaltıldıysa bilinçli silme; başka durumda vital alanları hiç gitmez/korunur.
+        clearVitals: !hasAnyVital(vitals) && hasAnyVital(current),
+        ...vitals
     };
 }

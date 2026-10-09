@@ -163,7 +163,31 @@ export interface ExaminationUpsertRequestDto {
     assessment: string | null;
     plan: string | null;
     notes: string | null;
-    rowVersion?: string;
+}
+
+/**
+ * PUT body — kısmi güncelleme: gövdede olmayan/`null` alan mevcut değeri korur.
+ * Metni silmek için `""` gönderilir. Vitalleri silmek için yalnızca `clearVitals: true`
+ * (vital değerlerle birlikte gönderilmez). `rowVersion`, `examinedAtUtc`, `visitReason` her istekte zorunlu.
+ */
+export interface ExaminationUpdateRequestDto {
+    appointmentId?: string;
+    clinicId: string;
+    petId: string;
+    examinedAtUtc: string;
+    visitReason: string;
+    anamnesis: string;
+    findings: string;
+    assessment: string;
+    plan: string;
+    notes: string;
+    weightKg?: number;
+    temperatureC?: number;
+    heartRateBpm?: number;
+    respiratoryRatePerMin?: number;
+    vitalsMeasuredAtUtc?: string;
+    clearVitals?: true;
+    rowVersion: string;
 }
 
 /** POST 201 / PUT 200 yanıtı. */

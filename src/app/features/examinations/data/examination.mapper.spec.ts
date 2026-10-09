@@ -1,5 +1,6 @@
 import {
     examinationsQueryToHttpParams,
+    isPartialVitalClear,
     mapCreateExaminationToApiBody,
     mapExaminationDetailDtoToEditVm,
     mapExaminationFormToCreateRequest,
@@ -76,15 +77,68 @@ describe('examination mapper — PUT gövdesi', () => {
         expect(mapExaminationFormToUpdateRequest(baseForm({ examinationTime: '' }), current())).toBeNull();
     });
 
-    it('vital yokken vitalsMeasuredAtUtc göndermez; ölçülmeyen vital null gider', () => {
+
+    it('boşaltılan metin alanları null değil "" olarak gider (null mevcut değeri korurdu); visitReason kırpılır', () => {
+        const body = mapUpdateExaminationToApiBody(mapExaminationFormToUpdateRequest(baseForm({ anamnesis: '   ' }), current())!);
+        expect(body.anamnesis).toBe('');
+        expect(body.findings).toBe('');
+        expect(body.assessment).toBe('');
+        expect(body.plan).toBe('');
+        expect(body.notes).toBe('');
+        expect(body.visitReason).toBe('İştahsızlık');
+    });
+
+    it('dolu metin kırpılarak gider', () => {
+        const body = mapUpdateExaminationToApiBody(
+            mapExaminationFormToUpdateRequest(baseForm({ plan: '  Sıvı tedavisi ' }), current())!
+        );
+        expect(body.plan).toBe('Sıvı tedavisi');
+    });
+
+    it('kayıtta vital yokken vital girilmezse vital alanları ve clearVitals hiç gönderilmez', () => {
         const body = mapUpdateExaminationToApiBody(
             mapExaminationFormToUpdateRequest(baseForm({ vitalsMeasuredAtLocal: '2026-10-08T13:30' }), current())!
         );
-        expect(body.vitalsMeasuredAtUtc).toBeNull();
-        expect(body.weightKg).toBeNull();
-        expect(body.temperatureC).toBeNull();
+        for (const k of ['weightKg', 'temperatureC', 'heartRateBpm', 'respiratoryRatePerMin', 'vitalsMeasuredAtUtc', 'clearVitals']) {
+            expect(k in body).withContext(k).toBeFalse();
+        }
     });
 
+    it('kayıttaki tüm vitaller bilinçli boşaltılırsa yalnızca clearVitals:true gider', () => {
+        const body = mapUpdateExaminationToApiBody(
+            mapExaminationFormToUpdateRequest(
+                baseForm(),
+                current({ weightKg: 4.25, temperatureC: 38.6, vitalsMeasuredAtUtc: '2026-10-08T10:30:00Z' })
+            )!
+        );
+        expect(body.clearVitals).toBeTrue();
+        for (const k of ['weightKg', 'temperatureC', 'heartRateBpm', 'respiratoryRatePerMin', 'vitalsMeasuredAtUtc']) {
+            expect(k in body).withContext(k).toBeFalse();
+        }
+    });
+
+    it('vital değerler varken clearVitals gönderilmez', () => {
+        const body = mapUpdateExaminationToApiBody(
+            mapExaminationFormToUpdateRequest(baseForm({ weightKg: 5 }), current({ weightKg: 4.25 }))!
+        );
+        expect('clearVitals' in body).toBeFalse();
+        expect(body.weightKg).toBe(5);
+    });
+
+    it('clearVitals isteği vital değerler taşısa bile gövdede vital değer bulunmaz', () => {
+        const req = mapExaminationFormToUpdateRequest(baseForm({ weightKg: 5 }), current())!;
+        const body = mapUpdateExaminationToApiBody({ ...req, clearVitals: true });
+        expect(body.clearVitals).toBeTrue();
+        expect('weightKg' in body).toBeFalse();
+        expect('vitalsMeasuredAtUtc' in body).toBeFalse();
+    });
+
+    it('her istekte rowVersion, examinedAtUtc ve visitReason gider', () => {
+        const body = mapUpdateExaminationToApiBody(mapExaminationFormToUpdateRequest(baseForm(), current())!);
+        expect(body.rowVersion).toBeTruthy();
+        expect(body.examinedAtUtc).toBe('2026-10-08T10:30:00.000Z');
+        expect(body.visitReason).toBeTruthy();
+    });
     it('değişmeyen ölçüm zamanını saniyesiyle birlikte aynen korur', () => {
         const orig = '2026-10-08T10:30:45Z';
         const body = mapUpdateExaminationToApiBody(
@@ -107,14 +161,6 @@ describe('examination mapper — PUT gövdesi', () => {
         expect(body.vitalsMeasuredAtUtc).toBe('2026-10-08T11:00:00.000Z');
     });
 
-    it('findings boşsa boş string, diğer boş metinler null gider; visitReason kırpılır', () => {
-        const body = mapUpdateExaminationToApiBody(mapExaminationFormToUpdateRequest(baseForm(), current())!);
-        expect(body.findings).toBe('');
-        expect(body.anamnesis).toBeNull();
-        expect(body.plan).toBeNull();
-        expect(body.assessment).toBeNull();
-        expect(body.visitReason).toBe('İştahsızlık');
-    });
 });
 
 describe('examination mapper — POST gövdesi', () => {
@@ -198,5 +244,19 @@ describe('examination mapper — liste tarih parametreleri', () => {
         const p = examinationsQueryToHttpParams({ fromDate: '2026-10-08' });
         expect(p.has('dateFromUtc')).toBeTrue();
         expect(p.has('dateToUtc')).toBeFalse();
+    });
+});
+
+describe('isPartialVitalClear', () => {
+    const none = { weightKg: null, temperatureC: null, heartRateBpm: null, respiratoryRatePerMin: null };
+
+    it('kayıttaki bir vital boşaltılıp başkası kalırsa true', () => {
+        expect(isPartialVitalClear({ ...none, temperatureC: 38 }, { ...none, weightKg: 4, temperatureC: 38 })).toBeTrue();
+    });
+
+    it('tümü boşaltılırsa, hiç değişmezse veya yeni vital eklenirse false', () => {
+        expect(isPartialVitalClear(none, { ...none, weightKg: 4 })).toBeFalse();
+        expect(isPartialVitalClear({ ...none, weightKg: 4 }, { ...none, weightKg: 4 })).toBeFalse();
+        expect(isPartialVitalClear({ ...none, weightKg: 4 }, none)).toBeFalse();
     });
 });

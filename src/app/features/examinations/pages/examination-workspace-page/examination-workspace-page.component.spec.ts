@@ -178,6 +178,57 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(cmp.form.controls.visitReason.value).toBe('İştahsızlık — güncellendi');
     });
 
+    it('boşaltılan metin alanı PUT ta "" olarak gider', () => {
+        service.getExaminationForEditById.and.returnValue(of(editVm({ plan: 'eski plan', notes: 'eski not' })));
+        cmp.reload();
+        service.updateExamination.and.returnValue(of({ id: 'e1', rowVersion: 'V2' }));
+        cmp.form.controls.plan.setValue('');
+        cmp.onSubmit();
+
+        const payload = service.updateExamination.calls.mostRecent().args[1];
+        expect(payload.plan).toBe('');
+        expect(payload.notes).toBe('eski not');
+    });
+
+    it('kayıttaki tüm vitaller boşaltılırsa clearVitals:true gider; sonraki kayıtta yinelenmez', () => {
+        service.getExaminationForEditById.and.returnValue(of(editVm({ weightKg: 4.25, temperatureC: 38.6 })));
+        cmp.reload();
+        service.updateExamination.and.returnValue(of({ id: 'e1', rowVersion: 'V2' }));
+        cmp.form.patchValue({ weightKg: null, temperatureC: null });
+        cmp.onSubmit();
+
+        const first = service.updateExamination.calls.argsFor(0)[1];
+        expect(first.clearVitals).toBeTrue();
+        expect(first.weightKg).toBeNull();
+
+        cmp.form.controls.plan.setValue('sonraki');
+        cmp.onSubmit();
+        expect(service.updateExamination.calls.argsFor(1)[1].clearVitals).toBeFalse();
+    });
+
+    it('tek vitali silmek (diğeri kalırken) engellenir ve kayıt gönderilmez', () => {
+        service.getExaminationForEditById.and.returnValue(of(editVm({ weightKg: 4.25, temperatureC: 38.6 })));
+        cmp.reload();
+        cmp.form.controls.weightKg.setValue(null);
+
+        expect(cmp.form.hasError('partialVitalClear')).toBeTrue();
+        expect(cmp.saveDisabled()).toBeTrue();
+        cmp.onSubmit();
+        expect(service.updateExamination).not.toHaveBeenCalled();
+    });
+
+    it('vital değer varken PUT ta clearVitals gönderilmez', () => {
+        service.getExaminationForEditById.and.returnValue(of(editVm({ weightKg: 4.25 })));
+        cmp.reload();
+        service.updateExamination.and.returnValue(of({ id: 'e1', rowVersion: 'V2' }));
+        cmp.form.controls.weightKg.setValue(5);
+        cmp.onSubmit();
+
+        const payload = service.updateExamination.calls.mostRecent().args[1];
+        expect(payload.clearVitals).toBeFalse();
+        expect(payload.weightKg).toBe(5);
+    });
+
     it('findings boş olsa da form geçerlidir; tek zorunlu klinik alan visitReason dır', () => {
         expect(cmp.form.valid).toBeTrue();
         cmp.form.controls.visitReason.setValue('   ');

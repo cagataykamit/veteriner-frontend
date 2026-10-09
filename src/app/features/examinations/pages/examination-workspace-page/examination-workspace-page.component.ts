@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal, WritableSignal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -15,6 +15,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
 import {
     mapExaminationFormToCreateRequest,
+    isPartialVitalClear,
     mapExaminationFormToUpdateRequest
 } from '@/app/features/examinations/data/examination.mapper';
 import type { ExaminationWorkspaceFormValue } from '@/app/features/examinations/models/examination-form.model';
@@ -342,6 +343,9 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                     formControlName="vitalsMeasuredAtLocal"
                                 />
                                 <small class="text-muted-color block">Vital değerler opsiyoneldir. Boş bırakılırsa ilk ölçüm girişinde muayene zamanı kullanılır.</small>
+                                @if (form.hasError('partialVitalClear')) {
+                                    <small class="text-red-500 block" role="alert">Kayıttaki tek bir vital değer silinemez; tüm vital alanlarını boşaltın veya değeri yeniden girin.</small>
+                                }
                                 @if (apiFieldErrors().vitalsMeasuredAt) {
                                     <small class="text-red-500">{{ apiFieldErrors().vitalsMeasuredAt }}</small>
                                 }
@@ -480,21 +484,28 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         petId: [{ value: '', disabled: true }, Validators.required]
     });
 
-    readonly form = this.fb.group({
-        examinationDate: this.fb.nonNullable.control('', [Validators.required, dateYearRangeValidator()]),
-        examinationTime: this.fb.nonNullable.control('', Validators.required),
-        visitReason: this.fb.nonNullable.control('', [requiredTrimmed, Validators.maxLength(2000)]),
-        anamnesis: this.fb.nonNullable.control(''),
-        findings: this.fb.nonNullable.control(''),
-        weightKg: this.fb.control<number | null>(null, positiveWhenPresent),
-        temperatureC: this.fb.control<number | null>(null, positiveWhenPresent),
-        heartRateBpm: this.fb.control<number | null>(null, [positiveWhenPresent, integerWhenPresent]),
-        respiratoryRatePerMin: this.fb.control<number | null>(null, [positiveWhenPresent, integerWhenPresent]),
-        vitalsMeasuredAtLocal: this.fb.nonNullable.control(''),
-        assessment: this.fb.nonNullable.control(''),
-        plan: this.fb.nonNullable.control(''),
-        notes: this.fb.nonNullable.control('')
-    });
+    /** Kayıttaki tek bir vital silinemez (sözleşme: yalnızca tümü `clearVitals` ile). */
+    private readonly partialVitalClearValidator: ValidatorFn = (g) =>
+        this.current && isPartialVitalClear(g.value, this.current) ? { partialVitalClear: true } : null;
+
+    readonly form = this.fb.group(
+        {
+            examinationDate: this.fb.nonNullable.control('', [Validators.required, dateYearRangeValidator()]),
+            examinationTime: this.fb.nonNullable.control('', Validators.required),
+            visitReason: this.fb.nonNullable.control('', [requiredTrimmed, Validators.maxLength(2000)]),
+            anamnesis: this.fb.nonNullable.control(''),
+            findings: this.fb.nonNullable.control(''),
+            weightKg: this.fb.control<number | null>(null, positiveWhenPresent),
+            temperatureC: this.fb.control<number | null>(null, positiveWhenPresent),
+            heartRateBpm: this.fb.control<number | null>(null, [positiveWhenPresent, integerWhenPresent]),
+            respiratoryRatePerMin: this.fb.control<number | null>(null, [positiveWhenPresent, integerWhenPresent]),
+            vitalsMeasuredAtLocal: this.fb.nonNullable.control(''),
+            assessment: this.fb.nonNullable.control(''),
+            plan: this.fb.nonNullable.control(''),
+            notes: this.fb.nonNullable.control('')
+        },
+        { validators: this.partialVitalClearValidator }
+    );
 
     readonly canShowQuickClientCreate = (): boolean =>
         canShowQuickClientCreateButton(this.auth, this.ro, this.contextFromAppointment());
@@ -683,7 +694,16 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                 this.submitting.set(false);
                 this.savedBanner.set(true);
                 if (res.rowVersion) {
-                    this.current = { ...current, rowVersion: res.rowVersion, vitalsMeasuredAtUtc: payload.vitalsMeasuredAtUtc };
+                    this.current = {
+                        ...current,
+                        rowVersion: res.rowVersion,
+                        weightKg: payload.weightKg,
+                        temperatureC: payload.temperatureC,
+                        heartRateBpm: payload.heartRateBpm,
+                        respiratoryRatePerMin: payload.respiratoryRatePerMin,
+                        vitalsMeasuredAtUtc: payload.clearVitals ? null : (payload.vitalsMeasuredAtUtc ?? current.vitalsMeasuredAtUtc)
+                    };
+                    this.form.updateValueAndValidity();
                 } else {
                     this.versionLost.set(true);
                     this.submitError.set(
