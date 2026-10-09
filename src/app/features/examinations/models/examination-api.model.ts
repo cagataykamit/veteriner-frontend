@@ -127,6 +127,16 @@ export interface ExaminationDetailDto {
     finding?: string | null;
     assessment?: string | null;
     diagnosis?: string | null;
+    /** Dilim 1 — eski kayıtlarda null olabilir. */
+    anamnesis?: string | null;
+    plan?: string | null;
+    weightKg?: number | null;
+    temperatureC?: number | null;
+    heartRateBpm?: number | null;
+    respiratoryRatePerMin?: number | null;
+    vitalsMeasuredAtUtc?: string | null;
+    /** Base64 (SQL rowversion); PUT'ta zorunlu. */
+    rowVersion?: string | null;
     /** Audit — API eksik döndürebilir; mapper null kabul eder. */
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
@@ -135,14 +145,29 @@ export interface ExaminationDetailDto {
 /**
  * POST/PUT body — `visitReason` zorunlu (max 2000, sunucu doğrulaması).
  * Eski `complaint` alias yalnızca backend isteğinde; istemci göndermez.
+ * `rowVersion` yalnızca PUT'ta gönderilir (zorunlu).
  */
-export interface ExaminationCreateRequestDto {
+export interface ExaminationUpsertRequestDto {
     appointmentId?: string | null;
     clinicId?: string | null;
     petId?: string | null;
     examinedAtUtc: string;
     visitReason: string;
+    anamnesis: string | null;
     findings: string;
-    assessment?: string | null;
-    notes?: string | null;
+    weightKg: number | null;
+    temperatureC: number | null;
+    heartRateBpm: number | null;
+    respiratoryRatePerMin: number | null;
+    vitalsMeasuredAtUtc: string | null;
+    assessment: string | null;
+    plan: string | null;
+    notes: string | null;
+    rowVersion?: string;
+}
+
+/** POST 201 / PUT 200 yanıtı. */
+export interface ExaminationWriteResultDto {
+    id: string;
+    rowVersion?: string | null;
 }

@@ -260,7 +260,15 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                             }
                         </div>
                         <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
-                            <h5 class="mt-0 mb-4">Bulgular</h5>
+                            <h5 class="mt-0 mb-4">Anamnez</h5>
+                            @if (exam()!.anamnesis === emptyMark) {
+                                <app-empty-state message="Anamnez girilmemiş." />
+                            } @else {
+                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.anamnesis }}</p>
+                            }
+                        </div>
+                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
+                            <h5 class="mt-0 mb-4">Klinik bulgular</h5>
                             @if (exam()!.findings === emptyMark) {
                                 <app-empty-state message="Bulgu kaydı yok." />
                             } @else {
@@ -268,15 +276,52 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                             }
                         </div>
                         <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
-                            <h5 class="mt-0 mb-4">Değerlendirme</h5>
+                            <h5 class="mt-0 mb-4">Vital değerler</h5>
+                            @if (!hasVitals()) {
+                                <app-empty-state message="Vital değer ölçülmemiş." />
+                            } @else {
+                                <dl class="m-0 grid grid-cols-12 gap-3">
+                                    @if (exam()!.weightKg !== null) {
+                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Kilo</dt>
+                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.weightKg }} kg</dd>
+                                    }
+                                    @if (exam()!.temperatureC !== null) {
+                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Vücut sıcaklığı</dt>
+                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.temperatureC }} °C</dd>
+                                    }
+                                    @if (exam()!.heartRateBpm !== null) {
+                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Kalp atış hızı</dt>
+                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.heartRateBpm }} atım/dk</dd>
+                                    }
+                                    @if (exam()!.respiratoryRatePerMin !== null) {
+                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Solunum sayısı</dt>
+                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.respiratoryRatePerMin }} soluk/dk</dd>
+                                    }
+                                    @if (exam()!.vitalsMeasuredAtUtc) {
+                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Ölçüm zamanı</dt>
+                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(exam()!.vitalsMeasuredAtUtc) }}</dd>
+                                    }
+                                </dl>
+                            }
+                        </div>
+                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
+                            <h5 class="mt-0 mb-4">Değerlendirme / tanı</h5>
                             @if (exam()!.assessment === emptyMark) {
                                 <app-empty-state message="Değerlendirme girilmemiş." />
                             } @else {
                                 <p class="m-0 whitespace-pre-wrap">{{ exam()!.assessment }}</p>
                             }
                         </div>
+                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
+                            <h5 class="mt-0 mb-4">Plan / tedavi planı</h5>
+                            @if (exam()!.plan === emptyMark) {
+                                <app-empty-state message="Plan girilmemiş." />
+                            } @else {
+                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.plan }}</p>
+                            }
+                        </div>
                         <div>
-                            <h5 class="mt-0 mb-4">Notlar</h5>
+                            <h5 class="mt-0 mb-4">Ek notlar</h5>
                             @if (exam()!.notes === emptyMark) {
                                 <app-empty-state message="Not yok." />
                             } @else {
@@ -595,6 +640,11 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly money = (amount: number | null, currency: string | null | undefined) =>
         formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
     readonly payMethodLabel = paymentMethodLabel;
+
+    hasVitals(): boolean {
+        const e = this.exam();
+        return !!e && (e.weightKg !== null || e.temperatureC !== null || e.heartRateBpm !== null || e.respiratoryRatePerMin !== null);
+    }
 
     hospitalizationStatusLine(row: ExaminationRelatedHospitalizationItemVm): string {
         if (row.dischargedAtUtc) {

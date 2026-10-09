@@ -27,7 +27,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
-    APPOINTMENTS_RESCHEDULE_CLAIM
+    APPOINTMENTS_RESCHEDULE_CLAIM,
+    EXAMINATIONS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
@@ -75,7 +76,36 @@ import {
                             icon="pi pi-pencil"
                             class="p-button-secondary"
                         ></a>
-                        @if (appt()!.clientId?.trim() && appt()!.petId?.trim() && !isCancelledForExam(appt()!.status)) {
+                    } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
+                        <button
+                            pButton
+                            type="button"
+                            label="Düzenle (salt okunur)"
+                            icon="pi pi-lock"
+                            [disabled]="true"
+                            class="p-button-secondary"
+                        ></button>
+                    }
+                    @if (canCreateExamination && appt()!.clientId?.trim() && appt()!.petId?.trim()) {
+                        @if (isCancelledForExam(appt()!.status)) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Muayene Oluştur"
+                                icon="pi pi-ban"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                        } @else if (ro.mutationBlocked()) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Muayene Oluştur (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                        } @else {
                             <a
                                 [routerLink]="['/panel/examinations/new']"
                                 [queryParams]="{
@@ -89,43 +119,6 @@ import {
                                 icon="pi pi-plus"
                                 class="p-button-secondary"
                             ></a>
-                        } @else if (appt()!.clientId?.trim() && appt()!.petId?.trim() && isCancelledForExam(appt()!.status)) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Muayene Oluştur"
-                                icon="pi pi-ban"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
-                        }
-                    } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Düzenle (salt okunur)"
-                            icon="pi pi-lock"
-                            [disabled]="true"
-                            class="p-button-secondary"
-                        ></button>
-                        @if (appt()!.clientId?.trim() && appt()!.petId?.trim() && !isCancelledForExam(appt()!.status)) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Muayene Oluştur (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
-                        } @else if (appt()!.clientId?.trim() && appt()!.petId?.trim() && isCancelledForExam(appt()!.status)) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Muayene Oluştur"
-                                icon="pi pi-ban"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
                         }
                     }
                 </div>
@@ -277,6 +270,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly typeSeverity = appointmentTypeDisplaySeverity;
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
+    readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
     readonly isCancelledForExam = isAppointmentCancelledStatus;
 
     ngOnInit(): void {

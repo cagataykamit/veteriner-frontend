@@ -1,22 +1,45 @@
 import { HttpParams } from '@angular/common/http';
 import type {
-    ExaminationCreateRequestDto,
     ExaminationDetailDto,
     ExaminationListItemDto,
     ExaminationListItemDtoPagedResult,
     ExaminationRelatedHospitalizationItemDto,
-    ExaminationRelatedSummaryDto
+    ExaminationRelatedSummaryDto,
+    ExaminationUpsertRequestDto,
+    ExaminationWriteResultDto
 } from '@/app/features/examinations/models/examination-api.model';
-import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
+import type {
+    CreateExaminationRequest,
+    ExaminationVitalsInput,
+    UpdateExaminationRequest
+} from '@/app/features/examinations/models/examination-create.model';
+import type { ExaminationWorkspaceFormValue } from '@/app/features/examinations/models/examination-form.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
 import type {
     ExaminationDetailVm,
     ExaminationEditVm,
     ExaminationListItemVm,
-    ExaminationRelatedSummaryVm
+    ExaminationRelatedSummaryVm,
+    ExaminationWriteResultVm
 } from '@/app/features/examinations/models/examination-vm.model';
+import {
+    addGregorianDaysToYmd,
+    dateOnlyInputToIstanbulStartUtcIso,
+    fromIstanbulDateAndTimeToUtcIso,
+    fromIstanbulDateTimeLocalInputToUtcIso,
+    toIstanbulDateTimeLocalInputValue
+} from '@/app/shared/utils/date.utils';
 
 const EM = '—';
+
+function finiteNumberOrNull(v: unknown): number | null {
+    return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
+function trimmedOrNull(v: string | null | undefined): string | null {
+    const t = v?.trim();
+    return t ? t : null;
+}
 
 function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
@@ -180,6 +203,14 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
         notes: canonicalNotes(dto),
         findings: canonicalFindings(dto),
         assessment: canonicalAssessment(dto),
+        anamnesis: str(dto.anamnesis),
+        plan: str(dto.plan),
+        weightKg: finiteNumberOrNull(dto.weightKg),
+        temperatureC: finiteNumberOrNull(dto.temperatureC),
+        heartRateBpm: finiteNumberOrNull(dto.heartRateBpm),
+        respiratoryRatePerMin: finiteNumberOrNull(dto.respiratoryRatePerMin),
+        vitalsMeasuredAtUtc: trimmedOrNull(dto.vitalsMeasuredAtUtc),
+        rowVersion: trimmedOrNull(dto.rowVersion),
         createdAtUtc: canonicalDetailCreatedAtUtc(dto),
         updatedAtUtc: canonicalDetailUpdatedAtUtc(dto)
     };
@@ -189,17 +220,50 @@ export function mapExaminationDetailDtoToEditVm(dto: ExaminationDetailDto): Exam
     return {
         id: dto.id,
         clinicId: canonicalClinicId(dto) ?? '',
-        clinicName: canonicalClinicName(dto) ?? '',
         clientId: canonicalClientId(dto) ?? '',
         petId: canonicalPetId(dto) ?? '',
         clientName: rawClientName(dto),
         petName: rawPetName(dto),
+        appointmentId: trimmedOrNull(dto.appointmentId),
         examinedAtUtc: canonicalExaminedAt(dto),
         visitReason: firstTrimmed(dto.visitReason) ?? '',
-        notes: firstTrimmed(dto.notes, dto.note) ?? '',
+        anamnesis: dto.anamnesis ?? '',
         findings: firstTrimmed(dto.findings, dto.finding) ?? '',
-        assessment: firstTrimmed(dto.assessment, dto.diagnosis) ?? ''
+        weightKg: finiteNumberOrNull(dto.weightKg),
+        temperatureC: finiteNumberOrNull(dto.temperatureC),
+        heartRateBpm: finiteNumberOrNull(dto.heartRateBpm),
+        respiratoryRatePerMin: finiteNumberOrNull(dto.respiratoryRatePerMin),
+        vitalsMeasuredAtUtc: trimmedOrNull(dto.vitalsMeasuredAtUtc),
+        assessment: firstTrimmed(dto.assessment, dto.diagnosis) ?? '',
+        plan: dto.plan ?? '',
+        notes: firstTrimmed(dto.notes, dto.note) ?? '',
+        rowVersion: trimmedOrNull(dto.rowVersion) ?? ''
     };
+}
+
+/** POST/PUT yanıtı → `{ id, rowVersion }`. Düz string gövde (eski sözleşme) yalnızca id sayılır. */
+export function mapExaminationWriteResultDtoToVm(raw: unknown): ExaminationWriteResultVm | null {
+    if (typeof raw === 'string') {
+        const id = raw.trim();
+        return id ? { id, rowVersion: null } : null;
+    }
+    if (!raw || typeof raw !== 'object') {
+        return null;
+    }
+    const o = raw as Partial<ExaminationWriteResultDto> & Record<string, unknown>;
+    const id = firstTrimmed(
+        typeof o.id === 'string' ? o.id : null,
+        typeof o['Id'] === 'string' ? (o['Id'] as string) : null,
+        typeof o['examinationId'] === 'string' ? (o['examinationId'] as string) : null
+    );
+    if (!id) {
+        return null;
+    }
+    const rv = firstTrimmed(
+        typeof o.rowVersion === 'string' ? o.rowVersion : null,
+        typeof o['RowVersion'] === 'string' ? (o['RowVersion'] as string) : null
+    );
+    return { id, rowVersion: rv };
 }
 
 export function mapPagedExaminationsToVm(result: ExaminationListItemDtoPagedResult): {
@@ -332,8 +396,37 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
 }
 
 /**
+ * Liste filtresi için İstanbul günü (`yyyy-MM-dd`) → `[dateFromUtc, dateToUtc)`.
+ * Bitiş: seçilen bitiş gününün ertesi gününün başlangıcı (hariç sınır).
+ * Tek dönüşüm noktası burasıdır; çağıran taraf UTC üretmez.
+ */
+export function examinationDateRangeToUtcParams(
+    fromDate: string | undefined,
+    toDate: string | undefined
+): { dateFromUtc?: string; dateToUtc?: string } {
+    const out: { dateFromUtc?: string; dateToUtc?: string } = {};
+    const from = fromDate?.trim();
+    if (from) {
+        const iso = dateOnlyInputToIstanbulStartUtcIso(from);
+        if (iso) {
+            out.dateFromUtc = iso;
+        }
+    }
+    const to = toDate?.trim();
+    if (to) {
+        const next = addGregorianDaysToYmd(to, 1);
+        const iso = next ? dateOnlyInputToIstanbulStartUtcIso(next) : '';
+        if (iso) {
+            out.dateToUtc = iso;
+        }
+    }
+    return out;
+}
+
+/**
  * GET `/api/v1/examinations` — canonical query:
- * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `appointmentId`, `FromDate`, `ToDate`, `Sort`, `Order`.
+ * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `appointmentId`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order`.
+ * `examinedOnLocalDate` ile birlikte kullanılamaz; bu istemci yalnızca UTC aralığı gönderir.
  */
 export function examinationsQueryToHttpParams(query: ExaminationsListQuery): HttpParams {
     let p = new HttpParams();
@@ -356,11 +449,12 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     if (query.appointmentId?.trim()) {
         p = p.set('appointmentId', query.appointmentId.trim());
     }
-    if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+    const range = examinationDateRangeToUtcParams(query.fromDate, query.toDate);
+    if (range.dateFromUtc) {
+        p = p.set('dateFromUtc', range.dateFromUtc);
     }
-    if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+    if (range.dateToUtc) {
+        p = p.set('dateToUtc', range.dateToUtc);
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
@@ -371,42 +465,128 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     return p;
 }
 
-export function mapCreateExaminationToApiBody(req: CreateExaminationRequest): ExaminationCreateRequestDto {
+function hasAnyVital(v: ExaminationVitalsInput): boolean {
+    return (
+        v.weightKg != null || v.temperatureC != null || v.heartRateBpm != null || v.respiratoryRatePerMin != null
+    );
+}
+
+function contentFields(
+    req: CreateExaminationRequest | UpdateExaminationRequest
+): Omit<ExaminationUpsertRequestDto, 'appointmentId' | 'clinicId' | 'petId' | 'rowVersion'> {
     return {
-        appointmentId: req.appointmentId?.trim() ? req.appointmentId.trim() : null,
-        clinicId: req.clinicId?.trim() ? req.clinicId.trim() : null,
-        petId: req.petId?.trim() ? req.petId.trim() : null,
         examinedAtUtc: req.examinedAtUtc,
         visitReason: req.visitReason.trim(),
-        findings: req.findings.trim(),
-        assessment: req.assessment?.trim() ? req.assessment.trim() : null,
-        notes: req.notes?.trim() ? req.notes.trim() : null
+        anamnesis: trimmedOrNull(req.anamnesis),
+        findings: req.findings?.trim() ?? '',
+        weightKg: req.weightKg,
+        temperatureC: req.temperatureC,
+        heartRateBpm: req.heartRateBpm,
+        respiratoryRatePerMin: req.respiratoryRatePerMin,
+        // Sözleşme: ölçüm zamanı yalnızca en az bir vital ile gönderilir.
+        vitalsMeasuredAtUtc: hasAnyVital(req) ? trimmedOrNull(req.vitalsMeasuredAtUtc) : null,
+        assessment: trimmedOrNull(req.assessment),
+        plan: trimmedOrNull(req.plan),
+        notes: trimmedOrNull(req.notes)
     };
 }
 
-export interface ExaminationUpsertFormAdapterInput {
-    clinicId: string;
-    petId: string;
-    examinedAtUtc: string;
-    visitReason: string;
-    findings: string;
-    assessment?: string | null;
-    notes?: string | null;
-    /** Randevu bağlamından oluşturmada dolu olabilir. */
-    appointmentId?: string | null;
-}
-
-export function mapExaminationUpsertFormToCreateRequest(input: ExaminationUpsertFormAdapterInput): CreateExaminationRequest {
-    const appt = input.appointmentId?.trim() ? input.appointmentId.trim() : undefined;
+export function mapCreateExaminationToApiBody(req: CreateExaminationRequest): ExaminationUpsertRequestDto {
     return {
-        appointmentId: appt,
-        clinicId: input.clinicId.trim(),
-        petId: input.petId.trim() || undefined,
-        examinedAtUtc: input.examinedAtUtc,
-        visitReason: input.visitReason.trim(),
-        findings: input.findings.trim(),
-        assessment: input.assessment?.trim() ? input.assessment.trim() : null,
-        notes: input.notes?.trim() ? input.notes.trim() : null
+        appointmentId: trimmedOrNull(req.appointmentId),
+        clinicId: trimmedOrNull(req.clinicId),
+        petId: trimmedOrNull(req.petId),
+        ...contentFields(req)
     };
 }
 
+/** PUT gövdesi: `rowVersion` zorunlu; `appointmentId` yalnızca mevcut değerle aynı gider (veya hiç gitmez). */
+export function mapUpdateExaminationToApiBody(req: UpdateExaminationRequest): ExaminationUpsertRequestDto {
+    const body: ExaminationUpsertRequestDto = {
+        clinicId: req.clinicId.trim(),
+        petId: req.petId.trim(),
+        ...contentFields(req),
+        rowVersion: req.rowVersion
+    };
+    const appt = trimmedOrNull(req.appointmentId);
+    if (appt) {
+        body.appointmentId = appt;
+    }
+    return body;
+}
+
+function numberOrNull(v: number | null | undefined): number | null {
+    return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
+function vitalsFromForm(
+    f: ExaminationWorkspaceFormValue,
+    originalVitalsMeasuredAtUtc: string | null | undefined
+): ExaminationVitalsInput {
+    const vitals = {
+        weightKg: numberOrNull(f.weightKg),
+        temperatureC: numberOrNull(f.temperatureC),
+        heartRateBpm: numberOrNull(f.heartRateBpm),
+        respiratoryRatePerMin: numberOrNull(f.respiratoryRatePerMin)
+    };
+    let measured: string | null = null;
+    const local = f.vitalsMeasuredAtLocal?.trim() ?? '';
+    if (local) {
+        const orig = originalVitalsMeasuredAtUtc?.trim() ?? '';
+        // Değişmediyse kayıtlı anı aynen koru (datetime-local saniyeyi keser).
+        measured =
+            orig && toIstanbulDateTimeLocalInputValue(orig) === local
+                ? orig
+                : fromIstanbulDateTimeLocalInputToUtcIso(local);
+    }
+    return { ...vitals, vitalsMeasuredAtUtc: measured };
+}
+
+/** Form → create isteği. Geçersiz tarih/saat için `null`. */
+export function mapExaminationFormToCreateRequest(
+    f: ExaminationWorkspaceFormValue,
+    ctx: { clinicId: string; petId: string; appointmentId?: string | null }
+): CreateExaminationRequest | null {
+    const examinedAtUtc = fromIstanbulDateAndTimeToUtcIso(f.examinationDate, f.examinationTime);
+    if (!examinedAtUtc) {
+        return null;
+    }
+    return {
+        appointmentId: trimmedOrNull(ctx.appointmentId) ?? undefined,
+        clinicId: ctx.clinicId.trim(),
+        petId: trimmedOrNull(ctx.petId) ?? undefined,
+        examinedAtUtc,
+        visitReason: f.visitReason,
+        anamnesis: f.anamnesis,
+        findings: f.findings,
+        assessment: f.assessment,
+        plan: f.plan,
+        notes: f.notes,
+        ...vitalsFromForm(f, null)
+    };
+}
+
+/** Form → update isteği. Bağlam (`clinicId`, `petId`, `appointmentId`, `rowVersion`) kayıttan gelir. */
+export function mapExaminationFormToUpdateRequest(
+    f: ExaminationWorkspaceFormValue,
+    current: Pick<ExaminationEditVm, 'clinicId' | 'petId' | 'appointmentId' | 'rowVersion' | 'vitalsMeasuredAtUtc'>
+): UpdateExaminationRequest | null {
+    const examinedAtUtc = fromIstanbulDateAndTimeToUtcIso(f.examinationDate, f.examinationTime);
+    if (!examinedAtUtc) {
+        return null;
+    }
+    return {
+        clinicId: current.clinicId,
+        petId: current.petId,
+        appointmentId: current.appointmentId,
+        rowVersion: current.rowVersion,
+        examinedAtUtc,
+        visitReason: f.visitReason,
+        anamnesis: f.anamnesis,
+        findings: f.findings,
+        assessment: f.assessment,
+        plan: f.plan,
+        notes: f.notes,
+        ...vitalsFromForm(f, current.vitalsMeasuredAtUtc)
+    };
+}

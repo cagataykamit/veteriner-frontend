@@ -6,6 +6,8 @@ import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     mapCreateExaminationToApiBody,
+    mapExaminationWriteResultDtoToVm,
+    mapUpdateExaminationToApiBody,
     mapExaminationDetailDtoToVm,
     mapExaminationDetailDtoToEditVm,
     mapExaminationRelatedSummaryDtoToVm,
@@ -17,13 +19,17 @@ import type {
     ExaminationListItemDtoPagedResult,
     ExaminationRelatedSummaryDto
 } from '@/app/features/examinations/models/examination-api.model';
-import type { CreateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
+import type {
+    CreateExaminationRequest,
+    UpdateExaminationRequest
+} from '@/app/features/examinations/models/examination-create.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
 import type {
     ExaminationDetailVm,
     ExaminationEditVm,
     ExaminationListItemVm,
-    ExaminationRelatedSummaryVm
+    ExaminationRelatedSummaryVm,
+    ExaminationWriteResultVm
 } from '@/app/features/examinations/models/examination-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
@@ -76,22 +82,35 @@ export class ExaminationsService {
 
     getExaminationForEditById(id: string): Observable<ExaminationEditVm> {
         return this.api.get<ExaminationDetailDto>(ApiEndpoints.examinations.byId(id)).pipe(
-            map((dto) => mapExaminationDetailDtoToEditVm(dto)),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Muayene düzenleme bilgileri yüklenemedi.')))
+            map((dto) => {
+                const vm = mapExaminationDetailDtoToEditVm(dto);
+                if (!vm.rowVersion) {
+                    // Sürümsüz PUT backend'de 400 verir; sürüm yoksa düzenlemeye izin verme.
+                    throw new Error('Sunucu kayıt sürümünü (rowVersion) döndürmedi; düzenleme yapılamaz.');
+                }
+                return vm;
+            }),
+            catchError((err: unknown) =>
+                throwError(() =>
+                    err instanceof HttpErrorResponse
+                        ? new Error(messageFromHttpError(err, 'Muayene düzenleme bilgileri yüklenemedi.'))
+                        : err instanceof Error
+                          ? err
+                          : new Error('Muayene düzenleme bilgileri yüklenemedi.')
+                )
             )
         );
     }
 
-    createExamination(payload: CreateExaminationRequest): Observable<{ id: string }> {
+    createExamination(payload: CreateExaminationRequest): Observable<ExaminationWriteResultVm> {
         const body = mapCreateExaminationToApiBody(payload);
         return this.api.post<unknown>(ApiEndpoints.examinations.list(), body).pipe(
             map((raw) => {
-                const id = extractCreatedExaminationIdFromPostResponse(raw);
-                if (!id) {
+                const result = mapExaminationWriteResultDtoToVm(raw);
+                if (!result) {
                     throw new Error('EXAMINATION_CREATE_NO_ID_IN_RESPONSE');
                 }
-                return { id };
+                return result;
             }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
@@ -113,10 +132,11 @@ export class ExaminationsService {
         );
     }
 
-    updateExamination(id: string, payload: CreateExaminationRequest): Observable<void> {
-        const body = mapCreateExaminationToApiBody(payload);
+    /** PUT; `rowVersion` zorunlu. Hata, çakışma kodunu (`code`) ayrıştırabilmek için ham `HttpErrorResponse` olarak iletilir. */
+    updateExamination(id: string, payload: UpdateExaminationRequest): Observable<ExaminationWriteResultVm> {
+        const body = mapUpdateExaminationToApiBody(payload);
         return this.api.put<unknown>(ApiEndpoints.examinations.byId(id), body).pipe(
-            map(() => void 0),
+            map((raw) => mapExaminationWriteResultDtoToVm(raw) ?? { id, rowVersion: null }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
@@ -127,44 +147,4 @@ export class ExaminationsService {
             })
         );
     }
-}
-
-function extractCreatedExaminationIdFromPostResponse(body: unknown): string | null {
-    if (body == null) {
-        return null;
-    }
-    if (typeof body === 'string') {
-        return body.trim() || null;
-    }
-    if (typeof body !== 'object') {
-        return null;
-    }
-    const o = body as Record<string, unknown>;
-    const idKeys = ['id', 'Id', 'examinationId', 'ExaminationId'];
-    for (const k of idKeys) {
-        const v = o[k];
-        if (typeof v === 'string' && v.trim()) {
-            return v.trim();
-        }
-        if (typeof v === 'number' && !Number.isNaN(v)) {
-            return String(v);
-        }
-    }
-    const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'examination', 'Examination'];
-    for (const w of wrappers) {
-        const inner = o[w];
-        if (inner && typeof inner === 'object') {
-            const n = inner as Record<string, unknown>;
-            for (const k of idKeys) {
-                const v = n[k];
-                if (typeof v === 'string' && v.trim()) {
-                    return v.trim();
-                }
-                if (typeof v === 'number' && !Number.isNaN(v)) {
-                    return String(v);
-                }
-            }
-        }
-    }
-    return null;
 }

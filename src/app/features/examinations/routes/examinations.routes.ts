@@ -7,8 +7,7 @@ import {
     EXAMINATIONS_UPDATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { ExaminationDetailPageComponent } from '@/app/features/examinations/pages/examination-detail-page/examination-detail-page.component';
-import { ExaminationEditPageComponent } from '@/app/features/examinations/pages/examination-edit-page/examination-edit-page.component';
-import { ExaminationNewPageComponent } from '@/app/features/examinations/pages/examination-new-page/examination-new-page.component';
+import { ExaminationWorkspacePageComponent } from '@/app/features/examinations/pages/examination-workspace-page/examination-workspace-page.component';
 import { ExaminationsListPageComponent } from '@/app/features/examinations/pages/examinations-list-page/examinations-list-page.component';
 
 export default [
@@ -28,7 +27,7 @@ export default [
             const router = inject(Router);
             return auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
-        component: ExaminationNewPageComponent
+        component: ExaminationWorkspacePageComponent
     },
     {
         path: ':id/edit',
@@ -37,7 +36,7 @@ export default [
             const router = inject(Router);
             return auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
-        component: ExaminationEditPageComponent
+        component: ExaminationWorkspacePageComponent
     },
     {
         path: ':id',

@@ -29,6 +29,14 @@ export interface ExaminationDetailVm {
     notes: string;
     findings: string;
     assessment: string;
+    anamnesis: string;
+    plan: string;
+    weightKg: number | null;
+    temperatureC: number | null;
+    heartRateBpm: number | null;
+    respiratoryRatePerMin: number | null;
+    vitalsMeasuredAtUtc: string | null;
+    rowVersion: string | null;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
 }
@@ -92,19 +100,34 @@ export interface ExaminationRelatedSummaryVm {
     payments: ExaminationRelatedPaymentItemVm[];
 }
 
+/** Çalışma alanı formunu dolduran okuma modeli. Boş metin `''`; ölçülmeyen vital `null`. */
 export interface ExaminationEditVm {
     id: string;
     clinicId: string;
-    clinicName: string;
     clientId: string;
     petId: string;
-    /** Dropdown sentetik etiket (liste dışı müşteri). */
+    /** Başlıkta gösterim için (detay yanıtından). */
     clientName: string | null;
-    /** Dropdown sentetik etiket (liste dışı hayvan). */
     petName: string | null;
+    appointmentId: string | null;
     examinedAtUtc: string | null;
     visitReason: string;
-    notes: string;
+    anamnesis: string;
     findings: string;
+    weightKg: number | null;
+    temperatureC: number | null;
+    heartRateBpm: number | null;
+    respiratoryRatePerMin: number | null;
+    vitalsMeasuredAtUtc: string | null;
     assessment: string;
+    plan: string;
+    notes: string;
+    /** PUT'ta aynen geri gönderilir. */
+    rowVersion: string;
+}
+
+export interface ExaminationWriteResultVm {
+    id: string;
+    /** Yanıtta yoksa null (sunucu sözleşmesi dışı). */
+    rowVersion: string | null;
 }

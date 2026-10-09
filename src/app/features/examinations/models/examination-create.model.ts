@@ -1,8 +1,28 @@
 /**
- * Yeni muayene oluşturma — UI / servis isteği.
+ * Muayene yazma isteği — servis girişi (form değil, API DTO değil).
+ * Payload'a dönüşüm yalnızca `examination.mapper.ts` içindedir.
  */
 
-export interface CreateExaminationRequest {
+export interface ExaminationVitalsInput {
+    weightKg: number | null;
+    temperatureC: number | null;
+    heartRateBpm: number | null;
+    respiratoryRatePerMin: number | null;
+    /** En az bir vital yoksa mapper `null` gönderir. */
+    vitalsMeasuredAtUtc: string | null;
+}
+
+export interface ExaminationContentInput extends ExaminationVitalsInput {
+    examinedAtUtc: string;
+    visitReason: string;
+    anamnesis?: string | null;
+    findings?: string | null;
+    assessment?: string | null;
+    plan?: string | null;
+    notes?: string | null;
+}
+
+export interface CreateExaminationRequest extends ExaminationContentInput {
     /**
      * Randevudan create: appointmentId doluysa clinicId/petId backend tarafından çözülebilir.
      * Randevusuz create: appointmentId yoksa clinicId + petId birlikte zorunlu.
@@ -10,9 +30,14 @@ export interface CreateExaminationRequest {
     appointmentId?: string;
     clinicId?: string;
     petId?: string;
-    examinedAtUtc: string;
-    visitReason: string;
-    findings: string;
-    assessment?: string | null;
-    notes?: string | null;
+}
+
+export interface UpdateExaminationRequest extends ExaminationContentInput {
+    /** GET'ten gelen (veya son başarılı yazmadan dönen) sürüm — zorunlu. */
+    rowVersion: string;
+    /** Kaydın mevcut değerleri; değiştirilemez, form input'u değildir. */
+    clinicId: string;
+    petId: string;
+    /** Mevcut bağlantı varsa aynı değer; yoksa gönderilmez. */
+    appointmentId?: string | null;
 }

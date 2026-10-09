@@ -304,7 +304,7 @@ function parseYyyyMmDd(dateStr: string): { y: number; m: number; d: number } | n
     return { y, m: mo, d };
 }
 
-function addGregorianDaysToYmd(ymd: string, deltaDays: number): string | null {
+export function addGregorianDaysToYmd(ymd: string, deltaDays: number): string | null {
     const p = parseYyyyMmDd(ymd);
     if (!p) {
         return null;

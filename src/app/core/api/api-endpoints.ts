@@ -77,7 +77,7 @@ export const ApiEndpoints = {
         logs: () => `/api/v1/reminders/logs`
     },
     examinations: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`, `appointmentId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`, `appointmentId`); `FromDate`/`ToDate` yok. */
         list: () => `/api/v1/examinations`,
         byId: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}`,
         relatedSummary: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/related-summary`
