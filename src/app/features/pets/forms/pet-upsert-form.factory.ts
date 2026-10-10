@@ -1,6 +1,7 @@
 import { FormBuilder, Validators } from '@angular/forms';
 import type { FormControl, FormGroup } from '@angular/forms';
 import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
+import { PET_ALERT_NOTE_MAX, type PetAlertFlag } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { petBirthDateValidator, petWeightStrValidator } from '@/app/features/pets/utils/pet-create-form.validators';
 
 /** Angular typed forms: form değeri `PetUpsertFormValue` ile kilitli. */
@@ -25,7 +26,9 @@ export function createPetUpsertFormGroup(fb: FormBuilder): PetUpsertFormGroup {
         passportOrTagNumber: fb.nonNullable.control('', Validators.maxLength(50)),
         specialProtocolNumber: fb.nonNullable.control('', Validators.maxLength(50)),
         isNeutered: fb.nonNullable.control(false),
-        notes: fb.nonNullable.control('')
+        notes: fb.nonNullable.control(''),
+        alertFlags: fb.nonNullable.control<PetAlertFlag[]>([]),
+        alertNote: fb.nonNullable.control('', Validators.maxLength(PET_ALERT_NOTE_MAX))
     });
 }
 

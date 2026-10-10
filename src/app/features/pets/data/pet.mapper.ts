@@ -19,6 +19,7 @@ import type {
     PetHistorySummaryVm,
     PetListItemVm
 } from '@/app/features/pets/models/pet-vm.model';
+import { mapPetAlertsDtoToVm, petAlertsFormToWrite } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { normalizePetGender, resolvePetGenderFormValue } from '@/app/features/pets/utils/pet-status.utils';
 
 const EM = '—';
@@ -241,7 +242,8 @@ export function mapPetUpsertFormToCreateRequest(
         passportOrTagNumber: passportRaw || undefined,
         specialProtocolNumber: protocolRaw || undefined,
         isNeutered: v.isNeutered,
-        notes: notesRaw || undefined
+        notes: notesRaw || undefined,
+        ...petAlertsFormToWrite(v.alertFlags, v.alertNote)
     };
 }
 
@@ -308,6 +310,12 @@ export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDt
     if (protocol) {
         body.specialProtocolNumber = protocol;
     }
+    if (req.alertFlags !== undefined) {
+        body.alertFlags = [...req.alertFlags];
+    }
+    if (req.alertNote !== undefined) {
+        body.alertNote = req.alertNote;
+    }
     body.isNeutered = req.isNeutered ?? false;
     return body;
 }
@@ -368,6 +376,7 @@ function canonicalPetDetailOwnerNavId(dto: PetDetailDto): string | null {
 
 /** GET `/pets/{id}` → `PetDetailVm` (özet alanları API ile hizalı; UI önceliği için bkz. `PetDetailVm`). */
 export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
+    const petAlerts = mapPetAlertsDtoToVm(dto.petAlerts);
     const vac = dto.vaccinationsSummary;
     const ex = dto.examinationsSummary;
     const ap = dto.appointmentsSummary;
@@ -376,6 +385,7 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
         dto.weight != null && !Number.isNaN(Number(dto.weight)) ? String(dto.weight) : EM;
 
     return {
+        petAlerts,
         id: dto.id,
         name: str(dto.name),
         speciesId: dto.speciesId?.trim() ? dto.speciesId.trim() : null,
@@ -439,7 +449,8 @@ export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
         passportOrTagNumber: canonicalPetIdentityString(dto, 'passportOrTagNumber', 'PassportOrTagNumber'),
         specialProtocolNumber: canonicalPetIdentityString(dto, 'specialProtocolNumber', 'SpecialProtocolNumber'),
         isNeutered: canonicalPetIsNeutered(dto) ?? false,
-        notes: dto.notes?.trim() ?? ''
+        notes: dto.notes?.trim() ?? '',
+        petAlerts: dto.petAlerts ? mapPetAlertsDtoToVm(dto.petAlerts) : null
     };
 }
 

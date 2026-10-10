@@ -1,3 +1,4 @@
+import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 export interface PetListItemVm {
     id: string;
     /** Liste DTO’sunda varsa; client’a göre filtre için (API ClientId yok sayarsa yedek). */
@@ -12,6 +13,7 @@ export interface PetListItemVm {
 }
 
 export interface PetDetailVm {
+    petAlerts: PetAlertsVm;
     id: string;
     name: string;
     /** Tür kimliği — referans veri ve aşı tanımı filtreleri. */
@@ -124,6 +126,8 @@ export interface PetHistorySummaryVm {
 
 /** Edit form için ham değerlere yakın, canonical alanlar. */
 export interface PetEditVm {
+    /** Yanıtta petAlerts yoksa null: düzenleme uyarıya dokunmaz (kazara silme yok). */
+    petAlerts: PetAlertsVm | null;
     id: string;
     clientId: string;
     name: string;

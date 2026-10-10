@@ -1,3 +1,4 @@
+import type { PetAlertsDto } from '@/app/shared/pet-alerts/pet-alerts.utils';
 /** Ham API DTO’ları — Swagger ile uyumlu; eksik alanlar ileride genişletilebilir. */
 
 export interface PetListItemDto {
@@ -62,6 +63,8 @@ export interface PetDetailDto {
     vaccinationsSummary?: PetVaccinationsSummaryDto | null;
     examinationsSummary?: PetExaminationsSummaryDto | null;
     appointmentsSummary?: PetAppointmentsSummaryDto | null;
+    /** Hayvan uyarıları (sözleşme: hiçbir zaman null; eski yanıtta alan olmayabilir). */
+    petAlerts?: PetAlertsDto | null;
 }
 
 export interface PetVaccinationsSummaryDto {
@@ -155,6 +158,10 @@ export interface PetHistoryPaymentItemDto {
  * Opsiyonel alanlar backend’de yoksa mapper’da çıkarılabilir.
  */
 export interface PetCreateRequestDto {
+    /** Opsiyonel: yok = dokunma; [] = temizle; dolu = küme bu liste olur. */
+    alertFlags?: string[];
+    /** Opsiyonel: yok = dokunma; "" = notu temizle (en çok 200). */
+    alertNote?: string;
     clientId: string;
     name: string;
     speciesId: string;

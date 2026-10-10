@@ -13,6 +13,7 @@ import { BREEDS_CREATE_CLAIM, CLIENTS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from 
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
+import { PetAlertFieldsComponent } from '@/app/features/pets/components/pet-alert-fields.component';
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
 import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
@@ -42,6 +43,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         RouterLink,
         ButtonModule,
         CheckboxModule,
+        PetAlertFieldsComponent,
         InputTextModule,
         SelectModule,
         AppPageHeaderComponent,
@@ -265,6 +267,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         @if (apiFieldErrors().notes) {
                             <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
                         }
+                    </div>
+                    <div class="col-span-12">
+                        <app-pet-alert-fields [form]="form" />
                     </div>
                 </div>
 

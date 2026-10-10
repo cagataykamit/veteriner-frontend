@@ -13,6 +13,7 @@ import { BREEDS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/opera
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
+import { PetAlertFieldsComponent } from '@/app/features/pets/components/pet-alert-fields.component';
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
 import type { PetEditVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
@@ -44,6 +45,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         RouterLink,
         ButtonModule,
         CheckboxModule,
+        PetAlertFieldsComponent,
         InputTextModule,
         SelectModule,
         AppPageHeaderComponent,
@@ -263,6 +265,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
                             }
                         </div>
+                        <div class="col-span-12">
+                            <app-pet-alert-fields [form]="form" />
+                        </div>
                     </div>
 
                     @if (submitError()) {
@@ -435,7 +440,9 @@ export class PetEditPageComponent implements OnInit {
                         passportOrTagNumber: pet.passportOrTagNumber,
                         specialProtocolNumber: pet.specialProtocolNumber,
                         isNeutered: pet.isNeutered,
-                        notes: pet.notes
+                        notes: pet.notes,
+                        alertFlags: pet.petAlerts?.flags ?? [],
+                        alertNote: pet.petAlerts?.note ?? ''
                     },
                     { emitEvent: false }
                 );
@@ -506,7 +513,9 @@ export class PetEditPageComponent implements OnInit {
             return;
         }
 
-        const payload = mapPetUpsertFormToCreateRequest(getPetUpsertFormValue(this.form), this.breedOptions());
+        const formPayload = mapPetUpsertFormToCreateRequest(getPetUpsertFormValue(this.form), this.breedOptions());
+        // Yüklenen yanıtta petAlerts yoksa (eski backend) uyarılar gönderilmez: bilinmeyen değerle üzerine yazılmaz.
+        const payload = this.editVmCache?.petAlerts ? formPayload : { ...formPayload, alertFlags: undefined, alertNote: undefined };
 
         this.submitting.set(true);
         this.petsService.updatePet(this.petId, payload).subscribe({
