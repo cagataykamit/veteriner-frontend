@@ -18,6 +18,7 @@ const visitDto = (over: Partial<VisitDto> = {}): VisitDto => ({
     arrivedAtUtc: '2026-10-10T07:00:00Z',
     careStatus: 'Waiting',
     isVoided: false,
+    isUrgent: false,
     ...over
 });
 
@@ -123,5 +124,18 @@ describe('visit mapper — yazma gövdeleri', () => {
             targetCareStatus: null,
             markAsMistaken: true
         });
+    });
+});
+
+describe('visit mapper — petAlerts', () => {
+    it('Bugün satırı hasta uyarılarını taşır; yoksa boş uyarı', () => {
+        const [withAlerts, without] = mapTodayDtoToVm({
+            date: 'd',
+            clinicId: 'c',
+            generatedAtUtc: 'g',
+            items: [itemDto({ petAlerts: { flags: ['Aggressive'], note: 'Isırır' } }), itemDto({ visitId: 'v2' })]
+        }).items;
+        expect(withAlerts.petAlerts).toEqual({ flags: ['Aggressive'], note: 'Isırır' });
+        expect(without.petAlerts).toEqual({ flags: [], note: null });
     });
 });

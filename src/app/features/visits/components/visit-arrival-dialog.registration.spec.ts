@@ -20,7 +20,8 @@ const visitResult = {
         responsibleVeterinarianName: null,
         arrivedAtUtc: '2026-10-10T07:00:00Z',
         careStatus: 'Waiting' as const,
-        isVoided: false
+        isVoided: false,
+        isUrgent: false
     }
 };
 
@@ -36,7 +37,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
             imports: [VisitArrivalDialogComponent],
             providers: [
                 { provide: VisitsService, useValue: visits },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1', hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => null, hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }), getClients: () => of({ items: [] }), quickRegister: () => of({ clientId: 'c-new', petId: 'p-new' }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }), createPet: () => of({ id: 'p-new' }) } },
                 { provide: SpeciesService, useValue: { getSpeciesList: () => of([{ id: 's1', name: 'Kedi' }]) } }
@@ -56,6 +57,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
         create(['Clients.Create', 'Pets.Create']);
         expect(links()).toContain('Yeni müşteri ve hasta ekle');
     });
+it('yetkili için arama yapılmadan da "Hasta kayıtlı değil mi?" ile görünür; resepsiyon ipucu çıkmaz', () => {        create(['Clients.Create', 'Pets.Create']);        const text = document.body.textContent ?? '';        expect(text).toContain('Hasta kayıtlı değil mi?');        expect(text).not.toContain('kaydı resepsiyon oluşturur');    });    it('yetkisiz için resepsiyon ipucu görünür, kayıt bağlantısı görünmez', () => {        create([]);        const text = document.body.textContent ?? '';        expect(text).toContain('Hasta kayıtlı değilse kaydı resepsiyon oluşturur.');        expect(text).not.toContain('Hasta kayıtlı değil mi?');        expect(links()).not.toContain('Yeni müşteri ve hasta ekle');    });
 
     it('yetkisizde (ya da yalnızca birinde) bağlantı görünmez', () => {
         create(['Clients.Create']);
@@ -87,7 +89,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
         cmp.openRegistration(null);
         cmp.onRegistered(registeredPet);
 
-        expect(visits.createVisit).toHaveBeenCalledOnceWith({ clinicId: 'c1', petId: 'p-new', responsibleVeterinarianUserId: '' });
+        expect(visits.createVisit).toHaveBeenCalledOnceWith({ clinicId: 'c1', petId: 'p-new', responsibleVeterinarianUserId: '', isUrgent: false });
         expect(arrived.length).toBe(1);
         expect(cmp.registration()).toBeNull();
     });

@@ -1,3 +1,4 @@
+import type { PetAlertsDto } from '@/app/shared/pet-alerts/pet-alerts.utils';
 /**
  * Visit (geliş) ve Bugün API DTO'ları — `docs/VISITS_API_CONTRACT.md`. Enum'lar JSON'da string.
  * Yalnızca mapper ve servis kullanır.
@@ -5,7 +6,7 @@
 
 export type VisitCareStatusDto = 'Waiting' | 'InProgress' | 'Completed';
 
-export type TodayAppointmentStatusDto = 'Scheduled' | 'Completed' | 'Cancelled';
+export type TodayAppointmentStatusDto = 'Scheduled' | 'Completed' | 'Cancelled' | 'NoShow';
 
 export interface VisitDto {
     id: string;
@@ -19,6 +20,7 @@ export interface VisitDto {
     startedAtUtc?: string | null;
     completedAtUtc?: string | null;
     isVoided: boolean;
+    isUrgent?: boolean;
     voidReason?: string | null;
 }
 
@@ -47,6 +49,10 @@ export interface TodayItemDto {
     isCarriedOver: boolean;
     paymentIndicator?: TodayPaymentIndicatorDto | null;
     hasActiveHospitalization?: boolean | null;
+    petAlerts?: PetAlertsDto | null;
+    isVoided?: boolean | null;
+    isUrgent?: boolean | null;
+    voidReason?: string | null;
 }
 
 export interface TodayDto {
@@ -66,10 +72,19 @@ export interface CreateVisitRequestDto {
     petId?: string;
     appointmentId?: string;
     responsibleVeterinarianUserId?: string;
+    isUrgent?: boolean;
 }
 
 export interface CorrectVisitRequestDto {
     reason: string;
     targetCareStatus: VisitCareStatusDto | null;
     markAsMistaken: boolean;
+}
+
+export interface RestoreVisitRequestDto {
+    reason: string;
+}
+
+export interface UpdateVisitUrgencyRequestDto {
+    isUrgent: boolean;
 }

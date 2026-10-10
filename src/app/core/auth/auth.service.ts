@@ -78,6 +78,13 @@ export class AuthService {
         return !!this.getClinicId();
     }
 
+    /** Giriş yapan kullanıcının kimliği (JWT `sub`); token yoksa `null`. */
+    getUserId(): string | null {
+        const token = this.getAccessToken();
+        const payload = token ? this.decodeJwtPayload(token) : null;
+        return payload ? this.firstString(payload['sub'], payload['Sub'], payload['user_id'], payload['UserId'])?.trim() || null : null;
+    }
+
     getClinicId(): string | null {
         const fromToken = this.readClinicClaimsFromCurrentToken().id;
         if (fromToken) {

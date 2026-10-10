@@ -1,7 +1,10 @@
+import { mapPetAlertsDtoToVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { HttpParams } from '@angular/common/http';
 import type {
     CorrectVisitRequestDto,
     CreateVisitRequestDto,
+    RestoreVisitRequestDto,
+    UpdateVisitUrgencyRequestDto,
     TodayDto,
     TodayItemDto,
     VeterinarianDto,
@@ -12,6 +15,7 @@ import type {
     CorrectVisitRequest,
     CreateVisitRequest,
     TodayItemVm,
+    TodayQuery,
     TodayVm,
     VeterinarianVm,
     VisitCreateResultVm,
@@ -35,7 +39,8 @@ export function mapVisitDtoToVm(dto: VisitDto): VisitVm {
         responsibleVeterinarianName: trimmedOrNull(dto.responsibleVeterinarianName),
         arrivedAtUtc: dto.arrivedAtUtc,
         careStatus: dto.careStatus,
-        isVoided: dto.isVoided
+        isVoided: dto.isVoided,
+        isUrgent: dto.isUrgent === true
     };
 }
 
@@ -63,7 +68,11 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         responsibleVeterinarianName: trimmedOrNull(dto.responsibleVeterinarianName),
         isCarriedOver: dto.isCarriedOver,
         paymentIndicator: dto.paymentIndicator ?? 'NoPaymentRecorded',
-        hasActiveHospitalization: dto.hasActiveHospitalization === true
+        hasActiveHospitalization: dto.hasActiveHospitalization === true,
+        isVoided: dto.isVoided === true,
+        voidReason: trimmedOrNull(dto.voidReason),
+        petAlerts: mapPetAlertsDtoToVm(dto.petAlerts),
+        isUrgent: dto.isUrgent === true
     };
 }
 
@@ -76,8 +85,15 @@ export function mapVeterinarianDtoToVm(dto: VeterinarianDto): VeterinarianVm {
 }
 
 /** Klinik bağlamı (JWT) yoksa `clinicId` zorunludur; varsa da açıkça gönderilir. */
-export function todayQueryToHttpParams(clinicId: string | null): HttpParams {
-    return clinicId ? new HttpParams().set('clinicId', clinicId) : new HttpParams();
+export function todayQueryToHttpParams(clinicId: string | null, query: TodayQuery = {}): HttpParams {
+    let params = new HttpParams();
+    if (clinicId) {
+        params = params.set('clinicId', clinicId);
+    }
+    if (query.voided) {
+        params = params.set('voided', true);
+    }
+    return query.responsibleVeterinarianUserId ? params.set('responsibleVeterinarianUserId', query.responsibleVeterinarianUserId) : params;
 }
 
 /** Boş alanlar gövdeye girmez; hekim seçilmediyse `responsibleVeterinarianUserId` hiç gönderilmez. */
@@ -99,6 +115,9 @@ export function mapCreateVisitToApiBody(req: CreateVisitRequest): CreateVisitReq
     if (vet) {
         body.responsibleVeterinarianUserId = vet;
     }
+    if (req.isUrgent) {
+        body.isUrgent = true;
+    }
     return body;
 }
 
@@ -109,4 +128,18 @@ export function mapCorrectVisitToApiBody(req: CorrectVisitRequest): CorrectVisit
         targetCareStatus: req.action === 'Mistaken' ? null : req.action,
         markAsMistaken: req.action === 'Mistaken'
     };
+}
+
+export function mapRestoreVisitToApiBody(reason: string): RestoreVisitRequestDto {
+    return { reason: reason.trim() };
+}
+
+export function mapUrgencyToApiBody(isUrgent: boolean): UpdateVisitUrgencyRequestDto {
+    return { isUrgent };
+}
+
+/** Giriş yapan kullanıcı hekim listesindeyse listedeki kimliği, değilse `null` (hekim tespitinin tek kuralı; kimlik büyük/küçük harf duyarsız). */
+export function findVeterinarianUserId(vets: readonly VeterinarianVm[], userId: string | null | undefined): string | null {
+    const wanted = userId?.trim().toLowerCase();
+    return wanted ? (vets.find((v) => v.userId.toLowerCase() === wanted)?.userId ?? null) : null;
 }

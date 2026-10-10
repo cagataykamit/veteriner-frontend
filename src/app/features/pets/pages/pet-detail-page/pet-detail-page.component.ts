@@ -16,6 +16,7 @@ import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -37,6 +38,7 @@ const EM = '—';
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
+        PetAlertBadgesComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent
@@ -82,6 +84,14 @@ const EM = '—';
                     ></button>
                 }
             </app-page-header>
+            @if (pet()!.petAlerts.flags.length > 0) {
+                <div class="card mb-4" role="region" aria-label="Hasta uyarıları">
+                    <app-pet-alert-badges [alerts]="pet()!.petAlerts" />
+                    @if (pet()!.petAlerts.note; as alertNote) {
+                        <p class="m-0 mt-2">{{ alertNote }}</p>
+                    }
+                </div>
+            }
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">

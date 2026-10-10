@@ -1,3 +1,4 @@
+import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import type { TodayAppointmentStatusDto, TodayPaymentIndicatorDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
 
 export type VisitCareStatus = VisitCareStatusDto;
@@ -17,6 +18,7 @@ export interface VisitVm {
     arrivedAtUtc: string;
     careStatus: VisitCareStatus;
     isVoided: boolean;
+    isUrgent: boolean;
 }
 
 export interface VisitCreateResultVm {
@@ -46,6 +48,11 @@ export interface TodayItemVm {
     isCarriedOver: boolean;
     paymentIndicator: TodayPaymentIndicator;
     hasActiveHospitalization: boolean;
+    /** Yalnızca "Yanlış işaretlenenler" görünümünde `true`. */
+    isVoided: boolean;
+    voidReason: string | null;
+    petAlerts: PetAlertsVm;
+    isUrgent: boolean;
 }
 
 export interface TodayVm {
@@ -74,6 +81,7 @@ export interface CreateVisitRequest {
     petId?: string;
     clinicId?: string;
     responsibleVeterinarianUserId?: string | null;
+    isUrgent?: boolean;
 }
 
 /** Düzeltme hedefi: bir bakım durumu veya "yanlış geliş" işareti. */
@@ -82,4 +90,11 @@ export type VisitCorrectionAction = VisitCareStatus | 'Mistaken';
 export interface CorrectVisitRequest {
     action: VisitCorrectionAction;
     reason: string;
+}
+
+/** `GET /visits/today` sorgusu: varsayılan normal kuyruk; `voided` yanlış işaretlenenleri getirir. */
+export interface TodayQuery {
+    voided?: boolean;
+    /** "Benim hastalarım": yalnızca bu kullanıcının sorumlu olduğu Visit satırları (kullanıcı klinikte aktif hekim olmalı). */
+    responsibleVeterinarianUserId?: string;
 }

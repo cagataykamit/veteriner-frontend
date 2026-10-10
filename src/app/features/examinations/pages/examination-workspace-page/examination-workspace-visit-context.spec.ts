@@ -24,6 +24,7 @@ const visit = (over: Partial<VisitVm> = {}): VisitVm => ({
     arrivedAtUtc: '2026-10-10T07:00:00Z',
     careStatus: 'Waiting',
     isVoided: false,
+    isUrgent: false,
     ...over
 });
 

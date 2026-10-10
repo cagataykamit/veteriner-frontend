@@ -1,12 +1,15 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, MonoTypeOperatorFunction, Observable, throwError } from 'rxjs';
+import { catchError, map, MonoTypeOperatorFunction, Observable, of, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     mapCorrectVisitToApiBody,
+    findVeterinarianUserId,
     mapCreateVisitToApiBody,
+    mapRestoreVisitToApiBody,
+    mapUrgencyToApiBody,
     mapTodayDtoToVm,
     mapVeterinarianDtoToVm,
     mapVisitCreateResultDtoToVm,
@@ -22,6 +25,7 @@ import type {
 import type {
     CorrectVisitRequest,
     CreateVisitRequest,
+    TodayQuery,
     TodayVm,
     VeterinarianVm,
     VisitCreateResultVm,
@@ -42,8 +46,8 @@ export class VisitsService {
     private readonly auth = inject(AuthService);
 
     /** Aktif klinik için İstanbul gününün kuyruğu (randevular + gelen hastalar). */
-    getToday(): Observable<TodayVm> {
-        const params = todayQueryToHttpParams(this.auth.getClinicId()?.trim() || null);
+    getToday(query: TodayQuery = {}): Observable<TodayVm> {
+        const params = todayQueryToHttpParams(this.auth.getClinicId()?.trim() || null, query);
         return this.api.get<TodayDto>(ApiEndpoints.visits.today(), params).pipe(
             map(mapTodayDtoToVm),
             toUserError('Bugün listesi yüklenemedi.')
@@ -61,6 +65,23 @@ export class VisitsService {
         return this.api.get<VeterinarianDto[]>(ApiEndpoints.clinics.veterinarians(clinicId)).pipe(
             map((list) => list.map(mapVeterinarianDtoToVm)),
             toUserError('Hekim listesi yüklenemedi.')
+        );
+    }
+
+    /**
+     * Giriş yapan kullanıcı aktif klinikte hekimse kimliği, değilse `null`. Kural backend ile aynıdır
+     * (kliniğe atanmış aktif `Veteriner`): hekim listesinde bulunup bulunmamaya bakılır. Liste alınamazsa `null`
+     * (süzgeç gizlenir, tüm liste gösterilir).
+     */
+    getCurrentVeterinarianUserId(): Observable<string | null> {
+        const userId = this.auth.getUserId()?.trim().toLowerCase();
+        const clinicId = this.auth.getClinicId()?.trim();
+        if (!userId || !clinicId) {
+            return of(null);
+        }
+        return this.getVeterinarians(clinicId).pipe(
+            map((vets) => findVeterinarianUserId(vets, userId)),
+            catchError(() => of(null))
         );
     }
 
@@ -96,6 +117,22 @@ export class VisitsService {
         return this.api.post<VisitDto>(ApiEndpoints.visits.corrections(id), mapCorrectVisitToApiBody(request)).pipe(
             map(mapVisitDtoToVm),
             toUserError('Düzeltme kaydedilemedi.')
+        );
+    }
+
+    /** `Visits.Update`; idempotent. Tamamlanmış kayıtta değişim `Visits.NotOpen` (409). */
+    setUrgency(id: string, isUrgent: boolean): Observable<VisitVm> {
+        return this.api.put<VisitDto>(ApiEndpoints.visits.urgency(id), mapUrgencyToApiBody(isUrgent)).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Acil işareti güncellenemedi.')
+        );
+    }
+
+    /** `Visits.Correct`; yanlış geliş işaretini kaldırır, gerekçe zorunlu. Çakışmada 409 döner. */
+    restoreVisit(id: string, reason: string): Observable<VisitVm> {
+        return this.api.post<VisitDto>(ApiEndpoints.visits.restore(id), mapRestoreVisitToApiBody(reason)).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Geri alma kaydedilemedi.')
         );
     }
 }

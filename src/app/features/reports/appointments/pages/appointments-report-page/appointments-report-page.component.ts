@@ -287,6 +287,12 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                         <span class="block text-muted-color text-sm mb-1">{{ copy.reportsTotalRecords }}</span>
                         <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totalCount }}</div>
                     </div>
+                    @if (r.noShowCount !== null) {
+                        <div class="col-span-12 sm:col-span-6">
+                            <span class="block text-muted-color text-sm mb-1">Gelmedi</span>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.noShowCount }}</div>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -461,7 +467,8 @@ export class AppointmentsReportPageComponent implements OnInit {
         { label: PANEL_COPY.filterPlaceholderAll, value: '' },
         { label: 'Planlandı', value: '0' },
         { label: 'Tamamlandı', value: '1' },
-        { label: 'İptal', value: '2' }
+        { label: 'İptal', value: '2' },
+        { label: 'Gelmedi', value: '3' }
     ];
 
     readonly displayedRows = computed(() => [...(this.report()?.items ?? [])]);

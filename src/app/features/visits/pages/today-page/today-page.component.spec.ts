@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -28,6 +29,10 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     isCarriedOver: false,
     paymentIndicator: 'NoPaymentRecorded',
     hasActiveHospitalization: false,
+    isVoided: false,
+    voidReason: null,
+    petAlerts: { flags: [], note: null },
+    isUrgent: false,
     ...over
 });
 
@@ -40,17 +45,19 @@ const visitVm: VisitVm = {
     responsibleVeterinarianName: null,
     arrivedAtUtc: '2026-10-10T07:00:00Z',
     careStatus: 'InProgress',
-    isVoided: false
+    isVoided: false,
+    isUrgent: false
 };
 
 describe('TodayPageComponent', () => {
     let visits: jasmine.SpyObj<VisitsService>;
     let toasts: jasmine.Spy;
 
-    const create = async (claims: string[], today: TodayVm): Promise<ComponentFixture<TodayPageComponent>> => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'startVisit', 'completeVisit', 'getVeterinarians']);
+    const create = async (claims: string[], today: TodayVm, vetUserId: string | null = null): Promise<ComponentFixture<TodayPageComponent>> => {
+        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'startVisit', 'completeVisit', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
         visits.getToday.and.returnValue(of(today));
         visits.getVeterinarians.and.returnValue(of([]));
+        visits.getCurrentVeterinarianUserId.and.returnValue(of(vetUserId));
 
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
@@ -129,7 +136,8 @@ describe('TodayPageComponent', () => {
     });
 
     it('ilk yükleme hatası hata durumunu gösterir', async () => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday']);
+        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getCurrentVeterinarianUserId']);
+        visits.getCurrentVeterinarianUserId.and.returnValue(of(null));
         visits.getToday.and.returnValue(throwError(() => new Error('Bugün listesi yüklenemedi.')));
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
@@ -139,6 +147,7 @@ describe('TodayPageComponent', () => {
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
+                { provide: AppointmentsService, useValue: {} },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
             ]
         }).compileComponents();
@@ -150,12 +159,13 @@ describe('TodayPageComponent', () => {
     it('Düzelt yalnızca Visits.Correct yetkisi olana görünür', async () => {
         const today: TodayVm = { date: '2026-10-10', items: [item()] };
         const without = await create(['Visits.Read', 'Visits.Update'], today);
-        expect(buttons(without)).not.toContain('Düzelt');
+        const keys = (f: ComponentFixture<TodayPageComponent>) => f.componentInstance.secondaryActionsOf(today.items[0], f.componentInstance.actionsOf(today.items[0])).map((a) => a.key);
+        expect(keys(without)).not.toContain('correct');
         expect(buttons(without)).toContain('Başlat');
         TestBed.resetTestingModule();
 
         const withCorrect = await create(['Visits.Read', 'Visits.Update', 'Visits.Correct'], today);
-        expect(buttons(withCorrect)).toContain('Düzelt');
+        expect(keys(withCorrect)).toContain('correct');
     });
 
     it('Geldi ve Randevusuz geliş Visits.Create ister; Muayene aç Examinations.Create ister', async () => {
@@ -227,5 +237,82 @@ describe('TodayPageComponent', () => {
 
         expect(text(f)).toContain('Pamuk');
         expect(text(f)).toContain('Liste güncellenemedi');
+    });
+});
+
+describe('TodayPageComponent — Benim hastalarım', () => {
+    const today: TodayVm = { date: 'd', items: [] };
+    let visits: jasmine.SpyObj<VisitsService>;
+
+    const create = async (claims: string[], vetUserId: string | null): Promise<ComponentFixture<TodayPageComponent>> => {
+        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
+        visits.getToday.and.returnValue(of(today));
+        visits.getVeterinarians.and.returnValue(of([]));
+        visits.getCurrentVeterinarianUserId.and.returnValue(of(vetUserId));
+        await TestBed.configureTestingModule({
+            imports: [TodayPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: VisitsService, useValue: visits },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1' } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+            ]
+        }).compileComponents();
+        const fixture = TestBed.createComponent(TodayPageComponent);
+        fixture.detectChanges();
+        return fixture;
+    };
+
+    it('hekim: varsayılan Benim hastalarım; ilk istek kullanıcı kimliğiyle gider, Tümü süzgeci kaldırır', async () => {
+        const f = await create(['Visits.Read', 'Visits.Create'], 'u1');
+        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false, responsibleVeterinarianUserId: 'u1' });
+        f.componentInstance.setScope('all');
+        expect(visits.getToday.calls.mostRecent().args[0]).toEqual({ voided: false });
+    });
+
+    it('hekim değil: süzgeç görünmez, kimlik gönderilmez', async () => {
+        const f = await create(['Visits.Read', 'Visits.Create'], null);
+        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false });
+        expect((f.nativeElement as HTMLElement).textContent).not.toContain('Benim hastalarım');
+    });
+
+    it('Visits.Create yoksa hekim sorgusu yapılmaz ve süzgeç yok', async () => {
+        await create(['Visits.Read'], 'u1');
+        expect(visits.getCurrentVeterinarianUserId).not.toHaveBeenCalled();
+        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false });
+    });
+});
+
+describe('TodayPageComponent — Benim hastalarım boş liste', () => {
+    it('hekimin listesi boşken Size atanmış hasta yok mesajı ve Tümü’ne geç bağlantısı çıkar', async () => {
+        const visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
+        visits.getToday.and.returnValue(of({ date: 'd', items: [] }));
+        visits.getCurrentVeterinarianUserId.and.returnValue(of('u1'));
+        await TestBed.configureTestingModule({
+            imports: [TodayPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: VisitsService, useValue: visits },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c !== 'Visits.None', getClinicId: () => 'c1' } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: AppointmentsService, useValue: {} },
+                { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+            ]
+        }).compileComponents();
+        const f = TestBed.createComponent(TodayPageComponent);
+        f.detectChanges();
+        const t = (f.nativeElement as HTMLElement).textContent ?? '';
+        expect(t).toContain('Size atanmış hasta yok.');
+        expect(t).not.toContain('Bugün için randevu veya gelen hasta yok');
+
+        const toAll = Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).find((b) => b.textContent?.includes('Tümü’ne geç'));
+        expect(toAll).toBeDefined();
+        toAll!.click();
+        expect(visits.getToday.calls.mostRecent().args[0]).toEqual({ voided: false });
+        f.detectChanges();
+        expect((f.nativeElement as HTMLElement).textContent).toContain('Bugün için randevu veya gelen hasta yok.');
     });
 });

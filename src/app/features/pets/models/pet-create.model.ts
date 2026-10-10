@@ -4,6 +4,8 @@
  * Create/edit: typed `PetUpsertFormValue` → `mapPetUpsertFormToCreateRequest` → `mapCreatePetToApiBody` (`pet.mapper.ts`, `pet-upsert-form.factory.ts`).
  */
 
+import type { PetAlertFlag } from '@/app/shared/pet-alerts/pet-alerts.utils';
+
 export interface CreatePetRequest {
     clientId: string;
     name: string;
@@ -23,4 +25,7 @@ export interface CreatePetRequest {
     specialProtocolNumber?: string;
     isNeutered?: boolean;
     notes?: string;
+    /** Uyarılar: form her zaman ikisini de doldurur; düzenlemede uyarı bilinmiyorsa (eski yanıt) gönderilmez. */
+    alertFlags?: PetAlertFlag[];
+    alertNote?: string;
 }

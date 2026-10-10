@@ -61,6 +61,7 @@ export function mapAppointmentsReportDtoToVm(raw: AppointmentsReportDto, q: { pa
     return {
         items,
         totalCount,
+        noShowCount: toFiniteNumber(raw.statusCounts?.noShow),
         page: q.page,
         pageSize: q.pageSize,
         totalPages

@@ -377,7 +377,7 @@ export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): Ap
 export function mapAppointmentUpsertFormToUpdateRequest(id: string, input: AppointmentUpsertFormAdapterInput): UpdateAppointmentRequest {
     const statusParsed = parseAppointmentStatusRawToEnum(input.status);
     if (statusParsed === null) {
-        throw new Error('Geçersiz randevu durumu (0–2 beklenir).');
+        throw new Error('Geçersiz randevu durumu (0–3 beklenir).');
     }
     return {
         id: id.trim(),
@@ -395,7 +395,7 @@ export function mapUpdateAppointmentToApiBody(req: UpdateAppointmentRequest): Ap
     const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : '';
     const statusParsed = parseAppointmentStatusRawToEnum(req.status);
     if (statusParsed === null) {
-        throw new Error('Geçersiz randevu durumu (0–2 beklenir).');
+        throw new Error('Geçersiz randevu durumu (0–3 beklenir).');
     }
     const base: AppointmentUpdateRequestDto = {
         id: req.id.trim(),

@@ -40,12 +40,14 @@ export const ApiEndpoints = {
     visits: {
         /** Geliş kaydı (POST). */
         create: () => `/api/v1/visits`,
-        /** Query: `clinicId`, `localDate` (İstanbul günü, `yyyy-MM-dd`). */
+        /** Query: `clinicId`, `localDate` (İstanbul günü, `yyyy-MM-dd`), `voided`. */
         today: () => `/api/v1/visits/today`,
         byId: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}`,
         start: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/start`,
         complete: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/complete`,
-        corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`
+        corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`,
+        restore: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/restore`,
+        urgency: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/urgency`
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
@@ -86,7 +88,11 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/appointments`,
         calendar: () => `/api/v1/appointments/calendar`,
-        byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`,
+        cancel: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/cancel`,
+        complete: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/complete`,
+        noShow: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/no-show`,
+        noShowRevert: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/no-show/revert`
     },
     reminders: {
         settings: () => `/api/v1/reminders/settings`,

@@ -1,3 +1,4 @@
+import type { PetAlertFlag } from '@/app/shared/pet-alerts/pet-alerts.utils';
 /**
  * Pet create/edit — tek form değer şekli (typed `FormGroup` ile birebir).
  * API veya VM modellerinden ayrı; yalnızca kullanıcı girdisi.
@@ -17,4 +18,6 @@ export interface PetUpsertFormValue {
     specialProtocolNumber: string;
     isNeutered: boolean;
     notes: string;
+    alertFlags: PetAlertFlag[];
+    alertNote: string;
 }

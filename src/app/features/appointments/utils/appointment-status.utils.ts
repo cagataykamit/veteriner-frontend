@@ -2,26 +2,28 @@ import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-ta
 
 const EM = '—';
 
-type StatusEnum012 = 0 | 1 | 2;
+type StatusEnum0123 = 0 | 1 | 2 | 3;
 
 export interface AppointmentWriteStatusOption {
     readonly label: string;
-    readonly value: StatusEnum012;
+    readonly value: StatusEnum0123;
 }
 
-const ENUM_LABEL: Record<StatusEnum012, string> = {
+const ENUM_LABEL: Record<StatusEnum0123, string> = {
     0: 'Planlandı',
     1: 'Tamamlandı',
-    2: 'İptal'
+    2: 'İptal',
+    3: 'Gelmedi'
 };
 
-const ENUM_SEVERITY: Record<StatusEnum012, StatusTagSeverity> = {
+const ENUM_SEVERITY: Record<StatusEnum0123, StatusTagSeverity> = {
     0: 'info',
     1: 'success',
-    2: 'danger'
+    2: 'danger',
+    3: 'warn'
 };
 
-/** Create/edit `p-select` — `optionValue` = 0 | 1 | 2 */
+/** Düzenleme `p-select` — `optionValue` = 0 | 1 | 2. Gelmedi (3) formdan seçilmez; kendi ucuyla işaretlenir. */
 export const APPOINTMENT_WRITE_STATUS_OPTIONS: ReadonlyArray<AppointmentWriteStatusOption> = [
     { label: 'Planlandı', value: 0 },
     { label: 'Tamamlandı', value: 1 },
@@ -37,7 +39,7 @@ export function parseAppointmentStatusRawToEnum(raw: unknown): number | null {
     }
     if (typeof raw === 'number' && Number.isFinite(raw)) {
         const i = Math.trunc(raw);
-        return i === 0 || i === 1 || i === 2 ? i : null;
+        return i >= 0 && i <= 3 ? i : null;
     }
     const s = String(raw).trim();
     if (!s) {
@@ -45,7 +47,7 @@ export function parseAppointmentStatusRawToEnum(raw: unknown): number | null {
     }
     if (/^-?\d+$/.test(s)) {
         const i = Number.parseInt(s, 10);
-        return i === 0 || i === 1 || i === 2 ? i : null;
+        return i >= 0 && i <= 3 ? i : null;
     }
     const k = s.toLocaleLowerCase('tr-TR');
     if (k === 'scheduled' || k === 'planned' || k === 'planlandi' || k === 'planlandı') {
@@ -57,6 +59,9 @@ export function parseAppointmentStatusRawToEnum(raw: unknown): number | null {
     if (k === 'cancelled' || k === 'canceled' || k === 'iptal' || k === 'cancel') {
         return 2;
     }
+    if (k === 'noshow' || k === 'no-show' || k === 'no_show' || k === 'gelmedi') {
+        return 3;
+    }
     return null;
 }
 
@@ -64,14 +69,14 @@ export function appointmentStatusEnumLabel(status: number | null | undefined): s
     if (status === null || status === undefined) {
         return EM;
     }
-    if (status === 0 || status === 1 || status === 2) {
+    if (status === 0 || status === 1 || status === 2 || status === 3) {
         return ENUM_LABEL[status];
     }
     return `Durum (${status})`;
 }
 
 export function appointmentStatusEnumSeverity(status: number | null | undefined): StatusTagSeverity {
-    if (status === 0 || status === 1 || status === 2) {
+    if (status === 0 || status === 1 || status === 2 || status === 3) {
         return ENUM_SEVERITY[status];
     }
     return 'secondary';
@@ -119,4 +124,22 @@ export function isAppointmentCancelledStatus(status: number | string | null | un
     }
     const n = parseAppointmentStatusRawToEnum(status);
     return n === 2;
+}
+
+/** Ürün kuralı: NoShow (3) randevuya doğrudan muayene açılamaz; önce geliş açılır veya gelmedi geri alınır. */
+export function isAppointmentNoShowStatus(status: number | string | null | undefined): boolean {
+    return status !== null && status !== undefined && parseAppointmentStatusRawToEnum(status) === 3;
+}
+
+/** "Gelmedi işaretle": yalnızca saati geçmiş `Scheduled` randevu (sunucu da `NoShowNotYetDue` ile denetler). */
+export function canMarkAppointmentNoShow(status: number | string | null | undefined, scheduledAtUtc: string | null | undefined, now: Date): boolean {
+    if (parseAppointmentStatusRawToEnum(status) !== 0 || !scheduledAtUtc) {
+        return false;
+    }
+    const at = new Date(scheduledAtUtc).getTime();
+    return !Number.isNaN(at) && at <= now.getTime();
+}
+
+export function canRevertAppointmentNoShow(status: number | string | null | undefined): boolean {
+    return isAppointmentNoShowStatus(status);
 }

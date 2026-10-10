@@ -121,6 +121,27 @@ export class AppointmentsService {
         );
     }
 
+    /** `Appointments.Cancel`. PUT ile durum geçişi kapatıldı; iptal kendi ucuyla yapılır. */
+    cancelAppointment(id: string): Observable<void> {
+        return this.postTransition(ApiEndpoints.appointments.cancel(id), {}, 'Randevu iptal edilemedi.');
+    }
+
+    /** `Appointments.Complete`. */
+    completeAppointment(id: string): Observable<void> {
+        return this.postTransition(ApiEndpoints.appointments.complete(id), {}, 'Randevu tamamlanamadı.');
+    }
+
+    /** `Appointments.NoShow`; yalnızca saati geçmiş `Scheduled` randevu. Idempotent; gerekçe opsiyonel (en çok 500). */
+    markNoShow(id: string, reason?: string): Observable<void> {
+        const trimmed = reason?.trim();
+        return this.postTransition(ApiEndpoints.appointments.noShow(id), trimmed ? { reason: trimmed } : {}, 'Randevu gelmedi olarak işaretlenemedi.');
+    }
+
+    /** `Appointments.NoShow`; `NoShow → Scheduled`, gerekçe zorunlu (5–500). */
+    revertNoShow(id: string, reason: string): Observable<void> {
+        return this.postTransition(ApiEndpoints.appointments.noShowRevert(id), { reason: reason.trim() }, 'Gelmedi işareti geri alınamadı.');
+    }
+
     updateAppointment(id: string, payload: UpdateAppointmentRequest): Observable<void> {
         const body = mapUpdateAppointmentToApiBody(payload);
         return this.api.put<unknown>(ApiEndpoints.appointments.byId(id), body).pipe(
@@ -133,6 +154,15 @@ export class AppointmentsService {
                     err instanceof Error ? err : new Error('Randevu güncellenemedi.')
                 );
             })
+        );
+    }
+
+    private postTransition(path: string, body: object, fallback: string): Observable<void> {
+        return this.api.post<unknown>(path, body).pipe(
+            map(() => void 0),
+            catchError((err: unknown) =>
+                throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, fallback)) : err))
+            )
         );
     }
 }

@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { catchError, forkJoin, map, Observable, of, Subject, switchMap } from 'rxjs';
@@ -14,6 +15,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { VisitQuickRegistrationComponent, type RegistrationOwner } from '@/app/features/visits/components/visit-quick-registration.component';
 import type { CreateVisitRequest, PetSuggestion, TodayItemVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
+import { findVeterinarianUserId } from '@/app/features/visits/data/visit.mapper';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -34,7 +36,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
 @Component({
     selector: 'app-visit-arrival-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, VisitQuickRegistrationComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent],
     template: `
         <p-dialog
             [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'"
@@ -86,9 +88,12 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                 />
                             </div>
                         } @else {
-                            <div class="col-span-12 flex flex-wrap gap-3 -mt-2">
+                            <div class="col-span-12 flex flex-wrap items-center gap-x-3 -mt-2">
                                 @if (canRegisterNewOwner) {
+                                    <span class="text-sm text-muted-color">Hasta kayıtlı değil mi?</span>
                                     <p-button type="button" label="Yeni müşteri ve hasta ekle" icon="pi pi-user-plus" size="small" [text]="true" (onClick)="openRegistration(null)" />
+                                } @else {
+                                    <small class="text-muted-color">Hasta kayıtlı değilse kaydı resepsiyon oluşturur.</small>
                                 }
                                 @if (canAddPet && selectedOwner(); as owner) {
                                     <p-button type="button" label="Bu sahibe yeni hayvan ekle" icon="pi pi-plus" size="small" [text]="true" (onClick)="openRegistration(owner)" />
@@ -110,6 +115,10 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                             [loading]="loadingVeterinarians()"
                             appendTo="body"
                         />
+                    </div>
+                    <div class="col-span-12 flex items-center gap-2">
+                        <p-checkbox inputId="va-urgent" formControlName="isUrgent" [binary]="true" />
+                        <label for="va-urgent" class="font-medium">Acil</label>
                     </div>
                 </div>
                 @if (submitError()) {
@@ -162,7 +171,8 @@ export class VisitArrivalDialogComponent {
 
     readonly form = this.fb.group({
         pet: this.fb.control<PetSuggestion | string | null>(null, petSelected),
-        veterinarianId: this.fb.nonNullable.control('')
+        veterinarianId: this.fb.nonNullable.control(''),
+        isUrgent: this.fb.nonNullable.control(false)
     });
 
     /** Sahip adı çözümlemesi aramalar arasında paylaşılır (aynı sahip için tekrar istek yok). */
@@ -208,7 +218,7 @@ export class VisitArrivalDialogComponent {
         this.submitError.set(null);
         this.loadError.set(null);
         this.petSuggestions.set([]);
-        this.form.reset({ pet: null, veterinarianId: '' });
+        this.form.reset({ pet: null, veterinarianId: '', isUrgent: false });
         this.registration.set(null);
         this.registeredPetId = null;
         this.lastSearchTerm.set('');
@@ -273,16 +283,16 @@ export class VisitArrivalDialogComponent {
     }
 
     private buildRequest(): CreateVisitRequest | null {
-        const { pet, veterinarianId } = this.form.getRawValue();
+        const { pet, veterinarianId, isUrgent } = this.form.getRawValue();
         const appointmentId = this.appointment()?.appointmentId;
         if (appointmentId) {
-            return { appointmentId, responsibleVeterinarianUserId: veterinarianId };
+            return { appointmentId, responsibleVeterinarianUserId: veterinarianId, isUrgent };
         }
         const clinicId = this.auth.getClinicId()?.trim();
         if (!clinicId || !pet || typeof pet !== 'object') {
             return null;
         }
-        return { clinicId, petId: pet.id, responsibleVeterinarianUserId: veterinarianId };
+        return { clinicId, petId: pet.id, responsibleVeterinarianUserId: veterinarianId, isUrgent };
     }
 
     /** Aynı ada sahip hastaları ayırt etmek için sonuçlara sahip adı eklenir (liste DTO'sunda sahip adı yok). */
@@ -316,6 +326,11 @@ export class VisitArrivalDialogComponent {
         this.visitsService.getVeterinarians(clinicId).subscribe({
             next: (vets) => {
                 this.veterinarianOptions.set(vets.map((v) => ({ label: v.name, value: v.userId })));
+                // Hekim kullanıcı için varsayılan kendisi; kullanıcı yüklenirken başka seçim yaptıysa ezilmez.
+                const self = findVeterinarianUserId(vets, this.auth.getUserId());
+                if (self && !this.form.controls.veterinarianId.value) {
+                    this.form.controls.veterinarianId.setValue(self);
+                }
                 this.loadingVeterinarians.set(false);
             },
             error: (e: unknown) => {

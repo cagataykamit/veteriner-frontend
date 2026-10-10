@@ -1,3 +1,4 @@
+import { Observable, of, switchMap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -338,7 +339,7 @@ export class AppointmentEditPageComponent implements OnInit {
 
     readonly canCancelAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CANCEL_CLAIM);
     readonly canCompleteAppointment = this.auth.hasOperationClaim(APPOINTMENTS_COMPLETE_CLAIM);
-    readonly statusOptions = APPOINTMENT_WRITE_STATUS_OPTIONS.filter((x) => {
+    private readonly writableStatusOptions = APPOINTMENT_WRITE_STATUS_OPTIONS.filter((x) => {
         const v = String(x.value);
         if (v === '2') {
             return this.canCancelAppointment;
@@ -348,6 +349,8 @@ export class AppointmentEditPageComponent implements OnInit {
         }
         return true;
     });
+    /** Gelmedi (3) formdan seçilmez; yalnızca zaten gelmedi olan randevuda mevcut durum olarak görünür (yüklemede eklenir). */
+    statusOptions: Array<{ label: string; value: number }> = [...this.writableStatusOptions];
 
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
@@ -426,6 +429,7 @@ export class AppointmentEditPageComponent implements OnInit {
         this.appointmentsService.getAppointmentForEditById(this.appointmentId).subscribe({
             next: (x) => {
                 this.editVmCache = x;
+                this.statusOptions = x.status === 3 ? [...this.writableStatusOptions, { label: 'Gelmedi', value: 3 }] : [...this.writableStatusOptions];
                 this.isInitializingClient = true;
                 this.form.patchValue(
                     {
@@ -484,7 +488,7 @@ export class AppointmentEditPageComponent implements OnInit {
             return;
         }
         const statusNum = v.status;
-        if (statusNum === null || statusNum === undefined || ![0, 1, 2].includes(statusNum)) {
+        if (statusNum === null || statusNum === undefined || ![0, 1, 2, 3].includes(statusNum)) {
             this.form.markAllAsTouched();
             this.submitError.set('Durum seçin.');
             return;
@@ -534,6 +538,19 @@ export class AppointmentEditPageComponent implements OnInit {
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
+    }
+
+    private applyStatusChange(target: number): Observable<void> {
+        if (target === this.editVmCache?.status) {
+            return of(void 0);
+        }
+        if (target === 1) {
+            return this.appointmentsService.completeAppointment(this.appointmentId);
+        }
+        if (target === 2) {
+            return this.appointmentsService.cancelAppointment(this.appointmentId);
+        }
+        return of(void 0);
     }
 
     goDetail(): void {

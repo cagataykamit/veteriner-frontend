@@ -1,14 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
+import { Menu, MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
+import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
+import { AppointmentNoShowDialogComponent } from '@/app/features/appointments/components/appointment-no-show-dialog.component';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    APPOINTMENTS_NOSHOW_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
     VISITS_CORRECT_CLAIM,
     VISITS_CREATE_CLAIM,
@@ -17,7 +23,7 @@ import {
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
 import { VisitCorrectionDialogComponent } from '@/app/features/visits/components/visit-correction-dialog.component';
-import type { TodayItemVm, TodayVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
+import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import {
     careStatusLabel,
@@ -25,7 +31,17 @@ import {
     formatElapsedSince,
     groupTodayItems,
     paymentIndicatorLabel,
-    todayItemActions
+    todayItemActions,
+    todaySecondaryActions,
+    todayUrgencyToggle,
+    type TodayItemActions,
+    type TodaySecondaryAction,
+    type TodaySecondaryActionKey,
+    type TodayRowPermissions,
+    type TodayUrgencyToggle,
+    type WaitAlertLevel,
+    waitAlertLevel,
+    waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -42,6 +58,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 const REFRESH_INTERVAL_MS = 30_000;
 
 type RefreshMode = 'initial' | 'silent';
+type TodayView = 'today' | 'voided';
+type TodayScope = 'mine' | 'all';
 
 /**
  * Bugün: o günün randevuları ve gelen hastalar tek listede (randevulu Visit tek satır).
@@ -53,6 +71,9 @@ type RefreshMode = 'initial' | 'silent';
     imports: [
         CommonModule,
         ButtonModule,
+        FormsModule,
+        SelectButtonModule,
+        MenuModule,
         TableModule,
         ToastModule,
         AppPageHeaderComponent,
@@ -61,7 +82,9 @@ type RefreshMode = 'initial' | 'silent';
         AppEmptyStateComponent,
         AppStatusTagComponent,
         VisitArrivalDialogComponent,
-        VisitCorrectionDialogComponent
+        VisitCorrectionDialogComponent,
+        AppointmentNoShowDialogComponent,
+        PetAlertBadgesComponent
     ],
     providers: [MessageService],
     template: `
@@ -86,6 +109,14 @@ type RefreshMode = 'initial' | 'silent';
                 }
             </div>
         </app-page-header>
+
+        <p-selectbutton class="block mb-4" [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Görünüm" />
+        @if (myUserId()) {
+            <p-selectbutton class="block mb-4" [options]="scopeOptions" [ngModel]="scope()" (ngModelChange)="setScope($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Hasta kapsamı" />
+            @if (scope() === 'mine') {
+                <p class="text-muted-color text-sm mt-0 mb-4">Yalnızca sorumlu hekimi siz olan kayıtlar gösterilir; planlı randevular bu görünümde yer almaz.</p>
+            }
+        }
 
         @if (loading()) {
             <app-loading-state message="Bugün yükleniyor…" />
@@ -136,16 +167,22 @@ type RefreshMode = 'initial' | 'silent';
                                     }
                                 </td>
                                 <td>
-                                    <div class="font-medium">{{ item.petName }}</div>
+                                    <div class="font-medium flex items-center gap-2">
+                                        {{ item.petName }}
+                                        <app-pet-alert-badges [alerts]="item.petAlerts" />
+                                        @if (item.isUrgent) {
+                                            <app-status-tag label="Acil" severity="danger" />
+                                        }
+                                    </div>
                                     <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
                                 </td>
                                 <td>
-                                    <div>{{ item.clientName }}</div>
+                                    <div class="max-w-56 truncate" [attr.title]="item.clientName">{{ item.clientName }}</div>
                                     @if (item.clientPhone) {
                                         <div class="text-sm text-muted-color">{{ phone(item.clientPhone) }}</div>
                                     }
                                 </td>
-                                <td>
+                                <td class="max-w-40 truncate" [attr.title]="item.responsibleVeterinarianName">
                                     @if (item.responsibleVeterinarianName; as vet) {
                                         {{ vet }}
                                     } @else {
@@ -156,15 +193,23 @@ type RefreshMode = 'initial' | 'silent';
                                     <div class="flex flex-wrap gap-1">
                                         @if (item.careStatus; as status) {
                                             <app-status-tag [label]="statusLabel(status)" [severity]="statusSeverity(status)" />
+                                        } @else if (item.appointmentStatus === 'NoShow') {
+                                            <app-status-tag label="Gelmedi" severity="warn" />
                                         } @else if (item.appointmentStatus === 'Completed') {
                                             <app-status-tag label="Randevu tamamlandı" severity="secondary" />
                                         } @else {
                                             <app-status-tag label="Bekleniyor" severity="secondary" />
                                         }
+                                        @if (item.isVoided) {
+                                            <app-status-tag label="Yanlış geliş" severity="danger" />
+                                        }
                                         @if (item.isCarriedOver) {
                                             <app-status-tag label="Önceki günden" severity="contrast" />
                                         }
                                     </div>
+                                    @if (item.voidReason; as reason) {
+                                        <div class="text-sm text-muted-color mt-1">Gerekçe: {{ reason }}</div>
+                                    }
                                 </td>
                                 <td>
                                     <div class="flex flex-wrap gap-1">
@@ -178,10 +223,17 @@ type RefreshMode = 'initial' | 'silent';
                                     </div>
                                 </td>
                                 @if (group.elapsedLabel) {
-                                    <td>{{ elapsed(item) ?? '—' }}</td>
+                                    @let wait = waitAlertOf(item);
+                                    <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
+                                        @if (wait !== 'none') {
+                                            <i class="pi pi-fw" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
+                                            <span class="sr-only">{{ waitTitle(wait) }}:</span>
+                                        }
+                                        {{ elapsed(item) ?? '—' }}
+                                    </td>
                                 }
-                                <td>
-                                    <div class="flex flex-wrap gap-2 justify-end">
+                                <td class="whitespace-nowrap" style="width: 1%">
+                                    <div class="flex flex-nowrap items-center gap-2 justify-end">
                                         @let actions = actionsOf(item);
                                         @if (canCreateVisit && actions.canMarkArrived) {
                                             <p-button
@@ -227,16 +279,36 @@ type RefreshMode = 'initial' | 'silent';
                                                 (onClick)="transition(item, 'complete')"
                                             />
                                         }
-                                        @if (canCorrect && actions.canCorrect) {
+                                        @let urgency = urgencyToggleOf(item, actions);
+                                        @if (urgency) {
                                             <p-button
                                                 type="button"
-                                                label="Düzelt"
-                                                icon="pi pi-pencil"
+                                                icon="pi pi-exclamation-triangle"
+                                                size="small"
+                                                [severity]="urgency.pressed ? 'danger' : 'secondary'"
+                                                [text]="!urgency.pressed"
+                                                [rounded]="true"
+                                                [ariaLabel]="urgency.label"
+                                                [attr.title]="urgency.label"
+                                                [attr.aria-pressed]="urgency.pressed"
+                                                [loading]="isBusy(item)"
+                                                [disabled]="isBusy(item) || ro.mutationBlocked()"
+                                                (onClick)="toggleUrgency(item)"
+                                            />
+                                        }
+                                        @let more = secondaryActionsOf(item, actions);
+                                        @if (more.length > 0) {
+                                            <p-button
+                                                type="button"
+                                                icon="pi pi-ellipsis-h"
                                                 size="small"
                                                 severity="secondary"
                                                 [text]="true"
-                                                [disabled]="ro.mutationBlocked()"
-                                                (onClick)="openCorrection(item)"
+                                                [rounded]="true"
+                                                ariaLabel="Diğer işlemler"
+                                                [attr.title]="'Diğer işlemler'"
+                                                aria-haspopup="menu"
+                                                (onClick)="openRowMenu($event, item, more)"
                                             />
                                         }
                                     </div>
@@ -247,20 +319,36 @@ type RefreshMode = 'initial' | 'silent';
                 </section>
             } @empty {
                 <div class="card">
-                    <app-empty-state
-                        message="Bugün için randevu veya gelen hasta yok."
-                        hint="Randevusuz gelen hastayı “Randevusuz geliş” ile kaydedebilirsiniz."
-                        iconClass="pi pi-calendar"
-                    />
+                    @if (scope() === 'mine') {
+                        <app-empty-state
+                            [message]="view() === 'voided' ? 'Size atanmış yanlış işaretlenen geliş yok.' : 'Size atanmış hasta yok.'"
+                            hint="Tüm sırayı görmek için Tümü’ne geçin."
+                            iconClass="pi pi-user"
+                        />
+                        <div class="flex justify-center mt-3">
+                            <p-button type="button" label="Tümü’ne geç" icon="pi pi-list" severity="secondary" (onClick)="setScope('all')" />
+                        </div>
+                    } @else {
+                        <app-empty-state
+                            [message]="view() === 'voided' ? 'Bugün yanlış işaretlenen geliş yok.' : 'Bugün için randevu veya gelen hasta yok.'"
+                            [hint]="view() === 'voided' ? '' : 'Randevusuz gelen hastayı “Randevusuz geliş” ile kaydedebilirsiniz.'"
+                            iconClass="pi pi-calendar"
+                        />
+                    }
                 </div>
             }
         }
 
+        <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" />
         @if (canCreateVisit) {
             <app-visit-arrival-dialog [(visible)]="arrivalOpen" [appointment]="arrivalAppointment()" (arrived)="onArrived($event)" />
         }
+        @if (canNoShow) {
+            <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="noShowItem()?.appointmentId ?? null" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
+        }
         @if (canCorrect) {
             <app-visit-correction-dialog [(visible)]="correctionOpen" [item]="correctionItem()" (corrected)="onCorrected()" />
+            <app-visit-correction-dialog mode="restore" [(visible)]="restoreOpen" [item]="restoreItem()" (corrected)="onRestored()" />
         }
     `
 })
@@ -277,6 +365,7 @@ export class TodayPageComponent implements OnInit {
     readonly canCreateVisit = this.auth.hasOperationClaim(VISITS_CREATE_CLAIM);
     readonly canUpdateVisit = this.auth.hasOperationClaim(VISITS_UPDATE_CLAIM);
     readonly canCorrect = this.auth.hasOperationClaim(VISITS_CORRECT_CLAIM);
+    readonly canNoShow = this.auth.hasOperationClaim(APPOINTMENTS_NOSHOW_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
 
     readonly loading = signal(true);
@@ -295,6 +384,30 @@ export class TodayPageComponent implements OnInit {
     readonly arrivalAppointment = signal<TodayItemVm | null>(null);
     readonly correctionOpen = signal(false);
     readonly correctionItem = signal<TodayItemVm | null>(null);
+    readonly restoreOpen = signal(false);
+    readonly restoreItem = signal<TodayItemVm | null>(null);
+    private readonly rowMenu = viewChild<Menu>('rowMenu');
+    readonly rowMenuItems = signal<MenuItem[]>([]);
+    readonly noShowOpen = signal(false);
+    readonly noShowItem = signal<TodayItemVm | null>(null);
+    readonly noShowMode = signal<'mark' | 'revert'>('mark');
+    readonly noShowSubject = computed(() => {
+        const i = this.noShowItem();
+        return i ? `${i.petName} · ${i.clientName} · Randevu ${this.time(i.scheduledAtUtc)}` : '';
+    });
+
+    readonly viewOptions: Array<{ label: string; value: TodayView }> = [
+        { label: 'Bugün', value: 'today' },
+        { label: 'Yanlış işaretlenenler', value: 'voided' }
+    ];
+    readonly view = signal<TodayView>('today');
+    readonly scopeOptions: Array<{ label: string; value: TodayScope }> = [
+        { label: 'Benim hastalarım', value: 'mine' },
+        { label: 'Tümü', value: 'all' }
+    ];
+    readonly scope = signal<TodayScope>('all');
+    /** Giriş yapan kullanıcı aktif klinikte hekimse kimliği; değilse `null` ve kapsam süzgeci görünmez. */
+    readonly myUserId = signal<string | null>(null);
 
     /** `switchMap`: üst üste gelen yenilemelerde yalnızca sonuncunun yanıtı uygulanır. */
     private readonly refresh$ = new Subject<RefreshMode>();
@@ -303,13 +416,24 @@ export class TodayPageComponent implements OnInit {
     readonly statusSeverity = careStatusSeverity;
     readonly paymentLabel = paymentIndicatorLabel;
     readonly phone = formatClientPhoneForDisplay;
-    readonly actionsOf = todayItemActions;
+    readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
+    readonly waitTitle = waitAlertTitle;
+    readonly waitAlertClass: Record<WaitAlertLevel, string> = {
+        none: '',
+        warning: 'font-semibold text-orange-600 dark:text-orange-400',
+        critical: 'font-semibold text-red-600 dark:text-red-400'
+    };
+    readonly waitAlertIcon: Record<WaitAlertLevel, string> = {
+        none: '',
+        warning: 'pi-clock',
+        critical: 'pi-exclamation-triangle'
+    };
 
     ngOnInit(): void {
         this.refresh$
             .pipe(
                 switchMap((mode) =>
-                    this.visitsService.getToday().pipe(
+                    this.visitsService.getToday(this.todayQuery()).pipe(
                         map((today): RefreshResult => ({ mode, today })),
                         catchError((e: unknown) => of({ mode, error: panelHttpFailureMessage(e, 'Bugün listesi yüklenemedi.') }))
                     )
@@ -320,7 +444,7 @@ export class TodayPageComponent implements OnInit {
         timer(REFRESH_INTERVAL_MS, REFRESH_INTERVAL_MS)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.refresh('silent'));
-        this.refresh('initial');
+        this.startWithScope();
     }
 
     refresh(mode: RefreshMode): void {
@@ -339,6 +463,10 @@ export class TodayPageComponent implements OnInit {
         return item.careStatus === 'Waiting' || item.careStatus === 'InProgress'
             ? formatElapsedSince(item.arrivedAtUtc, this.now())
             : null;
+    }
+
+    waitAlertOf(item: TodayItemVm): WaitAlertLevel {
+        return waitAlertLevel(item, this.now());
     }
 
     isBusy(item: TodayItemVm): boolean {
@@ -372,6 +500,86 @@ export class TodayPageComponent implements OnInit {
         this.refresh('silent');
     }
 
+    setScope(scope: TodayScope): void {
+        this.scope.set(scope);
+        this.refresh('initial');
+    }
+
+    /** Hekimse varsayılan "Benim hastalarım"; ilk yükleme kapsam belli olunca yapılır (çift istek / yanıp sönme yok). */
+    private startWithScope(): void {
+        if (!this.canCreateVisit) {
+            this.refresh('initial');
+            return;
+        }
+        this.visitsService
+            .getCurrentVeterinarianUserId()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((userId) => {
+                this.myUserId.set(userId);
+                this.scope.set(userId ? 'mine' : 'all');
+                this.refresh('initial');
+            });
+    }
+
+    private todayQuery(): TodayQuery {
+        const mine = this.scope() === 'mine' ? this.myUserId() : null;
+        return { voided: this.view() === 'voided', ...(mine ? { responsibleVeterinarianUserId: mine } : {}) };
+    }
+
+    setView(view: TodayView): void {
+        this.view.set(view);
+        this.refresh('initial');
+    }
+
+    private rowPermissions(): TodayRowPermissions {
+        return { canUpdateVisit: this.canUpdateVisit, canNoShow: this.canNoShow, canCorrect: this.canCorrect };
+    }
+
+    urgencyToggleOf(item: TodayItemVm, actions: TodayItemActions): TodayUrgencyToggle | null {
+        return todayUrgencyToggle(item, actions, this.rowPermissions());
+    }
+
+    secondaryActionsOf(item: TodayItemVm, actions: TodayItemActions): TodaySecondaryAction[] {
+        return todaySecondaryActions(item, actions, this.rowPermissions());
+    }
+
+    /** Seyrek/düzeltme eylemleri tek "⋯" menüsünde; PrimeNG popup menü klavye ile açılır/gezilir. */
+    openRowMenu(event: Event, item: TodayItemVm, actions: TodaySecondaryAction[]): void {
+        const handlers: Record<TodaySecondaryActionKey, () => void> = {
+            markNoShow: () => this.openNoShow(item, 'mark'),
+            revertNoShow: () => this.openNoShow(item, 'revert'),
+            restore: () => this.openRestore(item),
+            correct: () => this.openCorrection(item)
+        };
+        const blocked = this.ro.mutationBlocked() || this.isBusy(item);
+        this.rowMenuItems.set(actions.map((a) => ({ label: a.label, icon: a.icon, disabled: blocked, command: handlers[a.key] })));
+        this.rowMenu()?.toggle(event);
+    }
+    openNoShow(item: TodayItemVm, mode: 'mark' | 'revert'): void {
+        this.noShowItem.set(item);
+        this.noShowMode.set(mode);
+        this.noShowOpen.set(true);
+    }
+
+    onNoShowDone(): void {
+        addTracedToast(this.messages, 'TodayPage', this.router.url, {
+            severity: 'success',
+            summary: this.noShowMode() === 'mark' ? 'Randevu gelmedi olarak işaretlendi.' : 'Gelmedi işareti geri alındı.',
+            life: 4000
+        });
+        this.refresh('silent');
+    }
+
+    openRestore(item: TodayItemVm): void {
+        this.restoreItem.set(item);
+        this.restoreOpen.set(true);
+    }
+
+    onRestored(): void {
+        addTracedToast(this.messages, 'TodayPage', this.router.url, { severity: 'success', summary: 'Geliş geri alındı.', life: 4000 });
+        this.refresh('silent');
+    }
+
     openCorrection(item: TodayItemVm): void {
         this.correctionItem.set(item);
         this.correctionOpen.set(true);
@@ -380,6 +588,31 @@ export class TodayPageComponent implements OnInit {
     onCorrected(): void {
         addTracedToast(this.messages, 'TodayPage', this.router.url, { severity: 'success', summary: 'Düzeltme kaydedildi.', life: 4000 });
         this.refresh('silent');
+    }
+
+    /** Sıralamayı sunucu belirler: istemci yeniden sıralamaz, yalnızca yeniler. Hatada da yenilenir. */
+    toggleUrgency(item: TodayItemVm): void {
+        const visitId = item.visitId;
+        if (!visitId || this.isBusy(item)) {
+            return;
+        }
+        this.setBusy(item.key, true);
+        this.visitsService.setUrgency(visitId, !item.isUrgent).subscribe({
+            next: () => {
+                this.setBusy(item.key, false);
+                this.refresh('silent');
+            },
+            error: (e: unknown) => {
+                this.setBusy(item.key, false);
+                addTracedToast(this.messages, 'TodayPage', this.router.url, {
+                    severity: 'error',
+                    summary: 'Acil işareti güncellenemedi.',
+                    detail: panelHttpFailureMessage(e, 'Acil işareti güncellenemedi.'),
+                    life: 6000
+                });
+                this.refresh('silent');
+            }
+        });
     }
 
     /** Hasta tekrar seçilmez: Visit kimliği ve hasta bağlamı muayene çalışma alanına query ile taşınır. */

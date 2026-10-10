@@ -374,7 +374,8 @@ export class AppointmentsListPageComponent implements OnInit {
         { label: 'Tümü', value: '' },
         { label: 'Planlandı', value: '0' },
         { label: 'Tamamlandı', value: '1' },
-        { label: 'İptal', value: '2' }
+        { label: 'İptal', value: '2' },
+        { label: 'Gelmedi', value: '3' }
     ];
 
     readonly displayedRows = computed(() => this.rawItems());

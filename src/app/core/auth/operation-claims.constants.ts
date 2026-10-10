@@ -46,6 +46,7 @@ export const PETS_UPDATE_CLAIM = 'Pets.Update' as const;
 export const APPOINTMENTS_READ_CLAIM = 'Appointments.Read' as const;
 export const APPOINTMENTS_CREATE_CLAIM = 'Appointments.Create' as const;
 export const APPOINTMENTS_CANCEL_CLAIM = 'Appointments.Cancel' as const;
+export const APPOINTMENTS_NOSHOW_CLAIM = 'Appointments.NoShow' as const;
 export const APPOINTMENTS_COMPLETE_CLAIM = 'Appointments.Complete' as const;
 export const APPOINTMENTS_RESCHEDULE_CLAIM = 'Appointments.Reschedule' as const;
 
