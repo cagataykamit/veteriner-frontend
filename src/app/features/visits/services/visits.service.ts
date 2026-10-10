@@ -1,0 +1,101 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { catchError, map, MonoTypeOperatorFunction, Observable, throwError } from 'rxjs';
+import { ApiClient } from '@/app/core/api/api.client';
+import { ApiEndpoints } from '@/app/core/api/api-endpoints';
+import { AuthService } from '@/app/core/auth/auth.service';
+import {
+    mapCorrectVisitToApiBody,
+    mapCreateVisitToApiBody,
+    mapTodayDtoToVm,
+    mapVeterinarianDtoToVm,
+    mapVisitCreateResultDtoToVm,
+    mapVisitDtoToVm,
+    todayQueryToHttpParams
+} from '@/app/features/visits/data/visit.mapper';
+import type {
+    TodayDto,
+    VeterinarianDto,
+    VisitCreateResultDto,
+    VisitDto
+} from '@/app/features/visits/models/visit-api.model';
+import type {
+    CorrectVisitRequest,
+    CreateVisitRequest,
+    TodayVm,
+    VeterinarianVm,
+    VisitCreateResultVm,
+    VisitVm
+} from '@/app/features/visits/models/visit-vm.model';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+
+/** Hatayı kullanıcıya gösterilecek Türkçe mesajlı `Error`'a çevirir (backend `code` eşlemesi `messageFromHttpError` içinde). */
+function toUserError<T>(fallback: string): MonoTypeOperatorFunction<T> {
+    return catchError((err: unknown) =>
+        throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, fallback)) : err))
+    );
+}
+
+@Injectable({ providedIn: 'root' })
+export class VisitsService {
+    private readonly api = inject(ApiClient);
+    private readonly auth = inject(AuthService);
+
+    /** Aktif klinik için İstanbul gününün kuyruğu (randevular + gelen hastalar). */
+    getToday(): Observable<TodayVm> {
+        const params = todayQueryToHttpParams(this.auth.getClinicId()?.trim() || null);
+        return this.api.get<TodayDto>(ApiEndpoints.visits.today(), params).pipe(
+            map(mapTodayDtoToVm),
+            toUserError('Bugün listesi yüklenemedi.')
+        );
+    }
+
+    getVisitById(id: string): Observable<VisitVm> {
+        return this.api.get<VisitDto>(ApiEndpoints.visits.byId(id)).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Geliş kaydı yüklenemedi.')
+        );
+    }
+
+    getVeterinarians(clinicId: string): Observable<VeterinarianVm[]> {
+        return this.api.get<VeterinarianDto[]>(ApiEndpoints.clinics.veterinarians(clinicId)).pipe(
+            map((list) => list.map(mapVeterinarianDtoToVm)),
+            toUserError('Hekim listesi yüklenemedi.')
+        );
+    }
+
+    /**
+     * `201` yeni kayıt, `200` mevcut açık Visit (`created: false`); ikisi de başarıdır.
+     * Aynı hasta/randevu için tekrar istek ikinci Visit üretmez.
+     */
+    createVisit(request: CreateVisitRequest): Observable<VisitCreateResultVm> {
+        return this.api.post<VisitCreateResultDto>(ApiEndpoints.visits.create(), mapCreateVisitToApiBody(request)).pipe(
+            map(mapVisitCreateResultDtoToVm),
+            toUserError('Geliş kaydı oluşturulamadı.')
+        );
+    }
+
+    /** `Waiting → InProgress`; zaten hedef durumdaysa sunucu `200` ve mevcut kaydı döner. */
+    startVisit(id: string): Observable<VisitVm> {
+        return this.api.post<VisitDto>(ApiEndpoints.visits.start(id), {}).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Bakım başlatılamadı.')
+        );
+    }
+
+    /** `InProgress → Completed`; ödeme eksikliği geçişi engellemez. */
+    completeVisit(id: string): Observable<VisitVm> {
+        return this.api.post<VisitDto>(ApiEndpoints.visits.complete(id), {}).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Bakım tamamlanamadı.')
+        );
+    }
+
+    /** `Visits.Correct`; gerekçe zorunlu, sunucuda audit'e yazılır. */
+    correctVisit(id: string, request: CorrectVisitRequest): Observable<VisitVm> {
+        return this.api.post<VisitDto>(ApiEndpoints.visits.corrections(id), mapCorrectVisitToApiBody(request)).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Düzeltme kaydedilemedi.')
+        );
+    }
+}

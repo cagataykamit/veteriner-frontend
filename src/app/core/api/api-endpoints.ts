@@ -31,7 +31,19 @@ export const ApiEndpoints = {
         activate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/activate`,
         deactivate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/deactivate`,
         workingHours: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/working-hours`,
-        appointmentSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/appointment-settings`
+        appointmentSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/appointment-settings`,
+        /** Geliş formundaki sorumlu hekim seçimi (`Visits.Create`). */
+        veterinarians: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/veterinarians`
+    },
+    visits: {
+        /** Geliş kaydı (POST). */
+        create: () => `/api/v1/visits`,
+        /** Query: `clinicId`, `localDate` (İstanbul günü, `yyyy-MM-dd`). */
+        today: () => `/api/v1/visits/today`,
+        byId: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}`,
+        start: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/start`,
+        complete: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/complete`,
+        corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
