@@ -39,7 +39,6 @@ import { fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
 import { DATE_INPUT_MAX, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
-import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
@@ -232,22 +231,6 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                             <small class="text-red-500">Randevu Türü seçimi zorunludur.</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum</label>
-                        <p-select
-                            inputId="status"
-                            formControlName="status"
-                            [options]="statusOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Durum seçin"
-                            [showClear]="true"
-                            styleClass="w-full"
-                        />
-                        @if (apiFieldErrors().status) {
-                            <small class="text-red-500">{{ apiFieldErrors().status }}</small>
-                        }
-                    </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
@@ -320,7 +303,6 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly canShowQuickPetCreate = (): boolean => canShowQuickPetCreateButton(this.auth, this.ro, false);
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
-    readonly statusOptions = [...APPOINTMENT_WRITE_STATUS_OPTIONS];
     readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
 
     readonly form = this.fb.group({
@@ -339,7 +321,6 @@ export class AppointmentNewPageComponent implements OnInit {
             Validators.pattern(/^[0-9]+$/)
         ]),
         appointmentType: this.fb.control<number | null>(null, Validators.required),
-        status: this.fb.control<number | null>(0),
         notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH))
     });
 
@@ -358,7 +339,6 @@ export class AppointmentNewPageComponent implements OnInit {
         this.form.controls.scheduledTime.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
         this.form.controls.appointmentType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('appointmentType'));
         this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('durationMinutes'));
-        this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('status'));
         this.form.controls.notes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('notes'));
 
         effect(() => {
@@ -477,7 +457,6 @@ export class AppointmentNewPageComponent implements OnInit {
             scheduledAtUtc,
             durationMinutes,
             appointmentType,
-            status: v.status,
             notes: v.notes
         });
 

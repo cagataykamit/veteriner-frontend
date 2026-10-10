@@ -88,7 +88,11 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/appointments`,
         calendar: () => `/api/v1/appointments/calendar`,
-        byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`,
+        cancel: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/cancel`,
+        complete: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/complete`,
+        noShow: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/no-show`,
+        noShowRevert: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/no-show/revert`
     },
     reminders: {
         settings: () => `/api/v1/reminders/settings`,

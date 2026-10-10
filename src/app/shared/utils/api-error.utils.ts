@@ -192,7 +192,7 @@ function vaccinationPanelProblemUserMessage(err: HttpErrorResponse): string | nu
     return VACCINATION_PANEL_PROBLEM_MESSAGES[code] ?? VACCINATION_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
-/** Geliş (Visit) ve Bugün — `ProblemDetails` + `extensions.code`; `Visits.Validation` backend `detail` ile gösterilir. */
+/** Geliş (Visit), Bugün ve randevu durum geçişleri (Gelmedi) — `ProblemDetails` + `extensions.code`; `Visits.Validation` backend `detail` ile gösterilir. */
 const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Visits.NotFound': 'Geliş kaydı bulunamadı veya artık kuyrukta değil. Listeyi yenileyin.',
     'Visits.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
@@ -207,7 +207,11 @@ const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Visits.DuplicateAppointmentVisit': 'Bu randevu için başka geliş kaydı var; geri alınamaz.',
     'Visits.NotOpen': 'Bu geliş tamamlanmış veya yanlış geliş olarak işaretlenmiş; muayene açılamaz.',
     'Visits.ConcurrencyConflict': 'Kayıt aynı anda başka biri tarafından güncellendi. Listeyi yenileyip tekrar deneyin.',
-    'Examinations.VisitMismatch': 'Muayene, geliş kaydındaki hayvan veya randevuyla uyuşmuyor.'
+    'Examinations.VisitMismatch': 'Muayene, geliş kaydındaki hayvan veya randevuyla uyuşmuyor.',
+    'Examinations.AppointmentNoShow': 'Gelmedi işaretli randevuya doğrudan muayene açılamaz. Hasta geldiyse önce geliş kaydı açın veya gelmedi işaretini geri alın.',
+    'Appointments.NoShowNotYetDue': 'Randevu saati henüz gelmedi; gelmedi olarak işaretlenemez.',
+    'Appointments.HasVisit': 'Bu randevu için geliş kaydı var (hasta gelmiş); gelmedi olarak işaretlenemez.',
+    'Appointments.InvalidStatusTransition': 'Randevu durumu bu işleme uygun değil; durum başka biri tarafından değişmiş olabilir. Sayfayı yenileyip tekrar deneyin.'
 };
 
 function visitPanelProblemUserMessage(err: HttpErrorResponse): string | null {

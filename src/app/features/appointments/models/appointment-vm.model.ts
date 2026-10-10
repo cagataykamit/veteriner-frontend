@@ -19,7 +19,7 @@ export interface AppointmentListItemVm {
     appointmentType: number | null;
     /** API’nin gönderdiği ek açıklama; etiket için yedek. */
     appointmentTypeName: string | null;
-    /** Backend `AppointmentStatus` 0/1/2; bilinmeyen API değeri `null`. */
+    /** Backend `AppointmentStatus` 0/1/2/3; bilinmeyen API değeri `null`. */
     status: number | null;
     lifecycleStatus: number | null;
     /** `recent-summary` gibi kısa listelerde; aksi halde yok. */
@@ -40,7 +40,7 @@ export interface AppointmentDetailVm {
     speciesName: string | null;
     appointmentType: number | null;
     appointmentTypeName: string | null;
-    /** Backend `AppointmentStatus` 0/1/2; bilinmeyen API değeri `null`. */
+    /** Backend `AppointmentStatus` 0/1/2/3; bilinmeyen API değeri `null`. */
     status: number | null;
     lifecycleStatus: number | null;
     notes: string;
