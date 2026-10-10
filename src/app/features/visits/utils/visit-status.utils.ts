@@ -167,7 +167,7 @@ export function waitAlertTitle(level: WaitAlertLevel): string | null {
     return level === 'none' ? null : WAIT_ALERT_TITLE[level];
 }
 
-export type TodaySecondaryActionKey = 'toggleUrgency' | 'markNoShow' | 'revertNoShow' | 'correct';
+export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore';
 
 export interface TodaySecondaryAction {
     key: TodaySecondaryActionKey;
@@ -182,22 +182,37 @@ export interface TodayRowPermissions {
 }
 
 /**
- * Satırın ikincil eylemleri ("⋯" menüsü); birincil eylemler (Geldi, Muayene aç, Başlat, Tamamla, Geri al) satırda görünür kalır.
- * Hangi eylemin birincil/ikincil olduğu burada ve şablonda tek yerde belirlenir.
+ * Satırın seyrek/düzeltme eylemleri ("⋯" menüsü). Satırda görünür kalanlar: Geldi, Muayene aç, Başlat/Tamamla ve acil ikonu
+ * (`todayUrgencyToggle`). Görünür/menü ayrımı burada tek yerde belirlenir.
  */
 export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActions, perms: TodayRowPermissions): TodaySecondaryAction[] {
     const out: TodaySecondaryAction[] = [];
-    if (perms.canUpdateVisit && actions.canToggleUrgency) {
-        out.push({ key: 'toggleUrgency', label: item.isUrgent ? 'Acili kaldır' : 'Acil işaretle', icon: 'pi pi-exclamation-circle' });
-    }
     if (perms.canNoShow && actions.canMarkNoShow) {
         out.push({ key: 'markNoShow', label: 'Gelmedi olarak işaretle', icon: 'pi pi-user-minus' });
     }
     if (perms.canNoShow && actions.canRevertNoShow) {
         out.push({ key: 'revertNoShow', label: 'Gelmedi işaretini geri al', icon: 'pi pi-undo' });
     }
+    if (perms.canCorrect && actions.canRestore) {
+        out.push({ key: 'restore', label: 'Geri al', icon: 'pi pi-undo' });
+    }
     if (perms.canCorrect && actions.canCorrect) {
         out.push({ key: 'correct', label: 'Düzelt', icon: 'pi pi-pencil' });
     }
     return out;
+}
+
+export interface TodayUrgencyToggle {
+    /** Düğme ipucu ve erişilebilir ad. */
+    label: string;
+    /** İşaretliyse düğme belirgin (basılı) durumda. */
+    pressed: boolean;
+}
+
+/** Zaman açısından kritik acil aç/kapat eylemi satırda ikon düğmesi olarak görünür; yetki/koşul yoksa `null`. */
+export function todayUrgencyToggle(item: TodayItemVm, actions: TodayItemActions, perms: TodayRowPermissions): TodayUrgencyToggle | null {
+    if (!perms.canUpdateVisit || !actions.canToggleUrgency) {
+        return null;
+    }
+    return { label: item.isUrgent ? 'Acili kaldır' : 'Acil işaretle', pressed: item.isUrgent };
 }

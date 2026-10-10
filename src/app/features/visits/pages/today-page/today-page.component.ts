@@ -33,9 +33,12 @@ import {
     paymentIndicatorLabel,
     todayItemActions,
     todaySecondaryActions,
+    todayUrgencyToggle,
     type TodayItemActions,
     type TodaySecondaryAction,
     type TodaySecondaryActionKey,
+    type TodayRowPermissions,
+    type TodayUrgencyToggle,
     type WaitAlertLevel,
     waitAlertLevel,
     waitAlertTitle
@@ -276,15 +279,21 @@ type TodayScope = 'mine' | 'all';
                                                 (onClick)="transition(item, 'complete')"
                                             />
                                         }
-                                        @if (canCorrect && actions.canRestore) {
+                                        @let urgency = urgencyToggleOf(item, actions);
+                                        @if (urgency) {
                                             <p-button
                                                 type="button"
-                                                label="Geri al"
-                                                icon="pi pi-undo"
+                                                icon="pi pi-exclamation-triangle"
                                                 size="small"
-                                                severity="secondary"
-                                                [disabled]="ro.mutationBlocked()"
-                                                (onClick)="openRestore(item)"
+                                                [severity]="urgency.pressed ? 'danger' : 'secondary'"
+                                                [text]="!urgency.pressed"
+                                                [rounded]="true"
+                                                [ariaLabel]="urgency.label"
+                                                [attr.title]="urgency.label"
+                                                [attr.aria-pressed]="urgency.pressed"
+                                                [loading]="isBusy(item)"
+                                                [disabled]="isBusy(item) || ro.mutationBlocked()"
+                                                (onClick)="toggleUrgency(item)"
                                             />
                                         }
                                         @let more = secondaryActionsOf(item, actions);
@@ -522,7 +531,30 @@ export class TodayPageComponent implements OnInit {
         this.refresh('initial');
     }
 
-secondaryActionsOf(item: TodayItemVm, actions: TodayItemActions): TodaySecondaryAction[] {        return todaySecondaryActions(item, actions, { canUpdateVisit: this.canUpdateVisit, canNoShow: this.canNoShow, canCorrect: this.canCorrect });    }    /** İkincil eylemler tek "⋯" menüsünde; PrimeNG popup menü klavye ile açılır/gezilir. */    openRowMenu(event: Event, item: TodayItemVm, actions: TodaySecondaryAction[]): void {        const handlers: Record<TodaySecondaryActionKey, () => void> = {            toggleUrgency: () => this.toggleUrgency(item),            markNoShow: () => this.openNoShow(item, 'mark'),            revertNoShow: () => this.openNoShow(item, 'revert'),            correct: () => this.openCorrection(item)        };        const blocked = this.ro.mutationBlocked() || this.isBusy(item);        this.rowMenuItems.set(actions.map((a) => ({ label: a.label, icon: a.icon, disabled: blocked, command: handlers[a.key] })));        this.rowMenu()?.toggle(event);    }
+    private rowPermissions(): TodayRowPermissions {
+        return { canUpdateVisit: this.canUpdateVisit, canNoShow: this.canNoShow, canCorrect: this.canCorrect };
+    }
+
+    urgencyToggleOf(item: TodayItemVm, actions: TodayItemActions): TodayUrgencyToggle | null {
+        return todayUrgencyToggle(item, actions, this.rowPermissions());
+    }
+
+    secondaryActionsOf(item: TodayItemVm, actions: TodayItemActions): TodaySecondaryAction[] {
+        return todaySecondaryActions(item, actions, this.rowPermissions());
+    }
+
+    /** Seyrek/düzeltme eylemleri tek "⋯" menüsünde; PrimeNG popup menü klavye ile açılır/gezilir. */
+    openRowMenu(event: Event, item: TodayItemVm, actions: TodaySecondaryAction[]): void {
+        const handlers: Record<TodaySecondaryActionKey, () => void> = {
+            markNoShow: () => this.openNoShow(item, 'mark'),
+            revertNoShow: () => this.openNoShow(item, 'revert'),
+            restore: () => this.openRestore(item),
+            correct: () => this.openCorrection(item)
+        };
+        const blocked = this.ro.mutationBlocked() || this.isBusy(item);
+        this.rowMenuItems.set(actions.map((a) => ({ label: a.label, icon: a.icon, disabled: blocked, command: handlers[a.key] })));
+        this.rowMenu()?.toggle(event);
+    }
     openNoShow(item: TodayItemVm, mode: 'mark' | 'revert'): void {
         this.noShowItem.set(item);
         this.noShowMode.set(mode);

@@ -5,6 +5,7 @@ import {
     groupTodayItems,
     todayItemActions,
     todaySecondaryActions,
+    todayUrgencyToggle,
     waitAlertLevel,
     waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
@@ -195,28 +196,37 @@ describe('Gelmedi (NoShow) satırı', () => {
     });
 });
 
-describe('todaySecondaryActions', () => {
+describe('satır eylem düzeni (görünür / menü)', () => {
     const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true };
-    const secondary = (i: TodayItemVm, perms = all) => todaySecondaryActions(i, todayItemActions(i, new Date('2026-10-10T10:00:00Z')), perms).map((a) => a.key);
+    const now = new Date('2026-10-10T10:00:00Z');
+    const secondary = (i: TodayItemVm, perms = all) => todaySecondaryActions(i, todayItemActions(i, now), perms).map((a) => a.key);
+    const urgency = (i: TodayItemVm, perms = all) => todayUrgencyToggle(i, todayItemActions(i, now), perms);
+    const planned = item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z' });
 
-    it('açık Visit satırı: acil ve düzelt ikincil menüde; yetkisiz eylem listelenmez', () => {
-        expect(secondary(item())).toEqual(['toggleUrgency', 'correct']);
-        expect(secondary(item(), { canUpdateVisit: false, canNoShow: true, canCorrect: false })).toEqual([]);
+    it('acil açık satırda görünür ikon düğmesidir, menüde değildir', () => {
+        expect(urgency(item())).toEqual({ label: 'Acil işaretle', pressed: false });
+        expect(urgency(item({ isUrgent: true }))).toEqual({ label: 'Acili kaldır', pressed: true });
+        expect(secondary(item())).toEqual(['correct']);
     });
 
-    it('acil etiketi duruma göre', () => {
-        const label = (i: TodayItemVm) => todaySecondaryActions(i, todayItemActions(i), all)[0].label;
-        expect(label(item({ isUrgent: false }))).toBe('Acil işaretle');
-        expect(label(item({ isUrgent: true }))).toBe('Acili kaldır');
+    it('acil düğmesi yetkisiz, tamamlanmış, yanlış işaretli ve planlı satırda yok', () => {
+        expect(urgency(item(), { ...all, canUpdateVisit: false })).toBeNull();
+        expect(urgency(item({ careStatus: 'Completed' }))).toBeNull();
+        expect(urgency(item({ isVoided: true }))).toBeNull();
+        expect(urgency(planned)).toBeNull();
     });
 
-    it('tamamlanmış satırda yalnızca düzelt; yanlış işaretli satırda ikincil eylem yok (Geri al birincil)', () => {
+    it('menüde yalnızca seyrek eylemler; yetkisiz kullanıcıda menü boş', () => {
         expect(secondary(item({ careStatus: 'Completed' }))).toEqual(['correct']);
-        expect(secondary(item({ isVoided: true }))).toEqual([]);
+        expect(secondary(item(), { canUpdateVisit: true, canNoShow: true, canCorrect: false })).toEqual([]);
+    });
+
+    it('yanlış işaretli satırda Geri al menüdedir; yetkisizde menü boş', () => {
+        expect(secondary(item({ isVoided: true }))).toEqual(['restore']);
+        expect(secondary(item({ isVoided: true }), { ...all, canCorrect: false })).toEqual([]);
     });
 
     it('planlı ve gelmedi satırları', () => {
-        const planned = item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z' });
         expect(secondary(planned)).toEqual(['markNoShow']);
         expect(secondary({ ...planned, appointmentStatus: 'NoShow' })).toEqual(['revertNoShow']);
     });
