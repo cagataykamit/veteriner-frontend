@@ -1,34 +1,44 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, input, model, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
+import { catchError, forkJoin, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import type { CreateVisitRequest, TodayItemVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
-import {
-    clientOptionsFromList,
-    filterPetsByClientId,
-    isStalePetListResponse,
-    petOptionsFromList,
-    trimClientIdControlValue,
-    type SelectOption
-} from '@/app/shared/forms/client-pet-selection.utils';
+import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+
+/** Arama sonucu: seçilen hastanın kimliği ve sahip bilgisiyle ayırt edilebilir etiketi. */
+export interface PetSuggestion {
+    id: string;
+    label: string;
+}
+
+const PET_SEARCH_PAGE_SIZE = 10;
+
+function petSelected(c: AbstractControl): ValidationErrors | null {
+    // AutoComplete yazarken string, listeden seçilince nesne tutar; yalnızca seçilmiş hasta geçerlidir.
+    const v = c.value as PetSuggestion | string | null;
+    return v && typeof v === 'object' && v.id ? null : { required: true };
+}
 
 /**
  * Hasta kabulü. `appointment` verilirse randevudan "Geldi" (hasta kilitli); verilmezse randevusuz hızlı geliş
- * (müşteri → hayvan seçimi). Sorumlu hekim iki akışta da opsiyoneldir.
+ * (tek alanda hasta araması). Sorumlu hekim iki akışta da opsiyoneldir.
  * Çift tıklama: gönderim sürerken düğme kilitli, `onSubmit` ikinci çağrıyı yok sayar; sunucu da mevcut Visit'i döndürür.
  */
 @Component({
     selector: 'app-visit-arrival-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule],
     template: `
         <p-dialog
             [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'"
@@ -52,42 +62,24 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </div>
                     } @else {
                         <div class="col-span-12">
-                            <label for="va-clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
-                            <p-select
-                                inputId="va-clientId"
-                                formControlName="clientId"
-                                [options]="clientOptions()"
+                            <label for="va-pet" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
+                            <p-autocomplete
+                                inputId="va-pet"
+                                formControlName="pet"
+                                [suggestions]="petSuggestions()"
+                                (completeMethod)="onPetSearch($event)"
                                 optionLabel="label"
-                                optionValue="value"
-                                placeholder="Müşteri arayın veya seçin"
-                                [filter]="true"
-                                filterBy="label"
+                                [delay]="300"
+                                [minQueryLength]="2"
+                                [forceSelection]="true"
                                 [showClear]="true"
-                                styleClass="w-full"
-                                [loading]="loadingClients()"
+                                [fluid]="true"
+                                placeholder="Hasta, sahip, telefon veya mikroçip ile arayın"
+                                emptyMessage="Eşleşen hasta bulunamadı."
                                 appendTo="body"
                             />
-                            @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                                <small class="text-red-500">Zorunlu alan.</small>
-                            }
-                        </div>
-                        <div class="col-span-12">
-                            <label for="va-petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
-                            <p-select
-                                inputId="va-petId"
-                                formControlName="petId"
-                                [options]="petOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Önce müşteri seçin"
-                                [filter]="true"
-                                filterBy="label"
-                                styleClass="w-full"
-                                [loading]="loadingPets()"
-                                appendTo="body"
-                            />
-                            @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                                <small class="text-red-500">Zorunlu alan.</small>
+                            @if (form.controls.pet.invalid && form.controls.pet.touched) {
+                                <small class="text-red-500">Listeden bir hasta seçin.</small>
                             }
                         </div>
                     }
@@ -125,6 +117,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         </p-dialog>
     `
 })
+
 export class VisitArrivalDialogComponent {
     readonly visible = model(false);
     /** Doluysa randevudan geliş (hasta kilitli); `null` ise randevusuz geliş. */
@@ -142,47 +135,55 @@ export class VisitArrivalDialogComponent {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly loadError = signal<string | null>(null);
-    readonly loadingClients = signal(false);
-    readonly loadingPets = signal(false);
     readonly loadingVeterinarians = signal(false);
-    readonly clientOptions = signal<SelectOption[]>([]);
-    readonly petOptions = signal<SelectOption[]>([]);
+    readonly petSuggestions = signal<PetSuggestion[]>([]);
     readonly veterinarianOptions = signal<SelectOption[]>([]);
 
-    readonly form = this.fb.nonNullable.group({
-        clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }, Validators.required],
-        veterinarianId: ['']
+    readonly form = this.fb.group({
+        pet: this.fb.control<PetSuggestion | string | null>(null, petSelected),
+        veterinarianId: this.fb.nonNullable.control('')
     });
 
+    /** Sahip adı çözümlemesi aramalar arasında paylaşılır (aynı sahip için tekrar istek yok). */
+    private readonly ownerNames = new Map<string, string>();
+    private readonly petSearch$ = new Subject<string>();
+
     constructor() {
-        this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((raw) => {
-            this.form.controls.petId.setValue('');
-            this.petOptions.set([]);
-            const clientId = trimClientIdControlValue(raw);
-            if (!clientId) {
-                this.form.controls.petId.disable({ emitEvent: false });
-                this.loadingPets.set(false);
-                return;
-            }
-            this.form.controls.petId.enable({ emitEvent: false });
-            this.loadPets(clientId);
-        });
+        // Sunucu tarafı arama (`search`: Türkçe harf, telefon, mikroçip, sahip adı backend'de çözülür); `switchMap` eski yanıtı atar.
+        this.petSearch$
+            .pipe(
+                switchMap((term) =>
+                    this.petsService.getPets({ page: 1, pageSize: PET_SEARCH_PAGE_SIZE, search: term }).pipe(
+                        switchMap((r) => this.withOwnerLabels(r.items)),
+                        catchError((e: unknown) => {
+                            this.loadError.set(panelHttpFailureMessage(e, 'Hasta araması yapılamadı.'));
+                            return of([] as PetSuggestion[]);
+                        })
+                    )
+                ),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe((suggestions) => this.petSuggestions.set(suggestions));
+    }
+
+    onPetSearch(event: AutoCompleteCompleteEvent): void {
+        const term = event.query.trim();
+        if (term) {
+            this.loadError.set(null);
+            this.petSearch$.next(term);
+        }
     }
 
     onDialogShow(): void {
         this.submitError.set(null);
         this.loadError.set(null);
-        this.petOptions.set([]);
-        this.form.reset({ clientId: '', petId: '', veterinarianId: '' }, { emitEvent: false });
+        this.petSuggestions.set([]);
+        this.form.reset({ pet: null, veterinarianId: '' });
+        // Randevulu geliş: hasta randevudan gelir; devre dışı kontrol geçerliliği etkilemez.
         if (this.appointment()) {
-            // Randevulu geliş: hasta randevudan gelir; disabled kontroller geçerliliği etkilemez.
-            this.form.controls.clientId.disable({ emitEvent: false });
-            this.form.controls.petId.disable({ emitEvent: false });
+            this.form.controls.pet.disable({ emitEvent: false });
         } else {
-            this.form.controls.clientId.enable({ emitEvent: false });
-            this.form.controls.petId.disable({ emitEvent: false });
-            this.loadClients();
+            this.form.controls.pet.enable({ emitEvent: false });
         }
         this.loadVeterinarians();
     }
@@ -220,48 +221,35 @@ export class VisitArrivalDialogComponent {
     }
 
     private buildRequest(): CreateVisitRequest | null {
-        const veterinarian = this.form.getRawValue().veterinarianId;
+        const { pet, veterinarianId } = this.form.getRawValue();
         const appointmentId = this.appointment()?.appointmentId;
         if (appointmentId) {
-            return { appointmentId, responsibleVeterinarianUserId: veterinarian };
+            return { appointmentId, responsibleVeterinarianUserId: veterinarianId };
         }
         const clinicId = this.auth.getClinicId()?.trim();
-        if (!clinicId) {
+        if (!clinicId || !pet || typeof pet !== 'object') {
             return null;
         }
-        return { clinicId, petId: this.form.getRawValue().petId, responsibleVeterinarianUserId: veterinarian };
+        return { clinicId, petId: pet.id, responsibleVeterinarianUserId: veterinarianId };
     }
 
-    private loadClients(): void {
-        this.loadingClients.set(true);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-            },
-            error: (e: unknown) => {
-                this.loadError.set(panelHttpFailureMessage(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
-
-    private loadPets(clientId: string): void {
-        this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
-            next: (r) => {
-                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
-                    return;
-                }
-                const items = r.items.some((p) => (p.clientId ?? '').trim()) ? filterPetsByClientId(r.items, clientId) : r.items;
-                this.petOptions.set(petOptionsFromList(items));
-                this.loadingPets.set(false);
-            },
-            error: (e: unknown) => {
-                this.loadError.set(panelHttpFailureMessage(e, 'Hayvan listesi yüklenemedi.'));
-                this.loadingPets.set(false);
-            }
-        });
+    /** Aynı ada sahip hastaları ayırt etmek için sonuçlara sahip adı eklenir (liste DTO'sunda sahip adı yok). */
+    private withOwnerLabels(pets: PetListItemVm[]): Observable<PetSuggestion[]> {
+        const missing = [...new Set(pets.map((p) => p.clientId).filter((id): id is string => !!id && !this.ownerNames.has(id)))];
+        const lookups = missing.map((id) =>
+            this.clientsService.getClientById(id).pipe(
+                map((c) => this.ownerNames.set(id, c.fullName)),
+                catchError(() => of(this.ownerNames.set(id, '—')))
+            )
+        );
+        return (lookups.length ? forkJoin(lookups) : of([])).pipe(
+            map(() =>
+                pets.map((p) => ({
+                    id: p.id,
+                    label: `${p.name} — ${p.speciesName} · Sahip: ${(p.clientId && this.ownerNames.get(p.clientId)) || '—'}`
+                }))
+            )
+        );
     }
 
     /** Hekim opsiyonel: liste yüklenemezse geliş hekimsiz kaydedilebilir. */

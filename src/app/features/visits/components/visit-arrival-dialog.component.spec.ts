@@ -47,8 +47,10 @@ describe('VisitArrivalDialogComponent', () => {
     let cmp: VisitArrivalDialogComponent;
     let visits: jasmine.SpyObj<VisitsService>;
     let arrived: VisitCreateResultVm[];
+    let getPets: jasmine.Spy;
 
     beforeEach(async () => {
+        getPets = jasmine.createSpy('getPets').and.returnValue(of({ items: [{ id: 'p1', clientId: 'cl1', name: 'Pamuk', speciesName: 'Kedi' }] }));
         visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['createVisit', 'getVeterinarians']);
         visits.getVeterinarians.and.returnValue(of([{ userId: 'u1', name: 'Dr. Ayşe' }]));
 
@@ -57,11 +59,8 @@ describe('VisitArrivalDialogComponent', () => {
             providers: [
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1' } },
-                { provide: ClientsService, useValue: { getClients: () => of({ items: [{ id: 'cl1', fullName: 'Ali Veli', phone: '5551112233' }] }) } },
-                {
-                    provide: PetsService,
-                    useValue: { getPets: () => of({ items: [{ id: 'p1', clientId: 'cl1', name: 'Pamuk', speciesName: 'Kedi' }] }) }
-                }
+                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }) } },
+                { provide: PetsService, useValue: { getPets } }
             ]
         }).compileComponents();
 
@@ -132,25 +131,49 @@ describe('VisitArrivalDialogComponent', () => {
         });
     });
 
-    describe('randevusuz hızlı geliş', () => {
+    describe('randevusuz hızlı geliş (sunucu tarafı arama)', () => {
+        const pick = () => cmp.form.controls.pet.setValue({ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli' });
+
         beforeEach(() => {
             fixture.componentRef.setInput('appointment', null);
             cmp.visible.set(true);
             cmp.onDialogShow();
         });
 
-        it('müşteri ve hayvan seçilmeden gönderilmez', () => {
+        it('hasta seçilmeden gönderilmez', () => {
             cmp.onSubmit();
             expect(visits.createVisit).not.toHaveBeenCalled();
-            expect(cmp.form.controls.clientId.touched).toBeTrue();
+            expect(cmp.form.controls.pet.touched).toBeTrue();
         });
 
-        it('müşteri → hayvan seçilince petId ve aktif klinikle (hekimsiz) gönderilir', () => {
+        it('arama terimi sunucuya search olarak gider; sonuçlar sahip adıyla etiketlenir', () => {
+            cmp.onPetSearch({ query: ' 985 1210 ', originalEvent: new Event('x') });
+
+            expect(getPets).toHaveBeenCalledOnceWith({ page: 1, pageSize: 10, search: '985 1210' });
+            expect(cmp.petSuggestions()).toEqual([{ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli' }]);
+        });
+
+        it('boş terim istek üretmez', () => {
+            cmp.onPetSearch({ query: '   ', originalEvent: new Event('x') });
+            expect(getPets).not.toHaveBeenCalled();
+        });
+
+        it('arama hatasında mesaj gösterilir ve liste boşalır', () => {
+            getPets.and.returnValue(throwError(() => new Error('Sunucuya ulaşılamıyor.')));
+            cmp.onPetSearch({ query: 'pam', originalEvent: new Event('x') });
+
+            expect(cmp.loadError()).toBe('Sunucuya ulaşılamıyor.');
+            expect(cmp.petSuggestions()).toEqual([]);
+        });
+
+        it('yalnızca yazılmış metin (listeden seçilmemiş) geçersizdir', () => {
+            cmp.form.controls.pet.setValue('pamuk');
+            expect(cmp.form.controls.pet.invalid).toBeTrue();
+        });
+
+        it('seçilen hasta petId ve aktif klinikle (hekimsiz) gönderilir', () => {
             visits.createVisit.and.returnValue(of(result(true)));
-            cmp.form.controls.clientId.setValue('cl1');
-            expect(cmp.form.controls.petId.enabled).toBeTrue();
-            expect(cmp.petOptions().map((o) => o.value)).toEqual(['p1']);
-            cmp.form.controls.petId.setValue('p1');
+            pick();
             cmp.onSubmit();
 
             expect(visits.createVisit).toHaveBeenCalledOnceWith({ clinicId: 'c1', petId: 'p1', responsibleVeterinarianUserId: '' });
@@ -159,8 +182,7 @@ describe('VisitArrivalDialogComponent', () => {
         it('hekim listesi yüklenemese de geliş hekimsiz kaydedilebilir', () => {
             visits.getVeterinarians.and.returnValue(throwError(() => new Error('Hekim listesi yüklenemedi.')));
             cmp.onDialogShow();
-            cmp.form.controls.clientId.setValue('cl1');
-            cmp.form.controls.petId.setValue('p1');
+            pick();
 
             expect(cmp.loadError()).toBe('Hekim listesi yüklenemedi.');
             expect(cmp.form.valid).toBeTrue();
