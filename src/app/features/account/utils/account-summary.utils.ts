@@ -4,6 +4,10 @@ export const ACCOUNT_NOT_SELECTED_LABEL = 'Seçilmedi';
 export const ACCOUNT_ROLES_EMPTY_LABEL = 'Rol bilgisi bulunamadı';
 export const ACCOUNT_SUMMARY_LOAD_ERROR = 'Hesap bilgileri alınamadı.';
 
+/** Sözleşme: görünen ad en çok 120 karakter. */
+export const ACCOUNT_DISPLAY_NAME_MAX_LENGTH = 120;
+export const ACCOUNT_DISPLAY_NAME_SAVE_ERROR = 'Görünen ad kaydedilemedi.';
+
 export function resolveAccountDisplayName(summary: Pick<AccountSummary, 'displayName' | 'email'>): string {
     const displayName = summary.displayName?.trim();
     return displayName || summary.email;

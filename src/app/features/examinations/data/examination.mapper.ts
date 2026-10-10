@@ -485,7 +485,7 @@ export function isPartialVitalClear(form: VitalValues, current: VitalValues): bo
 
 function contentFields(
     req: CreateExaminationRequest
-): Omit<ExaminationUpsertRequestDto, 'appointmentId' | 'clinicId' | 'petId'> {
+): Omit<ExaminationUpsertRequestDto, 'appointmentId' | 'clinicId' | 'petId' | 'visitId'> {
     return {
         examinedAtUtc: req.examinedAtUtc,
         visitReason: req.visitReason.trim(),
@@ -508,6 +508,7 @@ export function mapCreateExaminationToApiBody(req: CreateExaminationRequest): Ex
         appointmentId: trimmedOrNull(req.appointmentId),
         clinicId: trimmedOrNull(req.clinicId),
         petId: trimmedOrNull(req.petId),
+        visitId: trimmedOrNull(req.visitId),
         ...contentFields(req)
     };
 }
@@ -589,16 +590,22 @@ function vitalsFromForm(
 /** Form → create isteği. Geçersiz tarih/saat için `null`. */
 export function mapExaminationFormToCreateRequest(
     f: ExaminationWorkspaceFormValue,
-    ctx: { clinicId: string; petId: string; appointmentId?: string | null }
+    ctx: { clinicId: string; petId: string; appointmentId?: string | null; visitId?: string | null }
 ): CreateExaminationRequest | null {
     const examinedAtUtc = fromIstanbulDateAndTimeToUtcIso(f.examinationDate, f.examinationTime);
     if (!examinedAtUtc) {
         return null;
     }
+    const visitId = trimmedOrNull(ctx.visitId);
     return {
-        appointmentId: trimmedOrNull(ctx.appointmentId) ?? undefined,
-        clinicId: ctx.clinicId.trim(),
-        petId: trimmedOrNull(ctx.petId) ?? undefined,
+        // Visit bağlamında klinik, hayvan ve randevu sunucuda Visit'ten türetilir; çakışabilecek değer iletilmez.
+        ...(visitId
+            ? { visitId }
+            : {
+                  appointmentId: trimmedOrNull(ctx.appointmentId) ?? undefined,
+                  clinicId: ctx.clinicId.trim(),
+                  petId: trimmedOrNull(ctx.petId) ?? undefined
+              }),
         examinedAtUtc,
         visitReason: f.visitReason,
         anamnesis: f.anamnesis,

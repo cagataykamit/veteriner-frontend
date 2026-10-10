@@ -49,6 +49,11 @@ export const APPOINTMENTS_CANCEL_CLAIM = 'Appointments.Cancel' as const;
 export const APPOINTMENTS_COMPLETE_CLAIM = 'Appointments.Complete' as const;
 export const APPOINTMENTS_RESCHEDULE_CLAIM = 'Appointments.Reschedule' as const;
 
+export const VISITS_READ_CLAIM = 'Visits.Read' as const;
+export const VISITS_CREATE_CLAIM = 'Visits.Create' as const;
+export const VISITS_UPDATE_CLAIM = 'Visits.Update' as const;
+export const VISITS_CORRECT_CLAIM = 'Visits.Correct' as const;
+
 export const EXAMINATIONS_READ_CLAIM = 'Examinations.Read' as const;
 export const EXAMINATIONS_CREATE_CLAIM = 'Examinations.Create' as const;
 export const EXAMINATIONS_UPDATE_CLAIM = 'Examinations.Update' as const;

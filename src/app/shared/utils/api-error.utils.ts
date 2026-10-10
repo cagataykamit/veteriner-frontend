@@ -192,6 +192,28 @@ function vaccinationPanelProblemUserMessage(err: HttpErrorResponse): string | nu
     return VACCINATION_PANEL_PROBLEM_MESSAGES[code] ?? VACCINATION_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
+/** Geliş (Visit) ve Bugün — `ProblemDetails` + `extensions.code`; `Visits.Validation` backend `detail` ile gösterilir. */
+const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Visits.NotFound': 'Geliş kaydı bulunamadı veya artık kuyrukta değil. Listeyi yenileyin.',
+    'Visits.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
+    'Visits.ClinicScopeRequired': 'Bugün listesi için önce bir klinik seçmelisiniz.',
+    'Visits.AppointmentPetClinicMismatch': 'Randevu, seçilen hayvan veya klinikle uyuşmuyor.',
+    'Visits.AppointmentCancelled': 'İptal edilmiş randevu için geliş kaydı açılamaz.',
+    'Visits.AppointmentNotScheduled': 'Bu randevu zaten tamamlanmış; geliş kaydı açılamaz.',
+    'Visits.InvalidStatusTransition': 'Bu geçiş yapılamaz; durum başka biri tarafından değişmiş olabilir. Listeyi yenileyin.',
+    'Visits.HasExaminations': 'Muayenesi olan geliş yanlış geliş olarak işaretlenemez.',
+    'Visits.TodayLimitExceeded': 'Bugün listesi sınırı aşıldı; tüm kayıtlar gösterilemiyor.',
+    'Visits.DuplicateActiveVisit': 'Bu hayvanın zaten açık bir geliş kaydı var; durum geri alınamaz.',
+    'Visits.NotOpen': 'Bu geliş tamamlanmış veya yanlış geliş olarak işaretlenmiş; muayene açılamaz.',
+    'Visits.ConcurrencyConflict': 'Kayıt aynı anda başka biri tarafından güncellendi. Listeyi yenileyip tekrar deneyin.',
+    'Examinations.VisitMismatch': 'Muayene, geliş kaydındaki hayvan veya randevuyla uyuşmuyor.'
+};
+
+function visitPanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    return code ? (VISIT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
+}
+
 function lookupSubscriptionWriteMessageByCode(code: string): string | null {
     const t = code.trim();
     if (!t) {
@@ -272,6 +294,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const clinicPanelMsg = clinicPanelProblemUserMessage(err);
     if (clinicPanelMsg) {
         return clinicPanelMsg;
+    }
+    const visitPanelMsg = visitPanelProblemUserMessage(err);
+    if (visitPanelMsg) {
+        return visitPanelMsg;
     }
 
     const body = err.error as ProblemDetails | string | null | undefined;

@@ -149,6 +149,8 @@ export interface ExaminationDetailDto {
  */
 export interface ExaminationUpsertRequestDto {
     appointmentId?: string | null;
+    /** Geliş (Visit) bağlantısı; verilirse klinik/hayvan/randevu sunucuda Visit'ten türetilir. */
+    visitId?: string | null;
     clinicId?: string | null;
     petId?: string | null;
     examinedAtUtc: string;

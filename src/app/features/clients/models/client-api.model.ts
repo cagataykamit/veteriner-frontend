@@ -97,3 +97,9 @@ export interface ClientPaymentSummaryDto {
     lastPaymentAtUtc?: string | null;
     recentPayments?: ClientPaymentSummaryRecentPaymentDto[] | null;
 }
+
+/** POST /clients/quick-register yanıtı (201). */
+export interface QuickRegisterResultDto {
+    clientId?: string | null;
+    petId?: string | null;
+}

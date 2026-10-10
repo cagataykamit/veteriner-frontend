@@ -55,6 +55,23 @@ export function parseAppointmentExaminationRouteContext(params: ParamMap): Appoi
     return { clientId, petId, appointmentId };
 }
 
+/** Bugün'deki geliş satırından muayene oluşturma. */
+export interface VisitExaminationRouteContext {
+    visitId: string;
+    clientId: string;
+    petId: string;
+}
+
+export function parseVisitExaminationRouteContext(params: ParamMap): VisitExaminationRouteContext | null {
+    const visitId = params.get('visitId')?.trim() ?? '';
+    const clientId = params.get('clientId')?.trim() ?? '';
+    const petId = params.get('petId')?.trim() ?? '';
+    if (!visitId || !clientId || !petId) {
+        return null;
+    }
+    return { visitId, clientId, petId };
+}
+
 /** Aşı create: zorunlu `clientId` + `petId`; `examinationId` opsiyonel (API gövdesine iletilebilir). */
 export interface VaccinationCreateRouteContext {
     clientId: string;

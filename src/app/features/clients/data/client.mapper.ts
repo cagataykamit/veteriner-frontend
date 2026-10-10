@@ -14,10 +14,11 @@ import type {
     ClientPaymentSummaryDto,
     ClientRecentAppointmentSummaryItemDto,
     ClientRecentExaminationSummaryItemDto,
-    ClientRecentSummaryDto
+    ClientRecentSummaryDto,
+    QuickRegisterResultDto
 } from '@/app/features/clients/models/client-api.model';
 import type { ClientUpsertFormValue } from '@/app/features/clients/forms/client-upsert-form.model';
-import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
+import type { CreateClientRequest, QuickRegisterRequest, QuickRegisterResult } from '@/app/features/clients/models/client-create.model';
 import type {
     ClientDetailVm,
     ClientListItemVm,
@@ -280,3 +281,39 @@ export function clientsQueryToHttpParams(query: ClientsListQuery): HttpParams {
     return p;
 }
 
+
+/** Müşteri + hayvan form değerleri → hızlı kayıt isteği (mevcut upsert formlarının alanları; e-posta/adres kullanılmaz). */
+export function mapQuickRegisterFormsToRequest(
+    client: Pick<ClientUpsertFormValue, 'fullName' | 'phone'>,
+    pet: { name: string; speciesId: string; microchipNumber: string }
+): QuickRegisterRequest {
+    return {
+        fullName: client.fullName.trim(),
+        phone: client.phone.trim(),
+        petName: pet.name.trim(),
+        speciesId: pet.speciesId.trim(),
+        microchipNumber: pet.microchipNumber.trim() || undefined
+    };
+}
+
+/** Boş mikroçip gövdeye girmez. */
+export function mapQuickRegisterToApiBody(req: QuickRegisterRequest): QuickRegisterRequest {
+    const body: QuickRegisterRequest = {
+        fullName: req.fullName.trim(),
+        phone: req.phone.trim(),
+        petName: req.petName.trim(),
+        speciesId: req.speciesId.trim()
+    };
+    const microchip = req.microchipNumber?.trim();
+    if (microchip) {
+        body.microchipNumber = microchip;
+    }
+    return body;
+}
+
+/** Her iki kimlik de zorunlu; eksikse `null` (kayıt oluşmuş olabilir, çağıran açık hata verir). */
+export function mapQuickRegisterResultDtoToVm(dto: QuickRegisterResultDto | null | undefined): QuickRegisterResult | null {
+    const clientId = dto?.clientId?.trim();
+    const petId = dto?.petId?.trim();
+    return clientId && petId ? { clientId, petId } : null;
+}

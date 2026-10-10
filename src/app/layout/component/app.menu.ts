@@ -26,7 +26,8 @@ import {
     SUBSCRIPTIONS_READ_CLAIM,
     TENANT_MANAGEMENT_CLAIM,
     TREATMENTS_READ_CLAIM,
-    VACCINATIONS_READ_CLAIM
+    VACCINATIONS_READ_CLAIM,
+    VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
@@ -58,6 +59,7 @@ export class AppMenu {
         const canAccessSubscriptionPage =
             this.auth.hasOperationClaim(SUBSCRIPTIONS_READ_CLAIM) ||
             this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM);
+        const canReadVisits = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
         const canReadClients = this.auth.hasOperationClaim(CLIENTS_READ_CLAIM);
         const canReadPets = this.auth.hasOperationClaim(PETS_READ_CLAIM);
         const canReadAppointments = this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM);
@@ -131,7 +133,10 @@ export class AppMenu {
         this.model = [
             {
                 label: 'Panel',
-                items: [{ label: 'Özet', icon: 'pi pi-fw pi-home', routerLink: ['/panel/dashboard'] }]
+                items: [
+                    { label: 'Özet', icon: 'pi pi-fw pi-home', routerLink: ['/panel/dashboard'] },
+                    ...(canReadVisits ? [{ label: 'Bugün', icon: 'pi pi-fw pi-calendar-clock', routerLink: ['/panel/today'] }] : [])
+                ]
             },
             ...(patientManagementItems.length > 0
                 ? [{ label: 'Hasta yönetimi', items: patientManagementItems }]

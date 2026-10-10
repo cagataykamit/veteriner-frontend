@@ -30,6 +30,11 @@ export interface CreateExaminationRequest extends ExaminationContentInput {
     appointmentId?: string;
     clinicId?: string;
     petId?: string;
+    /**
+     * Bugün'den muayene: yalnızca `visitId` yeterlidir (hasta tekrar seçilmez); klinik, hayvan ve randevu
+     * Visit'ten gelir, bu durumda `appointmentId`/`clinicId`/`petId` gönderilmez.
+     */
+    visitId?: string;
 }
 
 export interface UpdateExaminationRequest extends ExaminationContentInput {
