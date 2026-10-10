@@ -267,7 +267,7 @@ export class VisitArrivalDialogComponent {
             error: (e: unknown) => {
                 this.submitting.set(false);
                 const message = panelHttpFailureMessage(e, 'Geliş kaydı oluşturulamadı.');
-                this.submitError.set(request.petId && request.petId === this.registeredPetId ? `Hasta kaydedildi, ancak geliş kaydı oluşturulamadı: ${message}` : message);
+                this.submitError.set(request.petId && request.petId === this.registeredPetId ? `Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: ${message} Yeniden denemek için Kaydet'e basın.` : message);
             }
         });
     }

@@ -7,10 +7,7 @@ import { SpeciesService } from '@/app/features/species/services/species.service'
 import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
 import { VisitQuickRegistrationComponent } from './visit-quick-registration.component';
 
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-const validationError = (field: string, message: string) =>
-    new HttpErrorResponse({ status: 400, error: { status: 400, errors: { [field]: [message] } } });
+const httpError = (status: number, body: unknown) => new HttpErrorResponse({ status, error: body });
 
 describe('VisitQuickRegistrationComponent', () => {
     let fixture: ComponentFixture<VisitQuickRegistrationComponent>;
@@ -18,6 +15,7 @@ describe('VisitQuickRegistrationComponent', () => {
     let clients: jasmine.SpyObj<ClientsService>;
     let pets: jasmine.SpyObj<PetsService>;
     let registered: PetSuggestion[];
+    let cancelled: number;
 
     const create = (inputs: { searchTerm?: string; existingOwner?: { id: string; name: string } | null } = {}) => {
         fixture = TestBed.createComponent(VisitQuickRegistrationComponent);
@@ -25,7 +23,9 @@ describe('VisitQuickRegistrationComponent', () => {
         fixture.componentRef.setInput('searchTerm', inputs.searchTerm ?? '');
         fixture.componentRef.setInput('existingOwner', inputs.existingOwner ?? null);
         registered = [];
+        cancelled = 0;
         cmp.registered.subscribe((p) => registered.push(p));
+        cmp.cancelled.subscribe(() => cancelled++);
         fixture.detectChanges();
     };
 
@@ -35,10 +35,9 @@ describe('VisitQuickRegistrationComponent', () => {
     };
 
     beforeEach(() => {
-        clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['createClient', 'getClients']);
+        clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['quickRegister']);
         pets = jasmine.createSpyObj<PetsService>('PetsService', ['createPet']);
-        clients.getClients.and.returnValue(of({ items: [], page: 1, pageSize: 5, totalItems: 0, totalPages: 0 }));
-        clients.createClient.and.returnValue(of({ id: 'c-new' }));
+        clients.quickRegister.and.returnValue(of({ clientId: 'c-new', petId: 'p-new' }));
         pets.createPet.and.returnValue(of({ id: 'p-new' }));
         TestBed.configureTestingModule({
             imports: [VisitQuickRegistrationComponent],
@@ -50,11 +49,10 @@ describe('VisitQuickRegistrationComponent', () => {
         });
     });
 
-    it('aranan metin telefon biçimindeyse telefona, aksi halde sahip adına yazılır', () => {
+    it('aranan metin telefon biçimindeyse telefona yazılır', () => {
         create({ searchTerm: '0532 123 45 67' });
         expect(cmp.clientForm.controls.phone.value).toBe('0532 123 45 67');
         expect(cmp.clientForm.controls.fullName.value).toBe('');
-        TestBed.resetTestingModule();
     });
 
     it('aranan ad metni sahip adına yazılır', () => {
@@ -86,120 +84,96 @@ describe('VisitQuickRegistrationComponent', () => {
         expect(cmp.canSubmit()).toBeTrue();
     });
 
-    it('müşteri sonra hayvan sırayla oluşturulur; hayvan yeni müşteri kimliğiyle gider ve sahip adlı etiket yayılır', () => {
+    it('yeni müşteri: tek quick-register çağrısı; müşteri ve hayvan ayrı ayrı oluşturulmaz; sahip adlı etiket yayılır', () => {
         create();
         fillValid();
         cmp.petForm.patchValue({ microchipNumber: '985121001234567' });
         cmp.submit();
 
-        expect(clients.createClient).toHaveBeenCalledOnceWith(jasmine.objectContaining({ fullName: 'Ayşe Yılmaz', phone: '0532 123 45 67' }));
-        const petPayload = pets.createPet.calls.mostRecent().args[0];
-        expect(petPayload).toEqual(jasmine.objectContaining({ clientId: 'c-new', name: 'Pamuk', speciesId: 's1', microchipNumber: '985121001234567' }));
+        expect(clients.quickRegister).toHaveBeenCalledOnceWith({
+            fullName: 'Ayşe Yılmaz',
+            phone: '0532 123 45 67',
+            petName: 'Pamuk',
+            speciesId: 's1',
+            microchipNumber: '985121001234567'
+        });
+        expect(pets.createPet).not.toHaveBeenCalled();
         expect(registered).toEqual([{ id: 'p-new', label: 'Pamuk — Kedi · Sahip: Ayşe Yılmaz', clientId: 'c-new', clientName: 'Ayşe Yılmaz' }]);
     });
 
-    it('çift tıklama: yanıt gelmeden ikinci gönderim ikinci müşteri oluşturmaz', () => {
-        const pending = new Subject<{ id: string }>();
-        clients.createClient.and.returnValue(pending);
+    it('çift tıklama: yanıt gelmeden ikinci gönderim ikinci istek üretmez', () => {
+        clients.quickRegister.and.returnValue(new Subject());
         create();
         fillValid();
         cmp.submit();
         cmp.submit();
-        expect(clients.createClient).toHaveBeenCalledTimes(1);
+        expect(clients.quickRegister).toHaveBeenCalledTimes(1);
+        expect(cmp.submitting()).toBeTrue();
     });
 
-    it('yarım kayıt: müşteri oluşup hayvan hata verirse mesaj adımı söyler; yeniden denemede ikinci müşteri oluşmaz', () => {
-        pets.createPet.and.returnValue(throwError(() => validationError('name', 'Hayvan adı geçersiz.')));
+    it('409 Clients.DuplicateClient: mesaj aramadan seçmeye yönlendirir, düğme "Aramaya dön" olur', () => {
+        clients.quickRegister.and.returnValue(
+            throwError(() => httpError(409, { status: 409, extensions: { code: 'Clients.DuplicateClient' } }))
+        );
         create();
         fillValid();
         cmp.submit();
 
-        expect(clients.createClient).toHaveBeenCalledTimes(1);
-        expect(cmp.createdClientId()).toBe('c-new');
-        expect(cmp.stepError()).toContain('Müşteri kaydedildi');
-        expect(cmp.stepError()).toContain('hayvan kaydedilemedi');
-        expect(registered.length).toBe(0);
+        expect(cmp.duplicateClient()).toBeTrue();
+        expect(cmp.stepError()).toBe('Bu ad ve telefonla kayıtlı müşteri var. Aramada müşteriyi bulup seçin.');
         expect(cmp.submitting()).toBeFalse();
-
-        pets.createPet.and.returnValue(of({ id: 'p-new' }));
-        cmp.submit();
-
-        expect(clients.createClient).toHaveBeenCalledTimes(1);
-        expect(pets.createPet).toHaveBeenCalledTimes(2);
-        expect(pets.createPet.calls.mostRecent().args[0].clientId).toBe('c-new');
-        expect(registered[0].clientId).toBe('c-new');
+        expect(registered.length).toBe(0);
     });
 
-    it('müşteri adımı hata verirse mesaj adımı söyler ve hayvan oluşturulmaz', () => {
-        clients.createClient.and.returnValue(throwError(() => validationError('phone', 'Telefon geçersiz.')));
+    it('400 alan hatası: sunucu mesajı gösterilir, form değerleri korunur, tekrar denenebilir', () => {
+        clients.quickRegister.and.returnValue(throwError(() => httpError(400, { status: 400, errors: { phone: ['Telefon geçersiz.'] } })));
         create();
         fillValid();
         cmp.submit();
 
-        expect(cmp.stepError()).toContain('Müşteri kaydedilemedi');
-        expect(pets.createPet).not.toHaveBeenCalled();
-        expect(cmp.createdClientId()).toBeNull();
+        expect(cmp.stepError()).toBeTruthy();
+        expect(cmp.duplicateClient()).toBeFalse();
+        expect(cmp.clientForm.controls.fullName.value).toBe('Ayşe Yılmaz');
+        expect(cmp.submitting()).toBeFalse();
     });
 
-    it('kayıtlı sahibe hayvan ekleme: müşteri oluşturulmaz, sahip kimliği kullanılır', () => {
+    it('403 ve 404 hatası mesaj gösterir, kayıt yayılmaz', () => {
+        clients.quickRegister.and.returnValue(throwError(() => httpError(403, null)));
+        create();
+        fillValid();
+        cmp.submit();
+        expect(cmp.stepError()).toBe('Bu işlem için yetkiniz yok.');
+
+        clients.quickRegister.and.returnValue(throwError(() => httpError(404, { status: 404, extensions: { code: 'Pets.SpeciesNotFound' }, detail: 'Tür bulunamadı.' })));
+        cmp.submit();
+        expect(cmp.stepError()).toContain('Tür bulunamadı');
+        expect(registered.length).toBe(0);
+    });
+
+    it('"Aramaya dön" iptal olayını yayar', () => {
+        create();
+        cmp.cancelled.emit();
+        expect(cancelled).toBe(1);
+    });
+
+    it('kayıtlı sahibe hayvan ekleme: quick-register çağrılmaz, POST /pets sahip kimliğiyle gider', () => {
         create({ existingOwner: { id: 'c-old', name: 'Veli Kaya' } });
         cmp.petForm.patchValue({ name: 'Pamuk', speciesId: 's1' });
         expect(cmp.canSubmit()).toBeTrue();
         cmp.submit();
 
-        expect(clients.createClient).not.toHaveBeenCalled();
-        expect(pets.createPet.calls.mostRecent().args[0].clientId).toBe('c-old');
-        expect(registered[0].clientName).toBe('Veli Kaya');
+        expect(clients.quickRegister).not.toHaveBeenCalled();
+        expect(pets.createPet.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ clientId: 'c-old', name: 'Pamuk', speciesId: 's1' }));
+        expect(registered[0]).toEqual({ id: 'p-new', label: 'Pamuk — Kedi · Sahip: Veli Kaya', clientId: 'c-old', clientName: 'Veli Kaya' });
     });
 
-    describe('çift kayıt uyarısı', () => {
-        const existing = { id: 'c-old', fullName: 'Veli Kaya', phone: '+90 532 123 45 67', email: '', createdAtUtc: null };
+    it('kayıtlı sahibe hayvan eklerken hata mesajı gösterilir', () => {
+        pets.createPet.and.returnValue(throwError(() => httpError(400, { status: 400, errors: { name: ['Hayvan adı geçersiz.'] } })));
+        create({ existingOwner: { id: 'c-old', name: 'Veli Kaya' } });
+        cmp.petForm.patchValue({ name: 'Pamuk', speciesId: 's1' });
+        cmp.submit();
 
-        it('aynı telefonlu müşteri varsa uyarır; onay verilmeden gönderilemez, onayla gönderilir', async () => {
-            clients.getClients.and.returnValue(of({ items: [existing], page: 1, pageSize: 5, totalItems: 1, totalPages: 1 }));
-            create();
-            fillValid();
-            await wait(500);
-
-            expect(clients.getClients).toHaveBeenCalledWith(jasmine.objectContaining({ search: '0532 123 45 67' }));
-            expect(cmp.duplicates().map((d) => d.fullName)).toEqual(['Veli Kaya']);
-            expect(cmp.canSubmit()).toBeFalse();
-
-            cmp.confirmDuplicate.set(true);
-            expect(cmp.canSubmit()).toBeTrue();
-        });
-
-        it('aynı olmayan numaralı (alt dizi eşleşmesi) sonuçlar uyarı üretmez', async () => {
-            clients.getClients.and.returnValue(of({ items: [{ ...existing, phone: '0532 123 45 68' }], page: 1, pageSize: 5, totalItems: 1, totalPages: 1 }));
-            create();
-            fillValid();
-            await wait(500);
-
-            expect(cmp.duplicates()).toEqual([]);
-            expect(cmp.canSubmit()).toBeTrue();
-        });
-
-        it('"Onu seç": mevcut müşteri sahip olur, yeni müşteri oluşturulmaz', async () => {
-            clients.getClients.and.returnValue(of({ items: [existing], page: 1, pageSize: 5, totalItems: 1, totalPages: 1 }));
-            create();
-            fillValid();
-            await wait(500);
-            cmp.useExisting(cmp.duplicates()[0]);
-            cmp.submit();
-
-            expect(clients.createClient).not.toHaveBeenCalled();
-            expect(pets.createPet.calls.mostRecent().args[0].clientId).toBe('c-old');
-            expect(cmp.duplicates()).toEqual([]);
-        });
-
-        it('arama hatası kaydı engellemez', async () => {
-            clients.getClients.and.returnValue(throwError(() => new Error('x')));
-            create();
-            fillValid();
-            await wait(500);
-
-            expect(cmp.duplicates()).toEqual([]);
-            expect(cmp.canSubmit()).toBeTrue();
-        });
+        expect(cmp.stepError()).toBeTruthy();
+        expect(registered.length).toBe(0);
     });
 });

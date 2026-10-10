@@ -1,4 +1,4 @@
-import { samePhone, splitSearchTermForRegistration } from '@/app/features/visits/utils/visit-registration.utils';
+import { splitSearchTermForRegistration } from '@/app/features/visits/utils/visit-registration.utils';
 
 describe('splitSearchTermForRegistration', () => {
     it('telefon biçimindeki metin telefona gider', () => {
@@ -14,18 +14,5 @@ describe('splitSearchTermForRegistration', () => {
     it('boş veya yalnızca noktalama boşsa ad/telefon boş kalır', () => {
         expect(splitSearchTermForRegistration('   ')).toEqual({ fullName: '', phone: '' });
         expect(splitSearchTermForRegistration('...')).toEqual({ fullName: '...', phone: '' });
-    });
-});
-
-describe('samePhone', () => {
-    it('farklı biçimler aynı numarayı eşleştirir', () => {
-        expect(samePhone('0532 123 45 67', '+90 532 123 45 67')).toBeTrue();
-        expect(samePhone('905321234567', '(0532) 123-45-67')).toBeTrue();
-    });
-
-    it('farklı numara, kısa numara ve boş değer eşleşmez', () => {
-        expect(samePhone('0532 123 45 67', '0532 123 45 68')).toBeFalse();
-        expect(samePhone('532 123', '532 123')).toBeFalse();
-        expect(samePhone(null, undefined)).toBeFalse();
     });
 });

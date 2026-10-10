@@ -37,7 +37,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
             providers: [
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', hasOperationClaim: (c: string) => claims.includes(c) } },
-                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }), getClients: () => of({ items: [] }), createClient: () => of({ id: 'c-new' }) } },
+                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }), getClients: () => of({ items: [] }), quickRegister: () => of({ clientId: 'c-new', petId: 'p-new' }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }), createPet: () => of({ id: 'p-new' }) } },
                 { provide: SpeciesService, useValue: { getSpeciesList: () => of([{ id: 's1', name: 'Kedi' }]) } }
             ]
@@ -97,7 +97,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
         visits.createVisit.and.returnValue(throwError(() => new Error('Sunucu hatası.')));
         cmp.onRegistered(registeredPet);
 
-        expect(cmp.submitError()).toBe('Hasta kaydedildi, ancak geliş kaydı oluşturulamadı: Sunucu hatası.');
+        expect(cmp.submitError()).toBe("Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: Sunucu hatası. Yeniden denemek için Kaydet'e basın.");
         expect(cmp.form.controls.pet.value).toEqual(registeredPet);
 
         visits.createVisit.and.returnValue(of(visitResult));
