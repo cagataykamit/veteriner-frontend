@@ -58,7 +58,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         <label for="chargeClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="chargeClient" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-red-500">Listeden bir müşteri seçin.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
