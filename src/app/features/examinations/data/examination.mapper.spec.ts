@@ -173,6 +173,22 @@ describe('examination mapper — POST gövdesi', () => {
         const body = mapCreateExaminationToApiBody(req);
         expect(body.appointmentId).toBe('appt-9');
         expect('rowVersion' in body).toBeFalse();
+        expect(body.visitId).toBeNull();
+    });
+
+    it('Visit bağlamında yalnızca visitId gider; klinik, hayvan ve randevu sunucuda Visit ten türetilir', () => {
+        const req = mapExaminationFormToCreateRequest(baseForm(), {
+            clinicId: 'clinic-1',
+            petId: 'pet-1',
+            appointmentId: 'appt-9',
+            visitId: ' visit-1 '
+        })!;
+        const body = mapCreateExaminationToApiBody(req);
+        expect(body.visitId).toBe('visit-1');
+        expect(body.clinicId).toBeNull();
+        expect(body.petId).toBeNull();
+        expect(body.appointmentId).toBeNull();
+        expect(body.visitReason).toBe('İştahsızlık');
     });
 });
 

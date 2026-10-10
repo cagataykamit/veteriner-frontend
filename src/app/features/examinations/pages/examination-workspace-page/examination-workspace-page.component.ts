@@ -45,7 +45,12 @@ import {
     canShowQuickPetCreateButton
 } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
-import { parseAppointmentExaminationRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
+import { VisitsService } from '@/app/features/visits/services/visits.service';
+import {
+    parseAppointmentExaminationRouteContext,
+    parseVisitExaminationRouteContext,
+    type VisitExaminationRouteContext
+} from '@/app/shared/panel/examination-create-route-context.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -149,6 +154,9 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                         [fallbackPetName]="current?.petName ?? null"
                         [fallbackClientName]="current?.clientName ?? null"
                     />
+                } @else if (visitContextId()) {
+                    <app-examination-patient-header [petId]="selectedPetId()" [clientId]="selectedClientId()" />
+                    <p class="text-sm text-muted-color mt-0 mb-4">Bu muayene Bugün listesindeki geliş kaydına bağlanır; hasta tekrar seçilmez.</p>
                 } @else {
                     <div class="card mb-4">
                         <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
@@ -434,6 +442,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     private readonly appointmentsService = inject(AppointmentsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
+    private readonly visitsService = inject(VisitsService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
@@ -465,6 +474,8 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     readonly contextFromAppointment = signal(false);
     readonly applyingRouteContext = signal(false);
     readonly appointmentContextId = signal<string | null>(null);
+    /** Bugün'den açıldıysa doğrulanmış geliş kimliği; doluyken hasta seçimi gösterilmez. */
+    readonly visitContextId = signal<string | null>(null);
     readonly cancelledAppointmentBlocked = signal(false);
     readonly blockedAppointmentId = signal<string | null>(null);
 
@@ -647,7 +658,8 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         const payload = mapExaminationFormToCreateRequest(v, {
             clinicId,
             petId: this.selectionForm.getRawValue().petId,
-            appointmentId: this.appointmentContextId()
+            appointmentId: this.appointmentContextId(),
+            visitId: this.visitContextId()
         });
         if (!payload) {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
@@ -714,7 +726,12 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     // ---- Oluşturma: müşteri/hayvan seçimi ve randevu bağlamı ----
 
     private initCreateMode(): void {
-        this.loadClients();
+        const visitCtx = parseVisitExaminationRouteContext(this.route.snapshot.queryParamMap);
+        if (visitCtx) {
+            this.applyVisitRouteContext(visitCtx);
+        } else {
+            this.loadClients();
+        }
         this.selectionForm.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             if (this.contextFromAppointment()) {
                 return;
@@ -869,6 +886,41 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                 this.applyingRouteContext.set(false);
             }
         });
+    }
+
+    /**
+     * Bugün'den gelen geliş bağlamı: Visit sunucudan doğrulanır (açık ve adresteki hayvana ait olmalı); hasta tekrar seçilmez.
+     * Doğrulanamazsa hata gösterilir ve serbest oluşturma formu açılır (randevu bağlamıyla aynı davranış).
+     */
+    private applyVisitRouteContext(ctx: VisitExaminationRouteContext): void {
+        this.applyingRouteContext.set(true);
+        this.visitsService.getVisitById(ctx.visitId).subscribe({
+            next: (visit) => {
+                if (visit.isVoided || visit.careStatus === 'Completed') {
+                    this.rejectVisitContext('Bu geliş kaydı tamamlanmış veya yanlış geliş olarak işaretlenmiş; muayene açılamaz.');
+                    return;
+                }
+                if (visit.petId !== ctx.petId) {
+                    this.rejectVisitContext('Geliş bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
+                    return;
+                }
+                this.visitContextId.set(ctx.visitId);
+                this.selectedClientId.set(ctx.clientId);
+                this.selectedPetId.set(ctx.petId);
+                // Seçim formu kullanılmaz; devre dışı kontroller geçerliliği etkilemez.
+                this.selectionForm.controls.clientId.disable({ emitEvent: false });
+                this.selectionForm.controls.petId.disable({ emitEvent: false });
+                this.applyingRouteContext.set(false);
+            },
+            error: (e: unknown) => this.rejectVisitContext(panelHttpFailureMessage(e, 'Geliş kaydı yüklenemedi.'))
+        });
+    }
+
+    private rejectVisitContext(message: string): void {
+        this.loadClients();
+        // `loadClients` hata alanını sıfırlar; mesaj ondan sonra yazılmalı.
+        this.selectionError.set(`${message} Serbest oluşturma ile devam edebilirsiniz.`);
+        this.applyingRouteContext.set(false);
     }
 
     private mergeOption(target: WritableSignal<SelectOption[]>, id: string, label: string): void {
