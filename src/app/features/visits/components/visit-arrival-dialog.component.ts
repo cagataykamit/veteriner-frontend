@@ -88,9 +88,12 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                 />
                             </div>
                         } @else {
-                            <div class="col-span-12 flex flex-wrap gap-3 -mt-2">
+                            <div class="col-span-12 flex flex-wrap items-center gap-x-3 -mt-2">
                                 @if (canRegisterNewOwner) {
+                                    <span class="text-sm text-muted-color">Hasta kayıtlı değil mi?</span>
                                     <p-button type="button" label="Yeni müşteri ve hasta ekle" icon="pi pi-user-plus" size="small" [text]="true" (onClick)="openRegistration(null)" />
+                                } @else {
+                                    <small class="text-muted-color">Hasta kayıtlı değilse kaydı resepsiyon oluşturur.</small>
                                 }
                                 @if (canAddPet && selectedOwner(); as owner) {
                                     <p-button type="button" label="Bu sahibe yeni hayvan ekle" icon="pi pi-plus" size="small" [text]="true" (onClick)="openRegistration(owner)" />
