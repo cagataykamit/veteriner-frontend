@@ -159,12 +159,13 @@ describe('TodayPageComponent', () => {
     it('Düzelt yalnızca Visits.Correct yetkisi olana görünür', async () => {
         const today: TodayVm = { date: '2026-10-10', items: [item()] };
         const without = await create(['Visits.Read', 'Visits.Update'], today);
-        expect(buttons(without)).not.toContain('Düzelt');
+        const keys = (f: ComponentFixture<TodayPageComponent>) => f.componentInstance.secondaryActionsOf(today.items[0], f.componentInstance.actionsOf(today.items[0])).map((a) => a.key);
+        expect(keys(without)).not.toContain('correct');
         expect(buttons(without)).toContain('Başlat');
         TestBed.resetTestingModule();
 
         const withCorrect = await create(['Visits.Read', 'Visits.Update', 'Visits.Correct'], today);
-        expect(buttons(withCorrect)).toContain('Düzelt');
+        expect(keys(withCorrect)).toContain('correct');
     });
 
     it('Geldi ve Randevusuz geliş Visits.Create ister; Muayene aç Examinations.Create ister', async () => {

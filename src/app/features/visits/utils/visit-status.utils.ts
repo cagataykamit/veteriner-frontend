@@ -166,3 +166,38 @@ const WAIT_ALERT_TITLE: Record<Exclude<WaitAlertLevel, 'none'>, string> = {
 export function waitAlertTitle(level: WaitAlertLevel): string | null {
     return level === 'none' ? null : WAIT_ALERT_TITLE[level];
 }
+
+export type TodaySecondaryActionKey = 'toggleUrgency' | 'markNoShow' | 'revertNoShow' | 'correct';
+
+export interface TodaySecondaryAction {
+    key: TodaySecondaryActionKey;
+    label: string;
+    icon: string;
+}
+
+export interface TodayRowPermissions {
+    canUpdateVisit: boolean;
+    canNoShow: boolean;
+    canCorrect: boolean;
+}
+
+/**
+ * Satırın ikincil eylemleri ("⋯" menüsü); birincil eylemler (Geldi, Muayene aç, Başlat, Tamamla, Geri al) satırda görünür kalır.
+ * Hangi eylemin birincil/ikincil olduğu burada ve şablonda tek yerde belirlenir.
+ */
+export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActions, perms: TodayRowPermissions): TodaySecondaryAction[] {
+    const out: TodaySecondaryAction[] = [];
+    if (perms.canUpdateVisit && actions.canToggleUrgency) {
+        out.push({ key: 'toggleUrgency', label: item.isUrgent ? 'Acili kaldır' : 'Acil işaretle', icon: 'pi pi-exclamation-circle' });
+    }
+    if (perms.canNoShow && actions.canMarkNoShow) {
+        out.push({ key: 'markNoShow', label: 'Gelmedi olarak işaretle', icon: 'pi pi-user-minus' });
+    }
+    if (perms.canNoShow && actions.canRevertNoShow) {
+        out.push({ key: 'revertNoShow', label: 'Gelmedi işaretini geri al', icon: 'pi pi-undo' });
+    }
+    if (perms.canCorrect && actions.canCorrect) {
+        out.push({ key: 'correct', label: 'Düzelt', icon: 'pi pi-pencil' });
+    }
+    return out;
+}

@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
+import { Menu, MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { AppointmentNoShowDialogComponent } from '@/app/features/appointments/components/appointment-no-show-dialog.component';
@@ -31,6 +32,10 @@ import {
     groupTodayItems,
     paymentIndicatorLabel,
     todayItemActions,
+    todaySecondaryActions,
+    type TodayItemActions,
+    type TodaySecondaryAction,
+    type TodaySecondaryActionKey,
     type WaitAlertLevel,
     waitAlertLevel,
     waitAlertTitle
@@ -65,6 +70,7 @@ type TodayScope = 'mine' | 'all';
         ButtonModule,
         FormsModule,
         SelectButtonModule,
+        MenuModule,
         TableModule,
         ToastModule,
         AppPageHeaderComponent,
@@ -168,12 +174,12 @@ type TodayScope = 'mine' | 'all';
                                     <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
                                 </td>
                                 <td>
-                                    <div>{{ item.clientName }}</div>
+                                    <div class="max-w-56 truncate" [attr.title]="item.clientName">{{ item.clientName }}</div>
                                     @if (item.clientPhone) {
                                         <div class="text-sm text-muted-color">{{ phone(item.clientPhone) }}</div>
                                     }
                                 </td>
-                                <td>
+                                <td class="max-w-40 truncate" [attr.title]="item.responsibleVeterinarianName">
                                     @if (item.responsibleVeterinarianName; as vet) {
                                         {{ vet }}
                                     } @else {
@@ -223,8 +229,8 @@ type TodayScope = 'mine' | 'all';
                                         {{ elapsed(item) ?? '—' }}
                                     </td>
                                 }
-                                <td>
-                                    <div class="flex flex-wrap gap-2 justify-end">
+                                <td class="whitespace-nowrap" style="width: 1%">
+                                    <div class="flex flex-nowrap items-center gap-2 justify-end">
                                         @let actions = actionsOf(item);
                                         @if (canCreateVisit && actions.canMarkArrived) {
                                             <p-button
@@ -270,25 +276,6 @@ type TodayScope = 'mine' | 'all';
                                                 (onClick)="transition(item, 'complete')"
                                             />
                                         }
-                                        @if (canUpdateVisit && actions.canToggleUrgency) {
-                                            <p-button
-                                                type="button"
-                                                [label]="item.isUrgent ? 'Acili kaldır' : 'Acil işaretle'"
-                                                icon="pi pi-exclamation-circle"
-                                                size="small"
-                                                severity="secondary"
-                                                [text]="true"
-                                                [loading]="isBusy(item)"
-                                                [disabled]="isBusy(item) || ro.mutationBlocked()"
-                                                (onClick)="toggleUrgency(item)"
-                                            />
-                                        }
-                                        @if (canNoShow && actions.canMarkNoShow) {
-                                            <p-button type="button" label="Gelmedi" icon="pi pi-user-minus" size="small" severity="secondary" [text]="true" [disabled]="ro.mutationBlocked()" (onClick)="openNoShow(item, 'mark')" />
-                                        }
-                                        @if (canNoShow && actions.canRevertNoShow) {
-                                            <p-button type="button" label="Gelmedi işaretini geri al" icon="pi pi-undo" size="small" severity="secondary" [text]="true" [disabled]="ro.mutationBlocked()" (onClick)="openNoShow(item, 'revert')" />
-                                        }
                                         @if (canCorrect && actions.canRestore) {
                                             <p-button
                                                 type="button"
@@ -300,16 +287,19 @@ type TodayScope = 'mine' | 'all';
                                                 (onClick)="openRestore(item)"
                                             />
                                         }
-                                        @if (canCorrect && actions.canCorrect) {
+                                        @let more = secondaryActionsOf(item, actions);
+                                        @if (more.length > 0) {
                                             <p-button
                                                 type="button"
-                                                label="Düzelt"
-                                                icon="pi pi-pencil"
+                                                icon="pi pi-ellipsis-h"
                                                 size="small"
                                                 severity="secondary"
                                                 [text]="true"
-                                                [disabled]="ro.mutationBlocked()"
-                                                (onClick)="openCorrection(item)"
+                                                [rounded]="true"
+                                                ariaLabel="Diğer işlemler"
+                                                [attr.title]="'Diğer işlemler'"
+                                                aria-haspopup="menu"
+                                                (onClick)="openRowMenu($event, item, more)"
                                             />
                                         }
                                     </div>
@@ -329,6 +319,7 @@ type TodayScope = 'mine' | 'all';
             }
         }
 
+        <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" />
         @if (canCreateVisit) {
             <app-visit-arrival-dialog [(visible)]="arrivalOpen" [appointment]="arrivalAppointment()" (arrived)="onArrived($event)" />
         }
@@ -375,6 +366,8 @@ export class TodayPageComponent implements OnInit {
     readonly correctionItem = signal<TodayItemVm | null>(null);
     readonly restoreOpen = signal(false);
     readonly restoreItem = signal<TodayItemVm | null>(null);
+    private readonly rowMenu = viewChild<Menu>('rowMenu');
+    readonly rowMenuItems = signal<MenuItem[]>([]);
     readonly noShowOpen = signal(false);
     readonly noShowItem = signal<TodayItemVm | null>(null);
     readonly noShowMode = signal<'mark' | 'revert'>('mark');
@@ -518,6 +511,7 @@ export class TodayPageComponent implements OnInit {
         this.refresh('initial');
     }
 
+secondaryActionsOf(item: TodayItemVm, actions: TodayItemActions): TodaySecondaryAction[] {        return todaySecondaryActions(item, actions, { canUpdateVisit: this.canUpdateVisit, canNoShow: this.canNoShow, canCorrect: this.canCorrect });    }    /** İkincil eylemler tek "⋯" menüsünde; PrimeNG popup menü klavye ile açılır/gezilir. */    openRowMenu(event: Event, item: TodayItemVm, actions: TodaySecondaryAction[]): void {        const handlers: Record<TodaySecondaryActionKey, () => void> = {            toggleUrgency: () => this.toggleUrgency(item),            markNoShow: () => this.openNoShow(item, 'mark'),            revertNoShow: () => this.openNoShow(item, 'revert'),            correct: () => this.openCorrection(item)        };        const blocked = this.ro.mutationBlocked() || this.isBusy(item);        this.rowMenuItems.set(actions.map((a) => ({ label: a.label, icon: a.icon, disabled: blocked, command: handlers[a.key] })));        this.rowMenu()?.toggle(event);    }
     openNoShow(item: TodayItemVm, mode: 'mark' | 'revert'): void {
         this.noShowItem.set(item);
         this.noShowMode.set(mode);

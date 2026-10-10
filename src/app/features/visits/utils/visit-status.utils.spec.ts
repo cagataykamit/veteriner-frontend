@@ -4,6 +4,7 @@ import {
     formatElapsedSince,
     groupTodayItems,
     todayItemActions,
+    todaySecondaryActions,
     waitAlertLevel,
     waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
@@ -191,5 +192,32 @@ describe('Gelmedi (NoShow) satırı', () => {
         expect(ns.canMarkNoShow).toBeFalse();
         const withVisit = todayItemActions(item({ appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z' }), now);
         expect(withVisit.canMarkNoShow || withVisit.canRevertNoShow).toBeFalse();
+    });
+});
+
+describe('todaySecondaryActions', () => {
+    const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true };
+    const secondary = (i: TodayItemVm, perms = all) => todaySecondaryActions(i, todayItemActions(i, new Date('2026-10-10T10:00:00Z')), perms).map((a) => a.key);
+
+    it('açık Visit satırı: acil ve düzelt ikincil menüde; yetkisiz eylem listelenmez', () => {
+        expect(secondary(item())).toEqual(['toggleUrgency', 'correct']);
+        expect(secondary(item(), { canUpdateVisit: false, canNoShow: true, canCorrect: false })).toEqual([]);
+    });
+
+    it('acil etiketi duruma göre', () => {
+        const label = (i: TodayItemVm) => todaySecondaryActions(i, todayItemActions(i), all)[0].label;
+        expect(label(item({ isUrgent: false }))).toBe('Acil işaretle');
+        expect(label(item({ isUrgent: true }))).toBe('Acili kaldır');
+    });
+
+    it('tamamlanmış satırda yalnızca düzelt; yanlış işaretli satırda ikincil eylem yok (Geri al birincil)', () => {
+        expect(secondary(item({ careStatus: 'Completed' }))).toEqual(['correct']);
+        expect(secondary(item({ isVoided: true }))).toEqual([]);
+    });
+
+    it('planlı ve gelmedi satırları', () => {
+        const planned = item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z' });
+        expect(secondary(planned)).toEqual(['markNoShow']);
+        expect(secondary({ ...planned, appointmentStatus: 'NoShow' })).toEqual(['revertNoShow']);
     });
 });
