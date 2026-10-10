@@ -310,11 +310,22 @@ type TodayScope = 'mine' | 'all';
                 </section>
             } @empty {
                 <div class="card">
-                    <app-empty-state
-                        [message]="view() === 'voided' ? 'Bugün yanlış işaretlenen geliş yok.' : 'Bugün için randevu veya gelen hasta yok.'"
-                        [hint]="view() === 'voided' ? '' : 'Randevusuz gelen hastayı “Randevusuz geliş” ile kaydedebilirsiniz.'"
-                        iconClass="pi pi-calendar"
-                    />
+                    @if (scope() === 'mine') {
+                        <app-empty-state
+                            [message]="view() === 'voided' ? 'Size atanmış yanlış işaretlenen geliş yok.' : 'Size atanmış hasta yok.'"
+                            hint="Tüm sırayı görmek için Tümü’ne geçin."
+                            iconClass="pi pi-user"
+                        />
+                        <div class="flex justify-center mt-3">
+                            <p-button type="button" label="Tümü’ne geç" icon="pi pi-list" severity="secondary" (onClick)="setScope('all')" />
+                        </div>
+                    } @else {
+                        <app-empty-state
+                            [message]="view() === 'voided' ? 'Bugün yanlış işaretlenen geliş yok.' : 'Bugün için randevu veya gelen hasta yok.'"
+                            [hint]="view() === 'voided' ? '' : 'Randevusuz gelen hastayı “Randevusuz geliş” ile kaydedebilirsiniz.'"
+                            iconClass="pi pi-calendar"
+                        />
+                    }
                 </div>
             }
         }

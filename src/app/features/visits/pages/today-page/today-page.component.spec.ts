@@ -284,3 +284,35 @@ describe('TodayPageComponent — Benim hastalarım', () => {
         expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false });
     });
 });
+
+describe('TodayPageComponent — Benim hastalarım boş liste', () => {
+    it('hekimin listesi boşken Size atanmış hasta yok mesajı ve Tümü’ne geç bağlantısı çıkar', async () => {
+        const visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
+        visits.getToday.and.returnValue(of({ date: 'd', items: [] }));
+        visits.getCurrentVeterinarianUserId.and.returnValue(of('u1'));
+        await TestBed.configureTestingModule({
+            imports: [TodayPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: VisitsService, useValue: visits },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c !== 'Visits.None', getClinicId: () => 'c1' } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: AppointmentsService, useValue: {} },
+                { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+            ]
+        }).compileComponents();
+        const f = TestBed.createComponent(TodayPageComponent);
+        f.detectChanges();
+        const t = (f.nativeElement as HTMLElement).textContent ?? '';
+        expect(t).toContain('Size atanmış hasta yok.');
+        expect(t).not.toContain('Bugün için randevu veya gelen hasta yok');
+
+        const toAll = Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).find((b) => b.textContent?.includes('Tümü’ne geç'));
+        expect(toAll).toBeDefined();
+        toAll!.click();
+        expect(visits.getToday.calls.mostRecent().args[0]).toEqual({ voided: false });
+        f.detectChanges();
+        expect((f.nativeElement as HTMLElement).textContent).toContain('Bugün için randevu veya gelen hasta yok.');
+    });
+});
