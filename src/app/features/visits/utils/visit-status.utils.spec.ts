@@ -26,6 +26,8 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     isCarriedOver: false,
     paymentIndicator: 'NoPaymentRecorded',
     hasActiveHospitalization: false,
+    isVoided: false,
+    voidReason: null,
     ...over
 });
 
@@ -137,5 +139,20 @@ describe('waitAlertTitle', () => {
         expect(waitAlertTitle('none')).toBeNull();
         expect(waitAlertTitle('warning')).toContain('30');
         expect(waitAlertTitle('critical')).toContain('60');
+    });
+});
+
+describe('yanlış işaretlenen satır', () => {
+    const voided = item({ isVoided: true, voidReason: 'Yanlış hasta' });
+
+    it('voided grubuna düşer; yalnızca geri alma mümkündür', () => {
+        expect(groupTodayItems([voided]).map((g) => g.key)).toEqual(['voided']);
+        const a = todayItemActions(voided);
+        expect(a.canRestore).toBeTrue();
+        expect(a.canCorrect || a.canStartCare || a.canOpenExamination || a.canCompleteCare).toBeFalse();
+    });
+
+    it('normal satırda geri alma yok', () => {
+        expect(todayItemActions(item()).canRestore).toBeFalse();
     });
 });

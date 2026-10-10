@@ -21,7 +21,9 @@ const item: TodayItemVm = {
     responsibleVeterinarianName: null,
     isCarriedOver: false,
     paymentIndicator: 'NoPaymentRecorded',
-    hasActiveHospitalization: false
+    hasActiveHospitalization: false,
+    isVoided: false,
+    voidReason: null
 };
 
 const visit: VisitVm = {
@@ -101,5 +103,49 @@ describe('VisitCorrectionDialogComponent', () => {
         expect(cmp.submitError()).toBe('Muayenesi olan geliş yanlış geliş olarak işaretlenemez.');
         expect(cmp.visible()).toBeTrue();
         expect(cmp.submitting()).toBeFalse();
+    });
+});
+
+describe('VisitCorrectionDialogComponent — restore modu', () => {
+    let fixture: ComponentFixture<VisitCorrectionDialogComponent>;
+    let cmp: VisitCorrectionDialogComponent;
+    let visits: jasmine.SpyObj<VisitsService>;
+
+    beforeEach(async () => {
+        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['correctVisit', 'restoreVisit']);
+        await TestBed.configureTestingModule({
+            imports: [VisitCorrectionDialogComponent],
+            providers: [{ provide: VisitsService, useValue: visits }]
+        }).compileComponents();
+        fixture = TestBed.createComponent(VisitCorrectionDialogComponent);
+        cmp = fixture.componentInstance;
+        fixture.componentRef.setInput('item', { ...item, isVoided: true, voidReason: 'Yanlış' });
+        fixture.componentRef.setInput('mode', 'restore');
+        fixture.detectChanges();
+        cmp.visible.set(true);
+        fixture.detectChanges();
+    });
+
+    it('durum seçimi gerekmez; kısa gerekçe gönderilmez', () => {
+        cmp.form.controls.reason.setValue('abc');
+        cmp.onSubmit();
+        expect(visits.restoreVisit).not.toHaveBeenCalled();
+    });
+
+    it('geçerli gerekçeyle restoreVisit çağrılır, correctVisit çağrılmaz', () => {
+        visits.restoreVisit.and.returnValue(of(visit));
+        cmp.form.controls.reason.setValue('Yanlışlıkla işaretlendi');
+        cmp.onSubmit();
+        expect(visits.restoreVisit).toHaveBeenCalledOnceWith('v1', 'Yanlışlıkla işaretlendi');
+        expect(visits.correctVisit).not.toHaveBeenCalled();
+        expect(cmp.visible()).toBeFalse();
+    });
+
+    it('409 mesajı gösterilir, diyalog açık kalır', () => {
+        visits.restoreVisit.and.returnValue(throwError(() => new Error('Bu hayvanın başka açık geliş kaydı var.')));
+        cmp.form.controls.reason.setValue('Yanlışlıkla işaretlendi');
+        cmp.onSubmit();
+        expect(cmp.submitError()).toBe('Bu hayvanın başka açık geliş kaydı var.');
+        expect(cmp.visible()).toBeTrue();
     });
 });

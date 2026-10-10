@@ -100,3 +100,68 @@ describe('VisitsService', () => {
         http.expectOne('http://api.test/api/v1/clinics/c1/veterinarians').flush([{ userId: 'u1', name: 'Dr. Ayşe' }]);
     });
 });
+
+describe('VisitsService — geri alma ve yanlış işaretlenenler', () => {
+    let service: VisitsService;
+    let http: HttpTestingController;
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            providers: [
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: API_BASE_URL, useValue: 'http://api.test' },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
+            ]
+        });
+        service = TestBed.inject(VisitsService);
+        http = TestBed.inject(HttpTestingController);
+    });
+
+    afterEach(() => http.verify());
+
+    it('voided=true sorgusu gönderilir; varsayılanda gönderilmez', () => {
+        service.getToday({ voided: true }).subscribe();
+        const voidedReq = http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today');
+        expect(voidedReq.request.params.get('voided')).toBe('true');
+        voidedReq.flush({ date: 'd', clinicId: 'c1', generatedAtUtc: 'g', items: [{ petId: 'p1', clientId: 'cl1', isCarriedOver: false, visitId: 'v1', isVoided: true, voidReason: ' Yanlış ' }] });
+
+        service.getToday().subscribe();
+        const normal = http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today');
+        expect(normal.request.params.has('voided')).toBeFalse();
+        normal.flush({ date: 'd', clinicId: 'c1', generatedAtUtc: 'g', items: [] });
+    });
+
+    it('geri alma gerekçeyle restore ucuna gider', () => {
+        service.restoreVisit('v1', '  Yanlışlıkla işaretlendi ').subscribe();
+        const req = http.expectOne('http://api.test/api/v1/visits/v1/restore');
+        expect(req.request.method).toBe('POST');
+        expect(req.request.body).toEqual({ reason: 'Yanlışlıkla işaretlendi' });
+        req.flush({ ...visit });
+    });
+
+    for (const [code, text] of [
+        ['Visits.DuplicateActiveVisit', 'Bu hayvanın başka açık geliş kaydı var'],
+        ['Visits.DuplicateAppointmentVisit', 'Bu randevu için başka geliş kaydı var']
+    ]) {
+        it(`409 ${code} Türkçe mesaja çevrilir`, (done) => {
+            service.restoreVisit('v1', 'Yanlışlıkla işaretlendi').subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain(text);
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/visits/v1/restore').flush({ status: 409, extensions: { code } }, { status: 409, statusText: 'Conflict' });
+        });
+    }
+
+    it('400 Visits.Validation backend ayrıntısıyla gösterilir', (done) => {
+        service.restoreVisit('v1', 'Yanlışlıkla işaretlendi').subscribe({
+            error: (e: Error) => {
+                expect(e.message).toContain('Kayıt zaten geçerli');
+                done();
+            }
+        });
+        http.expectOne('http://api.test/api/v1/visits/v1/restore').flush({ status: 400, detail: 'Kayıt zaten geçerli', extensions: { code: 'Visits.Validation' } }, { status: 400, statusText: 'Bad Request' });
+    });
+});

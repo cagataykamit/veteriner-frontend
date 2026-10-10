@@ -40,12 +40,13 @@ export const ApiEndpoints = {
     visits: {
         /** Geliş kaydı (POST). */
         create: () => `/api/v1/visits`,
-        /** Query: `clinicId`, `localDate` (İstanbul günü, `yyyy-MM-dd`). */
+        /** Query: `clinicId`, `localDate` (İstanbul günü, `yyyy-MM-dd`), `voided`. */
         today: () => `/api/v1/visits/today`,
         byId: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}`,
         start: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/start`,
         complete: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/complete`,
-        corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`
+        corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`,
+        restore: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/restore`
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,

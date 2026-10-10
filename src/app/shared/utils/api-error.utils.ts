@@ -203,7 +203,8 @@ const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Visits.InvalidStatusTransition': 'Bu geçiş yapılamaz; durum başka biri tarafından değişmiş olabilir. Listeyi yenileyin.',
     'Visits.HasExaminations': 'Muayenesi olan geliş yanlış geliş olarak işaretlenemez.',
     'Visits.TodayLimitExceeded': 'Bugün listesi sınırı aşıldı; tüm kayıtlar gösterilemiyor.',
-    'Visits.DuplicateActiveVisit': 'Bu hayvanın zaten açık bir geliş kaydı var; durum geri alınamaz.',
+    'Visits.DuplicateActiveVisit': 'Bu hayvanın başka açık geliş kaydı var; bu işlem ikinci bir açık kayıt oluşturacağı için yapılamaz.',
+    'Visits.DuplicateAppointmentVisit': 'Bu randevu için başka geliş kaydı var; geri alınamaz.',
     'Visits.NotOpen': 'Bu geliş tamamlanmış veya yanlış geliş olarak işaretlenmiş; muayene açılamaz.',
     'Visits.ConcurrencyConflict': 'Kayıt aynı anda başka biri tarafından güncellendi. Listeyi yenileyip tekrar deneyin.',
     'Examinations.VisitMismatch': 'Muayene, geliş kaydındaki hayvan veya randevuyla uyuşmuyor.'

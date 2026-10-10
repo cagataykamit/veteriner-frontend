@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
@@ -45,6 +47,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 const REFRESH_INTERVAL_MS = 30_000;
 
 type RefreshMode = 'initial' | 'silent';
+type TodayView = 'today' | 'voided';
 
 /**
  * Bugün: o günün randevuları ve gelen hastalar tek listede (randevulu Visit tek satır).
@@ -56,6 +59,8 @@ type RefreshMode = 'initial' | 'silent';
     imports: [
         CommonModule,
         ButtonModule,
+        FormsModule,
+        SelectButtonModule,
         TableModule,
         ToastModule,
         AppPageHeaderComponent,
@@ -89,6 +94,8 @@ type RefreshMode = 'initial' | 'silent';
                 }
             </div>
         </app-page-header>
+
+        <p-selectbutton class="block mb-4" [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Görünüm" />
 
         @if (loading()) {
             <app-loading-state message="Bugün yükleniyor…" />
@@ -164,10 +171,16 @@ type RefreshMode = 'initial' | 'silent';
                                         } @else {
                                             <app-status-tag label="Bekleniyor" severity="secondary" />
                                         }
+                                        @if (item.isVoided) {
+                                            <app-status-tag label="Yanlış geliş" severity="danger" />
+                                        }
                                         @if (item.isCarriedOver) {
                                             <app-status-tag label="Önceki günden" severity="contrast" />
                                         }
                                     </div>
+                                    @if (item.voidReason; as reason) {
+                                        <div class="text-sm text-muted-color mt-1">Gerekçe: {{ reason }}</div>
+                                    }
                                 </td>
                                 <td>
                                     <div class="flex flex-wrap gap-1">
@@ -237,6 +250,17 @@ type RefreshMode = 'initial' | 'silent';
                                                 (onClick)="transition(item, 'complete')"
                                             />
                                         }
+                                        @if (canCorrect && actions.canRestore) {
+                                            <p-button
+                                                type="button"
+                                                label="Geri al"
+                                                icon="pi pi-undo"
+                                                size="small"
+                                                severity="secondary"
+                                                [disabled]="ro.mutationBlocked()"
+                                                (onClick)="openRestore(item)"
+                                            />
+                                        }
                                         @if (canCorrect && actions.canCorrect) {
                                             <p-button
                                                 type="button"
@@ -258,8 +282,8 @@ type RefreshMode = 'initial' | 'silent';
             } @empty {
                 <div class="card">
                     <app-empty-state
-                        message="Bugün için randevu veya gelen hasta yok."
-                        hint="Randevusuz gelen hastayı “Randevusuz geliş” ile kaydedebilirsiniz."
+                        [message]="view() === 'voided' ? 'Bugün yanlış işaretlenen geliş yok.' : 'Bugün için randevu veya gelen hasta yok.'"
+                        [hint]="view() === 'voided' ? '' : 'Randevusuz gelen hastayı “Randevusuz geliş” ile kaydedebilirsiniz.'"
                         iconClass="pi pi-calendar"
                     />
                 </div>
@@ -271,6 +295,7 @@ type RefreshMode = 'initial' | 'silent';
         }
         @if (canCorrect) {
             <app-visit-correction-dialog [(visible)]="correctionOpen" [item]="correctionItem()" (corrected)="onCorrected()" />
+            <app-visit-correction-dialog mode="restore" [(visible)]="restoreOpen" [item]="restoreItem()" (corrected)="onRestored()" />
         }
     `
 })
@@ -305,6 +330,14 @@ export class TodayPageComponent implements OnInit {
     readonly arrivalAppointment = signal<TodayItemVm | null>(null);
     readonly correctionOpen = signal(false);
     readonly correctionItem = signal<TodayItemVm | null>(null);
+    readonly restoreOpen = signal(false);
+    readonly restoreItem = signal<TodayItemVm | null>(null);
+
+    readonly viewOptions: Array<{ label: string; value: TodayView }> = [
+        { label: 'Bugün', value: 'today' },
+        { label: 'Yanlış işaretlenenler', value: 'voided' }
+    ];
+    readonly view = signal<TodayView>('today');
 
     /** `switchMap`: üst üste gelen yenilemelerde yalnızca sonuncunun yanıtı uygulanır. */
     private readonly refresh$ = new Subject<RefreshMode>();
@@ -330,7 +363,7 @@ export class TodayPageComponent implements OnInit {
         this.refresh$
             .pipe(
                 switchMap((mode) =>
-                    this.visitsService.getToday().pipe(
+                    this.visitsService.getToday({ voided: this.view() === 'voided' }).pipe(
                         map((today): RefreshResult => ({ mode, today })),
                         catchError((e: unknown) => of({ mode, error: panelHttpFailureMessage(e, 'Bugün listesi yüklenemedi.') }))
                     )
@@ -394,6 +427,21 @@ export class TodayPageComponent implements OnInit {
                       life: 6000
                   }
         );
+        this.refresh('silent');
+    }
+
+    setView(view: TodayView): void {
+        this.view.set(view);
+        this.refresh('initial');
+    }
+
+    openRestore(item: TodayItemVm): void {
+        this.restoreItem.set(item);
+        this.restoreOpen.set(true);
+    }
+
+    onRestored(): void {
+        addTracedToast(this.messages, 'TodayPage', this.router.url, { severity: 'success', summary: 'Geliş geri alındı.', life: 4000 });
         this.refresh('silent');
     }
 

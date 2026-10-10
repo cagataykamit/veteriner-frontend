@@ -28,6 +28,8 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     isCarriedOver: false,
     paymentIndicator: 'NoPaymentRecorded',
     hasActiveHospitalization: false,
+    isVoided: false,
+    voidReason: null,
     ...over
 });
 

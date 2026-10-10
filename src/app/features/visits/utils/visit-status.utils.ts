@@ -40,7 +40,7 @@ export function correctionActionOptions(current: VisitCareStatus): Array<{ label
     return [...statuses, { label: 'Yanlış geliş olarak işaretle', value: 'Mistaken' }];
 }
 
-export type TodayGroupKey = 'waiting' | 'inProgress' | 'planned' | 'completed';
+export type TodayGroupKey = 'waiting' | 'inProgress' | 'planned' | 'completed' | 'voided';
 
 export interface TodayGroup {
     key: TodayGroupKey;
@@ -54,10 +54,14 @@ const GROUP_ORDER: ReadonlyArray<{ key: TodayGroupKey; title: string; elapsedLab
     { key: 'waiting', title: 'Bekliyor', elapsedLabel: 'Bekleme' },
     { key: 'inProgress', title: 'Devam ediyor', elapsedLabel: 'Süre' },
     { key: 'planned', title: 'Planlı randevular', elapsedLabel: null },
-    { key: 'completed', title: 'Tamamlandı', elapsedLabel: null }
+    { key: 'completed', title: 'Tamamlandı', elapsedLabel: null },
+    { key: 'voided', title: 'Yanlış işaretlenenler', elapsedLabel: null }
 ];
 
 function groupKeyOf(item: TodayItemVm): TodayGroupKey {
+    if (item.isVoided) {
+        return 'voided';
+    }
     switch (item.careStatus) {
         case 'Waiting':
             return 'waiting';
@@ -83,16 +87,22 @@ export interface TodayItemActions {
     canCompleteCare: boolean;
     /** Düzeltme herhangi bir Visit için mümkündür (yetki ayrıca denetlenir). */
     canCorrect: boolean;
+    /** Yanlış geliş işaretini kaldırma (yetki ayrıca denetlenir). */
+    canRestore: boolean;
 }
 
 export function todayItemActions(item: TodayItemVm): TodayItemActions {
+    if (item.isVoided) {
+        return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId };
+    }
     const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
     return {
         canMarkArrived: !item.visitId && !!item.appointmentId && item.appointmentStatus === 'Scheduled',
         canStartCare: item.careStatus === 'Waiting',
         canOpenExamination: open,
         canCompleteCare: item.careStatus === 'InProgress',
-        canCorrect: !!item.visitId
+        canCorrect: !!item.visitId,
+        canRestore: false
     };
 }
 

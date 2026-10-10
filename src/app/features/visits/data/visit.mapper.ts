@@ -2,6 +2,7 @@ import { HttpParams } from '@angular/common/http';
 import type {
     CorrectVisitRequestDto,
     CreateVisitRequestDto,
+    RestoreVisitRequestDto,
     TodayDto,
     TodayItemDto,
     VeterinarianDto,
@@ -12,6 +13,7 @@ import type {
     CorrectVisitRequest,
     CreateVisitRequest,
     TodayItemVm,
+    TodayQuery,
     TodayVm,
     VeterinarianVm,
     VisitCreateResultVm,
@@ -63,7 +65,9 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         responsibleVeterinarianName: trimmedOrNull(dto.responsibleVeterinarianName),
         isCarriedOver: dto.isCarriedOver,
         paymentIndicator: dto.paymentIndicator ?? 'NoPaymentRecorded',
-        hasActiveHospitalization: dto.hasActiveHospitalization === true
+        hasActiveHospitalization: dto.hasActiveHospitalization === true,
+        isVoided: dto.isVoided === true,
+        voidReason: trimmedOrNull(dto.voidReason)
     };
 }
 
@@ -76,8 +80,12 @@ export function mapVeterinarianDtoToVm(dto: VeterinarianDto): VeterinarianVm {
 }
 
 /** Klinik bağlamı (JWT) yoksa `clinicId` zorunludur; varsa da açıkça gönderilir. */
-export function todayQueryToHttpParams(clinicId: string | null): HttpParams {
-    return clinicId ? new HttpParams().set('clinicId', clinicId) : new HttpParams();
+export function todayQueryToHttpParams(clinicId: string | null, query: TodayQuery = {}): HttpParams {
+    let params = new HttpParams();
+    if (clinicId) {
+        params = params.set('clinicId', clinicId);
+    }
+    return query.voided ? params.set('voided', true) : params;
 }
 
 /** Boş alanlar gövdeye girmez; hekim seçilmediyse `responsibleVeterinarianUserId` hiç gönderilmez. */
@@ -109,4 +117,8 @@ export function mapCorrectVisitToApiBody(req: CorrectVisitRequest): CorrectVisit
         targetCareStatus: req.action === 'Mistaken' ? null : req.action,
         markAsMistaken: req.action === 'Mistaken'
     };
+}
+
+export function mapRestoreVisitToApiBody(reason: string): RestoreVisitRequestDto {
+    return { reason: reason.trim() };
 }

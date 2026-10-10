@@ -7,6 +7,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     mapCorrectVisitToApiBody,
     mapCreateVisitToApiBody,
+    mapRestoreVisitToApiBody,
     mapTodayDtoToVm,
     mapVeterinarianDtoToVm,
     mapVisitCreateResultDtoToVm,
@@ -22,6 +23,7 @@ import type {
 import type {
     CorrectVisitRequest,
     CreateVisitRequest,
+    TodayQuery,
     TodayVm,
     VeterinarianVm,
     VisitCreateResultVm,
@@ -42,8 +44,8 @@ export class VisitsService {
     private readonly auth = inject(AuthService);
 
     /** Aktif klinik için İstanbul gününün kuyruğu (randevular + gelen hastalar). */
-    getToday(): Observable<TodayVm> {
-        const params = todayQueryToHttpParams(this.auth.getClinicId()?.trim() || null);
+    getToday(query: TodayQuery = {}): Observable<TodayVm> {
+        const params = todayQueryToHttpParams(this.auth.getClinicId()?.trim() || null, query);
         return this.api.get<TodayDto>(ApiEndpoints.visits.today(), params).pipe(
             map(mapTodayDtoToVm),
             toUserError('Bugün listesi yüklenemedi.')
@@ -96,6 +98,14 @@ export class VisitsService {
         return this.api.post<VisitDto>(ApiEndpoints.visits.corrections(id), mapCorrectVisitToApiBody(request)).pipe(
             map(mapVisitDtoToVm),
             toUserError('Düzeltme kaydedilemedi.')
+        );
+    }
+
+    /** `Visits.Correct`; yanlış geliş işaretini kaldırır, gerekçe zorunlu. Çakışmada 409 döner. */
+    restoreVisit(id: string, reason: string): Observable<VisitVm> {
+        return this.api.post<VisitDto>(ApiEndpoints.visits.restore(id), mapRestoreVisitToApiBody(reason)).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Geri alma kaydedilemedi.')
         );
     }
 }

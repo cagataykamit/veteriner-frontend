@@ -47,6 +47,8 @@ export interface TodayItemDto {
     isCarriedOver: boolean;
     paymentIndicator?: TodayPaymentIndicatorDto | null;
     hasActiveHospitalization?: boolean | null;
+    isVoided?: boolean | null;
+    voidReason?: string | null;
 }
 
 export interface TodayDto {
@@ -72,4 +74,8 @@ export interface CorrectVisitRequestDto {
     reason: string;
     targetCareStatus: VisitCareStatusDto | null;
     markAsMistaken: boolean;
+}
+
+export interface RestoreVisitRequestDto {
+    reason: string;
 }

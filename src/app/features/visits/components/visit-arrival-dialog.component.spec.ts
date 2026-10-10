@@ -39,7 +39,9 @@ const plannedItem: TodayItemVm = {
     responsibleVeterinarianName: null,
     isCarriedOver: false,
     paymentIndicator: 'NoPaymentRecorded',
-    hasActiveHospitalization: false
+    hasActiveHospitalization: false,
+    isVoided: false,
+    voidReason: null
 };
 
 describe('VisitArrivalDialogComponent', () => {

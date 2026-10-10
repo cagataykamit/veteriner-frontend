@@ -46,6 +46,9 @@ export interface TodayItemVm {
     isCarriedOver: boolean;
     paymentIndicator: TodayPaymentIndicator;
     hasActiveHospitalization: boolean;
+    /** Yalnızca "Yanlış işaretlenenler" görünümünde `true`. */
+    isVoided: boolean;
+    voidReason: string | null;
 }
 
 export interface TodayVm {
@@ -82,4 +85,9 @@ export type VisitCorrectionAction = VisitCareStatus | 'Mistaken';
 export interface CorrectVisitRequest {
     action: VisitCorrectionAction;
     reason: string;
+}
+
+/** `GET /visits/today` sorgusu: varsayılan normal kuyruk; `voided` yanlış işaretlenenleri getirir. */
+export interface TodayQuery {
+    voided?: boolean;
 }
