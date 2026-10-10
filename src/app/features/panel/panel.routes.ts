@@ -13,6 +13,7 @@ export default [
     { path: 'examinations', loadChildren: () => import('../examinations/routes/examinations.routes') },
     { path: 'vaccinations', loadChildren: () => import('../vaccinations/routes/vaccinations.routes') },
     { path: 'payments', loadChildren: () => import('../payments/routes/payments.routes') },
+    { path: 'charges', loadChildren: () => import('../charges/routes/charges.routes') },
     { path: 'products', loadChildren: () => import('../inventory/routes/inventory.routes') },
     { path: 'stocks', loadChildren: () => import('../inventory/routes/product-stocks.routes') },
     {
