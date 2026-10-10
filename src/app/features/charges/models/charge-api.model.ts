@@ -16,6 +16,10 @@ export interface ChargeDto {
     quantity: number;
     unitPrice: number;
     amount: number;
+    /** Tahsis edilen toplam (`PAYMENT_ALLOCATION_API_CONTRACT.md`); eski yanıtlarda yok. */
+    allocatedAmount?: number | null;
+    /** `amount − allocatedAmount`. */
+    outstandingAmount?: number | null;
     currency: string;
     createdByUserId: string;
     createdAtUtc: string;

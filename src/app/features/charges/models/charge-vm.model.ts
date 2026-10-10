@@ -10,6 +10,9 @@ export interface ChargeVm {
     quantity: number;
     unitPrice: number;
     amount: number;
+    /** Bilinmiyorsa `null`. */
+    allocatedAmount: number | null;
+    outstandingAmount: number | null;
     currency: string;
     createdAtUtc: string;
 }

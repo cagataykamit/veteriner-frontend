@@ -20,6 +20,8 @@ const dto = (over: Partial<ChargeDto> = {}): ChargeDto => ({
     quantity: 1,
     unitPrice: 750,
     amount: 750,
+    allocatedAmount: 250,
+    outstandingAmount: 500,
     currency: 'TRY',
     createdByUserId: 'u1',
     createdAtUtc: '2026-10-10T07:00:00Z',
@@ -34,6 +36,15 @@ describe('charge mapper — okuma', () => {
         expect(vm.visitId).toBe('v1');
         expect(vm.amount).toBe(750);
         expect(vm.currency).toBe('TRY');
+    });
+
+    it('ödenen ve kalan tutarı eşler; eski yanıtta yoksa null', () => {
+        const vm = mapChargeDtoToVm(dto());
+        expect(vm.allocatedAmount).toBe(250);
+        expect(vm.outstandingAmount).toBe(500);
+        const old = mapChargeDtoToVm(dto({ allocatedAmount: undefined, outstandingAmount: undefined }));
+        expect(old.allocatedAmount).toBeNull();
+        expect(old.outstandingAmount).toBeNull();
     });
 
     it('boş müşteri adı için tire gösterir', () => {

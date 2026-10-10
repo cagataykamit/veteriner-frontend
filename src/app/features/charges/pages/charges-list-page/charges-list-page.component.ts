@@ -14,6 +14,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -31,7 +32,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        AppStatusTagComponent
     ],
     template: `
         <app-page-header title="Ücretler" subtitle="Finans" description="Müşterilere yazılan ücret satırları.">
@@ -86,7 +88,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                         (onLazyLoad)="onLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '56rem' }"
+                        [tableStyle]="{ 'min-width': '66rem' }"
                     >
                         <ng-template #header>
                             <tr>
@@ -97,6 +99,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 <th class="text-right">Miktar</th>
                                 <th class="text-right">Birim fiyat</th>
                                 <th class="text-right">Tutar</th>
+                                <th class="text-right">Ödenen</th>
+                                <th class="text-right">Kalan</th>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
@@ -116,6 +120,14 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 <td class="text-right">{{ row.quantity }}</td>
                                 <td class="text-right">{{ money(row.unitPrice, row.currency) }}</td>
                                 <td class="text-right font-medium">{{ money(row.amount, row.currency) }}</td>
+                                <td class="text-right">{{ money(row.allocatedAmount, row.currency) }}</td>
+                                <td class="text-right">
+                                    @if (row.outstandingAmount === 0) {
+                                        <app-status-tag label="Ödendi" severity="success" />
+                                    } @else {
+                                        <span class="font-medium">{{ money(row.outstandingAmount, row.currency) }}</span>
+                                    }
+                                </td>
                             </tr>
                         </ng-template>
                     </p-table>

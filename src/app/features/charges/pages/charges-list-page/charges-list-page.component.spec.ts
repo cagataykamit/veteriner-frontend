@@ -20,6 +20,8 @@ const row: ChargeVm = {
     quantity: 2,
     unitPrice: 375.5,
     amount: 751,
+    allocatedAmount: 200,
+    outstandingAmount: 551,
     currency: 'TRY',
     createdAtUtc: '2026-10-10T07:00:00Z'
 };
@@ -66,6 +68,22 @@ describe('ChargesListPageComponent', () => {
         expect(text).toContain('Ali Veli');
         expect(text).toContain('375,50');
         expect(text).toContain('751,00');
+    });
+
+    it('Ödenen ve Kalan sütunları: kısmi ödemede kalan tutar gösterilir', async () => {
+        await setup();
+        const text = fixture.nativeElement.textContent as string;
+        expect(text).toContain('Ödenen');
+        expect(text).toContain('Kalan');
+        expect(text).toContain('₺200,00');
+        expect(text).toContain('₺551,00');
+        expect(text).not.toContain('Ödendi');
+    });
+
+    it('kalan 0 ise sade "Ödendi" gösterilir', async () => {
+        charges.getCharges.and.returnValue(of(page([{ ...row, allocatedAmount: 751, outstandingAmount: 0 }])));
+        await setup();
+        expect(fixture.nativeElement.textContent).toContain('Ödendi');
     });
 
     it('Charges.Create yoksa (Veteriner) "Yeni Ücret" düğmesi görünmez', async () => {

@@ -31,6 +31,8 @@ export function mapChargeDtoToVm(dto: ChargeDto): ChargeVm {
         quantity: dto.quantity,
         unitPrice: dto.unitPrice,
         amount: dto.amount,
+        allocatedAmount: dto.allocatedAmount ?? null,
+        outstandingAmount: dto.outstandingAmount ?? null,
         currency: dto.currency?.trim() || 'TRY',
         createdAtUtc: dto.createdAtUtc
     };

@@ -24,6 +24,8 @@ const created: ChargeVm = {
     quantity: 1,
     unitPrice: 750,
     amount: 750,
+    allocatedAmount: 0,
+    outstandingAmount: 750,
     currency: 'TRY',
     createdAtUtc: '2026-10-10T07:00:00Z'
 };
