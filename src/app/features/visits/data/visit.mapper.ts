@@ -3,6 +3,7 @@ import type {
     CorrectVisitRequestDto,
     CreateVisitRequestDto,
     RestoreVisitRequestDto,
+    UpdateVisitUrgencyRequestDto,
     TodayDto,
     TodayItemDto,
     VeterinarianDto,
@@ -37,7 +38,8 @@ export function mapVisitDtoToVm(dto: VisitDto): VisitVm {
         responsibleVeterinarianName: trimmedOrNull(dto.responsibleVeterinarianName),
         arrivedAtUtc: dto.arrivedAtUtc,
         careStatus: dto.careStatus,
-        isVoided: dto.isVoided
+        isVoided: dto.isVoided,
+        isUrgent: dto.isUrgent === true
     };
 }
 
@@ -67,7 +69,8 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         paymentIndicator: dto.paymentIndicator ?? 'NoPaymentRecorded',
         hasActiveHospitalization: dto.hasActiveHospitalization === true,
         isVoided: dto.isVoided === true,
-        voidReason: trimmedOrNull(dto.voidReason)
+        voidReason: trimmedOrNull(dto.voidReason),
+        isUrgent: dto.isUrgent === true
     };
 }
 
@@ -107,6 +110,9 @@ export function mapCreateVisitToApiBody(req: CreateVisitRequest): CreateVisitReq
     if (vet) {
         body.responsibleVeterinarianUserId = vet;
     }
+    if (req.isUrgent) {
+        body.isUrgent = true;
+    }
     return body;
 }
 
@@ -121,4 +127,8 @@ export function mapCorrectVisitToApiBody(req: CorrectVisitRequest): CorrectVisit
 
 export function mapRestoreVisitToApiBody(reason: string): RestoreVisitRequestDto {
     return { reason: reason.trim() };
+}
+
+export function mapUrgencyToApiBody(isUrgent: boolean): UpdateVisitUrgencyRequestDto {
+    return { isUrgent };
 }

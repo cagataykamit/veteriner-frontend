@@ -165,3 +165,54 @@ describe('VisitsService — geri alma ve yanlış işaretlenenler', () => {
         http.expectOne('http://api.test/api/v1/visits/v1/restore').flush({ status: 400, detail: 'Kayıt zaten geçerli', extensions: { code: 'Visits.Validation' } }, { status: 400, statusText: 'Bad Request' });
     });
 });
+
+describe('VisitsService — acil işareti', () => {
+    let service: VisitsService;
+    let http: HttpTestingController;
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            providers: [
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: API_BASE_URL, useValue: 'http://api.test' },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
+            ]
+        });
+        service = TestBed.inject(VisitsService);
+        http = TestBed.inject(HttpTestingController);
+    });
+
+    afterEach(() => http.verify());
+
+    it('PUT urgency ucuna isUrgent gövdesi gider ve VM isUrgent döner', (done) => {
+        service.setUrgency('v1', true).subscribe((vm) => {
+            expect(vm.isUrgent).toBeTrue();
+            done();
+        });
+        const req = http.expectOne('http://api.test/api/v1/visits/v1/urgency');
+        expect(req.request.method).toBe('PUT');
+        expect(req.request.body).toEqual({ isUrgent: true });
+        req.flush({ ...visit, isUrgent: true });
+    });
+
+    it('tamamlanmış kayıtta 409 Visits.NotOpen Türkçe mesaja çevrilir', (done) => {
+        service.setUrgency('v1', true).subscribe({
+            error: (e: Error) => {
+                expect(e.message).toContain('tamamlanmış');
+                done();
+            }
+        });
+        http.expectOne('http://api.test/api/v1/visits/v1/urgency').flush({ status: 409, extensions: { code: 'Visits.NotOpen' } }, { status: 409, statusText: 'Conflict' });
+    });
+
+    it('acil geliş isteği yalnızca true iken gövdeye girer; Bugün satırı isUrgent taşır', () => {
+        service.createVisit({ petId: 'p1', clinicId: 'c1', isUrgent: true }).subscribe();
+        const req = http.expectOne('http://api.test/api/v1/visits');
+        expect(req.request.body).toEqual({ petId: 'p1', clinicId: 'c1', isUrgent: true });
+        req.flush({ created: true, visit: { ...visit, isUrgent: true } }, { status: 201, statusText: 'Created' });
+
+        service.getToday().subscribe((vm) => expect(vm.items[0].isUrgent).toBeTrue());
+        http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today').flush({ date: 'd', clinicId: 'c1', generatedAtUtc: 'g', items: [{ petId: 'p1', clientId: 'cl1', isCarriedOver: false, visitId: 'v1', isUrgent: true }] });
+    });
+});

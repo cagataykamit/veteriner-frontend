@@ -89,11 +89,13 @@ export interface TodayItemActions {
     canCorrect: boolean;
     /** Yanlış geliş işaretini kaldırma (yetki ayrıca denetlenir). */
     canRestore: boolean;
+    /** Acil işareti yalnızca açık (bekleyen / devam eden) kayıtta değiştirilir. */
+    canToggleUrgency: boolean;
 }
 
 export function todayItemActions(item: TodayItemVm): TodayItemActions {
     if (item.isVoided) {
-        return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId };
+        return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId, canToggleUrgency: false };
     }
     const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
     return {
@@ -102,7 +104,8 @@ export function todayItemActions(item: TodayItemVm): TodayItemActions {
         canOpenExamination: open,
         canCompleteCare: item.careStatus === 'InProgress',
         canCorrect: !!item.visitId,
-        canRestore: false
+        canRestore: false,
+        canToggleUrgency: open && !!item.visitId
     };
 }
 

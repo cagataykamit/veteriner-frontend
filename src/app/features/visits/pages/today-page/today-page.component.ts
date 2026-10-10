@@ -146,7 +146,12 @@ type TodayView = 'today' | 'voided';
                                     }
                                 </td>
                                 <td>
-                                    <div class="font-medium">{{ item.petName }}</div>
+                                    <div class="font-medium flex items-center gap-2">
+                                        {{ item.petName }}
+                                        @if (item.isUrgent) {
+                                            <app-status-tag label="Acil" severity="danger" />
+                                        }
+                                    </div>
                                     <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
                                 </td>
                                 <td>
@@ -248,6 +253,19 @@ type TodayView = 'today' | 'voided';
                                                 [loading]="isBusy(item)"
                                                 [disabled]="isBusy(item) || ro.mutationBlocked()"
                                                 (onClick)="transition(item, 'complete')"
+                                            />
+                                        }
+                                        @if (canUpdateVisit && actions.canToggleUrgency) {
+                                            <p-button
+                                                type="button"
+                                                [label]="item.isUrgent ? 'Acili kaldır' : 'Acil işaretle'"
+                                                icon="pi pi-exclamation-circle"
+                                                size="small"
+                                                severity="secondary"
+                                                [text]="true"
+                                                [loading]="isBusy(item)"
+                                                [disabled]="isBusy(item) || ro.mutationBlocked()"
+                                                (onClick)="toggleUrgency(item)"
                                             />
                                         }
                                         @if (canCorrect && actions.canRestore) {
@@ -453,6 +471,31 @@ export class TodayPageComponent implements OnInit {
     onCorrected(): void {
         addTracedToast(this.messages, 'TodayPage', this.router.url, { severity: 'success', summary: 'Düzeltme kaydedildi.', life: 4000 });
         this.refresh('silent');
+    }
+
+    /** Sıralamayı sunucu belirler: istemci yeniden sıralamaz, yalnızca yeniler. Hatada da yenilenir. */
+    toggleUrgency(item: TodayItemVm): void {
+        const visitId = item.visitId;
+        if (!visitId || this.isBusy(item)) {
+            return;
+        }
+        this.setBusy(item.key, true);
+        this.visitsService.setUrgency(visitId, !item.isUrgent).subscribe({
+            next: () => {
+                this.setBusy(item.key, false);
+                this.refresh('silent');
+            },
+            error: (e: unknown) => {
+                this.setBusy(item.key, false);
+                addTracedToast(this.messages, 'TodayPage', this.router.url, {
+                    severity: 'error',
+                    summary: 'Acil işareti güncellenemedi.',
+                    detail: panelHttpFailureMessage(e, 'Acil işareti güncellenemedi.'),
+                    life: 6000
+                });
+                this.refresh('silent');
+            }
+        });
     }
 
     /** Hasta tekrar seçilmez: Visit kimliği ve hasta bağlamı muayene çalışma alanına query ile taşınır. */

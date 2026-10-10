@@ -46,7 +46,8 @@ export const ApiEndpoints = {
         start: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/start`,
         complete: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/complete`,
         corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`,
-        restore: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/restore`
+        restore: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/restore`,
+        urgency: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/urgency`
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,

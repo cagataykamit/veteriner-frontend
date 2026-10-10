@@ -23,7 +23,8 @@ const item: TodayItemVm = {
     paymentIndicator: 'NoPaymentRecorded',
     hasActiveHospitalization: false,
     isVoided: false,
-    voidReason: null
+    voidReason: null,
+    isUrgent: false
 };
 
 const visit: VisitVm = {
@@ -35,7 +36,8 @@ const visit: VisitVm = {
     responsibleVeterinarianName: null,
     arrivedAtUtc: item.arrivedAtUtc!,
     careStatus: 'InProgress',
-    isVoided: false
+    isVoided: false,
+    isUrgent: false
 };
 
 describe('VisitCorrectionDialogComponent', () => {

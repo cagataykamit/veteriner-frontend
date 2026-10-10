@@ -20,7 +20,8 @@ const visitResult = {
         responsibleVeterinarianName: null,
         arrivedAtUtc: '2026-10-10T07:00:00Z',
         careStatus: 'Waiting' as const,
-        isVoided: false
+        isVoided: false,
+        isUrgent: false
     }
 };
 
@@ -87,7 +88,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
         cmp.openRegistration(null);
         cmp.onRegistered(registeredPet);
 
-        expect(visits.createVisit).toHaveBeenCalledOnceWith({ clinicId: 'c1', petId: 'p-new', responsibleVeterinarianUserId: '' });
+        expect(visits.createVisit).toHaveBeenCalledOnceWith({ clinicId: 'c1', petId: 'p-new', responsibleVeterinarianUserId: '', isUrgent: false });
         expect(arrived.length).toBe(1);
         expect(cmp.registration()).toBeNull();
     });

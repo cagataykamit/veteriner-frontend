@@ -18,7 +18,8 @@ const result = (created: boolean): VisitCreateResultVm => ({
         responsibleVeterinarianName: null,
         arrivedAtUtc: '2026-10-10T07:00:00Z',
         careStatus: 'Waiting',
-        isVoided: false
+        isVoided: false,
+        isUrgent: false
     }
 });
 
@@ -41,7 +42,8 @@ const plannedItem: TodayItemVm = {
     paymentIndicator: 'NoPaymentRecorded',
     hasActiveHospitalization: false,
     isVoided: false,
-    voidReason: null
+    voidReason: null,
+    isUrgent: false
 };
 
 describe('VisitArrivalDialogComponent', () => {
@@ -87,7 +89,7 @@ describe('VisitArrivalDialogComponent', () => {
             expect(cmp.form.valid).toBeTrue();
             cmp.onSubmit();
 
-            expect(visits.createVisit).toHaveBeenCalledOnceWith({ appointmentId: 'a1', responsibleVeterinarianUserId: '' });
+            expect(visits.createVisit).toHaveBeenCalledOnceWith({ appointmentId: 'a1', responsibleVeterinarianUserId: '', isUrgent: false });
             expect(arrived.length).toBe(1);
             expect(cmp.visible()).toBeFalse();
         });
@@ -131,7 +133,15 @@ describe('VisitArrivalDialogComponent', () => {
             cmp.form.controls.veterinarianId.setValue('u1');
             cmp.onSubmit();
 
-            expect(visits.createVisit.calls.mostRecent().args[0]).toEqual({ appointmentId: 'a1', responsibleVeterinarianUserId: 'u1' });
+            expect(visits.createVisit.calls.mostRecent().args[0]).toEqual({ appointmentId: 'a1', responsibleVeterinarianUserId: 'u1', isUrgent: false });
+        });
+
+        it('Acil işaretlenirse isteğe isUrgent:true eklenir', () => {
+            visits.createVisit.and.returnValue(of(result(true)));
+            cmp.form.controls.isUrgent.setValue(true);
+            cmp.onSubmit();
+
+            expect(visits.createVisit.calls.mostRecent().args[0]).toEqual({ appointmentId: 'a1', responsibleVeterinarianUserId: '', isUrgent: true });
         });
     });
 
@@ -180,7 +190,7 @@ describe('VisitArrivalDialogComponent', () => {
             pick();
             cmp.onSubmit();
 
-            expect(visits.createVisit).toHaveBeenCalledOnceWith({ clinicId: 'c1', petId: 'p1', responsibleVeterinarianUserId: '' });
+            expect(visits.createVisit).toHaveBeenCalledOnceWith({ clinicId: 'c1', petId: 'p1', responsibleVeterinarianUserId: '', isUrgent: false });
         });
 
         it('hekim listesi yüklenemese de geliş hekimsiz kaydedilebilir', () => {

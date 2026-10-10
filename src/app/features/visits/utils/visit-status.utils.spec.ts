@@ -28,6 +28,7 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,
+    isUrgent: false,
     ...over
 });
 
@@ -154,5 +155,15 @@ describe('yanlış işaretlenen satır', () => {
 
     it('normal satırda geri alma yok', () => {
         expect(todayItemActions(item()).canRestore).toBeFalse();
+    });
+});
+
+describe('canToggleUrgency', () => {
+    it('yalnızca açık kayıtta; tamamlanmış, yanlış işaretli ve planlı satırda yok', () => {
+        expect(todayItemActions(item({ careStatus: 'Waiting' })).canToggleUrgency).toBeTrue();
+        expect(todayItemActions(item({ careStatus: 'InProgress' })).canToggleUrgency).toBeTrue();
+        expect(todayItemActions(item({ careStatus: 'Completed' })).canToggleUrgency).toBeFalse();
+        expect(todayItemActions(item({ isVoided: true })).canToggleUrgency).toBeFalse();
+        expect(todayItemActions(item({ visitId: null, careStatus: null })).canToggleUrgency).toBeFalse();
     });
 });

@@ -17,6 +17,7 @@ export interface VisitVm {
     arrivedAtUtc: string;
     careStatus: VisitCareStatus;
     isVoided: boolean;
+    isUrgent: boolean;
 }
 
 export interface VisitCreateResultVm {
@@ -49,6 +50,7 @@ export interface TodayItemVm {
     /** Yalnızca "Yanlış işaretlenenler" görünümünde `true`. */
     isVoided: boolean;
     voidReason: string | null;
+    isUrgent: boolean;
 }
 
 export interface TodayVm {
@@ -77,6 +79,7 @@ export interface CreateVisitRequest {
     petId?: string;
     clinicId?: string;
     responsibleVeterinarianUserId?: string | null;
+    isUrgent?: boolean;
 }
 
 /** Düzeltme hedefi: bir bakım durumu veya "yanlış geliş" işareti. */

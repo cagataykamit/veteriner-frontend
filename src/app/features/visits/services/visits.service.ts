@@ -8,6 +8,7 @@ import {
     mapCorrectVisitToApiBody,
     mapCreateVisitToApiBody,
     mapRestoreVisitToApiBody,
+    mapUrgencyToApiBody,
     mapTodayDtoToVm,
     mapVeterinarianDtoToVm,
     mapVisitCreateResultDtoToVm,
@@ -98,6 +99,14 @@ export class VisitsService {
         return this.api.post<VisitDto>(ApiEndpoints.visits.corrections(id), mapCorrectVisitToApiBody(request)).pipe(
             map(mapVisitDtoToVm),
             toUserError('Düzeltme kaydedilemedi.')
+        );
+    }
+
+    /** `Visits.Update`; idempotent. Tamamlanmış kayıtta değişim `Visits.NotOpen` (409). */
+    setUrgency(id: string, isUrgent: boolean): Observable<VisitVm> {
+        return this.api.put<VisitDto>(ApiEndpoints.visits.urgency(id), mapUrgencyToApiBody(isUrgent)).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Acil işareti güncellenemedi.')
         );
     }
 

@@ -19,6 +19,7 @@ export interface VisitDto {
     startedAtUtc?: string | null;
     completedAtUtc?: string | null;
     isVoided: boolean;
+    isUrgent?: boolean;
     voidReason?: string | null;
 }
 
@@ -48,6 +49,7 @@ export interface TodayItemDto {
     paymentIndicator?: TodayPaymentIndicatorDto | null;
     hasActiveHospitalization?: boolean | null;
     isVoided?: boolean | null;
+    isUrgent?: boolean | null;
     voidReason?: string | null;
 }
 
@@ -68,6 +70,7 @@ export interface CreateVisitRequestDto {
     petId?: string;
     appointmentId?: string;
     responsibleVeterinarianUserId?: string;
+    isUrgent?: boolean;
 }
 
 export interface CorrectVisitRequestDto {
@@ -78,4 +81,8 @@ export interface CorrectVisitRequestDto {
 
 export interface RestoreVisitRequestDto {
     reason: string;
+}
+
+export interface UpdateVisitUrgencyRequestDto {
+    isUrgent: boolean;
 }

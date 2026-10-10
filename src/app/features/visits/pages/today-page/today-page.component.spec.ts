@@ -30,6 +30,7 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,
+    isUrgent: false,
     ...over
 });
 
@@ -42,7 +43,8 @@ const visitVm: VisitVm = {
     responsibleVeterinarianName: null,
     arrivedAtUtc: '2026-10-10T07:00:00Z',
     careStatus: 'InProgress',
-    isVoided: false
+    isVoided: false,
+    isUrgent: false
 };
 
 describe('TodayPageComponent', () => {

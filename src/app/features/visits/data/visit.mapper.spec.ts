@@ -18,6 +18,7 @@ const visitDto = (over: Partial<VisitDto> = {}): VisitDto => ({
     arrivedAtUtc: '2026-10-10T07:00:00Z',
     careStatus: 'Waiting',
     isVoided: false,
+    isUrgent: false,
     ...over
 });
 

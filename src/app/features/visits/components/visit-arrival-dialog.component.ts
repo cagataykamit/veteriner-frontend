@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { catchError, forkJoin, map, Observable, of, Subject, switchMap } from 'rxjs';
@@ -34,7 +35,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
 @Component({
     selector: 'app-visit-arrival-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, VisitQuickRegistrationComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent],
     template: `
         <p-dialog
             [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'"
@@ -111,6 +112,10 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                             appendTo="body"
                         />
                     </div>
+                    <div class="col-span-12 flex items-center gap-2">
+                        <p-checkbox inputId="va-urgent" formControlName="isUrgent" [binary]="true" />
+                        <label for="va-urgent" class="font-medium">Acil</label>
+                    </div>
                 </div>
                 @if (submitError()) {
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
@@ -162,7 +167,8 @@ export class VisitArrivalDialogComponent {
 
     readonly form = this.fb.group({
         pet: this.fb.control<PetSuggestion | string | null>(null, petSelected),
-        veterinarianId: this.fb.nonNullable.control('')
+        veterinarianId: this.fb.nonNullable.control(''),
+        isUrgent: this.fb.nonNullable.control(false)
     });
 
     /** Sahip adı çözümlemesi aramalar arasında paylaşılır (aynı sahip için tekrar istek yok). */
@@ -208,7 +214,7 @@ export class VisitArrivalDialogComponent {
         this.submitError.set(null);
         this.loadError.set(null);
         this.petSuggestions.set([]);
-        this.form.reset({ pet: null, veterinarianId: '' });
+        this.form.reset({ pet: null, veterinarianId: '', isUrgent: false });
         this.registration.set(null);
         this.registeredPetId = null;
         this.lastSearchTerm.set('');
@@ -273,16 +279,16 @@ export class VisitArrivalDialogComponent {
     }
 
     private buildRequest(): CreateVisitRequest | null {
-        const { pet, veterinarianId } = this.form.getRawValue();
+        const { pet, veterinarianId, isUrgent } = this.form.getRawValue();
         const appointmentId = this.appointment()?.appointmentId;
         if (appointmentId) {
-            return { appointmentId, responsibleVeterinarianUserId: veterinarianId };
+            return { appointmentId, responsibleVeterinarianUserId: veterinarianId, isUrgent };
         }
         const clinicId = this.auth.getClinicId()?.trim();
         if (!clinicId || !pet || typeof pet !== 'object') {
             return null;
         }
-        return { clinicId, petId: pet.id, responsibleVeterinarianUserId: veterinarianId };
+        return { clinicId, petId: pet.id, responsibleVeterinarianUserId: veterinarianId, isUrgent };
     }
 
     /** Aynı ada sahip hastaları ayırt etmek için sonuçlara sahip adı eklenir (liste DTO'sunda sahip adı yok). */
