@@ -75,7 +75,7 @@ describe('VisitArrivalDialogComponent', () => {
         beforeEach(() => {
             fixture.componentRef.setInput('appointment', plannedItem);
             cmp.visible.set(true);
-            cmp.onDialogShow();
+            fixture.detectChanges();
         });
 
         it('hasta seçimi istemeden yalnızca appointmentId gönderir; hekim seçilmediyse boş', () => {
@@ -137,7 +137,7 @@ describe('VisitArrivalDialogComponent', () => {
         beforeEach(() => {
             fixture.componentRef.setInput('appointment', null);
             cmp.visible.set(true);
-            cmp.onDialogShow();
+            fixture.detectChanges();
         });
 
         it('hasta seçilmeden gönderilmez', () => {
@@ -181,7 +181,10 @@ describe('VisitArrivalDialogComponent', () => {
 
         it('hekim listesi yüklenemese de geliş hekimsiz kaydedilebilir', () => {
             visits.getVeterinarians.and.returnValue(throwError(() => new Error('Hekim listesi yüklenemedi.')));
-            cmp.onDialogShow();
+            cmp.visible.set(false);
+            fixture.detectChanges();
+            cmp.visible.set(true);
+            fixture.detectChanges();
             pick();
 
             expect(cmp.loadError()).toBe('Hekim listesi yüklenemedi.');

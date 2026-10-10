@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, input, model, output, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, model, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
@@ -48,7 +48,6 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
             [style]="{ width: 'min(560px, 95vw)' }"
             [contentStyle]="{ overflow: 'visible' }"
             [(visible)]="visible"
-            (onShow)="onDialogShow()"
         >
             @if (loadError()) {
                 <p class="text-red-500 mt-0 mb-3" role="alert">{{ loadError() }}</p>
@@ -71,7 +70,6 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                 optionLabel="label"
                                 [delay]="300"
                                 [minQueryLength]="2"
-                                [forceSelection]="true"
                                 [showClear]="true"
                                 [fluid]="true"
                                 placeholder="Hasta, sahip, telefon veya mikroçip ile arayın"
@@ -149,6 +147,13 @@ export class VisitArrivalDialogComponent {
     private readonly petSearch$ = new Subject<string>();
 
     constructor() {
+        // Form, diyalog açılırken (görünürlük değişince) hazırlanır; p-dialog'un onShow olayı açılış animasyonundan
+        // ~300 ms sonra tetiklenir ve o sırada kullanıcının yazdıklarını sıfırlardı.
+        effect(() => {
+            if (this.visible()) {
+                untracked(() => this.prepareForm());
+            }
+        });
         // Sunucu tarafı arama (`search`: Türkçe harf, telefon, mikroçip, sahip adı backend'de çözülür); `switchMap` eski yanıtı atar.
         this.petSearch$
             .pipe(
@@ -174,7 +179,8 @@ export class VisitArrivalDialogComponent {
         }
     }
 
-    onDialogShow(): void {
+    /** Diyalog her açıldığında formu ve yüklemeleri sıfırlar. */
+    private prepareForm(): void {
         this.submitError.set(null);
         this.loadError.set(null);
         this.petSuggestions.set([]);

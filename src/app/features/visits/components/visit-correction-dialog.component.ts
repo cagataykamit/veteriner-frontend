@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, input, model, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -35,7 +35,6 @@ function reasonLength(c: AbstractControl): ValidationErrors | null {
             [style]="{ width: 'min(560px, 95vw)' }"
             [contentStyle]="{ overflow: 'visible' }"
             [(visible)]="visible"
-            (onShow)="onDialogShow()"
         >
             @if (item(); as it) {
                 <p class="mt-0 mb-4">
@@ -115,7 +114,16 @@ export class VisitCorrectionDialogComponent {
         reason: this.fb.nonNullable.control('', reasonLength)
     });
 
-    onDialogShow(): void {
+    constructor() {
+        effect(() => {
+            if (this.visible()) {
+                untracked(() => this.prepareForm());
+            }
+        });
+    }
+
+    /** Diyalog her açıldığında formu sıfırlar (p-dialog onShow animasyondan sonra tetiklenip yazılanı silerdi). */
+    private prepareForm(): void {
         this.submitError.set(null);
         this.form.reset({ action: null, reason: '' });
     }

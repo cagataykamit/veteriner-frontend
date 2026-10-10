@@ -56,7 +56,7 @@ describe('VisitCorrectionDialogComponent', () => {
         cmp.corrected.subscribe((v) => corrected.push(v));
         fixture.detectChanges();
         cmp.visible.set(true);
-        cmp.onDialogShow();
+        fixture.detectChanges();
     });
 
     it('seçenekler mevcut durum hariç: Bekliyor, Devam ediyor, Yanlış geliş', () => {
