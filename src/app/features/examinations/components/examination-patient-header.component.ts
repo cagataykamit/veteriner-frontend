@@ -5,6 +5,8 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { formatPetAgeTr } from '@/app/features/examinations/utils/pet-age.utils';
 import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
+import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
+import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 
 const EM = '—';
 
@@ -15,7 +17,7 @@ const EM = '—';
 @Component({
     selector: 'app-examination-patient-header',
     standalone: true,
-    imports: [RouterLink],
+    imports: [RouterLink, PetAlertBadgesComponent],
     template: `
         <section class="card mb-4" aria-label="Hasta bilgileri">
             <dl class="m-0 grid grid-cols-12 gap-x-4 gap-y-3">
@@ -27,6 +29,7 @@ const EM = '—';
                         } @else {
                             {{ petName() }}
                         }
+                    <app-pet-alert-badges class="block mt-1" [alerts]="petAlerts()" />
                     </dd>
                 </div>
                 <div class="col-span-12 sm:col-span-6 lg:col-span-3">
@@ -80,6 +83,7 @@ export class ExaminationPatientHeaderComponent {
     private clientSeq = 0;
 
     readonly petName = computed(() => this.pet()?.name ?? (this.fallbackPetName()?.trim() || EM));
+    readonly petAlerts = computed(() => this.pet()?.petAlerts ?? NO_PET_ALERTS);
     readonly clientName = computed(() => this.client()?.fullName ?? (this.fallbackClientName()?.trim() || EM));
     readonly speciesBreed = computed(() => {
         const p = this.pet();

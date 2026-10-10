@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { AppointmentNoShowDialogComponent } from '@/app/features/appointments/components/appointment-no-show-dialog.component';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
@@ -73,7 +74,8 @@ type TodayScope = 'mine' | 'all';
         AppStatusTagComponent,
         VisitArrivalDialogComponent,
         VisitCorrectionDialogComponent,
-        AppointmentNoShowDialogComponent
+        AppointmentNoShowDialogComponent,
+        PetAlertBadgesComponent
     ],
     providers: [MessageService],
     template: `
@@ -158,6 +160,7 @@ type TodayScope = 'mine' | 'all';
                                 <td>
                                     <div class="font-medium flex items-center gap-2">
                                         {{ item.petName }}
+                                        <app-pet-alert-badges [alerts]="item.petAlerts" />
                                         @if (item.isUrgent) {
                                             <app-status-tag label="Acil" severity="danger" />
                                         }

@@ -43,6 +43,7 @@ const plannedItem: TodayItemVm = {
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,
+    petAlerts: { flags: [], note: null },
     isUrgent: false
 };
 

@@ -1,3 +1,4 @@
+import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import type { TodayAppointmentStatusDto, TodayPaymentIndicatorDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
 
 export type VisitCareStatus = VisitCareStatusDto;
@@ -50,6 +51,7 @@ export interface TodayItemVm {
     /** Yalnızca "Yanlış işaretlenenler" görünümünde `true`. */
     isVoided: boolean;
     voidReason: string | null;
+    petAlerts: PetAlertsVm;
     isUrgent: boolean;
 }
 

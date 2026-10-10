@@ -1,3 +1,4 @@
+import { mapPetAlertsDtoToVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { HttpParams } from '@angular/common/http';
 import type {
     CorrectVisitRequestDto,
@@ -70,6 +71,7 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         hasActiveHospitalization: dto.hasActiveHospitalization === true,
         isVoided: dto.isVoided === true,
         voidReason: trimmedOrNull(dto.voidReason),
+        petAlerts: mapPetAlertsDtoToVm(dto.petAlerts),
         isUrgent: dto.isUrgent === true
     };
 }

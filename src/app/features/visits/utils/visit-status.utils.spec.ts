@@ -28,6 +28,7 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,
+    petAlerts: { flags: [], note: null },
     isUrgent: false,
     ...over
 });

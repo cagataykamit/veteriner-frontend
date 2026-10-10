@@ -1,3 +1,4 @@
+import type { PetAlertsDto } from '@/app/shared/pet-alerts/pet-alerts.utils';
 /**
  * Visit (geliş) ve Bugün API DTO'ları — `docs/VISITS_API_CONTRACT.md`. Enum'lar JSON'da string.
  * Yalnızca mapper ve servis kullanır.
@@ -48,6 +49,7 @@ export interface TodayItemDto {
     isCarriedOver: boolean;
     paymentIndicator?: TodayPaymentIndicatorDto | null;
     hasActiveHospitalization?: boolean | null;
+    petAlerts?: PetAlertsDto | null;
     isVoided?: boolean | null;
     isUrgent?: boolean | null;
     voidReason?: string | null;
