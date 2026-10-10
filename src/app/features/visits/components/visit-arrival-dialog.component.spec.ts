@@ -54,9 +54,11 @@ describe('VisitArrivalDialogComponent', () => {
     let arrived: VisitCreateResultVm[];
     let getPets: jasmine.Spy;
     let claims: string[];
+    let userId: string | null;
 
     beforeEach(async () => {
         claims = [];
+        userId = null;
         getPets = jasmine.createSpy('getPets').and.returnValue(of({ items: [{ id: 'p1', clientId: 'cl1', name: 'Pamuk', speciesName: 'Kedi' }] }));
         visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['createVisit', 'getVeterinarians']);
         visits.getVeterinarians.and.returnValue(of([{ userId: 'u1', name: 'Dr. Ayşe' }]));
@@ -65,7 +67,7 @@ describe('VisitArrivalDialogComponent', () => {
             imports: [VisitArrivalDialogComponent],
             providers: [
                 { provide: VisitsService, useValue: visits },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1', hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => userId, hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }) } },
                 { provide: PetsService, useValue: { getPets } }
             ]
@@ -205,5 +207,41 @@ describe('VisitArrivalDialogComponent', () => {
             expect(cmp.loadError()).toBe('Hekim listesi yüklenemedi.');
             expect(cmp.form.valid).toBeTrue();
         });
+    });
+});
+
+describe('VisitArrivalDialogComponent — sorumlu hekim varsayılanı', () => {
+    const open = async (userId: string | null, vets: Array<{ userId: string; name: string }>) => {
+        const visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['createVisit', 'getVeterinarians']);
+        visits.getVeterinarians.and.returnValue(of(vets));
+        await TestBed.configureTestingModule({
+            imports: [VisitArrivalDialogComponent],
+            providers: [
+                { provide: VisitsService, useValue: visits },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => userId, hasOperationClaim: () => false } },
+                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali' }) } },
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+            ]
+        }).compileComponents();
+        const fixture = TestBed.createComponent(VisitArrivalDialogComponent);
+        fixture.detectChanges();
+        fixture.componentInstance.visible.set(true);
+        fixture.detectChanges();
+        return fixture.componentInstance;
+    };
+    const vets = [{ userId: 'u1', name: 'Dr. Ayşe' }, { userId: 'u2', name: 'Dr. Test Hekim' }];
+
+    it('hekim kullanıcıda alan kendisiyle gelir; değiştirilebilir ve temizlenebilir', async () => {
+        const cmp = await open('U2', vets);
+        expect(cmp.form.controls.veterinarianId.value).toBe('u2');
+        cmp.form.controls.veterinarianId.setValue('u1');
+        expect(cmp.form.controls.veterinarianId.value).toBe('u1');
+        cmp.form.controls.veterinarianId.setValue('');
+        expect(cmp.form.controls.veterinarianId.value).toBe('');
+    });
+
+    it('hekim olmayan kullanıcıda (resepsiyon) alan boş kalır', async () => {
+        const cmp = await open('u9', vets);
+        expect(cmp.form.controls.veterinarianId.value).toBe('');
     });
 });

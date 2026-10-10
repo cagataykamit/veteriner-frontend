@@ -137,3 +137,9 @@ export function mapRestoreVisitToApiBody(reason: string): RestoreVisitRequestDto
 export function mapUrgencyToApiBody(isUrgent: boolean): UpdateVisitUrgencyRequestDto {
     return { isUrgent };
 }
+
+/** Giriş yapan kullanıcı hekim listesindeyse listedeki kimliği, değilse `null` (hekim tespitinin tek kuralı; kimlik büyük/küçük harf duyarsız). */
+export function findVeterinarianUserId(vets: readonly VeterinarianVm[], userId: string | null | undefined): string | null {
+    const wanted = userId?.trim().toLowerCase();
+    return wanted ? (vets.find((v) => v.userId.toLowerCase() === wanted)?.userId ?? null) : null;
+}

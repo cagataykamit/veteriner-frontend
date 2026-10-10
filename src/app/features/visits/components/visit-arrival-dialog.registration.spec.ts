@@ -37,7 +37,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
             imports: [VisitArrivalDialogComponent],
             providers: [
                 { provide: VisitsService, useValue: visits },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1', hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => null, hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }), getClients: () => of({ items: [] }), quickRegister: () => of({ clientId: 'c-new', petId: 'p-new' }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }), createPet: () => of({ id: 'p-new' }) } },
                 { provide: SpeciesService, useValue: { getSpeciesList: () => of([{ id: 's1', name: 'Kedi' }]) } }

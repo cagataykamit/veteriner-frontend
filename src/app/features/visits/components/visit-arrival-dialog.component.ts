@@ -15,6 +15,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { VisitQuickRegistrationComponent, type RegistrationOwner } from '@/app/features/visits/components/visit-quick-registration.component';
 import type { CreateVisitRequest, PetSuggestion, TodayItemVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
+import { findVeterinarianUserId } from '@/app/features/visits/data/visit.mapper';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -322,6 +323,11 @@ export class VisitArrivalDialogComponent {
         this.visitsService.getVeterinarians(clinicId).subscribe({
             next: (vets) => {
                 this.veterinarianOptions.set(vets.map((v) => ({ label: v.name, value: v.userId })));
+                // Hekim kullanıcı için varsayılan kendisi; kullanıcı yüklenirken başka seçim yaptıysa ezilmez.
+                const self = findVeterinarianUserId(vets, this.auth.getUserId());
+                if (self && !this.form.controls.veterinarianId.value) {
+                    this.form.controls.veterinarianId.setValue(self);
+                }
                 this.loadingVeterinarians.set(false);
             },
             error: (e: unknown) => {

@@ -6,6 +6,7 @@ import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     mapCorrectVisitToApiBody,
+    findVeterinarianUserId,
     mapCreateVisitToApiBody,
     mapRestoreVisitToApiBody,
     mapUrgencyToApiBody,
@@ -79,7 +80,7 @@ export class VisitsService {
             return of(null);
         }
         return this.getVeterinarians(clinicId).pipe(
-            map((vets) => vets.find((v) => v.userId.toLowerCase() === userId)?.userId ?? null),
+            map((vets) => findVeterinarianUserId(vets, userId)),
             catchError(() => of(null))
         );
     }
