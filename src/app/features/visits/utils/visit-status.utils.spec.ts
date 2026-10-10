@@ -167,3 +167,28 @@ describe('canToggleUrgency', () => {
         expect(todayItemActions(item({ visitId: null, careStatus: null })).canToggleUrgency).toBeFalse();
     });
 });
+
+describe('Gelmedi (NoShow) satırı', () => {
+    const now = new Date('2026-10-10T10:00:00Z');
+    const planned = (over: Partial<TodayItemVm> = {}) =>
+        item({ visitId: null, key: 'a1', appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z', ...over });
+
+    it('Visit siz NoShow randevu en sonda Gelmedi grubuna düşer', () => {
+        const groups = groupTodayItems([planned({ key: 'ns', appointmentStatus: 'NoShow' }), item({ key: 'c', careStatus: 'Completed' }), planned({ key: 'p' })]);
+        expect(groups.map((g) => g.key)).toEqual(['planned', 'completed', 'noShow']);
+    });
+
+    it('saati geçmiş planlı satırda Gelmedi işaretlenir; gelecek saatte işaretlenemez', () => {
+        expect(todayItemActions(planned(), now).canMarkNoShow).toBeTrue();
+        expect(todayItemActions(planned({ scheduledAtUtc: '2026-10-10T11:00:00Z' }), now).canMarkNoShow).toBeFalse();
+    });
+
+    it('Gelmedi satırında geri alma ve geç gelen için Geldi var; Visit li satırda gelmedi yok', () => {
+        const ns = todayItemActions(planned({ appointmentStatus: 'NoShow' }), now);
+        expect(ns.canRevertNoShow).toBeTrue();
+        expect(ns.canMarkArrived).toBeTrue();
+        expect(ns.canMarkNoShow).toBeFalse();
+        const withVisit = todayItemActions(item({ appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z' }), now);
+        expect(withVisit.canMarkNoShow || withVisit.canRevertNoShow).toBeFalse();
+    });
+});

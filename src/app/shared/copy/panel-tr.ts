@@ -25,6 +25,7 @@ export const PANEL_COPY = {
     dashboardQuickActionsTitle: 'Hızlı işlemler',
     dashboardContextFootnote: 'Veriler seçili klinik bağlamındadır; bugünkü randevular yerel güne göredir.',
     cancelledAppointmentExamCreateBlocked: 'İptal edilmiş randevu için muayene oluşturulamaz.',
+    noShowAppointmentExamCreateBlocked: 'Gelmedi işaretli randevu için muayene oluşturulamaz. Hasta geldiyse önce geliş kaydı açın veya gelmedi işaretini geri alın.',
     cancelledAppointmentExamCreateHint: 'Bu işlem sadece aktif randevu akışlarında kullanılabilir.',
     /** Raporlar — panel */
     reportsNavGroup: 'Raporlar',

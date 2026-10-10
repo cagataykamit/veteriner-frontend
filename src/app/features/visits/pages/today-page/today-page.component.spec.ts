@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -145,6 +146,7 @@ describe('TodayPageComponent', () => {
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
+                { provide: AppointmentsService, useValue: {} },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
             ]
         }).compileComponents();

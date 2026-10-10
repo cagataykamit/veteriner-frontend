@@ -1,5 +1,6 @@
 import type { TodayItemVm, TodayPaymentIndicator, VisitCareStatus, VisitCorrectionAction } from '@/app/features/visits/models/visit-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { canMarkAppointmentNoShow, canRevertAppointmentNoShow } from '@/app/features/appointments/utils/appointment-status.utils';
 import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 const CARE_STATUS_LABEL: Record<VisitCareStatus, string> = {
@@ -40,7 +41,7 @@ export function correctionActionOptions(current: VisitCareStatus): Array<{ label
     return [...statuses, { label: 'Yanlış geliş olarak işaretle', value: 'Mistaken' }];
 }
 
-export type TodayGroupKey = 'waiting' | 'inProgress' | 'planned' | 'completed' | 'voided';
+export type TodayGroupKey = 'waiting' | 'inProgress' | 'planned' | 'completed' | 'voided' | 'noShow';
 
 export interface TodayGroup {
     key: TodayGroupKey;
@@ -55,12 +56,16 @@ const GROUP_ORDER: ReadonlyArray<{ key: TodayGroupKey; title: string; elapsedLab
     { key: 'inProgress', title: 'Devam ediyor', elapsedLabel: 'Süre' },
     { key: 'planned', title: 'Planlı randevular', elapsedLabel: null },
     { key: 'completed', title: 'Tamamlandı', elapsedLabel: null },
-    { key: 'voided', title: 'Yanlış işaretlenenler', elapsedLabel: null }
+    { key: 'voided', title: 'Yanlış işaretlenenler', elapsedLabel: null },
+    { key: 'noShow', title: 'Gelmedi', elapsedLabel: null }
 ];
 
 function groupKeyOf(item: TodayItemVm): TodayGroupKey {
     if (item.isVoided) {
         return 'voided';
+    }
+    if (!item.visitId && item.appointmentStatus === 'NoShow') {
+        return 'noShow';
     }
     switch (item.careStatus) {
         case 'Waiting':
@@ -80,7 +85,7 @@ export function groupTodayItems(items: readonly TodayItemVm[]): TodayGroup[] {
 }
 
 export interface TodayItemActions {
-    /** Randevudan "Geldi": yalnızca Visit'i olmayan, `Scheduled` randevu. */
+    /** Randevudan "Geldi": yalnızca Visit'i olmayan, `Scheduled` veya `NoShow` (geç gelen hasta) randevu. */
     canMarkArrived: boolean;
     canStartCare: boolean;
     canOpenExamination: boolean;
@@ -91,21 +96,28 @@ export interface TodayItemActions {
     canRestore: boolean;
     /** Acil işareti yalnızca açık (bekleyen / devam eden) kayıtta değiştirilir. */
     canToggleUrgency: boolean;
+    /** Planlı satırdan "Gelmedi": Visit'siz, saati geçmiş `Scheduled` randevu (yetki ayrıca denetlenir). */
+    canMarkNoShow: boolean;
+    /** "Gelmedi" grubundaki Visit'siz randevu satırından geri alma (yetki ayrıca denetlenir). */
+    canRevertNoShow: boolean;
 }
 
-export function todayItemActions(item: TodayItemVm): TodayItemActions {
+export function todayItemActions(item: TodayItemVm, now: Date = new Date()): TodayItemActions {
+    const noShowRow = !item.visitId && !!item.appointmentId;
     if (item.isVoided) {
-        return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId, canToggleUrgency: false };
+        return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId, canToggleUrgency: false, canMarkNoShow: false, canRevertNoShow: false };
     }
     const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
     return {
-        canMarkArrived: !item.visitId && !!item.appointmentId && item.appointmentStatus === 'Scheduled',
+        canMarkArrived: noShowRow && (item.appointmentStatus === 'Scheduled' || item.appointmentStatus === 'NoShow'),
         canStartCare: item.careStatus === 'Waiting',
         canOpenExamination: open,
         canCompleteCare: item.careStatus === 'InProgress',
         canCorrect: !!item.visitId,
         canRestore: false,
-        canToggleUrgency: open && !!item.visitId
+        canToggleUrgency: open && !!item.visitId,
+        canMarkNoShow: noShowRow && canMarkAppointmentNoShow(item.appointmentStatus, item.scheduledAtUtc, now),
+        canRevertNoShow: noShowRow && canRevertAppointmentNoShow(item.appointmentStatus)
     };
 }
 

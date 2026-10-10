@@ -5,7 +5,7 @@
 
 export type VisitCareStatusDto = 'Waiting' | 'InProgress' | 'Completed';
 
-export type TodayAppointmentStatusDto = 'Scheduled' | 'Completed' | 'Cancelled';
+export type TodayAppointmentStatusDto = 'Scheduled' | 'Completed' | 'Cancelled' | 'NoShow';
 
 export interface VisitDto {
     id: string;

@@ -5,12 +5,14 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { AppointmentNoShowDialogComponent } from '@/app/features/appointments/components/appointment-no-show-dialog.component';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    APPOINTMENTS_NOSHOW_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
     VISITS_CORRECT_CLAIM,
     VISITS_CREATE_CLAIM,
@@ -70,7 +72,8 @@ type TodayScope = 'mine' | 'all';
         AppEmptyStateComponent,
         AppStatusTagComponent,
         VisitArrivalDialogComponent,
-        VisitCorrectionDialogComponent
+        VisitCorrectionDialogComponent,
+        AppointmentNoShowDialogComponent
     ],
     providers: [MessageService],
     template: `
@@ -178,6 +181,8 @@ type TodayScope = 'mine' | 'all';
                                     <div class="flex flex-wrap gap-1">
                                         @if (item.careStatus; as status) {
                                             <app-status-tag [label]="statusLabel(status)" [severity]="statusSeverity(status)" />
+                                        } @else if (item.appointmentStatus === 'NoShow') {
+                                            <app-status-tag label="Gelmedi" severity="warn" />
                                         } @else if (item.appointmentStatus === 'Completed') {
                                             <app-status-tag label="Randevu tamamlandı" severity="secondary" />
                                         } @else {
@@ -275,6 +280,12 @@ type TodayScope = 'mine' | 'all';
                                                 (onClick)="toggleUrgency(item)"
                                             />
                                         }
+                                        @if (canNoShow && actions.canMarkNoShow) {
+                                            <p-button type="button" label="Gelmedi" icon="pi pi-user-minus" size="small" severity="secondary" [text]="true" [disabled]="ro.mutationBlocked()" (onClick)="openNoShow(item, 'mark')" />
+                                        }
+                                        @if (canNoShow && actions.canRevertNoShow) {
+                                            <p-button type="button" label="Gelmedi işaretini geri al" icon="pi pi-undo" size="small" severity="secondary" [text]="true" [disabled]="ro.mutationBlocked()" (onClick)="openNoShow(item, 'revert')" />
+                                        }
                                         @if (canCorrect && actions.canRestore) {
                                             <p-button
                                                 type="button"
@@ -318,6 +329,9 @@ type TodayScope = 'mine' | 'all';
         @if (canCreateVisit) {
             <app-visit-arrival-dialog [(visible)]="arrivalOpen" [appointment]="arrivalAppointment()" (arrived)="onArrived($event)" />
         }
+        @if (canNoShow) {
+            <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="noShowItem()?.appointmentId ?? null" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
+        }
         @if (canCorrect) {
             <app-visit-correction-dialog [(visible)]="correctionOpen" [item]="correctionItem()" (corrected)="onCorrected()" />
             <app-visit-correction-dialog mode="restore" [(visible)]="restoreOpen" [item]="restoreItem()" (corrected)="onRestored()" />
@@ -337,6 +351,7 @@ export class TodayPageComponent implements OnInit {
     readonly canCreateVisit = this.auth.hasOperationClaim(VISITS_CREATE_CLAIM);
     readonly canUpdateVisit = this.auth.hasOperationClaim(VISITS_UPDATE_CLAIM);
     readonly canCorrect = this.auth.hasOperationClaim(VISITS_CORRECT_CLAIM);
+    readonly canNoShow = this.auth.hasOperationClaim(APPOINTMENTS_NOSHOW_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
 
     readonly loading = signal(true);
@@ -357,6 +372,13 @@ export class TodayPageComponent implements OnInit {
     readonly correctionItem = signal<TodayItemVm | null>(null);
     readonly restoreOpen = signal(false);
     readonly restoreItem = signal<TodayItemVm | null>(null);
+    readonly noShowOpen = signal(false);
+    readonly noShowItem = signal<TodayItemVm | null>(null);
+    readonly noShowMode = signal<'mark' | 'revert'>('mark');
+    readonly noShowSubject = computed(() => {
+        const i = this.noShowItem();
+        return i ? `${i.petName} · ${i.clientName} · Randevu ${this.time(i.scheduledAtUtc)}` : '';
+    });
 
     readonly viewOptions: Array<{ label: string; value: TodayView }> = [
         { label: 'Bugün', value: 'today' },
@@ -378,7 +400,7 @@ export class TodayPageComponent implements OnInit {
     readonly statusSeverity = careStatusSeverity;
     readonly paymentLabel = paymentIndicatorLabel;
     readonly phone = formatClientPhoneForDisplay;
-    readonly actionsOf = todayItemActions;
+    readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
     readonly waitTitle = waitAlertTitle;
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',
@@ -491,6 +513,21 @@ export class TodayPageComponent implements OnInit {
     setView(view: TodayView): void {
         this.view.set(view);
         this.refresh('initial');
+    }
+
+    openNoShow(item: TodayItemVm, mode: 'mark' | 'revert'): void {
+        this.noShowItem.set(item);
+        this.noShowMode.set(mode);
+        this.noShowOpen.set(true);
+    }
+
+    onNoShowDone(): void {
+        addTracedToast(this.messages, 'TodayPage', this.router.url, {
+            severity: 'success',
+            summary: this.noShowMode() === 'mark' ? 'Randevu gelmedi olarak işaretlendi.' : 'Gelmedi işareti geri alındı.',
+            life: 4000
+        });
+        this.refresh('silent');
     }
 
     openRestore(item: TodayItemVm): void {

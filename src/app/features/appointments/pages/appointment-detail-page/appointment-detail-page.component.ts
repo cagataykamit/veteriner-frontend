@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { AppointmentNoShowDialogComponent } from '@/app/features/appointments/components/appointment-no-show-dialog.component';
 import type { AppointmentDetailVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -11,6 +12,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import {
     appointmentStatusLabel,
     appointmentStatusSeverity,
+    canMarkAppointmentNoShow,
+    canRevertAppointmentNoShow,
+    isAppointmentNoShowStatus,
     isAppointmentCancelledStatus
 } from '@/app/features/appointments/utils/appointment-status.utils';
 import {
@@ -27,6 +31,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    APPOINTMENTS_NOSHOW_CLAIM,
     APPOINTMENTS_RESCHEDULE_CLAIM,
     EXAMINATIONS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
@@ -42,7 +47,8 @@ import {
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppointmentNoShowDialogComponent
     ],
     template: `
         <a href="" (click)="goBack($event)" class="text-primary font-medium no-underline inline-block mb-4">← {{ backLabel() }}</a>
@@ -86,8 +92,15 @@ import {
                             class="p-button-secondary"
                         ></button>
                     }
+                    @if (canNoShow && !ro.mutationBlocked()) {
+                        @if (canMarkNoShow(appt()!.status, appt()!.scheduledAtUtc, now())) {
+                            <button pButton type="button" label="Gelmedi işaretle" icon="pi pi-user-minus" class="p-button-secondary" (click)="openNoShow('mark')"></button>
+                        } @else if (canRevertNoShow(appt()!.status)) {
+                            <button pButton type="button" label="Gelmedi işaretini geri al" icon="pi pi-undo" class="p-button-secondary" (click)="openNoShow('revert')"></button>
+                        }
+                    }
                     @if (canCreateExamination && appt()!.clientId?.trim() && appt()!.petId?.trim()) {
-                        @if (isCancelledForExam(appt()!.status)) {
+                        @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
                             <button
                                 pButton
                                 type="button"
@@ -122,12 +135,15 @@ import {
                         }
                     }
                 </div>
-                @if (isCancelledForExam(appt()!.status)) {
+                @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
                     <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mt-2" role="status">
-                        {{ copy.cancelledAppointmentExamCreateBlocked }}
+                        {{ isNoShow(appt()!.status) ? copy.noShowAppointmentExamCreateBlocked : copy.cancelledAppointmentExamCreateBlocked }}
                     </p>
                 }
             </app-page-header>
+            @if (canNoShow) {
+                <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="appt()!.id" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
+            }
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
@@ -272,6 +288,18 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
     readonly isCancelledForExam = isAppointmentCancelledStatus;
+    readonly isNoShow = isAppointmentNoShowStatus;
+    readonly canMarkNoShow = canMarkAppointmentNoShow;
+    readonly canRevertNoShow = canRevertAppointmentNoShow;
+    readonly canNoShow = this.auth.hasOperationClaim(APPOINTMENTS_NOSHOW_CLAIM);
+    readonly noShowOpen = signal(false);
+    readonly noShowMode = signal<'mark' | 'revert'>('mark');
+    /** Gelmedi koşulu (saati geçmiş mi) için saat; sayfa yüklenince/yenilenince güncellenir. */
+    readonly now = signal(new Date());
+    readonly noShowSubject = computed(() => {
+        const a = this.appt();
+        return a ? `${a.petName} · ${a.clientName} · ${formatUtcIsoAsLocalDateTimeDisplay(a.scheduledAtUtc)}` : '';
+    });
 
     ngOnInit(): void {
         this.readReturnContext();
@@ -313,6 +341,16 @@ export class AppointmentDetailPageComponent implements OnInit {
             });
     }
 
+    openNoShow(mode: 'mark' | 'revert'): void {
+        this.noShowMode.set(mode);
+        this.noShowOpen.set(true);
+    }
+
+    onNoShowDone(): void {
+        this.now.set(new Date());
+        this.reload();
+    }
+
     reload(): void {
         if (!this.lastId) {
             return;
@@ -322,6 +360,7 @@ export class AppointmentDetailPageComponent implements OnInit {
         this.appointmentsService.getAppointmentById(this.lastId).subscribe({
             next: (x) => {
                 this.appt.set(x);
+                this.now.set(new Date());
                 this.loading.set(false);
                 this.loadLinkedExaminations(x);
             },

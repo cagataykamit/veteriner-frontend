@@ -1,22 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import type { TodayItemVm, VisitCorrectionAction, VisitVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { careStatusLabel, correctionActionOptions } from '@/app/features/visits/utils/visit-status.utils';
+import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-
-const REASON_MIN = 5;
-const REASON_MAX = 500;
-
-/** Sözleşme: gerekçe trim sonrası 5–500 karakter. */
-function reasonLength(c: AbstractControl): ValidationErrors | null {
-    const len = typeof c.value === 'string' ? c.value.trim().length : 0;
-    return len >= REASON_MIN && len <= REASON_MAX ? null : { reasonLength: true };
-}
 
 /**
  * Geliş düzeltmesi (`Visits.Correct`): durumu geri/ileri al veya yanlış geliş olarak işaretle. Gerekçe zorunlu. `mode="restore"` ile yanlış gelişi geri alır (aynı gerekçe kuralı).
