@@ -39,6 +39,16 @@ describe('groupTodayItems', () => {
         expect(groups[0].items.map((i) => i.key)).toEqual(['w1', 'w2']);
     });
 
+    it('süre sütunu başlığı gruba göre: Bekleme / Süre; planlı ve tamamlananlarda yok', () => {
+        const groups = groupTodayItems([
+            item({ key: 'w', careStatus: 'Waiting' }),
+            item({ key: 'i', careStatus: 'InProgress' }),
+            item({ key: 'p', visitId: null, careStatus: null }),
+            item({ key: 'c', careStatus: 'Completed' })
+        ]);
+        expect(groups.map((g) => g.elapsedLabel)).toEqual(['Bekleme', 'Süre', null, null]);
+    });
+
     it('liste boşsa grup yok', () => {
         expect(groupTodayItems([])).toEqual([]);
     });

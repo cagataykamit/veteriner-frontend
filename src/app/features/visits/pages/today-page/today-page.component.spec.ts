@@ -80,8 +80,8 @@ describe('TodayPageComponent', () => {
             items: [item({ key: 'w' }), item({ key: 'c', careStatus: 'Completed' })]
         });
         const t = text(f);
-        expect(t).toContain('Bekliyor (1)');
-        expect(t).toContain('Tamamlandı (1)');
+        expect(t).toContain('Bekliyor');
+        expect(t).toContain('Tamamlandı');
         expect(t).toContain('Dr. Ayşe');
         expect(t).toContain('12 dk');
         expect(t).not.toMatch(/açık iş/i);
@@ -96,7 +96,31 @@ describe('TodayPageComponent', () => {
         expect(t).toContain('Ödeme kaydı var');
         expect(t).toContain('Ödeme kaydı yok');
         expect(t).toContain('Yatışta');
-        expect(t).toContain('Bekliyor (2)');
+        expect(t).toContain('Bekliyor');
+        expect((f.nativeElement as HTMLElement).querySelector('[aria-label="2 kayıt"]')).not.toBeNull();
+    });
+
+    it('telefon okunabilir biçimde, hekim yoksa Atanmadı gösterilir', async () => {
+        const f = await create(['Visits.Read'], { date: 'd', items: [item({ clientPhone: '905439580091', responsibleVeterinarianName: null })] });
+        const t = text(f);
+        expect(t).toContain('+90 543 958 00 91');
+        expect(t).not.toContain('905439580091');
+        expect(t).toContain('Atanmadı');
+    });
+
+    it('süre sütunu grup bazlı: Bekliyor için Bekleme, Devam ediyor için Süre, tamamlananlarda yok', async () => {
+        const f = await create(['Visits.Read'], {
+            date: 'd',
+            items: [item({ key: 'w' }), item({ key: 'i', careStatus: 'InProgress' }), item({ key: 'c', careStatus: 'Completed' })]
+        });
+        const headers = Array.from((f.nativeElement as HTMLElement).querySelectorAll('section')).map((s) =>
+            Array.from(s.querySelectorAll('th')).map((th) => th.textContent?.trim())
+        );
+        expect(headers[0]).toContain('Bekleme');
+        expect(headers[1]).toContain('Süre');
+        expect(headers[1]).not.toContain('Bekleme');
+        expect(headers[2]).not.toContain('Bekleme');
+        expect(headers[2]).not.toContain('Süre');
     });
 
     it('boş liste boş durumu gösterir', async () => {

@@ -35,6 +35,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 /** Resepsiyon ve hekimin aynı kuyruğu güncel görmesi için otomatik yenileme aralığı. */
@@ -103,7 +104,10 @@ type RefreshMode = 'initial' | 'silent';
             }
             @for (group of groups(); track group.key) {
                 <section class="card mb-4" [attr.aria-label]="group.title">
-                    <h2 class="text-lg font-semibold mt-0 mb-3">{{ group.title }} ({{ group.items.length }})</h2>
+                    <div class="font-medium mb-3 flex items-center gap-2">
+                        <span>{{ group.title }}</span>
+                        <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="group.items.length + ' kayıt'">{{ group.items.length }}</span>
+                    </div>
                     <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm">
                         <ng-template #header>
                             <tr>
@@ -113,7 +117,9 @@ type RefreshMode = 'initial' | 'silent';
                                 <th>Hekim</th>
                                 <th>Durum</th>
                                 <th>Ödeme / yatış</th>
-                                <th>Bekleme</th>
+                                @if (group.elapsedLabel) {
+                                    <th>{{ group.elapsedLabel }}</th>
+                                }
                                 <th></th>
                             </tr>
                         </ng-template>
@@ -136,10 +142,16 @@ type RefreshMode = 'initial' | 'silent';
                                 <td>
                                     <div>{{ item.clientName }}</div>
                                     @if (item.clientPhone) {
-                                        <div class="text-sm text-muted-color">{{ item.clientPhone }}</div>
+                                        <div class="text-sm text-muted-color">{{ phone(item.clientPhone) }}</div>
                                     }
                                 </td>
-                                <td>{{ item.responsibleVeterinarianName ?? '—' }}</td>
+                                <td>
+                                    @if (item.responsibleVeterinarianName; as vet) {
+                                        {{ vet }}
+                                    } @else {
+                                        <span class="text-muted-color">Atanmadı</span>
+                                    }
+                                </td>
                                 <td>
                                     <div class="flex flex-wrap gap-1">
                                         @if (item.careStatus; as status) {
@@ -165,7 +177,9 @@ type RefreshMode = 'initial' | 'silent';
                                         }
                                     </div>
                                 </td>
-                                <td>{{ elapsed(item) ?? '—' }}</td>
+                                @if (group.elapsedLabel) {
+                                    <td>{{ elapsed(item) ?? '—' }}</td>
+                                }
                                 <td>
                                     <div class="flex flex-wrap gap-2 justify-end">
                                         @let actions = actionsOf(item);
@@ -288,6 +302,7 @@ export class TodayPageComponent implements OnInit {
     readonly statusLabel = careStatusLabel;
     readonly statusSeverity = careStatusSeverity;
     readonly paymentLabel = paymentIndicatorLabel;
+    readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = todayItemActions;
 
     ngOnInit(): void {

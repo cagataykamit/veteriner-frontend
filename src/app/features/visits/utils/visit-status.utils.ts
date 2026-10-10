@@ -45,14 +45,16 @@ export type TodayGroupKey = 'waiting' | 'inProgress' | 'planned' | 'completed';
 export interface TodayGroup {
     key: TodayGroupKey;
     title: string;
+    /** Süre sütunu başlığı; `null` ise sütun yok (planlı ve tamamlananlarda gösterilecek süre verisi yok). */
+    elapsedLabel: string | null;
     items: TodayItemVm[];
 }
 
-const GROUP_ORDER: ReadonlyArray<{ key: TodayGroupKey; title: string }> = [
-    { key: 'waiting', title: 'Bekliyor' },
-    { key: 'inProgress', title: 'Devam ediyor' },
-    { key: 'planned', title: 'Planlı randevular' },
-    { key: 'completed', title: 'Tamamlandı' }
+const GROUP_ORDER: ReadonlyArray<{ key: TodayGroupKey; title: string; elapsedLabel: string | null }> = [
+    { key: 'waiting', title: 'Bekliyor', elapsedLabel: 'Bekleme' },
+    { key: 'inProgress', title: 'Devam ediyor', elapsedLabel: 'Süre' },
+    { key: 'planned', title: 'Planlı randevular', elapsedLabel: null },
+    { key: 'completed', title: 'Tamamlandı', elapsedLabel: null }
 ];
 
 function groupKeyOf(item: TodayItemVm): TodayGroupKey {
@@ -70,9 +72,7 @@ function groupKeyOf(item: TodayItemVm): TodayGroupKey {
 
 /** Sözleşme: `careStatus` dolu satır o gruba, `null` satır "Planlı"ya gider. Grup içi sıra sunucudan gelir. Boş gruplar atılır. */
 export function groupTodayItems(items: readonly TodayItemVm[]): TodayGroup[] {
-    return GROUP_ORDER.map(({ key, title }) => ({ key, title, items: items.filter((i) => groupKeyOf(i) === key) })).filter(
-        (g) => g.items.length > 0
-    );
+    return GROUP_ORDER.map((g) => ({ ...g, items: items.filter((i) => groupKeyOf(i) === g.key) })).filter((g) => g.items.length > 0);
 }
 
 export interface TodayItemActions {
