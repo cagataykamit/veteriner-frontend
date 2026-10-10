@@ -58,6 +58,15 @@ export interface VeterinarianVm {
     name: string;
 }
 
+/** Hasta arama sonucu / yeni kaydedilen hasta: sahip bilgisiyle ayırt edilebilir etiket. */
+export interface PetSuggestion {
+    id: string;
+    label: string;
+    /** Aynı sahibe yeni hayvan eklemek için; liste yanıtında yoksa `null`. */
+    clientId: string | null;
+    clientName: string;
+}
+
 export interface CreateVisitRequest {
     /** Randevulu geliş: `clinicId`/`petId` randevudan türetilir. */
     appointmentId?: string;

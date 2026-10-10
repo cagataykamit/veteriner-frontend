@@ -23,7 +23,7 @@ describe('VisitArrivalDialogComponent (hasta arama alanına yazma)', () => {
             imports: [VisitArrivalDialogComponent],
             providers: [
                 { provide: VisitsService, useValue: { getVeterinarians: () => of([]) } },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', hasOperationClaim: () => false } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }) } },
                 { provide: PetsService, useValue: { getPets } }
             ]

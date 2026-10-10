@@ -48,8 +48,10 @@ describe('VisitArrivalDialogComponent', () => {
     let visits: jasmine.SpyObj<VisitsService>;
     let arrived: VisitCreateResultVm[];
     let getPets: jasmine.Spy;
+    let claims: string[];
 
     beforeEach(async () => {
+        claims = [];
         getPets = jasmine.createSpy('getPets').and.returnValue(of({ items: [{ id: 'p1', clientId: 'cl1', name: 'Pamuk', speciesName: 'Kedi' }] }));
         visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['createVisit', 'getVeterinarians']);
         visits.getVeterinarians.and.returnValue(of([{ userId: 'u1', name: 'Dr. Ayşe' }]));
@@ -58,7 +60,7 @@ describe('VisitArrivalDialogComponent', () => {
             imports: [VisitArrivalDialogComponent],
             providers: [
                 { provide: VisitsService, useValue: visits },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }) } },
                 { provide: PetsService, useValue: { getPets } }
             ]
@@ -132,7 +134,7 @@ describe('VisitArrivalDialogComponent', () => {
     });
 
     describe('randevusuz hızlı geliş (sunucu tarafı arama)', () => {
-        const pick = () => cmp.form.controls.pet.setValue({ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli' });
+        const pick = () => cmp.form.controls.pet.setValue({ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' });
 
         beforeEach(() => {
             fixture.componentRef.setInput('appointment', null);
@@ -150,7 +152,7 @@ describe('VisitArrivalDialogComponent', () => {
             cmp.onPetSearch({ query: ' 985 1210 ', originalEvent: new Event('x') });
 
             expect(getPets).toHaveBeenCalledOnceWith({ page: 1, pageSize: 10, search: '985 1210' });
-            expect(cmp.petSuggestions()).toEqual([{ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli' }]);
+            expect(cmp.petSuggestions()).toEqual([{ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' }]);
         });
 
         it('boş terim istek üretmez', () => {

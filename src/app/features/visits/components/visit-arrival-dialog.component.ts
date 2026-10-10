@@ -8,19 +8,15 @@ import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { catchError, forkJoin, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { CLIENTS_CREATE_CLAIM, PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
-import type { CreateVisitRequest, TodayItemVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
+import { VisitQuickRegistrationComponent, type RegistrationOwner } from '@/app/features/visits/components/visit-quick-registration.component';
+import type { CreateVisitRequest, PetSuggestion, TodayItemVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-
-/** Arama sonucu: seçilen hastanın kimliği ve sahip bilgisiyle ayırt edilebilir etiketi. */
-export interface PetSuggestion {
-    id: string;
-    label: string;
-}
 
 const PET_SEARCH_PAGE_SIZE = 10;
 
@@ -38,7 +34,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
 @Component({
     selector: 'app-visit-arrival-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, VisitQuickRegistrationComponent],
     template: `
         <p-dialog
             [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'"
@@ -80,6 +76,25 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                 <small class="text-red-500">Listeden bir hasta seçin.</small>
                             }
                         </div>
+                        @if (registration(); as reg) {
+                            <div class="col-span-12">
+                                <app-visit-quick-registration
+                                    [searchTerm]="lastSearchTerm()"
+                                    [existingOwner]="reg.owner"
+                                    (registered)="onRegistered($event)"
+                                    (cancelled)="registration.set(null)"
+                                />
+                            </div>
+                        } @else {
+                            <div class="col-span-12 flex flex-wrap gap-3 -mt-2">
+                                @if (canRegisterNewOwner) {
+                                    <p-button type="button" label="Yeni müşteri ve hasta ekle" icon="pi pi-user-plus" size="small" [text]="true" (onClick)="openRegistration(null)" />
+                                }
+                                @if (canAddPet && selectedOwner(); as owner) {
+                                    <p-button type="button" label="Bu sahibe yeni hayvan ekle" icon="pi pi-plus" size="small" [text]="true" (onClick)="openRegistration(owner)" />
+                                }
+                            </div>
+                        }
                     }
                     <div class="col-span-12">
                         <label for="va-vet" class="block text-sm font-medium text-muted-color mb-2">Sorumlu hekim (opsiyonel)</label>
@@ -135,6 +150,14 @@ export class VisitArrivalDialogComponent {
     readonly loadError = signal<string | null>(null);
     readonly loadingVeterinarians = signal(false);
     readonly petSuggestions = signal<PetSuggestion[]>([]);
+    /** Hızlı kayıt açıksa (`owner`: kayıtlı sahibe hayvan ekleme); kapalıysa `null`. */
+    readonly registration = signal<{ owner: RegistrationOwner | null } | null>(null);
+    readonly lastSearchTerm = signal('');
+    /** Yeni müşteri + hasta için ikisi de, mevcut sahibe hayvan için yalnızca `Pets.Create` gerekir. */
+    readonly canAddPet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
+    readonly canRegisterNewOwner = this.canAddPet && this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM);
+    /** Hızlı kayıtla az önce oluşturulan hasta; Visit adımı hata verirse mesajda belirtilir. */
+    private registeredPetId: string | null = null;
     readonly veterinarianOptions = signal<SelectOption[]>([]);
 
     readonly form = this.fb.group({
@@ -173,6 +196,7 @@ export class VisitArrivalDialogComponent {
 
     onPetSearch(event: AutoCompleteCompleteEvent): void {
         const term = event.query.trim();
+        this.lastSearchTerm.set(term);
         if (term) {
             this.loadError.set(null);
             this.petSearch$.next(term);
@@ -185,6 +209,9 @@ export class VisitArrivalDialogComponent {
         this.loadError.set(null);
         this.petSuggestions.set([]);
         this.form.reset({ pet: null, veterinarianId: '' });
+        this.registration.set(null);
+        this.registeredPetId = null;
+        this.lastSearchTerm.set('');
         // Randevulu geliş: hasta randevudan gelir; devre dışı kontrol geçerliliği etkilemez.
         if (this.appointment()) {
             this.form.controls.pet.disable({ emitEvent: false });
@@ -196,6 +223,24 @@ export class VisitArrivalDialogComponent {
 
     close(): void {
         this.visible.set(false);
+    }
+
+    /** Seçili hastanın sahibi (liste yanıtında sahip kimliği varsa); "bu sahibe yeni hayvan" için. */
+    selectedOwner(): RegistrationOwner | null {
+        const pet = this.form.controls.pet.value;
+        return pet && typeof pet === 'object' && pet.clientId ? { id: pet.clientId, name: pet.clientName } : null;
+    }
+
+    openRegistration(owner: RegistrationOwner | null): void {
+        this.registration.set({ owner });
+    }
+
+    /** Müşteri/hayvan kaydedildi: hasta seçilir ve geliş (Visit) hemen açılır; Visit hata verirse hasta yeniden oluşturulmaz. */
+    onRegistered(pet: PetSuggestion): void {
+        this.registeredPetId = pet.id;
+        this.registration.set(null);
+        this.form.controls.pet.setValue(pet);
+        this.onSubmit();
     }
 
     onSubmit(): void {
@@ -221,7 +266,8 @@ export class VisitArrivalDialogComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
-                this.submitError.set(panelHttpFailureMessage(e, 'Geliş kaydı oluşturulamadı.'));
+                const message = panelHttpFailureMessage(e, 'Geliş kaydı oluşturulamadı.');
+                this.submitError.set(request.petId && request.petId === this.registeredPetId ? `Hasta kaydedildi, ancak geliş kaydı oluşturulamadı: ${message}` : message);
             }
         });
     }
@@ -252,7 +298,9 @@ export class VisitArrivalDialogComponent {
             map(() =>
                 pets.map((p) => ({
                     id: p.id,
-                    label: `${p.name} — ${p.speciesName} · Sahip: ${(p.clientId && this.ownerNames.get(p.clientId)) || '—'}`
+                    label: `${p.name} — ${p.speciesName} · Sahip: ${(p.clientId && this.ownerNames.get(p.clientId)) || '—'}`,
+                    clientId: p.clientId,
+                    clientName: (p.clientId && this.ownerNames.get(p.clientId)) || '—'
                 }))
             )
         );
