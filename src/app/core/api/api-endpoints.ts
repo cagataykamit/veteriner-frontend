@@ -57,6 +57,8 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order` (canonical — @see docs/BACKEND-INTEGRATION.md). */
         list: () => `/api/v1/clients`,
         byId: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}`,
+        /** POST: müşteri + hayvan tek işlemde (`Clients.Create` ve `Pets.Create`); Visit açmaz. */
+        quickRegister: () => `/api/v1/clients/quick-register`,
         recentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/recent-summary`,
         paymentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/payment-summary`
     },

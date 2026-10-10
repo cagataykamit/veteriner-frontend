@@ -10,15 +10,18 @@ import {
     mapClientRecentSummaryDtoToVm,
     mapCreateClientToApiBody,
     mapPagedClientsToVm,
+    mapQuickRegisterResultDtoToVm,
+    mapQuickRegisterToApiBody,
     clientsQueryToHttpParams
 } from '@/app/features/clients/data/client.mapper';
 import type {
     ClientDetailDto,
     ClientListItemDtoPagedResult,
     ClientPaymentSummaryDto,
-    ClientRecentSummaryDto
+    ClientRecentSummaryDto,
+    QuickRegisterResultDto
 } from '@/app/features/clients/models/client-api.model';
-import type { CreateClientRequest } from '@/app/features/clients/models/client-create.model';
+import type { CreateClientRequest, QuickRegisterRequest, QuickRegisterResult } from '@/app/features/clients/models/client-create.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 import type {
     ClientDetailVm,
@@ -109,6 +112,22 @@ export class ClientsService {
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Müşteri oluşturulamadı.')
                 );
+            })
+        );
+    }
+
+    /**
+     * Müşteri + hayvan tek işlemde (yarım kayıt oluşmaz). Visit açmaz: çağıran `petId` ile `POST /visits` yapar.
+     * HTTP hataları (400 alan, 403, 404 tür, 409 `Clients.DuplicateClient`) bileşende ayrıştırılabilsin diye ham iletilir.
+     */
+    quickRegister(payload: QuickRegisterRequest): Observable<QuickRegisterResult> {
+        return this.api.post<QuickRegisterResultDto>(ApiEndpoints.clients.quickRegister(), mapQuickRegisterToApiBody(payload)).pipe(
+            map((dto) => {
+                const result = mapQuickRegisterResultDtoToVm(dto);
+                if (!result) {
+                    throw new Error('Sunucu yanıtında müşteri/hayvan kimliği okunamadı. Kayıt oluşmuş olabilir; müşteri listesini kontrol edin.');
+                }
+                return result;
             })
         );
     }

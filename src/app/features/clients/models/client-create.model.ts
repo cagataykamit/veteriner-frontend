@@ -8,3 +8,20 @@ export interface CreateClientRequest {
     email?: string;
     address?: string;
 }
+
+/**
+ * Hızlı kayıt (randevusuz gelişte yeni müşteri + hasta): tek istekte, tek işlemde. E-posta/adres bu yolda yoktur.
+ */
+export interface QuickRegisterRequest {
+    fullName: string;
+    /** Zorunlu (Türkiye cep telefonu); sunucu normalleştirir. */
+    phone: string;
+    petName: string;
+    speciesId: string;
+    microchipNumber?: string;
+}
+
+export interface QuickRegisterResult {
+    clientId: string;
+    petId: string;
+}
