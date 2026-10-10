@@ -17,6 +17,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 /**
  * Yazdıkça arayan müşteri seçici (en az 2 karakter, 300 ms bekleme, sunucu tarafı arama).
  * Form değeri müşteri kimliğidir (`''`: seçim yok). Sonuç yoksa yetkiliye "Yeni müşteri ekle" sunar.
+ *
+ * `forceSelection` KULLANILMAZ: PrimeNG, panel kapanırken (ör. min. uzunluktan kısa tek karakter yazılınca) seçimsiz metni
+ * siler ve yazmayı imkânsız kılar. Listeden seçilmemiş metin form değerini boş (`''`) bırakır.
  */
 @Component({
     selector: 'app-client-search',
@@ -34,7 +37,6 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             optionLabel="label"
             [delay]="300"
             [minQueryLength]="minLength"
-            [forceSelection]="true"
             [showClear]="true"
             [fluid]="true"
             [placeholder]="placeholder()"

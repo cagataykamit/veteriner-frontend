@@ -48,6 +48,38 @@ describe('ClientSearchComponent', () => {
         fixture.detectChanges();
         cmp = fixture.debugElement.children[0].componentInstance as ClientSearchComponent;
     });
+    const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+    const typeInto = (text: string) => {
+        const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+        input.focus();
+        input.value = text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        return input;
+    };
+
+    it('gerçek input: tek karakter (min. uzunluğun altı) yazılınca metin silinmez, arama tetiklenmez', async () => {
+        const input = typeInto('m');
+        await wait(1000);
+        fixture.detectChanges();
+        expect(input.value).toBe('m');
+        expect(search.search).not.toHaveBeenCalled();
+    });
+
+    it('gerçek input: aralıklı yazılan metin korunur ve debounce sonrası tek sunucu araması yapılır', async () => {
+        typeInto('m');
+        await wait(500);
+        const input = typeInto('ma');
+        await wait(100);
+        typeInto('mak');
+        await wait(500);
+        fixture.detectChanges();
+        expect(input.value).toBe('mak');
+        expect(search.search).toHaveBeenCalledTimes(1);
+        expect(search.search).toHaveBeenCalledWith('mak');
+        expect(cmp.suggestions()).toEqual([ali]);
+        expect(host.control.value).toBe('');
+    });
 
     it('arama sunucuya gider ve sonuçlar listelenir', () => {
         cmp.onComplete({ query: 'ali', originalEvent: new Event('x') });
