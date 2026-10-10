@@ -6,6 +6,8 @@ import type { ChargeCreateResultVm, ChargeVm } from '@/app/features/charges/mode
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { SpeciesService } from '@/app/features/species/services/species.service';
+import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
@@ -49,6 +51,8 @@ describe('ChargeNewPageComponent', () => {
                 provideRouter([]),
                 { provide: ChargesService, useValue: charges },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
+                { provide: SpeciesService, useValue: {} }, // hızlı hayvan diyaloğunun bağımlılıkları; bu testlerde çağrılmaz
+                { provide: BreedsService, useValue: {} },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [{ id: 'p1', name: 'Pamuk', speciesName: 'Kedi', clientId: 'cl1' }] }) } },
                 {
                     provide: ExaminationsService,
@@ -221,6 +225,27 @@ describe('ChargeNewPageComponent', () => {
         const req = charges.createCharge.calls.mostRecent().args[0];
         expect(req.visitId).toBe('v1');
         expect(req.examinationId).toBe('ex1');
+    });
+
+    it('müşteri seçilince ve Pets.Create varken "yeni hayvan ekle" görünür; müşteri yokken veya yetkisiz görünmez', async () => {
+        claims.add('Pets.Create');
+        await setup();
+        expect(fixture.nativeElement.textContent).not.toContain('yeni hayvan');
+        fill();
+        expect(fixture.nativeElement.textContent).toContain('Bu müşteri için yeni hayvan');
+    });
+
+    it('Pets.Create yoksa "yeni hayvan ekle" görünmez', async () => {
+        await setup();
+        fill();
+        expect(fixture.nativeElement.textContent).not.toContain('yeni hayvan');
+    });
+
+    it('hızlı kayıtla eklenen hayvan listeye alınıp seçilir', async () => {
+        await setup();
+        fill();
+        cmp.onQuickPetCreated('p1');
+        expect(cmp.form.controls.petId.value).toBe('p1');
     });
 
     it('Visits.Read / Examinations.Read yoksa ilgili seçiciler gösterilmez', async () => {

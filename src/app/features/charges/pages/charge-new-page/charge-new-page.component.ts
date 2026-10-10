@@ -30,6 +30,8 @@ import {
     trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
+import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
+import { canShowQuickPetCreateButton } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -39,7 +41,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, ClientSearchComponent, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, ClientSearchComponent, QuickPetDialogComponent, AppPageHeaderComponent],
     template: `
         <a routerLink="/panel/charges" class="text-primary font-medium no-underline inline-block mb-4">← Ücret listesine dön</a>
 
@@ -76,6 +78,17 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                             styleClass="w-full"
                             [loading]="loadingPets()"
                         />
+                        @if (canQuickCreatePet() && form.controls.clientId.value) {
+                            <p-button
+                                type="button"
+                                [label]="petOptions().length ? 'Bu müşteri için yeni hayvan' : 'Hayvanı yok mu? Yeni hayvan ekle'"
+                                icon="pi pi-plus"
+                                [text]="true"
+                                size="small"
+                                styleClass="p-0 mt-2"
+                                (onClick)="quickPetOpen.set(true)"
+                            />
+                        }
                     </div>
                     @if (canLinkVisit) {
                         <div class="col-span-12 md:col-span-6">
@@ -163,6 +176,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                 </div>
             </form>
         </div>
+
+        <app-quick-pet-dialog [(visible)]="quickPetOpen" [ownerClientId]="form.controls.clientId.value" (petCreated)="onQuickPetCreated($event)" />
     `
 })
 export class ChargeNewPageComponent implements OnInit {
@@ -196,6 +211,8 @@ export class ChargeNewPageComponent implements OnInit {
     readonly loadingPets = signal(false);
     readonly loadingExaminations = signal(false);
     readonly petOptions = signal<SelectOption[]>([]);
+    readonly quickPetOpen = signal(false);
+    readonly canQuickCreatePet = () => canShowQuickPetCreateButton(this.auth, this.ro, false);
     readonly examinationOptions = signal<SelectOption[]>([]);
     private readonly todayItems = signal<TodayItemVm[]>([]);
 
@@ -271,6 +288,14 @@ export class ChargeNewPageComponent implements OnInit {
         }
     }
 
+    /** Hızlı kayıtla eklenen hayvan listeye alınır ve seçilir. */
+    onQuickPetCreated(petId: string): void {
+        const clientId = trimClientIdControlValue(this.form.controls.clientId.value);
+        if (clientId && petId.trim()) {
+            this.loadPets(clientId, petId.trim());
+        }
+    }
+
     goList(): void {
         const clientId = trimClientIdControlValue(this.form.controls.clientId.value);
         void this.router.navigate(['/panel/charges'], { queryParams: clientId ? { clientId } : {} });
@@ -313,7 +338,7 @@ export class ChargeNewPageComponent implements OnInit {
             });
     }
 
-    private loadPets(clientId: string): void {
+    private loadPets(clientId: string, selectPetId?: string): void {
         this.loadingPets.set(true);
         this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
             next: (r) => {
@@ -322,7 +347,11 @@ export class ChargeNewPageComponent implements OnInit {
                     return;
                 }
                 const hasOwner = r.items.some((p) => (p.clientId ?? '').trim());
-                this.petOptions.set(petOptionsFromList(hasOwner ? filterPetsByClientId(r.items, clientId) : r.items));
+                const pets = hasOwner ? filterPetsByClientId(r.items, clientId) : r.items;
+                this.petOptions.set(petOptionsFromList(pets));
+                if (selectPetId && pets.some((p) => p.id === selectPetId)) {
+                    this.form.controls.petId.setValue(selectPetId);
+                }
                 this.loadingPets.set(false);
             },
             error: (e: Error) => {
