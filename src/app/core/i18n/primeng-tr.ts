@@ -59,7 +59,6 @@ export const PRIMENG_TR: Translation = {
     today: 'Bugün',
     weekHeader: 'Hf',
     firstDayOfWeek: 1,
-    showMonthAfterYear: false,
     dateFormat: 'dd.mm.yy',
     weak: 'Zayıf',
     medium: 'Orta',
