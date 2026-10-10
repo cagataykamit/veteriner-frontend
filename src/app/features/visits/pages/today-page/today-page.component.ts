@@ -25,7 +25,10 @@ import {
     formatElapsedSince,
     groupTodayItems,
     paymentIndicatorLabel,
-    todayItemActions
+    todayItemActions,
+    type WaitAlertLevel,
+    waitAlertLevel,
+    waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -178,7 +181,14 @@ type RefreshMode = 'initial' | 'silent';
                                     </div>
                                 </td>
                                 @if (group.elapsedLabel) {
-                                    <td>{{ elapsed(item) ?? '—' }}</td>
+                                    @let wait = waitAlertOf(item);
+                                    <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
+                                        @if (wait !== 'none') {
+                                            <i class="pi pi-fw" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
+                                            <span class="sr-only">{{ waitTitle(wait) }}:</span>
+                                        }
+                                        {{ elapsed(item) ?? '—' }}
+                                    </td>
                                 }
                                 <td>
                                     <div class="flex flex-wrap gap-2 justify-end">
@@ -304,6 +314,17 @@ export class TodayPageComponent implements OnInit {
     readonly paymentLabel = paymentIndicatorLabel;
     readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = todayItemActions;
+    readonly waitTitle = waitAlertTitle;
+    readonly waitAlertClass: Record<WaitAlertLevel, string> = {
+        none: '',
+        warning: 'font-semibold text-orange-600 dark:text-orange-400',
+        critical: 'font-semibold text-red-600 dark:text-red-400'
+    };
+    readonly waitAlertIcon: Record<WaitAlertLevel, string> = {
+        none: '',
+        warning: 'pi-clock',
+        critical: 'pi-exclamation-triangle'
+    };
 
     ngOnInit(): void {
         this.refresh$
@@ -339,6 +360,10 @@ export class TodayPageComponent implements OnInit {
         return item.careStatus === 'Waiting' || item.careStatus === 'InProgress'
             ? formatElapsedSince(item.arrivedAtUtc, this.now())
             : null;
+    }
+
+    waitAlertOf(item: TodayItemVm): WaitAlertLevel {
+        return waitAlertLevel(item, this.now());
     }
 
     isBusy(item: TodayItemVm): boolean {

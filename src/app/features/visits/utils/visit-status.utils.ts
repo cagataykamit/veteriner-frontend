@@ -112,3 +112,32 @@ export function formatElapsedSince(arrivedAtUtc: string | null, now: Date): stri
     const rest = minutes % 60;
     return rest ? `${Math.floor(minutes / 60)} sa ${rest} dk` : `${Math.floor(minutes / 60)} sa`;
 }
+
+/** Bekleme uyarı eşikleri (dakika); ayar ekranı gelene kadar tek yerde sabit. */
+export const WAIT_WARNING_MINUTES = 30;
+export const WAIT_CRITICAL_MINUTES = 60;
+
+export type WaitAlertLevel = 'none' | 'warning' | 'critical';
+
+/** Yalnızca "Bekliyor" satırı için; "Devam ediyor" ve diğerleri her zaman `none`. Geliş yoksa/geçersizse `none`. */
+export function waitAlertLevel(item: TodayItemVm, now: Date): WaitAlertLevel {
+    const arrived = item.careStatus === 'Waiting' ? parseUtcApiInstantIsoString(item.arrivedAtUtc) : null;
+    if (!arrived) {
+        return 'none';
+    }
+    const minutes = Math.floor((now.getTime() - arrived.getTime()) / 60_000);
+    if (minutes >= WAIT_CRITICAL_MINUTES) {
+        return 'critical';
+    }
+    return minutes >= WAIT_WARNING_MINUTES ? 'warning' : 'none';
+}
+
+const WAIT_ALERT_TITLE: Record<Exclude<WaitAlertLevel, 'none'>, string> = {
+    warning: `${WAIT_WARNING_MINUTES} dakikayı aşan bekleme`,
+    critical: `${WAIT_CRITICAL_MINUTES} dakikayı aşan bekleme`
+};
+
+/** Renge ek erişilebilir ipucu (title / ekran okuyucu metni); uyarı yoksa `null`. */
+export function waitAlertTitle(level: WaitAlertLevel): string | null {
+    return level === 'none' ? null : WAIT_ALERT_TITLE[level];
+}

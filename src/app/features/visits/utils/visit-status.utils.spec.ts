@@ -3,7 +3,9 @@ import {
     correctionActionOptions,
     formatElapsedSince,
     groupTodayItems,
-    todayItemActions
+    todayItemActions,
+    waitAlertLevel,
+    waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
 
 const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
@@ -102,5 +104,38 @@ describe('correctionActionOptions', () => {
     it('mevcut durum dışındaki iki durum + yanlış geliş', () => {
         const opts = correctionActionOptions('InProgress');
         expect(opts.map((o) => o.value)).toEqual(['Waiting', 'Completed', 'Mistaken']);
+    });
+});
+
+describe('waitAlertLevel', () => {
+    const now = new Date('2026-10-10T08:00:00Z');
+    const arrivedMinutesAgo = (m: number) => new Date(now.getTime() - m * 60_000).toISOString();
+    const waiting = (m: number, over: Partial<TodayItemVm> = {}) => item({ arrivedAtUtc: arrivedMinutesAgo(m), ...over });
+
+    it('eşik sınırları: 29 none, 30 warning, 59 warning, 60 critical', () => {
+        expect(waitAlertLevel(waiting(29), now)).toBe('none');
+        expect(waitAlertLevel(waiting(30), now)).toBe('warning');
+        expect(waitAlertLevel(waiting(59), now)).toBe('warning');
+        expect(waitAlertLevel(waiting(60), now)).toBe('critical');
+        expect(waitAlertLevel(waiting(180), now)).toBe('critical');
+    });
+
+    it('Devam ediyor, Tamamlandı ve planlı satır uzun süre geçse de none', () => {
+        expect(waitAlertLevel(waiting(90, { careStatus: 'InProgress' }), now)).toBe('none');
+        expect(waitAlertLevel(waiting(90, { careStatus: 'Completed' }), now)).toBe('none');
+        expect(waitAlertLevel(waiting(90, { careStatus: null }), now)).toBe('none');
+    });
+
+    it('geliş anı yok/geçersiz ise none', () => {
+        expect(waitAlertLevel(item({ arrivedAtUtc: null }), now)).toBe('none');
+        expect(waitAlertLevel(item({ arrivedAtUtc: 'geçersiz' }), now)).toBe('none');
+    });
+});
+
+describe('waitAlertTitle', () => {
+    it('uyarı seviyesine metin ipucu verir; none için null', () => {
+        expect(waitAlertTitle('none')).toBeNull();
+        expect(waitAlertTitle('warning')).toContain('30');
+        expect(waitAlertTitle('critical')).toContain('60');
     });
 });
