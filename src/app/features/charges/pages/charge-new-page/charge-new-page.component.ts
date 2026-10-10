@@ -19,19 +19,15 @@ import {
     computeChargeAmount
 } from '@/app/features/charges/utils/charge-amount.utils';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import {
-    filterPetsByClientId,
     isStalePetListResponse,
-    petOptionsFromList,
     trimClientIdControlValue,
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
-import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
-import { canShowQuickPetCreateButton } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -41,7 +37,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, ClientSearchComponent, QuickPetDialogComponent, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent],
     template: `
         <a routerLink="/panel/charges" class="text-primary font-medium no-underline inline-block mb-4">← Ücret listesine dön</a>
 
@@ -65,30 +61,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="chargePet" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
-                        <p-select
-                            inputId="chargePet"
-                            formControlName="petId"
-                            [options]="petOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            [placeholder]="form.controls.petId.disabled ? 'Önce müşteri seçin' : 'Hayvan seçin (isteğe bağlı)'"
-                            [filter]="true"
-                            filterBy="label"
-                            [showClear]="true"
-                            styleClass="w-full"
-                            [loading]="loadingPets()"
-                        />
-                        @if (canQuickCreatePet() && form.controls.clientId.value) {
-                            <p-button
-                                type="button"
-                                [label]="petOptions().length ? 'Bu müşteri için yeni hayvan' : 'Hayvanı yok mu? Yeni hayvan ekle'"
-                                icon="pi pi-plus"
-                                [text]="true"
-                                size="small"
-                                styleClass="p-0 mt-2"
-                                (onClick)="quickPetOpen.set(true)"
-                            />
-                        }
+                        <app-pet-search inputId="chargePet" formControlName="petId" [clientId]="form.controls.clientId.value" />
                     </div>
                     @if (canLinkVisit) {
                         <div class="col-span-12 md:col-span-6">
@@ -176,8 +149,6 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                 </div>
             </form>
         </div>
-
-        <app-quick-pet-dialog [(visible)]="quickPetOpen" [ownerClientId]="form.controls.clientId.value" (petCreated)="onQuickPetCreated($event)" />
     `
 })
 export class ChargeNewPageComponent implements OnInit {
@@ -190,7 +161,6 @@ export class ChargeNewPageComponent implements OnInit {
 
     private readonly fb = inject(FormBuilder);
     private readonly chargesService = inject(ChargesService);
-    private readonly petsService = inject(PetsService);
     private readonly examinationsService = inject(ExaminationsService);
     private readonly visitsService = inject(VisitsService);
     private readonly router = inject(Router);
@@ -208,17 +178,13 @@ export class ChargeNewPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly loadError = signal<string | null>(null);
-    readonly loadingPets = signal(false);
     readonly loadingExaminations = signal(false);
-    readonly petOptions = signal<SelectOption[]>([]);
-    readonly quickPetOpen = signal(false);
-    readonly canQuickCreatePet = () => canShowQuickPetCreateButton(this.auth, this.ro, false);
     readonly examinationOptions = signal<SelectOption[]>([]);
     private readonly todayItems = signal<TodayItemVm[]>([]);
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }],
+        petId: [''],
         visitId: [''],
         examinationId: [''],
         description: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(CHARGE_DESCRIPTION_MAX_LENGTH)]],
@@ -263,17 +229,9 @@ export class ChargeNewPageComponent implements OnInit {
         }
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.patchValue({ petId: '', visitId: '', examinationId: '' }, { emitEvent: false });
-            this.petOptions.set([]);
             this.examinationOptions.set([]);
             const id = trimClientIdControlValue(clientId);
-            if (!id) {
-                this.form.controls.petId.disable({ emitEvent: false });
-                this.form.updateValueAndValidity();
-                return;
-            }
             this.form.updateValueAndValidity();
-            this.form.controls.petId.enable({ emitEvent: false });
-            this.loadPets(id);
             this.loadExaminations(id);
         });
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((petId) => {
@@ -285,14 +243,6 @@ export class ChargeNewPageComponent implements OnInit {
         const preset = this.route.snapshot.queryParamMap.get('clientId')?.trim();
         if (preset) {
             this.form.controls.clientId.setValue(preset);
-        }
-    }
-
-    /** Hızlı kayıtla eklenen hayvan listeye alınır ve seçilir. */
-    onQuickPetCreated(petId: string): void {
-        const clientId = trimClientIdControlValue(this.form.controls.clientId.value);
-        if (clientId && petId.trim()) {
-            this.loadPets(clientId, petId.trim());
         }
     }
 
@@ -336,29 +286,6 @@ export class ChargeNewPageComponent implements OnInit {
                     this.submitError.set(e.message ?? 'Ücret kaydedilemedi.');
                 }
             });
-    }
-
-    private loadPets(clientId: string, selectPetId?: string): void {
-        this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
-            next: (r) => {
-                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
-                    this.loadingPets.set(false);
-                    return;
-                }
-                const hasOwner = r.items.some((p) => (p.clientId ?? '').trim());
-                const pets = hasOwner ? filterPetsByClientId(r.items, clientId) : r.items;
-                this.petOptions.set(petOptionsFromList(pets));
-                if (selectPetId && pets.some((p) => p.id === selectPetId)) {
-                    this.form.controls.petId.setValue(selectPetId);
-                }
-                this.loadingPets.set(false);
-            },
-            error: (e: Error) => {
-                this.loadError.set(e.message ?? 'Hayvan listesi yüklenemedi.');
-                this.loadingPets.set(false);
-            }
-        });
     }
 
     private loadExaminations(clientId: string, petId = ''): void {

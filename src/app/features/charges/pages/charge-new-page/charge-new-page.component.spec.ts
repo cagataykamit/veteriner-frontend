@@ -53,7 +53,7 @@ describe('ChargeNewPageComponent', () => {
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
                 { provide: SpeciesService, useValue: {} }, // hızlı hayvan diyaloğunun bağımlılıkları; bu testlerde çağrılmaz
                 { provide: BreedsService, useValue: {} },
-                { provide: PetsService, useValue: { getPets: () => of({ items: [{ id: 'p1', name: 'Pamuk', speciesName: 'Kedi', clientId: 'cl1' }] }) } },
+                { provide: PetsService, useValue: { getPetById: () => of({ id: 'p1', name: 'Pamuk', speciesName: 'Kedi' }), getPets: () => of({ items: [{ id: 'p1', name: 'Pamuk', speciesName: 'Kedi', clientId: 'cl1' }] }) } },
                 {
                     provide: ExaminationsService,
                     useValue: {
@@ -195,7 +195,6 @@ describe('ChargeNewPageComponent', () => {
         queryClientId = 'cl1';
         await setup();
         expect(cmp.form.controls.clientId.value).toBe('cl1');
-        expect(cmp.form.controls.petId.enabled).toBeTrue();
     });
 
     it('geliş seçenekleri: yalnız seçili müşterinin, yanlış işaretlenmemiş gelişleri; hayvan seçilince daralır', async () => {
@@ -213,7 +212,6 @@ describe('ChargeNewPageComponent', () => {
         expect(cmp.form.controls.petId.value).toBe('');
         expect(cmp.form.controls.visitId.value).toBe('');
         expect(cmp.form.controls.examinationId.value).toBe('');
-        expect(cmp.form.controls.petId.disabled).toBeTrue();
     });
 
     it('seçilen geliş ve muayene isteğe taşınır', async () => {
@@ -241,12 +239,6 @@ describe('ChargeNewPageComponent', () => {
         expect(fixture.nativeElement.textContent).not.toContain('yeni hayvan');
     });
 
-    it('hızlı kayıtla eklenen hayvan listeye alınıp seçilir', async () => {
-        await setup();
-        fill();
-        cmp.onQuickPetCreated('p1');
-        expect(cmp.form.controls.petId.value).toBe('p1');
-    });
 
     it('Visits.Read / Examinations.Read yoksa ilgili seçiciler gösterilmez', async () => {
         claims = new Set();
