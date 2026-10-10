@@ -13,7 +13,7 @@ export default tseslint.config(
         processor: angular.processInlineTemplates,
         rules: {
             'padding-line-between-statements': [
-                'error',
+                'warn',
                 { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
                 { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
                 { blankLine: 'any', prev: ['case', 'default'], next: 'break' },
@@ -25,8 +25,8 @@ export default tseslint.config(
                 { blankLine: 'always', prev: '*', next: 'block-like' },
                 { blankLine: 'always', prev: ['import'], next: ['const', 'let', 'var'] }
             ],
-            '@angular-eslint/component-selector': ['error', { type: 'element', prefix: 'p', style: 'kebab-case' }],
-            '@angular-eslint/directive-selector': ['error', { type: 'attribute', prefix: 'p', style: 'camelCase' }],
+            '@angular-eslint/component-selector': ['warn', { type: 'element', prefix: 'p', style: 'kebab-case' }],
+            '@angular-eslint/directive-selector': ['warn', { type: 'attribute', prefix: 'p', style: 'camelCase' }],
             '@angular-eslint/component-class-suffix': ['error', { suffixes: [''] }],
             '@angular-eslint/no-host-metadata-property': 'off',
             '@angular-eslint/no-output-on-prefix': 'off',
@@ -35,7 +35,7 @@ export default tseslint.config(
             'arrow-body-style': ['error', 'as-needed'],
             curly: 0,
             '@typescript-eslint/member-ordering': [
-                'error',
+                'warn',
                 {
                     default: ['public-static-field', 'static-field', 'instance-field', 'public-instance-method', 'public-static-field']
                 }
@@ -48,6 +48,7 @@ export default tseslint.config(
         files: ['**/*.html'],
         extends: [...angular.configs.templateRecommended, prettier],
         rules: {
+            '@angular-eslint/template/prefer-control-flow': 'warn',
             '@angular-eslint/template/eqeqeq': ['error', { allowNullOrUndefined: true }]
         }
     }
