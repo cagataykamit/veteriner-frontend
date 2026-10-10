@@ -88,7 +88,10 @@ export function todayQueryToHttpParams(clinicId: string | null, query: TodayQuer
     if (clinicId) {
         params = params.set('clinicId', clinicId);
     }
-    return query.voided ? params.set('voided', true) : params;
+    if (query.voided) {
+        params = params.set('voided', true);
+    }
+    return query.responsibleVeterinarianUserId ? params.set('responsibleVeterinarianUserId', query.responsibleVeterinarianUserId) : params;
 }
 
 /** Boş alanlar gövdeye girmez; hekim seçilmediyse `responsibleVeterinarianUserId` hiç gönderilmez. */

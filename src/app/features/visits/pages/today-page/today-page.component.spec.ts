@@ -51,10 +51,11 @@ describe('TodayPageComponent', () => {
     let visits: jasmine.SpyObj<VisitsService>;
     let toasts: jasmine.Spy;
 
-    const create = async (claims: string[], today: TodayVm): Promise<ComponentFixture<TodayPageComponent>> => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'startVisit', 'completeVisit', 'getVeterinarians']);
+    const create = async (claims: string[], today: TodayVm, vetUserId: string | null = null): Promise<ComponentFixture<TodayPageComponent>> => {
+        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'startVisit', 'completeVisit', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
         visits.getToday.and.returnValue(of(today));
         visits.getVeterinarians.and.returnValue(of([]));
+        visits.getCurrentVeterinarianUserId.and.returnValue(of(vetUserId));
 
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
@@ -133,7 +134,8 @@ describe('TodayPageComponent', () => {
     });
 
     it('ilk yükleme hatası hata durumunu gösterir', async () => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday']);
+        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getCurrentVeterinarianUserId']);
+        visits.getCurrentVeterinarianUserId.and.returnValue(of(null));
         visits.getToday.and.returnValue(throwError(() => new Error('Bugün listesi yüklenemedi.')));
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
@@ -231,5 +233,50 @@ describe('TodayPageComponent', () => {
 
         expect(text(f)).toContain('Pamuk');
         expect(text(f)).toContain('Liste güncellenemedi');
+    });
+});
+
+describe('TodayPageComponent — Benim hastalarım', () => {
+    const today: TodayVm = { date: 'd', items: [] };
+    let visits: jasmine.SpyObj<VisitsService>;
+
+    const create = async (claims: string[], vetUserId: string | null): Promise<ComponentFixture<TodayPageComponent>> => {
+        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
+        visits.getToday.and.returnValue(of(today));
+        visits.getVeterinarians.and.returnValue(of([]));
+        visits.getCurrentVeterinarianUserId.and.returnValue(of(vetUserId));
+        await TestBed.configureTestingModule({
+            imports: [TodayPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: VisitsService, useValue: visits },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1' } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+            ]
+        }).compileComponents();
+        const fixture = TestBed.createComponent(TodayPageComponent);
+        fixture.detectChanges();
+        return fixture;
+    };
+
+    it('hekim: varsayılan Benim hastalarım; ilk istek kullanıcı kimliğiyle gider, Tümü süzgeci kaldırır', async () => {
+        const f = await create(['Visits.Read', 'Visits.Create'], 'u1');
+        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false, responsibleVeterinarianUserId: 'u1' });
+        f.componentInstance.setScope('all');
+        expect(visits.getToday.calls.mostRecent().args[0]).toEqual({ voided: false });
+    });
+
+    it('hekim değil: süzgeç görünmez, kimlik gönderilmez', async () => {
+        const f = await create(['Visits.Read', 'Visits.Create'], null);
+        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false });
+        expect((f.nativeElement as HTMLElement).textContent).not.toContain('Benim hastalarım');
+    });
+
+    it('Visits.Create yoksa hekim sorgusu yapılmaz ve süzgeç yok', async () => {
+        await create(['Visits.Read'], 'u1');
+        expect(visits.getCurrentVeterinarianUserId).not.toHaveBeenCalled();
+        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false });
     });
 });

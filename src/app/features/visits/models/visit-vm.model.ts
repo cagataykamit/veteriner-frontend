@@ -93,4 +93,6 @@ export interface CorrectVisitRequest {
 /** `GET /visits/today` sorgusu: varsayılan normal kuyruk; `voided` yanlış işaretlenenleri getirir. */
 export interface TodayQuery {
     voided?: boolean;
+    /** "Benim hastalarım": yalnızca bu kullanıcının sorumlu olduğu Visit satırları (kullanıcı klinikte aktif hekim olmalı). */
+    responsibleVeterinarianUserId?: string;
 }

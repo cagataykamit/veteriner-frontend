@@ -216,3 +216,70 @@ describe('VisitsService — acil işareti', () => {
         http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today').flush({ date: 'd', clinicId: 'c1', generatedAtUtc: 'g', items: [{ petId: 'p1', clientId: 'cl1', isCarriedOver: false, visitId: 'v1', isUrgent: true }] });
     });
 });
+
+describe('VisitsService — hekim tespiti ve Benim hastalarım', () => {
+    let http: HttpTestingController;
+    const setup = (userId: string | null): VisitsService => {
+        TestBed.configureTestingModule({
+            providers: [
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: API_BASE_URL, useValue: 'http://api.test' },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => userId } }
+            ]
+        });
+        http = TestBed.inject(HttpTestingController);
+        return TestBed.inject(VisitsService);
+    };
+
+    afterEach(() => http.verify());
+
+    it('kullanıcı klinik hekim listesindeyse kimliği döner (büyük/küçük harf duyarsız)', (done) => {
+        setup('U1').getCurrentVeterinarianUserId().subscribe((id) => {
+            expect(id).toBe('u1');
+            done();
+        });
+        http.expectOne('http://api.test/api/v1/clinics/c1/veterinarians').flush([{ userId: 'u1', name: 'Dr. Ayşe' }]);
+    });
+
+    it('listede değilse null', (done) => {
+        setup('u9').getCurrentVeterinarianUserId().subscribe((id) => {
+            expect(id).toBeNull();
+            done();
+        });
+        http.expectOne('http://api.test/api/v1/clinics/c1/veterinarians').flush([{ userId: 'u1', name: 'Dr. Ayşe' }]);
+    });
+
+    it('liste hatasında null (süzgeç gizlenir)', (done) => {
+        setup('u1').getCurrentVeterinarianUserId().subscribe((id) => {
+            expect(id).toBeNull();
+            done();
+        });
+        http.expectOne('http://api.test/api/v1/clinics/c1/veterinarians').flush({}, { status: 403, statusText: 'Forbidden' });
+    });
+
+    it('kimlik yoksa istek atılmadan null', (done) => {
+        setup(null).getCurrentVeterinarianUserId().subscribe((id) => {
+            expect(id).toBeNull();
+            done();
+        });
+    });
+
+    it('responsibleVeterinarianUserId sorgu parametresi gider (voided ile birlikte olabilir)', () => {
+        setup('u1').getToday({ voided: true, responsibleVeterinarianUserId: 'u1' }).subscribe();
+        const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today');
+        expect(req.request.params.get('responsibleVeterinarianUserId')).toBe('u1');
+        expect(req.request.params.get('voided')).toBe('true');
+        req.flush({ date: 'd', clinicId: 'c1', generatedAtUtc: 'g', items: [] });
+    });
+
+    it('400 Visits.Validation (hekim değil) mesajı iletilir', (done) => {
+        setup('u1').getToday({ responsibleVeterinarianUserId: 'x' }).subscribe({
+            error: (e: Error) => {
+                expect(e.message).toContain('Hekim değil');
+                done();
+            }
+        });
+        http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today').flush({ status: 400, detail: 'Hekim değil', extensions: { code: 'Visits.Validation' } }, { status: 400, statusText: 'Bad Request' });
+    });
+});

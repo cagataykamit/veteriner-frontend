@@ -19,7 +19,7 @@ import {
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
 import { VisitCorrectionDialogComponent } from '@/app/features/visits/components/visit-correction-dialog.component';
-import type { TodayItemVm, TodayVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
+import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import {
     careStatusLabel,
@@ -48,6 +48,7 @@ const REFRESH_INTERVAL_MS = 30_000;
 
 type RefreshMode = 'initial' | 'silent';
 type TodayView = 'today' | 'voided';
+type TodayScope = 'mine' | 'all';
 
 /**
  * Bugün: o günün randevuları ve gelen hastalar tek listede (randevulu Visit tek satır).
@@ -96,6 +97,12 @@ type TodayView = 'today' | 'voided';
         </app-page-header>
 
         <p-selectbutton class="block mb-4" [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Görünüm" />
+        @if (myUserId()) {
+            <p-selectbutton class="block mb-4" [options]="scopeOptions" [ngModel]="scope()" (ngModelChange)="setScope($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Hasta kapsamı" />
+            @if (scope() === 'mine') {
+                <p class="text-muted-color text-sm mt-0 mb-4">Yalnızca sorumlu hekimi siz olan kayıtlar gösterilir; planlı randevular bu görünümde yer almaz.</p>
+            }
+        }
 
         @if (loading()) {
             <app-loading-state message="Bugün yükleniyor…" />
@@ -356,6 +363,13 @@ export class TodayPageComponent implements OnInit {
         { label: 'Yanlış işaretlenenler', value: 'voided' }
     ];
     readonly view = signal<TodayView>('today');
+    readonly scopeOptions: Array<{ label: string; value: TodayScope }> = [
+        { label: 'Benim hastalarım', value: 'mine' },
+        { label: 'Tümü', value: 'all' }
+    ];
+    readonly scope = signal<TodayScope>('all');
+    /** Giriş yapan kullanıcı aktif klinikte hekimse kimliği; değilse `null` ve kapsam süzgeci görünmez. */
+    readonly myUserId = signal<string | null>(null);
 
     /** `switchMap`: üst üste gelen yenilemelerde yalnızca sonuncunun yanıtı uygulanır. */
     private readonly refresh$ = new Subject<RefreshMode>();
@@ -381,7 +395,7 @@ export class TodayPageComponent implements OnInit {
         this.refresh$
             .pipe(
                 switchMap((mode) =>
-                    this.visitsService.getToday({ voided: this.view() === 'voided' }).pipe(
+                    this.visitsService.getToday(this.todayQuery()).pipe(
                         map((today): RefreshResult => ({ mode, today })),
                         catchError((e: unknown) => of({ mode, error: panelHttpFailureMessage(e, 'Bugün listesi yüklenemedi.') }))
                     )
@@ -392,7 +406,7 @@ export class TodayPageComponent implements OnInit {
         timer(REFRESH_INTERVAL_MS, REFRESH_INTERVAL_MS)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.refresh('silent'));
-        this.refresh('initial');
+        this.startWithScope();
     }
 
     refresh(mode: RefreshMode): void {
@@ -446,6 +460,32 @@ export class TodayPageComponent implements OnInit {
                   }
         );
         this.refresh('silent');
+    }
+
+    setScope(scope: TodayScope): void {
+        this.scope.set(scope);
+        this.refresh('initial');
+    }
+
+    /** Hekimse varsayılan "Benim hastalarım"; ilk yükleme kapsam belli olunca yapılır (çift istek / yanıp sönme yok). */
+    private startWithScope(): void {
+        if (!this.canCreateVisit) {
+            this.refresh('initial');
+            return;
+        }
+        this.visitsService
+            .getCurrentVeterinarianUserId()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((userId) => {
+                this.myUserId.set(userId);
+                this.scope.set(userId ? 'mine' : 'all');
+                this.refresh('initial');
+            });
+    }
+
+    private todayQuery(): TodayQuery {
+        const mine = this.scope() === 'mine' ? this.myUserId() : null;
+        return { voided: this.view() === 'voided', ...(mine ? { responsibleVeterinarianUserId: mine } : {}) };
     }
 
     setView(view: TodayView): void {

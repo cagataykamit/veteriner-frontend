@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, MonoTypeOperatorFunction, Observable, throwError } from 'rxjs';
+import { catchError, map, MonoTypeOperatorFunction, Observable, of, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -64,6 +64,23 @@ export class VisitsService {
         return this.api.get<VeterinarianDto[]>(ApiEndpoints.clinics.veterinarians(clinicId)).pipe(
             map((list) => list.map(mapVeterinarianDtoToVm)),
             toUserError('Hekim listesi yüklenemedi.')
+        );
+    }
+
+    /**
+     * Giriş yapan kullanıcı aktif klinikte hekimse kimliği, değilse `null`. Kural backend ile aynıdır
+     * (kliniğe atanmış aktif `Veteriner`): hekim listesinde bulunup bulunmamaya bakılır. Liste alınamazsa `null`
+     * (süzgeç gizlenir, tüm liste gösterilir).
+     */
+    getCurrentVeterinarianUserId(): Observable<string | null> {
+        const userId = this.auth.getUserId()?.trim().toLowerCase();
+        const clinicId = this.auth.getClinicId()?.trim();
+        if (!userId || !clinicId) {
+            return of(null);
+        }
+        return this.getVeterinarians(clinicId).pipe(
+            map((vets) => vets.find((v) => v.userId.toLowerCase() === userId)?.userId ?? null),
+            catchError(() => of(null))
         );
     }
 
