@@ -24,6 +24,7 @@ export function normalizeDashboardSummaryDto(raw: DashboardSummaryDto): Dashboar
         upcomingAppointmentsCount: raw.upcomingAppointmentsCount ?? 0,
         completedTodayCount: raw.completedTodayCount ?? 0,
         cancelledTodayCount: raw.cancelledTodayCount ?? 0,
+        noShowTodayCount: raw.noShowTodayCount ?? 0,
         totalClientsCount: raw.totalClientsCount ?? 0,
         totalPetsCount: raw.totalPetsCount ?? 0,
         upcomingAppointments: raw.upcomingAppointments ?? [],

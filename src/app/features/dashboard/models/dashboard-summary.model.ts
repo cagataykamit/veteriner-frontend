@@ -38,6 +38,7 @@ export interface DashboardSummaryDto {
     upcomingAppointmentsCount?: number | null;
     completedTodayCount?: number | null;
     cancelledTodayCount?: number | null;
+    noShowTodayCount?: number | null;
     totalClientsCount?: number | null;
     totalPetsCount?: number | null;
     upcomingAppointments?: DashboardAppointmentItemDto[] | null;

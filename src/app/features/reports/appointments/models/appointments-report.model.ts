@@ -9,6 +9,8 @@ export type AppointmentReportRowVm = AppointmentListItemVm & {
 export interface AppointmentsReportResultVm {
     readonly items: readonly AppointmentReportRowVm[];
     readonly totalCount: number;
+    /** Backend yanıtında yoksa `null` (özet gösterilmez). */
+    readonly noShowCount: number | null;
     readonly page: number;
     readonly pageSize: number;
     readonly totalPages: number;
