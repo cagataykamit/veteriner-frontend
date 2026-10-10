@@ -4,6 +4,7 @@ import { tenantManagementGuard } from '@/app/core/auth/tenant-management.guard';
 
 export default [
     { path: 'dashboard', loadChildren: () => import('../dashboard/dashboard.routes') },
+    { path: 'today', loadChildren: () => import('../visits/routes/visits.routes') },
     { path: 'clients', loadChildren: () => import('../clients/routes/clients.routes') },
     { path: 'pets', loadChildren: () => import('../pets/routes/pets.routes') },
     { path: 'species', loadChildren: () => import('../species/routes/species.routes') },
