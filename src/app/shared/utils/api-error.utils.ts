@@ -219,6 +219,30 @@ function visitPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     return code ? (VISIT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
+/** Ücret (Charge) — `docs/CHARGES_API_CONTRACT.md` §6; `Charges.Validation` backend `detail` ile gösterilir. */
+const CHARGE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Charges.NotFound': 'Ücret kaydı bulunamadı.',
+    'Charges.ClinicScopeRequired': 'Ücretleri görmek için önce bir klinik seçmelisiniz.',
+    'Charges.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
+    'Clients.NotFound': 'Müşteri kaydı bulunamadı.',
+    'Pets.NotFound': 'Hayvan kaydı bulunamadı.',
+    'Examinations.NotFound': 'Muayene kaydı bulunamadı.',
+    'Charges.PetClientMismatch': 'Seçilen hayvan bu müşteriye ait değil.',
+    'Charges.VisitVoided': 'Yanlış olarak işaretlenmiş bir geliş kaydına ücret bağlanamaz.',
+    'Charges.VisitClinicMismatch': 'Geliş kaydı aktif klinikte değil.',
+    'Charges.VisitClientMismatch': 'Geliş kaydındaki hayvan bu müşteriye ait değil.',
+    'Charges.VisitPetMismatch': 'Geliş kaydı seçilen hayvanla uyuşmuyor.',
+    'Charges.ExaminationClinicMismatch': 'Muayene aktif klinikte değil.',
+    'Charges.ExaminationClientMismatch': 'Muayenedeki hayvan bu müşteriye ait değil.',
+    'Charges.ExaminationPetMismatch': 'Muayene seçilen hayvanla uyuşmuyor.',
+    'Charges.ExaminationVisitMismatch': 'Muayene, seçilen geliş kaydına bağlı değil.'
+};
+
+function chargePanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    return code ? (CHARGE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
+}
+
 function lookupSubscriptionWriteMessageByCode(code: string): string | null {
     const t = code.trim();
     if (!t) {
@@ -303,6 +327,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const visitPanelMsg = visitPanelProblemUserMessage(err);
     if (visitPanelMsg) {
         return visitPanelMsg;
+    }
+    const chargePanelMsg = chargePanelProblemUserMessage(err);
+    if (chargePanelMsg) {
+        return chargePanelMsg;
     }
 
     const body = err.error as ProblemDetails | string | null | undefined;

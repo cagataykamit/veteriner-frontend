@@ -49,6 +49,11 @@ export const ApiEndpoints = {
         restore: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/restore`,
         urgency: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/urgency`
     },
+    charges: {
+        /** GET (Query: `page`, `pageSize`, `clinicId`, `clientId`, `petId`, `visitId`, `examinationId`) ve POST. */
+        list: () => `/api/v1/charges`,
+        byId: (id: string) => `/api/v1/charges/${encodeURIComponent(id)}`
+    },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
         financeSummary: () => `/api/v1/dashboard/finance-summary`,
