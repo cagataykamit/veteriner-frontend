@@ -1,11 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { ToastModule } from 'primeng/toast';
 import type { AccountSummary } from '@/app/features/account/models/account-summary.model';
 import { AccountService } from '@/app/features/account/services/account.service';
 import {
+    ACCOUNT_DISPLAY_NAME_MAX_LENGTH,
+    ACCOUNT_DISPLAY_NAME_SAVE_ERROR,
     ACCOUNT_ROLES_EMPTY_LABEL,
     ACCOUNT_SUMMARY_LOAD_ERROR,
     resolveAccountAvatarInitials,
@@ -15,12 +21,15 @@ import {
 } from '@/app/features/account/utils/account-summary.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
     selector: 'app-account-summary-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, ToastModule, AppPageHeaderComponent],
+    providers: [MessageService],
     template: `
+        <p-toast position="bottom-right" />
         <div class="flex justify-center w-full">
             <div class="w-full max-w-4xl">
                 <app-page-header
@@ -132,6 +141,32 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                                     }
                                 </div>
                             </div>
+                            <form class="mt-6" (ngSubmit)="saveDisplayName()">
+                                <label for="displayName" class="block text-sm font-medium text-muted-color mb-2">Görünen ad</label>
+                                <div class="flex flex-col gap-2 sm:flex-row">
+                                    <input
+                                        id="displayName"
+                                        pInputText
+                                        class="w-full"
+                                        [formControl]="displayNameControl"
+                                        [maxlength]="displayNameMax"
+                                        autocomplete="name"
+                                    />
+                                    <p-button
+                                        type="submit"
+                                        label="Kaydet"
+                                        icon="pi pi-check"
+                                        [loading]="displayNameSaving()"
+                                        [disabled]="displayNameSaving() || displayNameControl.pristine"
+                                    />
+                                </div>
+                                <small class="text-muted-color block mt-1">
+                                    Hasta kabulünde sorumlu hekim olarak bu ad gösterilir. Boş bırakırsanız e-postanızdan türetilen ad kullanılır.
+                                </small>
+                                @if (displayNameError()) {
+                                    <small class="text-red-500 block mt-1" role="alert">{{ displayNameError() }}</small>
+                                }
+                            </form>
                         }
                     </div>
                 </div>
@@ -141,10 +176,19 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 })
 export class AccountSummaryPageComponent implements OnInit {
     private readonly account = inject(AccountService);
+    private readonly messages = inject(MessageService);
 
     readonly summaryLoading = signal(true);
     readonly summaryError = signal<string | null>(null);
     readonly summary = signal<AccountSummary | null>(null);
+
+    readonly displayNameMax = ACCOUNT_DISPLAY_NAME_MAX_LENGTH;
+    readonly displayNameControl = new FormControl('', {
+        nonNullable: true,
+        validators: Validators.maxLength(ACCOUNT_DISPLAY_NAME_MAX_LENGTH)
+    });
+    readonly displayNameSaving = signal(false);
+    readonly displayNameError = signal<string | null>(null);
 
     readonly rolesEmptyLabel = ACCOUNT_ROLES_EMPTY_LABEL;
     readonly displayName = resolveAccountDisplayName;
@@ -156,12 +200,42 @@ export class AccountSummaryPageComponent implements OnInit {
         this.loadAccountSummary();
     }
 
+    saveDisplayName(): void {
+        if (this.displayNameSaving() || this.displayNameControl.invalid) {
+            return;
+        }
+        const displayName = this.displayNameControl.value.trim();
+        this.displayNameError.set(null);
+        this.displayNameSaving.set(true);
+        this.account.updateDisplayName(displayName).subscribe({
+            next: () => {
+                this.displayNameSaving.set(false);
+                this.displayNameControl.reset(displayName);
+                this.summary.update((s) => (s ? { ...s, displayName: displayName || null } : s));
+                addTracedToast(this.messages, 'AccountSummaryPage', 'settings/account', {
+                    severity: 'success',
+                    summary: 'Görünen ad güncellendi.',
+                    life: 3000
+                });
+            },
+            error: (err: unknown) => {
+                this.displayNameSaving.set(false);
+                this.displayNameError.set(
+                    err instanceof HttpErrorResponse
+                        ? messageFromHttpError(err, ACCOUNT_DISPLAY_NAME_SAVE_ERROR)
+                        : ACCOUNT_DISPLAY_NAME_SAVE_ERROR
+                );
+            }
+        });
+    }
+
     private loadAccountSummary(): void {
         this.summaryLoading.set(true);
         this.summaryError.set(null);
         this.account.getAccountSummary().subscribe({
             next: (data) => {
                 this.summary.set(data);
+                this.displayNameControl.reset(data.displayName?.trim() ?? '');
                 this.summaryLoading.set(false);
             },
             error: (err: unknown) => {

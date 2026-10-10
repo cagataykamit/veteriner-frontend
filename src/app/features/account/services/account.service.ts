@@ -18,6 +18,12 @@ export class AccountService {
         return this.api.get<AccountSummary>(ApiEndpoints.me.accountSummary());
     }
 
+    /** Boş değer adı temizler (sunucuda e-posta türevi ad kullanılır). */
+    updateDisplayName(displayName: string): Observable<void> {
+        const body = { displayName: displayName.trim() || null };
+        return this.api.put<unknown>(ApiEndpoints.me.displayName(), body).pipe(map(() => undefined));
+    }
+
     changePassword(request: ChangePasswordRequest): Observable<void> {
         const body: ChangePasswordRequest = {
             currentPassword: request.currentPassword.trim(),

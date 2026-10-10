@@ -14,7 +14,9 @@ export const ApiEndpoints = {
     me: {
         clinics: () => `/api/v1/me/clinics`,
         accountSummary: () => `/api/v1/me/account-summary`,
-        changePassword: () => `/api/v1/me/change-password`
+        changePassword: () => `/api/v1/me/change-password`,
+        /** PUT; gövde `{ displayName: string | null }`, boş değer adı temizler, `204`. */
+        displayName: () => `/api/v1/me/display-name`
     },
     /** Kiracı firma / fatura profili — panel JWT kiracı bağlamında. */
     organization: {
