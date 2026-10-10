@@ -24,6 +24,7 @@ import {
     careStatusSeverity,
     formatElapsedSince,
     groupTodayItems,
+    paymentIndicatorLabel,
     todayItemActions
 } from '@/app/features/visits/utils/visit-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -43,7 +44,7 @@ type RefreshMode = 'initial' | 'silent';
 
 /**
  * Bugün: o günün randevuları ve gelen hastalar tek listede (randevulu Visit tek satır).
- * Ödeme / açık iş göstergesi bilinçli olarak yoktur.
+ * Ödeme ve yatış rozetleri bakım durumundan ayrıdır; açık iş göstergesi backend'de yoktur.
  */
 @Component({
     selector: 'app-today-page',
@@ -111,6 +112,7 @@ type RefreshMode = 'initial' | 'silent';
                                 <th>Sahip</th>
                                 <th>Hekim</th>
                                 <th>Durum</th>
+                                <th>Ödeme / yatış</th>
                                 <th>Bekleme</th>
                                 <th></th>
                             </tr>
@@ -149,6 +151,17 @@ type RefreshMode = 'initial' | 'silent';
                                         }
                                         @if (item.isCarriedOver) {
                                             <app-status-tag label="Önceki günden" severity="contrast" />
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <app-status-tag
+                                            [label]="paymentLabel(item.paymentIndicator)"
+                                            [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
+                                        />
+                                        @if (item.hasActiveHospitalization) {
+                                            <app-status-tag label="Yatışta" severity="warn" />
                                         }
                                     </div>
                                 </td>
@@ -274,6 +287,7 @@ export class TodayPageComponent implements OnInit {
 
     readonly statusLabel = careStatusLabel;
     readonly statusSeverity = careStatusSeverity;
+    readonly paymentLabel = paymentIndicatorLabel;
     readonly actionsOf = todayItemActions;
 
     ngOnInit(): void {

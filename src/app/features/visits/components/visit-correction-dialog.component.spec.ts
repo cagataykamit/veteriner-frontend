@@ -19,7 +19,9 @@ const item: TodayItemVm = {
     careStatus: 'Completed',
     appointmentStatus: null,
     responsibleVeterinarianName: null,
-    isCarriedOver: false
+    isCarriedOver: false,
+    paymentIndicator: 'NoPaymentRecorded',
+    hasActiveHospitalization: false
 };
 
 const visit: VisitVm = {

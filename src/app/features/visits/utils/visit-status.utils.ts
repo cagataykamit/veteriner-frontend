@@ -1,4 +1,4 @@
-import type { TodayItemVm, VisitCareStatus, VisitCorrectionAction } from '@/app/features/visits/models/visit-vm.model';
+import type { TodayItemVm, TodayPaymentIndicator, VisitCareStatus, VisitCorrectionAction } from '@/app/features/visits/models/visit-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
@@ -20,6 +20,16 @@ export function careStatusLabel(status: VisitCareStatus): string {
 
 export function careStatusSeverity(status: VisitCareStatus): StatusTagSeverity {
     return CARE_STATUS_SEVERITY[status];
+}
+
+const PAYMENT_INDICATOR_LABEL: Record<TodayPaymentIndicator, string> = {
+    NoPaymentRecorded: 'Ödeme kaydı yok',
+    PaymentRecorded: 'Ödeme kaydı var'
+};
+
+/** "Ödendi/borçlu" demez: sözleşme yalnızca tahsilat kaydının varlığını bildirir. */
+export function paymentIndicatorLabel(indicator: TodayPaymentIndicator): string {
+    return PAYMENT_INDICATOR_LABEL[indicator];
 }
 
 /** Düzeltme diyaloğu seçenekleri: mevcut durum hariç üç bakım durumu + yanlış geliş işareti. */

@@ -1,8 +1,11 @@
-import type { TodayAppointmentStatusDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
+import type { TodayAppointmentStatusDto, TodayPaymentIndicatorDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
 
 export type VisitCareStatus = VisitCareStatusDto;
 
 export type TodayAppointmentStatus = TodayAppointmentStatusDto;
+
+/** Yalnızca tahsilat kaydının varlığını söyler; borç/bakiye değildir ve bakım durumunu etkilemez. */
+export type TodayPaymentIndicator = TodayPaymentIndicatorDto;
 
 export interface VisitVm {
     id: string;
@@ -41,6 +44,8 @@ export interface TodayItemVm {
     appointmentStatus: TodayAppointmentStatus | null;
     responsibleVeterinarianName: string | null;
     isCarriedOver: boolean;
+    paymentIndicator: TodayPaymentIndicator;
+    hasActiveHospitalization: boolean;
 }
 
 export interface TodayVm {

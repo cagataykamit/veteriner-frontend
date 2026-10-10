@@ -26,6 +26,8 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     appointmentStatus: null,
     responsibleVeterinarianName: 'Dr. Ayşe',
     isCarriedOver: false,
+    paymentIndicator: 'NoPaymentRecorded',
+    hasActiveHospitalization: false,
     ...over
 });
 
@@ -82,7 +84,19 @@ describe('TodayPageComponent', () => {
         expect(t).toContain('Tamamlandı (1)');
         expect(t).toContain('Dr. Ayşe');
         expect(t).toContain('12 dk');
-        expect(t).not.toMatch(/ödeme|açık iş/i);
+        expect(t).not.toMatch(/açık iş/i);
+    });
+
+    it('ödeme ve yatış rozetleri bakım durumundan ayrı gösterilir', async () => {
+        const f = await create(['Visits.Read'], {
+            date: 'd',
+            items: [item({ paymentIndicator: 'PaymentRecorded', hasActiveHospitalization: true }), item({ key: 'x', visitId: 'x' })]
+        });
+        const t = text(f);
+        expect(t).toContain('Ödeme kaydı var');
+        expect(t).toContain('Ödeme kaydı yok');
+        expect(t).toContain('Yatışta');
+        expect(t).toContain('Bekliyor (2)');
     });
 
     it('boş liste boş durumu gösterir', async () => {

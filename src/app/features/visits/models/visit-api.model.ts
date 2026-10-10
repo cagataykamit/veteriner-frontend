@@ -27,6 +27,8 @@ export interface VisitCreateResultDto {
     visit: VisitDto;
 }
 
+export type TodayPaymentIndicatorDto = 'NoPaymentRecorded' | 'PaymentRecorded';
+
 export interface TodayItemDto {
     visitId?: string | null;
     appointmentId?: string | null;
@@ -43,6 +45,8 @@ export interface TodayItemDto {
     responsibleVeterinarianUserId?: string | null;
     responsibleVeterinarianName?: string | null;
     isCarriedOver: boolean;
+    paymentIndicator?: TodayPaymentIndicatorDto | null;
+    hasActiveHospitalization?: boolean | null;
 }
 
 export interface TodayDto {

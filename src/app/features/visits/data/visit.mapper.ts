@@ -61,7 +61,9 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         careStatus: dto.careStatus ?? null,
         appointmentStatus: dto.appointmentStatus ?? null,
         responsibleVeterinarianName: trimmedOrNull(dto.responsibleVeterinarianName),
-        isCarriedOver: dto.isCarriedOver
+        isCarriedOver: dto.isCarriedOver,
+        paymentIndicator: dto.paymentIndicator ?? 'NoPaymentRecorded',
+        hasActiveHospitalization: dto.hasActiveHospitalization === true
     };
 }
 

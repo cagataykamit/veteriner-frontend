@@ -74,6 +74,20 @@ describe('visit mapper — okuma', () => {
         expect(item.responsibleVeterinarianName).toBeNull();
     });
 
+    it('ödeme ve yatış göstergeleri ayrı alanlardır; yoksa güvenli varsayılan', () => {
+        const [recorded, missing] = mapTodayDtoToVm({
+            date: 'd',
+            clinicId: 'c',
+            generatedAtUtc: 'g',
+            items: [itemDto({ paymentIndicator: 'PaymentRecorded', hasActiveHospitalization: true }), itemDto({})]
+        }).items;
+        expect(recorded.paymentIndicator).toBe('PaymentRecorded');
+        expect(recorded.hasActiveHospitalization).toBeTrue();
+        expect(recorded.careStatus).toBe('Waiting');
+        expect(missing.paymentIndicator).toBe('NoPaymentRecorded');
+        expect(missing.hasActiveHospitalization).toBeFalse();
+    });
+
     it('hekim adı yoksa — gösterir', () => {
         expect(mapVeterinarianDtoToVm({ userId: 'u1', name: null })).toEqual({ userId: 'u1', name: '—' });
     });

@@ -22,6 +22,8 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     appointmentStatus: null,
     responsibleVeterinarianName: null,
     isCarriedOver: false,
+    paymentIndicator: 'NoPaymentRecorded',
+    hasActiveHospitalization: false,
     ...over
 });
 
