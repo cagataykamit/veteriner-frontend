@@ -4,7 +4,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ChargeCreateResultVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -46,10 +46,7 @@ describe('ChargeNewPageComponent', () => {
             providers: [
                 provideRouter([]),
                 { provide: ChargesService, useValue: charges },
-                {
-                    provide: ClientsService,
-                    useValue: { getClients: () => of({ items: [{ id: 'cl1', fullName: 'Ali Veli', phone: '5551112233', email: '', createdAtUtc: null }] }) }
-                },
+                { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [{ id: 'p1', name: 'Pamuk', speciesName: 'Kedi', clientId: 'cl1' }] }) } },
                 {
                     provide: ExaminationsService,

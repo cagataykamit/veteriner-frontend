@@ -18,14 +18,12 @@ import {
     chargeNumberValidator,
     computeChargeAmount
 } from '@/app/features/charges/utils/charge-amount.utils';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import {
-    clientOptionsFromList,
     filterPetsByClientId,
     isStalePetListResponse,
     petOptionsFromList,
@@ -33,6 +31,7 @@ import {
     type SelectOption
 } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -40,7 +39,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, ClientSearchComponent, AppPageHeaderComponent],
     template: `
         <a routerLink="/panel/charges" class="text-primary font-medium no-underline inline-block mb-4">← Ücret listesine dön</a>
 
@@ -57,19 +56,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="chargeClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
-                        <p-select
-                            inputId="chargeClient"
-                            formControlName="clientId"
-                            [options]="clientOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Müşteri seçin"
-                            [filter]="true"
-                            filterBy="label"
-                            [showClear]="true"
-                            styleClass="w-full"
-                            [loading]="loadingClients()"
-                        />
+                        <app-client-search inputId="chargeClient" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
@@ -170,7 +157,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || amountPreview() === null || submitting() || loadingClients() || ro.mutationBlocked()"
+                        [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"
                     />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -188,7 +175,6 @@ export class ChargeNewPageComponent implements OnInit {
 
     private readonly fb = inject(FormBuilder);
     private readonly chargesService = inject(ChargesService);
-    private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly examinationsService = inject(ExaminationsService);
     private readonly visitsService = inject(VisitsService);
@@ -207,10 +193,8 @@ export class ChargeNewPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly loadError = signal<string | null>(null);
-    readonly loadingClients = signal(false);
     readonly loadingPets = signal(false);
     readonly loadingExaminations = signal(false);
-    readonly clientOptions = signal<SelectOption[]>([]);
     readonly petOptions = signal<SelectOption[]>([]);
     readonly examinationOptions = signal<SelectOption[]>([]);
     private readonly todayItems = signal<TodayItemVm[]>([]);
@@ -281,7 +265,10 @@ export class ChargeNewPageComponent implements OnInit {
             this.loadExaminations(trimClientIdControlValue(this.form.controls.clientId.value), trimClientIdControlValue(petId));
         });
         // Abonelikler kurulduktan sonra: query'den gelen müşteri ön seçimi değişiklik akışını tetiklemeli.
-        this.loadClients();
+        const preset = this.route.snapshot.queryParamMap.get('clientId')?.trim();
+        if (preset) {
+            this.form.controls.clientId.setValue(preset);
+        }
     }
 
     goList(): void {
@@ -324,24 +311,6 @@ export class ChargeNewPageComponent implements OnInit {
                     this.submitError.set(e.message ?? 'Ücret kaydedilemedi.');
                 }
             });
-    }
-
-    private loadClients(): void {
-        this.loadingClients.set(true);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-                const preset = this.route.snapshot.queryParamMap.get('clientId')?.trim();
-                if (preset && r.items.some((c) => c.id === preset)) {
-                    this.form.controls.clientId.setValue(preset);
-                }
-            },
-            error: (e: Error) => {
-                this.loadError.set(e.message ?? 'Müşteri listesi yüklenemedi.');
-                this.loadingClients.set(false);
-            }
-        });
     }
 
     private loadPets(clientId: string): void {

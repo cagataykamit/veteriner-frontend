@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ChargesPagedVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ChargesListPageComponent } from './charges-list-page.component';
 
@@ -39,7 +39,7 @@ describe('ChargesListPageComponent', () => {
             providers: [
                 provideRouter([]),
                 { provide: ChargesService, useValue: charges },
-                { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
+                { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : null) } } } }

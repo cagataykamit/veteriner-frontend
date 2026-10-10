@@ -3,16 +3,14 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CHARGES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
-import { clientOptionsFromList, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -29,7 +27,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         RouterLink,
         TableModule,
         ButtonModule,
-        SelectModule,
+        ClientSearchComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -64,19 +62,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         <div class="card">
             <div class="mb-4 max-w-md">
                 <label for="chargeClientFilter" class="block text-xs font-medium text-muted-color mb-1">Müşteri</label>
-                <p-select
-                    inputId="chargeClientFilter"
-                    [options]="clientOptions()"
-                    [(ngModel)]="clientId"
-                    (ngModelChange)="onClientFilterChange()"
-                    optionLabel="label"
-                    optionValue="value"
-                    placeholder="Tümü"
-                    [filter]="true"
-                    filterBy="label"
-                    [showClear]="true"
-                    styleClass="w-full"
-                />
+                <app-client-search inputId="chargeClientFilter" placeholder="Tümü — ad, telefon, hayvan veya mikroçip ile arayın" [ngModel]="clientId" (ngModelChange)="onClientFilterChange($event)" />
             </div>
 
             @if (error()) {
@@ -140,7 +126,6 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 })
 export class ChargesListPageComponent implements OnInit {
     private readonly chargesService = inject(ChargesService);
-    private readonly clientsService = inject(ClientsService);
     private readonly route = inject(ActivatedRoute);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
@@ -153,7 +138,6 @@ export class ChargesListPageComponent implements OnInit {
     readonly totalItems = signal(0);
     readonly pageSize = signal(20);
     readonly first = signal(0);
-    readonly clientOptions = signal<SelectOption[]>([]);
 
     clientId: string | null = null;
 
@@ -162,11 +146,6 @@ export class ChargesListPageComponent implements OnInit {
 
     ngOnInit(): void {
         this.clientId = this.route.snapshot.queryParamMap.get('clientId')?.trim() || null;
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => this.clientOptions.set(clientOptionsFromList(r.items)),
-            // Filtre listesi yüklenemese de ücret listesi çalışır; filtre boş kalır.
-            error: () => this.clientOptions.set([])
-        });
         this.load(1, this.pageSize());
     }
 
@@ -174,7 +153,8 @@ export class ChargesListPageComponent implements OnInit {
         this.load(Math.floor(this.first() / this.pageSize()) + 1, this.pageSize());
     }
 
-    onClientFilterChange(): void {
+    onClientFilterChange(clientId: string | null): void {
+        this.clientId = clientId || null;
         this.load(1, this.pageSize());
     }
 
