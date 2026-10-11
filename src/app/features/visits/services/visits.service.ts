@@ -1,6 +1,5 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, MonoTypeOperatorFunction, Observable, of, throwError } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -31,14 +30,7 @@ import type {
     VisitCreateResultVm,
     VisitVm
 } from '@/app/features/visits/models/visit-vm.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-
-/** Hatayı kullanıcıya gösterilecek Türkçe mesajlı `Error`'a çevirir (backend `code` eşlemesi `messageFromHttpError` içinde). */
-function toUserError<T>(fallback: string): MonoTypeOperatorFunction<T> {
-    return catchError((err: unknown) =>
-        throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, fallback)) : err))
-    );
-}
+import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
 export class VisitsService {

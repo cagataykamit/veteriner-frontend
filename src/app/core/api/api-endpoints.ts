@@ -68,7 +68,11 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
         list: () => `/api/v1/pets`,
         byId: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}`,
-        historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`
+        historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`,
+        /** Bölüm bazlı durumlu özet kartı (`docs/PET_TIMELINE_API_CONTRACT.md`). */
+        summary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/summary`,
+        /** Query: `types` (tekrarlı), `fromUtc`, `toUtc`, `clinicId`, `includeVoided`, `limit` (≤50), `cursor` (opak). */
+        timeline: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/timeline`
     },
     species: {
         /** Query: opsiyonel `isActive` (`true` → yalnız aktif türler; lookup). Parametre yok → tümü. */
@@ -102,7 +106,9 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`, `appointmentId`); `FromDate`/`ToDate` yok. */
         list: () => `/api/v1/examinations`,
         byId: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}`,
-        relatedSummary: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/related-summary`
+        relatedSummary: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/related-summary`,
+        finalize: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/finalize`,
+        addenda: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/addenda`
     },
     vaccinations: {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
