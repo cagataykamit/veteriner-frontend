@@ -166,7 +166,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                     </span>
                                 }
                             </label>
-                            <app-date-input inputId="remLogFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
+                            <app-date-input inputId="remLogFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" />
                         </div>
                         <div
                             class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -188,7 +188,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                     </span>
                                 }
                             </label>
-                            <app-date-input inputId="remLogTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
+                            <app-date-input inputId="remLogTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" />
                         </div>
                         <div class="col-span-12 md:col-span-4 flex flex-wrap gap-2">
                             <p-button size="small" icon="pi pi-filter" label="Filtrele" (onClick)="applyFilters()" />
