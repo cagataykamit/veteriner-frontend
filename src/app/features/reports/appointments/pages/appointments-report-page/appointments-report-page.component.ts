@@ -1,3 +1,5 @@
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
@@ -68,7 +70,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppStatusTagComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <app-page-header
@@ -102,7 +104,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </label>
-                    <app-date-input inputId="apptRepFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" />
+                    <app-date-input inputId="apptRepFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isToDateActive())">
                     <label for="apptRepTo" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isToDateActive())">
@@ -113,7 +115,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </label>
-                    <app-date-input inputId="apptRepTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" />
+                    <app-date-input inputId="apptRepTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClinicActive())">
                     <span id="lblApptRepClinic" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClinicActive())">
@@ -133,8 +135,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                         optionValue="value"
                         [placeholder]="copy.reportsClinicPanelDefault"
                         styleClass="w-full"
-                        [showClear]="true"
-                    />
+                        [showClear]="true" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isStatusActive())">
                     <span id="lblApptRepStatus" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isStatusActive())">
@@ -154,8 +155,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                         optionValue="value"
                         [placeholder]="copy.filterPlaceholderAll"
                         styleClass="w-full"
-                        [showClear]="true"
-                    />
+                        [showClear]="true" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClientFilterActive())">
                     <span id="lblApptRepClient" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClientFilterActive())">
@@ -177,7 +177,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </span>
-                    <app-pet-search inputId="apptRepPet" [requireClient]="false" [clientId]="clientIdFilter" [(ngModel)]="petIdFilter" />
+                    <app-pet-search inputId="apptRepPet" [requireClient]="false" [clientId]="clientIdFilter" [(ngModel)]="petIdFilter" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isSearchActive())">
                     <label
@@ -192,18 +192,9 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </label>
-                    <input
-                        pInputText
-                        id="apptRepSearch"
-                        class="w-full"
-                        [ngClass]="activeInputClass(isSearchActive())"
-                        [(ngModel)]="searchInput"
-                        [placeholder]="copy.appointmentsReportSearchPlaceholder"
-                        (keyup.enter)="applyFilters()"
-                    />
+                    <app-search-input inputId="apptRepSearch" [placeholder]="copy.appointmentsReportSearchPlaceholder" [(value)]="searchInput" (search)="applyFilters()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                     @if (canExportReport()) {
                         <p-button
@@ -372,6 +363,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
     `
 })
 export class AppointmentsReportPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly reportTableRowTrackKey = reportTableRowTrackKey;
     private readonly reportService = inject(AppointmentsReportService);
@@ -453,6 +445,7 @@ export class AppointmentsReportPageComponent implements OnInit {
     onClientFilterChange(clientId: string | null): void {
         this.clientIdFilter = clientId ?? '';
         this.petIdFilter = '';
+        this.scheduleApply();
     }
 
     applyFilters(): void {

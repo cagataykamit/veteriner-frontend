@@ -1,3 +1,5 @@
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
@@ -67,7 +69,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <app-page-header
@@ -97,7 +99,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                             </span>
                         }
                     </label>
-                    <app-date-input inputId="repFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" />
+                    <app-date-input inputId="repFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isToDateActive())">
                     <label for="repTo" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isToDateActive())">
@@ -108,7 +110,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                             </span>
                         }
                     </label>
-                    <app-date-input inputId="repTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" />
+                    <app-date-input inputId="repTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClinicActive())">
                     <span id="lblRepClinic" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClinicActive())">
@@ -128,8 +130,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                         optionValue="value"
                         [placeholder]="copy.reportsClinicPanelDefault"
                         styleClass="w-full"
-                        [showClear]="true"
-                    />
+                        [showClear]="true" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isMethodActive())">
                     <span id="lblRepMethod" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isMethodActive())">
@@ -149,8 +150,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                         optionValue="value"
                         [placeholder]="copy.filterPlaceholderAll"
                         styleClass="w-full"
-                        [showClear]="true"
-                    />
+                        [showClear]="true" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClientFilterActive())">
                     <span id="lblPayRepClient" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClientFilterActive())">
@@ -172,7 +172,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                             </span>
                         }
                     </span>
-                    <app-pet-search inputId="payRepPet" [requireClient]="false" [clientId]="clientIdFilter" [(ngModel)]="petIdFilter" />
+                    <app-pet-search inputId="payRepPet" [requireClient]="false" [clientId]="clientIdFilter" [(ngModel)]="petIdFilter" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isSearchActive())">
                     <label for="repSearch" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isSearchActive())">
@@ -183,18 +183,9 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                             </span>
                         }
                     </label>
-                    <input
-                        pInputText
-                        id="repSearch"
-                        class="w-full"
-                        [ngClass]="activeInputClass(isSearchActive())"
-                        [(ngModel)]="searchInput"
-                        [placeholder]="copy.paymentsReportSearchPlaceholder"
-                        (keyup.enter)="applyFilters()"
-                    />
+                    <app-search-input inputId="repSearch" [placeholder]="copy.paymentsReportSearchPlaceholder" [(value)]="searchInput" (search)="applyFilters()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                     @if (canExportReport()) {
                         <p-button
@@ -360,6 +351,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
     `
 })
 export class PaymentsReportPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly reportTableRowTrackKey = reportTableRowTrackKey;
     private readonly reportService = inject(PaymentsReportService);
@@ -440,6 +432,7 @@ export class PaymentsReportPageComponent implements OnInit {
     onClientFilterChange(clientId: string | null): void {
         this.clientIdFilter = clientId ?? '';
         this.petIdFilter = '';
+        this.scheduleApply();
     }
 
     formatMoneyLine(n: number): string {
