@@ -28,7 +28,6 @@ import { StockMovementService } from '@/app/features/inventory/services/stock-mo
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
-    DATETIME_LOCAL_INPUT_MAX,
     DATETIME_LOCAL_INPUT_MIN
 } from '@/app/shared/utils/date-input-validation.utils';
 
@@ -169,7 +168,7 @@ type SelectOption = { label: string; value: string };
 
                 <div>
                     <label for="smcOccurred" class="block text-sm font-medium text-muted-color mb-2">İşlem zamanı</label>
-                    <app-date-input inputId="smcOccurred" type="datetime-local" formControlName="occurredAtUtcLocal" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                    <app-date-input inputId="smcOccurred" type="datetime-local" formControlName="occurredAtUtcLocal" [min]="datetimeLocalInputMin" limit="past" />
                     @if (form.controls.occurredAtUtcLocal.hasError('dateYearInvalid') && form.controls.occurredAtUtcLocal.touched) {
                         <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                     }
@@ -207,7 +206,6 @@ type SelectOption = { label: string; value: string };
 })
 export class StockMovementCreateDialogComponent {
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     private readonly fb = inject(FormBuilder);
     private readonly clinics = inject(ClinicsService);
     private readonly productService = inject(ProductService);

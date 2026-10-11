@@ -225,7 +225,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="smFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="dateFromInput" />
+                                <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -249,7 +249,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="smTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="dateToInput" />
+                                <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" />
                             </div>
                         </div>
                     </div>

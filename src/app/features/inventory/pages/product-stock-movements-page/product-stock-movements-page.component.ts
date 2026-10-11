@@ -180,7 +180,7 @@ type ProductStockMovementsListState = {
                                 "
                             >
                                 <label for="psmFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç (UTC tarih)</label>
-                                <app-date-input inputId="psmFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="dateFromInput" />
+                                <app-date-input inputId="psmFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -191,7 +191,7 @@ type ProductStockMovementsListState = {
                                 "
                             >
                                 <label for="psmTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş (UTC tarih)</label>
-                                <app-date-input inputId="psmTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="dateToInput" />
+                                <app-date-input inputId="psmTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" />
                             </div>
                         </div>
                     </div>
