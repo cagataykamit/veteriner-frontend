@@ -1,10 +1,5 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
-/**
- * TODO(Sprint3): Bu util şu an Examinations ekranlarında kullanılmıyor.
- * Examinations API'de status alanı kesinleştiğinde ya aktif kullanıma alınmalı
- * ya da modülden kaldırılmalı.
- */
 const EM = '—';
 
 const LABELS: Record<string, string> = {
@@ -12,6 +7,7 @@ const LABELS: Record<string, string> = {
     '1': 'Tamamlandı',
     '2': 'İptal',
     draft: 'Taslak',
+    finalized: 'Kesinleşti',
     pending: 'Bekliyor',
     inprogress: 'Devam ediyor',
     in_progress: 'Devam ediyor',
@@ -53,6 +49,9 @@ export function examinationStatusSeverity(status: string | null | undefined): St
     }
     if (k === 'cancelled' || k === 'canceled' || k === 'iptal') {
         return 'danger';
+    }
+    if (k === 'finalized') {
+        return 'success';
     }
     if (k === 'draft' || k === 'taslak') {
         return 'warn';

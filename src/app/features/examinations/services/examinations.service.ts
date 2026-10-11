@@ -5,7 +5,11 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    mapCreateAddendumToApiBody,
     mapCreateExaminationToApiBody,
+    mapExaminationAddendumDtoToVm,
+    mapExaminationFinalizeResultDtoToVm,
+    mapFinalizeExaminationToApiBody,
     mapExaminationWriteResultDtoToVm,
     mapUpdateExaminationToApiBody,
     mapExaminationDetailDtoToVm,
@@ -15,23 +19,28 @@ import {
     examinationsQueryToHttpParams
 } from '@/app/features/examinations/data/examination.mapper';
 import type {
+    ExaminationAddendumDto,
     ExaminationDetailDto,
+    ExaminationFinalizeResultDto,
     ExaminationListItemDtoPagedResult,
     ExaminationRelatedSummaryDto
 } from '@/app/features/examinations/models/examination-api.model';
 import type {
+    CreateExaminationAddendumRequest,
     CreateExaminationRequest,
     UpdateExaminationRequest
 } from '@/app/features/examinations/models/examination-create.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
 import type {
     ExaminationDetailVm,
+    ExaminationAddendumVm,
     ExaminationEditVm,
+    ExaminationFinalizeResultVm,
     ExaminationListItemVm,
     ExaminationRelatedSummaryVm,
     ExaminationWriteResultVm
 } from '@/app/features/examinations/models/examination-vm.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface ExaminationsPagedVm {
     items: ExaminationListItemVm[];
@@ -77,6 +86,33 @@ export class ExaminationsService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'İlgili kayıtlar yüklenemedi.')))
             )
+        );
+    }
+
+    /**
+     * Muayeneyi kesinleştirir (`Examinations.Finalize`). `rowVersion`: ekranın açıldığı sürüm; arada değişmişse 409.
+     * Çift tıklama koruması çağıranda; ikinci çağrı `AlreadyFinalized` (409) döner.
+     */
+    finalizeExamination(id: string, rowVersion: string): Observable<ExaminationFinalizeResultVm> {
+        return this.api.post<ExaminationFinalizeResultDto>(ApiEndpoints.examinations.finalize(id), mapFinalizeExaminationToApiBody(rowVersion)).pipe(
+            map((dto) => mapExaminationFinalizeResultDtoToVm(dto)),
+            toUserError('Muayene kesinleştirilemedi.')
+        );
+    }
+
+    /** Kesinleşme sonrası ek notlar, en eski önce (taslakta boş liste). */
+    getAddenda(examinationId: string): Observable<ExaminationAddendumVm[]> {
+        return this.api.get<ExaminationAddendumDto[]>(ApiEndpoints.examinations.addenda(examinationId)).pipe(
+            map((list) => (list ?? []).map((dto) => mapExaminationAddendumDtoToVm(dto))),
+            toUserError('Ek notlar yüklenemedi.')
+        );
+    }
+
+    /** Ek not yazar (`Examinations.Addendum`, yalnız kesinleşmiş muayene). Idempotency yoktur: çift gönderim iki kayıt üretir; kilit çağıranda. */
+    addAddendum(examinationId: string, payload: CreateExaminationAddendumRequest): Observable<ExaminationAddendumVm> {
+        return this.api.post<ExaminationAddendumDto>(ApiEndpoints.examinations.addenda(examinationId), mapCreateAddendumToApiBody(payload)).pipe(
+            map((dto) => mapExaminationAddendumDtoToVm(dto)),
+            toUserError('Ek not kaydedilemedi.')
         );
     }
 

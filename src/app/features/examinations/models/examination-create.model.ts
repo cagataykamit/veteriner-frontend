@@ -57,3 +57,9 @@ export interface UpdateExaminationRequest extends ExaminationContentInput {
     /** Mevcut bağlantı varsa aynı değer; yoksa gönderilmez. */
     appointmentId?: string | null;
 }
+
+/** Sözleşme: gerekçe kırpılmış 5–500, metin kırpılmış en çok 4000 karakter. */
+export interface CreateExaminationAddendumRequest {
+    reason: string;
+    text: string;
+}
