@@ -2,7 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, DestroyRef, ElementRef, forwardRef, inject, input, signal, viewChild } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, ValidationErrors, Validator } from '@angular/forms';
 import { DatePicker, DatePickerModule } from 'primeng/datepicker';
-import { DateInputType, formatDateInputValue, parseDateInputValue } from '@/app/shared/forms/date-input/date-input-value.utils';
+import {
+    applyDateMask,
+    DateInputType,
+    formatDateInputDisplay,
+    formatDateInputValue,
+    parseDateInputValue
+} from '@/app/shared/forms/date-input/date-input-value.utils';
 
 const PLACEHOLDERS: Record<DateInputType, string> = {
     date: 'gg.aa.yyyy',
@@ -17,10 +23,14 @@ const INVALID_MESSAGES: Record<DateInputType, string> = {
 };
 
 /**
- * Ortak tarih / tarih-saat / saat alanı (PrimeNG DatePicker). Alana tıklayınca takvim açılır, klavyeyle `gg.aa.yyyy`
- * (saatli: `gg.aa.yyyy ss:dd`) yazılabilir, × temizler. Form değeri yerel `<input type="date|datetime-local|time">` ile
- * aynı metindir (`yyyy-MM-dd`, `yyyy-MM-ddTHH:mm`, `HH:mm`; boş = `''`), böylece mevcut doğrulayıcı ve İstanbul/UTC
- * dönüşümleri değişmeden çalışır. Çözümlenemeyen yazı için form değeri `''` ve `dateInvalid` hatası olur.
+ * Ortak tarih / tarih-saat / saat alanı (PrimeNG DatePicker). Alana tıklayınca takvim açılır; klavyeyle yazarken maske
+ * uygulanır (`24111991` → `24.11.1991`, saatli: `24.11.1991 14:30`; yalnız rakam, uzunluk biçimle sınırlı); × temizler.
+ * Form değeri yerel `<input type="date|datetime-local|time">` ile aynı metindir (`yyyy-MM-dd`, `yyyy-MM-ddTHH:mm`,
+ * `HH:mm`; boş = `''`), böylece mevcut doğrulayıcı ve İstanbul/UTC dönüşümleri değişmeden çalışır.
+ *
+ * Hatalar (blur'dan sonra gösterilir, yazarken değil): çözümlenemeyen yazı (31.02 vb.) → `dateInvalid`; **yazılan** değer
+ * `min`/`max` dışındaysa → `dateOutOfRange` (formdan gelen mevcut değerler bu denetime girmez: eski kayıtlar kaydedilebilir).
+ * Geçmiş/gelecek sınırı `min`/`max` ile verilir (ör. doğum tarihi için geniş, randevu için dar).
  */
 @Component({
     selector: 'app-date-input',
@@ -50,64 +60,105 @@ const INVALID_MESSAGES: Record<DateInputType, string> = {
             iconDisplay="input"
             [fluid]="true"
             appendTo="body"
-            (onBlur)="onTouched()"
+            (onBlur)="onBlur()"
         />
-        @if (invalid()) {
-            <small class="text-red-500 block" role="alert">{{ invalidMessage() }}</small>
+        @if (errorMessage(); as message) {
+            <small class="text-red-500 block" role="alert">{{ message }}</small>
         }
     `
 })
 export class DateInputComponent implements ControlValueAccessor, Validator {
     readonly type = input<DateInputType>('date');
     readonly inputId = input('');
-    /** `yyyy-MM-dd` veya `yyyy-MM-ddTHH:mm`; takvimde seçilebilir en erken değer. */
+    /** `yyyy-MM-dd` veya `yyyy-MM-ddTHH:mm`; en erken değer (takvimde ve yazılan değerde). */
     readonly min = input<string | null | undefined>(null);
     readonly max = input<string | null | undefined>(null);
     readonly placeholder = input('');
 
     private readonly picker = viewChild(DatePicker);
 
-    constructor() {
-        const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-        const onInput = (): void => this.acceptInputWithoutKeydown();
-        host.addEventListener('input', onInput, true); // capture: PrimeNG'in kendi dinleyicisinden önce
-        inject(DestroyRef).onDestroy(() => host.removeEventListener('input', onInput, true));
-    }
-
     readonly view = signal<Date | null>(null);
     readonly disabled = signal(false);
-    readonly invalid = signal(false);
+    private readonly unparsable = signal(false);
+    private readonly outOfRange = signal(false);
+    /** Odak içinde yazılıyor: hata mesajı blur'dan sonra gösterilir (yazarken "geçersiz" yanıp sönmesin). */
+    private readonly editing = signal(false);
 
     readonly defaultPlaceholder = computed(() => PLACEHOLDERS[this.type()]);
-    readonly invalidMessage = computed(() => INVALID_MESSAGES[this.type()]);
-    readonly minDate = computed(() => this.type() === 'time' ? null : parseDateInputValue('datetime-local', this.min()));
-    readonly maxDate = computed(() => this.type() === 'time' ? null : parseDateInputValue('datetime-local', this.max()));
+    readonly minDate = computed(() => (this.type() === 'time' ? null : parseDateInputValue('datetime-local', this.min())));
+    readonly maxDate = computed(() => (this.type() === 'time' ? null : parseDateInputValue('datetime-local', this.max())));
+
+    readonly errorMessage = computed<string | null>(() => {
+        if (this.editing()) {
+            return null;
+        }
+        if (this.unparsable()) {
+            return INVALID_MESSAGES[this.type()];
+        }
+        return this.outOfRange() ? this.rangeMessage() : null;
+    });
 
     private onChange: (value: string) => void = () => undefined;
     onTouched: () => void = () => undefined;
     private onValidatorChange: () => void = () => undefined;
+    private lastMasked = '';
+
+    constructor() {
+        const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+        // Capture: PrimeNG'in kendi `input` dinleyicisinden önce çalışır; maskelenmiş metni PrimeNG çözümler.
+        const onInput = (event: Event): void => this.onRawInput(event);
+        const onFocus = (event: Event): void => {
+            if (event.target instanceof HTMLInputElement) {
+                this.lastMasked = event.target.value;
+            }
+        };
+        host.addEventListener('input', onInput, true);
+        host.addEventListener('focusin', onFocus, true);
+        inject(DestroyRef).onDestroy(() => {
+            host.removeEventListener('input', onInput, true);
+            host.removeEventListener('focusin', onFocus, true);
+        });
+    }
 
     /**
-     * PrimeNG yazılan metni yalnız `keydown` ile başlayan girdide işler; sağ tık yapıştırma, otomatik doldurma ve dikte
-     * `keydown` üretmez ve sessizce yok sayılırdı. `input` olayı (capture, PrimeNG'in kendi dinleyicisinden önce) geldiğinde
-     * PrimeNG'in bu iç bayrağı açılır. Davranış testi: yazma + tuşsuz girdi.
+     * Ham girdiyi maskeler. PrimeNG yazılan metni yalnız `keydown` ile başlayan girdide işler; sağ tık yapıştırma, otomatik
+     * doldurma ve dikte `keydown` üretmez ve sessizce yok sayılırdı: PrimeNG'in bu iç bayrağı burada açılır.
      */
-    acceptInputWithoutKeydown(): void {
+    private onRawInput(event: Event): void {
+        const el = event.target;
+        if (!(el instanceof HTMLInputElement)) {
+            return;
+        }
+        const masked = applyDateMask(this.type(), el.value, el.selectionStart ?? el.value.length, this.lastMasked, (event as InputEvent).inputType ?? '');
+        if (masked.text !== el.value) {
+            el.value = masked.text;
+            el.setSelectionRange(masked.caret, masked.caret);
+        }
+        this.lastMasked = masked.text;
+        this.editing.set(true);
         const picker = this.picker() as unknown as { isKeydown: boolean } | undefined;
         if (picker) {
             picker.isKeydown = true;
         }
     }
 
+    onBlur(): void {
+        this.editing.set(false);
+        this.onTouched();
+    }
+
     /** Seçici değişimi: `Date` (geçerli giriş/seçim), `null` (temizlendi) veya `string` (çözümlenemeyen yazı; `keepInvalid`). */
     onPickerChange(value: Date | string | null): void {
-        const rawInvalid = typeof value === 'string' && value.trim() !== '';
-        if (this.invalid() !== rawInvalid) {
-            this.invalid.set(rawInvalid);
+        const unparsable = typeof value === 'string' && value.trim() !== '';
+        const outOfRange = value instanceof Date && this.isOutOfRange(value);
+        const changed = this.unparsable() !== unparsable || this.outOfRange() !== outOfRange;
+        this.unparsable.set(unparsable);
+        this.outOfRange.set(outOfRange);
+        if (changed) {
             this.onValidatorChange();
         }
         // Çözümlenemeyen yazıda görünümü ezme: yazı sürerken PrimeNG girdiyi geri yazarsa kullanıcı yazamaz.
-        if (!rawInvalid) {
+        if (!unparsable) {
             this.view.set(value instanceof Date ? value : null);
         }
         this.onChange(value instanceof Date ? formatDateInputValue(this.type(), value) : '');
@@ -115,10 +166,11 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
 
     writeValue(value: string | null): void {
         const date = parseDateInputValue(this.type(), value);
-        const hadInvalidText = this.invalid();
-        this.invalid.set(false);
+        const hadError = this.unparsable() || this.outOfRange();
+        this.unparsable.set(false);
+        this.outOfRange.set(false);
         this.view.set(date);
-        if (hadInvalidText) {
+        if (hadError) {
             // `view` değişmediyse (null→null) ngModel girdiyi sıfırlamaz; yazı kalıntısını elle temizle.
             this.picker()?.writeValue(date);
             this.onValidatorChange();
@@ -126,7 +178,10 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     }
 
     validate(_control: AbstractControl): ValidationErrors | null {
-        return this.invalid() ? { dateInvalid: true } : null;
+        if (this.unparsable()) {
+            return { dateInvalid: true };
+        }
+        return this.outOfRange() ? { dateOutOfRange: true } : null;
     }
 
     registerOnValidatorChange(fn: () => void): void {
@@ -143,5 +198,34 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
 
     setDisabledState(isDisabled: boolean): void {
         this.disabled.set(isDisabled);
+    }
+
+    private isOutOfRange(value: Date): boolean {
+        if (this.type() === 'time') {
+            return false;
+        }
+        const min = this.minDate();
+        const max = this.maxDate();
+        // Tarih türünde gün başı (00:00), tarih-saatte dakika karşılaştırılır.
+        return (!!min && value.getTime() < min.getTime()) || (!!max && value.getTime() > max.getTime());
+    }
+
+    private rangeMessage(): string {
+        const type = this.type();
+        const min = this.minDate();
+        const max = this.maxDate();
+        // 1900 / 9999 gibi uç sınırlar kullanıcıya anlamlı değil; yalnız gerçek (dar) sınırlar mesaja girer.
+        const useMin = !!min && min.getFullYear() > 1900;
+        const useMax = !!max && max.getFullYear() < 9999;
+        if (useMin && useMax) {
+            return `Tarih ${formatDateInputDisplay(type, min)} ile ${formatDateInputDisplay(type, max)} arasında olmalıdır.`;
+        }
+        if (useMin) {
+            return `Tarih ${formatDateInputDisplay(type, min)} veya sonrası olmalıdır.`;
+        }
+        if (useMax) {
+            return `Tarih ${formatDateInputDisplay(type, max)} veya öncesi olmalıdır.`;
+        }
+        return 'Tarih izin verilen aralığın dışında.';
     }
 }

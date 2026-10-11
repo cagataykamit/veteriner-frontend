@@ -85,6 +85,10 @@ describe('DateInputComponent', () => {
         await typeText('31.02.2026');
         expect(host.control.value).toBe('');
         expect(host.control.hasError('dateInvalid')).toBeTrue();
+        expect(fixture.nativeElement.textContent).not.toContain('Geçerli bir tarih girin'); // yazarken gösterilmez
+        input().blur();
+        fixture.detectChanges();
+        await wait(50);
         expect(fixture.nativeElement.textContent).toContain('Geçerli bir tarih girin (gg.aa.yyyy).');
         await typeText('28.02.2026');
         expect(host.control.value).toBe('2026-02-28');
@@ -105,7 +109,7 @@ describe('DateInputComponent', () => {
         fixture.detectChanges();
         await wait(50);
         expect(input().value).toBe('11.10.2026');
-        await typeText('abc');
+        await typeText('31.02.2026');
         expect(host.control.hasError('dateInvalid')).toBeTrue();
         host.control.setValue('');
         fixture.detectChanges();

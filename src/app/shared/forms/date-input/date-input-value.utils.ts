@@ -57,3 +57,92 @@ export function formatDateInputValue(type: DateInputType, date: Date | null | un
     const ymd = `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     return type === 'date' ? ymd : `${ymd}T${hm}`;
 }
+
+const DIGIT_LIMIT: Record<DateInputType, number> = { date: 8, 'datetime-local': 12, time: 4 };
+/** Ayırıcının önüne konacağı rakam sırası → ayırıcı (gg.aa.yyyy ss:dd). */
+const SEPARATOR_BEFORE_DIGIT: Record<DateInputType, Record<number, string>> = {
+    date: { 2: '.', 4: '.' },
+    'datetime-local': { 2: '.', 4: '.', 8: ' ', 10: ':' },
+    time: { 2: ':' }
+};
+
+const ISO_RE = /^\s*(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/;
+
+export interface MaskedInput {
+    text: string;
+    caret: number;
+}
+
+const countDigits = (s: string): number => (s.match(/\d/g) ?? []).length;
+
+/** `2411` → `24.11` (ayırıcı yalnız iki rakam grubu arasına girer; sondaki boş ayırıcı bırakılmaz). */
+function insertSeparators(type: DateInputType, digits: string): string {
+    const seps = SEPARATOR_BEFORE_DIGIT[type];
+    let out = '';
+    for (let i = 0; i < digits.length; i++) {
+        out += (seps[i] ?? '') + digits[i];
+    }
+    return out;
+}
+
+/** `digitCount` rakamdan sonraki imleç konumu (biçimli metinde). */
+function caretAfterDigits(formatted: string, digitCount: number): number {
+    if (digitCount <= 0) {
+        return 0;
+    }
+    let seen = 0;
+    for (let i = 0; i < formatted.length; i++) {
+        if (/\d/.test(formatted[i])) {
+            seen++;
+            if (seen === digitCount) {
+                return i + 1;
+            }
+        }
+    }
+    return formatted.length;
+}
+
+/**
+ * Yazarken maske: yalnız rakam alınır, `gg.aa.yyyy` / `gg.aa.yyyy ss:dd` / `ss:dd` ayırıcıları kendiliğinden eklenir,
+ * uzunluk biçimle sınırlanır. `24111991` ve `24.11.1991` aynı sonucu verir; `1991-11-24` (ISO) yapıştırılırsa çevrilir.
+ * Silmede yalnız ayırıcı gitmişse (rakamlar değişmedi) imlecin yanındaki rakam silinir; böylece ayırıcıda takılmaz.
+ * @param previous Bu girdi olayından önceki (maskelenmiş) metin; yalnız silme tespiti için.
+ * @param inputType `InputEvent.inputType` (ör. `deleteContentBackward`).
+ */
+export function applyDateMask(type: DateInputType, raw: string, caret: number, previous = '', inputType = ''): MaskedInput {
+    let text = raw;
+    let pos = Math.min(caret, raw.length);
+    const iso = ISO_RE.exec(raw);
+    if (iso) {
+        text = `${iso[3]}${iso[2]}${iso[1]}${iso[4] ? iso[4] + iso[5] : ''}`;
+        pos = text.length;
+    }
+    let digits = text.replace(/\D/g, '');
+    let digitsBeforeCaret = countDigits(text.slice(0, pos));
+
+    if (!iso && inputType.startsWith('delete') && previous && digits === previous.replace(/\D/g, '') && digits.length > 0) {
+        const backward = inputType === 'deleteContentBackward';
+        const index = backward ? digitsBeforeCaret - 1 : digitsBeforeCaret;
+        if (index >= 0 && index < digits.length) {
+            digits = digits.slice(0, index) + digits.slice(index + 1);
+            if (backward) {
+                digitsBeforeCaret--;
+            }
+        }
+    }
+
+    digits = digits.slice(0, DIGIT_LIMIT[type]);
+    digitsBeforeCaret = Math.min(digitsBeforeCaret, digits.length);
+    const formatted = insertSeparators(type, digits);
+    return { text: formatted, caret: caretAfterDigits(formatted, digitsBeforeCaret) };
+}
+
+/** Görüntü biçimi: `gg.aa.yyyy`, `gg.aa.yyyy ss:dd`, `ss:dd` (hata mesajlarında). */
+export function formatDateInputDisplay(type: DateInputType, date: Date): string {
+    const hm = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    if (type === 'time') {
+        return hm;
+    }
+    const dmy = `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${pad(date.getFullYear(), 4)}`;
+    return type === 'date' ? dmy : `${dmy} ${hm}`;
+}
