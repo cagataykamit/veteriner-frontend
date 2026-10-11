@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -45,7 +47,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent
+        AppErrorStateComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <app-page-header title="Reçeteler" subtitle="Klinik" description="Reçete kayıtları.">
@@ -100,18 +102,9 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                             </span>
                                         }
                                     </label>
-                                    <input
-                                        pInputText
-                                        id="rxSearch"
-                                        class="w-full"
-                                        [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Başlık, müşteri veya hayvan…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
@@ -137,7 +130,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" />
+                                <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors"
@@ -159,7 +152,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" />
+                                <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -281,6 +274,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
     `
 })
 export class PrescriptionsListPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
