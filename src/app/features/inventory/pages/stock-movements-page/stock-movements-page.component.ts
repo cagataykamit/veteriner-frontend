@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -66,7 +67,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent, DateInputComponent
     ],
     template: `
         <p-toast position="bottom-right" />
@@ -224,7 +225,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                         </span>
                                     }
                                 </label>
-                                <input id="smFrom" type="date" class="w-full md:max-w-64 p-inputtext p-component" min="1900-01-01" max="9999-12-31" [(ngModel)]="dateFromInput" />
+                                <app-date-input inputId="smFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="dateFromInput" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -248,7 +249,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                         </span>
                                     }
                                 </label>
-                                <input id="smTo" type="date" class="w-full md:max-w-64 p-inputtext p-component" min="1900-01-01" max="9999-12-31" [(ngModel)]="dateToInput" />
+                                <app-date-input inputId="smTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="dateToInput" />
                             </div>
                         </div>
                     </div>
