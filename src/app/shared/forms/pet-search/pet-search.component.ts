@@ -36,7 +36,7 @@ const PAGE_SIZE = 20;
             [inputId]="inputId()"
             [ngModel]="model()"
             (ngModelChange)="onModelChange($event)"
-            [disabled]="disabled() || !clientId()"
+            [disabled]="disabled() || (requireClient() && !clientId())"
             [suggestions]="suggestions()"
             (completeMethod)="onComplete($event)"
             optionLabel="label"
@@ -47,7 +47,7 @@ const PAGE_SIZE = 20;
             dropdownMode="blank"
             [showClear]="true"
             [fluid]="true"
-            [placeholder]="clientId() ? placeholder() : 'Önce müşteri seçin'"
+            [placeholder]="requireClient() && !clientId() ? 'Önce müşteri seçin' : placeholder()"
             appendTo="body"
             (onBlur)="onTouched()"
         >
@@ -91,6 +91,8 @@ const PAGE_SIZE = 20;
 export class PetSearchComponent implements ControlValueAccessor {
     /** Sahip müşteri kimliği; boşsa alan kapalıdır. */
     readonly clientId = input('');
+    /** `false`: sahip seçilmemişken tüm hayvanlar aranır (rapor/liste filtreleri); sahip varsa yine ona daraltılır. */
+    readonly requireClient = input(true);
     readonly inputId = input('');
     readonly placeholder = input('Hayvan seçin veya yazarak arayın');
 
@@ -177,14 +179,14 @@ export class PetSearchComponent implements ControlValueAccessor {
 
     private load(term: string) {
         const clientId = this.clientId().trim();
-        if (!clientId) {
+        if (!clientId && this.requireClient()) {
             return of([] as PetSearchResult[]);
         }
         const search = term.trim();
-        return this.pets.getPets({ page: 1, pageSize: PAGE_SIZE, clientId, search: search || undefined }).pipe(
+        return this.pets.getPets({ page: 1, pageSize: PAGE_SIZE, clientId: clientId || undefined, search: search || undefined }).pipe(
             map((r) => {
                 const hasOwner = r.items.some((p) => (p.clientId ?? '').trim());
-                return (hasOwner ? filterPetsByClientId(r.items, clientId) : r.items).map((p) => ({ id: p.id, label: `${p.name} — ${p.speciesName}` }));
+                return (clientId && hasOwner ? filterPetsByClientId(r.items, clientId) : r.items).map((p) => ({ id: p.id, label: `${p.name} — ${p.speciesName}` }));
             }),
             catchError((e: unknown) => {
                 this.searchError.set(panelHttpFailureMessage(e, 'Hayvan listesi yüklenemedi.'));
