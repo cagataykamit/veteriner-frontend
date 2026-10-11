@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
@@ -88,7 +89,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
-        ExaminationPatientHeaderComponent, ClientSearchComponent, PetSearchComponent
+        ExaminationPatientHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
@@ -186,14 +187,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                         <div class="grid grid-cols-12 gap-4">
                             <div class="col-span-12 md:col-span-6">
                                 <label for="examinationDate" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi *</label>
-                                <input
-                                    id="examinationDate"
-                                    type="date"
-                                    class="w-full md:max-w-64 p-inputtext p-component"
-                                    formControlName="examinationDate"
-                                    [min]="dateInputMin"
-                                    [max]="dateInputMax"
-                                />
+                                <app-date-input inputId="examinationDate" type="date" formControlName="examinationDate" [min]="dateInputMin" [max]="dateInputMax" />
                                 @if (form.controls.examinationDate.hasError('dateYearInvalid') && form.controls.examinationDate.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                                 } @else if (form.controls.examinationDate.invalid && form.controls.examinationDate.touched) {
@@ -286,12 +280,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="vitalsMeasuredAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ölçüm zamanı</label>
-                                <input
-                                    id="vitalsMeasuredAtLocal"
-                                    type="datetime-local"
-                                    class="w-full p-inputtext p-component"
-                                    formControlName="vitalsMeasuredAtLocal"
-                                />
+                                <app-date-input inputId="vitalsMeasuredAtLocal" type="datetime-local" formControlName="vitalsMeasuredAtLocal" />
                                 <small class="text-muted-color block">Vital değerler opsiyoneldir. Boş bırakılırsa ilk ölçüm girişinde muayene zamanı kullanılır.</small>
                                 @if (form.hasError('partialVitalClear')) {
                                     <small class="text-red-500 block" role="alert">Kayıttaki tek bir vital değer silinemez; tüm vital alanlarını boşaltın veya değeri yeniden girin.</small>
