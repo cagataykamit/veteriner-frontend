@@ -1,3 +1,4 @@
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -34,7 +35,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, SearchInputComponent
     ],
     template: `
         <app-page-header
@@ -74,17 +75,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
                             <div class="flex-1 min-w-0">
                                 <label for="tmSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                <input
-                                    pInputText
-                                    id="tmSearch"
-                                    class="w-full"
-                                    [(ngModel)]="searchInput"
-                                    placeholder="E-posta…"
-                                    (keyup.enter)="applySearch()"
-                                />
+                                <app-search-input inputId="tmSearch" placeholder="E-posta…" [(value)]="searchInput" (search)="applySearch()" />
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
-                                <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
                                 <p-button
                                     [label]="copy.buttonClear"
                                     icon="pi pi-times"
