@@ -3,6 +3,8 @@ import {
     isPartialVitalClear,
     mapCreateExaminationToApiBody,
     mapExaminationDetailDtoToEditVm,
+    mapExaminationDetailDtoToVm,
+    mapExaminationStatus,
     mapExaminationFormToCreateRequest,
     mapExaminationFormToUpdateRequest,
     mapExaminationWriteResultDtoToVm,
@@ -48,6 +50,7 @@ const current = (over: Partial<ExaminationEditVm> = {}): ExaminationEditVm => ({
     assessment: '',
     plan: '',
     notes: '',
+    status: 'Draft',
     rowVersion: 'AQIDBAUGBwgJCgs=',
     ...over
 });
@@ -274,5 +277,34 @@ describe('isPartialVitalClear', () => {
         expect(isPartialVitalClear(none, { ...none, weightKg: 4 })).toBeFalse();
         expect(isPartialVitalClear({ ...none, weightKg: 4 }, { ...none, weightKg: 4 })).toBeFalse();
         expect(isPartialVitalClear({ ...none, weightKg: 4 }, none)).toBeFalse();
+    });
+});
+
+describe('examination mapper — durum (kesinleştirme)', () => {
+    it('yalnız Finalized kilitli sayılır; eksik, eski ve bilinmeyen değer Taslak', () => {
+        expect(mapExaminationStatus('Finalized')).toBe('Finalized');
+        expect(mapExaminationStatus(' finalized ')).toBe('Finalized');
+        expect(mapExaminationStatus('Draft')).toBe('Draft');
+        expect(mapExaminationStatus(undefined)).toBe('Draft');
+        expect(mapExaminationStatus('Weird')).toBe('Draft');
+    });
+
+    it('detay VM kesinleşme bilgisini taşır; eski kayıtta (alan yok) Taslak ve null', () => {
+        const done = mapExaminationDetailDtoToVm({
+            id: 'e1',
+            status: 'Finalized',
+            finalizedAtUtc: '2026-10-11T09:30:00Z',
+            finalizedByName: 'Dr. Ayşe',
+            rowVersion: 'V2'
+        });
+        expect(done).toEqual(jasmine.objectContaining({ status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z', finalizedByName: 'Dr. Ayşe', rowVersion: 'V2' }));
+
+        const legacy = mapExaminationDetailDtoToVm({ id: 'e2' });
+        expect(legacy).toEqual(jasmine.objectContaining({ status: 'Draft', finalizedAtUtc: null, finalizedByName: null }));
+    });
+
+    it('düzenleme VM i durumu taşır', () => {
+        expect(mapExaminationDetailDtoToEditVm({ id: 'e1', status: 'Finalized' }).status).toBe('Finalized');
+        expect(mapExaminationDetailDtoToEditVm({ id: 'e1' }).status).toBe('Draft');
     });
 });

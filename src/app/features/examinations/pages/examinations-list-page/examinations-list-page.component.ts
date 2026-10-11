@@ -18,6 +18,8 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -47,7 +49,10 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent, SearchInputComponent
+        AppErrorStateComponent,
+        AppStatusTagComponent,
+        DateInputComponent,
+        SearchInputComponent
     ],
     template: `
         <app-page-header title="Muayeneler" subtitle="Klinik" description="Muayene kayıtları ve takip.">
@@ -180,6 +185,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                     <th>Müşteri</th>
                                     <th>Hayvan</th>
                                     <th>Ziyaret sebebi</th>
+                                    <th>Durum</th>
                                     <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
@@ -203,6 +209,11 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         }
                                     </td>
                                     <td>{{ row.visitReason }}</td>
+                                    <td>
+                                        @if (row.status) {
+                                            <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
+                                        }
+                                    </td>
                                     <td>
                                         <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                     </td>
@@ -243,6 +254,9 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                 </div>
                                 <div class="text-sm text-muted-color mb-3 min-w-0 break-words">
                                     <span class="font-medium">Ziyaret sebebi: </span>{{ row.visitReason }}
+                                    @if (row.status) {
+                                        <app-status-tag class="ml-2" [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
+                                    }
                                 </div>
                                 <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline">Detay →</a>
@@ -298,6 +312,8 @@ export class ExaminationsListPageComponent implements OnInit {
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
+    readonly statusLabel = examinationStatusLabel;
+    readonly statusSeverity = examinationStatusSeverity;
     readonly formatDateTime = (v: string | null) => formatDateTimeDisplay(v);
     readonly hasActiveFilters = computed(
         () => !!this.activeSearch().trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim()

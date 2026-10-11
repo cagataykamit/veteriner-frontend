@@ -58,6 +58,9 @@ export const VISITS_CORRECT_CLAIM = 'Visits.Correct' as const;
 export const EXAMINATIONS_READ_CLAIM = 'Examinations.Read' as const;
 export const EXAMINATIONS_CREATE_CLAIM = 'Examinations.Create' as const;
 export const EXAMINATIONS_UPDATE_CLAIM = 'Examinations.Update' as const;
+/** Muayene kesinleştirme ve ek not (Veteriner ve yönetim; sekreter yalnız okur). */
+export const EXAMINATIONS_FINALIZE_CLAIM = 'Examinations.Finalize' as const;
+export const EXAMINATIONS_ADDENDUM_CLAIM = 'Examinations.Addendum' as const;
 
 export const VACCINATIONS_READ_CLAIM = 'Vaccinations.Read' as const;
 export const VACCINATIONS_CREATE_CLAIM = 'Vaccinations.Create' as const;

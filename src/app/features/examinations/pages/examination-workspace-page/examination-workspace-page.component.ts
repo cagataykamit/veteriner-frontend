@@ -113,6 +113,11 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                 </div>
             </app-page-header>
 
+            @if (finalized()) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status" data-testid="finalized-notice">
+                    Bu muayene kesinleştirilmiş; içeriği düzenlenemez. Düzeltme için muayene özetinden ek not ekleyebilirsiniz.
+                </p>
+            }
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
                     İşletme salt okunur moddadır; değişiklik kaydedilemez.
@@ -390,6 +395,8 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly conflict = signal(false);
+    /** Kesinleşmiş muayene salt okunur: form kilitlenir, kayıt engellenir. */
+    readonly finalized = signal(false);
     readonly selectionError = signal<string | null>(null);
     readonly apiFieldErrors = signal<ExaminationUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
@@ -485,6 +492,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         return (
             this.form.invalid ||
             (!this.isEdit && (this.selectionForm.invalid || this.applyingRouteContext())) ||
+            this.finalized() ||
             this.submitting() ||
             this.ro.mutationBlocked()
         );
@@ -530,6 +538,12 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                     },
                     { emitEvent: false }
                 );
+                this.finalized.set(x.status === 'Finalized');
+                if (this.finalized()) {
+                    this.form.disable({ emitEvent: false });
+                } else {
+                    this.form.enable({ emitEvent: false });
+                }
                 this.apiFieldErrors.set({});
                 this.submitError.set(null);
                 this.conflict.set(false);
@@ -548,7 +562,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     }
 
     onSubmit(): void {
-        if (this.submitting()) {
+        if (this.submitting() || this.finalized()) {
             return;
         }
         this.submitError.set(null);

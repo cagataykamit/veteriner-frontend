@@ -110,6 +110,11 @@ export interface PetHistoryPaymentItemVm {
     clinicName: string | null;
 }
 
+/** `history-summary` `omittedBlocks` değerleri (yetki yok). */
+export type PetHistoryBlockKey = 'Appointments' | 'Examinations' | 'Treatments' | 'Prescriptions' | 'LabResults' | 'Hospitalizations' | 'Payments';
+
+export const PET_HISTORY_BLOCK_KEYS: readonly PetHistoryBlockKey[] = ['Appointments', 'Examinations', 'Treatments', 'Prescriptions', 'LabResults', 'Hospitalizations', 'Payments'];
+
 export interface PetHistorySummaryVm {
     petId: string;
     petName: string;
@@ -122,6 +127,7 @@ export interface PetHistorySummaryVm {
     recentLabResults: PetHistoryLabResultItemVm[];
     recentHospitalizations: PetHistoryHospitalizationItemVm[];
     recentPayments: PetHistoryPaymentItemVm[];
+    omittedBlocks: PetHistoryBlockKey[];
 }
 
 /** Edit form için ham değerlere yakın, canonical alanlar. */

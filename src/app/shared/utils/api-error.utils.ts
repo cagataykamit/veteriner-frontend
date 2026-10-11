@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { catchError, MonoTypeOperatorFunction, throwError } from 'rxjs';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 
 /** Sunucunun genel ProblemDetails başlıkları / Angular transport metni — kullanıcıya göstermek için yetersiz. */
@@ -245,6 +246,22 @@ function chargePanelProblemUserMessage(err: HttpErrorResponse): string | null {
     return code ? (CHARGE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
+/** Muayene kesinleştirme / ek not — `ProblemDetails` + `extensions.code` (`docs/EXAMINATION_FINALIZE_API_CONTRACT.md`). */
+const EXAMINATION_FINALIZE_PROBLEM_MESSAGES: Record<string, string> = {
+    'Examinations.AlreadyFinalized': 'Bu muayene zaten kesinleştirilmiş. Sayfayı yenileyin.',
+    'Examinations.ConcurrencyConflict':
+        'Muayene siz ekranı açtıktan sonra başka biri tarafından değiştirilmiş. Sayfayı yenileyip içeriği kontrol ederek tekrar deneyin.',
+    'Examinations.Finalized': 'Kesinleşmiş muayene düzenlenemez. Düzeltme için ek not ekleyin.',
+    'Examinations.NotFinalized': 'Ek not yalnızca kesinleşmiş muayeneye eklenebilir.',
+    'Examinations.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
+    'Examinations.NotFound': 'Muayene bulunamadı veya artık erişilemiyor.'
+};
+
+function examinationFinalizeProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    return code ? (EXAMINATION_FINALIZE_PROBLEM_MESSAGES[code] ?? null) : null;
+}
+
 function lookupSubscriptionWriteMessageByCode(code: string): string | null {
     const t = code.trim();
     if (!t) {
@@ -334,6 +351,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     if (chargePanelMsg) {
         return chargePanelMsg;
     }
+    const examinationFinalizeMsg = examinationFinalizeProblemUserMessage(err);
+    if (examinationFinalizeMsg) {
+        return examinationFinalizeMsg;
+    }
 
     const body = err.error as ProblemDetails | string | null | undefined;
     if (body && typeof body === 'object') {
@@ -417,6 +438,13 @@ export function isReportRecoverableClinicConstraint403(err: unknown): boolean {
         return true;
     }
     return false;
+}
+
+/** Hatayı kullanıcıya gösterilecek Türkçe mesajlı `Error`'a çevirir (backend `code` eşlemesi `messageFromHttpError` içinde). */
+export function toUserError<T>(fallback: string): MonoTypeOperatorFunction<T> {
+    return catchError((err: unknown) =>
+        throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, fallback)) : err))
+    );
 }
 
 export function panelHttpFailureMessage(err: unknown, fallback: string): string {

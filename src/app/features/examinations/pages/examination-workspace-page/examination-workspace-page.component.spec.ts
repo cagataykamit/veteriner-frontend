@@ -34,6 +34,7 @@ const editVm = (over: Partial<ExaminationEditVm> = {}): ExaminationEditVm => ({
     assessment: '',
     plan: '',
     notes: '',
+    status: 'Draft',
     rowVersion: 'V1',
     ...over
 });
@@ -292,5 +293,29 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(cmp.form.controls.weightKg.valid).toBeTrue();
         cmp.form.controls.heartRateBpm.setValue(80.5);
         expect(cmp.form.controls.heartRateBpm.valid).toBeFalse();
+    });
+
+    it('kesinleşmiş muayene açılınca form kilitlenir, uyarı görünür ve kayıt gönderilmez', () => {
+        service.getExaminationForEditById.and.returnValue(of(editVm({ status: 'Finalized' })));
+        cmp.reload();
+        fixture.detectChanges();
+
+        expect(cmp.finalized()).toBeTrue();
+        expect(cmp.form.disabled).toBeTrue();
+        expect(cmp.saveDisabled()).toBeTrue();
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="finalized-notice"]')).not.toBeNull();
+
+        cmp.onSubmit();
+        expect(service.updateExamination).not.toHaveBeenCalled();
+    });
+
+    it('taslak muayene yeniden yüklenince form açık kalır', () => {
+        service.getExaminationForEditById.and.returnValue(of(editVm({ status: 'Finalized' })));
+        cmp.reload();
+        service.getExaminationForEditById.and.returnValue(of(editVm({ status: 'Draft' })));
+        cmp.reload();
+
+        expect(cmp.finalized()).toBeFalse();
+        expect(cmp.form.enabled).toBeTrue();
     });
 });

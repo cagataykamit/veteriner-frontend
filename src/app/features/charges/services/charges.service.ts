@@ -16,7 +16,7 @@ import type {
     ChargesPagedVm,
     CreateChargeRequest
 } from '@/app/features/charges/models/charge-vm.model';
-import { toUserError } from '@/app/shared/utils/to-user-error.operator';
+import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
 export class ChargesService {

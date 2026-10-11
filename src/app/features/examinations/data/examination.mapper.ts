@@ -1,6 +1,8 @@
 import { HttpParams } from '@angular/common/http';
 import type {
+    ExaminationAddendumDto,
     ExaminationDetailDto,
+    ExaminationFinalizeResultDto,
     ExaminationListItemDto,
     ExaminationListItemDtoPagedResult,
     ExaminationRelatedHospitalizationItemDto,
@@ -10,6 +12,7 @@ import type {
     ExaminationWriteResultDto
 } from '@/app/features/examinations/models/examination-api.model';
 import type {
+    CreateExaminationAddendumRequest,
     CreateExaminationRequest,
     ExaminationVitalsInput,
     UpdateExaminationRequest
@@ -17,10 +20,13 @@ import type {
 import type { ExaminationWorkspaceFormValue } from '@/app/features/examinations/models/examination-form.model';
 import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
 import type {
+    ExaminationAddendumVm,
     ExaminationDetailVm,
     ExaminationEditVm,
+    ExaminationFinalizeResultVm,
     ExaminationListItemVm,
     ExaminationRelatedSummaryVm,
+    ExaminationStatus,
     ExaminationWriteResultVm
 } from '@/app/features/examinations/models/examination-vm.model';
 import {
@@ -40,6 +46,11 @@ function finiteNumberOrNull(v: unknown): number | null {
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
     return t ? t : null;
+}
+
+/** `Finalized` dışındaki her değer (eksik/eski/bilinmeyen) `Draft` sayılır. */
+export function mapExaminationStatus(raw: string | null | undefined): ExaminationStatus {
+    return raw?.trim().toLowerCase() === 'finalized' ? 'Finalized' : 'Draft';
 }
 
 function str(v: string | null | undefined): string {
@@ -185,7 +196,8 @@ export function mapExaminationListItemDtoToVm(dto: ExaminationListItemDto): Exam
         petId: canonicalPetId(dto),
         petName: canonicalPetName(dto),
         appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
-        visitReason: canonicalVisitReason(dto)
+        visitReason: canonicalVisitReason(dto),
+        status: dto.status ? mapExaminationStatus(dto.status) : null
     };
 }
 
@@ -211,6 +223,9 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
         heartRateBpm: finiteNumberOrNull(dto.heartRateBpm),
         respiratoryRatePerMin: finiteNumberOrNull(dto.respiratoryRatePerMin),
         vitalsMeasuredAtUtc: trimmedOrNull(dto.vitalsMeasuredAtUtc),
+        status: mapExaminationStatus(dto.status),
+        finalizedAtUtc: trimmedOrNull(dto.finalizedAtUtc),
+        finalizedByName: trimmedOrNull(dto.finalizedByName),
         rowVersion: trimmedOrNull(dto.rowVersion),
         createdAtUtc: canonicalDetailCreatedAtUtc(dto),
         updatedAtUtc: canonicalDetailUpdatedAtUtc(dto)
@@ -238,6 +253,7 @@ export function mapExaminationDetailDtoToEditVm(dto: ExaminationDetailDto): Exam
         assessment: firstTrimmed(dto.assessment, dto.diagnosis) ?? '',
         plan: dto.plan ?? '',
         notes: firstTrimmed(dto.notes, dto.note) ?? '',
+        status: mapExaminationStatus(dto.status),
         rowVersion: trimmedOrNull(dto.rowVersion) ?? ''
     };
 }
@@ -646,4 +662,33 @@ export function mapExaminationFormToUpdateRequest(
         clearVitals: !hasAnyVital(vitals) && hasAnyVital(current),
         ...vitals
     };
+}
+
+/** POST /examinations/{id}/finalize gövdesi: sürüm zorunlu. */
+export function mapFinalizeExaminationToApiBody(rowVersion: string): { rowVersion: string } {
+    return { rowVersion };
+}
+
+export function mapExaminationFinalizeResultDtoToVm(dto: ExaminationFinalizeResultDto): ExaminationFinalizeResultVm {
+    return {
+        id: dto.id,
+        rowVersion: trimmedOrNull(dto.rowVersion),
+        status: mapExaminationStatus(dto.status),
+        finalizedAtUtc: trimmedOrNull(dto.finalizedAtUtc)
+    };
+}
+
+export function mapExaminationAddendumDtoToVm(dto: ExaminationAddendumDto): ExaminationAddendumVm {
+    return {
+        id: dto.id,
+        reason: dto.reason ?? '',
+        text: dto.text ?? '',
+        createdAtUtc: trimmedOrNull(dto.createdAtUtc),
+        createdByName: trimmedOrNull(dto.createdByName)
+    };
+}
+
+/** Gerekçe ve metin kırpılarak gönderilir (sunucu da kırpılmış uzunluğu doğrular). */
+export function mapCreateAddendumToApiBody(payload: CreateExaminationAddendumRequest): { reason: string; text: string } {
+    return { reason: payload.reason.trim(), text: payload.text.trim() };
 }

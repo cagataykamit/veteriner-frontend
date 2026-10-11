@@ -118,4 +118,58 @@ describe('ExaminationsService', () => {
         expect(req.request.params.has('FromDate')).toBeFalse();
         req.flush({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 });
     });
+
+    describe('kesinleştirme ve ek not (sözleşme: EXAMINATION_FINALIZE_API_CONTRACT)', () => {
+        const problem = (status: number, code: string) => ({ status, extensions: { code } });
+
+        it('finalize: POST /finalize gövdesinde yalnız rowVersion; yanıttan yeni sürüm ve durum döner', (done) => {
+            service.finalizeExamination('e1', 'AAAAAAAAB9E=').subscribe((res) => {
+                expect(res).toEqual({ id: 'e1', rowVersion: 'AAAAAAAAB9F=', status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z' });
+                done();
+            });
+            const req = http.expectOne('http://api.test/api/v1/examinations/e1/finalize');
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body).toEqual({ rowVersion: 'AAAAAAAAB9E=' });
+            req.flush({ id: 'e1', rowVersion: 'AAAAAAAAB9F=', status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z', finalizedByUserId: 'u1' });
+        });
+
+        it('finalize 409 ConcurrencyConflict ve AlreadyFinalized Türkçe mesaja çevrilir', () => {
+            const messages: string[] = [];
+            for (const code of ['Examinations.ConcurrencyConflict', 'Examinations.AlreadyFinalized']) {
+                service.finalizeExamination('e1', 'V').subscribe({ error: (e: Error) => messages.push(e.message) });
+                http.expectOne('http://api.test/api/v1/examinations/e1/finalize').flush(problem(409, code), { status: 409, statusText: 'Conflict' });
+            }
+
+            expect(messages[0]).toContain('başka biri tarafından değiştirilmiş');
+            expect(messages[1]).toContain('zaten kesinleştirilmiş');
+        });
+
+        it('ek not listesi: GET /addenda; ad çözülemeyen kayıt null ad ile gelir', (done) => {
+            service.getAddenda('e1').subscribe((list) => {
+                expect(list).toEqual([
+                    { id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo 12,4', createdAtUtc: '2026-10-11T10:05:00Z', createdByName: 'Dr. Ayşe' },
+                    { id: 'a2', reason: 'Not', text: 'x', createdAtUtc: null, createdByName: null }
+                ]);
+                done();
+            });
+            http.expectOne('http://api.test/api/v1/examinations/e1/addenda').flush([
+                { id: 'a1', examinationId: 'e1', reason: 'Hatalı kilo', text: 'Doğru kilo 12,4', createdAtUtc: '2026-10-11T10:05:00Z', createdByName: 'Dr. Ayşe' },
+                { id: 'a2', examinationId: 'e1', reason: 'Not', text: 'x', createdByName: null }
+            ]);
+        });
+
+        it('ek not yazma: POST /addenda kırpılmış gerekçe ve metinle; 409 NotFinalized mesajı Türkçe', () => {
+            service.addAddendum('e1', { reason: '  Hatalı kilo  ', text: ' Doğru kilo ' }).subscribe();
+            const ok = http.expectOne('http://api.test/api/v1/examinations/e1/addenda');
+            expect(ok.request.method).toBe('POST');
+            expect(ok.request.body).toEqual({ reason: 'Hatalı kilo', text: 'Doğru kilo' });
+            ok.flush({ id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo' }, { status: 201, statusText: 'Created' });
+
+            let message = '';
+            service.addAddendum('e1', { reason: 'Hatalı kilo', text: 'x' }).subscribe({ error: (e: Error) => (message = e.message) });
+            http.expectOne('http://api.test/api/v1/examinations/e1/addenda').flush(problem(409, 'Examinations.NotFinalized'), { status: 409, statusText: 'Conflict' });
+
+            expect(message).toContain('yalnızca kesinleşmiş muayeneye');
+        });
+    });
 });

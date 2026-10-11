@@ -30,7 +30,7 @@ import type {
     VisitCreateResultVm,
     VisitVm
 } from '@/app/features/visits/models/visit-vm.model';
-import { toUserError } from '@/app/shared/utils/to-user-error.operator';
+import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
 export class VisitsService {

@@ -10,6 +10,7 @@ import { PetDetailPageComponent } from '@/app/features/pets/pages/pet-detail-pag
 import { PetEditPageComponent } from '@/app/features/pets/pages/pet-edit-page/pet-edit-page.component';
 import { PetNewPageComponent } from '@/app/features/pets/pages/pet-new-page/pet-new-page.component';
 import { PetsListPageComponent } from '@/app/features/pets/pages/pets-list-page/pets-list-page.component';
+import { PetTimelinePageComponent } from '@/app/features/pets/pages/pet-timeline-page/pet-timeline-page.component';
 
 export default [
     {
@@ -38,6 +39,15 @@ export default [
             return auth.hasOperationClaim(PETS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PetEditPageComponent
+    },
+    {
+        path: ':id/timeline',
+        canActivate: [() => {
+            const auth = inject(AuthService);
+            const router = inject(Router);
+            return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+        }],
+        component: PetTimelinePageComponent
     },
     {
         path: ':id',

@@ -3,7 +3,11 @@
  * Şema farklıysa bu dosya ve mapper ince ayarlanır.
  */
 
+/** `status` JSON'da string enum (`docs/EXAMINATION_FINALIZE_API_CONTRACT.md`). */
+export type ExaminationStatusDto = 'Draft' | 'Finalized';
+
 export interface ExaminationListItemDto {
+    status?: string | null;
     /** Bazı rapor yanıtlarında `id` ile birlikte veya onun yerine gelebilir. */
     examinationId?: string | null;
     id: string;
@@ -135,6 +139,10 @@ export interface ExaminationDetailDto {
     heartRateBpm?: number | null;
     respiratoryRatePerMin?: number | null;
     vitalsMeasuredAtUtc?: string | null;
+    status?: string | null;
+    finalizedAtUtc?: string | null;
+    finalizedByUserId?: string | null;
+    finalizedByName?: string | null;
     /** Base64 (SQL rowversion); PUT'ta zorunlu. */
     rowVersion?: string | null;
     /** Audit — API eksik döndürebilir; mapper null kabul eder. */
@@ -196,4 +204,24 @@ export interface ExaminationUpdateRequestDto {
 export interface ExaminationWriteResultDto {
     id: string;
     rowVersion?: string | null;
+}
+
+/** POST /examinations/{id}/finalize 200 yanıtı. */
+export interface ExaminationFinalizeResultDto {
+    id: string;
+    rowVersion?: string | null;
+    status?: string | null;
+    finalizedAtUtc?: string | null;
+    finalizedByUserId?: string | null;
+}
+
+/** GET/POST /examinations/{id}/addenda — `ExaminationAddendumDto`. */
+export interface ExaminationAddendumDto {
+    id: string;
+    examinationId?: string | null;
+    reason?: string | null;
+    text?: string | null;
+    createdAtUtc?: string | null;
+    createdByUserId?: string | null;
+    createdByName?: string | null;
 }

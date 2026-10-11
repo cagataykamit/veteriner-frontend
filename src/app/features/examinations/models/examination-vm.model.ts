@@ -2,7 +2,14 @@
  * Muayene — UI view modelleri.
  */
 
+import type { ExaminationStatusDto } from '@/app/features/examinations/models/examination-api.model';
+
+/** Eski/eksik değer `Draft` sayılır (kilit kararı her zaman backend'dedir). */
+export type ExaminationStatus = ExaminationStatusDto;
+
 export interface ExaminationListItemVm {
+    /** Liste uç yanıtında vardır; durum bilmeyen kaynaklarda (müşteri özeti, ilişki seçicileri) yok/`null`. */
+    status?: ExaminationStatus | null;
     id: string;
     clinicId: string | null;
     clinicName: string | null;
@@ -36,6 +43,9 @@ export interface ExaminationDetailVm {
     heartRateBpm: number | null;
     respiratoryRatePerMin: number | null;
     vitalsMeasuredAtUtc: string | null;
+    status: ExaminationStatus;
+    finalizedAtUtc: string | null;
+    finalizedByName: string | null;
     rowVersion: string | null;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
@@ -122,6 +132,7 @@ export interface ExaminationEditVm {
     assessment: string;
     plan: string;
     notes: string;
+    status: ExaminationStatus;
     /** PUT'ta aynen geri gönderilir. */
     rowVersion: string;
 }
@@ -131,3 +142,21 @@ export interface ExaminationWriteResultVm {
     /** Yanıtta yoksa null (sunucu sözleşmesi dışı). */
     rowVersion: string | null;
 }
+
+/** POST /examinations/{id}/finalize sonucu; `rowVersion` yeni sürümdür. */
+export interface ExaminationFinalizeResultVm {
+    id: string;
+    rowVersion: string | null;
+    status: ExaminationStatus;
+    finalizedAtUtc: string | null;
+}
+
+export interface ExaminationAddendumVm {
+    id: string;
+    reason: string;
+    text: string;
+    createdAtUtc: string | null;
+    /** Ad çözülemediyse `null`. */
+    createdByName: string | null;
+}
+
