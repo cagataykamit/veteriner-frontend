@@ -3,6 +3,7 @@ import {
     correctionActionOptions,
     formatElapsedSince,
     groupTodayItems,
+    isPossiblyForgottenVisit,
     todayItemActions,
     todaySecondaryActions,
     todayUrgencyToggle,
@@ -229,5 +230,24 @@ describe('satır eylem düzeni (görünür / menü)', () => {
     it('planlı ve gelmedi satırları', () => {
         expect(secondary(planned)).toEqual(['markNoShow']);
         expect(secondary({ ...planned, appointmentStatus: 'NoShow' })).toEqual(['revertNoShow']);
+    });
+});
+
+describe('isPossiblyForgottenVisit', () => {
+    const now = new Date('2026-10-11T12:00:00Z');
+    const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
+
+    it('açık geliş 12 saati aşınca (sınır dahil) true', () => {
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'Waiting', arrivedAtUtc: hoursAgo(12) }), now)).toBeTrue();
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'InProgress', arrivedAtUtc: hoursAgo(23) }), now)).toBeTrue();
+    });
+
+    it('12 saatten kısa süre false', () => {
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'Waiting', arrivedAtUtc: hoursAgo(11.9) }), now)).toBeFalse();
+    });
+
+    it('tamamlanan, planlı ve gelişi olmayan satır false', () => {
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'Completed', arrivedAtUtc: hoursAgo(30) }), now)).toBeFalse();
+        expect(isPossiblyForgottenVisit(item({ careStatus: null, arrivedAtUtc: null }), now)).toBeFalse();
     });
 });

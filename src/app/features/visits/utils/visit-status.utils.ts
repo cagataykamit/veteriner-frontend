@@ -138,6 +138,16 @@ export function formatElapsedSince(arrivedAtUtc: string | null, now: Date): stri
     return rest ? `${Math.floor(minutes / 60)} sa ${rest} dk` : `${Math.floor(minutes / 60)} sa`;
 }
 
+/** Açık (Bekliyor/Devam ediyor) bir geliş bu süreyi aşarsa satırda yalnız görsel "unutulmuş olabilir" ipucu gösterilir (iş kuralı yok). */
+export const FORGOTTEN_VISIT_HOURS = 12;
+
+/** Açık geliş `FORGOTTEN_VISIT_HOURS` saati aştı mı? Kapalı/planlı satır ve geçersiz geliş için `false`. */
+export function isPossiblyForgottenVisit(item: TodayItemVm, now: Date): boolean {
+    const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
+    const arrived = open ? parseUtcApiInstantIsoString(item.arrivedAtUtc) : null;
+    return !!arrived && now.getTime() - arrived.getTime() >= FORGOTTEN_VISIT_HOURS * 3_600_000;
+}
+
 /** Bekleme uyarı eşikleri (dakika); ayar ekranı gelene kadar tek yerde sabit. */
 export const WAIT_WARNING_MINUTES = 30;
 export const WAIT_CRITICAL_MINUTES = 60;
