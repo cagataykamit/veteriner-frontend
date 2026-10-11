@@ -14,6 +14,9 @@ import {
 } from '@/app/features/pets/data/pet.mapper';
 import { mapPetSummaryDtoToVm } from '@/app/features/pets/data/pet-summary.mapper';
 import type { PetDetailDto, PetHistorySummaryDto, PetListItemDtoPagedResult } from '@/app/features/pets/models/pet-api.model';
+import { mapPetTimelinePageDtoToVm, petTimelineQueryToHttpParams } from '@/app/features/pets/data/pet-timeline.mapper';
+import type { PetTimelinePageDto } from '@/app/features/pets/models/pet-timeline-api.model';
+import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/features/pets/models/pet-timeline-vm.model';
 import type { PetSummaryDto } from '@/app/features/pets/models/pet-summary-api.model';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
@@ -67,6 +70,14 @@ export class PetsService {
         return this.api.get<PetSummaryDto>(ApiEndpoints.pets.summary(petId)).pipe(
             map((dto) => mapPetSummaryDtoToVm(dto)),
             toUserError('Hasta özeti yüklenemedi.')
+        );
+    }
+
+    /** Birleşik zaman çizelgesi; sayfalama opak imleçle (`nextCursor`), süzgeçler her sayfada aynı gönderilmelidir. */
+    getPetTimeline(petId: string, query: PetTimelineQuery): Observable<PetTimelinePageVm> {
+        return this.api.get<PetTimelinePageDto>(ApiEndpoints.pets.timeline(petId), petTimelineQueryToHttpParams(query)).pipe(
+            map((dto) => mapPetTimelinePageDtoToVm(dto)),
+            toUserError('Zaman çizelgesi yüklenemedi.')
         );
     }
 
