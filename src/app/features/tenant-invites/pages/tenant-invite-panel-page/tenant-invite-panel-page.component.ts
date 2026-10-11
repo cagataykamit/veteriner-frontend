@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -33,7 +34,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         ButtonModule,
         InputTextModule,
         AppPageHeaderComponent,
-        AppLoadingStateComponent
+        AppLoadingStateComponent, DateInputComponent
     ],
     template: `
         <app-page-header
@@ -114,7 +115,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="inviteExpires" class="block text-sm font-medium text-muted-color mb-2">Son geçerlilik (isteğe bağlı)</label>
-                            <input id="inviteExpires" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="expiresAtLocal" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                            <app-date-input inputId="inviteExpires" type="datetime-local" formControlName="expiresAtLocal" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
                             @if (form.controls.expiresAtLocal.hasError('dateYearInvalid') && form.controls.expiresAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             }
