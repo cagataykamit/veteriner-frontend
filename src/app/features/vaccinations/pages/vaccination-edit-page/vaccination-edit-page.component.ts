@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
@@ -59,7 +60,7 @@ import {
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
@@ -155,14 +156,7 @@ import {
                         @if (statusNum() === 1) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati *</label>
-                                <input
-                                    id="appliedAtLocal"
-                                    type="datetime-local"
-                                    class="w-full md:max-w-96 p-inputtext p-component"
-                                    formControlName="appliedAtLocal"
-                                    [attr.min]="datetimeLocalInputMin"
-                                    [attr.max]="maxAppliedInput()"
-                                />
+                                <app-date-input inputId="appliedAtLocal" type="datetime-local" formControlName="appliedAtLocal" [min]="datetimeLocalInputMin" [max]="maxAppliedInput()" />
                                 @if (form.controls.appliedAtLocal.hasError('dateYearInvalid') && form.controls.appliedAtLocal.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                                 } @else if (apiFieldErrors().appliedAtLocal) {
@@ -177,14 +171,7 @@ import {
                         @if (statusNum() === 0) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="nextDueDateScheduled" class="block text-sm font-medium text-muted-color mb-2">Planlanan uygulama tarihi ve saati *</label>
-                                <input
-                                    id="nextDueDateScheduled"
-                                    type="datetime-local"
-                                    class="w-full md:max-w-96 p-inputtext p-component"
-                                    formControlName="nextDueDate"
-                                    [attr.min]="plannedDateTimeMin()"
-                                    [attr.max]="datetimeLocalInputMax"
-                                />
+                                <app-date-input inputId="nextDueDateScheduled" type="datetime-local" formControlName="nextDueDate" [min]="plannedDateTimeMin()" [max]="datetimeLocalInputMax" />
                                 <p class="text-muted-color text-sm mt-2 mb-0">Aşı bu tarih ve saatte uygulanmak üzere planlanır.</p>
                                 @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
@@ -200,14 +187,7 @@ import {
                         @if (statusNum() === 1) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="nextDueDateApplied" class="block text-sm font-medium text-muted-color mb-2">Sonraki uygulama tarihi</label>
-                                <input
-                                    id="nextDueDateApplied"
-                                    type="datetime-local"
-                                    class="w-full md:max-w-96 p-inputtext p-component"
-                                    formControlName="nextDueDate"
-                                    [attr.min]="minNextDueAfterApplied()"
-                                    [attr.max]="datetimeLocalInputMax"
-                                />
+                                <app-date-input inputId="nextDueDateApplied" type="datetime-local" formControlName="nextDueDate" [min]="minNextDueAfterApplied()" [max]="datetimeLocalInputMax" />
                                 <p class="text-muted-color text-sm mt-2 mb-0">Boş bırakılırsa bu aşı için hatırlatma oluşturulmaz.</p>
                                 @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
@@ -221,7 +201,7 @@ import {
                         @if (statusNum() === 2) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="nextDueDateCancelled" class="block text-sm font-medium text-muted-color mb-2">Planlı / sonraki tarih (opsiyonel)</label>
-                                <input id="nextDueDateCancelled" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="nextDueDate" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                                <app-date-input inputId="nextDueDateCancelled" type="datetime-local" formControlName="nextDueDate" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
                                 @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                                 } @else if (apiFieldErrors().nextDueDate) {
