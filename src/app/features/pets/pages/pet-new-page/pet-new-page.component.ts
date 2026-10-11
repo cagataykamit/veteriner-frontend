@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -47,7 +48,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         SelectModule,
         AppPageHeaderComponent,
         QuickSpeciesDialogComponent,
-        QuickBreedDialogComponent, ClientSearchComponent
+        QuickBreedDialogComponent, ClientSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
@@ -162,7 +163,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="birthDate" class="block text-sm font-medium text-muted-color mb-2">Doğum tarihi</label>
-                        <input id="birthDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="birthDate" [min]="dateInputMin" [max]="dateInputMax" />
+                        <app-date-input inputId="birthDate" type="date" formControlName="birthDate" [min]="dateInputMin" [max]="dateInputMax" />
                         @if (apiFieldErrors().birthDate) {
                             <small class="text-red-500">{{ apiFieldErrors().birthDate }}</small>
                         } @else if (form.controls.birthDate.invalid && form.controls.birthDate.touched) {
