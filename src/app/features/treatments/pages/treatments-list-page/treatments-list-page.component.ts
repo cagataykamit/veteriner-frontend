@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -35,7 +37,7 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent
+        AppErrorStateComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <app-page-header title="Tedaviler" subtitle="Klinik" description="Tedavi kayıtları.">
@@ -72,17 +74,9 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
                                 <div class="flex-1 min-w-0">
                                     <label for="trSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                    <input
-                                        pInputText
-                                        id="trSearch"
-                                        class="w-full"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Başlık, müşteri veya hayvan…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="trSearch" placeholder="Başlık, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
@@ -90,11 +84,11 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6">
                                 <label for="trFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
-                                <app-date-input inputId="trFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" />
+                                <app-date-input inputId="trFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="trTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
-                                <app-date-input inputId="trTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" />
+                                <app-date-input inputId="trTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -216,6 +210,7 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
     `
 })
 export class TreatmentsListPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
