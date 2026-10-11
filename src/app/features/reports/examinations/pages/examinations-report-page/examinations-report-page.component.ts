@@ -1,6 +1,7 @@
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
@@ -55,6 +56,7 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
     selector: 'app-examinations-report-page',
     standalone: true,
     imports: [
+        FilterFieldComponent,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -86,38 +88,14 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
                 <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ dateFilterError() }}</p>
             }
             <p class="text-sm text-muted-color m-0 mb-4">{{ copy.examinationsReportDefaultPeriodHint }}</p>
-            <div class="grid grid-cols-12 gap-3 items-end">
-                <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isFromDateActive())">
-                    <label for="examRepFrom" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isFromDateActive())">
-                        {{ copy.reportsFilterDateFrom }}
-                        @if (isFromDateActive()) {
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                Aktif
-                            </span>
-                        }
-                    </label>
+            <div class="flex flex-wrap items-end gap-3">
+                <app-filter-field [label]="copy.reportsFilterDateFrom" labelFor="examRepFrom" [active]="isFromDateActive()" width="date">
                     <app-date-input inputId="examRepFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                </div>
-                <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isToDateActive())">
-                    <label for="examRepTo" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isToDateActive())">
-                        {{ copy.reportsFilterDateTo }}
-                        @if (isToDateActive()) {
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                Aktif
-                            </span>
-                        }
-                    </label>
+                </app-filter-field>
+                <app-filter-field [label]="copy.reportsFilterDateTo" labelFor="examRepTo" [active]="isToDateActive()" width="date">
                     <app-date-input inputId="examRepTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                </div>
-                <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClinicActive())">
-                    <span id="lblExamRepClinic" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClinicActive())">
-                        {{ copy.reportsFilterClinic }}
-                        @if (isClinicActive()) {
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                Aktif
-                            </span>
-                        }
-                    </span>
+                </app-filter-field>
+                <app-filter-field [label]="copy.reportsFilterClinic" labelId="lblExamRepClinic" [active]="isClinicActive()" width="select">
                     <p-select
                         ariaLabelledBy="lblExamRepClinic"
                         inputId="examRepClinic"
@@ -128,40 +106,16 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
                         [placeholder]="copy.reportsClinicPanelDefault"
                         styleClass="w-full"
                         [showClear]="true" (ngModelChange)="scheduleApply()" />
-                </div>
-                <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClientFilterActive())">
-                    <span id="lblExamRepClient" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClientFilterActive())">
-                        {{ copy.labelClient }}
-                        @if (isClientFilterActive()) {
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                Aktif
-                            </span>
-                        }
-                    </span>
+                </app-filter-field>
+                <app-filter-field [label]="copy.labelClient" labelId="lblExamRepClient" [active]="isClientFilterActive()" width="grow">
                     <app-client-search inputId="examRepClient" [ngModel]="clientIdFilter" (ngModelChange)="onClientFilterChange($event)" />
-                </div>
-                <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isPetFilterActive())">
-                    <span id="lblExamRepPet" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isPetFilterActive())">
-                        {{ copy.labelPet }}
-                        @if (isPetFilterActive()) {
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                Aktif
-                            </span>
-                        }
-                    </span>
+                </app-filter-field>
+                <app-filter-field [label]="copy.labelPet" labelId="lblExamRepPet" [active]="isPetFilterActive()" width="grow">
                     <app-pet-search inputId="examRepPet" [requireClient]="false" [clientId]="clientIdFilter" [(ngModel)]="petIdFilter" (ngModelChange)="scheduleApply()" />
-                </div>
-                <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isSearchActive())">
-                    <label for="examRepSearch" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isSearchActive())">
-                        {{ copy.reportsFilterSearch }}
-                        @if (isSearchActive()) {
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                Aktif
-                            </span>
-                        }
-                    </label>
+                </app-filter-field>
+                <app-filter-field [label]="copy.reportsFilterSearch" labelFor="examRepSearch" [active]="isSearchActive()" width="grow">
                     <app-search-input inputId="examRepSearch" [placeholder]="copy.examinationsReportSearchPlaceholder" [(value)]="searchInput" (search)="applyFilters()" />
-                </div>
+                </app-filter-field>
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                     @if (canExportReport()) {
@@ -713,16 +667,6 @@ export class ExaminationsReportPageComponent implements OnInit {
 
     isPetFilterActive(): boolean {
         return !!this.activePetId().trim();
-    }
-
-    filterBoxClass(active: boolean): string {
-        return active
-            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900';
-    }
-
-    filterLabelClass(active: boolean): string {
-        return active ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color';
     }
 
     activeInputClass(active: boolean): string {

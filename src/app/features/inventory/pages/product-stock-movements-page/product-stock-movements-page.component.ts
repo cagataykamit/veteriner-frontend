@@ -1,5 +1,6 @@
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -53,6 +54,7 @@ type ProductStockMovementsListState = {
     imports: [
         CommonModule,
         FormsModule,
+        FilterFieldComponent,
         RouterLink,
         TableModule,
         Paginator,
@@ -114,7 +116,7 @@ type ProductStockMovementsListState = {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else {
                 <div class="flex flex-col gap-4">
-                    <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
+                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
                             <div class="min-w-0">
                                 <h5 class="m-0">Hareketler</h5>
@@ -136,29 +138,8 @@ type ProductStockMovementsListState = {
                                 }
                             </div>
                         </div>
-                        <div class="grid grid-cols-12 gap-3 items-end">
-                            <div
-                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    movementTypeActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <span
-                                    id="lblPsmType"
-                                    class="flex items-center gap-2 text-xs font-medium mb-1"
-                                    [ngClass]="movementTypeActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                >
-                                    Hareket tipi
-                                    @if (movementTypeActive()) {
-                                        <span
-                                            class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100"
-                                        >
-                                            Aktif
-                                        </span>
-                                    }
-                                </span>
+                        <div class="flex flex-wrap items-end gap-3">
+                            <app-filter-field label="Hareket tipi" labelId="lblPsmType" [active]="movementTypeActive()" width="select">
                                 <p-select
                                     ariaLabelledBy="lblPsmType"
                                     inputId="psmMovementType"
@@ -169,29 +150,13 @@ type ProductStockMovementsListState = {
                                     placeholder="Tümü"
                                     styleClass="w-full"
                                     [showClear]="true" (ngModelChange)="scheduleApply()" />
-                            </div>
-                            <div
-                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isFromActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <label for="psmFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç (UTC tarih)</label>
+                            </app-filter-field>
+                            <app-filter-field label="Başlangıç (UTC tarih)" labelFor="psmFrom" [active]="isFromActive()" width="date">
                                 <app-date-input inputId="psmFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </div>
-                            <div
-                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isToActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <label for="psmTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş (UTC tarih)</label>
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş (UTC tarih)" labelFor="psmTo" [active]="isToActive()" width="date">
                                 <app-date-input inputId="psmTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </div>
+                            </app-filter-field>
                         </div>
                     </div>
 

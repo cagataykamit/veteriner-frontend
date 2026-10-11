@@ -1,5 +1,6 @@
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -47,7 +48,8 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent, SearchInputComponent
+        AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
+        SearchInputComponent
     ],
     template: `
         <app-page-header title="Reçeteler" subtitle="Klinik" description="Reçete kayıtları.">
@@ -73,7 +75,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else {
                 <div class="flex flex-col gap-4">
-                    <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
+                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
                             <div class="min-w-0">
                                 <h5 class="m-0">Reçeteler</h5>
@@ -82,78 +84,21 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                 }
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <div
-                                    class="flex-1 min-w-0 rounded-lg border p-2 transition-colors"
-                                    [ngClass]="
-                                        isSearchActive()
-                                            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                    "
-                                >
-                                    <label
-                                        for="rxSearch"
-                                        class="flex items-center gap-2 text-xs font-medium mb-1"
-                                        [ngClass]="isSearchActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                    >
-                                        Arama
-                                        @if (isSearchActive()) {
-                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                                Aktif
-                                            </span>
-                                        }
-                                    </label>
+                                <app-filter-field label="Arama" labelFor="rxSearch" [active]="isSearchActive()" width="grow">
                                     <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </div>
+                                </app-filter-field>
                                 <div class="flex flex-wrap gap-2 shrink-0">
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-12 gap-3 items-end">
-                            <div
-                                class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isFromDateActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <label
-                                    for="rxFrom"
-                                    class="flex items-center gap-2 text-xs font-medium mb-1"
-                                    [ngClass]="isFromDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                >
-                                    Başlangıç
-                                    @if (isFromDateActive()) {
-                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                            Aktif
-                                        </span>
-                                    }
-                                </label>
+                        <div class="flex flex-wrap items-end gap-3">
+                            <app-filter-field label="Başlangıç" labelFor="rxFrom" [active]="isFromDateActive()" width="date">
                                 <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </div>
-                            <div
-                                class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isToDateActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <label
-                                    for="rxTo"
-                                    class="flex items-center gap-2 text-xs font-medium mb-1"
-                                    [ngClass]="isToDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                >
-                                    Bitiş
-                                    @if (isToDateActive()) {
-                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                            Aktif
-                                        </span>
-                                    }
-                                </label>
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş" labelFor="rxTo" [active]="isToDateActive()" width="date">
                                 <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </div>
+                            </app-filter-field>
                         </div>
                     </div>
                 @if (displayedRows().length === 0) {

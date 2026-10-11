@@ -1,5 +1,6 @@
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -71,6 +72,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
+        FilterFieldComponent,
         SearchInputComponent
     ],
     providers: [ConfirmationService],
@@ -115,7 +117,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                     @if (listActionError()) {
                         <p class="text-red-500 text-sm m-0" role="alert">{{ listActionError() }}</p>
                     }
-                    <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
+                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
                             <div class="min-w-0">
                                 <h5 class="m-0">Kategoriler</h5>
@@ -124,23 +126,9 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                 }
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <div
-                                    class="flex-1 min-w-0 rounded-lg border p-2 transition-colors"
-                                    [ngClass]="
-                                        isSearchActive()
-                                            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                    "
-                                >
-                                    <label
-                                        for="catSearch"
-                                        class="flex items-center gap-2 text-xs font-medium mb-1"
-                                        [ngClass]="isSearchActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                    >
-                                        Arama
-                                    </label>
+                                <app-filter-field label="Arama" labelFor="catSearch" [active]="isSearchActive()" width="grow">
                                     <app-search-input inputId="catSearch" placeholder="Kategori adı…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </div>
+                                </app-filter-field>
                                 <div class="flex flex-wrap gap-2 shrink-0">
                                     <p-button
                                         [label]="copy.buttonClear"
@@ -152,16 +140,9 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                 </div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-12 gap-3 items-end">
-                            <div
-                                class="col-span-12 md:col-span-6 lg:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isActiveFilterApplied()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <span
+                        <div class="flex flex-wrap items-end gap-3">
+                            <app-filter-field label="Durum filtresi" labelId="lblCatActive" [active]="isActiveFilterApplied()" width="select">
+                           <span
                                     id="lblCatActive"
                                     class="flex items-center gap-2 text-xs font-medium mb-1 text-muted-color"
                                     >Durum filtresi</span
@@ -176,7 +157,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                     placeholder="Tüm durumlar"
                                     styleClass="w-full"
                                     [showClear]="true" (ngModelChange)="scheduleApply()" />
-                            </div>
+                            </app-filter-field>
                         </div>
                     </div>
 

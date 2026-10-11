@@ -1,5 +1,6 @@
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -40,6 +41,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
     selector: 'app-reminder-logs-page',
     standalone: true,
     imports: [
+        FilterFieldComponent,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -65,22 +67,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
             } @else {
                 <div class="flex flex-col gap-4">
                     <div class="grid grid-cols-12 gap-3 items-end pb-3 border-b border-surface-200 dark:border-surface-700">
-                        <div
-                            class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                            [ngClass]="
-                                isReminderTypeActive()
-                                    ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                    : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                            "
-                        >
-                            <span class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="isReminderTypeActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'">
-                                Tür
-                                @if (isReminderTypeActive()) {
-                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                        Aktif
-                                    </span>
-                                }
-                            </span>
+                        <app-filter-field label="Tür" [active]="isReminderTypeActive()" width="select">
                             <p-select
                                 [options]="reminderTypeOptions"
                                 [(ngModel)]="reminderTypeFilter"
@@ -89,23 +76,8 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 placeholder="Tümü"
                                 styleClass="w-full"
                                 [showClear]="true" (ngModelChange)="scheduleApply()" />
-                        </div>
-                        <div
-                            class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                            [ngClass]="
-                                isStatusActive()
-                                    ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                    : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                            "
-                        >
-                            <span class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="isStatusActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'">
-                                Durum
-                                @if (isStatusActive()) {
-                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                        Aktif
-                                    </span>
-                                }
-                            </span>
+                        </app-filter-field>
+                        <app-filter-field label="Durum" [active]="isStatusActive()" width="select">
                             <p-select
                                 [options]="statusOptions"
                                 [(ngModel)]="statusFilter"
@@ -114,23 +86,8 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 placeholder="Tümü"
                                 styleClass="w-full"
                                 [showClear]="true" (ngModelChange)="scheduleApply()" />
-                        </div>
-                        <div
-                            class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                            [ngClass]="
-                                isClinicActive()
-                                    ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                    : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                            "
-                        >
-                            <span class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="isClinicActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'">
-                                Klinik
-                                @if (isClinicActive()) {
-                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                        Aktif
-                                    </span>
-                                }
-                            </span>
+                        </app-filter-field>
+                        <app-filter-field label="Klinik" [active]="isClinicActive()" width="select">
                             <p-select
                                 [options]="clinicOptions()"
                                 [(ngModel)]="clinicFilter"
@@ -143,51 +100,13 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 [filter]="true"
                                 filterPlaceholder="Ara…"
                                 filterBy="label" (ngModelChange)="scheduleApply()" />
-                        </div>
-                        <div
-                            class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                            [ngClass]="
-                                isFromDateActive()
-                                    ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                    : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                            "
-                        >
-                            <label
-                                for="remLogFrom"
-                                class="flex items-center gap-2 text-xs font-medium mb-1"
-                                [ngClass]="isFromDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                            >
-                                Başlangıç tarihi
-                                @if (isFromDateActive()) {
-                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                        Aktif
-                                    </span>
-                                }
-                            </label>
+                        </app-filter-field>
+                        <app-filter-field label="Başlangıç tarihi" labelFor="remLogFrom" [active]="isFromDateActive()" width="date">
                             <app-date-input inputId="remLogFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </div>
-                        <div
-                            class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                            [ngClass]="
-                                isToDateActive()
-                                    ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                    : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                            "
-                        >
-                            <label
-                                for="remLogTo"
-                                class="flex items-center gap-2 text-xs font-medium mb-1"
-                                [ngClass]="isToDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                            >
-                                Bitiş tarihi
-                                @if (isToDateActive()) {
-                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                        Aktif
-                                    </span>
-                                }
-                            </label>
+                        </app-filter-field>
+                        <app-filter-field label="Bitiş tarihi" labelFor="remLogTo" [active]="isToDateActive()" width="date">
                             <app-date-input inputId="remLogTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </div>
+                        </app-filter-field>
                         <div class="col-span-12 md:col-span-4 flex flex-wrap gap-2">
                             <p-button size="small" icon="pi pi-times" label="Temizle" severity="secondary" (onClick)="clearFilters()" />
                         </div>

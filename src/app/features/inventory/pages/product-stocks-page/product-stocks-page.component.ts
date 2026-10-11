@@ -1,5 +1,6 @@
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -70,7 +71,8 @@ const PRODUCT_STOCK_CSV_HEADERS = [
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, SearchInputComponent
+        AppStatusTagComponent, FilterFieldComponent,
+        SearchInputComponent
     ],
     template: `
         <app-page-header
@@ -92,7 +94,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else {
                 <div class="flex flex-col gap-4">
-                    <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
+                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
                             <div class="min-w-0">
                                 <h5 class="m-0">Stoklar</h5>
@@ -102,23 +104,9 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                 }
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <div
-                                    class="flex-1 min-w-0 rounded-lg border p-2 transition-colors"
-                                    [ngClass]="
-                                        isSearchActive()
-                                            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                    "
-                                >
-                                    <label
-                                        for="stockSearch"
-                                        class="flex items-center gap-2 text-xs font-medium mb-1"
-                                        [ngClass]="isSearchActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                    >
-                                        Arama
-                                    </label>
+                                <app-filter-field label="Arama" labelFor="stockSearch" [active]="isSearchActive()" width="grow">
                                     <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </div>
+                                </app-filter-field>
                                 <div class="flex flex-wrap gap-2 shrink-0">
                                     <p-button
                                         [label]="copy.buttonClear"
@@ -140,17 +128,9 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                 </div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-12 gap-3 items-end">
+                        <div class="flex flex-wrap items-end gap-3">
                             @if (canReadCategories && categoryOptions().length > 0) {
-                                <div
-                                    class="col-span-12 md:col-span-6 lg:col-span-4 rounded-lg border p-2 transition-colors"
-                                    [ngClass]="
-                                        isCategoryFilterApplied()
-                                            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                    "
-                                >
-                                    <span id="lblStockCat" class="flex items-center gap-2 text-xs font-medium mb-1 text-muted-color">Kategori</span>
+                                <app-filter-field label="Kategori" labelId="lblStockCat" [active]="isCategoryFilterApplied()" width="select">
                                     <p-select
                                         ariaLabelledBy="lblStockCat"
                                         inputId="stockCategoryFilter"
@@ -164,17 +144,9 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                         filterPlaceholder="Ara…"
                                         filterBy="label"
                                         [showClear]="true" (ngModelChange)="scheduleApply()" />
-                                </div>
+                                </app-filter-field>
                             }
-                            <div
-                                class="col-span-12 md:col-span-6 lg:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isLowStockFilterApplied()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <span id="lblStockLow" class="flex items-center gap-2 text-xs font-medium mb-1 text-muted-color">Düşük stok</span>
+                            <app-filter-field label="Düşük stok" labelId="lblStockLow" [active]="isLowStockFilterApplied()" width="select">
                                 <p-select
                                     ariaLabelledBy="lblStockLow"
                                     inputId="stockLowFilter"
@@ -184,7 +156,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                     optionValue="value"
                                     placeholder="Tümü"
                                     styleClass="w-full" (ngModelChange)="scheduleApply()" />
-                            </div>
+                            </app-filter-field>
                         </div>
                     </div>
 

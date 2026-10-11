@@ -1,5 +1,6 @@
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -52,7 +53,8 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent, SearchInputComponent
+        AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
+        SearchInputComponent
     ],
     template: `
         <app-page-header title="Ödemeler" subtitle="Finans" description="Ödeme kayıtları.">
@@ -78,7 +80,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else {
                 <div class="flex flex-col gap-4">
-                    <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
+                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
                             <div class="min-w-0">
                                 <h5 class="m-0">Ödemeler</h5>
@@ -87,54 +89,16 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 }
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <div
-                                    class="flex-1 min-w-0 rounded-lg border p-2 transition-colors"
-                                    [ngClass]="
-                                        isSearchActive()
-                                            ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                            : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                    "
-                                >
-                                    <label
-                                        for="paySearch"
-                                        class="flex items-center gap-2 text-xs font-medium mb-1"
-                                        [ngClass]="isSearchActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                    >
-                                        Arama
-                                        @if (isSearchActive()) {
-                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                                Aktif
-                                            </span>
-                                        }
-                                    </label>
+                                <app-filter-field label="Arama" labelFor="paySearch" [active]="isSearchActive()" width="grow">
                                     <app-search-input inputId="paySearch" placeholder="Not, para birimi; müşteri, hayvan, tür veya ırk, e-posta, telefon…" [(value)]="searchInput" (search)="applySearch()" />
-                                </div>
+                                </app-filter-field>
                                 <div class="flex flex-wrap gap-2 shrink-0">
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-12 gap-3 items-end">
-                            <div
-                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isMethodActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <span
-                                    id="lblPayMethod"
-                                    class="flex items-center gap-2 text-xs font-medium mb-1"
-                                    [ngClass]="isMethodActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                >
-                                    Yöntem
-                                    @if (isMethodActive()) {
-                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                            Aktif
-                                        </span>
-                                    }
-                                </span>
+                        <div class="flex flex-wrap items-end gap-3">
+                            <app-filter-field label="Yöntem" labelId="lblPayMethod" [active]="isMethodActive()" width="select">
                                 <p-select
                                     ariaLabelledBy="lblPayMethod"
                                     inputId="payMethod"
@@ -145,51 +109,13 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                     [placeholder]="copy.filterPlaceholderAll"
                                     styleClass="w-full"
                                     [showClear]="true" (ngModelChange)="scheduleApply()" />
-                            </div>
-                            <div
-                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isFromDateActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <label
-                                    for="payFrom"
-                                    class="flex items-center gap-2 text-xs font-medium mb-1"
-                                    [ngClass]="isFromDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                >
-                                    Ödeme tarihi (başlangıç)
-                                    @if (isFromDateActive()) {
-                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                            Aktif
-                                        </span>
-                                    }
-                                </label>
+                            </app-filter-field>
+                            <app-filter-field label="Ödeme tarihi (başlangıç)" labelFor="payFrom" [active]="isFromDateActive()" width="date">
                                 <app-date-input inputId="payFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </div>
-                            <div
-                                class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isToDateActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <label
-                                    for="payTo"
-                                    class="flex items-center gap-2 text-xs font-medium mb-1"
-                                    [ngClass]="isToDateActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                >
-                                    Ödeme tarihi (bitiş)
-                                    @if (isToDateActive()) {
-                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                            Aktif
-                                        </span>
-                                    }
-                                </label>
+                            </app-filter-field>
+                            <app-filter-field label="Ödeme tarihi (bitiş)" labelFor="payTo" [active]="isToDateActive()" width="date">
                                 <app-date-input inputId="payTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </div>
+                            </app-filter-field>
                         </div>
                     </div>
                 @if (displayedRows().length === 0) {

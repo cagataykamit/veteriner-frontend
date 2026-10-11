@@ -1,4 +1,5 @@
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -44,7 +45,8 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, SearchInputComponent
+        AppErrorStateComponent, FilterFieldComponent,
+        SearchInputComponent
     ],
     template: `
         <app-page-header title="Müşteriler" subtitle="Hasta yönetimi" description="Kayıtlı müşteri listesi ve detay.">
@@ -80,28 +82,9 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                             }
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                            <div
-                                class="flex-1 min-w-0 rounded-lg border p-2 transition-colors"
-                                [ngClass]="
-                                    isSearchActive()
-                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/25 ring-1 ring-primary-300/40 dark:ring-primary-700/50'
-                                        : 'border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900'
-                                "
-                            >
-                                <label
-                                    for="clientSearch"
-                                    class="flex items-center gap-2 text-xs font-medium mb-1"
-                                    [ngClass]="isSearchActive() ? 'text-primary-800 dark:text-primary-200' : 'text-muted-color'"
-                                >
-                                    Arama
-                                    @if (isSearchActive()) {
-                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-primary-100 text-primary-800 dark:bg-primary-800/70 dark:text-primary-100">
-                                            Aktif
-                                        </span>
-                                    }
-                                </label>
+                            <app-filter-field label="Arama" labelFor="clientSearch" [active]="isSearchActive()" width="grow">
                                 <app-search-input inputId="clientSearch" placeholder="Ad, e-posta, telefon…" [(value)]="searchInput" (search)="applySearch()" />
-                            </div>
+                            </app-filter-field>
                             <div class="flex flex-wrap gap-2 shrink-0">
                                 <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             </div>
