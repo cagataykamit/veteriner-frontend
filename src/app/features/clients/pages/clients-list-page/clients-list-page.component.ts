@@ -1,3 +1,4 @@
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -43,7 +44,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, SearchInputComponent
     ],
     template: `
         <app-page-header title="Müşteriler" subtitle="Hasta yönetimi" description="Kayıtlı müşteri listesi ve detay.">
@@ -99,18 +100,9 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                         </span>
                                     }
                                 </label>
-                                <input
-                                    pInputText
-                                    id="clientSearch"
-                                    class="w-full"
-                                    [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                    [(ngModel)]="searchInput"
-                                    placeholder="Ad, e-posta, telefon…"
-                                    (keyup.enter)="applySearch()"
-                                />
+                                <app-search-input inputId="clientSearch" placeholder="Ad, e-posta, telefon…" [(value)]="searchInput" (search)="applySearch()" />
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
-                                <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
                                 <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             </div>
                         </div>
