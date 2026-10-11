@@ -95,6 +95,8 @@ export interface PetHistorySummaryDto {
     recentLabResults?: PetHistoryLabResultItemDto[] | null;
     recentHospitalizations?: PetHistoryHospitalizationItemDto[] | null;
     recentPayments?: PetHistoryPaymentItemDto[] | null;
+    /** Yetki yok nedeniyle boş bırakılan bloklar (`Appointments`, `Examinations`, …); boş blok + listede yok = kayıt yok. */
+    omittedBlocks?: string[] | null;
 }
 
 export interface PetHistoryAppointmentItemDto {

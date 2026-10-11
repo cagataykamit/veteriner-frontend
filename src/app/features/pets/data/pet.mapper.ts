@@ -19,6 +19,7 @@ import type {
     PetHistorySummaryVm,
     PetListItemVm
 } from '@/app/features/pets/models/pet-vm.model';
+import { PET_HISTORY_BLOCK_KEYS } from '@/app/features/pets/models/pet-vm.model';
 import { mapPetAlertsDtoToVm, petAlertsFormToWrite } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { normalizePetGender, resolvePetGenderFormValue } from '@/app/features/pets/utils/pet-status.utils';
 
@@ -618,7 +619,8 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
                     clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
                 };
             })
-            .filter((x): x is NonNullable<typeof x> => x != null)
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        omittedBlocks: PET_HISTORY_BLOCK_KEYS.filter((k) => (dto.omittedBlocks ?? []).includes(k))
     };
 }
 

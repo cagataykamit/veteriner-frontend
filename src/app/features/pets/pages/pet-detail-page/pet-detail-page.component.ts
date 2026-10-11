@@ -11,6 +11,9 @@ import type {
     PetHistoryHospitalizationItemVm,
     PetHistorySummaryVm
 } from '@/app/features/pets/models/pet-vm.model';
+import { PetSummaryCardComponent } from '@/app/features/pets/components/pet-summary-card.component';
+import type { PetHistoryBlockKey } from '@/app/features/pets/models/pet-vm.model';
+import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -39,6 +42,7 @@ const EM = '—';
         ButtonModule,
         AppPageHeaderComponent,
         PetAlertBadgesComponent,
+        PetSummaryCardComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent
@@ -92,6 +96,14 @@ const EM = '—';
                     }
                 </div>
             }
+
+            <app-pet-summary-card
+                [petId]="pet()!.id"
+                [summary]="summary()"
+                [loading]="summaryLoading()"
+                [error]="summaryError()"
+                (retry)="retrySummary()"
+            />
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
@@ -166,7 +178,9 @@ const EM = '—';
                                 <h5 class="mt-0 mb-0">Son randevular</h5>
                                 <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (recentAppointmentsView().total === 0) {
+                            @if (isBlockOmitted('Appointments')) {
+                                <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                            } @else if (recentAppointmentsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
@@ -201,7 +215,9 @@ const EM = '—';
                                 <h5 class="mt-0 mb-0">Son muayeneler</h5>
                                 <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (recentExaminationsView().total === 0) {
+                            @if (isBlockOmitted('Examinations')) {
+                                <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                            } @else if (recentExaminationsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
@@ -233,7 +249,9 @@ const EM = '—';
                                 <h5 class="mt-0 mb-0">Son tedaviler</h5>
                                 <a routerLink="/panel/treatments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (recentTreatmentsView().total === 0) {
+                            @if (isBlockOmitted('Treatments')) {
+                                <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                            } @else if (recentTreatmentsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
@@ -265,7 +283,9 @@ const EM = '—';
                                 <h5 class="mt-0 mb-0">Son reçeteler</h5>
                                 <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (recentPrescriptionsView().total === 0) {
+                            @if (isBlockOmitted('Prescriptions')) {
+                                <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                            } @else if (recentPrescriptionsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
@@ -297,7 +317,9 @@ const EM = '—';
                                 <h5 class="mt-0 mb-0">Son lab sonuçları</h5>
                                 <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (recentLabResultsView().total === 0) {
+                            @if (isBlockOmitted('LabResults')) {
+                                <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                            } @else if (recentLabResultsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
@@ -329,7 +351,9 @@ const EM = '—';
                                 <h5 class="mt-0 mb-0">Son yatışlar</h5>
                                 <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (recentHospitalizationsView().total === 0) {
+                            @if (isBlockOmitted('Hospitalizations')) {
+                                <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                            } @else if (recentHospitalizationsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
@@ -362,7 +386,9 @@ const EM = '—';
                                 <h5 class="mt-0 mb-0">Son ödemeler</h5>
                                 <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
-                            @if (recentPaymentsView().total === 0) {
+                            @if (isBlockOmitted('Payments')) {
+                                <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                            } @else if (recentPaymentsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
                             } @else {
                                 <ul class="list-none m-0 p-0">
@@ -428,6 +454,9 @@ export class PetDetailPageComponent implements OnInit {
     readonly historyLoading = signal(false);
     readonly historyError = signal<string | null>(null);
     readonly history = signal<PetHistorySummaryVm | null>(null);
+    readonly summaryLoading = signal(false);
+    readonly summaryError = signal<string | null>(null);
+    readonly summary = signal<PetSummaryVm | null>(null);
 
     readonly recentAppointmentsView = computed(() => sliceDetailRelatedList(this.history()?.recentAppointments));
     readonly recentExaminationsView = computed(() => sliceDetailRelatedList(this.history()?.recentExaminations));
@@ -475,6 +504,11 @@ export class PetDetailPageComponent implements OnInit {
         return 'Taburcu';
     }
 
+    /** `omittedBlocks`: yetki yok nedeniyle boş; "kayıt yok" ile karıştırılmaz. */
+    isBlockOmitted(key: PetHistoryBlockKey): boolean {
+        return this.history()?.omittedBlocks.includes(key) ?? false;
+    }
+
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
             this.showSavedBanner.set(true);
@@ -508,6 +542,7 @@ export class PetDetailPageComponent implements OnInit {
                     this.pet.set(p);
                     this.loading.set(false);
                     this.loadHistory(p.id);
+                    this.loadSummary(p.id);
                 },
                 error: (e: Error) => {
                     this.error.set(e.message ?? 'Yükleme hatası');
@@ -529,6 +564,7 @@ export class PetDetailPageComponent implements OnInit {
                 this.pet.set(p);
                 this.loading.set(false);
                 this.loadHistory(p.id);
+                this.loadSummary(p.id);
             },
             error: (e: Error) => {
                 this.error.set(e.message ?? 'Yükleme hatası');
@@ -538,6 +574,13 @@ export class PetDetailPageComponent implements OnInit {
         });
     }
 
+    retrySummary(): void {
+        if (!this.lastId) {
+            return;
+        }
+        this.loadSummary(this.lastId);
+    }
+
     retryHistory(): void {
         if (!this.lastId) {
             return;
@@ -545,10 +588,32 @@ export class PetDetailPageComponent implements OnInit {
         this.loadHistory(this.lastId);
     }
 
+    private resetSummary(): void {
+        this.summary.set(null);
+        this.summaryLoading.set(false);
+        this.summaryError.set(null);
+    }
+
     private resetHistory(): void {
+        this.resetSummary();
         this.history.set(null);
         this.historyLoading.set(false);
         this.historyError.set(null);
+    }
+
+    private loadSummary(petId: string): void {
+        this.summaryLoading.set(true);
+        this.summaryError.set(null);
+        this.petsService.getPetSummary(petId).subscribe({
+            next: (s) => {
+                this.summary.set(s);
+                this.summaryLoading.set(false);
+            },
+            error: (e: Error) => {
+                this.summaryError.set(e.message ?? 'Hasta özeti yüklenemedi.');
+                this.summaryLoading.set(false);
+            }
+        });
     }
 
     private loadHistory(petId: string): void {

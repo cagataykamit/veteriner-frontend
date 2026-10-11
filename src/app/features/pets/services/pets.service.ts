@@ -12,11 +12,14 @@ import {
     mapPetHistorySummaryDtoToVm,
     petsQueryToHttpParams
 } from '@/app/features/pets/data/pet.mapper';
+import { mapPetSummaryDtoToVm } from '@/app/features/pets/data/pet-summary.mapper';
 import type { PetDetailDto, PetHistorySummaryDto, PetListItemDtoPagedResult } from '@/app/features/pets/models/pet-api.model';
+import type { PetSummaryDto } from '@/app/features/pets/models/pet-summary-api.model';
+import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
 import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
 import type { PetDetailVm, PetEditVm, PetHistorySummaryVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface PetsPagedVm {
     items: PetListItemVm[];
@@ -56,6 +59,14 @@ export class PetsService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Hasta geçmişi yüklenemedi.')))
             )
+        );
+    }
+
+    /** Hasta özet kartı: bölüm bazlı durum (Ok/Empty/Forbidden/Unavailable). */
+    getPetSummary(petId: string): Observable<PetSummaryVm> {
+        return this.api.get<PetSummaryDto>(ApiEndpoints.pets.summary(petId)).pipe(
+            map((dto) => mapPetSummaryDtoToVm(dto)),
+            toUserError('Hasta özeti yüklenemedi.')
         );
     }
 
