@@ -118,6 +118,7 @@ import {
                                 optionValue="value"
                                 [placeholder]="copy.vaccinationVaccinePlaceholder"
                                 [filter]="true"
+                                filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
                                 styleClass="w-full"

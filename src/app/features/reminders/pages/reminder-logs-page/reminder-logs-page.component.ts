@@ -141,6 +141,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 [showClear]="true"
                                 [loading]="clinicsLoading()"
                                 [filter]="true"
+                                filterPlaceholder="Ara…"
                                 filterBy="label"
                             />
                         </div>

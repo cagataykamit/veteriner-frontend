@@ -360,6 +360,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                             optionValue="value"
                             placeholder="Klinik seçin…"
                             [filter]="true"
+                            filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
                             styleClass="w-full"

@@ -89,6 +89,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 optionValue="value"
                                 [placeholder]="examinationOptions().length ? 'Bağlanacak muayene (isteğe bağlı)' : 'Bağlanabilir muayene yok'"
                                 [filter]="true"
+                                filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
                                 styleClass="w-full"

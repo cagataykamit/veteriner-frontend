@@ -62,6 +62,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 optionValue="value"
                                 placeholder="Kategori seçin (isteğe bağlı)"
                                 [filter]="true"
+                                filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
                                 styleClass="w-full"

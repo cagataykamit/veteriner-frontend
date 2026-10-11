@@ -99,6 +99,7 @@ type SelectOption = { label: string; value: string };
                             optionValue="value"
                             placeholder="Ürün seçin"
                             [filter]="true"
+                            filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
                             styleClass="w-full"

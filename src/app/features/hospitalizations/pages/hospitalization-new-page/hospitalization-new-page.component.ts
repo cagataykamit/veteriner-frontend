@@ -142,6 +142,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             optionValue="value"
                             placeholder="Hayvan seçin"
                             [filter]="true"
+                            filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
                             styleClass="w-full"

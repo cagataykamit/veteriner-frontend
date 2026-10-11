@@ -75,6 +75,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                     optionValue="value"
                                     placeholder="Kategori seçin (isteğe bağlı)"
                                     [filter]="true"
+                                    filterPlaceholder="Ara…"
                                     filterBy="label"
                                     [showClear]="true"
                                     styleClass="w-full"

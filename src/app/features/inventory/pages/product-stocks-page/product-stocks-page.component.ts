@@ -167,6 +167,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                         placeholder="Tüm kategoriler"
                                         styleClass="w-full"
                                         [filter]="true"
+                                        filterPlaceholder="Ara…"
                                         filterBy="label"
                                         [showClear]="true"
                                     />
