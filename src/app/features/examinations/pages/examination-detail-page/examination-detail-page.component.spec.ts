@@ -30,6 +30,9 @@ const detailVm: ExaminationDetailVm = {
     heartRateBpm: null,
     respiratoryRatePerMin: null,
     vitalsMeasuredAtUtc: null,
+    status: 'Draft',
+    finalizedAtUtc: null,
+    finalizedByName: null,
     rowVersion: 'V1',
     createdAtUtc: null,
     updatedAtUtc: null
@@ -90,5 +93,97 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
 
         expect(toastAdd).not.toHaveBeenCalled();
         expect(navigate).not.toHaveBeenCalled();
+    });
+});
+
+describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
+    const finalizedVm: ExaminationDetailVm = {
+        ...detailVm,
+        status: 'Finalized',
+        finalizedAtUtc: '2026-10-11T09:30:00Z',
+        finalizedByName: 'Dr. Ayşe',
+        rowVersion: 'V2'
+    };
+
+    const setup = async (vm: ExaminationDetailVm, claims: string[]) => {
+        const service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', [
+            'getExaminationById',
+            'getExaminationRelatedSummary',
+            'getAddenda',
+            'finalizeExamination'
+        ]);
+        service.getExaminationById.and.returnValue(of(vm));
+        service.getExaminationRelatedSummary.and.returnValue(of({ examinationId: 'e1' }) as never);
+        service.getAddenda.and.returnValue(of([{ id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo 12,4', createdAtUtc: '2026-10-11T10:05:00Z', createdByName: 'Dr. Ayşe' }]));
+        await TestBed.configureTestingModule({
+            imports: [ExaminationDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'e1' })) }
+                },
+                { provide: ExaminationsService, useValue: service },
+                {
+                    provide: DetailRelatedSummariesService,
+                    useValue: {
+                        loadSiblingExaminationsForPet: () => of([]),
+                        loadRecentAppointmentsForPetChronological: () => of([])
+                    }
+                },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        }).compileComponents();
+        const fixture = TestBed.createComponent(ExaminationDetailPageComponent);
+        fixture.detectChanges();
+        return { fixture, service, el: fixture.nativeElement as HTMLElement };
+    };
+    const has = (el: HTMLElement, testId: string) => el.querySelector(`[data-testid="${testId}"]`) !== null;
+    const label = (el: HTMLElement) => el.textContent ?? '';
+
+    it('Veteriner (Finalize+Update) taslakta Kesinleştir ve Düzenle görür; ek not bölümü yok', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize', 'Examinations.Addendum']);
+
+        expect(has(el, 'finalize-open')).toBeTrue();
+        expect(label(el)).toContain('Düzenle');
+        expect(has(el, 'addenda-section')).toBeFalse();
+        expect(label(el)).toContain('Taslak');
+    });
+
+    it('Sekreter (izinsiz) taslakta Kesinleştir görmez', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read']);
+
+        expect(has(el, 'finalize-open')).toBeFalse();
+    });
+
+    it('kesinleşmiş muayenede Düzenle ve Kesinleştir gizli; kesinleştiren ve ek notlar görünür', async () => {
+        const { el } = await setup(finalizedVm, ['Examinations.Update', 'Examinations.Finalize', 'Examinations.Addendum']);
+
+        expect(has(el, 'finalize-open')).toBeFalse();
+        expect(el.querySelector('a[href$="/e1/edit"]')).toBeNull();
+        expect(label(el)).toContain('Kesinleşti');
+        expect(el.querySelector('[data-testid="finalized-info"]')?.textContent).toContain('Dr. Ayşe');
+        expect(el.querySelectorAll('[data-testid="addendum-item"]').length).toBe(1);
+        expect(has(el, 'addendum-open')).toBeTrue();
+    });
+
+    it('Addendum izni olmayan kullanıcı ek notları okur ama "Ek not ekle" görmez', async () => {
+        const { el } = await setup(finalizedVm, ['Examinations.Read']);
+
+        expect(el.querySelectorAll('[data-testid="addendum-item"]').length).toBe(1);
+        expect(has(el, 'addendum-open')).toBeFalse();
+    });
+
+    it('kesinleştirme sonrası durum Kesinleşti olur, sürüm yenilenir ve düğme kalkar', async () => {
+        const { fixture, service, el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize']);
+        service.getExaminationById.and.returnValue(of(finalizedVm));
+
+        fixture.componentInstance.onFinalized({ id: 'e1', rowVersion: 'V2', status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z' });
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.exam()?.status).toBe('Finalized');
+        expect(fixture.componentInstance.exam()?.rowVersion).toBe('V2');
+        expect(has(el, 'finalize-open')).toBeFalse();
     });
 });

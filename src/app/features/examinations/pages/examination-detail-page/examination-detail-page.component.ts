@@ -8,11 +8,15 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type {
     ExaminationDetailVm,
+    ExaminationFinalizeResultVm,
     ExaminationListItemVm,
     ExaminationRelatedHospitalizationItemVm,
     ExaminationRelatedSummaryVm
 } from '@/app/features/examinations/models/examination-vm.model';
+import { ExaminationAddendaSectionComponent } from '@/app/features/examinations/components/examination-addenda-section.component';
+import { ExaminationFinalizeDialogComponent } from '@/app/features/examinations/components/examination-finalize-dialog.component';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
@@ -27,7 +31,12 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import {
+    EXAMINATIONS_ADDENDUM_CLAIM,
+    EXAMINATIONS_FINALIZE_CLAIM,
+    EXAMINATIONS_UPDATE_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 @Component({
     selector: 'app-examination-detail-page',
@@ -40,11 +49,22 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
+        AppStatusTagComponent,
+        ExaminationAddendaSectionComponent,
+        ExaminationFinalizeDialogComponent,
         ToastModule
     ],
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
+        @if (exam(); as e) {
+            <app-examination-finalize-dialog
+                [examinationId]="e.id"
+                [rowVersion]="e.rowVersion"
+                [(visible)]="finalizeDialogVisible"
+                (finalized)="onFinalized($event)"
+            />
+        }
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
 
         @if (loading()) {
@@ -60,15 +80,27 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                 [description]="formatDateTime(exam()!.examinedAtUtc)"
             >
                 <div actions class="flex flex-wrap gap-2">
-                    @if (canUpdateExamination && !ro.mutationBlocked()) {
-                        <a
-                            [routerLink]="['/panel/examinations', exam()!.id, 'edit']"
+                    @if (canFinalizeNow()) {
+                        <button
                             pButton
                             type="button"
-                            label="Düzenle"
-                            icon="pi pi-pencil"
-                            class="p-button-secondary"
-                        ></a>
+                            label="Kesinleştir"
+                            icon="pi pi-lock"
+                            data-testid="finalize-open"
+                            (click)="finalizeDialogVisible.set(true)"
+                        ></button>
+                    }
+                    @if (canUpdateExamination && !ro.mutationBlocked()) {
+                        @if (exam()!.status === 'Draft') {
+                            <a
+                                [routerLink]="['/panel/examinations', exam()!.id, 'edit']"
+                                pButton
+                                type="button"
+                                label="Düzenle"
+                                icon="pi pi-pencil"
+                                class="p-button-secondary"
+                            ></a>
+                        }
                         @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
                             <a
                                 [routerLink]="['/panel/treatments/new']"
@@ -150,14 +182,16 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                             ></a>
                         }
                     } @else if (canUpdateExamination && ro.mutationBlocked()) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Düzenle (salt okunur)"
-                            icon="pi pi-lock"
-                            [disabled]="true"
-                            class="p-button-secondary"
-                        ></button>
+                        @if (exam()!.status === 'Draft') {
+                            <button
+                                pButton
+                                type="button"
+                                label="Düzenle (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                        }
                         @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
                             <button
                                 pButton
@@ -219,6 +253,17 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene tarihi</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(exam()!.examinedAtUtc) }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0" data-testid="exam-status">
+                                <app-status-tag [label]="statusLabel(exam()!.status)" [severity]="statusSeverity(exam()!.status)" />
+                                @if (exam()!.status === 'Finalized') {
+                                    <span class="text-muted-color text-sm ml-2" data-testid="finalized-info">
+                                        {{ formatDateTime(exam()!.finalizedAtUtc) }}@if (exam()!.finalizedByName) {
+                                            · {{ exam()!.finalizedByName }}
+                                        }
+                                    </span>
+                                }
+                            </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(exam()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
@@ -332,6 +377,12 @@ import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                         </div>
                     </div>
                 </div>
+
+                @if (exam()!.status === 'Finalized') {
+                    <div class="col-span-12">
+                        <app-examination-addenda-section [examinationId]="exam()!.id" [canAdd]="canAddAddendum()" />
+                    </div>
+                }
 
                 <div class="col-span-12">
                     <h4 class="mt-0 mb-4 text-xl font-semibold">İlgili kayıtlar</h4>
@@ -616,6 +667,11 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly relatedSummaryError = signal<string | null>(null);
     readonly relatedSummary = signal<ExaminationRelatedSummaryVm | null>(null);
     readonly canUpdateExamination = this.auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM);
+    readonly canFinalizeExamination = this.auth.hasOperationClaim(EXAMINATIONS_FINALIZE_CLAIM);
+    readonly canAddendumExamination = this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);
+    readonly statusLabel = examinationStatusLabel;
+    readonly statusSeverity = examinationStatusSeverity;
+    readonly finalizeDialogVisible = signal(false);
 
     readonly relatedTreatmentsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.treatments));
     readonly relatedPrescriptionsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.prescriptions));
@@ -642,6 +698,29 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly money = (amount: number | null, currency: string | null | undefined) =>
         formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
     readonly payMethodLabel = paymentMethodLabel;
+
+    /** Kesinleştir yalnız taslakta, yetkiliyse ve kurum yazmaya açıkken görünür. */
+    canFinalizeNow(): boolean {
+        return this.canFinalizeExamination && this.exam()?.status === 'Draft' && !this.ro.mutationBlocked();
+    }
+
+    canAddAddendum(): boolean {
+        return this.canAddendumExamination && !this.ro.mutationBlocked();
+    }
+
+    /** Yeni sürüm ve durum yerel kaydedilir; kesinleştiren adı için kaydı sessizce yeniler. */
+    onFinalized(result: ExaminationFinalizeResultVm): void {
+        const current = this.exam();
+        if (current) {
+            this.exam.set({ ...current, status: result.status, finalizedAtUtc: result.finalizedAtUtc, rowVersion: result.rowVersion });
+        }
+        addTracedToast(this.messages, 'ExaminationDetailPage', this.router.url, {
+            severity: 'success',
+            summary: 'Tamam',
+            detail: 'Muayene kesinleştirildi.'
+        });
+        this.examinationsService.getExaminationById(result.id).subscribe({ next: (x) => this.exam.set(x), error: () => undefined });
+    }
 
     hasVitals(): boolean {
         const e = this.exam();
