@@ -140,7 +140,8 @@ type TodayScope = 'mine' | 'all';
                         <span>{{ group.title }}</span>
                         <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="group.items.length + ' kayıt'">{{ group.items.length }}</span>
                     </div>
-                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed', 'min-width': '64rem' }">
+                    <div class="overflow-x-auto">
+                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed', 'min-width': '84rem' }">
                         <ng-template #colgroup>
                             <colgroup>
                                 @for (w of columnWidths; track $index) {
@@ -331,6 +332,7 @@ type TodayScope = 'mine' | 'all';
                             </tr>
                         </ng-template>
                     </p-table>
+                    </div>
                 </section>
             } @empty {
                 <div class="card">
@@ -433,8 +435,8 @@ export class TodayPageComponent implements OnInit {
     readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
     readonly waitTitle = waitAlertTitle;
-    /** Tüm grup tabloları aynı sütun genişliklerini kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler. */
-    protected readonly columnWidths = ['9%', '13%', '13%', '9%', '14%', '11%', '9%', '22%'];
+    /** Tüm grup tabloları aynı sütun genişliklerini kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler. Eylem sütunu sabit genişlikte (düğmeler taşıp Süre hücresine binmesin); Hasta/Sahip kalan alanı paylaşır. */
+    protected readonly columnWidths: Array<string | null> = ['7.5rem', null, null, '9rem', '10rem', '9rem', '8rem', '24rem'];
     protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',

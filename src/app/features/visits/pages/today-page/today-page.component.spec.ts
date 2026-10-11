@@ -266,6 +266,23 @@ describe('TodayPageComponent', () => {
             expect(section(f, 'Bekliyor').textContent).toContain('Ödeme kaydı yok');
         });
 
+        it('en geniş eylem satırında (Muayene aç + Başlat + acil + ⋯) hiçbir hücre içeriği taşmaz; Süre hücresine eylem binmez', async () => {
+            const f = await create(['Visits.Read', 'Visits.Update', 'Visits.Correct', 'Examinations.Create'], { date: 'd', items: [item({ key: 'w', isCarriedOver: true, arrivedAtUtc: new Date(Date.now() - 26 * 3_600_000).toISOString() })] });
+            const host = f.nativeElement as HTMLElement;
+            host.style.width = '1400px';
+            host.style.display = 'block';
+            document.body.appendChild(host);
+            f.detectChanges();
+            const cells = Array.from(host.querySelectorAll<HTMLTableCellElement>('tbody tr:first-child td'));
+            expect(cells.length).toBe(8);
+            const overflowing = cells.filter((td) => td.scrollWidth > td.clientWidth + 1).map((td) => td.cellIndex);
+            expect(overflowing).toEqual([]);
+            for (let i = 1; i < cells.length; i++) {
+                expect(cells[i].getBoundingClientRect().left).toBeGreaterThanOrEqual(cells[i - 1].getBoundingClientRect().right - 1);
+            }
+            host.remove();
+        });
+
         it('Gelmedi grubunda yatış rozeti yine görünür', async () => {
             const f = await create(['Visits.Read'], { date: 'd', items: [noShowItem({ hasActiveHospitalization: true })] });
             expect(section(f, 'Gelmedi').textContent).toContain('Yatışta');
