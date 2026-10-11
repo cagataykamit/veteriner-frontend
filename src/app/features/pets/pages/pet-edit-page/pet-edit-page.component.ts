@@ -1,3 +1,5 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -10,7 +12,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { BREEDS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { PetAlertFieldsComponent } from '@/app/features/pets/components/pet-alert-fields.component';
@@ -28,12 +29,12 @@ import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.ut
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { clientOptionsFromList, trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
+import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick-breed-dialog.component';
 import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { DATE_INPUT_MAX, DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
+import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -52,7 +53,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppLoadingStateComponent,
         AppErrorStateComponent,
         QuickSpeciesDialogComponent,
-        QuickBreedDialogComponent
+        QuickBreedDialogComponent, ClientSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
@@ -79,19 +80,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
-                            <p-select
-                                inputId="clientId"
-                                formControlName="clientId"
-                                [options]="clientOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Müşteri seçin"
-                                [filter]="true"
-                                filterBy="label"
-                                [showClear]="true"
-                                styleClass="w-full"
-                                [loading]="loadingClients()"
-                            />
+                            <app-client-search inputId="clientId" formControlName="clientId" />
                             @if (apiFieldErrors().clientId) {
                                 <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                             } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
@@ -185,7 +174,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="birthDate" class="block text-sm font-medium text-muted-color mb-2">Doğum tarihi</label>
-                            <input id="birthDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="birthDate" [min]="dateInputMin" [max]="dateInputMax" />
+                            <app-date-input inputId="birthDate" type="date" formControlName="birthDate" [min]="dateInputMin" limit="past" />
                             @if (apiFieldErrors().birthDate) {
                                 <small class="text-red-500">{{ apiFieldErrors().birthDate }}</small>
                             } @else if (form.controls.birthDate.invalid && form.controls.birthDate.touched) {
@@ -280,7 +269,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()"
+                            [disabled]="form.invalid || submitting() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -307,14 +296,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class PetEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
-    protected readonly dateInputMax = DATE_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly petsService = inject(PetsService);
     private readonly petColorsService = inject(PetColorsService);
-    private readonly clientsService = inject(ClientsService);
     private readonly breedsService = inject(BreedsService);
     private readonly speciesService = inject(SpeciesService);
     private readonly destroyRef = inject(DestroyRef);
@@ -334,11 +321,9 @@ export class PetEditPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
-    readonly loadingClients = signal(false);
     readonly loadingSpecies = signal(false);
     readonly loadingBreeds = signal(false);
     readonly loadingColors = signal(false);
-    readonly clientOptions = signal<SelectOption[]>([]);
     readonly speciesOptions = signal<SelectOption[]>([]);
     readonly breedOptions = signal<SelectOption[]>([]);
     readonly colorOptions = signal<SelectOption[]>([]);
@@ -412,7 +397,6 @@ export class PetEditPageComponent implements OnInit {
             this.loadBreedsForSpecies(sid);
         });
 
-        this.loadClients();
         this.loadSpecies();
         this.loadPetColors();
         this.reload();
@@ -536,20 +520,6 @@ export class PetEditPageComponent implements OnInit {
         });
     }
 
-    private loadClients(): void {
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
 
     private loadPetColors(): void {
         this.loadingColors.set(true);

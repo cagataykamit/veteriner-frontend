@@ -209,6 +209,8 @@ const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Visits.ConcurrencyConflict': 'Kayıt aynı anda başka biri tarafından güncellendi. Listeyi yenileyip tekrar deneyin.',
     'Examinations.VisitMismatch': 'Muayene, geliş kaydındaki hayvan veya randevuyla uyuşmuyor.',
     'Examinations.AppointmentNoShow': 'Gelmedi işaretli randevuya doğrudan muayene açılamaz. Hasta geldiyse önce geliş kaydı açın veya gelmedi işaretini geri alın.',
+    'Appointments.ScheduledTooFarInPast': 'Randevu zamanı çok eski; en fazla 7 gün öncesine kadar kayıt açılabilir.',
+    'Appointments.ScheduledTooFarInFuture': 'Randevu zamanı en fazla 2 yıl ileriye planlanabilir.',
     'Appointments.NoShowNotYetDue': 'Randevu saati henüz gelmedi; gelmedi olarak işaretlenemez.',
     'Appointments.HasVisit': 'Bu randevu için geliş kaydı var (hasta gelmiş); gelmedi olarak işaretlenemez.',
     'Appointments.InvalidStatusTransition': 'Randevu durumu bu işleme uygun değil; durum başka biri tarafından değişmiş olabilir. Sayfayı yenileyip tekrar deneyin.'
@@ -217,6 +219,30 @@ const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 function visitPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
     return code ? (VISIT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
+}
+
+/** Ücret (Charge) — `docs/CHARGES_API_CONTRACT.md` §6; `Charges.Validation` backend `detail` ile gösterilir. */
+const CHARGE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Charges.NotFound': 'Ücret kaydı bulunamadı.',
+    'Charges.ClinicScopeRequired': 'Ücretleri görmek için önce bir klinik seçmelisiniz.',
+    'Charges.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
+    'Clients.NotFound': 'Müşteri kaydı bulunamadı.',
+    'Pets.NotFound': 'Hayvan kaydı bulunamadı.',
+    'Examinations.NotFound': 'Muayene kaydı bulunamadı.',
+    'Charges.PetClientMismatch': 'Seçilen hayvan bu müşteriye ait değil.',
+    'Charges.VisitVoided': 'Yanlış olarak işaretlenmiş bir geliş kaydına ücret bağlanamaz.',
+    'Charges.VisitClinicMismatch': 'Geliş kaydı aktif klinikte değil.',
+    'Charges.VisitClientMismatch': 'Geliş kaydındaki hayvan bu müşteriye ait değil.',
+    'Charges.VisitPetMismatch': 'Geliş kaydı seçilen hayvanla uyuşmuyor.',
+    'Charges.ExaminationClinicMismatch': 'Muayene aktif klinikte değil.',
+    'Charges.ExaminationClientMismatch': 'Muayenedeki hayvan bu müşteriye ait değil.',
+    'Charges.ExaminationPetMismatch': 'Muayene seçilen hayvanla uyuşmuyor.',
+    'Charges.ExaminationVisitMismatch': 'Muayene, seçilen geliş kaydına bağlı değil.'
+};
+
+function chargePanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    return code ? (CHARGE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
 function lookupSubscriptionWriteMessageByCode(code: string): string | null {
@@ -303,6 +329,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const visitPanelMsg = visitPanelProblemUserMessage(err);
     if (visitPanelMsg) {
         return visitPanelMsg;
+    }
+    const chargePanelMsg = chargePanelProblemUserMessage(err);
+    if (chargePanelMsg) {
+        return chargePanelMsg;
     }
 
     const body = err.error as ProblemDetails | string | null | undefined;

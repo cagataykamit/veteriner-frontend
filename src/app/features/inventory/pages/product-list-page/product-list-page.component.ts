@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -53,7 +55,8 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        SearchInputComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -114,18 +117,9 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                             </span>
                                         }
                                     </label>
-                                    <input
-                                        pInputText
-                                        id="productSearch"
-                                        class="w-full"
-                                        [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Ad, SKU veya barkod…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
@@ -162,8 +156,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                     optionValue="value"
                                     placeholder="Tüm durumlar"
                                     styleClass="w-full"
-                                    [showClear]="true"
-                                />
+                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -316,6 +309,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
     `
 })
 export class ProductListPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
 
     private readonly productService = inject(ProductService);

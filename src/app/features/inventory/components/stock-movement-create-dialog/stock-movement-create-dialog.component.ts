@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import {
     Component,
@@ -27,7 +28,6 @@ import { StockMovementService } from '@/app/features/inventory/services/stock-mo
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
-    DATETIME_LOCAL_INPUT_MAX,
     DATETIME_LOCAL_INPUT_MIN
 } from '@/app/shared/utils/date-input-validation.utils';
 
@@ -36,7 +36,7 @@ type SelectOption = { label: string; value: string };
 @Component({
     selector: 'app-stock-movement-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent],
     template: `
         <p-dialog
             header="Stok hareketi ekle"
@@ -99,6 +99,7 @@ type SelectOption = { label: string; value: string };
                             optionValue="value"
                             placeholder="Ürün seçin"
                             [filter]="true"
+                            filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
                             styleClass="w-full"
@@ -167,7 +168,7 @@ type SelectOption = { label: string; value: string };
 
                 <div>
                     <label for="smcOccurred" class="block text-sm font-medium text-muted-color mb-2">İşlem zamanı</label>
-                    <input id="smcOccurred" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="occurredAtUtcLocal" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                    <app-date-input inputId="smcOccurred" type="datetime-local" formControlName="occurredAtUtcLocal" [min]="datetimeLocalInputMin" limit="past" />
                     @if (form.controls.occurredAtUtcLocal.hasError('dateYearInvalid') && form.controls.occurredAtUtcLocal.touched) {
                         <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                     }
@@ -205,7 +206,6 @@ type SelectOption = { label: string; value: string };
 })
 export class StockMovementCreateDialogComponent {
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     private readonly fb = inject(FormBuilder);
     private readonly clinics = inject(ClinicsService);
     private readonly productService = inject(ProductService);

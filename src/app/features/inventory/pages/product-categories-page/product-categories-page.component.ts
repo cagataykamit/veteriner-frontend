@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -68,7 +70,8 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        SearchInputComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -136,17 +139,9 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                     >
                                         Arama
                                     </label>
-                                    <input
-                                        pInputText
-                                        id="catSearch"
-                                        class="w-full"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Kategori adı…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="catSearch" placeholder="Kategori adı…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button
                                         [label]="copy.buttonClear"
                                         icon="pi pi-times"
@@ -180,8 +175,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                     optionValue="value"
                                     placeholder="Tüm durumlar"
                                     styleClass="w-full"
-                                    [showClear]="true"
-                                />
+                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -369,6 +363,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
     `
 })
 export class ProductCategoriesPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
 
     private readonly fb = inject(FormBuilder);

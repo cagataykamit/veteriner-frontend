@@ -1,3 +1,6 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
@@ -19,20 +22,17 @@ import {
 } from '@/app/features/appointments/utils/appointment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import {
-    clientOptionsFromList,
-    filterPetsByClientId,
-    isStalePetListResponse,
-    petOptionsFromList,
-    trimClientIdControlValue,
-    type SelectOption
-} from '@/app/shared/forms/client-pet-selection.utils';
+import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import {
     APPOINTMENT_NOTES_MAX_LENGTH,
-    appointmentCreatePastDateValidator,
-    filterFutureIstanbulTimeOptions,
-    isIstanbulDateTimeInPast,
-    istanbulTodayYmd
+    APPOINTMENT_TOO_FAR_PAST_MESSAGE,
+    APPOINTMENT_TOO_FAR_FUTURE_MESSAGE,
+    appointmentCreateScheduleDateValidator,
+    appointmentEarliestDateYmd,
+    appointmentLatestDateYmd,
+    filterAllowedIstanbulTimeOptions,
+    isIstanbulDateTimeTooFarInFuture,
+    isIstanbulDateTimeTooFarInPast
 } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
@@ -41,12 +41,6 @@ import { messageFromClinicResolutionHttpError } from '@/app/features/appointment
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
-import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
-import {
-    canShowQuickClientCreateButton,
-    canShowQuickPetCreateButton
-} from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
-import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 
 @Component({
     selector: 'app-appointment-new-page',
@@ -58,9 +52,7 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent,
-        QuickClientDialogComponent,
-        QuickPetDialogComponent
+        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/appointments" class="text-primary font-medium no-underline inline-block mb-4">← Randevu listesine dön</a>
@@ -81,93 +73,33 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
-                        <p-select
-                            inputId="clientId"
-                            formControlName="clientId"
-                            [options]="clientOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Müşteri seçin"
-                            [filter]="true"
-                            filterBy="label"
-                            [showClear]="true"
-                            styleClass="w-full"
-                            [loading]="loadingClients()"
-                        />
+                        <app-client-search inputId="clientId" formControlName="clientId" />
                         @if (apiFieldErrors().clientId) {
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Müşteri seçimi zorunludur.</small>
                         }
-                        @if (canShowQuickClientCreate()) {
-                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Yeni müşteri"
-                                    icon="pi pi-user-plus"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    (onClick)="quickClientOpen.set(true)"
-                                />
-                            </div>
-                        }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
-                        <p-select
-                            inputId="petId"
-                            formControlName="petId"
-                            [options]="petOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            [placeholder]="form.controls.petId.disabled ? 'Önce müşteri seçin' : 'Hayvan seçin'"
-                            [filter]="true"
-                            filterBy="label"
-                            [showClear]="true"
-                            styleClass="w-full"
-                            [loading]="loadingPets()"
-                        />
+                        <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Hayvan seçimi zorunludur.</small>
-                        } @else if (
-                            !loadingPets() &&
-                            form.controls.clientId.value &&
-                            !form.controls.petId.disabled &&
-                            petOptions().length === 0
-                        ) {
-                            <small class="text-muted-color">Bu müşteriye kayıtlı hayvan yok. Aşağıdaki bağlantıdan yeni hayvan ekleyebilirsiniz.</small>
-                        }
-                        @if (canShowQuickPetCreate()) {
-                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Bu müşteri için yeni hayvan"
-                                    icon="pi pi-plus"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    [disabled]="petQuickAddDisabled()"
-                                    (onClick)="quickPetOpen.set(true)"
-                                />
-                            </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
-                        <input
-                            id="scheduledDate"
-                            type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                            formControlName="scheduledDate"
-                            [min]="minScheduledDate()"
-                            [max]="dateInputMax"
-                        />
+                        <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="minScheduledDate()" [max]="maxScheduledDate()" />
                         @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (apiFieldErrors().scheduledAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                        } @else if (form.controls.scheduledDate.hasError('pastDate') && form.controls.scheduledDate.touched) {
-                            <small class="text-red-500">Geçmiş bir tarih seçilemez.</small>
+                        } @else if (form.controls.scheduledDate.hasError('tooFarPast') && form.controls.scheduledDate.touched) {
+                            <small class="text-red-500">En fazla 7 gün öncesine kadar randevu açılabilir.</small>
+                        } @else if (form.controls.scheduledDate.hasError('tooFarFuture') && form.controls.scheduledDate.touched) {
+                            <small class="text-red-500">En fazla 2 yıl ileriye randevu açılabilir.</small>
                         } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
                         }
@@ -252,19 +184,13 @@ import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-p
                         label="Kaydet"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingClients() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"
+                        [disabled]="form.invalid || submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"
                     />
                     <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>
 
-        <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
-        <app-quick-pet-dialog
-            [(visible)]="quickPetOpen"
-            [ownerClientId]="quickPetOwnerClientId()"
-            (petCreated)="onQuickPetCreated($event)"
-        />
     `
 })
 export class AppointmentNewPageComponent implements OnInit {
@@ -285,22 +211,14 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly selectionError = signal<string | null>(null);
     readonly apiFieldErrors = signal<AppointmentUpsertFieldErrors>({});
 
-    readonly loadingClients = signal(false);
-    readonly loadingPets = signal(false);
-    readonly clientOptions = signal<SelectOption[]>([]);
-    readonly petOptions = signal<SelectOption[]>([]);
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
     readonly clinicSlotIntervalMinutes = signal<number | null>(null);
     readonly timeOptions = signal<SelectOption[]>([]);
     readonly workingHoursLoadError = signal<string | null>(null);
     private workingHours: ClinicWorkingHourVm[] = [];
 
-    readonly quickClientOpen = signal(false);
-    readonly quickPetOpen = signal(false);
 
-    readonly canShowQuickClientCreate = (): boolean => canShowQuickClientCreateButton(this.auth, this.ro, false);
 
-    readonly canShowQuickPetCreate = (): boolean => canShowQuickPetCreateButton(this.auth, this.ro, false);
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
@@ -310,7 +228,7 @@ export class AppointmentNewPageComponent implements OnInit {
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
         scheduledDate: this.fb.nonNullable.control('', [
             Validators.required,
-            appointmentCreatePastDateValidator(),
+            appointmentCreateScheduleDateValidator(),
             dateYearRangeValidator()
         ]),
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
@@ -352,7 +270,6 @@ export class AppointmentNewPageComponent implements OnInit {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.loadDefaultDurationFromClinic();
         this.loadWorkingHours();
-        this.loadClients();
         this.form.controls.scheduledDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildTimeOptions());
         this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildTimeOptions());
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
@@ -364,12 +281,10 @@ export class AppointmentNewPageComponent implements OnInit {
             }
             const id = trimClientIdControlValue(this.form.controls.clientId.value);
             if (!id) {
-                this.petOptions.set([]);
                 this.form.controls.petId.disable({ emitEvent: false });
                 return;
             }
             this.form.controls.petId.enable({ emitEvent: false });
-            this.loadPetsForClient(id);
         });
 
         this.syncScheduledTimeDisabledState();
@@ -379,38 +294,17 @@ export class AppointmentNewPageComponent implements OnInit {
         void this.router.navigate(['/panel/appointments']);
     }
 
+    maxScheduledDate(): string {
+        return appointmentLatestDateYmd();
+    }
+
     minScheduledDate(): string {
-        return istanbulTodayYmd();
+        return appointmentEarliestDateYmd();
     }
 
-    petQuickAddDisabled(): boolean {
-        return (
-            this.ro.mutationBlocked() ||
-            !trimClientIdControlValue(this.form.getRawValue().clientId) ||
-            this.form.controls.petId.disabled
-        );
-    }
 
-    quickPetOwnerClientId(): string {
-        return trimClientIdControlValue(this.form.getRawValue().clientId);
-    }
 
-    onQuickClientCreated(clientId: string): void {
-        const id = clientId.trim();
-        if (!id) {
-            return;
-        }
-        this.reloadClientsAndSelectClient(id);
-    }
 
-    onQuickPetCreated(petId: string): void {
-        const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
-        const pid = petId.trim();
-        if (!cid || !pid) {
-            return;
-        }
-        this.loadPetsForClient(cid, pid);
-    }
 
     onSubmit(): void {
         this.submitError.set(null);
@@ -426,9 +320,14 @@ export class AppointmentNewPageComponent implements OnInit {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
             return;
         }
-        if (isIstanbulDateTimeInPast(v.scheduledDate, v.scheduledTime)) {
+        if (isIstanbulDateTimeTooFarInPast(v.scheduledDate, v.scheduledTime)) {
             this.form.markAllAsTouched();
-            this.submitError.set('Geçmiş bir tarih veya saat seçilemez.');
+            this.submitError.set(APPOINTMENT_TOO_FAR_PAST_MESSAGE);
+            return;
+        }
+        if (isIstanbulDateTimeTooFarInFuture(v.scheduledDate, v.scheduledTime)) {
+            this.form.markAllAsTouched();
+            this.submitError.set(APPOINTMENT_TOO_FAR_FUTURE_MESSAGE);
             return;
         }
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
@@ -484,67 +383,8 @@ export class AppointmentNewPageComponent implements OnInit {
         });
     }
 
-    private loadClients(): void {
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
 
-    private reloadClientsAndSelectClient(clientId: string): void {
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-                this.form.controls.clientId.setValue(clientId, { emitEvent: true });
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
 
-    private loadPetsForClient(clientId: string, selectPetId?: string): void {
-        const cid = clientId.trim();
-        this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId: cid }).subscribe({
-            next: (r) => {
-                if (isStalePetListResponse(this.form.controls.clientId.value, cid)) {
-                    return;
-                }
-                let items = r.items;
-                const anyClientId = items.some((p) => (p.clientId ?? '').trim());
-                if (anyClientId) {
-                    items = filterPetsByClientId(items, cid);
-                }
-                this.petOptions.set(petOptionsFromList(items));
-                const want = selectPetId?.trim();
-                if (want) {
-                    const exists = items.some((p) => p.id === want);
-                    if (exists) {
-                        this.form.controls.petId.setValue(want, { emitEvent: true });
-                    }
-                }
-                this.loadingPets.set(false);
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
-                this.petOptions.set([]);
-                this.loadingPets.set(false);
-            }
-        });
-    }
 
     private loadDefaultDurationFromClinic(): void {
         const clinicId = this.auth.getClinicId()?.trim();
@@ -618,7 +458,7 @@ export class AppointmentNewPageComponent implements OnInit {
             }
             return;
         }
-        const options = filterFutureIstanbulTimeOptions(date, this.buildTimeOptions(day, duration, interval));
+        const options = filterAllowedIstanbulTimeOptions(date, this.buildTimeOptions(day, duration, interval));
         this.timeOptions.set(options);
         const selected = this.form.controls.scheduledTime.value.trim();
         if (selected && !options.some((o) => o.value === selected)) {

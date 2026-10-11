@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -50,7 +52,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent, DateInputComponent
     ],
     template: `
         <app-page-header title="Hatırlatma Geçmişi" subtitle="Hesap" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
@@ -86,8 +88,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 optionValue="value"
                                 placeholder="Tümü"
                                 styleClass="w-full"
-                                [showClear]="true"
-                            />
+                                [showClear]="true" (ngModelChange)="scheduleApply()" />
                         </div>
                         <div
                             class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -112,8 +113,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 optionValue="value"
                                 placeholder="Tümü"
                                 styleClass="w-full"
-                                [showClear]="true"
-                            />
+                                [showClear]="true" (ngModelChange)="scheduleApply()" />
                         </div>
                         <div
                             class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -141,8 +141,8 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 [showClear]="true"
                                 [loading]="clinicsLoading()"
                                 [filter]="true"
-                                filterBy="label"
-                            />
+                                filterPlaceholder="Ara…"
+                                filterBy="label" (ngModelChange)="scheduleApply()" />
                         </div>
                         <div
                             class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -164,14 +164,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                     </span>
                                 }
                             </label>
-                            <input
-                                id="remLogFrom"
-                                type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                                min="1900-01-01"
-                                max="9999-12-31"
-                                [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                [(ngModel)]="fromDateInput"
-                            />
+                            <app-date-input inputId="remLogFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </div>
                         <div
                             class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -193,17 +186,9 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                     </span>
                                 }
                             </label>
-                            <input
-                                id="remLogTo"
-                                type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                                min="1900-01-01"
-                                max="9999-12-31"
-                                [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                [(ngModel)]="toDateInput"
-                            />
+                            <app-date-input inputId="remLogTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </div>
                         <div class="col-span-12 md:col-span-4 flex flex-wrap gap-2">
-                            <p-button size="small" icon="pi pi-filter" label="Filtrele" (onClick)="applyFilters()" />
                             <p-button size="small" icon="pi pi-times" label="Temizle" severity="secondary" (onClick)="clearFilters()" />
                         </div>
                     </div>
@@ -311,6 +296,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
     `
 })
 export class ReminderLogsPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     private readonly reminders = inject(RemindersService);
     private readonly clinics = inject(ClinicsService);
 

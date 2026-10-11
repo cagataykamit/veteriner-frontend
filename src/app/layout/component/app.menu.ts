@@ -11,6 +11,7 @@ import {
     EXAMINATIONS_READ_CLAIM,
     HOSPITALIZATIONS_READ_CLAIM,
     LAB_RESULTS_READ_CLAIM,
+    CHARGES_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
     PRODUCT_CATEGORIES_READ_CLAIM,
     PRODUCTS_READ_CLAIM,
@@ -66,6 +67,7 @@ export class AppMenu {
         const canReadExaminations = this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM);
         const canReadVaccinations = this.auth.hasOperationClaim(VACCINATIONS_READ_CLAIM);
         const canReadPayments = this.auth.hasOperationClaim(PAYMENTS_READ_CLAIM);
+        const canReadCharges = this.auth.hasOperationClaim(CHARGES_READ_CLAIM);
         const canReadProducts = this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM);
         const canReadStockMovements = this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM);
         const canReadProductCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_READ_CLAIM);
@@ -127,6 +129,7 @@ export class AppMenu {
             ...(canReadLabResults ? [{ label: 'Lab sonuçları', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/panel/lab-results'] }] : []),
             ...(canReadHospitalizations ? [{ label: 'Yatışlar', icon: 'pi pi-fw pi-building', routerLink: ['/panel/hospitalizations'] }] : []),
             ...(canReadVaccinations ? [{ label: 'Aşılar', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/vaccinations'] }] : []),
+            ...(canReadCharges ? [{ label: 'Ücretler', icon: 'pi pi-fw pi-receipt', routerLink: ['/panel/charges'] }] : []),
             ...(canReadPayments ? [{ label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }] : [])
         ];
 

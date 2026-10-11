@@ -34,7 +34,6 @@ export const PANEL_COPY = {
     reportsFilterClinic: 'Klinik',
     reportsFilterSearch: 'Arama',
     /** Müşteri/hayvan rapor filtreleri — liste yükleme uyarısı */
-    reportsClientPetLookupError: 'Müşteri veya hayvan seçenekleri yüklenemedi.',
     /** Rapor filtreleri — tarih aralığı uyarısı */
     reportsDateRangeBothRequired: 'Başlangıç ve bitiş tarihi birlikte seçilmelidir.',
     reportsClinicPanelDefault: 'Panel seçili klinik',

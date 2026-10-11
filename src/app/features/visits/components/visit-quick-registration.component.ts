@@ -78,6 +78,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                         optionValue="value"
                         placeholder="Tür seçin"
                         [filter]="true"
+                        filterPlaceholder="Ara…"
                         filterBy="label"
                         styleClass="w-full"
                         [loading]="loadingSpecies()"

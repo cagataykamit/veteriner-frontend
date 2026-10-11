@@ -70,6 +70,10 @@ export const PAYMENTS_READ_CLAIM = 'Payments.Read' as const;
 export const PAYMENTS_CREATE_CLAIM = 'Payments.Create' as const;
 export const PAYMENTS_UPDATE_CLAIM = 'Payments.Update' as const;
 
+/** Ücret (Charge) — `docs/CHARGES_API_CONTRACT.md`; Veteriner yalnızca okur. */
+export const CHARGES_READ_CLAIM = 'Charges.Read' as const;
+export const CHARGES_CREATE_CLAIM = 'Charges.Create' as const;
+
 export const TREATMENTS_READ_CLAIM = 'Treatments.Read' as const;
 export const TREATMENTS_CREATE_CLAIM = 'Treatments.Create' as const;
 export const TREATMENTS_UPDATE_CLAIM = 'Treatments.Update' as const;

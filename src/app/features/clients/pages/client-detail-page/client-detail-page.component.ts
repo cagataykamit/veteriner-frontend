@@ -22,7 +22,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-client-detail-page',
@@ -326,6 +326,30 @@ import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants
                         }
                     </div>
                 </div>
+                @if (canReadCharges) {
+                    <div class="col-span-12 lg:col-span-6">
+                        <div class="card">
+                            <h5 class="mt-0 mb-3 pb-2 text-base border-b border-surface-200 dark:border-surface-700">Ücretler</h5>
+                            <p class="text-sm text-muted-color mt-0 mb-3">Bu müşteriye yazılan ücret satırları.</p>
+                            <div class="flex flex-wrap gap-3 items-center">
+                                <a [routerLink]="['/panel/charges']" [queryParams]="{ clientId: client()!.id }" class="text-primary font-medium no-underline">
+                                    Ücretleri görüntüle →
+                                </a>
+                                @if (canCreateCharges && !ro.mutationBlocked()) {
+                                    <a
+                                        [routerLink]="['/panel/charges/new']"
+                                        [queryParams]="{ clientId: client()!.id }"
+                                        pButton
+                                        type="button"
+                                        label="Ücret ekle"
+                                        icon="pi pi-plus"
+                                        class="p-button-sm"
+                                    ></a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         }
     `
@@ -373,6 +397,8 @@ export class ClientDetailPageComponent implements OnInit {
     readonly statusLabel = appointmentStatusLabel;
     readonly payMethodLabel = paymentMethodLabel;
     readonly canUpdateClient = this.auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM);
+    readonly canReadCharges = this.auth.hasOperationClaim(CHARGES_READ_CLAIM);
+    readonly canCreateCharges = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
 
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {

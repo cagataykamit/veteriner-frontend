@@ -31,14 +31,12 @@ const visit = (over: Partial<VisitVm> = {}): VisitVm => ({
 describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
     let examinations: jasmine.SpyObj<ExaminationsService>;
     let visits: jasmine.SpyObj<VisitsService>;
-    let getClients: jasmine.Spy;
     let navigate: jasmine.Spy;
 
     const create = (query: Record<string, string>, visitResult: Observable<VisitVm>) => {
         examinations = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['createExamination']);
         visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getVisitById']);
         visits.getVisitById.and.returnValue(visitResult);
-        getClients = jasmine.createSpy('getClients').and.returnValue(of({ items: [] }));
 
         TestBed.configureTestingModule({
             imports: [ExaminationWorkspacePageComponent],
@@ -59,7 +57,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
                 { provide: AppointmentsService, useValue: {} },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: PetsService, useValue: { getPetById: () => of({ name: 'Pamuk', speciesName: 'Kedi', breed: 'Van', birthDate: null }) } },
-                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '555', email: '—' }), getClients } }
+                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '555', email: '—' }) } }
             ]
         });
         navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
@@ -70,13 +68,13 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
 
     const ctxQuery = { visitId: 'visit-1', clientId: 'client-1', petId: 'pet-1' };
 
-    it('açık Visit doğrulanır: hasta seçimi istenmez, müşteri listesi yüklenmez, yalnızca visitId ile kaydedilir', () => {
+    it('açık Visit doğrulanır: hasta seçimi istenmez, müşteri seçimi kilitli, yalnızca visitId ile kaydedilir', () => {
         const cmp = create(ctxQuery, of(visit()));
         examinations.createExamination.and.returnValue(of({ id: 'e1', rowVersion: 'A' }));
 
         expect(cmp.visitContextId()).toBe('visit-1');
         expect(cmp.selectedPetId()).toBe('pet-1');
-        expect(getClients).not.toHaveBeenCalled();
+        expect(cmp.selectionForm.controls.clientId.disabled).toBeTrue();
         expect(cmp.selectionForm.invalid).toBeFalse();
 
         cmp.form.patchValue({ examinationDate: '2026-10-10', examinationTime: '13:30', visitReason: 'Kontrol' });
@@ -96,7 +94,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
 
         expect(cmp.visitContextId()).toBeNull();
         expect(cmp.selectionError()).toContain('muayene açılamaz');
-        expect(getClients).toHaveBeenCalled();
+        expect(cmp.selectionForm.controls.clientId.enabled).toBeTrue();
     });
 
     it('yanlış geliş işaretli Visit reddedilir', () => {
@@ -123,6 +121,6 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
 
         expect(visits.getVisitById).not.toHaveBeenCalled();
         expect(cmp.visitContextId()).toBeNull();
-        expect(getClients).toHaveBeenCalled();
+        expect(cmp.selectionForm.controls.clientId.enabled).toBeTrue();
     });
 });

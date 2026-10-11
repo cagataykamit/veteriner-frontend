@@ -1,3 +1,7 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -22,12 +26,6 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import {
-    clientOptionsFromList,
-    filterPetsByClientId,
-    petOptionsFromList,
-    type SelectOption
-} from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
@@ -44,7 +42,6 @@ import {
     vaccinationStatusDateFieldsAfterTransition
 } from '@/app/features/vaccinations/utils/vaccination-upsert-date-submit.utils';
 import {
-    DATETIME_LOCAL_INPUT_MAX,
     DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator,
     effectiveDateTimeLocalInputMax,
@@ -62,7 +59,7 @@ import {
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
@@ -93,19 +90,7 @@ import {
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
-                            <p-select
-                                inputId="clientId"
-                                formControlName="clientId"
-                                [options]="clientOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Müşteri seçin"
-                                [filter]="true"
-                                filterBy="label"
-                                [showClear]="true"
-                                styleClass="w-full"
-                                [loading]="loadingClients()"
-                            />
+                            <app-client-search inputId="clientId" formControlName="clientId" />
                             @if (apiFieldErrors().clientId) {
                                 <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                             } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
@@ -114,19 +99,7 @@ import {
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
-                            <p-select
-                                inputId="petId"
-                                formControlName="petId"
-                                [options]="petOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="form.controls.petId.disabled ? 'Önce müşteri seçin' : 'Hayvan seçin'"
-                                [filter]="true"
-                                filterBy="label"
-                                [showClear]="true"
-                                styleClass="w-full"
-                                [loading]="loadingPets()"
-                            />
+                            <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                             @if (apiFieldErrors().petId) {
                                 <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
@@ -145,6 +118,7 @@ import {
                                 optionValue="value"
                                 [placeholder]="copy.vaccinationVaccinePlaceholder"
                                 [filter]="true"
+                                filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
                                 styleClass="w-full"
@@ -181,14 +155,7 @@ import {
                         @if (statusNum() === 1) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati *</label>
-                                <input
-                                    id="appliedAtLocal"
-                                    type="datetime-local"
-                                    class="w-full md:max-w-96 p-inputtext p-component"
-                                    formControlName="appliedAtLocal"
-                                    [attr.min]="datetimeLocalInputMin"
-                                    [attr.max]="maxAppliedInput()"
-                                />
+                                <app-date-input inputId="appliedAtLocal" type="datetime-local" formControlName="appliedAtLocal" [min]="datetimeLocalInputMin" limit="past" />
                                 @if (form.controls.appliedAtLocal.hasError('dateYearInvalid') && form.controls.appliedAtLocal.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                                 } @else if (apiFieldErrors().appliedAtLocal) {
@@ -203,14 +170,7 @@ import {
                         @if (statusNum() === 0) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="nextDueDateScheduled" class="block text-sm font-medium text-muted-color mb-2">Planlanan uygulama tarihi ve saati *</label>
-                                <input
-                                    id="nextDueDateScheduled"
-                                    type="datetime-local"
-                                    class="w-full md:max-w-96 p-inputtext p-component"
-                                    formControlName="nextDueDate"
-                                    [attr.min]="plannedDateTimeMin()"
-                                    [attr.max]="datetimeLocalInputMax"
-                                />
+                                <app-date-input inputId="nextDueDateScheduled" type="datetime-local" formControlName="nextDueDate" [min]="plannedDateTimeMin()" limit="planned" />
                                 <p class="text-muted-color text-sm mt-2 mb-0">Aşı bu tarih ve saatte uygulanmak üzere planlanır.</p>
                                 @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
@@ -226,14 +186,7 @@ import {
                         @if (statusNum() === 1) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="nextDueDateApplied" class="block text-sm font-medium text-muted-color mb-2">Sonraki uygulama tarihi</label>
-                                <input
-                                    id="nextDueDateApplied"
-                                    type="datetime-local"
-                                    class="w-full md:max-w-96 p-inputtext p-component"
-                                    formControlName="nextDueDate"
-                                    [attr.min]="minNextDueAfterApplied()"
-                                    [attr.max]="datetimeLocalInputMax"
-                                />
+                                <app-date-input inputId="nextDueDateApplied" type="datetime-local" formControlName="nextDueDate" [min]="minNextDueAfterApplied()" limit="planned" />
                                 <p class="text-muted-color text-sm mt-2 mb-0">Boş bırakılırsa bu aşı için hatırlatma oluşturulmaz.</p>
                                 @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
@@ -247,7 +200,7 @@ import {
                         @if (statusNum() === 2) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="nextDueDateCancelled" class="block text-sm font-medium text-muted-color mb-2">Planlı / sonraki tarih (opsiyonel)</label>
-                                <input id="nextDueDateCancelled" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="nextDueDate" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                                <app-date-input inputId="nextDueDateCancelled" type="datetime-local" formControlName="nextDueDate" [min]="datetimeLocalInputMin" limit="planned" />
                                 @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                                 } @else if (apiFieldErrors().nextDueDate) {
@@ -274,7 +227,7 @@ import {
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || vaccineDefinitionsLoading() || ro.mutationBlocked()"
+                            [disabled]="form.invalid || submitting() || vaccineDefinitionsLoading() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -293,7 +246,6 @@ import {
 export class VaccinationEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly vaccinationsService = inject(VaccinationsService);
@@ -311,17 +263,12 @@ export class VaccinationEditPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
-    readonly loadingClients = signal(false);
-    readonly loadingPets = signal(false);
-    readonly clientOptions = signal<SelectOption[]>([]);
-    readonly petOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<VaccinationUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
     readonly vaccineDefinitionsLoading = signal(false);
     readonly vaccineDefinitionsError = signal<string | null>(null);
     readonly vaccineDefinitionRows = signal<VaccineDefinitionListItemVm[]>([]);
-    private readonly petIdToSpeciesId = signal<Record<string, string>>({});
     readonly legacyMissingVaccineDefinition = signal(false);
 
     readonly vaccineDefinitionOptions = computed(() =>
@@ -329,7 +276,6 @@ export class VaccinationEditPageComponent implements OnInit {
     );
 
     private vaccinationId = '';
-    private isInitializingClient = false;
     /** GET /vaccinations/:id — dropdown’larda eksik etiketleri tamamlamak için önbellek. */
     private editVmCache: VaccinationEditVm | null = null;
 
@@ -419,15 +365,19 @@ export class VaccinationEditPageComponent implements OnInit {
             this.submitError.set(null);
             this.selectionError.set(null);
             if (!cid) {
-                this.petOptions.set([]);
                 this.form.controls.petId.disable({ emitEvent: false });
                 return;
             }
             this.form.controls.petId.enable({ emitEvent: false });
-            this.loadPetsForClient(cid);
         });
 
-        this.loadClients();
+        this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((petId) => {
+            const pid = trimClientIdControlValue(petId);
+            if (pid) {
+                this.applyPetSpecies(pid);
+            }
+        });
+
         this.reload();
     }
 
@@ -438,8 +388,6 @@ export class VaccinationEditPageComponent implements OnInit {
             next: (x) => {
                 this.editVmCache = x;
                 this.legacyMissingVaccineDefinition.set(!(x.vaccineDefinitionId ?? '').trim());
-                this.isInitializingClient = true;
-                // clientId patch’i valueChanges tetiklemesin: pet sıfırlanmasın, loadPets tek kez ve petId ile gitsin.
                 const st = this.normalizeStatusNum(x.status ?? 0);
                 const appliedForm = st === 1 ? toIstanbulDateTimeLocalInputValue(x.appliedAtUtc) : '';
                 this.form.patchValue(
@@ -456,13 +404,11 @@ export class VaccinationEditPageComponent implements OnInit {
                 );
                 this.lastStatusForDateTransition = st;
                 this.applyDateValidatorsForStatus(st);
-                this.mergeClientOptionFromCache();
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
-                    this.loadPetsForClient(x.clientId, x.petId);
+                    this.form.controls.petId.setValue(x.petId);
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
-                    this.isInitializingClient = false;
                 }
                 this.loading.set(false);
             },
@@ -533,59 +479,7 @@ export class VaccinationEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/vaccinations', this.vaccinationId]);
     }
 
-    private loadClients(): void {
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.mergeClientOptionFromCache();
-                this.loadingClients.set(false);
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
 
-    private loadPetsForClient(clientId: string, selectedPetId = ''): void {
-        this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
-            next: (r) => {
-                let items = r.items;
-                const anyClientId = items.some((p) => (p.clientId ?? '').trim());
-                if (anyClientId) {
-                    items = filterPetsByClientId(items, clientId);
-                }
-                this.petOptions.set(petOptionsFromList(items));
-                this.mergePetSpeciesFromItems(items);
-                this.mergePetOptionFromCache();
-                if (selectedPetId) {
-                    const exists = items.some((x) => x.id === selectedPetId);
-                    const allowFromDetail =
-                        !!this.editVmCache?.petName?.trim() &&
-                        (this.editVmCache?.petId ?? '').trim() === selectedPetId;
-                    this.form.controls.petId.setValue(exists || allowFromDetail ? selectedPetId : '');
-                } else if (!this.isInitializingClient) {
-                    this.form.controls.petId.setValue('');
-                }
-                this.loadingPets.set(false);
-                this.isInitializingClient = false;
-                const pid = this.form.getRawValue().petId?.trim();
-                if (pid) {
-                    const sp = this.petIdToSpeciesId()[pid];
-                    this.loadVaccineDefinitionsForSpecies(sp?.trim() ? sp : null);
-                }
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
-                this.petOptions.set([]);
-                this.loadingPets.set(false);
-                this.isInitializingClient = false;
-            }
-        });
-    }
 
     private loadVaccineDefinitionsForSpecies(speciesId: string | null): void {
         this.vaccineDefinitionsLoading.set(true);
@@ -622,47 +516,19 @@ export class VaccinationEditPageComponent implements OnInit {
         }
     }
 
-    private mergePetSpeciesFromItems(items: { id: string; speciesId: string | null }[]): void {
-        const m = { ...this.petIdToSpeciesId() };
-        for (const p of items) {
-            const id = p.id?.trim();
-            const sp = p.speciesId?.trim();
-            if (id && sp) {
-                m[id] = sp;
-            }
-        }
-        this.petIdToSpeciesId.set(m);
+    /** Seçili hayvanın türüne göre aşı tanımlarını yükler. */
+    private applyPetSpecies(petId: string): void {
+        this.petsService.getPetById(petId).subscribe({
+            next: (pet) => {
+                if (trimClientIdControlValue(this.form.controls.petId.value) === petId) {
+                    this.loadVaccineDefinitionsForSpecies(pet.speciesId?.trim() ? pet.speciesId : null);
+                }
+            },
+            error: (e: unknown) => this.selectionError.set(this.mapLoadError(e, 'Hayvan bilgisi yüklenemedi.'))
+        });
     }
 
-    /** Liste sayfası (ör. 300) dışında kalan müşteri için API’den gelen adı seçenek olarak ekle. */
-    private mergeClientOptionFromCache(): void {
-        const vm = this.editVmCache;
-        const cid = vm?.clientId?.trim();
-        const label = vm?.clientName?.trim();
-        if (!cid || !label) {
-            return;
-        }
-        const opts = this.clientOptions();
-        if (opts.some((o) => o.value === cid)) {
-            return;
-        }
-        this.clientOptions.set([{ value: cid, label }, ...opts]);
-    }
 
-    /** Hayvan listesi eşleşmezse detay yanıtındaki adı seçenek olarak ekle. */
-    private mergePetOptionFromCache(): void {
-        const vm = this.editVmCache;
-        const pid = vm?.petId?.trim();
-        const label = vm?.petName?.trim();
-        if (!pid || !label) {
-            return;
-        }
-        const opts = this.petOptions();
-        if (opts.some((o) => o.value === pid)) {
-            return;
-        }
-        this.petOptions.set([{ value: pid, label }, ...opts]);
-    }
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
@@ -706,9 +572,6 @@ export class VaccinationEditPageComponent implements OnInit {
         return effectiveDateTimeLocalInputMin(minDateTimeLocalMinuteAfterNow());
     }
 
-    protected maxAppliedInput(): string {
-        return effectiveDateTimeLocalInputMax(localDateTimeLocalInputMaxNow());
-    }
 
     protected minNextDueAfterApplied(): string {
         return effectiveDateTimeLocalInputMin(minDateTimeLocalMinuteAfter(this.form.controls.appliedAtLocal.value ?? ''));

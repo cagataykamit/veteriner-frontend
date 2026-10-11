@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -68,7 +70,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent, SearchInputComponent
     ],
     template: `
         <app-page-header
@@ -115,17 +117,9 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                     >
                                         Arama
                                     </label>
-                                    <input
-                                        pInputText
-                                        id="stockSearch"
-                                        class="w-full"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Ürün adı, SKU…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button
                                         [label]="copy.buttonClear"
                                         icon="pi pi-times"
@@ -167,9 +161,9 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                         placeholder="Tüm kategoriler"
                                         styleClass="w-full"
                                         [filter]="true"
+                                        filterPlaceholder="Ara…"
                                         filterBy="label"
-                                        [showClear]="true"
-                                    />
+                                        [showClear]="true" (ngModelChange)="scheduleApply()" />
                                 </div>
                             }
                             <div
@@ -189,8 +183,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                     optionLabel="label"
                                     optionValue="value"
                                     placeholder="Tümü"
-                                    styleClass="w-full"
-                                />
+                                    styleClass="w-full" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -300,6 +293,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
     `
 })
 export class ProductStocksPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
 
     private readonly route = inject(ActivatedRoute);

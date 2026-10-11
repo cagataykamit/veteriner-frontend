@@ -1,3 +1,6 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -54,7 +57,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <app-page-header title="Randevular" subtitle="Operasyon" description="Randevu listesi ve durum takibi.">
@@ -112,18 +115,9 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                             </span>
                                         }
                                     </label>
-                                    <input
-                                        pInputText
-                                        id="apptSearch"
-                                        class="w-full"
-                                        [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Not; müşteri, hayvan, tür veya ırk metni…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="apptSearch" placeholder="Not; müşteri, hayvan, tür veya ırk metni…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
@@ -158,8 +152,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                     optionValue="value"
                                     [placeholder]="copy.filterPlaceholderAll"
                                     styleClass="w-full"
-                                    [showClear]="true"
-                                />
+                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -181,14 +174,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                         </span>
                                     }
                                 </label>
-                                <input
-                                    id="apptFrom"
-                                    type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                                    min="1900-01-01"
-                                    max="9999-12-31"
-                                    [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                    [(ngModel)]="fromDateInput"
-                                />
+                                <app-date-input inputId="apptFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -210,14 +196,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                         </span>
                                     }
                                 </label>
-                                <input
-                                    id="apptTo"
-                                    type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                                    min="1900-01-01"
-                                    max="9999-12-31"
-                                    [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                    [(ngModel)]="toDateInput"
-                                />
+                                <app-date-input inputId="apptTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -344,6 +323,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
     `
 })
 export class AppointmentsListPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);

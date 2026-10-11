@@ -1,3 +1,6 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -19,16 +22,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import {
-    clientOptionsFromList,
-    filterPetsByClientId,
-    isStalePetListResponse,
-    petOptionsFromList,
-    trimClientIdControlValue,
-    type SelectOption
-} from '@/app/shared/forms/client-pet-selection.utils';
-import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
-import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
+import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { amountToFormString, parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
 import {
@@ -36,7 +30,6 @@ import {
     toIstanbulDateTimeLocalInputValue
 } from '@/app/shared/utils/date.utils';
 import {
-    DATETIME_LOCAL_INPUT_MAX,
     dateTimeYearRangeValidator,
     effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
@@ -61,9 +54,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent,
-        QuickClientDialogComponent,
-        QuickPetDialogComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
@@ -91,65 +82,19 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
-                            <p-select
-                                inputId="clientId"
-                                formControlName="clientId"
-                                [options]="clientOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Müşteri seçin"
-                                [filter]="true"
-                                filterBy="label"
-                                [showClear]="true"
-                                styleClass="w-full"
-                                [loading]="loadingClients()"
-                            />
+                            <app-client-search inputId="clientId" formControlName="clientId" />
                             @if (apiFieldErrors().clientId) {
                                 <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                             } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                                 <small class="text-red-500">Müşteri seçimi zorunludur.</small>
                             }
-                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Yeni müşteri"
-                                    icon="pi pi-user-plus"
-                                    [disabled]="ro.mutationBlocked()"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    (onClick)="quickClientOpen.set(true)"
-                                />
-                            </div>
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
-                            <p-select
-                                inputId="petId"
-                                formControlName="petId"
-                                [options]="petOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="form.controls.petId.disabled ? 'Önce müşteri seçin' : 'Hayvan seçin'"
-                                [filter]="true"
-                                filterBy="label"
-                                [showClear]="true"
-                                styleClass="w-full"
-                                [loading]="loadingPets()"
-                            />
+                            <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                             @if (apiFieldErrors().petId) {
                                 <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                             }
-                            <div class="flex flex-wrap gap-2 align-items-center mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Bu müşteri için yeni hayvan"
-                                    icon="pi pi-plus"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    [disabled]="petQuickAddDisabled()"
-                                    (onClick)="quickPetOpen.set(true)"
-                                />
-                            </div>
                         </div>
                         <div class="col-span-12 md:col-span-4">
                             <label for="amount" class="block text-sm font-medium text-muted-color mb-2">Tutar *</label>
@@ -190,7 +135,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-4">
                             <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
-                            <input id="paidAtLocal" type="datetime-local" class="w-full md:max-w-96 p-inputtext p-component" formControlName="paidAtLocal" [min]="paymentDateMinAllowed()" [max]="datetimeLocalInputMax" />
+                            <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed()" limit="past" />
                             @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched) {
@@ -220,7 +165,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || ro.mutationBlocked()"
+                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -234,18 +179,11 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 </form>
             </div>
 
-            <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
-            <app-quick-pet-dialog
-                [(visible)]="quickPetOpen"
-                [ownerClientId]="quickPetOwnerClientId()"
-                (petCreated)="onQuickPetCreated($event)"
-            />
         }
     `
 })
 export class PaymentEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     protected readonly paymentDateTooFarPastMessage = PAYMENT_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
@@ -264,17 +202,10 @@ export class PaymentEditPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
-    readonly loadingClients = signal(false);
-    readonly loadingPets = signal(false);
-    readonly clientOptions = signal<SelectOption[]>([]);
-    readonly petOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<PaymentUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
-    readonly quickClientOpen = signal(false);
-    readonly quickPetOpen = signal(false);
 
     private paymentId = '';
-    private isInitializingClient = false;
     private appointmentId: string | null = null;
     private examinationId: string | null = null;
 
@@ -317,15 +248,12 @@ export class PaymentEditPageComponent implements OnInit {
             }
             const cid = trimClientIdControlValue(this.form.controls.clientId.value);
             if (!cid) {
-                this.petOptions.set([]);
                 this.form.controls.petId.disable({ emitEvent: false });
                 return;
             }
             this.form.controls.petId.enable({ emitEvent: false });
-            this.loadPetsForClient(cid);
         });
 
-        this.loadClients();
         this.reload();
     }
 
@@ -336,7 +264,6 @@ export class PaymentEditPageComponent implements OnInit {
         this.examinationId = null;
         this.paymentsService.getPaymentForEditById(this.paymentId).subscribe({
             next: (x) => {
-                this.isInitializingClient = true;
                 this.appointmentId = x.appointmentId;
                 this.examinationId = x.examinationId;
                 this.form.patchValue({
@@ -350,10 +277,9 @@ export class PaymentEditPageComponent implements OnInit {
                 });
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
-                    this.loadPetsForClient(x.clientId, x.petId);
+                    this.form.controls.petId.setValue(x.petId);
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
-                    this.isInitializingClient = false;
                 }
                 this.loading.set(false);
             },
@@ -432,102 +358,9 @@ export class PaymentEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/payments', this.paymentId]);
     }
 
-    petQuickAddDisabled(): boolean {
-        if (this.ro.mutationBlocked()) {
-            return true;
-        }
-        return !trimClientIdControlValue(this.form.getRawValue().clientId) || this.form.controls.petId.disabled;
-    }
 
-    quickPetOwnerClientId(): string {
-        return trimClientIdControlValue(this.form.getRawValue().clientId);
-    }
 
-    onQuickClientCreated(clientId: string): void {
-        const id = clientId.trim();
-        if (!id) {
-            return;
-        }
-        this.reloadClientsAndSelectClient(id);
-    }
 
-    onQuickPetCreated(petId: string): void {
-        const cid = trimClientIdControlValue(this.form.getRawValue().clientId);
-        const pid = petId.trim();
-        if (!cid || !pid) {
-            return;
-        }
-        this.loadPetsForClient(cid, pid);
-    }
-
-    private loadClients(): void {
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
-
-    private reloadClientsAndSelectClient(clientId: string): void {
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-                this.form.controls.clientId.setValue(clientId, { emitEvent: true });
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
-
-    private loadPetsForClient(clientId: string, selectedPetId = ''): void {
-        this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
-            next: (r) => {
-                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
-                    this.loadingPets.set(false);
-                    this.isInitializingClient = false;
-                    return;
-                }
-                let items = r.items;
-                const anyClientId = items.some((p) => (p.clientId ?? '').trim());
-                if (anyClientId) {
-                    items = filterPetsByClientId(items, clientId);
-                }
-                this.petOptions.set(petOptionsFromList(items));
-                if (selectedPetId) {
-                    const exists = items.some((x) => x.id === selectedPetId);
-                    this.form.controls.petId.setValue(exists ? selectedPetId : '');
-                } else if (!this.isInitializingClient) {
-                    this.form.controls.petId.setValue('');
-                }
-                this.loadingPets.set(false);
-                this.isInitializingClient = false;
-            },
-            error: (e: unknown) => {
-                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
-                    this.loadingPets.set(false);
-                    this.isInitializingClient = false;
-                    return;
-                }
-                this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
-                this.petOptions.set([]);
-                this.loadingPets.set(false);
-                this.isInitializingClient = false;
-            }
-        });
-    }
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {

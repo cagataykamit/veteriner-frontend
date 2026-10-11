@@ -40,6 +40,7 @@ import {
     type TodayRowPermissions,
     type TodayUrgencyToggle,
     type WaitAlertLevel,
+    isPossiblyForgottenVisit,
     waitAlertLevel,
     waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
@@ -139,18 +140,24 @@ type TodayScope = 'mine' | 'all';
                         <span>{{ group.title }}</span>
                         <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="group.items.length + ' kayıt'">{{ group.items.length }}</span>
                     </div>
-                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm">
+                    <div class="@container overflow-x-auto">
+                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed' }">
+                        <ng-template #colgroup>
+                            <colgroup>
+                                @for (cls of columnClasses; track $index) {
+                                    <col [class]="cls" />
+                                }
+                            </colgroup>
+                        </ng-template>
                         <ng-template #header>
                             <tr>
-                                <th>Saat</th>
-                                <th>Hasta</th>
-                                <th>Sahip</th>
-                                <th>Hekim</th>
-                                <th>Durum</th>
-                                <th>Ödeme / yatış</th>
-                                @if (group.elapsedLabel) {
-                                    <th>{{ group.elapsedLabel }}</th>
-                                }
+                                <th class="whitespace-nowrap">Saat</th>
+                                <th class="whitespace-nowrap">Hasta</th>
+                                <th class="whitespace-nowrap">Sahip</th>
+                                <th class="whitespace-nowrap @max-[76rem]:hidden">Hekim</th>
+                                <th class="whitespace-nowrap">Durum</th>
+                                <th class="whitespace-nowrap @max-[76rem]:hidden">Ödeme / yatış</th>
+                                <th class="whitespace-nowrap">{{ group.elapsedLabel }}</th>
                                 <th></th>
                             </tr>
                         </ng-template>
@@ -167,34 +174,40 @@ type TodayScope = 'mine' | 'all';
                                     }
                                 </td>
                                 <td>
-                                    <div class="font-medium flex items-center gap-2">
-                                        {{ item.petName }}
-                                        <app-pet-alert-badges [alerts]="item.petAlerts" />
+                                    <div class="font-medium flex items-center gap-2 min-w-0">
+                                        <span class="truncate min-w-0" [attr.title]="item.petName">{{ item.petName }}</span>
+                                        <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
                                         @if (item.isUrgent) {
-                                            <app-status-tag label="Acil" severity="danger" />
+                                            <app-status-tag class="shrink-0" label="Acil" severity="danger" />
                                         }
                                     </div>
-                                    <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
+                                    <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
+                                    <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
+                                    <div class="text-sm text-muted-color truncate @min-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
+                                        {{ item.responsibleVeterinarianName ?? 'Atanmadı' }}
+                                    </div>
                                 </td>
                                 <td>
-                                    <div class="max-w-56 truncate" [attr.title]="item.clientName">{{ item.clientName }}</div>
+                                    <div class="truncate" [attr.title]="item.clientName">{{ item.clientName }}</div>
                                     @if (item.clientPhone) {
                                         <div class="text-sm text-muted-color">{{ phone(item.clientPhone) }}</div>
                                     }
                                 </td>
-                                <td class="max-w-40 truncate" [attr.title]="item.responsibleVeterinarianName">
+                                <td class="truncate @max-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName">
                                     @if (item.responsibleVeterinarianName; as vet) {
                                         {{ vet }}
                                     } @else {
                                         <span class="text-muted-color">Atanmadı</span>
                                     }
                                 </td>
-                                <td>
+                                <td class="whitespace-nowrap">
                                     <div class="flex flex-wrap gap-1">
                                         @if (item.careStatus; as status) {
                                             <app-status-tag [label]="statusLabel(status)" [severity]="statusSeverity(status)" />
                                         } @else if (item.appointmentStatus === 'NoShow') {
-                                            <app-status-tag label="Gelmedi" severity="warn" />
+                                            @if (group.key !== 'noShow') {
+                                                <app-status-tag label="Gelmedi" severity="warn" />
+                                            }
                                         } @else if (item.appointmentStatus === 'Completed') {
                                             <app-status-tag label="Randevu tamamlandı" severity="secondary" />
                                         } @else {
@@ -204,41 +217,65 @@ type TodayScope = 'mine' | 'all';
                                             <app-status-tag label="Yanlış geliş" severity="danger" />
                                         }
                                         @if (item.isCarriedOver) {
-                                            <app-status-tag label="Önceki günden" severity="contrast" />
+                                            <span [attr.title]="carriedOverTitle">
+                                                <app-status-tag label="Önceki günden" severity="secondary" />
+                                            </span>
                                         }
                                     </div>
                                     @if (item.voidReason; as reason) {
-                                        <div class="text-sm text-muted-color mt-1">Gerekçe: {{ reason }}</div>
+                                        <div class="text-sm text-muted-color mt-1 whitespace-normal">Gerekçe: {{ reason }}</div>
                                     }
-                                </td>
-                                <td>
-                                    <div class="flex flex-wrap gap-1">
-                                        <app-status-tag
-                                            [label]="paymentLabel(item.paymentIndicator)"
-                                            [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
-                                        />
+                                    <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
+                                    <div class="flex flex-wrap gap-1 mt-1 @min-[76rem]:hidden">
+                                        @if (group.key !== 'noShow') {
+                                            <app-status-tag
+                                                [label]="paymentLabel(item.paymentIndicator)"
+                                                [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
+                                            />
+                                        }
                                         @if (item.hasActiveHospitalization) {
                                             <app-status-tag label="Yatışta" severity="warn" />
                                         }
                                     </div>
                                 </td>
-                                @if (group.elapsedLabel) {
-                                    @let wait = waitAlertOf(item);
-                                    <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
+                                <td class="whitespace-nowrap @max-[76rem]:hidden">
+                                    <div class="flex flex-wrap gap-1">
+                                        @if (group.key !== 'noShow') {
+                                            <app-status-tag
+                                                [label]="paymentLabel(item.paymentIndicator)"
+                                                [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
+                                            />
+                                        }
+                                        @if (item.hasActiveHospitalization) {
+                                            <app-status-tag label="Yatışta" severity="warn" />
+                                        }
+                                    </div>
+                                </td>
+                                @let wait = waitAlertOf(item);
+                                <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
+                                    @if (group.elapsedLabel) {
                                         @if (wait !== 'none') {
                                             <i class="pi pi-fw" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
                                             <span class="sr-only">{{ waitTitle(wait) }}:</span>
                                         }
                                         {{ elapsed(item) ?? '—' }}
-                                    </td>
-                                }
-                                <td class="whitespace-nowrap" style="width: 1%">
-                                    <div class="flex flex-nowrap items-center gap-2 justify-end">
+                                        @if (possiblyForgotten(item)) {
+                                            <div class="text-xs font-normal text-muted-color">Unutulmuş olabilir</div>
+                                        }
+                                    }
+                                </td>
+                                <td class="whitespace-nowrap">
+                                    <!-- Sabit yuvalar: birincil | ikincil | acil | ⋯ → düğmeler satırlar arasında aynı hizada -->
+                                    <div class="grid grid-cols-[7.5rem_6rem_1.85rem_1.85rem] @max-[50rem]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem] items-center gap-2 justify-start">
                                         @let actions = actionsOf(item);
                                         @if (canCreateVisit && actions.canMarkArrived) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-1 @max-[50rem]:[&_.p-button-label]:hidden"
+                                                styleClass="w-full"
                                                 label="Geldi"
+                                                ariaLabel="Geldi"
+                                                [attr.title]="'Geldi'"
                                                 icon="pi pi-sign-in"
                                                 size="small"
                                                 [disabled]="ro.mutationBlocked()"
@@ -248,7 +285,11 @@ type TodayScope = 'mine' | 'all';
                                         @if (canCreateExamination && actions.canOpenExamination) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-1 @max-[50rem]:[&_.p-button-label]:hidden"
+                                                styleClass="w-full"
                                                 label="Muayene aç"
+                                                ariaLabel="Muayene aç"
+                                                [attr.title]="'Muayene aç'"
                                                 icon="pi pi-file-edit"
                                                 size="small"
                                                 [disabled]="ro.mutationBlocked()"
@@ -258,7 +299,11 @@ type TodayScope = 'mine' | 'all';
                                         @if (canUpdateVisit && actions.canStartCare) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-2 @max-[50rem]:[&_.p-button-label]:hidden"
+                                                styleClass="w-full"
                                                 label="Başlat"
+                                                ariaLabel="Başlat"
+                                                [attr.title]="'Başlat'"
                                                 icon="pi pi-play"
                                                 size="small"
                                                 severity="secondary"
@@ -270,7 +315,11 @@ type TodayScope = 'mine' | 'all';
                                         @if (canUpdateVisit && actions.canCompleteCare) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-2 @max-[50rem]:[&_.p-button-label]:hidden"
+                                                styleClass="w-full"
                                                 label="Tamamla"
+                                                ariaLabel="Tamamla"
+                                                [attr.title]="'Tamamla'"
                                                 icon="pi pi-check"
                                                 size="small"
                                                 severity="secondary"
@@ -283,6 +332,7 @@ type TodayScope = 'mine' | 'all';
                                         @if (urgency) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-3"
                                                 icon="pi pi-exclamation-triangle"
                                                 size="small"
                                                 [severity]="urgency.pressed ? 'danger' : 'secondary'"
@@ -300,6 +350,7 @@ type TodayScope = 'mine' | 'all';
                                         @if (more.length > 0) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-4"
                                                 icon="pi pi-ellipsis-h"
                                                 size="small"
                                                 severity="secondary"
@@ -316,6 +367,7 @@ type TodayScope = 'mine' | 'all';
                             </tr>
                         </ng-template>
                     </p-table>
+                    </div>
                 </section>
             } @empty {
                 <div class="card">
@@ -418,6 +470,24 @@ export class TodayPageComponent implements OnInit {
     readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
     readonly waitTitle = waitAlertTitle;
+    /**
+     * Tüm grup tabloları aynı sütun şablonunu kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler.
+     * Üç kip, tablo kapsayıcısının genişliğine göre (kapsayıcı sorgusu; ekran/yakınlaştırma değil):
+     * geniş (≥72 rem): tüm sütunlar, yazılı düğmeler; orta (50–72 rem): Hekim ve Ödeme/yatış sütunları gizlenir (bilgi Hasta ve Durum
+     * hücrelerine taşınır), düğmeler yine yazılı; dar (<50 rem): düğmeler yalnız ikon (aria-label + ipucu). Ad sütunları kısalıp ipucuyla
+     * tam adı gösterir; tablo yatay taşmaz. Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
+     */
+    protected readonly columnClasses = [
+        'w-[6.5rem]',
+        'w-auto',
+        'w-auto',
+        'w-[8rem] @max-[76rem]:hidden',
+        'w-[8.5rem] @max-[76rem]:w-[9rem]',
+        'w-[9rem] @max-[76rem]:hidden',
+        'w-[7.5rem]',
+        'w-[20rem] @max-[50rem]:w-[12rem]'
+    ];
+    protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',
         warning: 'font-semibold text-orange-600 dark:text-orange-400',
@@ -463,6 +533,10 @@ export class TodayPageComponent implements OnInit {
         return item.careStatus === 'Waiting' || item.careStatus === 'InProgress'
             ? formatElapsedSince(item.arrivedAtUtc, this.now())
             : null;
+    }
+
+    possiblyForgotten(item: TodayItemVm): boolean {
+        return isPossiblyForgottenVisit(item, this.now());
     }
 
     waitAlertOf(item: TodayItemVm): WaitAlertLevel {

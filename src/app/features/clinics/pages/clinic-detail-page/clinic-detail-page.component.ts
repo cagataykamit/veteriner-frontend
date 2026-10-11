@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, effect, inject, signal } from '@angular/core';
@@ -57,6 +58,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     imports: [
         CommonModule,
         ReactiveFormsModule,
+        DateInputComponent,
         RouterLink,
         ButtonModule,
         InputTextModule,
@@ -267,19 +269,19 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                 </div>
                                 <div class="col-span-6 md:col-span-2">
                                     <label class="block text-xs text-muted-color mb-1">Açılış</label>
-                                    <input type="time" class="w-full p-inputtext p-component" formControlName="opensAt" step="60" />
+                                    <app-date-input type="time" formControlName="opensAt" />
                                 </div>
                                 <div class="col-span-6 md:col-span-2">
                                     <label class="block text-xs text-muted-color mb-1">Kapanış</label>
-                                    <input type="time" class="w-full p-inputtext p-component" formControlName="closesAt" step="60" />
+                                    <app-date-input type="time" formControlName="closesAt" />
                                 </div>
                                 <div class="col-span-6 md:col-span-2">
                                     <label class="block text-xs text-muted-color mb-1">Mola başlangıç</label>
-                                    <input type="time" class="w-full p-inputtext p-component" formControlName="breakStartsAt" step="60" />
+                                    <app-date-input type="time" formControlName="breakStartsAt" />
                                 </div>
                                 <div class="col-span-6 md:col-span-2">
                                     <label class="block text-xs text-muted-color mb-1">Mola bitiş</label>
-                                    <input type="time" class="w-full p-inputtext p-component" formControlName="breakEndsAt" step="60" />
+                                    <app-date-input type="time" formControlName="breakEndsAt" />
                                 </div>
                             </div>
                         }

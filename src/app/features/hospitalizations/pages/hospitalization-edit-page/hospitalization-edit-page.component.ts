@@ -1,3 +1,6 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -25,14 +28,7 @@ import {
     prescriptionExaminationSelectOption
 } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import {
-    clientOptionsFromList,
-    filterPetsByClientId,
-    isStalePetListResponse,
-    petOptionsFromList,
-    trimClientIdControlValue,
-    type SelectOption
-} from '@/app/shared/forms/client-pet-selection.utils';
+import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -42,7 +38,6 @@ import {
     toIstanbulDateTimeLocalInputValue
 } from '@/app/shared/utils/date.utils';
 import {
-    DATETIME_LOCAL_INPUT_MAX,
     DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator,
     effectiveDateTimeLocalInputMin
@@ -66,7 +61,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
@@ -99,19 +94,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
-                            <p-select
-                                inputId="clientId"
-                                formControlName="clientId"
-                                [options]="clientOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Müşteri seçin"
-                                [filter]="true"
-                                filterBy="label"
-                                [showClear]="true"
-                                styleClass="w-full"
-                                [loading]="loadingClients()"
-                            />
+                            <app-client-search inputId="clientId" formControlName="clientId" />
                             @if (apiFieldErrors().clientId) {
                                 <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                             } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
@@ -120,19 +103,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
-                            <p-select
-                                inputId="petId"
-                                formControlName="petId"
-                                [options]="petOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="form.controls.petId.disabled ? 'Önce müşteri seçin' : 'Hayvan seçin'"
-                                [filter]="true"
-                                filterBy="label"
-                                [showClear]="true"
-                                styleClass="w-full"
-                                [loading]="loadingPets()"
-                            />
+                            <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                             @if (apiFieldErrors().petId) {
                                 <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
@@ -141,14 +112,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="admittedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Yatış tarihi / saati *</label>
-                            <input
-                                id="admittedAtLocal"
-                                type="datetime-local"
-                                class="w-full md:max-w-96 p-inputtext p-component"
-                                formControlName="admittedAtLocal"
-                                [min]="hospitalizationDateMinAllowed()"
-                                [max]="datetimeLocalInputMax"
-                            />
+                            <app-date-input inputId="admittedAtLocal" type="datetime-local" formControlName="admittedAtLocal" [min]="hospitalizationDateMinAllowed()" limit="past" />
                             @if (form.controls.admittedAtLocal.hasError('dateYearInvalid') && form.controls.admittedAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (form.controls.admittedAtLocal.hasError('hospitalizationDateTooFarPast') && form.controls.admittedAtLocal.touched) {
@@ -161,14 +125,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="plannedDischargeAtLocal" class="block text-sm font-medium text-muted-color mb-2">Planlı taburcu</label>
-                            <input
-                                id="plannedDischargeAtLocal"
-                                type="datetime-local"
-                                class="w-full md:max-w-96 p-inputtext p-component"
-                                formControlName="plannedDischargeAtLocal"
-                                [min]="datetimeLocalInputMin"
-                                [max]="datetimeLocalInputMax"
-                            />
+                            <app-date-input inputId="plannedDischargeAtLocal" type="datetime-local" formControlName="plannedDischargeAtLocal" [min]="datetimeLocalInputMin" limit="planned" />
                             @if (form.controls.plannedDischargeAtLocal.hasError('dateYearInvalid') && form.controls.plannedDischargeAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().plannedDischargeAtLocal) {
@@ -185,6 +142,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 optionValue="value"
                                 placeholder="Hayvan seçin"
                                 [filter]="true"
+                                filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
                                 styleClass="w-full"
@@ -223,7 +181,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             [label]="copy.buttonSave"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || loadingClients() || loadingPets() || ro.mutationBlocked()"
+                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -242,7 +200,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class HospitalizationEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     protected readonly hospitalizationDateTooFarPastMessage = HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
@@ -264,18 +221,13 @@ export class HospitalizationEditPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
-    readonly loadingClients = signal(false);
-    readonly loadingPets = signal(false);
     readonly loadingExaminations = signal(false);
-    readonly clientOptions = signal<SelectOption[]>([]);
-    readonly petOptions = signal<SelectOption[]>([]);
     readonly examinationOptions = signal<SelectOption[]>([]);
     private relationLoadSeq = 0;
     private initialRelationHydratePending = false;
     readonly apiFieldErrors = signal<HospitalizationUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
-    private isInitializingClient = false;
     private editVmCache: HospitalizationEditVm | null = null;
 
     readonly form = this.fb.nonNullable.group({
@@ -326,12 +278,10 @@ export class HospitalizationEditPageComponent implements OnInit {
             this.selectionError.set(null);
             const cid = trimClientIdControlValue(this.form.controls.clientId.value);
             if (!cid) {
-                this.petOptions.set([]);
                 this.form.controls.petId.disable({ emitEvent: false });
                 return;
             }
             this.form.controls.petId.enable({ emitEvent: false });
-            this.loadPetsForClient(cid);
         });
 
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -355,7 +305,6 @@ export class HospitalizationEditPageComponent implements OnInit {
             this.loadExaminationsForPetFresh(pid);
         });
 
-        this.loadClients();
         this.reload();
     }
 
@@ -375,7 +324,6 @@ export class HospitalizationEditPageComponent implements OnInit {
                     return;
                 }
                 this.editVmCache = x;
-                this.isInitializingClient = true;
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
@@ -387,14 +335,12 @@ export class HospitalizationEditPageComponent implements OnInit {
                     },
                     { emitEvent: false }
                 );
-                this.mergeClientOptionFromCache();
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
                     this.initialRelationHydratePending = true;
-                    this.loadPetsForClient(x.clientId, x.petId);
+                    this.form.controls.petId.setValue(x.petId);
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
-                    this.isInitializingClient = false;
                 }
                 this.loading.set(false);
             },
@@ -468,21 +414,6 @@ export class HospitalizationEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/hospitalizations', this.hospitalizationId]);
     }
 
-    private loadClients(): void {
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.mergeClientOptionFromCache();
-                this.loadingClients.set(false);
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
 
     private loadExaminationsForPetFresh(petId: string): void {
         const seq = ++this.relationLoadSeq;
@@ -548,75 +479,8 @@ export class HospitalizationEditPageComponent implements OnInit {
         }
     }
 
-    private loadPetsForClient(clientId: string, selectedPetId = ''): void {
-        const cid = clientId.trim();
-        this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId: cid }).subscribe({
-            next: (r) => {
-                if (isStalePetListResponse(this.form.controls.clientId.value, cid)) {
-                    return;
-                }
-                let items = r.items;
-                const anyClientId = items.some((p) => (p.clientId ?? '').trim());
-                if (anyClientId) {
-                    items = filterPetsByClientId(items, cid);
-                }
-                this.petOptions.set(petOptionsFromList(items));
-                this.mergePetOptionFromCache(cid);
-                const vmClient = this.editVmCache?.clientId?.trim() ?? '';
-                if (selectedPetId) {
-                    const exists = items.some((x) => x.id === selectedPetId);
-                    const allowFromDetail =
-                        cid === vmClient &&
-                        !!this.editVmCache?.petName?.trim() &&
-                        (this.editVmCache?.petId ?? '').trim() === selectedPetId;
-                    this.form.controls.petId.setValue(exists || allowFromDetail ? selectedPetId : '');
-                } else if (!this.isInitializingClient) {
-                    this.form.controls.petId.setValue('');
-                }
-                this.loadingPets.set(false);
-                this.isInitializingClient = false;
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
-                this.petOptions.set([]);
-                this.loadingPets.set(false);
-                this.isInitializingClient = false;
-            }
-        });
-    }
 
-    private mergeClientOptionFromCache(): void {
-        const vm = this.editVmCache;
-        const cid = vm?.clientId?.trim();
-        const label = vm?.clientName?.trim();
-        if (!cid || !label) {
-            return;
-        }
-        const opts = this.clientOptions();
-        if (opts.some((o) => o.value === cid)) {
-            return;
-        }
-        this.clientOptions.set([{ value: cid, label }, ...opts]);
-    }
 
-    private mergePetOptionFromCache(forRequestClientId: string): void {
-        const vm = this.editVmCache;
-        const vmClient = vm?.clientId?.trim();
-        if (!vmClient || forRequestClientId.trim() !== vmClient) {
-            return;
-        }
-        const pid = vm?.petId?.trim();
-        const label = vm?.petName?.trim();
-        if (!pid || !label) {
-            return;
-        }
-        const opts = this.petOptions();
-        if (opts.some((o) => o.value === pid)) {
-            return;
-        }
-        this.petOptions.set([{ value: pid, label }, ...opts]);
-    }
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {

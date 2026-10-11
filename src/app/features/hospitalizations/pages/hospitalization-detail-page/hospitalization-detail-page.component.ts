@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
@@ -16,7 +17,6 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import {
-    DATETIME_LOCAL_INPUT_MAX,
     DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator
 } from '@/app/shared/utils/date-input-validation.utils';
@@ -39,7 +39,7 @@ import {
         DialogModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
@@ -215,14 +215,7 @@ import {
                 <div class="flex flex-col gap-4">
                     <div>
                         <label for="dischargedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Taburcu tarihi / saati *</label>
-                        <input
-                            id="dischargedAtLocal"
-                            type="datetime-local"
-                            class="w-full md:max-w-96 p-inputtext p-component"
-                            formControlName="dischargedAtLocal"
-                            [min]="datetimeLocalInputMin"
-                            [max]="datetimeLocalInputMax"
-                        />
+                        <app-date-input inputId="dischargedAtLocal" type="datetime-local" formControlName="dischargedAtLocal" [min]="datetimeLocalInputMin" limit="past" />
                         @if (dischargeForm.controls.dischargedAtLocal.hasError('dateYearInvalid') && dischargeForm.controls.dischargedAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (dischargeForm.controls.dischargedAtLocal.invalid && dischargeForm.controls.dischargedAtLocal.touched) {
@@ -258,7 +251,6 @@ import {
 })
 export class HospitalizationDetailPageComponent implements OnInit {
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     private readonly route = inject(ActivatedRoute);
     private readonly hospitalizationsService = inject(HospitalizationsService);
     private readonly fb = inject(FormBuilder);

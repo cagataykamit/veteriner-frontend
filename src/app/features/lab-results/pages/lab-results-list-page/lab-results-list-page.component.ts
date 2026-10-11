@@ -1,3 +1,6 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -34,7 +37,7 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <app-page-header title="Lab sonuçları" subtitle="Klinik" description="Laboratuvar sonuç kayıtları.">
@@ -71,17 +74,9 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
                                 <div class="flex-1 min-w-0">
                                     <label for="lrSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                    <input
-                                        pInputText
-                                        id="lrSearch"
-                                        class="w-full"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Test adı, müşteri veya hayvan…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="lrSearch" placeholder="Test adı, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
@@ -89,11 +84,11 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6">
                                 <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
-                                <input id="lrFrom" type="date" class="w-full md:max-w-64 p-inputtext p-component" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
+                                <app-date-input inputId="lrFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="lrTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
-                                <input id="lrTo" type="date" class="w-full md:max-w-64 p-inputtext p-component" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
+                                <app-date-input inputId="lrTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -208,6 +203,7 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
     `
 })
 export class LabResultsListPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);

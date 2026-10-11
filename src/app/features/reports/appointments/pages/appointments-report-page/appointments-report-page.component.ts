@@ -1,3 +1,8 @@
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -13,13 +18,7 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
 import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-my-clinics-to-select-options';
-import {
-    loadReportClientSelectOptions$,
-    loadReportPetLookupBundle$
-} from '@/app/features/reports/shared/report-client-pet-lookup';
 import { isReportUiClinicIdMisalignedWithJwt, isReportUiClinicIdUnknownToMyClinics } from '@/app/features/reports/shared/report-my-clinic.utils';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import type { AppointmentsReportQuery } from '@/app/features/reports/appointments/models/appointments-report-query.model';
@@ -71,7 +70,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <app-page-header
@@ -87,9 +86,6 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
         }
 
         <div class="card mb-4">
-            @if (lookupWarning()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ lookupWarning() }}</p>
-            }
             @if (dateFilterError()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ dateFilterError() }}</p>
             }
@@ -108,14 +104,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </label>
-                    <input
-                        id="apptRepFrom"
-                        type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                        min="1900-01-01"
-                        max="9999-12-31"
-                        [ngClass]="activeInputClass(isFromDateActive())"
-                        [(ngModel)]="fromDateInput"
-                    />
+                    <app-date-input inputId="apptRepFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isToDateActive())">
                     <label for="apptRepTo" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isToDateActive())">
@@ -126,14 +115,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </label>
-                    <input
-                        id="apptRepTo"
-                        type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                        min="1900-01-01"
-                        max="9999-12-31"
-                        [ngClass]="activeInputClass(isToDateActive())"
-                        [(ngModel)]="toDateInput"
-                    />
+                    <app-date-input inputId="apptRepTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClinicActive())">
                     <span id="lblApptRepClinic" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClinicActive())">
@@ -153,8 +135,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                         optionValue="value"
                         [placeholder]="copy.reportsClinicPanelDefault"
                         styleClass="w-full"
-                        [showClear]="true"
-                    />
+                        [showClear]="true" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isStatusActive())">
                     <span id="lblApptRepStatus" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isStatusActive())">
@@ -174,8 +155,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                         optionValue="value"
                         [placeholder]="copy.filterPlaceholderAll"
                         styleClass="w-full"
-                        [showClear]="true"
-                    />
+                        [showClear]="true" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClientFilterActive())">
                     <span id="lblApptRepClient" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClientFilterActive())">
@@ -186,21 +166,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </span>
-                    <p-select
-                        ariaLabelledBy="lblApptRepClient"
-                        inputId="apptRepClient"
-                        [options]="clientSelectOptions()"
-                        [(ngModel)]="clientIdFilter"
-                        (ngModelChange)="onClientFilterNgModelChange()"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
-                        [filter]="true"
-                        filterBy="label"
-                        [loading]="loadingClientOptions()"
-                    />
+                    <app-client-search inputId="apptRepClient" [ngModel]="clientIdFilter" (ngModelChange)="onClientFilterChange($event)" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isPetFilterActive())">
                     <span id="lblApptRepPet" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isPetFilterActive())">
@@ -211,20 +177,7 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </span>
-                    <p-select
-                        ariaLabelledBy="lblApptRepPet"
-                        inputId="apptRepPet"
-                        [options]="petSelectOptions()"
-                        [(ngModel)]="petIdFilter"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
-                        [filter]="true"
-                        filterBy="label"
-                        [loading]="loadingPetOptions()"
-                    />
+                    <app-pet-search inputId="apptRepPet" [requireClient]="false" [clientId]="clientIdFilter" [(ngModel)]="petIdFilter" (ngModelChange)="scheduleApply()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isSearchActive())">
                     <label
@@ -239,18 +192,9 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
                             </span>
                         }
                     </label>
-                    <input
-                        pInputText
-                        id="apptRepSearch"
-                        class="w-full"
-                        [ngClass]="activeInputClass(isSearchActive())"
-                        [(ngModel)]="searchInput"
-                        [placeholder]="copy.appointmentsReportSearchPlaceholder"
-                        (keyup.enter)="applyFilters()"
-                    />
+                    <app-search-input inputId="apptRepSearch" [placeholder]="copy.appointmentsReportSearchPlaceholder" [(value)]="searchInput" (search)="applyFilters()" />
                 </div>
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
-                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                     @if (canExportReport()) {
                         <p-button
@@ -419,12 +363,11 @@ const APPOINTMENTS_REPORT_STATE_KEY = 'panel:reports:appointments:listState';
     `
 })
 export class AppointmentsReportPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly reportTableRowTrackKey = reportTableRowTrackKey;
     private readonly reportService = inject(AppointmentsReportService);
     private readonly auth = inject(AuthService);
-    private readonly clientsService = inject(ClientsService);
-    private readonly petsService = inject(PetsService);
 
     readonly canExportReport = computed(() => this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM));
 
@@ -432,7 +375,6 @@ export class AppointmentsReportPageComponent implements OnInit {
     readonly exportKind = signal<'csv' | 'xlsx' | null>(null);
     readonly error = signal<string | null>(null);
     readonly exportError = signal<string | null>(null);
-    readonly lookupWarning = signal<string | null>(null);
     readonly dateFilterError = signal<string | null>(null);
     readonly report = signal<AppointmentsReportResultVm | null>(null);
 
@@ -458,10 +400,6 @@ export class AppointmentsReportPageComponent implements OnInit {
     petIdFilter = '';
 
     readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
-    readonly loadingClientOptions = signal(false);
-    readonly loadingPetOptions = signal(false);
-    readonly clientSelectOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.filterPlaceholderAll, value: '' }]);
-    readonly petSelectOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.filterPlaceholderAll, value: '' }]);
 
     readonly statusOptions = [
         { label: PANEL_COPY.filterPlaceholderAll, value: '' },
@@ -501,48 +439,13 @@ export class AppointmentsReportPageComponent implements OnInit {
             this.first.set(0);
         }
         this.suppressNextLazy = true;
-        this.bootstrapClientPetLookups();
         this.bootstrapReportAfterMyClinics();
     }
 
-    onClientFilterNgModelChange(): void {
-        this.reloadPetSelectOptions();
-    }
-
-    private bootstrapClientPetLookups(): void {
-        this.loadingClientOptions.set(true);
-        loadReportClientSelectOptions$(this.clientsService, this.copy.filterPlaceholderAll).subscribe({
-            next: (opts) => {
-                this.lookupWarning.set(null);
-                this.clientSelectOptions.set(opts);
-                this.loadingClientOptions.set(false);
-                this.reloadPetSelectOptions();
-            },
-            error: () => {
-                this.lookupWarning.set(this.copy.reportsClientPetLookupError);
-                this.loadingClientOptions.set(false);
-                this.reloadPetSelectOptions();
-            }
-        });
-    }
-
-    private reloadPetSelectOptions(): void {
-        this.loadingPetOptions.set(true);
-        const clientId = (typeof this.clientIdFilter === 'string' ? this.clientIdFilter : '').trim();
-        loadReportPetLookupBundle$(this.petsService, this.copy.filterPlaceholderAll, clientId || undefined).subscribe({
-            next: ({ options, pets }) => {
-                this.petSelectOptions.set(options);
-                const pid = (typeof this.petIdFilter === 'string' ? this.petIdFilter : '').trim();
-                if (pid && !pets.some((p) => p.id === pid)) {
-                    this.petIdFilter = '';
-                }
-                this.loadingPetOptions.set(false);
-            },
-            error: () => {
-                this.lookupWarning.set(this.copy.reportsClientPetLookupError);
-                this.loadingPetOptions.set(false);
-            }
-        });
+    onClientFilterChange(clientId: string | null): void {
+        this.clientIdFilter = clientId ?? '';
+        this.petIdFilter = '';
+        this.scheduleApply();
     }
 
     applyFilters(): void {
