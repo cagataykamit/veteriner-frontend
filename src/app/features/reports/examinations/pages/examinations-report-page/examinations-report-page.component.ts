@@ -94,7 +94,7 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
                             </span>
                         }
                     </label>
-                    <app-date-input inputId="examRepFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
+                    <app-date-input inputId="examRepFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isToDateActive())">
                     <label for="examRepTo" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isToDateActive())">
@@ -105,7 +105,7 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
                             </span>
                         }
                     </label>
-                    <app-date-input inputId="examRepTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
+                    <app-date-input inputId="examRepTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClinicActive())">
                     <span id="lblExamRepClinic" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClinicActive())">
