@@ -154,9 +154,9 @@ type TodayScope = 'mine' | 'all';
                                 <th class="whitespace-nowrap">Saat</th>
                                 <th class="whitespace-nowrap">Hasta</th>
                                 <th class="whitespace-nowrap">Sahip</th>
-                                <th class="whitespace-nowrap @max-[72rem]:hidden">Hekim</th>
+                                <th class="whitespace-nowrap @max-[76rem]:hidden">Hekim</th>
                                 <th class="whitespace-nowrap">Durum</th>
-                                <th class="whitespace-nowrap @max-[72rem]:hidden">Ödeme / yatış</th>
+                                <th class="whitespace-nowrap @max-[76rem]:hidden">Ödeme / yatış</th>
                                 <th class="whitespace-nowrap">{{ group.elapsedLabel }}</th>
                                 <th></th>
                             </tr>
@@ -183,7 +183,7 @@ type TodayScope = 'mine' | 'all';
                                     </div>
                                     <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
                                     <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
-                                    <div class="text-sm text-muted-color truncate @min-[72rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
+                                    <div class="text-sm text-muted-color truncate @min-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
                                         {{ item.responsibleVeterinarianName ?? 'Atanmadı' }}
                                     </div>
                                 </td>
@@ -193,7 +193,7 @@ type TodayScope = 'mine' | 'all';
                                         <div class="text-sm text-muted-color">{{ phone(item.clientPhone) }}</div>
                                     }
                                 </td>
-                                <td class="truncate @max-[72rem]:hidden" [attr.title]="item.responsibleVeterinarianName">
+                                <td class="truncate @max-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName">
                                     @if (item.responsibleVeterinarianName; as vet) {
                                         {{ vet }}
                                     } @else {
@@ -226,7 +226,7 @@ type TodayScope = 'mine' | 'all';
                                         <div class="text-sm text-muted-color mt-1 whitespace-normal">Gerekçe: {{ reason }}</div>
                                     }
                                     <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
-                                    <div class="flex flex-wrap gap-1 mt-1 @min-[72rem]:hidden">
+                                    <div class="flex flex-wrap gap-1 mt-1 @min-[76rem]:hidden">
                                         @if (group.key !== 'noShow') {
                                             <app-status-tag
                                                 [label]="paymentLabel(item.paymentIndicator)"
@@ -238,7 +238,7 @@ type TodayScope = 'mine' | 'all';
                                         }
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap @max-[72rem]:hidden">
+                                <td class="whitespace-nowrap @max-[76rem]:hidden">
                                     <div class="flex flex-wrap gap-1">
                                         @if (group.key !== 'noShow') {
                                             <app-status-tag
@@ -478,13 +478,13 @@ export class TodayPageComponent implements OnInit {
      * tam adı gösterir; tablo yatay taşmaz. Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
      */
     protected readonly columnClasses = [
-        'w-[5rem]',
+        'w-[6.5rem]',
         'w-auto',
         'w-auto',
-        'w-[8rem] @max-[72rem]:hidden',
-        'w-[8.5rem] @max-[72rem]:w-[9rem]',
-        'w-[6.5rem] @max-[72rem]:hidden',
-        'w-[6rem]',
+        'w-[8rem] @max-[76rem]:hidden',
+        'w-[8.5rem] @max-[76rem]:w-[9rem]',
+        'w-[9rem] @max-[76rem]:hidden',
+        'w-[7.5rem]',
         'w-[20rem] @max-[50rem]:w-[12rem]'
     ];
     protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
