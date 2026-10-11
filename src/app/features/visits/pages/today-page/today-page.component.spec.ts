@@ -238,6 +238,56 @@ describe('TodayPageComponent', () => {
         expect(text(f)).toContain('Pamuk');
         expect(text(f)).toContain('Liste güncellenemedi');
     });
+    describe('grup tabloları ve rozetler', () => {
+        const noShowItem = (over: Partial<TodayItemVm> = {}) =>
+            item({ key: 'n', visitId: null, appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T07:00:00Z', appointmentStatus: 'NoShow', ...over });
+        const section = (f: ComponentFixture<TodayPageComponent>, title: string) =>
+            (f.nativeElement as HTMLElement).querySelector(`section[aria-label="${title}"]`) as HTMLElement;
+
+        it('tüm gruplar aynı sütun genişliklerini ve sabit tablo düzenini kullanır; başlık sayısı eşit', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', items: [item({ key: 'w' }), item({ key: 'p', careStatus: 'InProgress' }), item({ key: 'c', careStatus: 'Completed' }), noShowItem()] });
+            const tables = Array.from((f.nativeElement as HTMLElement).querySelectorAll('section table'));
+            expect(tables.length).toBe(4);
+            const widths = tables.map((t) => Array.from(t.querySelectorAll('colgroup col')).map((c) => (c as HTMLElement).style.width).join(','));
+            expect(new Set(widths).size).toBe(1);
+            expect(widths[0].split(',').length).toBe(8);
+            for (const t of tables) {
+                expect(getComputedStyle(t).tableLayout).toBe('fixed');
+                expect(t.querySelectorAll('thead th').length).toBe(8);
+            }
+        });
+
+        it('Gelmedi grubunda ödeme rozeti ve Durum: Gelmedi tekrarı yok; planlanan saat görünür', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', items: [noShowItem(), item({ key: 'w' })] });
+            const body = section(f, 'Gelmedi').querySelector('tbody')!.textContent ?? '';
+            expect(body).not.toContain('Ödeme kaydı');
+            expect(body).not.toContain('Gelmedi');
+            expect(body).toContain('Randevu');
+            expect(section(f, 'Bekliyor').textContent).toContain('Ödeme kaydı yok');
+        });
+
+        it('Gelmedi grubunda yatış rozeti yine görünür', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', items: [noShowItem({ hasActiveHospitalization: true })] });
+            expect(section(f, 'Gelmedi').textContent).toContain('Yatışta');
+        });
+
+        it('Önceki günden rozeti sönük (secondary) ve ipucu metni var', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', items: [item({ isCarriedOver: true })] });
+            const tagHost = Array.from((f.nativeElement as HTMLElement).querySelectorAll('span[title]')).find((e) => e.textContent?.includes('Önceki günden')) as HTMLElement;
+            expect(tagHost).toBeDefined();
+            expect(tagHost.getAttribute('title')).toBe('Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin');
+            const tag = tagHost.querySelector('.p-tag')!;
+            expect(tag.classList.contains('p-tag-secondary')).toBeTrue();
+            expect(tag.classList.contains('p-tag-contrast')).toBeFalse();
+        });
+
+        it('12 saati aşan açık gelişte sönük "Unutulmuş olabilir" ipucu; kısa sürede ve tamamlananda yok', async () => {
+            const old = new Date(Date.now() - 13 * 3_600_000).toISOString();
+            const f = await create(['Visits.Read'], { date: 'd', items: [item({ key: 'old', arrivedAtUtc: old }), item({ key: 'new' }), item({ key: 'done', careStatus: 'Completed', arrivedAtUtc: old })] });
+            const hints = ((f.nativeElement as HTMLElement).textContent ?? '').match(/Unutulmuş olabilir/g) ?? [];
+            expect(hints.length).toBe(1);
+        });
+    });
 });
 
 describe('TodayPageComponent — Benim hastalarım', () => {
@@ -315,4 +365,5 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
         f.detectChanges();
         expect((f.nativeElement as HTMLElement).textContent).toContain('Bugün için randevu veya gelen hasta yok.');
     });
+
 });

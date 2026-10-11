@@ -40,6 +40,7 @@ import {
     type TodayRowPermissions,
     type TodayUrgencyToggle,
     type WaitAlertLevel,
+    isPossiblyForgottenVisit,
     waitAlertLevel,
     waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
@@ -139,7 +140,14 @@ type TodayScope = 'mine' | 'all';
                         <span>{{ group.title }}</span>
                         <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="group.items.length + ' kayıt'">{{ group.items.length }}</span>
                     </div>
-                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm">
+                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed', 'min-width': '64rem' }">
+                        <ng-template #colgroup>
+                            <colgroup>
+                                @for (w of columnWidths; track $index) {
+                                    <col [style.width]="w" />
+                                }
+                            </colgroup>
+                        </ng-template>
                         <ng-template #header>
                             <tr>
                                 <th>Saat</th>
@@ -148,9 +156,7 @@ type TodayScope = 'mine' | 'all';
                                 <th>Hekim</th>
                                 <th>Durum</th>
                                 <th>Ödeme / yatış</th>
-                                @if (group.elapsedLabel) {
-                                    <th>{{ group.elapsedLabel }}</th>
-                                }
+                                <th>{{ group.elapsedLabel }}</th>
                                 <th></th>
                             </tr>
                         </ng-template>
@@ -194,7 +200,9 @@ type TodayScope = 'mine' | 'all';
                                         @if (item.careStatus; as status) {
                                             <app-status-tag [label]="statusLabel(status)" [severity]="statusSeverity(status)" />
                                         } @else if (item.appointmentStatus === 'NoShow') {
-                                            <app-status-tag label="Gelmedi" severity="warn" />
+                                            @if (group.key !== 'noShow') {
+                                                <app-status-tag label="Gelmedi" severity="warn" />
+                                            }
                                         } @else if (item.appointmentStatus === 'Completed') {
                                             <app-status-tag label="Randevu tamamlandı" severity="secondary" />
                                         } @else {
@@ -204,7 +212,9 @@ type TodayScope = 'mine' | 'all';
                                             <app-status-tag label="Yanlış geliş" severity="danger" />
                                         }
                                         @if (item.isCarriedOver) {
-                                            <app-status-tag label="Önceki günden" severity="contrast" />
+                                            <span [attr.title]="carriedOverTitle">
+                                                <app-status-tag label="Önceki günden" severity="secondary" />
+                                            </span>
                                         }
                                     </div>
                                     @if (item.voidReason; as reason) {
@@ -213,26 +223,31 @@ type TodayScope = 'mine' | 'all';
                                 </td>
                                 <td>
                                     <div class="flex flex-wrap gap-1">
-                                        <app-status-tag
-                                            [label]="paymentLabel(item.paymentIndicator)"
-                                            [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
-                                        />
+                                        @if (group.key !== 'noShow') {
+                                            <app-status-tag
+                                                [label]="paymentLabel(item.paymentIndicator)"
+                                                [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
+                                            />
+                                        }
                                         @if (item.hasActiveHospitalization) {
                                             <app-status-tag label="Yatışta" severity="warn" />
                                         }
                                     </div>
                                 </td>
-                                @if (group.elapsedLabel) {
-                                    @let wait = waitAlertOf(item);
-                                    <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
+                                @let wait = waitAlertOf(item);
+                                <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
+                                    @if (group.elapsedLabel) {
                                         @if (wait !== 'none') {
                                             <i class="pi pi-fw" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
                                             <span class="sr-only">{{ waitTitle(wait) }}:</span>
                                         }
                                         {{ elapsed(item) ?? '—' }}
-                                    </td>
-                                }
-                                <td class="whitespace-nowrap" style="width: 1%">
+                                        @if (possiblyForgotten(item)) {
+                                            <div class="text-xs font-normal text-muted-color">Unutulmuş olabilir</div>
+                                        }
+                                    }
+                                </td>
+                                <td class="whitespace-nowrap">
                                     <div class="flex flex-nowrap items-center gap-2 justify-end">
                                         @let actions = actionsOf(item);
                                         @if (canCreateVisit && actions.canMarkArrived) {
@@ -418,6 +433,9 @@ export class TodayPageComponent implements OnInit {
     readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
     readonly waitTitle = waitAlertTitle;
+    /** Tüm grup tabloları aynı sütun genişliklerini kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler. */
+    protected readonly columnWidths = ['9%', '13%', '13%', '9%', '14%', '11%', '9%', '22%'];
+    protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',
         warning: 'font-semibold text-orange-600 dark:text-orange-400',
@@ -463,6 +481,10 @@ export class TodayPageComponent implements OnInit {
         return item.careStatus === 'Waiting' || item.careStatus === 'InProgress'
             ? formatElapsedSince(item.arrivedAtUtc, this.now())
             : null;
+    }
+
+    possiblyForgotten(item: TodayItemVm): boolean {
+        return isPossiblyForgottenVisit(item, this.now());
     }
 
     waitAlertOf(item: TodayItemVm): WaitAlertLevel {
