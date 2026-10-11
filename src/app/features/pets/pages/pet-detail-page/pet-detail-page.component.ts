@@ -15,7 +15,7 @@ import { PetSummaryCardComponent } from '@/app/features/pets/components/pet-summ
 import type { PetHistoryBlockKey } from '@/app/features/pets/models/pet-vm.model';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
+import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -110,25 +110,27 @@ const EM = '—';
                     <div class="card">
                         <h5 class="mt-0 mb-4">Genel bilgiler</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Tür</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.speciesName }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Cins</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.breed }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Cinsiyet</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ genderLabel(pet()!.gender) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Renk</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.colorName }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Ağırlık</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.weight }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Çip numarası</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.microchipNumber }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Karne / Küpe no</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.passportOrTagNumber }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Özel protokol no</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.specialProtocolNumber }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Kısırlaştırılmış mı?</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ pet()!.isNeutered }}</dd>
+                            @for (field of generalFields().filled; track field.label) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">{{ field.label }}</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ field.value }}</dd>
+                            }
+                            @if (showEmptyFields()) {
+                                @for (field of generalFields().empty; track field.label) {
+                                    <dt class="col-span-12 sm:col-span-4 text-muted-color">{{ field.label }}</dt>
+                                    <dd class="col-span-12 sm:col-span-8 m-0 text-muted-color">{{ field.value }}</dd>
+                                }
+                            }
                         </dl>
+                        @if (generalFields().empty.length > 0) {
+                            <button
+                                type="button"
+                                class="mt-3 p-0 border-0 bg-transparent text-primary text-sm font-medium cursor-pointer"
+                                data-testid="toggle-empty-fields"
+                                (click)="showEmptyFields.set(!showEmptyFields())"
+                            >
+                                {{ showEmptyFields() ? 'Boş alanları gizle' : 'Boş alanları göster (' + generalFields().empty.length + ')' }}
+                            </button>
+                        }
                     </div>
                 </div>
                 <div class="col-span-12 lg:col-span-6">
@@ -450,6 +452,11 @@ export class PetDetailPageComponent implements OnInit {
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly pet = signal<PetDetailVm | null>(null);
+    readonly showEmptyFields = signal(false);
+    readonly generalFields = computed(() => {
+        const p = this.pet();
+        return p ? buildPetGeneralFields(p) : { filled: [], empty: [] };
+    });
 
     readonly historyLoading = signal(false);
     readonly historyError = signal<string | null>(null);
@@ -470,7 +477,6 @@ export class PetDetailPageComponent implements OnInit {
 
     readonly formatDateOnly = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
     readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly genderLabel = petGenderLabel;
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
 
     appointmentSubtitle(row: PetHistoryAppointmentItemVm): string {
