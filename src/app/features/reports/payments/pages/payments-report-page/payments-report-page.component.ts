@@ -1,3 +1,5 @@
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -13,13 +15,7 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PAYMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
 import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-my-clinics-to-select-options';
-import {
-    loadReportClientSelectOptions$,
-    loadReportPetLookupBundle$
-} from '@/app/features/reports/shared/report-client-pet-lookup';
 import { isReportUiClinicIdMisalignedWithJwt, isReportUiClinicIdUnknownToMyClinics } from '@/app/features/reports/shared/report-my-clinic.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import type { PaymentsReportQuery } from '@/app/features/reports/payments/models/payments-report-query.model';
@@ -70,7 +66,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent
     ],
     template: `
         <app-page-header
@@ -86,9 +82,6 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
         }
 
         <div class="card mb-4">
-            @if (lookupWarning()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ lookupWarning() }}</p>
-            }
             @if (dateFilterError()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ dateFilterError() }}</p>
             }
@@ -181,21 +174,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                             </span>
                         }
                     </span>
-                    <p-select
-                        ariaLabelledBy="lblPayRepClient"
-                        inputId="payRepClient"
-                        [options]="clientSelectOptions()"
-                        [(ngModel)]="clientIdFilter"
-                        (ngModelChange)="onClientFilterNgModelChange()"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
-                        [filter]="true"
-                        filterBy="label"
-                        [loading]="loadingClientOptions()"
-                    />
+                    <app-client-search inputId="payRepClient" [ngModel]="clientIdFilter" (ngModelChange)="onClientFilterChange($event)" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isPetFilterActive())">
                     <span id="lblPayRepPet" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isPetFilterActive())">
@@ -206,20 +185,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                             </span>
                         }
                     </span>
-                    <p-select
-                        ariaLabelledBy="lblPayRepPet"
-                        inputId="payRepPet"
-                        [options]="petSelectOptions()"
-                        [(ngModel)]="petIdFilter"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.filterPlaceholderAll"
-                        styleClass="w-full"
-                        [showClear]="true"
-                        [filter]="true"
-                        filterBy="label"
-                        [loading]="loadingPetOptions()"
-                    />
+                    <app-pet-search inputId="payRepPet" [requireClient]="false" [clientId]="clientIdFilter" [(ngModel)]="petIdFilter" />
                 </div>
                 <div class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isSearchActive())">
                     <label for="repSearch" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isSearchActive())">
@@ -411,8 +377,6 @@ export class PaymentsReportPageComponent implements OnInit {
     readonly reportTableRowTrackKey = reportTableRowTrackKey;
     private readonly reportService = inject(PaymentsReportService);
     private readonly auth = inject(AuthService);
-    private readonly clientsService = inject(ClientsService);
-    private readonly petsService = inject(PetsService);
 
     readonly canExportReport = computed(() => this.auth.hasOperationClaim(PAYMENTS_READ_CLAIM));
 
@@ -420,7 +384,6 @@ export class PaymentsReportPageComponent implements OnInit {
     readonly exportKind = signal<'csv' | 'xlsx' | null>(null);
     readonly error = signal<string | null>(null);
     readonly exportError = signal<string | null>(null);
-    readonly lookupWarning = signal<string | null>(null);
     readonly dateFilterError = signal<string | null>(null);
     readonly report = signal<PaymentsReportResultVm | null>(null);
 
@@ -446,10 +409,6 @@ export class PaymentsReportPageComponent implements OnInit {
     petIdFilter = '';
 
     readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
-    readonly loadingClientOptions = signal(false);
-    readonly loadingPetOptions = signal(false);
-    readonly clientSelectOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.filterPlaceholderAll, value: '' }]);
-    readonly petSelectOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.filterPlaceholderAll, value: '' }]);
 
     readonly methodOptions = [
         { label: PANEL_COPY.filterPlaceholderAll, value: '' },
@@ -488,48 +447,12 @@ export class PaymentsReportPageComponent implements OnInit {
             this.first.set(0);
         }
         this.suppressNextLazy = true;
-        this.bootstrapClientPetLookups();
         this.bootstrapReportAfterMyClinics();
     }
 
-    onClientFilterNgModelChange(): void {
-        this.reloadPetSelectOptions();
-    }
-
-    private bootstrapClientPetLookups(): void {
-        this.loadingClientOptions.set(true);
-        loadReportClientSelectOptions$(this.clientsService, this.copy.filterPlaceholderAll).subscribe({
-            next: (opts) => {
-                this.lookupWarning.set(null);
-                this.clientSelectOptions.set(opts);
-                this.loadingClientOptions.set(false);
-                this.reloadPetSelectOptions();
-            },
-            error: () => {
-                this.lookupWarning.set(this.copy.reportsClientPetLookupError);
-                this.loadingClientOptions.set(false);
-                this.reloadPetSelectOptions();
-            }
-        });
-    }
-
-    private reloadPetSelectOptions(): void {
-        this.loadingPetOptions.set(true);
-        const clientId = (typeof this.clientIdFilter === 'string' ? this.clientIdFilter : '').trim();
-        loadReportPetLookupBundle$(this.petsService, this.copy.filterPlaceholderAll, clientId || undefined).subscribe({
-            next: ({ options, pets }) => {
-                this.petSelectOptions.set(options);
-                const pid = (typeof this.petIdFilter === 'string' ? this.petIdFilter : '').trim();
-                if (pid && !pets.some((p) => p.id === pid)) {
-                    this.petIdFilter = '';
-                }
-                this.loadingPetOptions.set(false);
-            },
-            error: () => {
-                this.lookupWarning.set(this.copy.reportsClientPetLookupError);
-                this.loadingPetOptions.set(false);
-            }
-        });
+    onClientFilterChange(clientId: string | null): void {
+        this.clientIdFilter = clientId ?? '';
+        this.petIdFilter = '';
     }
 
     formatMoneyLine(n: number): string {
