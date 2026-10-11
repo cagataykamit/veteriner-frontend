@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, input, model, output } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, input, model, output, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -19,6 +19,7 @@ export const SEARCH_DEBOUNCE_MS = 350;
     template: `
         <div class="relative w-full">
             <input
+                #field
                 pInputText
                 type="text"
                 class="w-full pr-8"
@@ -52,6 +53,7 @@ export class SearchInputComponent {
     /** Sayfa listeyi yenilemelidir (otomatik, Enter veya temizleme). */
     readonly search = output<void>();
 
+    private readonly field = viewChild.required<ElementRef<HTMLInputElement>>('field');
     private readonly typed$ = new Subject<void>();
 
     constructor() {
@@ -77,5 +79,6 @@ export class SearchInputComponent {
     clear(): void {
         this.value.set('');
         this.search.emit();
+        this.field().nativeElement.focus(); // temizledikten sonra yeniden yazılabilsin
     }
 }

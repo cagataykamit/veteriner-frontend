@@ -40,6 +40,7 @@ describe('SearchInputComponent (ortak arama kutusu)', () => {
         await TestBed.configureTestingModule({ imports: [HostComponent] }).compileComponents();
         fixture = TestBed.createComponent(HostComponent);
         host = fixture.componentInstance;
+        document.body.appendChild(fixture.nativeElement); // odak denetimi için
         fixture.detectChanges();
     });
 
@@ -81,6 +82,7 @@ describe('SearchInputComponent (ortak arama kutusu)', () => {
         fixture.detectChanges();
         expect(host.text()).toBe('');
         expect(host.searches).toEqual(['']);
+        expect(document.activeElement).toBe(input()); // odak kutuda kalır
         expect(fixture.nativeElement.querySelector('button[aria-label="Aramayı temizle"]')).toBeNull();
     });
 
@@ -91,6 +93,8 @@ describe('SearchInputComponent (ortak arama kutusu)', () => {
         await wait(500);
         expect(host.searches).toEqual(['ali', '']);
     });
+
+    afterEach(() => fixture.destroy());
 
     it('"Ara" düğmesi yoktur', () => {
         expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Ara');
