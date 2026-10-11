@@ -63,6 +63,17 @@ describe('DateInputComponent', () => {
         expect(host.control.value).toBe('2026-10-11T13:30');
     });
 
+    it('tuş olayı olmadan gelen girdi (yapıştırma, otomatik doldurma, dikte) da işlenir', async () => {
+        await create('date');
+        const el = input();
+        el.focus();
+        el.value = '11.10.2026';
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        fixture.detectChanges();
+        await wait(50);
+        expect(host.control.value).toBe('2026-10-11');
+    });
+
     it('time: ss:dd yazılınca HH:mm olur', async () => {
         await create('time');
         await typeText('09:05');

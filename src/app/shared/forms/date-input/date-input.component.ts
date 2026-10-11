@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, forwardRef, input, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, forwardRef, inject, input, signal, viewChild } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, ValidationErrors, Validator } from '@angular/forms';
 import { DatePicker, DatePickerModule } from 'primeng/datepicker';
 import { DateInputType, formatDateInputValue, parseDateInputValue } from '@/app/shared/forms/date-input/date-input-value.utils';
@@ -67,6 +67,13 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
 
     private readonly picker = viewChild(DatePicker);
 
+    constructor() {
+        const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+        const onInput = (): void => this.acceptInputWithoutKeydown();
+        host.addEventListener('input', onInput, true); // capture: PrimeNG'in kendi dinleyicisinden önce
+        inject(DestroyRef).onDestroy(() => host.removeEventListener('input', onInput, true));
+    }
+
     readonly view = signal<Date | null>(null);
     readonly disabled = signal(false);
     readonly invalid = signal(false);
@@ -79,6 +86,18 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     private onChange: (value: string) => void = () => undefined;
     onTouched: () => void = () => undefined;
     private onValidatorChange: () => void = () => undefined;
+
+    /**
+     * PrimeNG yazılan metni yalnız `keydown` ile başlayan girdide işler; sağ tık yapıştırma, otomatik doldurma ve dikte
+     * `keydown` üretmez ve sessizce yok sayılırdı. `input` olayı (capture, PrimeNG'in kendi dinleyicisinden önce) geldiğinde
+     * PrimeNG'in bu iç bayrağı açılır. Davranış testi: yazma + tuşsuz girdi.
+     */
+    acceptInputWithoutKeydown(): void {
+        const picker = this.picker() as unknown as { isKeydown: boolean } | undefined;
+        if (picker) {
+            picker.isKeydown = true;
+        }
+    }
 
     /** Seçici değişimi: `Date` (geçerli giriş/seçim), `null` (temizlendi) veya `string` (çözümlenemeyen yazı; `keepInvalid`). */
     onPickerChange(value: Date | string | null): void {
