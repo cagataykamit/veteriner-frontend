@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -50,7 +51,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent, DateInputComponent
     ],
     template: `
         <app-page-header title="Hatırlatma Geçmişi" subtitle="Hesap" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
@@ -165,14 +166,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                     </span>
                                 }
                             </label>
-                            <input
-                                id="remLogFrom"
-                                type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                                min="1900-01-01"
-                                max="9999-12-31"
-                                [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                [(ngModel)]="fromDateInput"
-                            />
+                            <app-date-input inputId="remLogFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
                         </div>
                         <div
                             class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -194,14 +188,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                     </span>
                                 }
                             </label>
-                            <input
-                                id="remLogTo"
-                                type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                                min="1900-01-01"
-                                max="9999-12-31"
-                                [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                [(ngModel)]="toDateInput"
-                            />
+                            <app-date-input inputId="remLogTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
                         </div>
                         <div class="col-span-12 md:col-span-4 flex flex-wrap gap-2">
                             <p-button size="small" icon="pi pi-filter" label="Filtrele" (onClick)="applyFilters()" />
