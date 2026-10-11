@@ -269,7 +269,7 @@ describe('TodayPageComponent', () => {
         it('iki kip: Hekim ve Ödeme sütunları dar kipte gizlenir; hekim adı Hasta hücresine, ödeme/yatış rozeti Durum hücresine taşınır; başlıklar ve rozetler tek satır', async () => {
             const f = await create(['Visits.Read'], { date: 'd', items: [item({ key: 'w', isCarriedOver: true, hasActiveHospitalization: true })] });
             const host = f.nativeElement as HTMLElement;
-            const hideCompact = 'max-[1849px]:hidden';
+            const hideCompact = '@max-[72rem]:hidden';
             const ths = Array.from(host.querySelectorAll('thead th'));
             expect(ths.map((th) => th.classList.contains('whitespace-nowrap'))).toEqual([true, true, true, true, true, true, true, false]);
             expect(ths[3].textContent?.trim()).toBe('Hekim');
@@ -283,8 +283,8 @@ describe('TodayPageComponent', () => {
             expect(cells[3].className).toContain(hideCompact); // Hekim
             expect(cells[5].className).toContain(hideCompact); // Ödeme / yatış
             expect(cells[4].className).toContain('whitespace-nowrap'); // Durum: Önceki günden bölünmez
-            // dar kip yedekleri yalnız dar kipte görünür (geniş kipte min-[1850px]:hidden)
-            const compactOnly = Array.from(host.querySelectorAll('tbody *')).filter((e) => e.classList.contains('min-[1850px]:hidden'));
+            // dar kip yedekleri yalnız dar kipte görünür (geniş kipte @min-[72rem]:hidden)
+            const compactOnly = Array.from(host.querySelectorAll('tbody *')).filter((e) => e.classList.contains('@min-[72rem]:hidden'));
             expect(compactOnly.some((e) => e.textContent?.includes('Dr. Ayşe'))).toBeTrue();
             expect(compactOnly.some((e) => e.textContent?.includes('Ödeme kaydı yok'))).toBeTrue();
             expect(compactOnly.some((e) => e.textContent?.includes('Yatışta'))).toBeTrue();
@@ -311,7 +311,7 @@ describe('TodayPageComponent', () => {
             expect(slotOf('Tamamla')).toEqual(['col-start-2']);
             const grid = host.querySelector('tbody td:last-child > div') as HTMLElement;
             expect(grid.className).toContain('grid-cols-[7.5rem_6rem_1.85rem_1.85rem]');
-            expect(grid.className).toContain('max-[1849px]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem]'); // dar kip: yalnız ikon
+            expect(grid.className).toContain('@max-[50rem]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem]'); // dar kip: yalnız ikon
             const icons = Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.classList.contains('col-start-3') || p.classList.contains('col-start-4'));
             expect(icons.length).toBeGreaterThan(1);
         });

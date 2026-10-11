@@ -140,7 +140,7 @@ type TodayScope = 'mine' | 'all';
                         <span>{{ group.title }}</span>
                         <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="group.items.length + ' kayıt'">{{ group.items.length }}</span>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="@container overflow-x-auto">
                     <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed' }">
                         <ng-template #colgroup>
                             <colgroup>
@@ -154,9 +154,9 @@ type TodayScope = 'mine' | 'all';
                                 <th class="whitespace-nowrap">Saat</th>
                                 <th class="whitespace-nowrap">Hasta</th>
                                 <th class="whitespace-nowrap">Sahip</th>
-                                <th class="whitespace-nowrap max-[1849px]:hidden">Hekim</th>
+                                <th class="whitespace-nowrap @max-[72rem]:hidden">Hekim</th>
                                 <th class="whitespace-nowrap">Durum</th>
-                                <th class="whitespace-nowrap max-[1849px]:hidden">Ödeme / yatış</th>
+                                <th class="whitespace-nowrap @max-[72rem]:hidden">Ödeme / yatış</th>
                                 <th class="whitespace-nowrap">{{ group.elapsedLabel }}</th>
                                 <th></th>
                             </tr>
@@ -183,7 +183,7 @@ type TodayScope = 'mine' | 'all';
                                     </div>
                                     <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
                                     <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
-                                    <div class="text-sm text-muted-color truncate min-[1850px]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
+                                    <div class="text-sm text-muted-color truncate @min-[72rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
                                         {{ item.responsibleVeterinarianName ?? 'Atanmadı' }}
                                     </div>
                                 </td>
@@ -193,7 +193,7 @@ type TodayScope = 'mine' | 'all';
                                         <div class="text-sm text-muted-color">{{ phone(item.clientPhone) }}</div>
                                     }
                                 </td>
-                                <td class="truncate max-[1849px]:hidden" [attr.title]="item.responsibleVeterinarianName">
+                                <td class="truncate @max-[72rem]:hidden" [attr.title]="item.responsibleVeterinarianName">
                                     @if (item.responsibleVeterinarianName; as vet) {
                                         {{ vet }}
                                     } @else {
@@ -226,7 +226,7 @@ type TodayScope = 'mine' | 'all';
                                         <div class="text-sm text-muted-color mt-1 whitespace-normal">Gerekçe: {{ reason }}</div>
                                     }
                                     <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
-                                    <div class="flex flex-wrap gap-1 mt-1 min-[1850px]:hidden">
+                                    <div class="flex flex-wrap gap-1 mt-1 @min-[72rem]:hidden">
                                         @if (group.key !== 'noShow') {
                                             <app-status-tag
                                                 [label]="paymentLabel(item.paymentIndicator)"
@@ -238,7 +238,7 @@ type TodayScope = 'mine' | 'all';
                                         }
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap max-[1849px]:hidden">
+                                <td class="whitespace-nowrap @max-[72rem]:hidden">
                                     <div class="flex flex-wrap gap-1">
                                         @if (group.key !== 'noShow') {
                                             <app-status-tag
@@ -266,12 +266,12 @@ type TodayScope = 'mine' | 'all';
                                 </td>
                                 <td class="whitespace-nowrap">
                                     <!-- Sabit yuvalar: birincil | ikincil | acil | ⋯ → düğmeler satırlar arasında aynı hizada -->
-                                    <div class="grid grid-cols-[7.5rem_6rem_1.85rem_1.85rem] max-[1849px]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem] items-center gap-2 justify-start">
+                                    <div class="grid grid-cols-[7.5rem_6rem_1.85rem_1.85rem] @max-[50rem]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem] items-center gap-2 justify-start">
                                         @let actions = actionsOf(item);
                                         @if (canCreateVisit && actions.canMarkArrived) {
                                             <p-button
                                                 type="button"
-                                                class="col-start-1 max-[1849px]:[&_.p-button-label]:hidden"
+                                                class="col-start-1 @max-[50rem]:[&_.p-button-label]:hidden"
                                                 styleClass="w-full"
                                                 label="Geldi"
                                                 ariaLabel="Geldi"
@@ -285,7 +285,7 @@ type TodayScope = 'mine' | 'all';
                                         @if (canCreateExamination && actions.canOpenExamination) {
                                             <p-button
                                                 type="button"
-                                                class="col-start-1 max-[1849px]:[&_.p-button-label]:hidden"
+                                                class="col-start-1 @max-[50rem]:[&_.p-button-label]:hidden"
                                                 styleClass="w-full"
                                                 label="Muayene aç"
                                                 ariaLabel="Muayene aç"
@@ -299,7 +299,7 @@ type TodayScope = 'mine' | 'all';
                                         @if (canUpdateVisit && actions.canStartCare) {
                                             <p-button
                                                 type="button"
-                                                class="col-start-2 max-[1849px]:[&_.p-button-label]:hidden"
+                                                class="col-start-2 @max-[50rem]:[&_.p-button-label]:hidden"
                                                 styleClass="w-full"
                                                 label="Başlat"
                                                 ariaLabel="Başlat"
@@ -315,7 +315,7 @@ type TodayScope = 'mine' | 'all';
                                         @if (canUpdateVisit && actions.canCompleteCare) {
                                             <p-button
                                                 type="button"
-                                                class="col-start-2 max-[1849px]:[&_.p-button-label]:hidden"
+                                                class="col-start-2 @max-[50rem]:[&_.p-button-label]:hidden"
                                                 styleClass="w-full"
                                                 label="Tamamla"
                                                 ariaLabel="Tamamla"
@@ -472,19 +472,20 @@ export class TodayPageComponent implements OnInit {
     readonly waitTitle = waitAlertTitle;
     /**
      * Tüm grup tabloları aynı sütun şablonunu kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler.
-     * Geniş kip (≥1850 px, ör. 1920 px ekran): tüm sütunlar. Dar kip: Hekim ve Ödeme/yatış sütunları gizlenir (bilgi Hasta ve Durum
-     * hücrelerine taşınır), eylem düğmeleri yalnız ikon olur; ad sütunları kısalır ve ipucuyla tam adı gösterir, tablo yatay taşmaz.
-     * Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
+     * Üç kip, tablo kapsayıcısının genişliğine göre (kapsayıcı sorgusu; ekran/yakınlaştırma değil):
+     * geniş (≥72 rem): tüm sütunlar, yazılı düğmeler; orta (50–72 rem): Hekim ve Ödeme/yatış sütunları gizlenir (bilgi Hasta ve Durum
+     * hücrelerine taşınır), düğmeler yine yazılı; dar (<50 rem): düğmeler yalnız ikon (aria-label + ipucu). Ad sütunları kısalıp ipucuyla
+     * tam adı gösterir; tablo yatay taşmaz. Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
      */
     protected readonly columnClasses = [
-        'w-[6rem]',
-        'w-[8.5rem] max-[1849px]:w-auto',
+        'w-[5rem]',
         'w-auto',
-        'w-[8.5rem] max-[1849px]:hidden',
-        'w-[8.5rem] max-[1849px]:w-[9rem]',
-        'w-[9rem] max-[1849px]:hidden',
-        'w-[7.5rem]',
-        'w-[20.5rem] max-[1849px]:w-[12rem]'
+        'w-auto',
+        'w-[8rem] @max-[72rem]:hidden',
+        'w-[8.5rem] @max-[72rem]:w-[9rem]',
+        'w-[6.5rem] @max-[72rem]:hidden',
+        'w-[6rem]',
+        'w-[20rem] @max-[50rem]:w-[12rem]'
     ];
     protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
