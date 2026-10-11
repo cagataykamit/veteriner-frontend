@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, DestroyRef, ElementRef, forwardRef, inject, input, signal, viewChild } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, ValidationErrors, Validator } from '@angular/forms';
 import { DatePicker, DatePickerModule } from 'primeng/datepicker';
+import { DateInputLimit, resolveLimitMax } from '@/app/shared/forms/date-input/date-input-limits.utils';
 import {
     applyDateMask,
     DateInputType,
@@ -73,6 +74,8 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     /** `yyyy-MM-dd` veya `yyyy-MM-ddTHH:mm`; en erken değer (takvimde ve yazılan değerde). */
     readonly min = input<string | null | undefined>(null);
     readonly max = input<string | null | undefined>(null);
+    /** Üst sınır politikası (`past` = en geç şimdi, `planned` = bugünden 5 yıl); açık `max` verilirse o geçerlidir. */
+    readonly limit = input<DateInputLimit>('none');
     readonly placeholder = input('');
 
     private readonly picker = viewChild(DatePicker);
@@ -86,7 +89,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
 
     readonly defaultPlaceholder = computed(() => PLACEHOLDERS[this.type()]);
     readonly minDate = computed(() => (this.type() === 'time' ? null : parseDateInputValue('datetime-local', this.min())));
-    readonly maxDate = computed(() => (this.type() === 'time' ? null : parseDateInputValue('datetime-local', this.max())));
+    readonly maxDate = computed(() => this.resolveMax());
 
     readonly errorMessage = computed<string | null>(() => {
         if (this.editing()) {
@@ -205,15 +208,22 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
             return false;
         }
         const min = this.minDate();
-        const max = this.maxDate();
+        const max = this.resolveMax(); // taze: "şimdi" sınırı zamanla ilerler
         // Tarih türünde gün başı (00:00), tarih-saatte dakika karşılaştırılır.
         return (!!min && value.getTime() < min.getTime()) || (!!max && value.getTime() > max.getTime());
+    }
+
+    private resolveMax(): Date | null {
+        if (this.type() === 'time') {
+            return null;
+        }
+        return parseDateInputValue('datetime-local', this.max()) ?? resolveLimitMax(this.type(), this.limit());
     }
 
     private rangeMessage(): string {
         const type = this.type();
         const min = this.minDate();
-        const max = this.maxDate();
+        const max = this.resolveMax();
         // 1900 / 9999 gibi uç sınırlar kullanıcıya anlamlı değil; yalnız gerçek (dar) sınırlar mesaja girer.
         const useMin = !!min && min.getFullYear() > 1900;
         const useMax = !!max && max.getFullYear() < 9999;
