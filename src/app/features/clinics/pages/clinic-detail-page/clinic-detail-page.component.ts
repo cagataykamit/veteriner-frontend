@@ -58,6 +58,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     imports: [
         CommonModule,
         ReactiveFormsModule,
+        DateInputComponent,
         RouterLink,
         ButtonModule,
         InputTextModule,
