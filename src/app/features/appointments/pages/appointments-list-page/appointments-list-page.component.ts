@@ -182,7 +182,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="apptFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
+                                <app-date-input inputId="apptFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -204,7 +204,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="apptTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
+                                <app-date-input inputId="apptTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" />
                             </div>
                         </div>
                     </div>
