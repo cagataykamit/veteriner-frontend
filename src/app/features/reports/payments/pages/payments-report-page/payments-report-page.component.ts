@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
@@ -66,7 +67,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <app-page-header
@@ -96,14 +97,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                             </span>
                         }
                     </label>
-                    <input
-                        id="repFrom"
-                        type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                        min="1900-01-01"
-                        max="9999-12-31"
-                        [ngClass]="activeInputClass(isFromDateActive())"
-                        [(ngModel)]="fromDateInput"
-                    />
+                    <app-date-input inputId="repFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isToDateActive())">
                     <label for="repTo" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isToDateActive())">
@@ -114,14 +108,7 @@ const PAYMENTS_REPORT_STATE_KEY = 'panel:reports:payments:listState';
                             </span>
                         }
                     </label>
-                    <input
-                        id="repTo"
-                        type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                        min="1900-01-01"
-                        max="9999-12-31"
-                        [ngClass]="activeInputClass(isToDateActive())"
-                        [(ngModel)]="toDateInput"
-                    />
+                    <app-date-input inputId="repTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
                 </div>
                 <div class="col-span-12 md:col-span-3 rounded-lg border p-2 transition-colors" [ngClass]="filterBoxClass(isClinicActive())">
                     <span id="lblRepClinic" class="flex items-center gap-2 text-xs font-medium mb-1" [ngClass]="filterLabelClass(isClinicActive())">
