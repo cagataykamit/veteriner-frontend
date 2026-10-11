@@ -44,9 +44,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import {
-    DATE_INPUT_MAX,
     DATE_INPUT_MIN,
-    DATETIME_LOCAL_INPUT_MAX,
     dateTimeYearRangeValidator,
     dateYearRangeValidator,
     effectiveDateTimeLocalInputMin
@@ -116,7 +114,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="prescribedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Reçete tarihi / saati *</label>
-                        <app-date-input inputId="prescribedAtLocal" type="datetime-local" formControlName="prescribedAtLocal" [min]="prescriptionDateMinAllowed()" [max]="datetimeLocalInputMax" />
+                        <app-date-input inputId="prescribedAtLocal" type="datetime-local" formControlName="prescribedAtLocal" [min]="prescriptionDateMinAllowed()" limit="past" />
                         @if (form.controls.prescribedAtLocal.hasError('dateYearInvalid') && form.controls.prescribedAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (form.controls.prescribedAtLocal.hasError('prescriptionDateTooFarPast') && form.controls.prescribedAtLocal.touched) {
@@ -129,7 +127,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
-                        <app-date-input inputId="followUpDate" type="date" formControlName="followUpDate" [min]="dateInputMin" [max]="dateInputMax" />
+                        <app-date-input inputId="followUpDate" type="date" formControlName="followUpDate" [min]="dateInputMin" limit="planned" />
                         @if (form.controls.followUpDate.hasError('dateYearInvalid') && form.controls.followUpDate.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (apiFieldErrors().followUpDate) {
@@ -225,8 +223,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class PrescriptionNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
-    protected readonly dateInputMax = DATE_INPUT_MAX;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     protected readonly prescriptionDateTooFarPastMessage = PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);

@@ -137,7 +137,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="rxFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
+                                <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors"
@@ -159,7 +159,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="rxTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
+                                <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" />
                             </div>
                         </div>
                     </div>
