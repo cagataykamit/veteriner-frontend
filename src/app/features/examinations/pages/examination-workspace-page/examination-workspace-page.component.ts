@@ -46,7 +46,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { DATE_INPUT_MAX, DATE_INPUT_MIN, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
+import { DATE_INPUT_MIN, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { toIstanbulDateTimeInputParts, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 
 function requiredTrimmed(c: AbstractControl): ValidationErrors | null {
@@ -187,7 +187,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                         <div class="grid grid-cols-12 gap-4">
                             <div class="col-span-12 md:col-span-6">
                                 <label for="examinationDate" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi *</label>
-                                <app-date-input inputId="examinationDate" type="date" formControlName="examinationDate" [min]="dateInputMin" [max]="dateInputMax" />
+                                <app-date-input inputId="examinationDate" type="date" formControlName="examinationDate" [min]="dateInputMin" limit="past" />
                                 @if (form.controls.examinationDate.hasError('dateYearInvalid') && form.controls.examinationDate.touched) {
                                     <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                                 } @else if (form.controls.examinationDate.invalid && form.controls.examinationDate.touched) {
@@ -280,7 +280,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="vitalsMeasuredAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ölçüm zamanı</label>
-                                <app-date-input inputId="vitalsMeasuredAtLocal" type="datetime-local" formControlName="vitalsMeasuredAtLocal" />
+                                <app-date-input inputId="vitalsMeasuredAtLocal" type="datetime-local" formControlName="vitalsMeasuredAtLocal" limit="past" />
                                 <small class="text-muted-color block">Vital değerler opsiyoneldir. Boş bırakılırsa ilk ölçüm girişinde muayene zamanı kullanılır.</small>
                                 @if (form.hasError('partialVitalClear')) {
                                     <small class="text-red-500 block" role="alert">Kayıttaki tek bir vital değer silinemez; tüm vital alanlarını boşaltın veya değeri yeniden girin.</small>
@@ -366,7 +366,6 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
 export class ExaminationWorkspacePageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
-    protected readonly dateInputMax = DATE_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
