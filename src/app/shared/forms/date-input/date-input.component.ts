@@ -221,7 +221,8 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     }
 
     private rangeMessage(): string {
-        const type = this.type();
+        // Mesajda yalnız gün gösterilir (saat dakikalı sınırlar anlamsız gürültü olur).
+        const type: DateInputType = 'date';
         const min = this.minDate();
         const max = this.resolveMax();
         // 1900 / 9999 gibi uç sınırlar kullanıcıya anlamlı değil; yalnız gerçek (dar) sınırlar mesaja girer.
