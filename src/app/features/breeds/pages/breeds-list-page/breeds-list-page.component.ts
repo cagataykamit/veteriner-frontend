@@ -1,3 +1,4 @@
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -31,7 +32,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent, SearchInputComponent
     ],
     template: `
         <app-page-header title="Irklar" subtitle="Referans yönetimi" description="Irk kayıtlarını yönetin.">
@@ -68,17 +69,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
                                 <div class="flex-1 min-w-0">
                                     <label for="breedListSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                    <input
-                                        pInputText
-                                        id="breedListSearch"
-                                        class="w-full"
-                                        [(ngModel)]="searchDraft"
-                                        placeholder="Irk veya tür adı…"
-                                        (keyup.enter)="applySearch()"
-                                    />
+                                    <app-search-input inputId="breedListSearch" placeholder="Irk veya tür adı…" [(value)]="searchDraft" (search)="applySearch()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
                                     <p-button
                                         [label]="copy.buttonClear"
                                         icon="pi pi-times"
