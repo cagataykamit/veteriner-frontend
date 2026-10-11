@@ -283,6 +283,22 @@ describe('TodayPageComponent', () => {
             host.remove();
         });
 
+        it('eylem düğmeleri sabit ızgara yuvalarında: birincil=1, ikincil=2, acil=3, ⋯=4 (satırlar arası hiza; konum tarayıcıda ölçülür, Tailwind testte yüklü değil)', async () => {
+            const claims = ['Visits.Read', 'Visits.Create', 'Visits.Update', 'Visits.Correct', 'Examinations.Create'];
+            const planned = item({ key: 'p', visitId: null, appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, scheduledAtUtc: new Date(Date.now() + 3_600_000).toISOString(), appointmentStatus: 'Scheduled' });
+            const f = await create(claims, { date: 'd', items: [item({ key: 'w' }), item({ key: 'i', careStatus: 'InProgress' }), planned] });
+            const host = f.nativeElement as HTMLElement;
+            const slotOf = (label: string) => Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.textContent?.trim() === label).map((p) => Array.from(p.classList).find((c) => c.startsWith('col-start-')));
+            expect(slotOf('Muayene aç')).toEqual(['col-start-1', 'col-start-1']);
+            expect(slotOf('Geldi')).toEqual(['col-start-1']);
+            expect(slotOf('Başlat')).toEqual(['col-start-2']);
+            expect(slotOf('Tamamla')).toEqual(['col-start-2']);
+            const grid = host.querySelector('tbody td:last-child > div') as HTMLElement;
+            expect(grid.className).toContain('grid-cols-[7.75rem_6.25rem_2rem_2rem]');
+            const icons = Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.classList.contains('col-start-3') || p.classList.contains('col-start-4'));
+            expect(icons.length).toBeGreaterThan(1);
+        });
+
         it('Gelmedi grubunda yatış rozeti yine görünür', async () => {
             const f = await create(['Visits.Read'], { date: 'd', items: [noShowItem({ hasActiveHospitalization: true })] });
             expect(section(f, 'Gelmedi').textContent).toContain('Yatışta');

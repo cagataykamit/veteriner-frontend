@@ -249,11 +249,14 @@ type TodayScope = 'mine' | 'all';
                                     }
                                 </td>
                                 <td class="whitespace-nowrap">
-                                    <div class="flex flex-nowrap items-center gap-2 justify-end">
+                                    <!-- Sabit yuvalar: birincil | ikincil | acil | ⋯ → düğmeler satırlar arasında aynı hizada -->
+                                    <div class="grid grid-cols-[7.75rem_6.25rem_2rem_2rem] items-center gap-2 justify-start">
                                         @let actions = actionsOf(item);
                                         @if (canCreateVisit && actions.canMarkArrived) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-1"
+                                                styleClass="w-full"
                                                 label="Geldi"
                                                 icon="pi pi-sign-in"
                                                 size="small"
@@ -264,6 +267,8 @@ type TodayScope = 'mine' | 'all';
                                         @if (canCreateExamination && actions.canOpenExamination) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-1"
+                                                styleClass="w-full"
                                                 label="Muayene aç"
                                                 icon="pi pi-file-edit"
                                                 size="small"
@@ -274,6 +279,8 @@ type TodayScope = 'mine' | 'all';
                                         @if (canUpdateVisit && actions.canStartCare) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-2"
+                                                styleClass="w-full"
                                                 label="Başlat"
                                                 icon="pi pi-play"
                                                 size="small"
@@ -286,6 +293,8 @@ type TodayScope = 'mine' | 'all';
                                         @if (canUpdateVisit && actions.canCompleteCare) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-2"
+                                                styleClass="w-full"
                                                 label="Tamamla"
                                                 icon="pi pi-check"
                                                 size="small"
@@ -299,6 +308,7 @@ type TodayScope = 'mine' | 'all';
                                         @if (urgency) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-3"
                                                 icon="pi pi-exclamation-triangle"
                                                 size="small"
                                                 [severity]="urgency.pressed ? 'danger' : 'secondary'"
@@ -316,6 +326,7 @@ type TodayScope = 'mine' | 'all';
                                         @if (more.length > 0) {
                                             <p-button
                                                 type="button"
+                                                class="col-start-4"
                                                 icon="pi pi-ellipsis-h"
                                                 size="small"
                                                 severity="secondary"
@@ -435,8 +446,8 @@ export class TodayPageComponent implements OnInit {
     readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
     readonly waitTitle = waitAlertTitle;
-    /** Tüm grup tabloları aynı sütun genişliklerini kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler. Eylem sütunu sabit genişlikte (düğmeler taşıp Süre hücresine binmesin; en geniş satır ≈ 19 rem). Toplam asgari genişlik, 1920 px ekrandaki kart genişliğine (~1376 px, kök yazı ~17,5 px) sığar; Hasta/Sahip kalan alanı paylaşır. */
-    protected readonly columnWidths: Array<string | null> = ['7rem', null, null, '8rem', '8.5rem', '8rem', '9.5rem', '20rem'];
+    /** Tüm grup tabloları aynı sütun genişliklerini kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler. Eylem sütunu sabit genişlikte (düğmeler taşıp Süre hücresine binmesin; yuvalar: birincil 7,75 + ikincil 6,25 + 2×2 rem + boşluklar). Toplam asgari genişlik, 1920 px ekrandaki kart genişliğine (~1376 px, kök yazı ~17,5 px) sığar; Hasta/Sahip kalan alanı paylaşır. */
+    protected readonly columnWidths: Array<string | null> = ['6.5rem', null, null, '8rem', '8rem', '7.5rem', '9.5rem', '21rem'];
     protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',
