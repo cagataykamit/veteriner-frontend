@@ -1,6 +1,8 @@
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal, WritableSignal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -32,19 +34,7 @@ import {
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import {
-    clientOptionsFromList,
-    filterPetsByClientId,
-    petOptionsFromList,
-    trimClientIdControlValue,
-    type SelectOption
-} from '@/app/shared/forms/client-pet-selection.utils';
-import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
-import {
-    canShowQuickClientCreateButton,
-    canShowQuickPetCreateButton
-} from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
-import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
+import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import {
     parseAppointmentExaminationRouteContext,
@@ -98,9 +88,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
-        ExaminationPatientHeaderComponent,
-        QuickClientDialogComponent,
-        QuickPetDialogComponent
+        ExaminationPatientHeaderComponent, ClientSearchComponent, PetSearchComponent
     ],
     template: `
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
@@ -169,62 +157,20 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                             <div class="grid grid-cols-12 gap-4">
                                 <div class="col-span-12 md:col-span-6">
                                     <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
-                                    <p-select
-                                        inputId="clientId"
-                                        formControlName="clientId"
-                                        [options]="clientOptions()"
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        placeholder="Müşteri seçin"
-                                        [filter]="true"
-                                        filterBy="label"
-                                        [showClear]="true"
-                                        styleClass="w-full"
-                                        [loading]="loadingClients()"
-                                    />
+                                    <app-client-search inputId="clientId" formControlName="clientId" />
                                     @if (selectionForm.controls.clientId.invalid && selectionForm.controls.clientId.touched) {
                                         <small class="text-red-500">Zorunlu alan.</small>
                                     } @else if (apiFieldErrors().clientId) {
                                         <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                                     }
-                                    @if (canShowQuickClientCreate()) {
-                                        <div class="flex flex-wrap gap-2 mt-2">
-                                            <p-button type="button" label="Yeni müşteri" icon="pi pi-user-plus" [text]="true" styleClass="p-0" (onClick)="quickClientOpen.set(true)" />
-                                        </div>
-                                    }
                                 </div>
                                 <div class="col-span-12 md:col-span-6">
                                     <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
-                                    <p-select
-                                        inputId="petId"
-                                        formControlName="petId"
-                                        [options]="petOptions()"
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        [placeholder]="selectionForm.controls.petId.disabled ? 'Önce müşteri seçin' : 'Hayvan seçin'"
-                                        [filter]="true"
-                                        filterBy="label"
-                                        [showClear]="true"
-                                        styleClass="w-full"
-                                        [loading]="loadingPets()"
-                                    />
+                                    <app-pet-search inputId="petId" formControlName="petId" [clientId]="selectionForm.controls.clientId.value" />
                                     @if (selectionForm.controls.petId.invalid && selectionForm.controls.petId.touched) {
                                         <small class="text-red-500">Zorunlu alan.</small>
                                     } @else if (apiFieldErrors().petId) {
                                         <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
-                                    }
-                                    @if (canShowQuickPetCreate()) {
-                                        <div class="flex flex-wrap gap-2 mt-2">
-                                            <p-button
-                                                type="button"
-                                                label="Bu müşteri için yeni hayvan"
-                                                icon="pi pi-plus"
-                                                [text]="true"
-                                                styleClass="p-0"
-                                                [disabled]="petQuickAddDisabled()"
-                                                (onClick)="quickPetOpen.set(true)"
-                                            />
-                                        </div>
                                     }
                                 </div>
                             </div>
@@ -424,8 +370,6 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
             }
 
             @if (!isEdit) {
-                <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onQuickClientCreated($event)" />
-                <app-quick-pet-dialog [(visible)]="quickPetOpen" [ownerClientId]="quickPetOwnerClientId()" (petCreated)="onQuickPetCreated($event)" />
             }
         }
     `
@@ -462,14 +406,8 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     readonly apiFieldErrors = signal<ExaminationUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
-    readonly loadingClients = signal(false);
-    readonly loadingPets = signal(false);
-    readonly clientOptions = signal<SelectOption[]>([]);
-    readonly petOptions = signal<SelectOption[]>([]);
     readonly selectedClientId = signal<string | null>(null);
     readonly selectedPetId = signal<string | null>(null);
-    readonly quickClientOpen = signal(false);
-    readonly quickPetOpen = signal(false);
 
     readonly contextFromAppointment = signal(false);
     readonly applyingRouteContext = signal(false);
@@ -509,11 +447,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         { validators: this.partialVitalClearValidator }
     );
 
-    readonly canShowQuickClientCreate = (): boolean =>
-        canShowQuickClientCreateButton(this.auth, this.ro, this.contextFromAppointment());
 
-    readonly canShowQuickPetCreate = (): boolean =>
-        canShowQuickPetCreateButton(this.auth, this.ro, this.contextFromAppointment());
 
     constructor() {
         const fieldMap: Array<[ExaminationUpsertFormFieldKey, keyof typeof this.form.controls]> = [
@@ -562,7 +496,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     saveDisabled(): boolean {
         return (
             this.form.invalid ||
-            (!this.isEdit && (this.selectionForm.invalid || this.loadingClients() || this.applyingRouteContext())) ||
+            (!this.isEdit && (this.selectionForm.invalid || this.applyingRouteContext())) ||
             this.submitting() ||
             this.ro.mutationBlocked()
         );
@@ -730,7 +664,6 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         if (visitCtx) {
             this.applyVisitRouteContext(visitCtx);
         } else {
-            this.loadClients();
         }
         this.selectionForm.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             if (this.contextFromAppointment()) {
@@ -745,96 +678,19 @@ export class ExaminationWorkspacePageComponent implements OnInit {
             const id = trimClientIdControlValue(this.selectionForm.controls.clientId.value);
             this.selectedClientId.set(id || null);
             if (!id) {
-                this.petOptions.set([]);
                 this.selectionForm.controls.petId.disable({ emitEvent: false });
                 return;
             }
             this.selectionForm.controls.petId.enable({ emitEvent: false });
-            this.loadPetsForClient(id);
         });
         this.selectionForm.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((petId) => {
             this.selectedPetId.set(petId?.trim() || null);
         });
     }
 
-    petQuickAddDisabled(): boolean {
-        if (this.ro.mutationBlocked() || this.contextFromAppointment()) {
-            return true;
-        }
-        return !trimClientIdControlValue(this.selectionForm.getRawValue().clientId) || this.selectionForm.controls.petId.disabled;
-    }
 
-    quickPetOwnerClientId(): string {
-        return trimClientIdControlValue(this.selectionForm.getRawValue().clientId);
-    }
 
-    onQuickClientCreated(clientId: string): void {
-        const id = clientId.trim();
-        if (this.contextFromAppointment() || !id) {
-            return;
-        }
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-                this.selectionForm.controls.clientId.setValue(id, { emitEvent: true });
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
 
-    onQuickPetCreated(petId: string): void {
-        const cid = trimClientIdControlValue(this.selectionForm.getRawValue().clientId);
-        const pid = petId.trim();
-        if (this.contextFromAppointment() || !cid || !pid) {
-            return;
-        }
-        this.loadPetsForClient(cid, pid);
-    }
-
-    private loadClients(): void {
-        this.loadingClients.set(true);
-        this.selectionError.set(null);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(clientOptionsFromList(r.items));
-                this.loadingClients.set(false);
-                this.tryApplyAppointmentRouteContext();
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Müşteri listesi yüklenemedi.'));
-                this.loadingClients.set(false);
-            }
-        });
-    }
-
-    private loadPetsForClient(clientId: string, selectPetId?: string): void {
-        this.loadingPets.set(true);
-        this.petsService.getPets({ page: 1, pageSize: 200, clientId }).subscribe({
-            next: (r) => {
-                let items = r.items;
-                if (items.some((p) => (p.clientId ?? '').trim())) {
-                    items = filterPetsByClientId(items, clientId);
-                }
-                this.petOptions.set(petOptionsFromList(items));
-                const want = selectPetId?.trim();
-                if (want && items.some((p) => p.id === want)) {
-                    this.selectionForm.controls.petId.setValue(want, { emitEvent: true });
-                }
-                this.loadingPets.set(false);
-            },
-            error: (e: unknown) => {
-                this.selectionError.set(this.mapLoadError(e, 'Hayvan listesi yüklenemedi.'));
-                this.petOptions.set([]);
-                this.loadingPets.set(false);
-            }
-        });
-    }
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
@@ -869,8 +725,6 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                     this.applyingRouteContext.set(false);
                     return;
                 }
-                this.mergeOption(this.clientOptions, cId, (ap.clientName ?? '').trim() || '—');
-                this.mergeOption(this.petOptions, pId, (ap.petName ?? '').trim() || '—');
                 this.appointmentContextId.set(ctx.appointmentId);
                 this.selectionForm.controls.petId.enable({ emitEvent: false });
                 this.selectionForm.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
@@ -917,16 +771,9 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     }
 
     private rejectVisitContext(message: string): void {
-        this.loadClients();
         // `loadClients` hata alanını sıfırlar; mesaj ondan sonra yazılmalı.
         this.selectionError.set(`${message} Serbest oluşturma ile devam edebilirsiniz.`);
         this.applyingRouteContext.set(false);
     }
 
-    private mergeOption(target: WritableSignal<SelectOption[]>, id: string, label: string): void {
-        const opts = target();
-        if (!opts.some((o) => o.value === id)) {
-            target.set([{ value: id, label }, ...opts]);
-        }
-    }
 }

@@ -84,7 +84,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
                 { provide: AppointmentsService, useValue: {} },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: PetsService, useValue: { getPetById: () => of({ name: 'Pamuk', speciesName: 'Kedi', breed: 'Van', birthDate: null }) } },
-                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '555', email: '—' }), getClients: () => of({ items: [] }) } }
+                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '555', email: '—' }) } }
             ]
         }).compileComponents();
 
