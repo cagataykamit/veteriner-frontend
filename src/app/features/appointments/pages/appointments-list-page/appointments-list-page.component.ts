@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -54,7 +55,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent, DateInputComponent
     ],
     template: `
         <app-page-header title="Randevular" subtitle="Operasyon" description="Randevu listesi ve durum takibi.">
@@ -181,14 +182,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                         </span>
                                     }
                                 </label>
-                                <input
-                                    id="apptFrom"
-                                    type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                                    min="1900-01-01"
-                                    max="9999-12-31"
-                                    [ngClass]="isFromDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                    [(ngModel)]="fromDateInput"
-                                />
+                                <app-date-input inputId="apptFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -210,14 +204,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                         </span>
                                     }
                                 </label>
-                                <input
-                                    id="apptTo"
-                                    type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                                    min="1900-01-01"
-                                    max="9999-12-31"
-                                    [ngClass]="isToDateActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                    [(ngModel)]="toDateInput"
-                                />
+                                <app-date-input inputId="apptTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
                             </div>
                         </div>
                     </div>

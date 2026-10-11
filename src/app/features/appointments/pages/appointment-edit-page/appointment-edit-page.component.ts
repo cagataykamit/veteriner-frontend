@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { Observable, of } from 'rxjs';
@@ -60,7 +61,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a href="" (click)="goBack($event)" class="text-primary font-medium no-underline inline-block mb-4">← {{ backLabel() }}</a>
@@ -106,7 +107,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
-                            <input id="scheduledDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="scheduledDate" [min]="dateInputMin" [max]="dateInputMax" />
+                            <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="dateInputMin" [max]="dateInputMax" />
                             @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().scheduledAtLocal) {
