@@ -141,7 +141,7 @@ type TodayScope = 'mine' | 'all';
                         <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="group.items.length + ' kayıt'">{{ group.items.length }}</span>
                     </div>
                     <div class="overflow-x-auto">
-                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed', 'min-width': '76rem' }">
+                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed', 'min-width': '77rem' }">
                         <ng-template #colgroup>
                             <colgroup>
                                 @for (w of columnWidths; track $index) {
@@ -436,7 +436,7 @@ export class TodayPageComponent implements OnInit {
     readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
     readonly waitTitle = waitAlertTitle;
     /** Tüm grup tabloları aynı sütun genişliklerini kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler. Eylem sütunu sabit genişlikte (düğmeler taşıp Süre hücresine binmesin; en geniş satır ≈ 19 rem). Toplam asgari genişlik, 1920 px ekrandaki kart genişliğine (~1376 px, kök yazı ~17,5 px) sığar; Hasta/Sahip kalan alanı paylaşır. */
-    protected readonly columnWidths: Array<string | null> = ['7rem', null, null, '8rem', '8.5rem', '8rem', '7rem', '20rem'];
+    protected readonly columnWidths: Array<string | null> = ['7rem', null, null, '8rem', '8.5rem', '8rem', '9.5rem', '20rem'];
     protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',
