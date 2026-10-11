@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
@@ -56,7 +57,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent
+        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/treatments" class="text-primary font-medium no-underline inline-block mb-4">← Tedavi listesine dön</a>
@@ -100,14 +101,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="treatmentDateLocal" class="block text-sm font-medium text-muted-color mb-2">Tedavi tarihi / saati *</label>
-                        <input
-                            id="treatmentDateLocal"
-                            type="datetime-local"
-                            class="w-full md:max-w-96 p-inputtext p-component"
-                            formControlName="treatmentDateLocal"
-                            [min]="treatmentDateMinAllowed()"
-                            [max]="datetimeLocalInputMax"
-                        />
+                        <app-date-input inputId="treatmentDateLocal" type="datetime-local" formControlName="treatmentDateLocal" [min]="treatmentDateMinAllowed()" [max]="datetimeLocalInputMax" />
                         @if (form.controls.treatmentDateLocal.hasError('dateYearInvalid') && form.controls.treatmentDateLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (form.controls.treatmentDateLocal.hasError('treatmentDateTooFarPast') && form.controls.treatmentDateLocal.touched) {
@@ -165,7 +159,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
-                        <input id="followUpDate" type="date" class="w-full md:max-w-64 p-inputtext p-component" formControlName="followUpDate" [min]="dateInputMin" [max]="dateInputMax" />
+                        <app-date-input inputId="followUpDate" type="date" formControlName="followUpDate" [min]="dateInputMin" [max]="dateInputMax" />
                         @if (form.controls.followUpDate.hasError('dateYearInvalid') && form.controls.followUpDate.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (apiFieldErrors().followUpDate) {

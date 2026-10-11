@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -34,7 +35,7 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, DateInputComponent
     ],
     template: `
         <app-page-header title="Tedaviler" subtitle="Klinik" description="Tedavi kayıtları.">
@@ -89,11 +90,11 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6">
                                 <label for="trFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
-                                <input id="trFrom" type="date" class="w-full md:max-w-64 p-inputtext p-component" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
+                                <app-date-input inputId="trFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="trTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
-                                <input id="trTo" type="date" class="w-full md:max-w-64 p-inputtext p-component" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
+                                <app-date-input inputId="trTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
                             </div>
                         </div>
                     </div>
