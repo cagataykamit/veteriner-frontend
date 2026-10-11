@@ -26,9 +26,12 @@ import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/
 import {
     APPOINTMENT_NOTES_MAX_LENGTH,
     APPOINTMENT_TOO_FAR_PAST_MESSAGE,
-    appointmentCreateTooFarPastDateValidator,
+    APPOINTMENT_TOO_FAR_FUTURE_MESSAGE,
+    appointmentCreateScheduleDateValidator,
     appointmentEarliestDateYmd,
+    appointmentLatestDateYmd,
     filterAllowedIstanbulTimeOptions,
+    isIstanbulDateTimeTooFarInFuture,
     isIstanbulDateTimeTooFarInPast
 } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -88,13 +91,15 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
-                        <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="minScheduledDate()" [max]="dateInputMax" />
+                        <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="minScheduledDate()" [max]="maxScheduledDate()" />
                         @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (apiFieldErrors().scheduledAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
                         } @else if (form.controls.scheduledDate.hasError('tooFarPast') && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">En fazla 7 gün öncesine kadar randevu açılabilir.</small>
+                        } @else if (form.controls.scheduledDate.hasError('tooFarFuture') && form.controls.scheduledDate.touched) {
+                            <small class="text-red-500">En fazla 2 yıl ileriye randevu açılabilir.</small>
                         } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
                         }
@@ -223,7 +228,7 @@ export class AppointmentNewPageComponent implements OnInit {
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
         scheduledDate: this.fb.nonNullable.control('', [
             Validators.required,
-            appointmentCreateTooFarPastDateValidator(),
+            appointmentCreateScheduleDateValidator(),
             dateYearRangeValidator()
         ]),
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
@@ -289,6 +294,10 @@ export class AppointmentNewPageComponent implements OnInit {
         void this.router.navigate(['/panel/appointments']);
     }
 
+    maxScheduledDate(): string {
+        return appointmentLatestDateYmd();
+    }
+
     minScheduledDate(): string {
         return appointmentEarliestDateYmd();
     }
@@ -314,6 +323,11 @@ export class AppointmentNewPageComponent implements OnInit {
         if (isIstanbulDateTimeTooFarInPast(v.scheduledDate, v.scheduledTime)) {
             this.form.markAllAsTouched();
             this.submitError.set(APPOINTMENT_TOO_FAR_PAST_MESSAGE);
+            return;
+        }
+        if (isIstanbulDateTimeTooFarInFuture(v.scheduledDate, v.scheduledTime)) {
+            this.form.markAllAsTouched();
+            this.submitError.set(APPOINTMENT_TOO_FAR_FUTURE_MESSAGE);
             return;
         }
         const clinicId = this.auth.getClinicId()?.trim() ?? '';

@@ -28,7 +28,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
 import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
-import { APPOINTMENT_NOTES_MAX_LENGTH } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
+import { APPOINTMENT_NOTES_MAX_LENGTH, appointmentLatestDateYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -107,7 +107,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
-                            <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="dateInputMin" [max]="dateInputMax" />
+                            <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="dateInputMin" [max]="maxScheduledDate()" />
                             @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().scheduledAtLocal) {
@@ -236,6 +236,10 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
     protected readonly dateInputMax = DATE_INPUT_MAX;
+
+    maxScheduledDate(): string {
+        return appointmentLatestDateYmd();
+    }
 
     private readonly fb = inject(FormBuilder);
     private readonly appointmentsService = inject(AppointmentsService);

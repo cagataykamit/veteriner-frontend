@@ -1,8 +1,10 @@
 import { FormControl } from '@angular/forms';
 import {
-    appointmentCreateTooFarPastDateValidator,
+    appointmentCreateScheduleDateValidator,
     appointmentEarliestDateYmd,
+    appointmentLatestDateYmd,
     filterAllowedIstanbulTimeOptions,
+    isIstanbulDateTimeTooFarInFuture,
     isIstanbulDateTimeTooFarInPast
 } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 
@@ -17,6 +19,18 @@ describe('appointment-schedule-validation (backend penceresiyle hizalı)', () =>
     });
 
     afterEach(() => jasmine.clock().uninstall());
+
+    it('en geç gün bugünden 2 yıl sonra (İstanbul)', () => {
+        expect(appointmentLatestDateYmd()).toBe('2028-10-11');
+    });
+
+    it('2 yıl sınırı: tam sınır serbest, bir dakika sonrası reddedilir', () => {
+        // şimdi 2026-10-11 12:00Z → sınır 2028-10-11 12:00Z = 15:00 İstanbul
+        expect(isIstanbulDateTimeTooFarInFuture('2028-10-11', '15:00', now.getTime())).toBeFalse();
+        expect(isIstanbulDateTimeTooFarInFuture('2028-10-11', '15:01', now.getTime())).toBeTrue();
+        expect(isIstanbulDateTimeTooFarInFuture('5555-01-01', '10:00', now.getTime())).toBeTrue();
+        expect(isIstanbulDateTimeTooFarInFuture('2027-01-01', '10:00', now.getTime())).toBeFalse();
+    });
 
     it('en erken gün bugünden 7 gün önce (İstanbul)', () => {
         expect(appointmentEarliestDateYmd()).toBe('2026-10-04');
@@ -42,11 +56,14 @@ describe('appointment-schedule-validation (backend penceresiyle hizalı)', () =>
     });
 
     it('gün doğrulayıcısı: 7 günden eski gün reddedilir, sınır ve sonrası serbest, boş serbest', () => {
-        const v = appointmentCreateTooFarPastDateValidator();
+        const v = appointmentCreateScheduleDateValidator();
         expect(v(new FormControl('2026-10-03'))).toEqual({ tooFarPast: true });
         expect(v(new FormControl('2026-10-04'))).toBeNull();
         expect(v(new FormControl('2026-10-11'))).toBeNull();
         expect(v(new FormControl('2027-01-01'))).toBeNull();
+        expect(v(new FormControl('2028-10-11'))).toBeNull(); // tam 2 yıl
+        expect(v(new FormControl('2028-10-12'))).toEqual({ tooFarFuture: true });
+        expect(v(new FormControl('5555-01-01'))).toEqual({ tooFarFuture: true });
         expect(v(new FormControl(''))).toBeNull();
     });
 
