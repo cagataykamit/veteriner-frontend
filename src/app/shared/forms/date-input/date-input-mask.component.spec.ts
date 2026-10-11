@@ -46,6 +46,46 @@ describe('applyDateMask (saf maske)', () => {
         expect(applyDateMask('time', '1', 1).text).toBe('1');
     });
 
+    /** Kullanıcı gibi: her tuş ayrı, imleç sonda. */
+    const typed = (type: DateInputType, keys: string): string => {
+        let text = '';
+        for (const k of keys) {
+            text = applyDateMask(type, text + k, (text + k).length).text;
+        }
+        return text;
+    };
+
+    it('bölüm sınırları: gün 01–31, ay 01–12, saat 00–23, dakika 00–59; geçersiz rakam yazılamaz', () => {
+        expect(typed('date', '21555555')).toBe('21'); // ay 55 yazılamaz (21.55.5555 → 21)
+        expect(typed('date', '4')).toBe(''); // gün ilk rakamı en çok 3
+        expect(typed('date', '39')).toBe('3'); // 3x yalnız 30–31
+        expect(typed('date', '00')).toBe('0'); // gün 00 olmaz
+        expect(typed('date', '3112')).toBe('31.12');
+        expect(typed('date', '1313')).toBe('13.1'); // ay 13 olmaz
+        expect(typed('date', '0100')).toBe('01.0'); // ay 00 olmaz
+        expect(typed('date', '0105')).toBe('01.05');
+        expect(typed('date', '0112')).toBe('01.12');
+        expect(typed('datetime-local', '24111991256')).toBe('24.11.1991 2'); // saat 25 ve 26 yazılamaz
+        expect(typed('datetime-local', '24111991146')).toBe('24.11.1991 14'); // dakika ilk rakamı 6 yazılamaz
+        expect(typed('datetime-local', '241119912359')).toBe('24.11.1991 23:59');
+        expect(typed('time', '25')).toBe('2'); // saat 25 yazılamaz
+        expect(typed('time', '096')).toBe('09'); // dakika 6x yazılamaz
+        expect(typed('time', '0959')).toBe('09:59');
+        expect(typed('time', '2359')).toBe('23:59');
+    });
+
+    it('yapıştırılan metinde geçersiz rakamlar atılır', () => {
+        expect(applyDateMask('date', '2155', 4).text).toBe('21'); // ay ilk rakamı 5 atılır
+        expect(applyDateMask('date', '21.55.5555', 10).text).toBe('21');
+    });
+
+    it('geçersiz rakam atılınca imleç doğru konumda kalır', () => {
+        // "21.|" konumunda 5 yazıldı → atılır, imleç "21|" (ayırıcı henüz yok)
+        const r = applyDateMask('date', '215', 3);
+        expect(r.text).toBe('21');
+        expect(r.caret).toBe(2);
+    });
+
     it('ISO (1991-11-24) yapıştırılırsa gg.aa.yyyy olur', () => {
         expect(applyDateMask('date', '1991-11-24', 10).text).toBe('24.11.1991');
         expect(applyDateMask('datetime-local', '1991-11-24T14:30', 16).text).toBe('24.11.1991 14:30');

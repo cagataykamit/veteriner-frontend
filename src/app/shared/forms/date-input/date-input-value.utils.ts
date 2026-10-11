@@ -58,7 +58,6 @@ export function formatDateInputValue(type: DateInputType, date: Date | null | un
     return type === 'date' ? ymd : `${ymd}T${hm}`;
 }
 
-const DIGIT_LIMIT: Record<DateInputType, number> = { date: 8, 'datetime-local': 12, time: 4 };
 /** Ayırıcının önüne konacağı rakam sırası → ayırıcı (gg.aa.yyyy ss:dd). */
 const SEPARATOR_BEFORE_DIGIT: Record<DateInputType, Record<number, string>> = {
     date: { 2: '.', 4: '.' },
@@ -67,6 +66,56 @@ const SEPARATOR_BEFORE_DIGIT: Record<DateInputType, Record<number, string>> = {
 };
 
 const ISO_RE = /^\s*(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/;
+
+/** Rakam konumlarının bölümleri: d=gün, m=ay, y=yıl, h=saat, n=dakika. */
+const FIELD_LAYOUT: Record<DateInputType, string> = {
+    date: 'ddmmyyyy',
+    'datetime-local': 'ddmmyyyyhhnn',
+    time: 'hhnn'
+};
+
+/** Sıradaki rakam, şimdiye kadar kabul edilenlere göre bölümünün sınırları içinde mi? (gün 01–31, ay 01–12, saat 00–23, dakika 00–59) */
+function isDigitAllowed(layout: string, accepted: string, digit: string): boolean {
+    const index = accepted.length;
+    const slot = layout[index];
+    if (!slot) {
+        return false;
+    }
+    const d = Number(digit);
+    const second = index > 0 && layout[index - 1] === slot;
+    const prev = second ? accepted[index - 1] : '';
+    switch (slot) {
+        case 'd':
+            return !second ? d <= 3 : prev === '0' ? d >= 1 : prev === '3' ? d <= 1 : true;
+        case 'm':
+            return !second ? d <= 1 : prev === '0' ? d >= 1 : d <= 2;
+        case 'h':
+            return !second ? d <= 2 : prev === '2' ? d <= 3 : true;
+        case 'n':
+            return !second ? d <= 5 : true;
+        default:
+            return true; // yıl: 4 rakam serbest (aralık denetimi min/max ile)
+    }
+}
+
+/**
+ * Geçersiz rakamları atar (ör. ayın ilk rakamı 5 → atılır; `21.55` yazılamaz) ve biçimin rakam sayısıyla sınırlar.
+ * @param caretDigits İmleçten önceki ham rakam sayısı; çıktıda imleçten önceki kabul edilen rakam sayısına çevrilir.
+ */
+function acceptDigits(type: DateInputType, rawDigits: string, caretDigits: number): { digits: string; caretDigits: number } {
+    const layout = FIELD_LAYOUT[type];
+    let accepted = '';
+    let acceptedBeforeCaret = 0;
+    for (let i = 0; i < rawDigits.length; i++) {
+        if (isDigitAllowed(layout, accepted, rawDigits[i])) {
+            accepted += rawDigits[i];
+            if (i < caretDigits) {
+                acceptedBeforeCaret++;
+            }
+        }
+    }
+    return { digits: accepted, caretDigits: acceptedBeforeCaret };
+}
 
 export interface MaskedInput {
     text: string;
@@ -131,10 +180,9 @@ export function applyDateMask(type: DateInputType, raw: string, caret: number, p
         }
     }
 
-    digits = digits.slice(0, DIGIT_LIMIT[type]);
-    digitsBeforeCaret = Math.min(digitsBeforeCaret, digits.length);
-    const formatted = insertSeparators(type, digits);
-    return { text: formatted, caret: caretAfterDigits(formatted, digitsBeforeCaret) };
+    const accepted = acceptDigits(type, digits, digitsBeforeCaret);
+    const formatted = insertSeparators(type, accepted.digits);
+    return { text: formatted, caret: caretAfterDigits(formatted, accepted.caretDigits) };
 }
 
 /** Görüntü biçimi: `gg.aa.yyyy`, `gg.aa.yyyy ss:dd`, `ss:dd` (hata mesajlarında). */
