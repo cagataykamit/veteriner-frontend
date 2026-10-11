@@ -18,7 +18,6 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateTimeLocalInputToIsoUtc, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import {
-    DATETIME_LOCAL_INPUT_MAX,
     DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator
 } from '@/app/shared/utils/date-input-validation.utils';
@@ -115,7 +114,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="inviteExpires" class="block text-sm font-medium text-muted-color mb-2">Son geçerlilik (isteğe bağlı)</label>
-                            <app-date-input inputId="inviteExpires" type="datetime-local" formControlName="expiresAtLocal" [min]="datetimeLocalInputMin" [max]="datetimeLocalInputMax" />
+                            <app-date-input inputId="inviteExpires" type="datetime-local" formControlName="expiresAtLocal" [min]="datetimeLocalInputMin" limit="planned" />
                             @if (form.controls.expiresAtLocal.hasError('dateYearInvalid') && form.controls.expiresAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             }
@@ -204,7 +203,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class TenantInvitePanelPageComponent implements OnInit {
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     /** Şablonda join URL üretimi için (import doğrudan şablonda kullanılamaz). */
     readonly buildInviteLink = buildPublicJoinInviteUrl;
 
