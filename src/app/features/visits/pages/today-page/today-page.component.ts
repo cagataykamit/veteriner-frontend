@@ -141,23 +141,23 @@ type TodayScope = 'mine' | 'all';
                         <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="group.items.length + ' kayıt'">{{ group.items.length }}</span>
                     </div>
                     <div class="overflow-x-auto">
-                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed', 'min-width': '77rem' }">
+                    <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed' }">
                         <ng-template #colgroup>
                             <colgroup>
-                                @for (w of columnWidths; track $index) {
-                                    <col [style.width]="w" />
+                                @for (cls of columnClasses; track $index) {
+                                    <col [class]="cls" />
                                 }
                             </colgroup>
                         </ng-template>
                         <ng-template #header>
                             <tr>
-                                <th>Saat</th>
-                                <th>Hasta</th>
-                                <th>Sahip</th>
-                                <th>Hekim</th>
-                                <th>Durum</th>
-                                <th>Ödeme / yatış</th>
-                                <th>{{ group.elapsedLabel }}</th>
+                                <th class="whitespace-nowrap">Saat</th>
+                                <th class="whitespace-nowrap">Hasta</th>
+                                <th class="whitespace-nowrap">Sahip</th>
+                                <th class="whitespace-nowrap max-[1849px]:hidden">Hekim</th>
+                                <th class="whitespace-nowrap">Durum</th>
+                                <th class="whitespace-nowrap max-[1849px]:hidden">Ödeme / yatış</th>
+                                <th class="whitespace-nowrap">{{ group.elapsedLabel }}</th>
                                 <th></th>
                             </tr>
                         </ng-template>
@@ -174,29 +174,33 @@ type TodayScope = 'mine' | 'all';
                                     }
                                 </td>
                                 <td>
-                                    <div class="font-medium flex items-center gap-2">
-                                        {{ item.petName }}
-                                        <app-pet-alert-badges [alerts]="item.petAlerts" />
+                                    <div class="font-medium flex items-center gap-2 min-w-0">
+                                        <span class="truncate min-w-0" [attr.title]="item.petName">{{ item.petName }}</span>
+                                        <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
                                         @if (item.isUrgent) {
-                                            <app-status-tag label="Acil" severity="danger" />
+                                            <app-status-tag class="shrink-0" label="Acil" severity="danger" />
                                         }
                                     </div>
-                                    <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
+                                    <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
+                                    <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
+                                    <div class="text-sm text-muted-color truncate min-[1850px]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
+                                        {{ item.responsibleVeterinarianName ?? 'Atanmadı' }}
+                                    </div>
                                 </td>
                                 <td>
-                                    <div class="max-w-56 truncate" [attr.title]="item.clientName">{{ item.clientName }}</div>
+                                    <div class="truncate" [attr.title]="item.clientName">{{ item.clientName }}</div>
                                     @if (item.clientPhone) {
                                         <div class="text-sm text-muted-color">{{ phone(item.clientPhone) }}</div>
                                     }
                                 </td>
-                                <td class="max-w-40 truncate" [attr.title]="item.responsibleVeterinarianName">
+                                <td class="truncate max-[1849px]:hidden" [attr.title]="item.responsibleVeterinarianName">
                                     @if (item.responsibleVeterinarianName; as vet) {
                                         {{ vet }}
                                     } @else {
                                         <span class="text-muted-color">Atanmadı</span>
                                     }
                                 </td>
-                                <td>
+                                <td class="whitespace-nowrap">
                                     <div class="flex flex-wrap gap-1">
                                         @if (item.careStatus; as status) {
                                             <app-status-tag [label]="statusLabel(status)" [severity]="statusSeverity(status)" />
@@ -219,10 +223,22 @@ type TodayScope = 'mine' | 'all';
                                         }
                                     </div>
                                     @if (item.voidReason; as reason) {
-                                        <div class="text-sm text-muted-color mt-1">Gerekçe: {{ reason }}</div>
+                                        <div class="text-sm text-muted-color mt-1 whitespace-normal">Gerekçe: {{ reason }}</div>
                                     }
+                                    <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
+                                    <div class="flex flex-wrap gap-1 mt-1 min-[1850px]:hidden">
+                                        @if (group.key !== 'noShow') {
+                                            <app-status-tag
+                                                [label]="paymentLabel(item.paymentIndicator)"
+                                                [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
+                                            />
+                                        }
+                                        @if (item.hasActiveHospitalization) {
+                                            <app-status-tag label="Yatışta" severity="warn" />
+                                        }
+                                    </div>
                                 </td>
-                                <td>
+                                <td class="whitespace-nowrap max-[1849px]:hidden">
                                     <div class="flex flex-wrap gap-1">
                                         @if (group.key !== 'noShow') {
                                             <app-status-tag
@@ -250,14 +266,16 @@ type TodayScope = 'mine' | 'all';
                                 </td>
                                 <td class="whitespace-nowrap">
                                     <!-- Sabit yuvalar: birincil | ikincil | acil | ⋯ → düğmeler satırlar arasında aynı hizada -->
-                                    <div class="grid grid-cols-[7.75rem_6.25rem_2rem_2rem] items-center gap-2 justify-start">
+                                    <div class="grid grid-cols-[7.5rem_6rem_1.85rem_1.85rem] max-[1849px]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem] items-center gap-2 justify-start">
                                         @let actions = actionsOf(item);
                                         @if (canCreateVisit && actions.canMarkArrived) {
                                             <p-button
                                                 type="button"
-                                                class="col-start-1"
+                                                class="col-start-1 max-[1849px]:[&_.p-button-label]:hidden"
                                                 styleClass="w-full"
                                                 label="Geldi"
+                                                ariaLabel="Geldi"
+                                                [attr.title]="'Geldi'"
                                                 icon="pi pi-sign-in"
                                                 size="small"
                                                 [disabled]="ro.mutationBlocked()"
@@ -267,9 +285,11 @@ type TodayScope = 'mine' | 'all';
                                         @if (canCreateExamination && actions.canOpenExamination) {
                                             <p-button
                                                 type="button"
-                                                class="col-start-1"
+                                                class="col-start-1 max-[1849px]:[&_.p-button-label]:hidden"
                                                 styleClass="w-full"
                                                 label="Muayene aç"
+                                                ariaLabel="Muayene aç"
+                                                [attr.title]="'Muayene aç'"
                                                 icon="pi pi-file-edit"
                                                 size="small"
                                                 [disabled]="ro.mutationBlocked()"
@@ -279,9 +299,11 @@ type TodayScope = 'mine' | 'all';
                                         @if (canUpdateVisit && actions.canStartCare) {
                                             <p-button
                                                 type="button"
-                                                class="col-start-2"
+                                                class="col-start-2 max-[1849px]:[&_.p-button-label]:hidden"
                                                 styleClass="w-full"
                                                 label="Başlat"
+                                                ariaLabel="Başlat"
+                                                [attr.title]="'Başlat'"
                                                 icon="pi pi-play"
                                                 size="small"
                                                 severity="secondary"
@@ -293,9 +315,11 @@ type TodayScope = 'mine' | 'all';
                                         @if (canUpdateVisit && actions.canCompleteCare) {
                                             <p-button
                                                 type="button"
-                                                class="col-start-2"
+                                                class="col-start-2 max-[1849px]:[&_.p-button-label]:hidden"
                                                 styleClass="w-full"
                                                 label="Tamamla"
+                                                ariaLabel="Tamamla"
+                                                [attr.title]="'Tamamla'"
                                                 icon="pi pi-check"
                                                 size="small"
                                                 severity="secondary"
@@ -446,8 +470,22 @@ export class TodayPageComponent implements OnInit {
     readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
     readonly waitTitle = waitAlertTitle;
-    /** Tüm grup tabloları aynı sütun genişliklerini kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler. Eylem sütunu sabit genişlikte (düğmeler taşıp Süre hücresine binmesin; yuvalar: birincil 7,75 + ikincil 6,25 + 2×2 rem + boşluklar). Toplam asgari genişlik, 1920 px ekrandaki kart genişliğine (~1376 px, kök yazı ~17,5 px) sığar; Hasta/Sahip kalan alanı paylaşır. */
-    protected readonly columnWidths: Array<string | null> = ['6.5rem', null, null, '8rem', '8rem', '7.5rem', '9.5rem', '21rem'];
+    /**
+     * Tüm grup tabloları aynı sütun şablonunu kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler.
+     * Geniş kip (≥1850 px, ör. 1920 px ekran): tüm sütunlar. Dar kip: Hekim ve Ödeme/yatış sütunları gizlenir (bilgi Hasta ve Durum
+     * hücrelerine taşınır), eylem düğmeleri yalnız ikon olur; ad sütunları kısalır ve ipucuyla tam adı gösterir, tablo yatay taşmaz.
+     * Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
+     */
+    protected readonly columnClasses = [
+        'w-[6rem]',
+        'w-[8.5rem] max-[1849px]:w-auto',
+        'w-auto',
+        'w-[8.5rem] max-[1849px]:hidden',
+        'w-[8.5rem] max-[1849px]:w-[9rem]',
+        'w-[9rem] max-[1849px]:hidden',
+        'w-[7.5rem]',
+        'w-[20.5rem] max-[1849px]:w-[12rem]'
+    ];
     protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',

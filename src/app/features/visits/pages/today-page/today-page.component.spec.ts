@@ -248,9 +248,9 @@ describe('TodayPageComponent', () => {
             const f = await create(['Visits.Read'], { date: 'd', items: [item({ key: 'w' }), item({ key: 'p', careStatus: 'InProgress' }), item({ key: 'c', careStatus: 'Completed' }), noShowItem()] });
             const tables = Array.from((f.nativeElement as HTMLElement).querySelectorAll('section table'));
             expect(tables.length).toBe(4);
-            const widths = tables.map((t) => Array.from(t.querySelectorAll('colgroup col')).map((c) => (c as HTMLElement).style.width).join(','));
+            const widths = tables.map((t) => Array.from(t.querySelectorAll('colgroup col')).map((c) => (c as HTMLElement).className).join('|'));
             expect(new Set(widths).size).toBe(1);
-            expect(widths[0].split(',').length).toBe(8);
+            expect(widths[0].split('|').length).toBe(8);
             for (const t of tables) {
                 expect(getComputedStyle(t).tableLayout).toBe('fixed');
                 expect(t.querySelectorAll('thead th').length).toBe(8);
@@ -266,21 +266,37 @@ describe('TodayPageComponent', () => {
             expect(section(f, 'Bekliyor').textContent).toContain('Ödeme kaydı yok');
         });
 
-        it('en geniş eylem satırında (Muayene aç + Başlat + acil + ⋯) hiçbir hücre içeriği taşmaz; Süre hücresine eylem binmez', async () => {
-            const f = await create(['Visits.Read', 'Visits.Update', 'Visits.Correct', 'Examinations.Create'], { date: 'd', items: [item({ key: 'w', isCarriedOver: true, arrivedAtUtc: new Date(Date.now() - 26 * 3_600_000).toISOString() })] });
+        it('iki kip: Hekim ve Ödeme sütunları dar kipte gizlenir; hekim adı Hasta hücresine, ödeme/yatış rozeti Durum hücresine taşınır; başlıklar ve rozetler tek satır', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', items: [item({ key: 'w', isCarriedOver: true, hasActiveHospitalization: true })] });
             const host = f.nativeElement as HTMLElement;
-            host.style.width = '1400px';
-            host.style.display = 'block';
-            document.body.appendChild(host);
-            f.detectChanges();
+            const hideCompact = 'max-[1849px]:hidden';
+            const ths = Array.from(host.querySelectorAll('thead th'));
+            expect(ths.map((th) => th.classList.contains('whitespace-nowrap'))).toEqual([true, true, true, true, true, true, true, false]);
+            expect(ths[3].textContent?.trim()).toBe('Hekim');
+            expect(ths[3].className).toContain(hideCompact);
+            expect(ths[5].textContent?.trim()).toBe('Ödeme / yatış');
+            expect(ths[5].className).toContain(hideCompact);
+            const cols = Array.from(host.querySelectorAll('colgroup col')).map((c) => c.className);
+            expect(cols[3]).toContain(hideCompact);
+            expect(cols[5]).toContain(hideCompact);
             const cells = Array.from(host.querySelectorAll<HTMLTableCellElement>('tbody tr:first-child td'));
-            expect(cells.length).toBe(8);
-            const overflowing = cells.filter((td) => td.scrollWidth > td.clientWidth + 1).map((td) => td.cellIndex);
-            expect(overflowing).toEqual([]);
-            for (let i = 1; i < cells.length; i++) {
-                expect(cells[i].getBoundingClientRect().left).toBeGreaterThanOrEqual(cells[i - 1].getBoundingClientRect().right - 1);
-            }
-            host.remove();
+            expect(cells[3].className).toContain(hideCompact); // Hekim
+            expect(cells[5].className).toContain(hideCompact); // Ödeme / yatış
+            expect(cells[4].className).toContain('whitespace-nowrap'); // Durum: Önceki günden bölünmez
+            // dar kip yedekleri yalnız dar kipte görünür (geniş kipte min-[1850px]:hidden)
+            const compactOnly = Array.from(host.querySelectorAll('tbody *')).filter((e) => e.classList.contains('min-[1850px]:hidden'));
+            expect(compactOnly.some((e) => e.textContent?.includes('Dr. Ayşe'))).toBeTrue();
+            expect(compactOnly.some((e) => e.textContent?.includes('Ödeme kaydı yok'))).toBeTrue();
+            expect(compactOnly.some((e) => e.textContent?.includes('Yatışta'))).toBeTrue();
+        });
+
+        it('uzun ad kısaltılır ve tam adı ipucuyla (title) gösterilir: Sahip, Hasta, Hekim', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', items: [item({ key: 'w', clientName: 'Çok Uzun İsimli Müşteri Soyadıgeçen', petName: 'Çok uzun hasta adı', responsibleVeterinarianName: 'Dr. Çok Uzun Hekim Adı' })] });
+            const host = f.nativeElement as HTMLElement;
+            const titled = Array.from(host.querySelectorAll('tbody [title]')).map((e) => e.getAttribute('title'));
+            expect(titled).toContain('Çok Uzun İsimli Müşteri Soyadıgeçen');
+            expect(titled).toContain('Çok uzun hasta adı');
+            expect(titled).toContain('Dr. Çok Uzun Hekim Adı');
         });
 
         it('eylem düğmeleri sabit ızgara yuvalarında: birincil=1, ikincil=2, acil=3, ⋯=4 (satırlar arası hiza; konum tarayıcıda ölçülür, Tailwind testte yüklü değil)', async () => {
@@ -294,7 +310,8 @@ describe('TodayPageComponent', () => {
             expect(slotOf('Başlat')).toEqual(['col-start-2']);
             expect(slotOf('Tamamla')).toEqual(['col-start-2']);
             const grid = host.querySelector('tbody td:last-child > div') as HTMLElement;
-            expect(grid.className).toContain('grid-cols-[7.75rem_6.25rem_2rem_2rem]');
+            expect(grid.className).toContain('grid-cols-[7.5rem_6rem_1.85rem_1.85rem]');
+            expect(grid.className).toContain('max-[1849px]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem]'); // dar kip: yalnız ikon
             const icons = Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.classList.contains('col-start-3') || p.classList.contains('col-start-4'));
             expect(icons.length).toBeGreaterThan(1);
         });
