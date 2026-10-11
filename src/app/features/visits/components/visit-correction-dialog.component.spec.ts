@@ -68,6 +68,45 @@ describe('VisitCorrectionDialogComponent', () => {
         expect(cmp.actionOptions().map((o) => o.value)).toEqual(['Waiting', 'InProgress', 'Mistaken']);
     });
 
+    /** Karma sayfasının betik metinlerini dışarıda bırakmak için yalnız diyalog içeriği okunur. */
+    const dialogText = (): string => Array.from(document.querySelectorAll('.p-dialog')).map((d) => d.textContent ?? '').join(' ');
+
+    it('etiket "Yapılacak düzeltme *"', () => {
+        const label = document.querySelector('label[for="vc-action"]');
+        expect(label?.textContent?.trim()).toBe('Yapılacak düzeltme *');
+    });
+
+    it('"Yanlış geliş olarak işaretle" seçilince açıklama gösterilir; diğer seçeneklerde gösterilmez', () => {
+        const note = 'Kaydı Bugün listesinden kaldırır; Yanlış işaretlenenler sekmesinden geri alınabilir.';
+        expect(dialogText()).not.toContain(note);
+        cmp.form.controls.action.setValue('Mistaken');
+        fixture.detectChanges();
+        expect(dialogText()).toContain(note);
+        cmp.form.controls.action.setValue('Waiting');
+        fixture.detectChanges();
+        expect(dialogText()).not.toContain(note);
+    });
+
+    it('Bekliyor durumundan "Tamamlandı" seçilince "Bu geliş için muayene açılmadı." bilgi notu çıkar', () => {
+        fixture.componentRef.setInput('item', { ...item, careStatus: 'Waiting' });
+        fixture.detectChanges();
+        expect(dialogText()).not.toContain('Bu geliş için muayene açılmadı.');
+        cmp.form.controls.action.setValue('Completed');
+        fixture.detectChanges();
+        expect(dialogText()).toContain('Bu geliş için muayene açılmadı.');
+        cmp.form.controls.action.setValue('InProgress');
+        fixture.detectChanges();
+        expect(dialogText()).not.toContain('Bu geliş için muayene açılmadı.');
+    });
+
+    it('Devam ediyor durumundan "Tamamlandı" seçilince muayene notu çıkmaz', () => {
+        fixture.componentRef.setInput('item', { ...item, careStatus: 'InProgress' });
+        fixture.detectChanges();
+        cmp.form.controls.action.setValue('Completed');
+        fixture.detectChanges();
+        expect(dialogText()).not.toContain('Bu geliş için muayene açılmadı.');
+    });
+
     it('gerekçe olmadan veya 5 karakterden kısa gerekçeyle gönderilmez', () => {
         cmp.form.controls.action.setValue('Waiting');
         cmp.form.controls.reason.setValue('  ab  ');

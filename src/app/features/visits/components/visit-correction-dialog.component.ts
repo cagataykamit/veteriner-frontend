@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
@@ -40,7 +42,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <div class="grid grid-cols-12 gap-4">
                     @if (!restoring()) {
                         <div class="col-span-12">
-                            <label for="vc-action" class="block text-sm font-medium text-muted-color mb-2">Düzeltme *</label>
+                            <label for="vc-action" class="block text-sm font-medium text-muted-color mb-2">Yapılacak düzeltme *</label>
                             <p-select
                                 inputId="vc-action"
                                 formControlName="action"
@@ -50,9 +52,22 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 placeholder="Düzeltme seçin"
                                 styleClass="w-full"
                                 appendTo="body"
-                            />
+                            >
+                                <ng-template #item let-option>
+                                    <div>{{ option.label }}</div>
+                                    @if (option.value === 'Mistaken') {
+                                        <div class="text-xs text-muted-color whitespace-normal">{{ mistakenDescription }}</div>
+                                    }
+                                </ng-template>
+                            </p-select>
                             @if (form.controls.action.invalid && form.controls.action.touched) {
                                 <small class="text-red-500">Zorunlu alan.</small>
+                            }
+                            @if (selectedAction() === 'Mistaken') {
+                                <p class="text-sm text-muted-color mt-2 mb-0">{{ mistakenDescription }}</p>
+                            }
+                            @if (waitingToCompleted()) {
+                                <p class="text-sm text-muted-color mt-2 mb-0" role="note">{{ noExaminationNote }}</p>
                             }
                         </div>
                     }
@@ -97,6 +112,8 @@ export class VisitCorrectionDialogComponent {
     protected readonly reasonMin = REASON_MIN;
     protected readonly reasonMax = REASON_MAX;
     protected readonly statusLabel = careStatusLabel;
+    protected readonly mistakenDescription = 'Kaydı Bugün listesinden kaldırır; Yanlış işaretlenenler sekmesinden geri alınabilir.';
+    protected readonly noExaminationNote = 'Bu geliş için muayene açılmadı.';
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -110,6 +127,10 @@ export class VisitCorrectionDialogComponent {
         action: this.fb.control<VisitCorrectionAction | null>(null, Validators.required),
         reason: this.fb.nonNullable.control('', reasonLength)
     });
+
+    protected readonly selectedAction = toSignal(this.form.controls.action.valueChanges.pipe(startWith(null)), { initialValue: null });
+    /** Bekliyor durumundan doğrudan "Tamamlandı": muayene açılmadığı bilgisi gösterilir. */
+    protected readonly waitingToCompleted = computed(() => this.item()?.careStatus === 'Waiting' && this.selectedAction() === 'Completed');
 
     constructor() {
         effect(() => {
