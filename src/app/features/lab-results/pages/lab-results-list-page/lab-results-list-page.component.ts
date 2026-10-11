@@ -90,11 +90,11 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6">
                                 <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
-                                <app-date-input inputId="lrFrom" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="fromDateInput" />
+                                <app-date-input inputId="lrFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" />
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="lrTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
-                                <app-date-input inputId="lrTo" type="date" min="1900-01-01" max="9999-12-31" [(ngModel)]="toDateInput" />
+                                <app-date-input inputId="lrTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" />
                             </div>
                         </div>
                     </div>

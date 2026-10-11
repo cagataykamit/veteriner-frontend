@@ -38,7 +38,6 @@ import {
     toIstanbulDateTimeLocalInputValue
 } from '@/app/shared/utils/date.utils';
 import {
-    DATETIME_LOCAL_INPUT_MAX,
     dateTimeYearRangeValidator,
     effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
@@ -107,7 +106,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="resultDateLocal" class="block text-sm font-medium text-muted-color mb-2">Sonuç tarihi / saati *</label>
-                            <app-date-input inputId="resultDateLocal" type="datetime-local" formControlName="resultDateLocal" [min]="labResultDateMinAllowed()" [max]="datetimeLocalInputMax" />
+                            <app-date-input inputId="resultDateLocal" type="datetime-local" formControlName="resultDateLocal" [min]="labResultDateMinAllowed()" limit="past" />
                             @if (form.controls.resultDateLocal.hasError('dateYearInvalid') && form.controls.resultDateLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (form.controls.resultDateLocal.hasError('labResultDateTooFarPast') && form.controls.resultDateLocal.touched) {
@@ -202,7 +201,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class LabResultEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
-    protected readonly datetimeLocalInputMax = DATETIME_LOCAL_INPUT_MAX;
     protected readonly labResultDateTooFarPastMessage = LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
