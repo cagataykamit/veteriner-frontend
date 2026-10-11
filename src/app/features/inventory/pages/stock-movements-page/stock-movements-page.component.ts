@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -67,7 +69,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, DateInputComponent
+        AppStatusTagComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <p-toast position="bottom-right" />
@@ -142,18 +144,9 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                             </span>
                                         }
                                     </label>
-                                    <input
-                                        pInputText
-                                        id="smSearch"
-                                        class="w-full"
-                                        [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Ürün, SKU, kategori, klinik…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="smSearch" placeholder="Ürün, SKU, kategori, klinik…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                     @if (canExportStockMovements()) {
                                         <p-button
@@ -200,8 +193,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                     optionValue="value"
                                     placeholder="Tümü"
                                     styleClass="w-full"
-                                    [showClear]="true"
-                                />
+                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -225,7 +217,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" />
+                                <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -249,7 +241,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" />
+                                <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -364,6 +356,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
     `
 })
 export class StockMovementsPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
 
     private readonly stockMovementService = inject(StockMovementService);

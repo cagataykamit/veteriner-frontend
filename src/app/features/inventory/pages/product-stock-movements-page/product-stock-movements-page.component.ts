@@ -1,3 +1,4 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -122,7 +123,6 @@ type ProductStockMovementsListState = {
                                 }
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
-                                <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                 <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 @if (canExportStockMovements()) {
                                     <p-button
@@ -168,8 +168,7 @@ type ProductStockMovementsListState = {
                                     optionValue="value"
                                     placeholder="Tümü"
                                     styleClass="w-full"
-                                    [showClear]="true"
-                                />
+                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -180,7 +179,7 @@ type ProductStockMovementsListState = {
                                 "
                             >
                                 <label for="psmFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç (UTC tarih)</label>
-                                <app-date-input inputId="psmFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" />
+                                <app-date-input inputId="psmFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -191,7 +190,7 @@ type ProductStockMovementsListState = {
                                 "
                             >
                                 <label for="psmTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş (UTC tarih)</label>
-                                <app-date-input inputId="psmTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" />
+                                <app-date-input inputId="psmTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -291,6 +290,7 @@ type ProductStockMovementsListState = {
     `
 })
 export class ProductStockMovementsPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
 
     private readonly route = inject(ActivatedRoute);
