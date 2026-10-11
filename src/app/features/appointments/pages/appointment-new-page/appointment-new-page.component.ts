@@ -1,3 +1,4 @@
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
@@ -24,10 +25,11 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import {
     APPOINTMENT_NOTES_MAX_LENGTH,
-    appointmentCreatePastDateValidator,
-    filterFutureIstanbulTimeOptions,
-    isIstanbulDateTimeInPast,
-    istanbulTodayYmd
+    APPOINTMENT_TOO_FAR_PAST_MESSAGE,
+    appointmentCreateTooFarPastDateValidator,
+    appointmentEarliestDateYmd,
+    filterAllowedIstanbulTimeOptions,
+    isIstanbulDateTimeTooFarInPast
 } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
@@ -47,7 +49,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent
+        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/appointments" class="text-primary font-medium no-underline inline-block mb-4">← Randevu listesine dön</a>
@@ -86,19 +88,13 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
-                        <input
-                            id="scheduledDate"
-                            type="date" class="w-full md:max-w-64 p-inputtext p-component"
-                            formControlName="scheduledDate"
-                            [min]="minScheduledDate()"
-                            [max]="dateInputMax"
-                        />
+                        <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="minScheduledDate()" [max]="dateInputMax" />
                         @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (apiFieldErrors().scheduledAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                        } @else if (form.controls.scheduledDate.hasError('pastDate') && form.controls.scheduledDate.touched) {
-                            <small class="text-red-500">Geçmiş bir tarih seçilemez.</small>
+                        } @else if (form.controls.scheduledDate.hasError('tooFarPast') && form.controls.scheduledDate.touched) {
+                            <small class="text-red-500">En fazla 7 gün öncesine kadar randevu açılabilir.</small>
                         } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
                         }
@@ -227,7 +223,7 @@ export class AppointmentNewPageComponent implements OnInit {
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
         scheduledDate: this.fb.nonNullable.control('', [
             Validators.required,
-            appointmentCreatePastDateValidator(),
+            appointmentCreateTooFarPastDateValidator(),
             dateYearRangeValidator()
         ]),
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
@@ -294,7 +290,7 @@ export class AppointmentNewPageComponent implements OnInit {
     }
 
     minScheduledDate(): string {
-        return istanbulTodayYmd();
+        return appointmentEarliestDateYmd();
     }
 
 
@@ -315,9 +311,9 @@ export class AppointmentNewPageComponent implements OnInit {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
             return;
         }
-        if (isIstanbulDateTimeInPast(v.scheduledDate, v.scheduledTime)) {
+        if (isIstanbulDateTimeTooFarInPast(v.scheduledDate, v.scheduledTime)) {
             this.form.markAllAsTouched();
-            this.submitError.set('Geçmiş bir tarih veya saat seçilemez.');
+            this.submitError.set(APPOINTMENT_TOO_FAR_PAST_MESSAGE);
             return;
         }
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
@@ -448,7 +444,7 @@ export class AppointmentNewPageComponent implements OnInit {
             }
             return;
         }
-        const options = filterFutureIstanbulTimeOptions(date, this.buildTimeOptions(day, duration, interval));
+        const options = filterAllowedIstanbulTimeOptions(date, this.buildTimeOptions(day, duration, interval));
         this.timeOptions.set(options);
         const selected = this.form.controls.scheduledTime.value.trim();
         if (selected && !options.some((o) => o.value === selected)) {

@@ -209,6 +209,8 @@ const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Visits.ConcurrencyConflict': 'Kayıt aynı anda başka biri tarafından güncellendi. Listeyi yenileyip tekrar deneyin.',
     'Examinations.VisitMismatch': 'Muayene, geliş kaydındaki hayvan veya randevuyla uyuşmuyor.',
     'Examinations.AppointmentNoShow': 'Gelmedi işaretli randevuya doğrudan muayene açılamaz. Hasta geldiyse önce geliş kaydı açın veya gelmedi işaretini geri alın.',
+    'Appointments.ScheduledTooFarInPast': 'Randevu zamanı çok eski; en fazla 7 gün öncesine kadar kayıt açılabilir.',
+    'Appointments.ScheduledTooFarInFuture': 'Randevu zamanı en fazla 2 yıl ileriye planlanabilir.',
     'Appointments.NoShowNotYetDue': 'Randevu saati henüz gelmedi; gelmedi olarak işaretlenemez.',
     'Appointments.HasVisit': 'Bu randevu için geliş kaydı var (hasta gelmiş); gelmedi olarak işaretlenemez.',
     'Appointments.InvalidStatusTransition': 'Randevu durumu bu işleme uygun değil; durum başka biri tarafından değişmiş olabilir. Sayfayı yenileyip tekrar deneyin.'
