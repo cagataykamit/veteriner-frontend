@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -47,7 +49,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, ClientSearchComponent
+        AppErrorStateComponent, ClientSearchComponent, SearchInputComponent
     ],
     template: `
         <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay.">
@@ -102,18 +104,9 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                             </span>
                                         }
                                     </label>
-                                    <input
-                                        pInputText
-                                        id="petSearch"
-                                        class="w-full"
-                                        [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Hayvan, tür, ırk, sahip…"
-                                        (keyup.enter)="applyFilters()"
-                                    />
+                                    <app-search-input inputId="petSearch" placeholder="Hayvan, tür, ırk, sahip…" [(value)]="searchInput" (search)="applyFilters()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applyFilters()" [disabled]="loading()" />
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
@@ -139,7 +132,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                         </span>
                                     }
                                 </span>
-                                <app-client-search inputId="petClient" [(ngModel)]="clientIdInput" />
+                                <app-client-search inputId="petClient" [(ngModel)]="clientIdInput" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors"
@@ -171,8 +164,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                     [placeholder]="copy.filterPlaceholderAll"
                                     styleClass="w-full"
                                     [showClear]="true"
-                                    [loading]="loadingSpecies()"
-                                />
+                                    [loading]="loadingSpecies()" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -286,6 +278,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
     `
 })
 export class PetsListPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
