@@ -12,37 +12,34 @@ export function localDateYyyyMmDd(d: Date = new Date()): string {
     return `${y}-${m}-${day}`;
 }
 
-export function formatDateDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+/**
+ * Görüntüleme: API UTC anları ve tarihleri her zaman **Europe/Istanbul** duvar saatiyle gösterilir (tarayıcı saat diliminden bağımsız);
+ * böylece aynı kayıt tüm ekranlarda aynı günü/saati gösterir. Offset'siz metin UTC kabul edilir (`parseUtcApiInstantIsoString`).
+ */
+function formatInstantInIstanbul(value: string | Date | null | undefined, options: Intl.DateTimeFormatOptions, locale: string): string {
     if (value == null || value === '') {
         return '—';
     }
-    const d = typeof value === 'string' ? new Date(value) : value;
-    if (Number.isNaN(d.getTime())) {
+    const d = value instanceof Date ? value : parseUtcApiInstantIsoString(value);
+    if (!d || Number.isNaN(d.getTime())) {
         return '—';
     }
-    return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+    return new Intl.DateTimeFormat(locale, { timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE, ...options }).format(d);
+}
+
+const DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+const TIME_OPTIONS: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+
+export function formatDateDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+    return formatInstantInIstanbul(value, DATE_OPTIONS, locale);
 }
 
 export function formatTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
-    if (value == null || value === '') {
-        return '—';
-    }
-    const d = typeof value === 'string' ? new Date(value) : value;
-    if (Number.isNaN(d.getTime())) {
-        return '—';
-    }
-    return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(d);
+    return formatInstantInIstanbul(value, TIME_OPTIONS, locale);
 }
 
 export function formatDateTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
-    if (value == null || value === '') {
-        return '—';
-    }
-    const d = typeof value === 'string' ? new Date(value) : value;
-    if (Number.isNaN(d.getTime())) {
-        return '—';
-    }
-    return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    return formatInstantInIstanbul(value, { ...DATE_OPTIONS, ...TIME_OPTIONS }, locale);
 }
 
 function hasExplicitIso8601Zone(s: string): boolean {
@@ -74,69 +71,19 @@ export function parseUtcApiInstantIsoString(value: string | null | undefined): D
     return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** UTC ISO anını kullanıcı yerel saatine çevirip `formatDateTimeDisplay` ile aynı biçimde gösterir. */
+/** UTC ISO anı -> Europe/Istanbul tarih ve saat (`dd.MM.yyyy HH:mm`). */
 export function formatUtcIsoAsLocalDateTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
-    if (value == null || value === '') {
-        return '—';
-    }
-    if (value instanceof Date) {
-        if (Number.isNaN(value.getTime())) {
-            return '—';
-        }
-        return new Intl.DateTimeFormat(locale, {
-            timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE,
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(value);
-    }
-    const d = parseUtcApiInstantIsoString(value);
-    if (!d) {
-        return '—';
-    }
-    return new Intl.DateTimeFormat(locale, {
-        timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE,
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    }).format(d);
+    return formatDateTimeDisplay(value, locale);
 }
 
 /** UTC ISO anı -> Europe/Istanbul tarih (`dd.MM.yyyy`) */
 export function formatUtcIsoAsLocalDateDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
-    if (value == null || value === '') {
-        return '—';
-    }
-    const d = value instanceof Date ? value : parseUtcApiInstantIsoString(value);
-    if (!d || Number.isNaN(d.getTime())) {
-        return '—';
-    }
-    return new Intl.DateTimeFormat(locale, {
-        timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE,
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    }).format(d);
+    return formatDateDisplay(value, locale);
 }
 
 /** UTC ISO anı -> Europe/Istanbul saat (`HH:mm`) */
 export function formatUtcIsoAsLocalTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
-    if (value == null || value === '') {
-        return '—';
-    }
-    const d = value instanceof Date ? value : parseUtcApiInstantIsoString(value);
-    if (!d || Number.isNaN(d.getTime())) {
-        return '—';
-    }
-    return new Intl.DateTimeFormat(locale, {
-        timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE,
-        hour: '2-digit',
-        minute: '2-digit'
-    }).format(d);
+    return formatTimeDisplay(value, locale);
 }
 
 /** Alias: UTC anı -> local datetime (TR/Istanbul). */

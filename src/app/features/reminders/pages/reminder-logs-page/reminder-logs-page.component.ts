@@ -19,7 +19,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { dateOnlyInputToUtcIso, dateOnlyInputToUtcIsoEndOfDay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { dateOnlyInputToIstanbulStartUtcIso, dateOnlyInputToIstanbulEndUtcIso, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 type ClinicSelectOption = { label: string; value: string };
 type ReminderLogsListState = {
@@ -405,8 +405,8 @@ export class ReminderLogsPageComponent implements OnInit {
             this.toDateInput = to;
         }
 
-        const fromUtc = from ? dateOnlyInputToUtcIso(from) : undefined;
-        const toUtc = to ? dateOnlyInputToUtcIsoEndOfDay(to) : undefined;
+        const fromUtc = from ? dateOnlyInputToIstanbulStartUtcIso(from) : undefined;
+        const toUtc = to ? dateOnlyInputToIstanbulEndUtcIso(to) : undefined;
 
         this.activeReminderType.set(this.reminderTypeFilter || '');
         this.activeStatus.set(this.statusFilter || '');
