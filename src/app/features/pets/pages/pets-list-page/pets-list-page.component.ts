@@ -9,7 +9,7 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
@@ -47,7 +47,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent, ClientSearchComponent
     ],
     template: `
         <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay.">
@@ -139,18 +139,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                         </span>
                                     }
                                 </span>
-                                <p-select
-                                    ariaLabelledBy="lblPetClient"
-                                    inputId="petClient"
-                                    [options]="clientOptions()"
-                                    [(ngModel)]="clientIdInput"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    [placeholder]="copy.filterPlaceholderAll"
-                                    styleClass="w-full"
-                                    [showClear]="true"
-                                    [loading]="loadingClients()"
-                                />
+                                <app-client-search inputId="petClient" [(ngModel)]="clientIdInput" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-6 rounded-lg border p-2 transition-colors"
@@ -303,12 +292,10 @@ export class PetsListPageComponent implements OnInit {
 
     private readonly petsService = inject(PetsService);
     private readonly speciesService = inject(SpeciesService);
-    private readonly clientsService = inject(ClientsService);
 
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
     readonly loading = signal(true);
     readonly loadingSpecies = signal(false);
-    readonly loadingClients = signal(false);
     readonly error = signal<string | null>(null);
 
     readonly rawItems = signal<PetListItemVm[]>([]);
@@ -326,7 +313,6 @@ export class PetsListPageComponent implements OnInit {
     speciesIdInput = '';
     clientIdInput = '';
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
-    readonly clientOptions = signal<{ label: string; value: string }[]>([]);
     readonly canCreatePet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
 
     readonly displayedRows = computed(() => this.rawItems());
@@ -340,7 +326,6 @@ export class PetsListPageComponent implements OnInit {
             this.first.set(0);
         }
         this.loadSpeciesOptions();
-        this.loadClientOptions();
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
     }
@@ -478,23 +463,6 @@ export class PetsListPageComponent implements OnInit {
         });
     }
 
-    private loadClientOptions(): void {
-        this.loadingClients.set(true);
-        this.clientsService.getClients({ page: 1, pageSize: 200 }).subscribe({
-            next: (r) => {
-                this.clientOptions.set(
-                    r.items.map((c) => ({
-                        label: c.fullName?.trim() ? c.fullName : c.id,
-                        value: c.id
-                    }))
-                );
-                this.loadingClients.set(false);
-            },
-            error: () => {
-                this.loadingClients.set(false);
-            }
-        });
-    }
 
     isSearchActive(): boolean {
         return !!this.activeSearch().trim();
