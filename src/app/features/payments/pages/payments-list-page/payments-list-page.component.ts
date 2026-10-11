@@ -1,3 +1,5 @@
+import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
+import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -50,7 +52,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent
+        AppErrorStateComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
         <app-page-header title="Ödemeler" subtitle="Finans" description="Ödeme kayıtları.">
@@ -105,18 +107,9 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                             </span>
                                         }
                                     </label>
-                                    <input
-                                        pInputText
-                                        id="paySearch"
-                                        class="w-full"
-                                        [ngClass]="isSearchActive() ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : ''"
-                                        [(ngModel)]="searchInput"
-                                        placeholder="Not, para birimi; müşteri, hayvan, tür veya ırk, e-posta, telefon…"
-                                        (keyup.enter)="applySearch()"
-                                    />
+                                    <app-search-input inputId="paySearch" placeholder="Not, para birimi; müşteri, hayvan, tür veya ırk, e-posta, telefon…" [(value)]="searchInput" (search)="applySearch()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonSearch" icon="pi pi-search" (onClick)="applySearch()" [disabled]="loading()" />
                                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
@@ -151,8 +144,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                     optionValue="value"
                                     [placeholder]="copy.filterPlaceholderAll"
                                     styleClass="w-full"
-                                    [showClear]="true"
-                                />
+                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -174,7 +166,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="payFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" />
+                                <app-date-input inputId="payFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div
                                 class="col-span-12 md:col-span-4 rounded-lg border p-2 transition-colors"
@@ -196,7 +188,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                         </span>
                                     }
                                 </label>
-                                <app-date-input inputId="payTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" />
+                                <app-date-input inputId="payTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                         </div>
                     </div>
@@ -321,6 +313,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
     `
 })
 export class PaymentsListPageComponent implements OnInit {
+    protected readonly scheduleApply = debouncedAction(() => this.applySearch());
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
