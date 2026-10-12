@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '@/app/core/auth/auth.guard';
 import { AppLayout } from './app/layout/component/app.layout';
+import { panelHomeRedirect } from '@/app/core/routing/panel-home.redirect';
 import { Notfound } from './app/pages/notfound/notfound';
 
 export const appRoutes: Routes = [
@@ -15,7 +16,7 @@ export const appRoutes: Routes = [
         component: AppLayout,
         canActivate: [authGuard],
         children: [
-            { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+            { path: '', pathMatch: 'full', redirectTo: panelHomeRedirect },
             { path: '', loadChildren: () => import('./app/features/panel/panel.routes') }
         ]
     },

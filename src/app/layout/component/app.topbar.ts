@@ -31,7 +31,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
             <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
                 <i class="pi pi-bars"></i>
             </button>
-            <a class="layout-topbar-logo" routerLink="/panel/dashboard">
+            <a class="layout-topbar-logo" routerLink="/panel">
                 <img
                     [src]="logoSrc()"
                     [alt]="logoAlt"

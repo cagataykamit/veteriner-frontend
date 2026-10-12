@@ -6,7 +6,8 @@ export function safePanelReturnUrl(raw: string | null | undefined): string | nul
     return s && s.startsWith('/panel') && !s.startsWith('//') ? s : null;
 }
 
-export const DEFAULT_PANEL_AFTER_AUTH = '/panel/dashboard';
+/** `/panel` rotası izne göre Bugün veya Özet'e yönlendirir (`panelHomeRedirect`). */
+export const DEFAULT_PANEL_AFTER_AUTH = '/panel';
 
 export function panelReturnUrlOrDefault(raw: string | null | undefined): string {
     return safePanelReturnUrl(raw) ?? DEFAULT_PANEL_AFTER_AUTH;

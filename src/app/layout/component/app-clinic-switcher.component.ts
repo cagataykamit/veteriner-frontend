@@ -8,6 +8,7 @@ import { ToastModule } from 'primeng/toast';
 import { finalize } from 'rxjs';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { authFailureMessage } from '@/app/core/auth/auth-error.utils';
+import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClinicSwitcherRefreshService } from '@/app/layout/service/clinic-switcher-refresh.service';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
@@ -202,7 +203,7 @@ export class AppClinicSwitcher implements OnDestroy {
                     // uygulama yeni token / clinic_id ile temiz boot eder.
                     // Not: `tenantReadOnlyContext.loadForPanel()` çağrılmaz — reload onu hemen iptal
                     // eder (backend `TaskCanceledException`), AppLayout zaten boot sonrası çağırır.
-                    window.location.replace('/panel/dashboard');
+                    window.location.replace(DEFAULT_PANEL_AFTER_AUTH);
                 },
                 error: (e: unknown) => {
                     this.showErrorToast(e, 'Klinik değiştirilemedi.');
