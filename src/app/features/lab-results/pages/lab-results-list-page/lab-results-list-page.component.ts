@@ -11,7 +11,10 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import type { LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
+import type { LabResultListItemVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
+import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
+import { LAB_RESULT_STATUS_FILTER_OPTIONS } from '@/app/features/lab-results/utils/lab-result-status.utils';
+import { SelectModule } from 'primeng/select';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -37,7 +40,7 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent, SearchInputComponent
+        AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent
     ],
     template: `
         <app-page-header title="Lab sonuçları" subtitle="Klinik" description="Laboratuvar sonuç kayıtları.">
@@ -82,13 +85,25 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                             </div>
                         </div>
                         <div class="grid grid-cols-12 gap-3 items-end">
-                            <div class="col-span-12 md:col-span-6">
+                            <div class="col-span-12 md:col-span-4">
                                 <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
                                 <app-date-input inputId="lrFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
-                            <div class="col-span-12 md:col-span-6">
+                            <div class="col-span-12 md:col-span-4">
                                 <label for="lrTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
                                 <app-date-input inputId="lrTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </div>
+                            <div class="col-span-12 md:col-span-4">
+                                <label for="lrStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
+                                <p-select
+                                    inputId="lrStatus"
+                                    [options]="statusOptions"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [(ngModel)]="statusInput"
+                                    (ngModelChange)="applyFilters()"
+                                    styleClass="w-full"
+                                />
                             </div>
                         </div>
                     </div>
@@ -113,6 +128,7 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                             <ng-template #header>
                                 <tr>
                                     <th>Tarih</th>
+                                    <th>Durum</th>
                                     <th>Müşteri</th>
                                     <th>Hayvan</th>
                                     <th>Test</th>
@@ -121,7 +137,8 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr>
-                                    <td>{{ formatDateTime(row.resultDateUtc) }}</td>
+                                    <td>{{ formatDateTime(row.resultDateUtc ?? row.requestedAtUtc) }}</td>
+                                    <td><app-lab-result-status-badges [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" /></td>
                                     <td>
                                         @if (row.clientId) {
                                             <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
@@ -153,7 +170,8 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                                 class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
                             >
                                 <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                    {{ formatDateTime(row.resultDateUtc) }}
+                                    {{ formatDateTime(row.resultDateUtc ?? row.requestedAtUtc) }}
+                                    <app-lab-result-status-badges class="ml-2" [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" />
                                 </div>
                                 <div class="space-y-2 mb-3 min-w-0">
                                     <div class="text-sm">
@@ -223,10 +241,13 @@ export class LabResultsListPageComponent implements OnInit {
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
     readonly activeToDate = signal('');
+    readonly activeStatus = signal<LabResultStatus | ''>('');
 
     searchInput = '';
     fromDateInput = '';
     toDateInput = '';
+    statusInput: LabResultStatus | '' = '';
+    readonly statusOptions = LAB_RESULT_STATUS_FILTER_OPTIONS;
     readonly displayedRows = computed(() => this.rawItems());
     readonly canCreateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_CREATE_CLAIM);
 
@@ -237,7 +258,7 @@ export class LabResultsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
     }
 
     applyFilters(): void {
@@ -254,8 +275,9 @@ export class LabResultsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
+        this.activeStatus.set(this.statusInput);
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
     }
 
     resetFilters(): void {
@@ -265,8 +287,10 @@ export class LabResultsListPageComponent implements OnInit {
         this.activeSearch.set('');
         this.activeFromDate.set('');
         this.activeToDate.set('');
+        this.activeStatus.set('');
+        this.statusInput = '';
         this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '', '', '');
+        this.loadFromServer(1, this.pageSize(), '', '', '', '');
     }
 
     reload(): void {
@@ -276,6 +300,7 @@ export class LabResultsListPageComponent implements OnInit {
             this.activeSearch(),
             this.activeFromDate(),
             this.activeToDate(),
+            this.activeStatus(),
             true
         );
     }
@@ -288,7 +313,7 @@ export class LabResultsListPageComponent implements OnInit {
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
     }
 
     onMobilePageChange(state: PaginatorState): void {
@@ -296,7 +321,7 @@ export class LabResultsListPageComponent implements OnInit {
         const first = state.first ?? 0;
         const page = Math.floor(first / rows) + 1;
         this.suppressNextLazy = true;
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
     }
 
     private loadFromServer(
@@ -305,9 +330,10 @@ export class LabResultsListPageComponent implements OnInit {
         search: string,
         fromDate: string,
         toDate: string,
+        status: LabResultStatus | '',
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -320,7 +346,8 @@ export class LabResultsListPageComponent implements OnInit {
                 pageSize,
                 search: search || undefined,
                 fromDate: fromDate || undefined,
-                toDate: toDate || undefined
+                toDate: toDate || undefined,
+                status: status || undefined
             })
             .subscribe({
                 next: (r) => {
