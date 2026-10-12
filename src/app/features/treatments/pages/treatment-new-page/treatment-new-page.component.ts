@@ -266,6 +266,7 @@ export class TreatmentNewPageComponent implements OnInit {
             }
             this.loadExaminationsForPet(pid);
         });
+        this.tryApplyExaminationRouteContext();
     }
 
     private syncExaminationSelectState(): void {

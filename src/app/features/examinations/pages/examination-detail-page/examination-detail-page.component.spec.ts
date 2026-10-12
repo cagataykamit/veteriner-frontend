@@ -174,6 +174,30 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(has(el, 'addendum-open')).toBeTrue();
     });
 
+    it('taslakta tedavi/reçete/aşı/lab/yatış oluşturma bağlantıları muayene bağlamıyla görünür; kilit ipucu yok', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Update']);
+
+        for (const path of ['treatments', 'prescriptions', 'vaccinations', 'lab-results', 'hospitalizations']) {
+            const a = el.querySelector(`a[href*="/panel/${path}/new"]`);
+            expect(a).withContext(path).not.toBeNull();
+            expect(a?.getAttribute('href')).toContain('examinationId=e1');
+            expect(a?.getAttribute('href')).toContain('clientId=client-1');
+            expect(a?.getAttribute('href')).toContain('petId=pet-1');
+        }
+        expect(has(el, 'finalized-locked-hint')).toBeFalse();
+    });
+
+    it('kesinleşmiş muayenede tedavi/reçete/aşı oluştur gizli ve neden görünür; lab ve yatış açık kalır', async () => {
+        const { el } = await setup(finalizedVm, ['Examinations.Update']);
+
+        for (const path of ['treatments', 'prescriptions', 'vaccinations']) {
+            expect(el.querySelector(`a[href*="/panel/${path}/new"]`)).withContext(path).toBeNull();
+        }
+        expect(el.querySelector('a[href*="/panel/lab-results/new"]')).not.toBeNull();
+        expect(el.querySelector('a[href*="/panel/hospitalizations/new"]')).not.toBeNull();
+        expect(el.querySelector('[data-testid="finalized-locked-hint"]')?.textContent).toContain('ek not ekleyebilirsiniz');
+    });
+
     it('Addendum izni olmayan kullanıcı ek notları okur ama "Ek not ekle" görmez', async () => {
         const { el } = await setup(finalizedVm, ['Examinations.Read']);
 
