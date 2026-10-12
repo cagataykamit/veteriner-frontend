@@ -127,6 +127,13 @@ function canonicalPaidAtList(dto: PaymentListItemDto): string | null {
     return dto.paidAtUtc?.trim() ? dto.paidAtUtc.trim() : null;
 }
 
+/** Birden fazla hayvana yayılan ödemede tek hayvan adı yerine gösterilir (petCount > 1). */
+export const MULTIPLE_PETS_LABEL = 'Birden fazla hayvan';
+
+function hasMultiplePets(petCount: number | null | undefined): boolean {
+    return petCount != null && petCount > 1;
+}
+
 function listPetNameFromDto(petName: string | null | undefined): string {
     return petName == null ? '' : String(petName).trim();
 }
@@ -149,7 +156,7 @@ export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListI
         clientId,
         clientName: str(dto.clientName?.trim() ?? null),
         petId,
-        petName: listPetNameFromDto(dto.petName),
+        petName: hasMultiplePets(dto.petCount) ? MULTIPLE_PETS_LABEL : listPetNameFromDto(dto.petName),
         amount: num(dto.amount),
         currency: dto.currency?.trim() ? dto.currency.trim() : 'TRY',
         method: canonicalMethodFromListDto(dto),
@@ -163,7 +170,8 @@ export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm 
         clientId: detailClientId(dto),
         clientName: detailClientName(dto),
         petId: detailPetId(dto),
-        petName: detailPetName(dto),
+        petName: hasMultiplePets(dto.petCount) ? MULTIPLE_PETS_LABEL : detailPetName(dto),
+        hasMultiplePets: hasMultiplePets(dto.petCount),
         amount: detailAmount(dto),
         currency: detailCurrency(dto),
         method: resolvePaymentMethodFormValue(readRawMethodFromUnknown(dto)),
