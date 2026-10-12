@@ -49,6 +49,8 @@ const STATUS_LABELS: Record<string, string> = {
     Active: 'Yatışta',
     Discharged: 'Taburcu',
     Applied: 'Uygulandı',
+    Requested: 'İstendi',
+    Resulted: 'Sonuçlandı',
     Cancelled: 'İptal',
     Draft: 'Taslak',
     Finalized: 'Kesinleşti'

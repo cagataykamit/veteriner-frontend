@@ -1,3 +1,4 @@
+import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 /**
  * Muayene — UI view modelleri.
  */
@@ -75,6 +76,9 @@ export interface ExaminationRelatedLabResultItemVm {
     clinicId: string | null;
     clinicName: string | null;
     testName: string;
+    status: LabResultStatus | null;
+    requestedAtUtc: string | null;
+    awaitingInterpretation: boolean;
 }
 
 export interface ExaminationRelatedHospitalizationItemVm {

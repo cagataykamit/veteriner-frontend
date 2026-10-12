@@ -134,6 +134,9 @@ export interface PetHistoryLabResultItemDto {
     id: string;
     resultDateUtc?: string | null;
     testName?: string | null;
+    status?: string | null;
+    requestedAtUtc?: string | null;
+    awaitingInterpretation?: boolean | null;
     clinicName?: string | null;
 }
 

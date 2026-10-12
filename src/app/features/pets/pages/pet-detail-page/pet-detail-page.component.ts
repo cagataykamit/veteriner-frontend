@@ -1,3 +1,4 @@
+import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -38,6 +39,7 @@ const EM = '—';
     standalone: true,
     imports: [
         CommonModule,
+        LabResultStatusBadgesComponent,
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
@@ -329,12 +331,13 @@ const EM = '—';
                                         <li
                                             class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
                                         >
-                                            <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.resultDateUtc) }}</div>
+                                            <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.resultDateUtc ?? row.requestedAtUtc) }}</div>
                                             <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.resultDateUtc) }}</span>
+                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.resultDateUtc ?? row.requestedAtUtc) }}</span>
                                                 <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                             </div>
                                             <div class="font-medium min-w-0 break-words">{{ row.testName }}</div>
+                                            <app-lab-result-status-badges [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" />
                                             @if (row.clinicName) {
                                                 <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
                                             }

@@ -1,3 +1,4 @@
+import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 export interface PetListItemVm {
     id: string;
@@ -89,6 +90,9 @@ export interface PetHistoryLabResultItemVm {
     id: string;
     resultDateUtc: string | null;
     testName: string;
+    status: LabResultStatus | null;
+    requestedAtUtc: string | null;
+    awaitingInterpretation: boolean;
     clinicName: string | null;
 }
 
