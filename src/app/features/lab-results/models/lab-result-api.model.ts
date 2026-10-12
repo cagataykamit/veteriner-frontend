@@ -40,6 +40,8 @@ export interface LabResultDetailDto {
     notes?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
+    /** Base64; PUT'ta geri gönderilir. */
+    rowVersion?: string | null;
 }
 
 /** POST / PUT body — API ile uyumlu. */
@@ -52,4 +54,6 @@ export interface LabResultWriteRequestDto {
     resultText: string;
     interpretation?: string | null;
     notes?: string | null;
+    /** Yalnız PUT. */
+    rowVersion?: string;
 }

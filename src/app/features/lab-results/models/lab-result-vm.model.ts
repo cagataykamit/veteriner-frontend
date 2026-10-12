@@ -44,4 +44,5 @@ export interface LabResultEditVm {
     resultText: string;
     interpretation: string;
     notes: string;
+    rowVersion: string;
 }

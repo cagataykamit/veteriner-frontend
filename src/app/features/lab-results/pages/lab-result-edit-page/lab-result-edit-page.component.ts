@@ -172,7 +172,21 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         </div>
                     </div>
 
-                    @if (submitError()) {
+                    @if (conflict()) {
+                        <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
+                            <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
+                            <div class="mt-3">
+                                <p-button
+                                    type="button"
+                                    label="Yazdıklarımı atıp güncel kaydı yükle"
+                                    icon="pi pi-refresh"
+                                    severity="secondary"
+                                    size="small"
+                                    (onClick)="reload()"
+                                />
+                            </div>
+                        </div>
+                    } @else if (submitError()) {
                         <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
 
@@ -218,6 +232,7 @@ export class LabResultEditPageComponent implements OnInit {
     readonly loadError = signal<string | null>(null);
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
+    readonly conflict = signal(false);
     readonly selectionError = signal<string | null>(null);
     readonly loadingExaminations = signal(false);
     readonly examinationOptions = signal<SelectOption[]>([]);
@@ -229,6 +244,7 @@ export class LabResultEditPageComponent implements OnInit {
 
     private labResultId = '';
     private editVmCache: LabResultEditVm | null = null;
+    private rowVersion = '';
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -323,6 +339,9 @@ export class LabResultEditPageComponent implements OnInit {
         this.labResultsService.getLabResultForEditById(this.labResultId).subscribe({
             next: (x) => {
                 this.editVmCache = x;
+                this.rowVersion = x.rowVersion;
+                this.conflict.set(false);
+                this.submitError.set(null);
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
@@ -383,7 +402,8 @@ export class LabResultEditPageComponent implements OnInit {
             resultText: v.resultText,
             interpretation: v.interpretation,
             notes: v.notes,
-            examinationId: v.examinationId
+            examinationId: v.examinationId,
+            rowVersion: this.rowVersion
         });
 
         this.submitting.set(true);
@@ -397,6 +417,7 @@ export class LabResultEditPageComponent implements OnInit {
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseLabResultUpsertHttpError(e);
                     this.apiFieldErrors.set(parsed.fieldErrors);
+                    this.conflict.set(parsed.isConcurrencyConflict);
                     this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
                     return;
                 }

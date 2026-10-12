@@ -134,7 +134,8 @@ export function mapLabResultDetailDtoToEditVm(dto: LabResultDetailDto): LabResul
         testName: firstTrimmed(dto.testName, readDtoString(dto, ['TestName'])) ?? '',
         resultText: firstTrimmed(dto.resultText, readDtoString(dto, ['ResultText'])) ?? '',
         interpretation: firstTrimmed(dto.interpretation, readDtoString(dto, ['Interpretation'])) ?? '',
-        notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? ''
+        notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
+        rowVersion: firstTrimmed(dto.rowVersion, readDtoString(dto, ['RowVersion'])) ?? ''
     };
 }
 
@@ -224,6 +225,10 @@ export function mapCreateLabResultToApiBody(req: CreateLabResultRequest): LabRes
     if (ex) {
         dto.examinationId = ex;
     }
+    const rowVersion = req.rowVersion?.trim();
+    if (rowVersion) {
+        dto.rowVersion = rowVersion;
+    }
     return dto;
 }
 
@@ -236,6 +241,7 @@ export interface LabResultUpsertFormAdapterInput {
     interpretation?: string | null;
     notes?: string | null;
     examinationId?: string | null;
+    rowVersion?: string;
 }
 
 export function mapLabResultUpsertFormToCreateRequest(input: LabResultUpsertFormAdapterInput): CreateLabResultRequest {
@@ -247,6 +253,7 @@ export function mapLabResultUpsertFormToCreateRequest(input: LabResultUpsertForm
         resultText: input.resultText.trim(),
         interpretation: input.interpretation?.trim() ? input.interpretation.trim() : null,
         notes: input.notes?.trim() ? input.notes.trim() : null,
-        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null
+        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null,
+        rowVersion: input.rowVersion
     };
 }

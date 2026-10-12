@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import {
     extractRawValidationErrors,
     firstStringMessage,
@@ -28,7 +28,11 @@ export type LabResultUpsertFieldErrors = Partial<Record<LabResultUpsertFormField
 export interface ParsedLabResultUpsertHttpError {
     fieldErrors: LabResultUpsertFieldErrors;
     summaryMessage: string | null;
+    /** 409 + `LabResults.ConcurrencyConflict`: kayıt başka biri tarafından değişti, yeniden yükleme gerekir. */
+    isConcurrencyConflict: boolean;
 }
+
+export const LAB_RESULT_CONCURRENCY_CONFLICT_CODE = 'LabResults.ConcurrencyConflict';
 
 const FIELD_MAP: Record<string, LabResultUpsertFormFieldKey> = {
     clientid: 'clientId',
@@ -93,7 +97,7 @@ function promoteLabResultDatePastFromUnmappedErrors(err: HttpErrorResponse): Lab
     return null;
 }
 
-export function parseLabResultUpsertHttpError(err: HttpErrorResponse): ParsedLabResultUpsertHttpError {
+function parseFieldErrors(err: HttpErrorResponse): Omit<ParsedLabResultUpsertHttpError, 'isConcurrencyConflict'> {
     const parsed = parseValidationHttpError<LabResultUpsertFormFieldKey>(err, {
         fieldMap: FIELD_MAP,
         normalizeMessage: normalizeLabResultUpsertFieldMessage,
@@ -123,4 +127,9 @@ export function parseLabResultUpsertHttpError(err: HttpErrorResponse): ParsedLab
     }
 
     return parsed;
+}
+
+export function parseLabResultUpsertHttpError(err: HttpErrorResponse): ParsedLabResultUpsertHttpError {
+    const isConcurrencyConflict = err.status === 409 && problemCodeFromHttpError(err) === LAB_RESULT_CONCURRENCY_CONFLICT_CODE;
+    return { ...parseFieldErrors(err), isConcurrencyConflict };
 }

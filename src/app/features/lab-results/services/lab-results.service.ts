@@ -56,9 +56,22 @@ export class LabResultsService {
 
     getLabResultForEditById(id: string): Observable<LabResultEditVm> {
         return this.api.get<LabResultDetailDto>(ApiEndpoints.labResults.byId(id)).pipe(
-            map((dto) => mapLabResultDetailDtoToEditVm(dto)),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Düzenleme bilgileri yüklenemedi.')))
+            map((dto) => {
+                const vm = mapLabResultDetailDtoToEditVm(dto);
+                if (!vm.rowVersion) {
+                    // Sürümsüz PUT backend'de 400 verir; sürüm yoksa düzenlemeye izin verme.
+                    throw new Error('Sunucu kayıt sürümünü (rowVersion) döndürmedi; düzenleme yapılamaz.');
+                }
+                return vm;
+            }),
+            catchError((err: unknown) =>
+                throwError(() =>
+                    err instanceof HttpErrorResponse
+                        ? new Error(messageFromHttpError(err, 'Düzenleme bilgileri yüklenemedi.'))
+                        : err instanceof Error
+                          ? err
+                          : new Error('Düzenleme bilgileri yüklenemedi.')
+                )
             )
         );
     }

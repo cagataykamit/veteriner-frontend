@@ -11,4 +11,6 @@ export interface CreateLabResultRequest {
     resultText: string;
     interpretation?: string | null;
     notes?: string | null;
+    /** Yalnız güncellemede; GET'ten alınan sürüm. */
+    rowVersion?: string;
 }
