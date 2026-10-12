@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, effect, inject, input, model, output, signal, untracked } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder,ReactiveFormsModule } from '@angular/forms';
 import type { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -33,7 +34,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <label for="rc-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
                 <textarea id="rc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
-                @if (form.controls.reason.invalid && form.controls.reason.touched) {
+                @if (form.controls.reason.invalid && (form.controls.reason.dirty || form.controls.reason.touched)) {
                     <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
                 }
                 @if (submitError()) {
@@ -79,6 +80,7 @@ export class ReasonConfirmDialogComponent {
     readonly form = this.fb.nonNullable.group({ reason: ['', reasonLength] });
 
     constructor() {
+        this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.submitError.set(null));
         effect(() => {
             if (this.visible()) {
                 untracked(() => {

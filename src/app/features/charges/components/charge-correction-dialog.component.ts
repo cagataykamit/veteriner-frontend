@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
@@ -75,7 +75,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                     <div class="col-span-12">
                         <label for="cc-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
                         <textarea id="cc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
-                        @if (form.controls.reason.invalid && form.controls.reason.touched) {
+                        @if (form.controls.reason.invalid && (form.controls.reason.dirty || form.controls.reason.touched)) {
                             <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
                         }
                     </div>
@@ -147,6 +147,7 @@ export class ChargeCorrectionDialogComponent {
     });
 
     constructor() {
+        this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.submitError.set(null));
         effect(() => {
             const c = this.charge();
             if (this.visible() && c) {
