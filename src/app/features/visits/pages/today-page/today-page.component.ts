@@ -180,7 +180,7 @@ type TodayScope = 'mine' | 'all';
                                 </td>
                                 <td>
                                     <div class="font-medium flex items-center gap-2 min-w-0">
-                                        <span class="truncate min-w-0" [attr.title]="item.petName">{{ item.petName }}</span>
+                                        <span class="line-clamp-2 break-words min-w-0" [attr.title]="item.petName">{{ item.petName }}</span>
                                         <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
                                         @if (item.isUrgent) {
                                             <app-status-tag class="shrink-0" label="Acil" severity="danger" />
@@ -193,9 +193,9 @@ type TodayScope = 'mine' | 'all';
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="truncate" [attr.title]="item.clientName">{{ item.clientName }}</div>
+                                    <div class="line-clamp-2 break-words" [attr.title]="item.clientName">{{ item.clientName }}</div>
                                     @if (item.clientPhone) {
-                                        <div class="text-sm text-muted-color">{{ phone(item.clientPhone) }}</div>
+                                        <div class="text-sm text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</div>
                                     }
                                 </td>
                                 <td class="truncate @max-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName">
@@ -512,14 +512,14 @@ export class TodayPageComponent implements OnInit {
      * Tüm grup tabloları aynı sütun şablonunu kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler.
      * Üç kip, tablo kapsayıcısının genişliğine göre (kapsayıcı sorgusu; ekran/yakınlaştırma değil):
      * geniş (≥72 rem): tüm sütunlar, yazılı düğmeler; orta (50–72 rem): Hekim ve Ödeme/yatış sütunları gizlenir (bilgi Hasta ve Durum
-     * hücrelerine taşınır), düğmeler yine yazılı; dar (<50 rem): düğmeler yalnız ikon (aria-label + ipucu). Ad sütunları kısalıp ipucuyla
-     * tam adı gösterir; tablo yatay taşmaz. Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
+     * hücrelerine taşınır), düğmeler yine yazılı; dar (<50 rem): düğmeler yalnız ikon (aria-label + ipucu). Hasta/Sahip adı en çok 2 satıra
+     * sarar (tam ad ipucunda); Sahip kalan genişliği alır, telefon tek satır; tablo yatay taşmaz. Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
      */
     protected readonly columnClasses = [
-        'w-[6.5rem]',
+        'w-[6rem]',
+        'w-[9rem]',
         'w-auto',
-        'w-auto',
-        'w-[8rem] @max-[76rem]:hidden',
+        'w-[7rem] @max-[76rem]:hidden',
         'w-[8.5rem] @max-[76rem]:w-[9rem]',
         'w-[11rem] @max-[76rem]:hidden',
         'w-[7.5rem]',

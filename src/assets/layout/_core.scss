@@ -6,6 +6,20 @@ html {
     scrollbar-gutter: stable;
 }
 
+/*
+ * PrimeNG modal açılınca gövdeye p-overflow-hidden ekler (overflow:hidden + padding-right); gövdeden görünüme yayılan
+ * overflow:hidden kaydırma çubuğunu kaldırıp içeriği kaydırır. Kilidi html'e taşıyoruz: scrollbar-gutter: stable
+ * oluk yerinde kalır, hiçbir diyalogda (Dialog, ConfirmDialog, Drawer...) arka plan oynamaz.
+ */
+body.p-overflow-hidden {
+    overflow: visible !important;
+    padding-right: 0 !important;
+}
+
+html:has(body.p-overflow-hidden) {
+    overflow: hidden;
+}
+
 body {
     font-family: "Inter", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: var(--text-color);

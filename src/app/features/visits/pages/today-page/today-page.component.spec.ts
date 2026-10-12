@@ -185,6 +185,23 @@ describe('TodayPageComponent', () => {
         expect(t).toContain('Atanmadı');
     });
 
+    it('hasta ve sahip adı tek satırda kesilmez: 2 satıra sarar, tam ad ipucunda; telefon tek satır', async () => {
+        const f = await create(['Visits.Read'], {
+            date: 'd',
+            activeHospitalizations: [],
+            items: [item({ petName: 'Karabaş Uzun Adlı Köpek', clientName: 'TEST Mehmet Yıldızoğlu Uzunadlı', clientPhone: '905439580091' })]
+        });
+        const root = f.nativeElement as HTMLElement;
+        const pet = root.querySelector<HTMLElement>('[title="Karabaş Uzun Adlı Köpek"]');
+        const client = root.querySelector<HTMLElement>('[title="TEST Mehmet Yıldızoğlu Uzunadlı"]');
+        for (const el of [pet, client]) {
+            expect(el).not.toBeNull();
+            expect(el!.classList).toContain('line-clamp-2');
+            expect(el!.classList).not.toContain('truncate');
+        }
+        expect(Array.from(root.querySelectorAll('div')).find((d) => d.textContent?.trim() === '+90 543 958 00 91')?.classList).toContain('whitespace-nowrap');
+    });
+
     it('süre sütunu grup bazlı: Bekliyor için Bekleme, Devam ediyor için Süre, tamamlananlarda yok', async () => {
         const f = await create(['Visits.Read'], {
             date: 'd',
