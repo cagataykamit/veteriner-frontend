@@ -1,0 +1,63 @@
+export interface AdministrationVm {
+    id: string;
+    petId: string;
+    examinationId: string | null;
+    treatmentId: string | null;
+    productId: string;
+    productName: string;
+    productSku: string | null;
+    unit: string;
+    quantity: number;
+    administeredAtUtc: string;
+    notes: string | null;
+    isVoided: boolean;
+    voidedAtUtc: string | null;
+    voidReason: string | null;
+    createdAtUtc: string;
+}
+
+export interface AdministrationStockVm {
+    quantityOnHand: number;
+    minimumStockLevel: number;
+    isBelowMinimum: boolean;
+}
+
+export interface AdministrationsPagedVm {
+    items: AdministrationVm[];
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+}
+
+/** GET /administrations sorgusu; klinik kapsamı servis tarafından eklenir. */
+export interface AdministrationsListQuery {
+    page?: number;
+    pageSize?: number;
+    clinicId?: string;
+    petId?: string;
+    examinationId?: string;
+    treatmentId?: string;
+    productId?: string;
+    includeVoided?: boolean;
+}
+
+export interface CreateAdministrationRequest {
+    petId: string;
+    examinationId?: string | null;
+    treatmentId?: string | null;
+    productId: string;
+    quantity: number;
+    /** Boşsa sunucu "şimdi" kullanır. */
+    administeredAtUtc?: string | null;
+    notes?: string | null;
+    /** Form başına bir kez üretilen anahtar; aynı anahtarla tekrar istek ikinci düşüm üretmez. */
+    requestId: string;
+}
+
+export interface AdministrationCreateResultVm {
+    /** `false`: aynı `requestId` ile daha önce kaydedilmiş uygulama döndü (stok değişmedi). */
+    created: boolean;
+    administration: AdministrationVm;
+    stock: AdministrationStockVm;
+}

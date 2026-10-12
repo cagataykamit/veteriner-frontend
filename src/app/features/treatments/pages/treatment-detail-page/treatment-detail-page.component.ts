@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
 import type { TreatmentDetailVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -19,6 +20,7 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
         CommonModule,
         RouterLink,
         ButtonModule,
+        AdministrationsSectionComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent
@@ -166,6 +168,16 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                         <p class="mt-0 mb-0 whitespace-pre-wrap">{{ row()!.notes }}</p>
                     </div>
                 </div>
+                @if (row()!.petId?.trim()) {
+                    <div class="col-span-12">
+                        <app-administrations-section
+                            [petId]="row()!.petId!"
+                            [petName]="row()!.petName"
+                            [examinationId]="row()!.examinationId"
+                            [treatmentId]="row()!.id"
+                        />
+                    </div>
+                }
             </div>
         }
     `

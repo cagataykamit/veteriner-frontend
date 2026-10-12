@@ -1,0 +1,229 @@
+import { CommonModule } from '@angular/common';
+import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { startWith } from 'rxjs';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { SelectModule } from 'primeng/select';
+import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
+import {
+    CHARGE_QUANTITY_MAX,
+    CHARGE_QUANTITY_MAX_DECIMALS,
+    chargeNumberValidator
+} from '@/app/features/charges/utils/charge-amount.utils';
+import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
+import { ProductService } from '@/app/features/inventory/services/product.service';
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+
+const NOTES_MAX_LENGTH = 2000;
+
+/**
+ * Hastaya uygulanan ürünün kaydı (`Administrations.Create`): stok aynı işlemde düşer, yetersiz stok kaydı engeller.
+ * Miktar ürünün stok birimindedir (birim dönüşümü yok). Yetki denetimi çağıran bileşende yapılır.
+ */
+@Component({
+    selector: 'app-administration-create-dialog',
+    standalone: true,
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent],
+    template: `
+        <p-dialog
+            header="Uygulama kaydet"
+            [modal]="true"
+            [dismissableMask]="!submitting()"
+            [closable]="!submitting()"
+            [style]="{ width: 'min(560px, 95vw)' }"
+            [(visible)]="visible"
+        >
+            @if (petName()) {
+                <p class="mt-0 mb-1 font-medium">{{ petName() }}</p>
+            }
+            <p class="mt-0 mb-4 text-sm text-muted-color">
+                Klinikte hastaya uygulanan ürün kaydedilir ve stoktan düşülür. Dışarıdan alınacak ilaç için reçete yazın; reçete stok düşmez.
+            </p>
+            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-12">
+                        <label for="ad-product" class="block text-sm font-medium text-muted-color mb-2">Ürün *</label>
+                        <p-select
+                            inputId="ad-product"
+                            formControlName="productId"
+                            [options]="productOptions()"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Ürün seçin"
+                            [filter]="true"
+                            filterPlaceholder="Ara…"
+                            filterBy="label"
+                            [loading]="loadingProducts()"
+                            appendTo="body"
+                            styleClass="w-full"
+                        />
+                        @if (form.controls.productId.invalid && form.controls.productId.touched) {
+                            <small class="text-red-500">Ürün seçimi zorunludur.</small>
+                        }
+                        @if (productsError()) {
+                            <small class="text-red-500 block">{{ productsError() }}</small>
+                        }
+                    </div>
+                    <div class="col-span-12 sm:col-span-6">
+                        <label for="ad-quantity" class="block text-sm font-medium text-muted-color mb-2">
+                            Miktar *@if (unit()) { <span> ({{ unit() }})</span> }
+                        </label>
+                        <input id="ad-quantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
+                        @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
+                            <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
+                        } @else if (unit()) {
+                            <small class="text-muted-color">Miktar ürünün stok birimindedir: {{ unit() }}. Örnek: birim "şişe" ise 0,5 yarım şişedir.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 sm:col-span-6">
+                        <label for="ad-at" class="block text-sm font-medium text-muted-color mb-2">Uygulama zamanı</label>
+                        <app-date-input inputId="ad-at" type="datetime-local" formControlName="administeredAtLocal" />
+                        @if (form.controls.administeredAtLocal.hasError('dateYearInvalid') && form.controls.administeredAtLocal.touched) {
+                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else {
+                            <small class="text-muted-color">Boş bırakılırsa şimdi kaydedilir (en fazla 7 gün geriye).</small>
+                        }
+                    </div>
+                    <div class="col-span-12">
+                        <label for="ad-notes" class="block text-sm font-medium text-muted-color mb-2">Not</label>
+                        <textarea id="ad-notes" rows="2" class="w-full p-inputtext p-component" formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
+                    </div>
+                </div>
+                @if (submitError()) {
+                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                }
+            </form>
+            <ng-template pTemplate="footer">
+                <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
+                <p-button type="button" label="Kaydet ve stoktan düş" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
+            </ng-template>
+        </p-dialog>
+    `
+})
+export class AdministrationCreateDialogComponent {
+    readonly visible = model(false);
+    readonly petId = input.required<string>();
+    readonly petName = input<string | null>(null);
+    readonly examinationId = input<string | null>(null);
+    readonly treatmentId = input<string | null>(null);
+    readonly saved = output<AdministrationCreateResultVm>();
+
+    private readonly fb = inject(FormBuilder);
+    private readonly administrationsService = inject(AdministrationsService);
+    private readonly productService = inject(ProductService);
+
+    protected readonly quantityMax = CHARGE_QUANTITY_MAX;
+    protected readonly quantityDecimals = CHARGE_QUANTITY_MAX_DECIMALS;
+    protected readonly notesMaxLength = NOTES_MAX_LENGTH;
+
+    readonly submitting = signal(false);
+    readonly submitError = signal<string | null>(null);
+    readonly loadingProducts = signal(false);
+    readonly productsError = signal<string | null>(null);
+    private readonly products = signal<ProductListItemVm[]>([]);
+    private productsLoaded = false;
+
+    /** Form başına bir kez üretilir; hata sonrası yeniden denemede aynı kalır (ikinci düşüm oluşmaz), başarıdan sonra yenilenir. */
+    private requestId = crypto.randomUUID();
+
+    readonly form = this.fb.group({
+        productId: this.fb.nonNullable.control('', Validators.required),
+        quantity: this.fb.control<number | null>(null, [Validators.required, chargeNumberValidator(CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS)]),
+        administeredAtLocal: this.fb.nonNullable.control('', dateTimeYearRangeValidator()),
+        notes: this.fb.nonNullable.control('', Validators.maxLength(NOTES_MAX_LENGTH))
+    });
+
+    private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(null)), { initialValue: null });
+
+    readonly productOptions = computed(() =>
+        this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name }))
+    );
+    readonly unit = computed(() => {
+        this.formValue();
+        const id = this.form.controls.productId.value;
+        return this.products().find((p) => p.id === id)?.unit ?? '';
+    });
+
+    constructor() {
+        effect(() => {
+            if (this.visible()) {
+                untracked(() => {
+                    this.submitError.set(null);
+                    this.form.reset({ productId: '', quantity: null, administeredAtLocal: '', notes: '' });
+                    this.loadProducts();
+                });
+            }
+        });
+    }
+
+    close(): void {
+        this.visible.set(false);
+    }
+
+    onSubmit(): void {
+        if (this.submitting()) {
+            return;
+        }
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            return;
+        }
+        const v = this.form.getRawValue();
+        const at = v.administeredAtLocal.trim();
+        const administeredAtUtc = at ? fromIstanbulDateTimeLocalInputToUtcIso(at) : null;
+        if (at && !administeredAtUtc) {
+            this.submitError.set('Geçerli bir uygulama zamanı girin.');
+            return;
+        }
+        this.submitError.set(null);
+        this.submitting.set(true);
+        this.administrationsService
+            .createAdministration({
+                petId: this.petId(),
+                examinationId: this.examinationId(),
+                treatmentId: this.treatmentId(),
+                productId: v.productId,
+                quantity: v.quantity!,
+                administeredAtUtc,
+                notes: v.notes,
+                requestId: this.requestId
+            })
+            .subscribe({
+                next: (result) => {
+                    this.requestId = crypto.randomUUID();
+                    this.submitting.set(false);
+                    this.visible.set(false);
+                    this.saved.emit(result);
+                },
+                error: (e: unknown) => {
+                    this.submitting.set(false);
+                    this.submitError.set(panelHttpFailureMessage(e, 'Uygulama kaydedilemedi.'));
+                }
+            });
+    }
+
+    private loadProducts(): void {
+        if (this.productsLoaded || this.loadingProducts()) {
+            return;
+        }
+        this.loadingProducts.set(true);
+        this.productsError.set(null);
+        this.productService.getProducts({ page: 1, pageSize: 200, isActive: true }).subscribe({
+            next: (r) => {
+                this.products.set(r.items);
+                this.productsLoaded = true;
+                this.loadingProducts.set(false);
+            },
+            error: (e: Error) => {
+                this.productsError.set(e.message ?? 'Ürün listesi yüklenemedi.');
+                this.loadingProducts.set(false);
+            }
+        });
+    }
+}

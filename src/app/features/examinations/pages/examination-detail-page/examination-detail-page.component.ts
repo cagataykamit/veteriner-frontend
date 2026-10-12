@@ -14,6 +14,7 @@ import type {
     ExaminationRelatedSummaryVm
 } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationAddendaSectionComponent } from '@/app/features/examinations/components/examination-addenda-section.component';
+import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
 import { ExaminationFinalizeDialogComponent } from '@/app/features/examinations/components/examination-finalize-dialog.component';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
@@ -51,6 +52,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         AppErrorStateComponent,
         AppStatusTagComponent,
         ExaminationAddendaSectionComponent,
+        AdministrationsSectionComponent,
         ExaminationFinalizeDialogComponent,
         ToastModule
     ],
@@ -381,6 +383,17 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 @if (exam()!.status === 'Finalized') {
                     <div class="col-span-12">
                         <app-examination-addenda-section [examinationId]="exam()!.id" [canAdd]="canAddAddendum()" />
+                    </div>
+                }
+
+                @if (exam()!.petId?.trim()) {
+                    <div class="col-span-12">
+                        <app-administrations-section
+                            [petId]="exam()!.petId!"
+                            [petName]="exam()!.petName"
+                            [examinationId]="exam()!.id"
+                            [locked]="exam()!.status === 'Finalized'"
+                        />
                     </div>
                 }
 
