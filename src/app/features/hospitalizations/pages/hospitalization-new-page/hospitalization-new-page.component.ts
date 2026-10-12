@@ -38,8 +38,12 @@ import {
 } from '@/app/shared/utils/date-input-validation.utils';
 import {
     HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE,
+    HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY,
+    HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_MESSAGE,
     hospitalizationDateNotTooFarPastValidator,
-    hospitalizationDateTimeLocalMinAllowed
+    hospitalizationDateTimeLocalMinAllowed,
+    hospitalizationPlannedDischargeMin,
+    plannedDischargeNotBeforeAdmissionValidator
 } from '@/app/features/hospitalizations/utils/hospitalization-date-validation.utils';
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -111,9 +115,11 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="plannedDischargeAtLocal" class="block text-sm font-medium text-muted-color mb-2">Planlı taburcu</label>
-                        <app-date-input inputId="plannedDischargeAtLocal" type="datetime-local" formControlName="plannedDischargeAtLocal" [min]="datetimeLocalInputMin" limit="planned" />
+                        <app-date-input inputId="plannedDischargeAtLocal" type="datetime-local" formControlName="plannedDischargeAtLocal" [min]="plannedDischargeMin()" limit="planned" />
                         @if (form.controls.plannedDischargeAtLocal.hasError('dateYearInvalid') && form.controls.plannedDischargeAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        } @else if (form.hasError(plannedBeforeAdmissionKey) && !form.controls.plannedDischargeAtLocal.hasError('dateOutOfRange') && form.controls.plannedDischargeAtLocal.touched) {
+                            <small class="text-red-500 block">{{ plannedBeforeAdmissionMessage }}</small>
                         } @else if (apiFieldErrors().plannedDischargeAtLocal) {
                             <small class="text-red-500">{{ apiFieldErrors().plannedDischargeAtLocal }}</small>
                         }
@@ -179,6 +185,8 @@ export class HospitalizationNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
     protected readonly hospitalizationDateTooFarPastMessage = HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE;
+    protected readonly plannedBeforeAdmissionKey = HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY;
+    protected readonly plannedBeforeAdmissionMessage = HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
     private readonly hospitalizationsService = inject(HospitalizationsService);
@@ -210,7 +218,7 @@ export class HospitalizationNewPageComponent implements OnInit {
         examinationId: [''],
         reason: ['', Validators.required],
         notes: ['']
-    });
+    }, { validators: [plannedDischargeNotBeforeAdmissionValidator()] });
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
@@ -264,6 +272,10 @@ export class HospitalizationNewPageComponent implements OnInit {
         } else {
             this.form.controls.examinationId.enable({ emitEvent: false });
         }
+    }
+
+    plannedDischargeMin(): string {
+        return hospitalizationPlannedDischargeMin(this.form.controls.admittedAtLocal.value, this.datetimeLocalInputMin);
     }
 
     hospitalizationDateMinAllowed(): string {
