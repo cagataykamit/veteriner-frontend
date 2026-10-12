@@ -4,32 +4,10 @@ import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    APPOINTMENTS_READ_CLAIM,
-    CLIENTS_READ_CLAIM,
-    CLINICS_READ_CLAIM,
-    EXAMINATIONS_READ_CLAIM,
-    HOSPITALIZATIONS_READ_CLAIM,
-    LAB_RESULTS_READ_CLAIM,
-    CHARGES_READ_CLAIM,
-    PAYMENTS_READ_CLAIM,
-    PRODUCT_CATEGORIES_READ_CLAIM,
-    PRODUCTS_READ_CLAIM,
-    STOCK_MOVEMENTS_READ_CLAIM,
-    PETS_READ_CLAIM,
-    PRESCRIPTIONS_READ_CLAIM,
-    REMINDERS_READ_CLAIM,
-    BREEDS_CREATE_CLAIM,
-    BREEDS_UPDATE_CLAIM,
-    SPECIES_CREATE_CLAIM,
-    SPECIES_UPDATE_CLAIM,
-    SUBSCRIPTIONS_MANAGE_CLAIM,
-    SUBSCRIPTIONS_READ_CLAIM,
-    TENANT_MANAGEMENT_CLAIM,
-    TREATMENTS_READ_CLAIM,
-    VACCINATIONS_READ_CLAIM,
-    VISITS_READ_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { MENU_GROUPS, visibleGroups } from '@/app/core/routing/panel-navigation';
+
+/** Alt yollarda da (`/panel/pets/:id`) vurgulanır. */
+const SUBSET_ACTIVE_OPTIONS = { paths: 'subset', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' } as const;
 
 @Component({
     selector: 'app-menu',
@@ -50,147 +28,14 @@ export class AppMenu {
     model: MenuItem[] = [];
 
     ngOnInit() {
-        const canReadReminders = this.auth.hasOperationClaim(REMINDERS_READ_CLAIM);
-        const reminderItems: MenuItem[] = [];
-        if (canReadReminders) {
-            reminderItems.push({ label: 'Hatırlatmalar', icon: 'pi pi-fw pi-bell', routerLink: ['/panel/settings/reminders'] });
-            reminderItems.push({ label: 'Hatırlatma Geçmişi', icon: 'pi pi-fw pi-history', routerLink: ['/panel/settings/reminders/logs'] });
-        }
-
-        const canAccessSubscriptionPage =
-            this.auth.hasOperationClaim(SUBSCRIPTIONS_READ_CLAIM) ||
-            this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM);
-        const canReadVisits = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
-        const canReadClients = this.auth.hasOperationClaim(CLIENTS_READ_CLAIM);
-        const canReadPets = this.auth.hasOperationClaim(PETS_READ_CLAIM);
-        const canReadAppointments = this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM);
-        const canReadExaminations = this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM);
-        const canReadVaccinations = this.auth.hasOperationClaim(VACCINATIONS_READ_CLAIM);
-        const canReadPayments = this.auth.hasOperationClaim(PAYMENTS_READ_CLAIM);
-        const canReadCharges = this.auth.hasOperationClaim(CHARGES_READ_CLAIM);
-        const canReadProducts = this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM);
-        const canReadStockMovements = this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM);
-        const canReadProductCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_READ_CLAIM);
-        const canReadTreatments = this.auth.hasOperationClaim(TREATMENTS_READ_CLAIM);
-        const canReadPrescriptions = this.auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM);
-        const canReadLabResults = this.auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM);
-        const canReadHospitalizations = this.auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM);
-        const canReadClinics = this.auth.hasOperationClaim(CLINICS_READ_CLAIM);
-        const canShowSpeciesManagementMenu =
-            this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) ||
-            this.auth.hasOperationClaim(SPECIES_UPDATE_CLAIM);
-        const canShowBreedsManagementMenu =
-            this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM) ||
-            this.auth.hasOperationClaim(BREEDS_UPDATE_CLAIM);
-
-        const canManageTenantAccess = this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM);
-        const tenantManagementItems: MenuItem[] = [];
-        if (canManageTenantAccess) {
-            tenantManagementItems.push(
-                { label: 'Organizasyon Ayarları', icon: 'pi pi-fw pi-building', routerLink: ['/panel/settings/organization'] },
-                { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', routerLink: ['/panel/settings/members'] },
-                { label: 'Davetler', icon: 'pi pi-fw pi-list', routerLink: ['/panel/settings/invites/list'] },
-                { label: 'Davet oluştur', icon: 'pi pi-fw pi-user-plus', routerLink: ['/panel/settings/invites'] }
-            );
-        }
-
-        const reportMenuItems: MenuItem[] = [
-            ...(canReadPayments
-                ? [{ label: 'Ödeme Raporu', icon: 'pi pi-fw pi-file-export', routerLink: ['/panel/reports/payments'] }]
-                : []),
-            ...(canReadAppointments
-                ? [{ label: 'Randevu Raporu', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/panel/reports/appointments'] }]
-                : []),
-            ...(canReadExaminations
-                ? [{ label: 'Muayene Raporu', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/reports/examinations'] }]
-                : []),
-            ...(canReadVaccinations
-                ? [{ label: 'Aşı Raporu', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/reports/vaccinations'] }]
-                : [])
-        ];
-        const canShowReportsGroup = reportMenuItems.length > 0;
-
-        const patientManagementItems: MenuItem[] = [
-            ...(canReadClients ? [{ label: 'Müşteriler', icon: 'pi pi-fw pi-users', routerLink: ['/panel/clients'] }] : []),
-            ...(canReadPets ? [{ label: 'Hayvanlar', icon: 'pi pi-fw pi-heart', routerLink: ['/panel/pets'] }] : []),
-            ...(canShowSpeciesManagementMenu
-                ? [{ label: 'Türler', icon: 'pi pi-fw pi-tags', routerLink: ['/panel/species'] }]
-                : []),
-            ...(canShowBreedsManagementMenu
-                ? [{ label: 'Irklar', icon: 'pi pi-fw pi-sitemap', routerLink: ['/panel/breeds'] }]
-                : []),
-            ...(canReadAppointments ? [{ label: 'Randevular', icon: 'pi pi-fw pi-calendar', routerLink: ['/panel/appointments'] }] : []),
-            ...(canReadAppointments
-                ? [{ label: 'Randevu Takvimi', icon: 'pi pi-fw pi-calendar-clock', routerLink: ['/panel/appointments/calendar'] }]
-                : []),
-            ...(canReadExaminations ? [{ label: 'Muayeneler', icon: 'pi pi-fw pi-file-edit', routerLink: ['/panel/examinations'] }] : []),
-            ...(canReadTreatments ? [{ label: 'Tedaviler', icon: 'pi pi-fw pi-briefcase', routerLink: ['/panel/treatments'] }] : []),
-            ...(canReadPrescriptions ? [{ label: 'Reçeteler', icon: 'pi pi-fw pi-file', routerLink: ['/panel/prescriptions'] }] : []),
-            ...(canReadLabResults ? [{ label: 'Lab sonuçları', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/panel/lab-results'] }] : []),
-            ...(canReadHospitalizations ? [{ label: 'Yatışlar', icon: 'pi pi-fw pi-building', routerLink: ['/panel/hospitalizations'] }] : []),
-            ...(canReadVaccinations ? [{ label: 'Aşılar', icon: 'pi pi-fw pi-shield', routerLink: ['/panel/vaccinations'] }] : []),
-            ...(canReadCharges ? [{ label: 'Ücretler', icon: 'pi pi-fw pi-receipt', routerLink: ['/panel/charges'] }] : []),
-            ...(canReadPayments ? [{ label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', routerLink: ['/panel/payments'] }] : [])
-        ];
-
-        this.model = [
-            {
-                label: 'Panel',
-                items: [
-                    { label: 'Özet', icon: 'pi pi-fw pi-home', routerLink: ['/panel/dashboard'] },
-                    ...(canReadVisits ? [{ label: 'Bugün', icon: 'pi pi-fw pi-calendar-clock', routerLink: ['/panel/today'] }] : [])
-                ]
-            },
-            ...(patientManagementItems.length > 0
-                ? [{ label: 'Hasta yönetimi', items: patientManagementItems }]
-                : []),
-            ...(canReadProducts || canReadStockMovements || canReadProductCategories
-                ? [
-                      {
-                          label: 'Ürün ve Stok',
-                          items: [
-                              ...(canReadProducts
-                                  ? [
-                                        { label: 'Ürünler', icon: 'pi pi-fw pi-box', routerLink: ['/panel/products'] },
-                                        { label: 'Stok Durumu', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/panel/stocks'] }
-                                    ]
-                                  : []),
-                              ...(canReadStockMovements
-                                  ? [
-                                        {
-                                            label: 'Stok hareketleri',
-                                            icon: 'pi pi-fw pi-arrow-right-arrow-left',
-                                            routerLink: ['/panel/stock-movements']
-                                        }
-                                    ]
-                                  : []),
-                              ...(canReadProductCategories
-                                  ? [
-                                        {
-                                            label: 'Kategoriler',
-                                            icon: 'pi pi-fw pi-folder-open',
-                                            routerLink: ['/panel/product-categories']
-                                        }
-                                    ]
-                                  : [])
-                          ]
-                      }
-                  ]
-                : []),
-            ...(canShowReportsGroup ? [{ label: 'Raporlar', items: reportMenuItems }] : []),
-            {
-                label: 'Ayarlar',
-                items: [
-                    { label: 'Hesabım', icon: 'pi pi-fw pi-user', routerLink: ['/panel/settings/account'] },
-                    ...(canAccessSubscriptionPage
-                        ? [{ label: 'Abonelik', icon: 'pi pi-fw pi-wallet', routerLink: ['/panel/settings/subscription'] }]
-                        : []),
-                    ...(canReadClinics ? [{ label: 'Klinikler', icon: 'pi pi-fw pi-building', routerLink: ['/panel/settings/clinics'] }] : []),
-                    ...reminderItems,
-                    ...tenantManagementItems,
-                    { label: 'Giriş', icon: 'pi pi-fw pi-sign-in', routerLink: ['/auth/login'] }
-                ]
-            }
-        ];
+        this.model = visibleGroups(MENU_GROUPS, (claim) => this.auth.hasOperationClaim(claim)).map((group) => ({
+            label: group.label,
+            items: group.entries.map((entry) => ({
+                label: entry.label,
+                icon: entry.icon,
+                routerLink: [entry.route],
+                ...(entry.exact ? {} : { routerLinkActiveOptions: SUBSET_ACTIVE_OPTIONS })
+            }))
+        }));
     }
 }
