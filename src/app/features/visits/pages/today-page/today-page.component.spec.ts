@@ -7,7 +7,7 @@ import { AppointmentsService } from '@/app/features/appointments/services/appoin
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
-import type { TodayItemVm, TodayVm, VisitVm } from '@/app/features/visits/models/visit-vm.model';
+import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { TodayPageComponent } from './today-page.component';
 
@@ -117,6 +117,40 @@ describe('TodayPageComponent', () => {
         expect(t).toContain('Bekliyor');
         expect(t).not.toContain('Ödeme kaydı');
         expect((f.nativeElement as HTMLElement).querySelector('[aria-label="2 kayıt"]')).not.toBeNull();
+    });
+
+    describe('aktif yatışlar bölümü', () => {
+        const hosp = (over: Partial<TodayHospitalizationVm> = {}): TodayHospitalizationVm => ({
+            hospitalizationId: 'h1',
+            petId: 'p1',
+            petName: 'Pamuk',
+            clientName: 'Ali Veli',
+            admittedAtUtc: new Date(Date.now() - 3 * 86_400_000 - 60_000).toISOString(),
+            plannedDischargeAtUtc: null,
+            ...over
+        });
+        const section = (f: ComponentFixture<TodayPageComponent>) => (f.nativeElement as HTMLElement).querySelector('section[aria-label="Aktif yatışlar"]');
+
+        it('hayvan, sahip, giriş ve kaç gündür yatışta olduğu gösterilir; Hospitalizations.Read varsa detay bağlantısı verir', async () => {
+            const f = await create(['Visits.Read', 'Hospitalizations.Read'], { date: 'd', items: [], activeHospitalizations: [hosp({ plannedDischargeAtUtc: '2026-10-20T09:00:00Z' })] });
+            const s = section(f);
+            expect(s?.textContent).toContain('Pamuk');
+            expect(s?.textContent).toContain('Ali Veli');
+            expect(s?.textContent).toContain('3 gün');
+            expect(s?.textContent).toContain('Planlı taburcu');
+            expect(s?.querySelector('a')?.getAttribute('href')).toBe('/panel/hospitalizations/h1');
+        });
+
+        it('Hospitalizations.Read yoksa bağlantı gösterilmez', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', items: [], activeHospitalizations: [hosp()] });
+            expect(section(f)).not.toBeNull();
+            expect(section(f)?.querySelector('a')).toBeNull();
+        });
+
+        it('aktif yatış yoksa bölüm görünmez', async () => {
+            const f = await create(['Visits.Read', 'Hospitalizations.Read'], { date: 'd', items: [item({})], activeHospitalizations: [] });
+            expect(section(f)).toBeNull();
+        });
     });
 
     it('tutarlar null ise (Charges.Read yok) hiçbir tutar veya ödeme rozeti gösterilmez', async () => {
