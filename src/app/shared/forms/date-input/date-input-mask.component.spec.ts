@@ -204,6 +204,23 @@ describe('DateInputComponent — maske, hata ve aralık (gerçek input)', () => 
         expect(fixture.nativeElement.textContent).toContain('Geçerli bir tarih girin (gg.aa.yyyy).');
     });
 
+    it('tarih-saat alanında yalnız tarih yazılıp saat atlanırsa blur sonrası "Saati de girin" denir', async () => {
+        await create('datetime-local');
+        await typeChars('15102026');
+        expect(fixture.nativeElement.textContent).not.toContain('Saati de girin');
+        await blur();
+        expect(host.control.hasError('dateInvalid')).toBeTrue();
+        expect(fixture.nativeElement.textContent).toContain('Saati de girin (gg.aa.yyyy ss:dd).');
+    });
+
+    it('tarih-saat alanında yarım saat genel geçersiz mesajı verir; yalnız tarih alanı etkilenmez', async () => {
+        await create('datetime-local');
+        await typeChars('151020261');
+        await blur();
+        expect(fixture.nativeElement.textContent).toContain('Geçerli bir tarih ve saat girin');
+        expect(fixture.nativeElement.textContent).not.toContain('Saati de girin');
+    });
+
     it('yarım yazı blur sonrası hata verir (yazarken değil)', async () => {
         await create('date');
         await typeChars('2411');
