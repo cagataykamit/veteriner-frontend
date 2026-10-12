@@ -27,7 +27,10 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     appointmentStatus: null,
     responsibleVeterinarianName: 'Dr. Ayşe',
     isCarriedOver: false,
-    paymentIndicator: 'NoPaymentRecorded',
+    chargedAmount: null,
+    allocatedAmount: null,
+    outstandingAmount: null,
+    clientOutstandingAmount: null,
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,
@@ -94,17 +97,47 @@ describe('TodayPageComponent', () => {
         expect(t).not.toMatch(/açık iş/i);
     });
 
-    it('ödeme ve yatış rozetleri bakım durumundan ayrı gösterilir', async () => {
+    it('ziyaret ücret/ödenen/kalan ve müşteri borcu gösterilir; yatış rozeti bakım durumundan ayrıdır', async () => {
         const f = await create(['Visits.Read'], {
             date: 'd',
-            items: [item({ paymentIndicator: 'PaymentRecorded', hasActiveHospitalization: true }), item({ key: 'x', visitId: 'x' })]
+            items: [
+                item({ chargedAmount: 1000, allocatedAmount: 400, outstandingAmount: 600, clientOutstandingAmount: 900, hasActiveHospitalization: true }),
+                item({ key: 'x', visitId: 'x' })
+            ]
         });
         const t = text(f);
-        expect(t).toContain('Ödeme kaydı var');
-        expect(t).toContain('Ödeme kaydı yok');
+        expect(t).toContain('Kısmi ödendi');
+        expect(t).toContain('Ücret ₺1.000,00');
+        expect(t).toContain('Ödenen ₺400,00');
+        expect(t).toContain('Kalan ₺600,00');
+        expect(t).toContain('Müşteri borcu ₺900,00');
         expect(t).toContain('Yatışta');
         expect(t).toContain('Bekliyor');
+        expect(t).not.toContain('Ödeme kaydı');
         expect((f.nativeElement as HTMLElement).querySelector('[aria-label="2 kayıt"]')).not.toBeNull();
+    });
+
+    it('tutarlar null ise (Charges.Read yok) hiçbir tutar veya ödeme rozeti gösterilmez', async () => {
+        const f = await create(['Visits.Read'], { date: 'd', items: [item({})] });
+        const t = text(f);
+        expect(t).not.toContain('Ödenmedi');
+        expect(t).not.toContain('Ücret yok');
+        expect(t).not.toContain('Müşteri borcu');
+        expect(t).not.toContain('Ödeme kaydı');
+    });
+
+    it('ücreti olmayan ziyarette "Ücret yok" rozeti; ödenmiş ziyarette "Ödendi" ve müşteri borcu yoksa borç satırı çıkmaz', async () => {
+        const f = await create(['Visits.Read'], {
+            date: 'd',
+            items: [
+                item({ key: 'a', chargedAmount: 0, allocatedAmount: 0, outstandingAmount: 0, clientOutstandingAmount: 0 }),
+                item({ key: 'b', visitId: 'b', chargedAmount: 500, allocatedAmount: 500, outstandingAmount: 0, clientOutstandingAmount: 0 })
+            ]
+        });
+        const t = text(f);
+        expect(t).toContain('Ücret yok');
+        expect(t).toContain('Ödendi');
+        expect(t).not.toContain('Müşteri borcu');
     });
 
     it('telefon okunabilir biçimde, hekim yoksa Atanmadı gösterilir', async () => {
@@ -258,16 +291,18 @@ describe('TodayPageComponent', () => {
         });
 
         it('Gelmedi grubunda ödeme rozeti ve Durum: Gelmedi tekrarı yok; planlanan saat görünür', async () => {
-            const f = await create(['Visits.Read'], { date: 'd', items: [noShowItem(), item({ key: 'w' })] });
+            const money = { chargedAmount: 1000, allocatedAmount: 0, outstandingAmount: 1000, clientOutstandingAmount: 1000 };
+            const f = await create(['Visits.Read'], { date: 'd', items: [noShowItem(money), item({ key: 'w', ...money })] });
             const body = section(f, 'Gelmedi').querySelector('tbody')!.textContent ?? '';
-            expect(body).not.toContain('Ödeme kaydı');
+            expect(body).not.toContain('Ödenmedi');
+            expect(body).not.toContain('Müşteri borcu');
             expect(body).not.toContain('Gelmedi');
             expect(body).toContain('Randevu');
-            expect(section(f, 'Bekliyor').textContent).toContain('Ödeme kaydı yok');
+            expect(section(f, 'Bekliyor').textContent).toContain('Ödenmedi');
         });
 
         it('iki kip: Hekim ve Ödeme sütunları dar kipte gizlenir; hekim adı Hasta hücresine, ödeme/yatış rozeti Durum hücresine taşınır; başlıklar ve rozetler tek satır', async () => {
-            const f = await create(['Visits.Read'], { date: 'd', items: [item({ key: 'w', isCarriedOver: true, hasActiveHospitalization: true })] });
+            const f = await create(['Visits.Read'], { date: 'd', items: [item({ key: 'w', isCarriedOver: true, hasActiveHospitalization: true, chargedAmount: 1000, allocatedAmount: 0, outstandingAmount: 1000 })] });
             const host = f.nativeElement as HTMLElement;
             const hideCompact = '@max-[76rem]:hidden';
             const ths = Array.from(host.querySelectorAll('thead th'));
@@ -286,7 +321,7 @@ describe('TodayPageComponent', () => {
             // dar kip yedekleri yalnız dar kipte görünür (geniş kipte @min-[76rem]:hidden)
             const compactOnly = Array.from(host.querySelectorAll('tbody *')).filter((e) => e.classList.contains('@min-[76rem]:hidden'));
             expect(compactOnly.some((e) => e.textContent?.includes('Dr. Ayşe'))).toBeTrue();
-            expect(compactOnly.some((e) => e.textContent?.includes('Ödeme kaydı yok'))).toBeTrue();
+            expect(compactOnly.some((e) => e.textContent?.includes('Ödenmedi'))).toBeTrue();
             expect(compactOnly.some((e) => e.textContent?.includes('Yatışta'))).toBeTrue();
         });
 

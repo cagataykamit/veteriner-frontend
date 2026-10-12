@@ -75,18 +75,23 @@ describe('visit mapper — okuma', () => {
         expect(item.responsibleVeterinarianName).toBeNull();
     });
 
-    it('ödeme ve yatış göstergeleri ayrı alanlardır; yoksa güvenli varsayılan', () => {
-        const [recorded, missing] = mapTodayDtoToVm({
+    it('yatış göstergesi ve tutar alanları eşlenir; tutar yoksa null (yetkisiz), 0 ile karışmaz', () => {
+        const [full, missing, zero] = mapTodayDtoToVm({
             date: 'd',
             clinicId: 'c',
             generatedAtUtc: 'g',
-            items: [itemDto({ paymentIndicator: 'PaymentRecorded', hasActiveHospitalization: true }), itemDto({})]
+            items: [
+                itemDto({ hasActiveHospitalization: true, chargedAmount: 1000, allocatedAmount: 400, outstandingAmount: 600, clientOutstandingAmount: 900 }),
+                itemDto({}),
+                itemDto({ chargedAmount: 0, allocatedAmount: 0, outstandingAmount: 0, clientOutstandingAmount: 0 })
+            ]
         }).items;
-        expect(recorded.paymentIndicator).toBe('PaymentRecorded');
-        expect(recorded.hasActiveHospitalization).toBeTrue();
-        expect(recorded.careStatus).toBe('Waiting');
-        expect(missing.paymentIndicator).toBe('NoPaymentRecorded');
+        expect(full.hasActiveHospitalization).toBeTrue();
+        expect(full.careStatus).toBe('Waiting');
+        expect([full.chargedAmount, full.allocatedAmount, full.outstandingAmount, full.clientOutstandingAmount]).toEqual([1000, 400, 600, 900]);
         expect(missing.hasActiveHospitalization).toBeFalse();
+        expect([missing.chargedAmount, missing.allocatedAmount, missing.outstandingAmount, missing.clientOutstandingAmount]).toEqual([null, null, null, null]);
+        expect([zero.chargedAmount, zero.clientOutstandingAmount]).toEqual([0, 0]);
     });
 
     it('hekim adı yoksa — gösterir', () => {

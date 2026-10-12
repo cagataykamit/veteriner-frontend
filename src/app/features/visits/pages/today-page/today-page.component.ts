@@ -21,6 +21,7 @@ import {
     VISITS_UPDATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
 import { VisitCorrectionDialogComponent } from '@/app/features/visits/components/visit-correction-dialog.component';
 import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
@@ -30,7 +31,6 @@ import {
     careStatusSeverity,
     formatElapsedSince,
     groupTodayItems,
-    paymentIndicatorLabel,
     todayItemActions,
     todaySecondaryActions,
     todayUrgencyToggle,
@@ -82,6 +82,7 @@ type TodayScope = 'mine' | 'all';
         AppErrorStateComponent,
         AppEmptyStateComponent,
         AppStatusTagComponent,
+        TodayMoneyComponent,
         VisitArrivalDialogComponent,
         VisitCorrectionDialogComponent,
         AppointmentNoShowDialogComponent,
@@ -228,10 +229,7 @@ type TodayScope = 'mine' | 'all';
                                     <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
                                     <div class="flex flex-wrap gap-1 mt-1 @min-[76rem]:hidden">
                                         @if (group.key !== 'noShow') {
-                                            <app-status-tag
-                                                [label]="paymentLabel(item.paymentIndicator)"
-                                                [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
-                                            />
+                                            <app-today-money [item]="item" />
                                         }
                                         @if (item.hasActiveHospitalization) {
                                             <app-status-tag label="Yatışta" severity="warn" />
@@ -241,10 +239,7 @@ type TodayScope = 'mine' | 'all';
                                 <td class="whitespace-nowrap @max-[76rem]:hidden">
                                     <div class="flex flex-wrap gap-1">
                                         @if (group.key !== 'noShow') {
-                                            <app-status-tag
-                                                [label]="paymentLabel(item.paymentIndicator)"
-                                                [severity]="item.paymentIndicator === 'PaymentRecorded' ? 'success' : 'secondary'"
-                                            />
+                                            <app-today-money [item]="item" />
                                         }
                                         @if (item.hasActiveHospitalization) {
                                             <app-status-tag label="Yatışta" severity="warn" />
@@ -466,7 +461,6 @@ export class TodayPageComponent implements OnInit {
 
     readonly statusLabel = careStatusLabel;
     readonly statusSeverity = careStatusSeverity;
-    readonly paymentLabel = paymentIndicatorLabel;
     readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
     readonly waitTitle = waitAlertTitle;
@@ -483,7 +477,7 @@ export class TodayPageComponent implements OnInit {
         'w-auto',
         'w-[8rem] @max-[76rem]:hidden',
         'w-[8.5rem] @max-[76rem]:w-[9rem]',
-        'w-[9rem] @max-[76rem]:hidden',
+        'w-[11rem] @max-[76rem]:hidden',
         'w-[7.5rem]',
         'w-[20rem] @max-[50rem]:w-[12rem]'
     ];

@@ -8,6 +8,7 @@ import {
     todaySecondaryActions,
     todayUrgencyToggle,
     waitAlertLevel,
+    visitPaymentStatus,
     waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
 
@@ -27,7 +28,10 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     appointmentStatus: null,
     responsibleVeterinarianName: null,
     isCarriedOver: false,
-    paymentIndicator: 'NoPaymentRecorded',
+    chargedAmount: null,
+    allocatedAmount: null,
+    outstandingAmount: null,
+    clientOutstandingAmount: null,
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,
@@ -249,5 +253,27 @@ describe('isPossiblyForgottenVisit', () => {
     it('tamamlanan, planlı ve gelişi olmayan satır false', () => {
         expect(isPossiblyForgottenVisit(item({ careStatus: 'Completed', arrivedAtUtc: hoursAgo(30) }), now)).toBeFalse();
         expect(isPossiblyForgottenVisit(item({ careStatus: null, arrivedAtUtc: null }), now)).toBeFalse();
+    });
+});
+
+describe('visitPaymentStatus', () => {
+    const amounts = (charged: number | null, allocated: number | null, outstanding: number | null) => ({
+        chargedAmount: charged,
+        allocatedAmount: allocated,
+        outstandingAmount: outstanding
+    });
+
+    it('tutarlar yoksa (yetkisiz veya ziyaret yok) rozet yok', () => {
+        expect(visitPaymentStatus(amounts(null, null, null))).toBeNull();
+    });
+
+    it('ücret yazılmamış ziyaret', () => {
+        expect(visitPaymentStatus(amounts(0, 0, 0))).toEqual({ label: 'Ücret yok', severity: 'secondary' });
+    });
+
+    it('hiç ödenmemiş, kısmi ve tam ödenmiş', () => {
+        expect(visitPaymentStatus(amounts(1000, 0, 1000))?.label).toBe('Ödenmedi');
+        expect(visitPaymentStatus(amounts(1000, 400, 600))?.label).toBe('Kısmi ödendi');
+        expect(visitPaymentStatus(amounts(1000, 1000, 0))).toEqual({ label: 'Ödendi', severity: 'success' });
     });
 });

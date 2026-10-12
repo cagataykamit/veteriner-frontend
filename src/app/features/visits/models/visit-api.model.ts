@@ -48,6 +48,11 @@ export interface TodayItemDto {
     responsibleVeterinarianName?: string | null;
     isCarriedOver: boolean;
     paymentIndicator?: TodayPaymentIndicatorDto | null;
+    /** Ziyaret ve müşteri tutarları (`CLIENT_BALANCE_API_CONTRACT.md` §7); `Charges.Read` yoksa hepsi `null`. */
+    chargedAmount?: number | null;
+    allocatedAmount?: number | null;
+    outstandingAmount?: number | null;
+    clientOutstandingAmount?: number | null;
     hasActiveHospitalization?: boolean | null;
     petAlerts?: PetAlertsDto | null;
     isVoided?: boolean | null;

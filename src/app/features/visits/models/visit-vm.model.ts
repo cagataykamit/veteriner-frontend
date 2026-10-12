@@ -1,12 +1,9 @@
 import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
-import type { TodayAppointmentStatusDto, TodayPaymentIndicatorDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
+import type { TodayAppointmentStatusDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
 
 export type VisitCareStatus = VisitCareStatusDto;
 
 export type TodayAppointmentStatus = TodayAppointmentStatusDto;
-
-/** Yalnızca tahsilat kaydının varlığını söyler; borç/bakiye değildir ve bakım durumunu etkilemez. */
-export type TodayPaymentIndicator = TodayPaymentIndicatorDto;
 
 export interface VisitVm {
     id: string;
@@ -46,7 +43,12 @@ export interface TodayItemVm {
     appointmentStatus: TodayAppointmentStatus | null;
     responsibleVeterinarianName: string | null;
     isCarriedOver: boolean;
-    paymentIndicator: TodayPaymentIndicator;
+    /** Bu ziyaretin ücret / tahsis / kalan tutarı. `null`: `Charges.Read` yok veya ziyaret yok (planlı randevu). */
+    chargedAmount: number | null;
+    allocatedAmount: number | null;
+    outstandingAmount: number | null;
+    /** Müşterinin bu klinikteki toplam açık borcu (ziyaretten bağımsız). `null`: `Charges.Read` yok. */
+    clientOutstandingAmount: number | null;
     hasActiveHospitalization: boolean;
     /** Yalnızca "Yanlış işaretlenenler" görünümünde `true`. */
     isVoided: boolean;

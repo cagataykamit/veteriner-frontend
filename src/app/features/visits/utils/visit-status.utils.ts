@@ -1,4 +1,4 @@
-import type { TodayItemVm, TodayPaymentIndicator, VisitCareStatus, VisitCorrectionAction } from '@/app/features/visits/models/visit-vm.model';
+import type { TodayItemVm, VisitCareStatus, VisitCorrectionAction } from '@/app/features/visits/models/visit-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { canMarkAppointmentNoShow, canRevertAppointmentNoShow } from '@/app/features/appointments/utils/appointment-status.utils';
 import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
@@ -23,14 +23,19 @@ export function careStatusSeverity(status: VisitCareStatus): StatusTagSeverity {
     return CARE_STATUS_SEVERITY[status];
 }
 
-const PAYMENT_INDICATOR_LABEL: Record<TodayPaymentIndicator, string> = {
-    NoPaymentRecorded: 'Ödeme kaydı yok',
-    PaymentRecorded: 'Ödeme kaydı var'
-};
-
-/** "Ödendi/borçlu" demez: sözleşme yalnızca tahsilat kaydının varlığını bildirir. */
-export function paymentIndicatorLabel(indicator: TodayPaymentIndicator): string {
-    return PAYMENT_INDICATOR_LABEL[indicator];
+/** Ziyaret ücret durumu rozeti; tutarlar yoksa (yetkisiz veya ziyaret yok) `null`. Bakım durumundan bağımsızdır. */
+export function visitPaymentStatus(item: Pick<TodayItemVm, 'chargedAmount' | 'allocatedAmount' | 'outstandingAmount'>): { label: string; severity: StatusTagSeverity } | null {
+    const { chargedAmount, allocatedAmount, outstandingAmount } = item;
+    if (chargedAmount == null || allocatedAmount == null || outstandingAmount == null) {
+        return null;
+    }
+    if (chargedAmount === 0) {
+        return { label: 'Ücret yok', severity: 'secondary' };
+    }
+    if (outstandingAmount === 0) {
+        return { label: 'Ödendi', severity: 'success' };
+    }
+    return allocatedAmount > 0 ? { label: 'Kısmi ödendi', severity: 'info' } : { label: 'Ödenmedi', severity: 'warn' };
 }
 
 /** Düzeltme diyaloğu seçenekleri: mevcut durum hariç üç bakım durumu + yanlış geliş işareti. */
