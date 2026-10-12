@@ -6,10 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/features/clients/models/client-balance-vm.model';
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { BreedsService } from '@/app/features/breeds/services/breeds.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
-import { SpeciesService } from '@/app/features/species/services/species.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { PaymentNewPageComponent } from './payment-new-page.component';
 
@@ -59,9 +56,6 @@ describe('PaymentNewPageComponent', () => {
                 { provide: PaymentsService, useValue: payments },
                 { provide: ClientsService, useValue: clients },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
-                { provide: SpeciesService, useValue: {} },
-                { provide: BreedsService, useValue: {} },
-                { provide: PetsService, useValue: { getPetById: () => of({ id: 'p1', name: 'Pamuk', speciesName: 'Kedi' }), getPets: () => of({ items: [] }) } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => query[k] ?? null } } } }
@@ -217,7 +211,7 @@ describe('PaymentNewPageComponent', () => {
     });
 
     it('muayene bağlamı: müşteri ön seçilir, o muayenenin ücretleri tam tutarla dolu gelir ve muayene ödemeye bağlanır', async () => {
-        query = { clientId: 'cl1', petId: 'p1', examinationId: 'ex1' };
+        query = { clientId: 'cl1', examinationId: 'ex1' };
         clients.getClientBalance.and.returnValue(
             of(balance([openCharge('ch1', { examinationId: 'ex1' }), openCharge('ch2', { examinationId: 'ex2' })]))
         );

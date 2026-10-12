@@ -1,6 +1,5 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -60,7 +59,7 @@ const DUPLICATE_MISMATCH_MESSAGE =
         ButtonModule,
         SelectModule,
         TableModule,
-        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppPageHeaderComponent, ClientSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
@@ -83,13 +82,6 @@ const DUPLICATE_MISMATCH_MESSAGE =
                             <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
-                        <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
-                        @if (apiFieldErrors().petId) {
-                            <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
                     </div>
 
@@ -265,7 +257,6 @@ export class PaymentNewPageComponent implements OnInit {
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }],
         method: ['cash', Validators.required],
         paidAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), paymentDateNotTooFarPastValidator()]],
         note: ['']
@@ -279,7 +270,6 @@ export class PaymentNewPageComponent implements OnInit {
         this.form.statusChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.formValid.set(this.form.valid));
         this.formValid.set(this.form.valid);
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
-            this.form.controls.petId.setValue('');
             this.submitError.set(null);
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
@@ -290,11 +280,9 @@ export class PaymentNewPageComponent implements OnInit {
                 this.context = null;
             }
             if (!id) {
-                this.form.controls.petId.disable({ emitEvent: false });
                 this.resetCharges();
                 return;
             }
-            this.form.controls.petId.enable({ emitEvent: false });
             this.loadBalance(id);
         });
         this.applyRouteContext();
@@ -358,7 +346,6 @@ export class PaymentNewPageComponent implements OnInit {
             ...mapPaymentUpsertFormToWriteRequest({
                 clinicId,
                 clientId: v.clientId,
-                petId: v.petId,
                 examinationId: this.context?.examinationId,
                 amount: allocationTotal(allocations),
                 currency: PAYMENT_CURRENCY,
@@ -403,7 +390,7 @@ export class PaymentNewPageComponent implements OnInit {
         this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
     }
 
-    /** Muayene/geliş ekranlarından gelen bağlam: müşteri (ve hayvan) ön seçilir, o muayene/gelişin ücretleri dolu gelir. */
+    /** Muayene/geliş ekranlarından gelen bağlam: müşteri ön seçilir, o muayene/gelişin ücretleri dolu gelir. */
     private applyRouteContext(): void {
         const q = this.route.snapshot.queryParamMap;
         const clientId = q.get('clientId')?.trim() ?? '';
@@ -416,10 +403,6 @@ export class PaymentNewPageComponent implements OnInit {
             visitId: q.get('visitId')?.trim() || null
         };
         this.form.controls.clientId.setValue(clientId);
-        const petId = q.get('petId')?.trim() ?? '';
-        if (petId) {
-            this.form.controls.petId.setValue(petId);
-        }
     }
 
     private resetCharges(): void {
