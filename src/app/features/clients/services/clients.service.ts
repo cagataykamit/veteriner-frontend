@@ -29,7 +29,10 @@ import type {
     ClientPaymentSummaryVm,
     ClientRecentSummaryVm
 } from '@/app/features/clients/models/client-vm.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { mapClientBalanceDtoToVm } from '@/app/features/clients/data/client-balance.mapper';
+import type { ClientBalanceDto } from '@/app/features/clients/models/client-balance-api.model';
+import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
+import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface ClientsPagedVm {
     items: ClientListItemVm[];
@@ -79,6 +82,14 @@ export class ClientsService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Ödeme özeti yüklenemedi.')))
             )
+        );
+    }
+
+    /** `Charges.Read` — müşterinin açık ücretleri ve toplam borcu (aktif klinik kapsamı). */
+    getClientBalance(clientId: string): Observable<ClientBalanceVm> {
+        return this.api.get<ClientBalanceDto>(ApiEndpoints.clients.balance(clientId)).pipe(
+            map(mapClientBalanceDtoToVm),
+            toUserError('Müşteri bakiyesi yüklenemedi.')
         );
     }
 

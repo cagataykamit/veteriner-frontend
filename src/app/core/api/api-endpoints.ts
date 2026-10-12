@@ -67,7 +67,9 @@ export const ApiEndpoints = {
         /** POST: müşteri + hayvan tek işlemde (`Clients.Create` ve `Pets.Create`); Visit açmaz. */
         quickRegister: () => `/api/v1/clients/quick-register`,
         recentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/recent-summary`,
-        paymentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/payment-summary`
+        paymentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/payment-summary`,
+        /** `Charges.Read`; yalnız açık ücretler, hayvan ve ziyaret kırılımıyla (`CLIENT_BALANCE_API_CONTRACT.md`). */
+        balance: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/balance`
     },
     pets: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
