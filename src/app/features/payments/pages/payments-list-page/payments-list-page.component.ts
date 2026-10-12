@@ -16,6 +16,7 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -25,7 +26,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type PaymentsListState = {
     search: string;
@@ -54,7 +55,8 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        ReasonConfirmDialogComponent
     ],
     template: `
         <app-page-header title="Ödemeler" subtitle="Finans" description="Ödeme kayıtları.">
@@ -144,7 +146,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                     <th>Para birimi</th>
                                     <th>Yöntem</th>
                                     <th>Ödeme tarihi</th>
-                                    <th style="width: 8rem">İşlemler</th>
+                                    <th style="width: 12rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -169,8 +171,11 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                     <td>{{ row.currency }}</td>
                                     <td>{{ methodLabel(row.method) }}</td>
                                     <td>{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
-                                    <td>
+                                    <td class="whitespace-nowrap">
                                         <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        @if (canVoid && !ro.mutationBlocked()) {
+                                            <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                        }
                                     </td>
                                 </tr>
                             </ng-template>
@@ -214,7 +219,10 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 <div class="text-sm text-muted-color mb-3 min-w-0">
                                     <span class="font-medium">Yöntem: </span>{{ methodLabel(row.method) }}
                                 </div>
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-3 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                    @if (canVoid && !ro.mutationBlocked()) {
+                                        <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                    }
                                     <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay →</a>
                                 </div>
                             </div>
@@ -236,6 +244,17 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                 </div>
             }
         </div>
+
+        <app-reason-confirm-dialog
+            [(visible)]="voidVisible"
+            header="Ödemeyi iptal et"
+            [summary]="voidSummary()"
+            description="Ödeme hiç alınmamış sayılır: bağlı olduğu ücretlerin açık tutarı artar, listelerden ve bakiyeden düşer. Geri alınamaz; yanlışsa doğrusu yeni ödeme olarak girilir."
+            confirmLabel="Ödemeyi iptal et"
+            failureFallback="Ödeme iptal edilemedi."
+            [execute]="voidPayment"
+            (confirmed)="afterVoid()"
+        />
     `
 })
 export class PaymentsListPageComponent implements OnInit {
@@ -273,6 +292,16 @@ export class PaymentsListPageComponent implements OnInit {
         { label: 'Havale / EFT', value: 'transfer' }
     ];
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
+    readonly canVoid = this.auth.hasOperationClaim(PAYMENTS_CORRECT_CLAIM);
+
+    /** İptal diyaloğunun açık olduğu satır. */
+    readonly voidTarget = signal<PaymentListItemVm | null>(null);
+    voidVisible = false;
+    readonly voidSummary = computed(() => {
+        const p = this.voidTarget();
+        return p ? `${p.clientName} · ${formatMoney(p.amount, p.currency || 'TRY')} · ${paymentMethodLabel(p.method)}` : null;
+    });
+    readonly voidPayment = (reason: string) => this.paymentsService.voidPayment(this.voidTarget()!.id, reason);
 
     readonly displayedRows = computed(() => this.rawItems());
 
@@ -327,6 +356,20 @@ export class PaymentsListPageComponent implements OnInit {
         this.currentPage.set(1);
         this.clearStateFromSessionStorage();
         this.loadFromServer(1, this.pageSize(), '', '', '', '');
+    }
+
+    openVoid(row: PaymentListItemVm): void {
+        this.voidTarget.set(row);
+        this.voidVisible = true;
+    }
+
+    /** Sayfadaki son kayıt iptal edildiyse boş sayfa yerine bir önceki sayfaya döner. */
+    afterVoid(): void {
+        if (this.rawItems().length === 1 && this.currentPage() > 1) {
+            this.currentPage.set(this.currentPage() - 1);
+            this.first.set((this.currentPage() - 1) * this.pageSize());
+        }
+        this.reload();
     }
 
     reload(): void {

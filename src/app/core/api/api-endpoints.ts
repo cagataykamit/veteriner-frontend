@@ -52,7 +52,10 @@ export const ApiEndpoints = {
     charges: {
         /** GET (Query: `page`, `pageSize`, `clinicId`, `clientId`, `petId`, `visitId`, `examinationId`) ve POST. */
         list: () => `/api/v1/charges`,
-        byId: (id: string) => `/api/v1/charges/${encodeURIComponent(id)}`
+        /** GET; PUT = düzeltme (`Charges.Correct`, gerekçe zorunlu). */
+        byId: (id: string) => `/api/v1/charges/${encodeURIComponent(id)}`,
+        /** POST `{ reason }`; 204. */
+        void: (id: string) => `/api/v1/charges/${encodeURIComponent(id)}/void`
     },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
@@ -129,7 +132,9 @@ export const ApiEndpoints = {
     payments: {
         /** Query: `Page`, `PageSize`, `Search`, `Method`, `FromDate`, `ToDate` (+ `ClientId`, `PetId`, `clinicId`). */
         list: () => `/api/v1/payments`,
-        byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`,
+        /** POST `{ reason }`; 204 (`Payments.Correct`). */
+        void: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}/void`
     },
     reports: {
         /** Faz 6C.1 — Payments reporting contract (`from`, `to`, `clinicId`, `method`, `clientId`, `petId`, `search`, `page`, `pageSize`). */

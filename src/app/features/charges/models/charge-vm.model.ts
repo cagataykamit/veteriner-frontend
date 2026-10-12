@@ -48,6 +48,14 @@ export interface CreateChargeRequest {
     requestId: string;
 }
 
+export interface CorrectChargeRequest {
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    /** Zorunlu gerekçe (5–500 karakter, sunucuda audit'e yazılır). */
+    reason: string;
+}
+
 export interface ChargeCreateResultVm {
     /** `false`: aynı `requestId` ile daha önce kaydedilmiş ücret döndü. */
     created: boolean;

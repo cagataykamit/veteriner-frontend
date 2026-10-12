@@ -1,5 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import type {
+    ChargeCorrectionRequestDto,
     ChargeCreateRequestDto,
     ChargeCreateResultDto,
     ChargeDto,
@@ -10,6 +11,7 @@ import type {
     ChargesListQuery,
     ChargesPagedVm,
     ChargeVm,
+    CorrectChargeRequest,
     CreateChargeRequest
 } from '@/app/features/charges/models/charge-vm.model';
 
@@ -77,4 +79,9 @@ export function mapCreateChargeToApiBody(clinicId: string, req: CreateChargeRequ
         unitPrice: req.unitPrice,
         requestId: trimmedOrNull(req.requestId)
     };
+}
+
+/** Gerekçe sunucuda kırpılarak doğrulanır; istemci de kırpıp gönderir. */
+export function mapCorrectChargeToApiBody(req: CorrectChargeRequest): ChargeCorrectionRequestDto {
+    return { description: req.description.trim(), quantity: req.quantity, unitPrice: req.unitPrice, reason: req.reason.trim() };
 }

@@ -222,7 +222,7 @@ function visitPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     return code ? (VISIT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
-/** Ücret (Charge) — `docs/CHARGES_API_CONTRACT.md` §6; `Charges.Validation` backend `detail` ile gösterilir. */
+/** Ücret (Charge) ve ödeme iptali — `docs/CHARGES_API_CONTRACT.md` §6, `FINANCE_CORRECTION_API_CONTRACT.md` §8; `*.Validation` backend `detail` ile gösterilir. */
 const CHARGE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Charges.NotFound': 'Ücret kaydı bulunamadı.',
     'Charges.ClinicScopeRequired': 'Ücretleri görmek için önce bir klinik seçmelisiniz.',
@@ -238,7 +238,16 @@ const CHARGE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Charges.ExaminationClinicMismatch': 'Muayene aktif klinikte değil.',
     'Charges.ExaminationClientMismatch': 'Muayenedeki hayvan bu müşteriye ait değil.',
     'Charges.ExaminationPetMismatch': 'Muayene seçilen hayvanla uyuşmuyor.',
-    'Charges.ExaminationVisitMismatch': 'Muayene, seçilen geliş kaydına bağlı değil.'
+    'Charges.ExaminationVisitMismatch': 'Muayene, seçilen geliş kaydına bağlı değil.',
+    'Charges.VoidBlockedByAllocation': 'Bu ücrete ödeme bağlı olduğu için iptal edilemez. Önce ilgili ödemeyi iptal edin.',
+    'Charges.CorrectionBelowAllocated': 'Yeni tutar, bu ücrete bağlı ödemelerin toplamının altında olamaz. Önce ilgili ödemeyi iptal edin veya daha yüksek bir tutar girin.',
+    'Charges.AlreadyVoided': 'Bu ücret zaten iptal edilmiş. Listeyi yenileyin.',
+    'Charges.RequestIdVoided': 'Bu ücret kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
+    'Charges.ConcurrencyConflict': 'Ücret aynı anda başka biri tarafından değiştirildi. Listeyi yenileyip tekrar deneyin.',
+    'Payments.NotFound': 'Ödeme kaydı bulunamadı veya iptal edilmiş.',
+    'Payments.AlreadyVoided': 'Bu ödeme zaten iptal edilmiş. Listeyi yenileyin.',
+    'Payments.RequestIdVoided': 'Bu ödeme kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
+    'Payments.ConcurrencyConflict': 'Ödeme aynı anda başka biri tarafından değiştirildi. Sayfayı yenileyip tekrar deneyin.'
 };
 
 function chargePanelProblemUserMessage(err: HttpErrorResponse): string | null {

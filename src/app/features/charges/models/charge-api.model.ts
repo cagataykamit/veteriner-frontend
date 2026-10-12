@@ -38,6 +38,14 @@ export interface ChargeCreateResultDto {
     charge: ChargeDto;
 }
 
+/** PUT /charges/{id} gövdesi (`Charges.Correct`); müşteri/hayvan/geliş/muayene değişmez. */
+export interface ChargeCorrectionRequestDto {
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    reason: string;
+}
+
 /** POST /charges gövdesi; tutar ve para birimi istemciden gönderilmez. */
 export interface ChargeCreateRequestDto {
     clinicId: string;
