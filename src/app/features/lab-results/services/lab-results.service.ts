@@ -11,11 +11,11 @@ import {
     mapPagedLabResultsToVm,
     labResultsQueryToHttpParams
 } from '@/app/features/lab-results/data/lab-result.mapper';
-import type { LabResultDetailDto, LabResultListItemDtoPagedResult } from '@/app/features/lab-results/models/lab-result-api.model';
+import type { LabResultCancelRequestDto, LabResultDetailDto, LabResultListItemDtoPagedResult } from '@/app/features/lab-results/models/lab-result-api.model';
 import type { CreateLabResultRequest } from '@/app/features/lab-results/models/lab-result-create.model';
 import type { LabResultsListQuery } from '@/app/features/lab-results/models/lab-result-query.model';
 import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface LabResultsPagedVm {
     items: LabResultListItemVm[];
@@ -56,9 +56,22 @@ export class LabResultsService {
 
     getLabResultForEditById(id: string): Observable<LabResultEditVm> {
         return this.api.get<LabResultDetailDto>(ApiEndpoints.labResults.byId(id)).pipe(
-            map((dto) => mapLabResultDetailDtoToEditVm(dto)),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Düzenleme bilgileri yüklenemedi.')))
+            map((dto) => {
+                const vm = mapLabResultDetailDtoToEditVm(dto);
+                if (!vm.rowVersion) {
+                    // Sürümsüz PUT backend'de 400 verir; sürüm yoksa düzenlemeye izin verme.
+                    throw new Error('Sunucu kayıt sürümünü (rowVersion) döndürmedi; düzenleme yapılamaz.');
+                }
+                return vm;
+            }),
+            catchError((err: unknown) =>
+                throwError(() =>
+                    err instanceof HttpErrorResponse
+                        ? new Error(messageFromHttpError(err, 'Düzenleme bilgileri yüklenemedi.'))
+                        : err instanceof Error
+                          ? err
+                          : new Error('Düzenleme bilgileri yüklenemedi.')
+                )
             )
         );
     }
@@ -68,22 +81,7 @@ export class LabResultsService {
         try {
             body = mapCreateLabResultToApiBody(payload);
         } catch (e: unknown) {
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_CLINIC_ID_REQUIRED') {
-                return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
-            }
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_PET_ID_REQUIRED') {
-                return throwError(() => new Error('Hayvan seçimi zorunludur.'));
-            }
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_DATE_REQUIRED') {
-                return throwError(() => new Error('Sonuç tarihi / saati zorunludur.'));
-            }
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_TEST_NAME_REQUIRED') {
-                return throwError(() => new Error('Test adı zorunludur.'));
-            }
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_RESULT_TEXT_REQUIRED') {
-                return throwError(() => new Error('Sonuç metni zorunludur.'));
-            }
-            return throwError(() => (e instanceof Error ? e : new Error('Kayıt oluşturulamadı.')));
+            return throwError(() => labResultWriteBodyError(e, 'Kayıt oluşturulamadı.'));
         }
         return this.api.post<unknown>(ApiEndpoints.labResults.list(), body).pipe(
             map((raw) => {
@@ -110,27 +108,13 @@ export class LabResultsService {
         );
     }
 
+    /** PUT; `rowVersion` zorunlu. `Requested` kayıda sonuç yazılırsa sunucu `Resulted` yapar. Hata, kodu ayrıştırabilmek için ham `HttpErrorResponse` olarak iletilir. */
     updateLabResult(id: string, payload: CreateLabResultRequest): Observable<void> {
         let body: unknown;
         try {
             body = mapCreateLabResultToApiBody(payload);
         } catch (e: unknown) {
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_CLINIC_ID_REQUIRED') {
-                return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
-            }
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_PET_ID_REQUIRED') {
-                return throwError(() => new Error('Hayvan seçimi zorunludur.'));
-            }
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_DATE_REQUIRED') {
-                return throwError(() => new Error('Sonuç tarihi / saati zorunludur.'));
-            }
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_TEST_NAME_REQUIRED') {
-                return throwError(() => new Error('Test adı zorunludur.'));
-            }
-            if (e instanceof Error && e.message === 'LAB_RESULT_WRITE_RESULT_TEXT_REQUIRED') {
-                return throwError(() => new Error('Sonuç metni zorunludur.'));
-            }
-            return throwError(() => (e instanceof Error ? e : new Error('Kayıt güncellenemedi.')));
+            return throwError(() => labResultWriteBodyError(e, 'Kayıt güncellenemedi.'));
         }
         return this.api.put<unknown>(ApiEndpoints.labResults.byId(id), body).pipe(
             map(() => void 0),
@@ -142,6 +126,40 @@ export class LabResultsService {
             })
         );
     }
+
+    /** Gerekçeli iptal (`LabResults.Update`); `rowVersion`: ekranın açıldığı sürüm. Hatalar Türkçe `Error` olarak iletilir. */
+    cancelLabResult(id: string, reason: string, rowVersion: string): Observable<void> {
+        const body: LabResultCancelRequestDto = { reason: reason.trim(), rowVersion };
+        return this.api.post<unknown>(ApiEndpoints.labResults.cancel(id), body).pipe(
+            map(() => void 0),
+            catchError((err: unknown) => {
+                if (err instanceof HttpErrorResponse) {
+                    return throwError(() => new Error(cancelErrorMessage(err)));
+                }
+                return throwError(() => (err instanceof Error ? err : new Error('Lab kaydı iptal edilemedi.')));
+            })
+        );
+    }
+}
+
+const WRITE_BODY_ERRORS: Record<string, string> = {
+    LAB_RESULT_WRITE_CLINIC_ID_REQUIRED: 'Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.',
+    LAB_RESULT_WRITE_PET_ID_REQUIRED: 'Hayvan seçimi zorunludur.',
+    LAB_RESULT_WRITE_TEST_NAME_REQUIRED: 'Test adı zorunludur.',
+    LAB_RESULT_WRITE_RESULT_INCOMPLETE: 'Sonuç tarihi ve sonuç metni birlikte girilmelidir.'
+};
+
+function labResultWriteBodyError(e: unknown, fallback: string): Error {
+    const mapped = e instanceof Error ? WRITE_BODY_ERRORS[e.message] : undefined;
+    return mapped ? new Error(mapped) : e instanceof Error ? e : new Error(fallback);
+}
+
+/** Sonuçlanmış kaydın kesinleşmiş muayenede iptali `Examinations.Finalized` ile reddedilir (sözleşme §3). */
+function cancelErrorMessage(err: HttpErrorResponse): string {
+    if (problemCodeFromHttpError(err) === 'Examinations.Finalized') {
+        return 'Sonuçlanmış lab kaydı, kesinleşmiş muayeneye bağlı olduğu için iptal edilemedi. Gerekirse muayeneye ek not ekleyin.';
+    }
+    return messageFromHttpError(err, 'Lab kaydı iptal edilemedi.');
 }
 
 function extractCreatedLabResultIdFromPostResponse(body: unknown): string | null {

@@ -271,6 +271,20 @@ function examinationFinalizeProblemUserMessage(err: HttpErrorResponse): string |
     return code ? (EXAMINATION_FINALIZE_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
+/** Lab istem/sonuç durumu — `docs/LAB_RESULT_STATUS_API_CONTRACT.md` §5; `LabResults.Validation` backend `detail` ile gösterilir. */
+const LAB_RESULT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'LabResults.ConcurrencyConflict': 'Bu lab kaydı siz düzenlerken başka biri tarafından güncellendi.',
+    'LabResults.AlreadyCancelled': 'Bu lab kaydı zaten iptal edilmiş. Sayfayı yenileyin.',
+    'LabResults.VisitPetMismatch': 'Geliş kaydı seçilen hayvanla uyuşmuyor.',
+    'LabResults.VisitClinicMismatch': 'Geliş kaydı aktif klinikte değil.',
+    'LabResults.ExaminationVisitMismatch': 'Muayene, geliş kaydına bağlı değil.'
+};
+
+function labResultPanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    return code ? (LAB_RESULT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
+}
+
 /** Uygulama kaydı ve iptali — `docs/ADMINISTRATIONS_API_CONTRACT.md` §3–§6; `Administrations.Validation` backend `detail` ile gösterilir. */
 const ADMINISTRATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Administrations.InsufficientStock': 'Bu ürünün klinik stoğu yetersiz; uygulama kaydedilmedi. Önce stok girişi yapın veya miktarı düşürün.',
@@ -390,6 +404,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const administrationPanelMsg = administrationPanelProblemUserMessage(err);
     if (administrationPanelMsg) {
         return administrationPanelMsg;
+    }
+    const labResultPanelMsg = labResultPanelProblemUserMessage(err);
+    if (labResultPanelMsg) {
+        return labResultPanelMsg;
     }
     const examinationFinalizeMsg = examinationFinalizeProblemUserMessage(err);
     if (examinationFinalizeMsg) {

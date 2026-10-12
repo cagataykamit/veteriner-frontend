@@ -1,3 +1,4 @@
+import { parseLabResultStatus } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import { HttpParams } from '@angular/common/http';
 import type {
     ExaminationAddendumDto,
@@ -365,7 +366,10 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     resultDateUtc: relatedSafeTrim(x.resultDateUtc),
                     clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
                     clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
-                    testName: str(x.testName)
+                    testName: str(x.testName),
+                    status: parseLabResultStatus(x.status),
+                    requestedAtUtc: relatedSafeTrim(x.requestedAtUtc),
+                    awaitingInterpretation: x.awaitingInterpretation === true
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),

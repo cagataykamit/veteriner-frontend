@@ -7,6 +7,7 @@ import type {
 } from '@/app/features/lab-results/models/lab-result-api.model';
 import type { CreateLabResultRequest } from '@/app/features/lab-results/models/lab-result-create.model';
 import type { LabResultsListQuery } from '@/app/features/lab-results/models/lab-result-query.model';
+import { parseLabResultStatus } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
 
 const EM = '—';
@@ -68,8 +69,8 @@ function canonicalExaminationId(dto: LabResultListItemDto | LabResultDetailDto):
     return firstTrimmed(dto.examinationId, readDtoString(dto, ['ExaminationId']));
 }
 
-function canonicalResultText(dto: LabResultDetailDto): string {
-    return str(firstTrimmed(dto.resultText, readDtoString(dto, ['ResultText'])));
+function canonicalResultText(dto: LabResultDetailDto): string | null {
+    return firstTrimmed(dto.resultText, readDtoString(dto, ['ResultText']));
 }
 
 function canonicalInterpretation(dto: LabResultDetailDto): string {
@@ -97,6 +98,9 @@ export function mapLabResultListItemDtoToVm(dto: LabResultListItemDto): LabResul
         clientId: canonicalClientId(dto),
         clientName: canonicalClientName(dto),
         resultDateUtc: canonicalResultDate(dto),
+        requestedAtUtc: canonicalRequestedAt(dto),
+        status: parseLabResultStatus(dto.status),
+        awaitingInterpretation: dto.awaitingInterpretation === true,
         testName: canonicalTestName(dto),
         examinationId: canonicalExaminationId(dto)
     };
@@ -112,12 +116,18 @@ export function mapLabResultDetailDtoToVm(dto: LabResultDetailDto): LabResultDet
         clientName: canonicalClientName(dto),
         examinationId: canonicalExaminationId(dto),
         resultDateUtc: canonicalResultDate(dto),
+        requestedAtUtc: canonicalRequestedAt(dto),
+        status: parseLabResultStatus(dto.status),
+        awaitingInterpretation: dto.awaitingInterpretation === true,
         testName: canonicalTestName(dto),
         resultText: canonicalResultText(dto),
         interpretation: canonicalInterpretation(dto),
         notes: canonicalNotes(dto),
         createdAtUtc: canonicalCreatedAt(dto),
-        updatedAtUtc: canonicalUpdatedAt(dto)
+        updatedAtUtc: canonicalUpdatedAt(dto),
+        cancelledAtUtc: firstTrimmed(dto.cancelledAtUtc),
+        cancelReason: firstTrimmed(dto.cancelReason),
+        rowVersion: firstTrimmed(dto.rowVersion) ?? ''
     };
 }
 
@@ -130,11 +140,13 @@ export function mapLabResultDetailDtoToEditVm(dto: LabResultDetailDto): LabResul
         clientName: firstTrimmed(dto.clientName, readDtoString(dto, ['ClientName'])),
         petName: firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])),
         examinationId: canonicalExaminationId(dto) ?? '',
+        status: parseLabResultStatus(dto.status),
         resultDateUtc: canonicalResultDate(dto),
         testName: firstTrimmed(dto.testName, readDtoString(dto, ['TestName'])) ?? '',
         resultText: firstTrimmed(dto.resultText, readDtoString(dto, ['ResultText'])) ?? '',
         interpretation: firstTrimmed(dto.interpretation, readDtoString(dto, ['Interpretation'])) ?? '',
-        notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? ''
+        notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
+        rowVersion: firstTrimmed(dto.rowVersion, readDtoString(dto, ['RowVersion'])) ?? ''
     };
 }
 
@@ -175,6 +187,9 @@ export function labResultsQueryToHttpParams(query: LabResultsListQuery): HttpPar
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+    if (query.status) {
+        p = p.set('Status', query.status);
+    }
     if (query.fromDate?.trim()) {
         p = p.set('FromDate', query.fromDate.trim());
     }
@@ -199,24 +214,22 @@ export function mapCreateLabResultToApiBody(req: CreateLabResultRequest): LabRes
     if (!petId) {
         throw new Error('LAB_RESULT_WRITE_PET_ID_REQUIRED');
     }
-    const resultDateUtc = req.resultDateUtc?.trim() ?? '';
-    if (!resultDateUtc) {
-        throw new Error('LAB_RESULT_WRITE_DATE_REQUIRED');
-    }
     const testName = req.testName.trim();
-    const resultText = req.resultText.trim();
     if (!testName) {
         throw new Error('LAB_RESULT_WRITE_TEST_NAME_REQUIRED');
     }
-    if (!resultText) {
-        throw new Error('LAB_RESULT_WRITE_RESULT_TEXT_REQUIRED');
+    // Sonuç tarihi ve metni birlikte verilir ya da birlikte verilmez (ikisi de yok → `Requested` istem).
+    const resultDateUtc = req.resultDateUtc?.trim() ?? '';
+    const resultText = req.resultText?.trim() ?? '';
+    if (!resultDateUtc !== !resultText) {
+        throw new Error('LAB_RESULT_WRITE_RESULT_INCOMPLETE');
     }
     const dto: LabResultWriteRequestDto = {
         clinicId,
         petId,
-        resultDateUtc,
+        resultDateUtc: resultDateUtc || null,
         testName,
-        resultText,
+        resultText: resultText || null,
         interpretation: req.interpretation?.trim() ? req.interpretation.trim() : null,
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
@@ -224,29 +237,39 @@ export function mapCreateLabResultToApiBody(req: CreateLabResultRequest): LabRes
     if (ex) {
         dto.examinationId = ex;
     }
+    const rowVersion = req.rowVersion?.trim();
+    if (rowVersion) {
+        dto.rowVersion = rowVersion;
+    }
     return dto;
 }
 
 export interface LabResultUpsertFormAdapterInput {
     clinicId: string;
     petId: string;
-    resultDateUtc: string;
+    resultDateUtc?: string | null;
     testName: string;
-    resultText: string;
+    resultText?: string | null;
     interpretation?: string | null;
     notes?: string | null;
     examinationId?: string | null;
+    rowVersion?: string;
 }
 
 export function mapLabResultUpsertFormToCreateRequest(input: LabResultUpsertFormAdapterInput): CreateLabResultRequest {
     return {
         clinicId: input.clinicId.trim(),
         petId: input.petId.trim(),
-        resultDateUtc: input.resultDateUtc.trim(),
+        resultDateUtc: input.resultDateUtc?.trim() ?? null,
         testName: input.testName.trim(),
-        resultText: input.resultText.trim(),
+        resultText: input.resultText?.trim() ?? null,
         interpretation: input.interpretation?.trim() ? input.interpretation.trim() : null,
         notes: input.notes?.trim() ? input.notes.trim() : null,
-        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null
+        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null,
+        rowVersion: input.rowVersion
     };
+}
+
+function canonicalRequestedAt(dto: LabResultListItemDto | LabResultDetailDto): string | null {
+    return firstTrimmed(dto.requestedAtUtc, readDtoString(dto, ['RequestedAtUtc']));
 }

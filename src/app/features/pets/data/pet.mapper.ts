@@ -1,3 +1,4 @@
+import { parseLabResultStatus } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import { HttpParams } from '@angular/common/http';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
 import { parseAppointmentTypeEnumValue } from '@/app/features/appointments/utils/appointment-type.utils';
@@ -579,6 +580,9 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
                     id,
                     resultDateUtc: safeTrim(x.resultDateUtc),
                     testName: str(x.testName),
+                    status: parseLabResultStatus(x.status),
+                    requestedAtUtc: safeTrim(x.requestedAtUtc),
+                    awaitingInterpretation: x.awaitingInterpretation === true,
                     clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
                 };
             })

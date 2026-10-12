@@ -39,6 +39,11 @@ import {
     labResultDateNotTooFarPastValidator,
     labResultDateTimeLocalMinAllowed
 } from '@/app/features/lab-results/utils/lab-result-date-validation.utils';
+import {
+    LAB_RESULT_INCOMPLETE_MESSAGE,
+    LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE,
+    labResultResultFieldsValidator
+} from '@/app/features/lab-results/utils/lab-result-form.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -56,7 +61,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     template: `
         <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
 
-        <app-page-header title="Yeni lab sonucu" subtitle="Klinik" description="Laboratuvar sonuç kaydı oluşturun." />
+        <app-page-header title="Yeni lab istemi" subtitle="Klinik" description="Lab istemi oluşturun; sonuç henüz yoksa sonuç alanlarını boş bırakın, sonra girebilirsiniz." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
@@ -94,7 +99,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="resultDateLocal" class="block text-sm font-medium text-muted-color mb-2">Sonuç tarihi / saati *</label>
+                        <label for="resultDateLocal" class="block text-sm font-medium text-muted-color mb-2">Sonuç tarihi / saati</label>
                         <app-date-input inputId="resultDateLocal" type="datetime-local" formControlName="resultDateLocal" [min]="labResultDateMinAllowed()" limit="past" />
                         @if (form.controls.resultDateLocal.hasError('dateYearInvalid') && form.controls.resultDateLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
@@ -102,8 +107,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <small class="text-red-500 block">{{ labResultDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().resultDateLocal) {
                             <small class="text-red-500 block">{{ apiFieldErrors().resultDateLocal }}</small>
-                        } @else if (form.controls.resultDateLocal.invalid && form.controls.resultDateLocal.touched) {
-                            <small class="text-red-500 block">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -136,10 +139,10 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         }
                     </div>
                     <div class="col-span-12">
-                        <label for="resultText" class="block text-sm font-medium text-muted-color mb-2">Sonuç metni *</label>
+                        <label for="resultText" class="block text-sm font-medium text-muted-color mb-2">Sonuç metni</label>
                         <textarea id="resultText" rows="4" class="w-full p-inputtext p-component" formControlName="resultText"></textarea>
-                        @if (form.controls.resultText.invalid && form.controls.resultText.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                        @if (form.hasError('labResultResultIncomplete') && (form.controls.resultText.touched || form.controls.resultDateLocal.touched)) {
+                            <small class="text-red-500">{{ resultIncompleteMessage }}</small>
                         } @else if (apiFieldErrors().resultText) {
                             <small class="text-red-500">{{ apiFieldErrors().resultText }}</small>
                         }
@@ -147,7 +150,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     <div class="col-span-12">
                         <label for="interpretation" class="block text-sm font-medium text-muted-color mb-2">Yorum</label>
                         <textarea id="interpretation" rows="3" class="w-full p-inputtext p-component" formControlName="interpretation"></textarea>
-                        @if (apiFieldErrors().interpretation) {
+                        @if (form.hasError('labResultInterpretationWithoutResult') && form.controls.interpretation.touched) {
+                            <small class="text-red-500">{{ interpretationWithoutResultMessage }}</small>
+                        } @else if (apiFieldErrors().interpretation) {
                             <small class="text-red-500">{{ apiFieldErrors().interpretation }}</small>
                         }
                     </div>
@@ -182,6 +187,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class LabResultNewPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly labResultDateTooFarPastMessage = LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE;
+    protected readonly resultIncompleteMessage = LAB_RESULT_INCOMPLETE_MESSAGE;
+    protected readonly interpretationWithoutResultMessage = LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
     private readonly labResultsService = inject(LabResultsService);
@@ -209,13 +216,13 @@ export class LabResultNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        resultDateLocal: ['', [Validators.required, dateTimeYearRangeValidator(), labResultDateNotTooFarPastValidator()]],
+        resultDateLocal: ['', [dateTimeYearRangeValidator(), labResultDateNotTooFarPastValidator()]],
         examinationId: [''],
         testName: ['', Validators.required],
-        resultText: ['', Validators.required],
+        resultText: [''],
         interpretation: [''],
         notes: ['']
-    });
+    }, { validators: labResultResultFieldsValidator() });
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
@@ -296,8 +303,8 @@ export class LabResultNewPageComponent implements OnInit {
         }
 
         const v = this.form.getRawValue();
-        const resultDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.resultDateLocal);
-        if (!resultDateUtc) {
+        const resultDateUtc = v.resultDateLocal.trim() ? fromIstanbulDateTimeLocalInputToUtcIso(v.resultDateLocal) : null;
+        if (v.resultDateLocal.trim() && !resultDateUtc) {
             this.submitError.set('Geçerli bir sonuç tarihi ve saati seçin.');
             return;
         }

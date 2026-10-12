@@ -85,6 +85,9 @@ export interface ExaminationRelatedLabResultItemDto {
     clinicId?: string | null;
     clinicName?: string | null;
     testName?: string | null;
+    status?: string | null;
+    requestedAtUtc?: string | null;
+    awaitingInterpretation?: boolean | null;
 }
 
 export interface ExaminationRelatedHospitalizationItemDto {

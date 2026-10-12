@@ -1,9 +1,11 @@
 /**
  * GET `/api/v1/lab-results` — liste sorgusu.
  *
- * HttpParams (canonical): `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `FromDate`, `ToDate`, `Sort`, `Order`.
+ * HttpParams (canonical): `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order`.
  * `fromDate` / `toDate` istekte sırasıyla `FromDate` / `ToDate` olarak gider; değer **yyyy-MM-dd** (date-only).
  */
+import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
+
 
 export interface LabResultsListQuery {
     page?: number;
@@ -17,4 +19,6 @@ export interface LabResultsListQuery {
     toDate?: string;
     sort?: string;
     order?: string;
+    /** Boşsa iptaller gizli (backend varsayılanı). */
+    status?: LabResultStatus;
 }

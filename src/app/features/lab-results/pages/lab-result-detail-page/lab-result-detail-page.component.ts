@@ -4,6 +4,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { LabResultDetailVm } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
+import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -21,7 +23,9 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
         ButtonModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        LabResultStatusBadgesComponent,
+        ReasonConfirmDialogComponent
     ],
     template: `
         <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
@@ -38,26 +42,37 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
             </div>
         } @else if (row()) {
             <app-page-header title="Lab sonucu" subtitle="Klinik" [description]="row()!.testName">
-                @if (canUpdateLabResult && !ro.mutationBlocked()) {
-                    <a
-                        actions
-                        [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
-                        pButton
-                        type="button"
-                        label="Düzenle"
-                        icon="pi pi-pencil"
-                        class="p-button-secondary"
-                    ></a>
-                } @else if (canUpdateLabResult && ro.mutationBlocked()) {
-                    <button
-                        actions
-                        pButton
-                        type="button"
-                        label="Düzenle (salt okunur)"
-                        icon="pi pi-lock"
-                        [disabled]="true"
-                        class="p-button-secondary"
-                    ></button>
+                @if (canUpdateLabResult && row()!.status !== 'Cancelled') {
+                    @if (ro.mutationBlocked()) {
+                        <button
+                            actions
+                            pButton
+                            type="button"
+                            label="Düzenle (salt okunur)"
+                            icon="pi pi-lock"
+                            [disabled]="true"
+                            class="p-button-secondary"
+                        ></button>
+                    } @else {
+                        <a
+                            actions
+                            [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
+                            pButton
+                            type="button"
+                            [label]="row()!.status === 'Requested' ? 'Sonuç gir' : 'Düzenle'"
+                            [icon]="row()!.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"
+                            [class]="row()!.status === 'Requested' ? 'p-button-primary' : 'p-button-secondary'"
+                        ></a>
+                        <button
+                            actions
+                            pButton
+                            type="button"
+                            label="İptal et"
+                            icon="pi pi-ban"
+                            class="p-button-danger p-button-outlined"
+                            (click)="cancelVisible = true"
+                        ></button>
+                    }
                 }
             </app-page-header>
 
@@ -66,8 +81,20 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                     <div class="card">
                         <h5 class="mt-0 mb-4">Genel</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">
+                                <app-lab-result-status-badges [status]="row()!.status" [awaitingInterpretation]="row()!.awaitingInterpretation" />
+                            </dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">İstem tarihi</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.requestedAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonuç tarihi</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.resultDateUtc) }}</dd>
+                            @if (row()!.status === 'Cancelled') {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal tarihi</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.cancelledAtUtc) }}</dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal gerekçesi</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0 whitespace-pre-wrap">{{ row()!.cancelReason ?? '—' }}</dd>
+                            }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
@@ -112,7 +139,11 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                     <div class="card">
                         <h5 class="mt-0 mb-4">Sonuç</h5>
                         <h6 class="mt-0 mb-2 text-muted-color text-sm">Sonuç metni</h6>
-                        <p class="mt-0 mb-4 whitespace-pre-wrap">{{ row()!.resultText }}</p>
+                        @if (row()!.resultText) {
+                            <p class="mt-0 mb-4 whitespace-pre-wrap">{{ row()!.resultText }}</p>
+                        } @else {
+                            <p class="mt-0 mb-4 text-muted-color">Sonuç henüz girilmedi.</p>
+                        }
                         <h6 class="mt-0 mb-2 text-muted-color text-sm">Yorum</h6>
                         <p class="mt-0 mb-4 whitespace-pre-wrap">{{ row()!.interpretation }}</p>
                         <h6 class="mt-0 mb-2 text-muted-color text-sm">Notlar</h6>
@@ -121,6 +152,17 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                 </div>
             </div>
         }
+
+        <app-reason-confirm-dialog
+            [(visible)]="cancelVisible"
+            header="Lab kaydını iptal et"
+            [summary]="row() ? row()!.testName + ' · ' + row()!.petName : null"
+            description="İptal edilen kayıt silinmez; listelerde varsayılan olarak gizlenir. Geri alınamaz."
+            confirmLabel="Kaydı iptal et"
+            failureFallback="Lab kaydı iptal edilemedi."
+            [execute]="cancelLabResult"
+            (confirmed)="reload()"
+        />
     `
 })
 export class LabResultDetailPageComponent implements OnInit {
@@ -133,9 +175,12 @@ export class LabResultDetailPageComponent implements OnInit {
     readonly error = signal<string | null>(null);
     readonly row = signal<LabResultDetailVm | null>(null);
     readonly showSavedBanner = signal(false);
+    cancelVisible = false;
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
 
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
+
+    readonly cancelLabResult = (reason: string) => this.labResultsService.cancelLabResult(this.labResultId, reason, this.row()!.rowVersion);
 
     private labResultId = '';
 

@@ -2,6 +2,8 @@
  * Lab Results — UI view modelleri.
  */
 
+export type LabResultStatus = 'Requested' | 'Resulted' | 'Cancelled';
+
 export interface LabResultListItemVm {
     id: string;
     clinicId: string | null;
@@ -9,7 +11,11 @@ export interface LabResultListItemVm {
     petName: string;
     clientId: string | null;
     clientName: string;
+    /** `Requested` kayıtta null. */
     resultDateUtc: string | null;
+    requestedAtUtc: string | null;
+    status: LabResultStatus | null;
+    awaitingInterpretation: boolean;
     testName: string;
     examinationId: string | null;
 }
@@ -23,12 +29,19 @@ export interface LabResultDetailVm {
     clientName: string;
     examinationId: string | null;
     resultDateUtc: string | null;
+    requestedAtUtc: string | null;
+    status: LabResultStatus | null;
+    awaitingInterpretation: boolean;
     testName: string;
-    resultText: string;
+    /** Sonuç girilmemişse null. */
+    resultText: string | null;
     interpretation: string;
     notes: string;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
+    cancelledAtUtc: string | null;
+    cancelReason: string | null;
+    rowVersion: string;
 }
 
 export interface LabResultEditVm {
@@ -39,9 +52,11 @@ export interface LabResultEditVm {
     clientName: string | null;
     petName: string | null;
     examinationId: string;
+    status: LabResultStatus | null;
     resultDateUtc: string | null;
     testName: string;
     resultText: string;
     interpretation: string;
     notes: string;
+    rowVersion: string;
 }
