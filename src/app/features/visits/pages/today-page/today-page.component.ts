@@ -16,6 +16,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     APPOINTMENTS_NOSHOW_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
+    PAYMENTS_CREATE_CLAIM,
     VISITS_CORRECT_CLAIM,
     VISITS_CREATE_CLAIM,
     VISITS_UPDATE_CLAIM
@@ -414,6 +415,7 @@ export class TodayPageComponent implements OnInit {
     readonly canCorrect = this.auth.hasOperationClaim(VISITS_CORRECT_CLAIM);
     readonly canNoShow = this.auth.hasOperationClaim(APPOINTMENTS_NOSHOW_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
+    readonly canCollectPayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
 
     readonly loading = signal(true);
     /** İlk yükleme / elle yenileme hatası: listeyi değiştirir. */
@@ -600,7 +602,7 @@ export class TodayPageComponent implements OnInit {
     }
 
     private rowPermissions(): TodayRowPermissions {
-        return { canUpdateVisit: this.canUpdateVisit, canNoShow: this.canNoShow, canCorrect: this.canCorrect };
+        return { canUpdateVisit: this.canUpdateVisit, canNoShow: this.canNoShow, canCorrect: this.canCorrect, canCollectPayment: this.canCollectPayment };
     }
 
     urgencyToggleOf(item: TodayItemVm, actions: TodayItemActions): TodayUrgencyToggle | null {
@@ -617,7 +619,8 @@ export class TodayPageComponent implements OnInit {
             markNoShow: () => this.openNoShow(item, 'mark'),
             revertNoShow: () => this.openNoShow(item, 'revert'),
             restore: () => this.openRestore(item),
-            correct: () => this.openCorrection(item)
+            correct: () => this.openCorrection(item),
+            collectPayment: () => this.openPayment(item)
         };
         const blocked = this.ro.mutationBlocked() || this.isBusy(item);
         this.rowMenuItems.set(actions.map((a) => ({ label: a.label, icon: a.icon, disabled: blocked, command: handlers[a.key] })));
@@ -688,6 +691,11 @@ export class TodayPageComponent implements OnInit {
         void this.router.navigate(['/panel/examinations/new'], {
             queryParams: { visitId: item.visitId, clientId: item.clientId, petId: item.petId }
         });
+    }
+
+    /** Müşteri ve (varsa) geliş bağlamı ödeme formuna taşınır; o gelişin açık ücretleri dolu gelir. */
+    openPayment(item: TodayItemVm): void {
+        void this.router.navigate(['/panel/payments/new'], { queryParams: { clientId: item.clientId, visitId: item.visitId } });
     }
 
     /** Satır kilitliyken ikinci istek gitmez; hatada da liste yenilenir (durum başkası tarafından değişmiş olabilir). */

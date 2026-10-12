@@ -201,6 +201,20 @@ describe('TodayPageComponent', () => {
         expect(keys(withCorrect)).toContain('correct');
     });
 
+    it('Ödeme al yalnızca Payments.Create yetkisiyle görünür ve müşteri + geliş bağlamıyla ödeme formuna gider', async () => {
+        const today: TodayVm = { date: '2026-10-10', items: [item({ visitId: 'v9', clientId: 'cl7' })] };
+        const keys = (f: ComponentFixture<TodayPageComponent>) => f.componentInstance.secondaryActionsOf(today.items[0], f.componentInstance.actionsOf(today.items[0])).map((a) => a.key);
+        const without = await create(['Visits.Read', 'Visits.Update'], today);
+        expect(keys(without)).not.toContain('collectPayment');
+        TestBed.resetTestingModule();
+
+        const f = await create(['Visits.Read', 'Payments.Create'], today);
+        expect(keys(f)).toContain('collectPayment');
+        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        f.componentInstance.openPayment(today.items[0]);
+        expect(navigate).toHaveBeenCalledWith(['/panel/payments/new'], { queryParams: { clientId: 'cl7', visitId: 'v9' } });
+    });
+
     it('Geldi ve Randevusuz geliş Visits.Create ister; Muayene aç Examinations.Create ister', async () => {
         const planned = item({ key: 'a1', visitId: null, appointmentId: 'a1', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T07:00:00Z' });
         const waiting = item({ key: 'w' });

@@ -202,7 +202,7 @@ describe('Gelmedi (NoShow) satırı', () => {
 });
 
 describe('satır eylem düzeni (görünür / menü)', () => {
-    const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true };
+    const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true, canCollectPayment: false };
     const now = new Date('2026-10-10T10:00:00Z');
     const secondary = (i: TodayItemVm, perms = all) => todaySecondaryActions(i, todayItemActions(i, now), perms).map((a) => a.key);
     const urgency = (i: TodayItemVm, perms = all) => todayUrgencyToggle(i, todayItemActions(i, now), perms);
@@ -223,12 +223,19 @@ describe('satır eylem düzeni (görünür / menü)', () => {
 
     it('menüde yalnızca seyrek eylemler; yetkisiz kullanıcıda menü boş', () => {
         expect(secondary(item({ careStatus: 'Completed' }))).toEqual(['correct']);
-        expect(secondary(item(), { canUpdateVisit: true, canNoShow: true, canCorrect: false })).toEqual([]);
+        expect(secondary(item(), { canUpdateVisit: true, canNoShow: true, canCorrect: false, canCollectPayment: false })).toEqual([]);
     });
 
     it('yanlış işaretli satırda Geri al menüdedir; yetkisizde menü boş', () => {
         expect(secondary(item({ isVoided: true }))).toEqual(['restore']);
         expect(secondary(item({ isVoided: true }), { ...all, canCorrect: false })).toEqual([]);
+    });
+
+    it('Ödeme al: yetki varsa menünün başında; yanlış işaretli satırda ve yetkisizde yok', () => {
+        const pay = { ...all, canCollectPayment: true };
+        expect(secondary(item(), pay)).toEqual(['collectPayment', 'correct']);
+        expect(secondary(item(), all)).toEqual(['correct']);
+        expect(secondary(item({ isVoided: true }), pay)).toEqual(['restore']);
     });
 
     it('planlı ve gelmedi satırları', () => {

@@ -182,7 +182,7 @@ export function waitAlertTitle(level: WaitAlertLevel): string | null {
     return level === 'none' ? null : WAIT_ALERT_TITLE[level];
 }
 
-export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore';
+export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore' | 'collectPayment';
 
 export interface TodaySecondaryAction {
     key: TodaySecondaryActionKey;
@@ -194,6 +194,7 @@ export interface TodayRowPermissions {
     canUpdateVisit: boolean;
     canNoShow: boolean;
     canCorrect: boolean;
+    canCollectPayment: boolean;
 }
 
 /**
@@ -202,6 +203,9 @@ export interface TodayRowPermissions {
  */
 export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActions, perms: TodayRowPermissions): TodaySecondaryAction[] {
     const out: TodaySecondaryAction[] = [];
+    if (perms.canCollectPayment && !item.isVoided) {
+        out.push({ key: 'collectPayment', label: 'Ödeme al', icon: 'pi pi-wallet' });
+    }
     if (perms.canNoShow && actions.canMarkNoShow) {
         out.push({ key: 'markNoShow', label: 'Gelmedi olarak işaretle', icon: 'pi pi-user-minus' });
     }
