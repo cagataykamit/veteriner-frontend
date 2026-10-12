@@ -104,45 +104,51 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                             ></a>
                         }
                         @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
-                            <a
-                                [routerLink]="['/panel/treatments/new']"
-                                [queryParams]="{
-                                    clientId: exam()!.clientId,
-                                    petId: exam()!.petId,
-                                    examinationId: exam()!.id
-                                }"
-                                pButton
-                                type="button"
-                                label="Tedavi Oluştur"
-                                icon="pi pi-plus"
-                                class="p-button-secondary"
-                            ></a>
-                            <a
-                                [routerLink]="['/panel/prescriptions/new']"
-                                [queryParams]="{
-                                    clientId: exam()!.clientId,
-                                    petId: exam()!.petId,
-                                    examinationId: exam()!.id
-                                }"
-                                pButton
-                                type="button"
-                                label="Reçete Oluştur"
-                                icon="pi pi-file-edit"
-                                class="p-button-secondary"
-                            ></a>
-                            <a
-                                [routerLink]="['/panel/vaccinations/new']"
-                                [queryParams]="{
-                                    clientId: exam()!.clientId,
-                                    petId: exam()!.petId,
-                                    examinationId: exam()!.id
-                                }"
-                                pButton
-                                type="button"
-                                label="Aşı Oluştur"
-                                icon="pi pi-shield"
-                                class="p-button-secondary"
-                            ></a>
+                            @if (exam()!.status === 'Draft') {
+                                <a
+                                    [routerLink]="['/panel/treatments/new']"
+                                    [queryParams]="{
+                                        clientId: exam()!.clientId,
+                                        petId: exam()!.petId,
+                                        examinationId: exam()!.id
+                                    }"
+                                    pButton
+                                    type="button"
+                                    label="Tedavi Oluştur"
+                                    icon="pi pi-plus"
+                                    class="p-button-secondary"
+                                ></a>
+                                <a
+                                    [routerLink]="['/panel/prescriptions/new']"
+                                    [queryParams]="{
+                                        clientId: exam()!.clientId,
+                                        petId: exam()!.petId,
+                                        examinationId: exam()!.id
+                                    }"
+                                    pButton
+                                    type="button"
+                                    label="Reçete Oluştur"
+                                    icon="pi pi-file-edit"
+                                    class="p-button-secondary"
+                                ></a>
+                                <a
+                                    [routerLink]="['/panel/vaccinations/new']"
+                                    [queryParams]="{
+                                        clientId: exam()!.clientId,
+                                        petId: exam()!.petId,
+                                        examinationId: exam()!.id
+                                    }"
+                                    pButton
+                                    type="button"
+                                    label="Aşı Oluştur"
+                                    icon="pi pi-shield"
+                                    class="p-button-secondary"
+                                ></a>
+                            } @else {
+                                <span class="self-center text-sm text-muted-color" data-testid="finalized-locked-hint">
+                                    Kesinleşmiş muayeneye tedavi, reçete veya aşı eklenemez; ek not ekleyebilirsiniz.
+                                </span>
+                            }
                             <a
                                 [routerLink]="['/panel/lab-results/new']"
                                 [queryParams]="{
