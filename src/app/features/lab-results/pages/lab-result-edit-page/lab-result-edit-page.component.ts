@@ -125,7 +125,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 [options]="examinationOptions()"
                                 optionLabel="label"
                                 optionValue="value"
-                                placeholder="Hayvan seçin"
+                                placeholder="Muayene seçin"
                                 [filter]="true"
                                 filterPlaceholder="Ara…"
                                 filterBy="label"

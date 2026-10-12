@@ -8,6 +8,7 @@ import {
     DateInputType,
     formatDateInputDisplay,
     formatDateInputValue,
+    isDateWithoutTime,
     parseDateInputValue
 } from '@/app/shared/forms/date-input/date-input-value.utils';
 
@@ -22,6 +23,8 @@ const INVALID_MESSAGES: Record<DateInputType, string> = {
     'datetime-local': 'Geçerli bir tarih ve saat girin (gg.aa.yyyy ss:dd).',
     time: 'Geçerli bir saat girin (ss:dd).'
 };
+
+const TIME_MISSING_MESSAGE = 'Saati de girin (gg.aa.yyyy ss:dd).';
 
 /**
  * Ortak tarih / tarih-saat / saat alanı (PrimeNG DatePicker). Alana tıklayınca takvim açılır; klavyeyle yazarken maske
@@ -83,6 +86,8 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     readonly view = signal<Date | null>(null);
     readonly disabled = signal(false);
     private readonly unparsable = signal(false);
+    /** Çözümlenemeyen yazı yalnız tam bir tarih (saat yazılmamış): mesaj saati ister. */
+    private readonly timeMissing = signal(false);
     private readonly outOfRange = signal(false);
     /** Odak içinde yazılıyor: hata mesajı blur'dan sonra gösterilir (yazarken "geçersiz" yanıp sönmesin). */
     private readonly editing = signal(false);
@@ -96,7 +101,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
             return null;
         }
         if (this.unparsable()) {
-            return INVALID_MESSAGES[this.type()];
+            return this.timeMissing() ? TIME_MISSING_MESSAGE : INVALID_MESSAGES[this.type()];
         }
         return this.outOfRange() ? this.rangeMessage() : null;
     });
@@ -156,6 +161,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         const outOfRange = value instanceof Date && this.isOutOfRange(value);
         const changed = this.unparsable() !== unparsable || this.outOfRange() !== outOfRange;
         this.unparsable.set(unparsable);
+        this.timeMissing.set(unparsable && this.type() === 'datetime-local' && isDateWithoutTime(value as string));
         this.outOfRange.set(outOfRange);
         if (changed) {
             this.onValidatorChange();
@@ -171,6 +177,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         const date = parseDateInputValue(this.type(), value);
         const hadError = this.unparsable() || this.outOfRange();
         this.unparsable.set(false);
+        this.timeMissing.set(false);
         this.outOfRange.set(false);
         this.view.set(date);
         if (hadError) {

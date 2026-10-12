@@ -1,4 +1,4 @@
-import { formatDateInputValue, parseDateInputValue } from './date-input-value.utils';
+import { formatDateInputValue, isDateWithoutTime, parseDateInputValue } from './date-input-value.utils';
 
 describe('date-input-value utils', () => {
     it('date: metin ↔ Date gidiş-dönüş aynı kalır', () => {
@@ -51,5 +51,16 @@ describe('date-input-value utils', () => {
     it('boş Date biçimlenince boş metin', () => {
         expect(formatDateInputValue('date', null)).toBe('');
         expect(formatDateInputValue('date', new Date(NaN))).toBe('');
+    });
+});
+
+describe('isDateWithoutTime', () => {
+    it('yalnız tam tarih saat yok sayılır', () => {
+        expect(isDateWithoutTime('15.10.2026')).toBeTrue();
+        expect(isDateWithoutTime(' 15.10.2026 ')).toBeTrue();
+        expect(isDateWithoutTime('15.10.2026 14')).toBeFalse();
+        expect(isDateWithoutTime('15.10.2026 14:30')).toBeFalse();
+        expect(isDateWithoutTime('15.10.20')).toBeFalse();
+        expect(isDateWithoutTime('')).toBeFalse();
     });
 });

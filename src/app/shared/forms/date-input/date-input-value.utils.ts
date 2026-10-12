@@ -185,6 +185,11 @@ export function applyDateMask(type: DateInputType, raw: string, caret: number, p
     return { text: formatted, caret: caretAfterDigits(formatted, accepted.caretDigits) };
 }
 
+/** Yazı yalnız tam bir tarih mi (`gg.aa.yyyy`, saat yok)? Tarih-saat alanında saatin atlandığını anlamak için. */
+export function isDateWithoutTime(text: string): boolean {
+    return /^\s*\d{2}\.\d{2}\.\d{4}\s*$/.test(text);
+}
+
 /** Görüntü biçimi: `gg.aa.yyyy`, `gg.aa.yyyy ss:dd`, `ss:dd` (hata mesajlarında). */
 export function formatDateInputDisplay(type: DateInputType, date: Date): string {
     const hm = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
