@@ -1,16 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CHARGES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CHARGES_CORRECT_CLAIM, CHARGES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ChargeCorrectionDialogComponent } from '@/app/features/charges/components/charge-correction-dialog.component';
 import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -29,6 +31,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         TableModule,
         ButtonModule,
         ClientSearchComponent,
+        ChargeCorrectionDialogComponent,
+        ReasonConfirmDialogComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -101,6 +105,9 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 <th class="text-right">Tutar</th>
                                 <th class="text-right">Ödenen</th>
                                 <th class="text-right">Kalan</th>
+                                @if (canCorrect) {
+                                    <th style="width: 12rem">İşlemler</th>
+                                }
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
@@ -128,12 +135,34 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                         <span class="font-medium">{{ money(row.outstandingAmount, row.currency) }}</span>
                                     }
                                 </td>
+                                @if (canCorrect) {
+                                    <td class="whitespace-nowrap">
+                                        @if (ro.mutationBlocked()) {
+                                            <span class="text-muted-color text-sm">Salt okunur</span>
+                                        } @else {
+                                            <p-button label="Düzelt" icon="pi pi-pencil" size="small" [text]="true" (onClick)="openCorrection(row)" />
+                                            <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                        }
+                                    </td>
+                                }
                             </tr>
                         </ng-template>
                     </p-table>
                 </div>
             }
         </div>
+
+        <app-charge-correction-dialog [(visible)]="correctionVisible" [charge]="actionTarget()" (corrected)="reload()" />
+        <app-reason-confirm-dialog
+            [(visible)]="voidVisible"
+            header="Ücreti iptal et"
+            [summary]="voidSummary()"
+            description="İptal edilen ücret listelerden, bakiyeden ve Bugün tutarlarından düşer; geri alınamaz. Yanlışsa yeni ücret yazılır. Ödemesi olan ücret önce ödeme iptal edilmeden iptal edilemez."
+            confirmLabel="Ücreti iptal et"
+            failureFallback="Ücret iptal edilemedi."
+            [execute]="voidCharge"
+            (confirmed)="reload()"
+        />
     `
 })
 export class ChargesListPageComponent implements OnInit {
@@ -143,6 +172,12 @@ export class ChargesListPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly canCreate = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
+    readonly canCorrect = this.auth.hasOperationClaim(CHARGES_CORRECT_CLAIM);
+
+    /** Düzeltme veya iptal diyaloğunun açık olduğu satır. */
+    readonly actionTarget = signal<ChargeVm | null>(null);
+    correctionVisible = false;
+    voidVisible = false;
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -153,12 +188,28 @@ export class ChargesListPageComponent implements OnInit {
 
     clientId: string | null = null;
 
+    readonly voidSummary = computed(() => {
+        const c = this.actionTarget();
+        return c ? `${c.clientName} · ${c.description} · ${formatMoney(c.amount, c.currency || 'TRY')}` : null;
+    });
+    readonly voidCharge = (reason: string) => this.chargesService.voidCharge(this.actionTarget()!.id, reason);
+
     readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
 
     ngOnInit(): void {
         this.clientId = this.route.snapshot.queryParamMap.get('clientId')?.trim() || null;
         this.load(1, this.pageSize());
+    }
+
+    openCorrection(row: ChargeVm): void {
+        this.actionTarget.set(row);
+        this.correctionVisible = true;
+    }
+
+    openVoid(row: ChargeVm): void {
+        this.actionTarget.set(row);
+        this.voidVisible = true;
     }
 
     reload(): void {
@@ -184,6 +235,11 @@ export class ChargesListPageComponent implements OnInit {
         this.error.set(null);
         this.chargesService.getCharges({ page, pageSize, clientId: this.clientId ?? undefined }).subscribe({
             next: (r) => {
+                // Son sayfadaki son kayıt iptal edilince boş sayfa yerine bir önceki sayfaya dön.
+                if (r.items.length === 0 && page > 1) {
+                    this.load(page - 1, pageSize);
+                    return;
+                }
                 this.rows.set(r.items);
                 this.totalItems.set(r.totalItems);
                 this.pageSize.set(r.pageSize);

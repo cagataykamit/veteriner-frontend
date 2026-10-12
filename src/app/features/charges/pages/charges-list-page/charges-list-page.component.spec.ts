@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ChargesPagedVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
@@ -54,7 +54,7 @@ describe('ChargesListPageComponent', () => {
     };
 
     beforeEach(() => {
-        charges = jasmine.createSpyObj<ChargesService>('ChargesService', ['getCharges']);
+        charges = jasmine.createSpyObj<ChargesService>('ChargesService', ['getCharges', 'voidCharge']);
         charges.getCharges.and.returnValue(of(page([row])));
         claims = new Set(['Charges.Read']);
         mutationBlocked = false;
@@ -116,6 +116,51 @@ describe('ChargesListPageComponent', () => {
         charges.getCharges.and.returnValue(of(page([])));
         await setup();
         expect(fixture.nativeElement.textContent).toContain('Ücret kaydı yok');
+    });
+
+    it('Charges.Correct yoksa Düzelt/İptal et eylemleri görünmez', async () => {
+        await setup();
+        const text = fixture.nativeElement.textContent as string;
+        expect(text).not.toContain('Düzelt');
+        expect(text).not.toContain('İptal et');
+    });
+
+    it('Charges.Correct varsa Düzelt ve İptal et görünür; salt okunur kiracıda gizlenir', async () => {
+        claims.add('Charges.Correct');
+        await setup();
+        expect(fixture.nativeElement.textContent).toContain('Düzelt');
+        expect(fixture.nativeElement.textContent).toContain('İptal et');
+    });
+
+    it('salt okunur kiracıda eylemler yerine bilgi gösterilir', async () => {
+        claims.add('Charges.Correct');
+        mutationBlocked = true;
+        await setup();
+        const text = fixture.nativeElement.textContent as string;
+        expect(text).not.toContain('Düzelt');
+        expect(text).toContain('Salt okunur');
+    });
+
+    it('iptal diyaloğu satırın ücretini iptal eder ve listeyi yeniden okur', async () => {
+        claims.add('Charges.Correct');
+        charges.voidCharge.and.returnValue(of(void 0));
+        await setup();
+        const cmp = fixture.componentInstance;
+        cmp.openVoid(row);
+        await firstValueFrom(cmp.voidCharge('Yanlış girildi'));
+        expect(charges.voidCharge).toHaveBeenCalledOnceWith('ch1', 'Yanlış girildi');
+        const before = charges.getCharges.calls.count();
+        cmp.reload();
+        expect(charges.getCharges.calls.count()).toBe(before + 1);
+    });
+
+    it('son sayfadaki son kayıt kalkınca boş sayfa yerine önceki sayfa yüklenir', async () => {
+        await setup();
+        charges.getCharges.calls.reset();
+        charges.getCharges.and.returnValues(of({ items: [], page: 2, pageSize: 20, totalItems: 20, totalPages: 1 }), of(page([row])));
+        fixture.componentInstance.onLazyLoad({ first: 20, rows: 20 });
+        expect(charges.getCharges.calls.allArgs().map((a) => a[0]?.page)).toEqual([2, 1]);
+        expect(fixture.componentInstance.rows()).toEqual([row]);
     });
 
     it('yükleme hatasını gösterir', async () => {
