@@ -57,9 +57,20 @@ export interface TodayItemVm {
     isUrgent: boolean;
 }
 
+/** Bugün'deki aktif yatış satırı; `items` içine karışmaz, sorumlu hekim süzgecinden etkilenmez. */
+export interface TodayHospitalizationVm {
+    hospitalizationId: string;
+    petId: string;
+    petName: string;
+    clientName: string;
+    admittedAtUtc: string;
+    plannedDischargeAtUtc: string | null;
+}
+
 export interface TodayVm {
     date: string;
     items: TodayItemVm[];
+    activeHospitalizations: TodayHospitalizationVm[];
 }
 
 export interface VeterinarianVm {

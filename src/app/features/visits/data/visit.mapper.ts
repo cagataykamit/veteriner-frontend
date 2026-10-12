@@ -6,6 +6,7 @@ import type {
     RestoreVisitRequestDto,
     UpdateVisitUrgencyRequestDto,
     TodayDto,
+    TodayHospitalizationDto,
     TodayItemDto,
     VeterinarianDto,
     VisitCreateResultDto,
@@ -14,6 +15,7 @@ import type {
 import type {
     CorrectVisitRequest,
     CreateVisitRequest,
+    TodayHospitalizationVm,
     TodayItemVm,
     TodayQuery,
     TodayVm,
@@ -79,8 +81,23 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
     };
 }
 
+export function mapTodayHospitalizationDtoToVm(dto: TodayHospitalizationDto): TodayHospitalizationVm {
+    return {
+        hospitalizationId: dto.hospitalizationId,
+        petId: dto.petId,
+        petName: trimmedOrNull(dto.petName) ?? EM,
+        clientName: trimmedOrNull(dto.clientName) ?? EM,
+        admittedAtUtc: dto.admittedAtUtc,
+        plannedDischargeAtUtc: trimmedOrNull(dto.plannedDischargeAtUtc)
+    };
+}
+
 export function mapTodayDtoToVm(dto: TodayDto): TodayVm {
-    return { date: dto.date, items: (dto.items ?? []).map(mapTodayItemDtoToVm) };
+    return {
+        date: dto.date,
+        items: (dto.items ?? []).map(mapTodayItemDtoToVm),
+        activeHospitalizations: (dto.activeHospitalizations ?? []).map(mapTodayHospitalizationDtoToVm)
+    };
 }
 
 export function mapVeterinarianDtoToVm(dto: VeterinarianDto): VeterinarianVm {

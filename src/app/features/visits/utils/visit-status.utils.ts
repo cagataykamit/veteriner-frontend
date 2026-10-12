@@ -143,6 +143,16 @@ export function formatElapsedSince(arrivedAtUtc: string | null, now: Date): stri
     return rest ? `${Math.floor(minutes / 60)} sa ${rest} dk` : `${Math.floor(minutes / 60)} sa`;
 }
 
+/** Yatış süresi: bir günden kısaysa saat/dakika, değilse tam gün sayısı. */
+export function formatHospitalizationStay(admittedAtUtc: string | null, now: Date): string | null {
+    const admitted = parseUtcApiInstantIsoString(admittedAtUtc);
+    if (!admitted) {
+        return null;
+    }
+    const days = Math.floor((now.getTime() - admitted.getTime()) / 86_400_000);
+    return days >= 1 ? `${days} gün` : formatElapsedSince(admittedAtUtc, now);
+}
+
 /** Açık (Bekliyor/Devam ediyor) bir geliş bu süreyi aşarsa satırda yalnız görsel "unutulmuş olabilir" ipucu gösterilir (iş kuralı yok). */
 export const FORGOTTEN_VISIT_HOURS = 12;
 

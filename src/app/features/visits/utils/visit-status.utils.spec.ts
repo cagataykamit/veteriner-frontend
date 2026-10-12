@@ -2,6 +2,7 @@ import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import {
     correctionActionOptions,
     formatElapsedSince,
+    formatHospitalizationStay,
     groupTodayItems,
     isPossiblyForgottenVisit,
     todayItemActions,
@@ -108,6 +109,21 @@ describe('formatElapsedSince', () => {
 
     it('saat farkı negatifse (istemci saati geride) Az önce', () => {
         expect(formatElapsedSince('2026-10-10T08:05:00Z', now)).toBe('Az önce');
+    });
+});
+
+describe('formatHospitalizationStay', () => {
+    const now = new Date('2026-10-10T08:00:00Z');
+
+    it('bir günden kısa süre saat/dakika, sonrası tam gün', () => {
+        expect(formatHospitalizationStay('2026-10-10T06:00:00Z', now)).toBe('2 sa');
+        expect(formatHospitalizationStay('2026-10-09T08:00:00Z', now)).toBe('1 gün');
+        expect(formatHospitalizationStay('2026-10-07T07:00:00Z', now)).toBe('3 gün');
+    });
+
+    it('geçersiz/boş değer null', () => {
+        expect(formatHospitalizationStay(null, now)).toBeNull();
+        expect(formatHospitalizationStay('geçersiz', now)).toBeNull();
     });
 });
 
