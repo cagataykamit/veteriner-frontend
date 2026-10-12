@@ -44,7 +44,6 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
             [dismissableMask]="!submitting()"
             [closable]="!submitting()"
             [style]="{ width: 'min(560px, 95vw)' }"
-            [contentStyle]="{ overflow: 'visible' }"
             [(visible)]="visible"
         >
             @if (loadError()) {
@@ -74,7 +73,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                 emptyMessage="Eşleşen hasta bulunamadı."
                                 appendTo="body"
                             />
-                            @if (form.controls.pet.invalid && form.controls.pet.touched) {
+                            @if (petTextUnselected()) {
                                 <small class="text-red-500">Listeden bir hasta seçin.</small>
                             }
                         </div>
@@ -202,6 +201,12 @@ export class VisitArrivalDialogComponent {
                 takeUntilDestroyed(this.destroyRef)
             )
             .subscribe((suggestions) => this.petSuggestions.set(suggestions));
+    }
+
+    /** Hata yalnız yazılmış ama listeden seçilmemiş metin için gösterilir; boş alan dokunulmadan hata vermez. */
+    petTextUnselected(): boolean {
+        const v = this.form.controls.pet.value;
+        return this.form.controls.pet.touched && typeof v === 'string' && v.trim().length > 0;
     }
 
     onPetSearch(event: AutoCompleteCompleteEvent): void {
