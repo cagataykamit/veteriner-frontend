@@ -54,10 +54,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 appendTo="body"
                             >
                                 <ng-template #item let-option>
-                                    <div>{{ option.label }}</div>
-                                    @if (option.value === 'Mistaken') {
-                                        <div class="text-xs text-muted-color whitespace-normal">{{ mistakenDescription }}</div>
-                                    }
+                                    <div>
+                                        <div>{{ option.label }}</div>
+                                        @if (option.value === 'Mistaken') {
+                                            <div class="text-xs text-muted-color whitespace-normal">{{ mistakenDescription }}</div>
+                                        }
+                                    </div>
                                 </ng-template>
                             </p-select>
                             @if (form.controls.action.invalid && form.controls.action.touched) {
