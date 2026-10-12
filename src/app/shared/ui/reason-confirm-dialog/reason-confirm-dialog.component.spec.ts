@@ -45,6 +45,15 @@ describe('ReasonConfirmDialogComponent', () => {
         expect(confirmed).toBe(0);
     });
 
+    it('gerekçe düzenlenince eski sunucu hatası temizlenir', () => {
+        execute.and.returnValue(throwError(() => new Error('Hata.')));
+        cmp.form.controls.reason.setValue('Yanlış tutar girildi');
+        cmp.onSubmit();
+        expect(cmp.submitError()).toBe('Hata.');
+        cmp.form.controls.reason.setValue('Yanlış tutar girildi 2');
+        expect(cmp.submitError()).toBeNull();
+    });
+
     it('çağrı sürerken ikinci gönderim yoksayılır', () => {
         const pending = new Subject<void>();
         execute.and.returnValue(pending);
