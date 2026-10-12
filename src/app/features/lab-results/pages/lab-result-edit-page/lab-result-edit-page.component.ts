@@ -15,7 +15,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { mapLabResultUpsertFormToCreateRequest } from '@/app/features/lab-results/data/lab-result.mapper';
-import type { LabResultEditVm } from '@/app/features/lab-results/models/lab-result-vm.model';
+import type { LabResultEditVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
 import {
     type LabResultUpsertFieldErrors,
@@ -46,6 +46,11 @@ import {
     labResultDateNotTooFarPastValidator,
     labResultDateTimeLocalMinAllowed
 } from '@/app/features/lab-results/utils/lab-result-date-validation.utils';
+import {
+    LAB_RESULT_INCOMPLETE_MESSAGE,
+    LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE,
+    labResultResultFieldsValidator
+} from '@/app/features/lab-results/utils/lab-result-form.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -72,7 +77,11 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Lab sonucunu düzenle" subtitle="Klinik" description="Kaydı güncelleyin." />
+            <app-page-header
+                [title]="status() === 'Requested' ? 'Lab sonucu gir' : 'Lab sonucunu düzenle'"
+                subtitle="Klinik"
+                [description]="status() === 'Requested' ? 'Sonuç tarihi ve metnini girince kayıt Sonuçlandı olur.' : 'Kaydı güncelleyin.'"
+            />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
@@ -84,6 +93,11 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
                 <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+                @if (examinationFinalized()) {
+                    <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="finalized-identity-locked">
+                        Bağlı muayene kesinleşmiş; müşteri, hayvan, bağlı muayene ve test adı değiştirilemez. Sonuç, yorum ve notlar düzenlenebilir.
+                    </p>
+                }
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
@@ -105,7 +119,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="resultDateLocal" class="block text-sm font-medium text-muted-color mb-2">Sonuç tarihi / saati *</label>
+                            <label for="resultDateLocal" class="block text-sm font-medium text-muted-color mb-2">Sonuç tarihi / saati</label>
                             <app-date-input inputId="resultDateLocal" type="datetime-local" formControlName="resultDateLocal" [min]="labResultDateMinAllowed()" limit="past" />
                             @if (form.controls.resultDateLocal.hasError('dateYearInvalid') && form.controls.resultDateLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
@@ -113,8 +127,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 <small class="text-red-500 block">{{ labResultDateTooFarPastMessage }}</small>
                             } @else if (apiFieldErrors().resultDateLocal) {
                                 <small class="text-red-500 block">{{ apiFieldErrors().resultDateLocal }}</small>
-                            } @else if (form.controls.resultDateLocal.invalid && form.controls.resultDateLocal.touched) {
-                                <small class="text-red-500 block">Tarih zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -148,18 +160,20 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             }
                         </div>
                         <div class="col-span-12">
-                            <label for="resultText" class="block text-sm font-medium text-muted-color mb-2">Sonuç metni *</label>
+                            <label for="resultText" class="block text-sm font-medium text-muted-color mb-2">Sonuç metni</label>
                             <textarea id="resultText" rows="4" class="w-full p-inputtext p-component" formControlName="resultText"></textarea>
-                            @if (apiFieldErrors().resultText) {
+                            @if (form.hasError('labResultResultIncomplete') && (form.controls.resultText.touched || form.controls.resultDateLocal.touched)) {
+                                <small class="text-red-500">{{ resultIncompleteMessage }}</small>
+                            } @else if (apiFieldErrors().resultText) {
                                 <small class="text-red-500">{{ apiFieldErrors().resultText }}</small>
-                            } @else if (form.controls.resultText.invalid && form.controls.resultText.touched) {
-                                <small class="text-red-500">Sonuç metni zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12">
                             <label for="interpretation" class="block text-sm font-medium text-muted-color mb-2">Yorum</label>
                             <textarea id="interpretation" rows="3" class="w-full p-inputtext p-component" formControlName="interpretation"></textarea>
-                            @if (apiFieldErrors().interpretation) {
+                            @if (form.hasError('labResultInterpretationWithoutResult') && form.controls.interpretation.touched) {
+                                <small class="text-red-500">{{ interpretationWithoutResultMessage }}</small>
+                            } @else if (apiFieldErrors().interpretation) {
                                 <small class="text-red-500">{{ apiFieldErrors().interpretation }}</small>
                             }
                         </div>
@@ -216,6 +230,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 export class LabResultEditPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     protected readonly labResultDateTooFarPastMessage = LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE;
+    protected readonly resultIncompleteMessage = LAB_RESULT_INCOMPLETE_MESSAGE;
+    protected readonly interpretationWithoutResultMessage = LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE;
 
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
@@ -245,17 +261,21 @@ export class LabResultEditPageComponent implements OnInit {
     private labResultId = '';
     private editVmCache: LabResultEditVm | null = null;
     private rowVersion = '';
+    /** Sonuçlanmış kayıtta sonuç geri silinemez (PUT 400). */
+    readonly status = signal<LabResultStatus | null>(null);
+    /** Bağlı muayene kesinleşmişse kimlik alanları (test, hayvan, muayene) backend'de kilitlidir. */
+    readonly examinationFinalized = signal(false);
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        resultDateLocal: ['', [Validators.required, dateTimeYearRangeValidator(), labResultDateNotTooFarPastValidator()]],
+        resultDateLocal: ['', [dateTimeYearRangeValidator(), labResultDateNotTooFarPastValidator()]],
         examinationId: [''],
         testName: ['', Validators.required],
-        resultText: ['', Validators.required],
+        resultText: [''],
         interpretation: [''],
         notes: ['']
-    });
+    }, { validators: labResultResultFieldsValidator(() => this.status() === 'Resulted') });
 
     constructor() {
         const fields: LabResultUpsertFormFieldKey[] = [
@@ -330,7 +350,7 @@ export class LabResultEditPageComponent implements OnInit {
     }
 
     examinationSelectDisabled(): boolean {
-        return this.form.controls.petId.disabled || !trimClientIdControlValue(this.form.controls.petId.value);
+        return this.examinationFinalized() || this.form.controls.petId.disabled || !trimClientIdControlValue(this.form.controls.petId.value);
     }
 
     reload(): void {
@@ -338,7 +358,17 @@ export class LabResultEditPageComponent implements OnInit {
         this.loadError.set(null);
         this.labResultsService.getLabResultForEditById(this.labResultId).subscribe({
             next: (x) => {
+                if (x.status === 'Cancelled') {
+                    this.loadError.set('İptal edilmiş lab kaydı düzenlenemez.');
+                    this.loading.set(false);
+                    return;
+                }
                 this.editVmCache = x;
+                this.status.set(x.status);
+                this.examinationFinalized.set(false);
+                for (const c of [this.form.controls.clientId, this.form.controls.testName, this.form.controls.examinationId]) {
+                    c.enable({ emitEvent: false });
+                }
                 this.rowVersion = x.rowVersion;
                 this.conflict.set(false);
                 this.submitError.set(null);
@@ -362,10 +392,32 @@ export class LabResultEditPageComponent implements OnInit {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
                 this.loading.set(false);
+                this.lockIdentityWhenExaminationFinalized(x.examinationId);
             },
             error: (e: unknown) => {
                 this.loadError.set(panelHttpFailureMessage(e, 'Kayıt bilgileri yüklenemedi.'));
                 this.loading.set(false);
+            }
+        });
+    }
+
+    /** Kesinleşmiş muayenede test adı, hayvan ve muayene değişimi backend'de `Examinations.Finalized` ile reddedilir; baştan pasif yapılır. */
+    private lockIdentityWhenExaminationFinalized(examinationId: string): void {
+        if (!examinationId) {
+            return;
+        }
+        this.examinationsService.getExaminationById(examinationId).subscribe({
+            next: (ex) => {
+                if (ex.status !== 'Finalized') {
+                    return;
+                }
+                this.examinationFinalized.set(true);
+                for (const c of [this.form.controls.clientId, this.form.controls.petId, this.form.controls.examinationId, this.form.controls.testName]) {
+                    c.disable({ emitEvent: false });
+                }
+            },
+            error: () => {
+                /* Kilit bilinemezse backend Examinations.Finalized döner ve mesaj gösterilir. */
             }
         });
     }
@@ -382,8 +434,8 @@ export class LabResultEditPageComponent implements OnInit {
             return;
         }
         const v = this.form.getRawValue();
-        const resultDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.resultDateLocal);
-        if (!resultDateUtc) {
+        const resultDateUtc = v.resultDateLocal.trim() ? fromIstanbulDateTimeLocalInputToUtcIso(v.resultDateLocal) : null;
+        if (v.resultDateLocal.trim() && !resultDateUtc) {
             this.submitError.set('Geçerli bir sonuç tarihi ve saati seçin.');
             return;
         }
