@@ -49,3 +49,27 @@ export function isHospitalizationDateTooFarPastBackendMessage(message: string): 
     }
     return /too far in the past/i.test(m) && /7\s*days?/i.test(m);
 }
+
+export const HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY = 'plannedDischargeBeforeAdmission';
+
+export const HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_MESSAGE = 'Planlı taburcu, yatış tarihinden önce olamaz.';
+
+const DATETIME_LOCAL_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
+/** Planlı taburcu için en erken değer: geçerli bir yatış tarihi varsa o, yoksa `fallbackMin` (`datetime-local` metni). */
+export function hospitalizationPlannedDischargeMin(admittedLocal: string | null | undefined, fallbackMin: string): string {
+    const admitted = (admittedLocal ?? '').trim();
+    return DATETIME_LOCAL_RE.test(admitted) ? admitted : fallbackMin;
+}
+
+/** Form grubu — planlı taburcu yatış tarihinden önce olamaz (backend `PlannedDischargeBeforeAdmission` ile uyumlu). */
+export function plannedDischargeNotBeforeAdmissionValidator(): ValidatorFn {
+    return (group: AbstractControl): ValidationErrors | null => {
+        const admitted = (group.get('admittedAtLocal')?.value ?? '').toString().trim();
+        const planned = (group.get('plannedDischargeAtLocal')?.value ?? '').toString().trim();
+        if (!DATETIME_LOCAL_RE.test(admitted) || !DATETIME_LOCAL_RE.test(planned)) {
+            return null;
+        }
+        return planned < admitted ? { [HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY]: true } : null;
+    };
+}
