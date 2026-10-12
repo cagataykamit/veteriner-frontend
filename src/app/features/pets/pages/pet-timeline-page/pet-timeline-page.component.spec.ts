@@ -119,6 +119,16 @@ describe('PetTimelinePageComponent', () => {
         expect(fixture.componentInstance.items().length).toBe(1);
     });
 
+    it('tarih aralığı süzgeci listeyi baştan ve aynı aralıkla yükler; ters aralık yer değiştirir; değişmeyen aralık istek atmaz', () => {
+        create();
+
+        fixture.componentInstance.setDateRange('2026-10-12', '2026-10-10');
+        fixture.componentInstance.setDateRange('2026-10-10', '2026-10-12');
+
+        expect(calls.length).toBe(2);
+        expect(calls[1]).toEqual(jasmine.objectContaining({ fromDate: '2026-10-10', toDate: '2026-10-12', cursor: null }));
+    });
+
     it('tür seçimi sözleşme sırasıyla types olarak gönderilir', () => {
         create();
 

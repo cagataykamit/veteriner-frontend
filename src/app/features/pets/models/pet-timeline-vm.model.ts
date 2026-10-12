@@ -30,6 +30,9 @@ export interface PetTimelinePageVm {
 export interface PetTimelineQuery {
     /** Boş/undefined = yetkili tüm türler. */
     types?: PetTimelineType[];
+    /** İstanbul günü (`yyyy-MM-dd`), bitiş günü dahil; UTC dönüşümü mapper'dadır. */
+    fromDate?: string;
+    toDate?: string;
     includeVoided?: boolean;
     limit?: number;
     cursor?: string | null;

@@ -1,4 +1,5 @@
 import { HttpParams } from '@angular/common/http';
+import { istanbulDateRangeToUtcIso } from '@/app/shared/utils/date.utils';
 import type { PetTimelineItemDto, PetTimelinePageDto } from '@/app/features/pets/models/pet-timeline-api.model';
 import type { PetTimelineItemVm, PetTimelinePageVm, PetTimelineQuery } from '@/app/features/pets/models/pet-timeline-vm.model';
 
@@ -7,11 +8,18 @@ function trimOrNull(v: string | null | undefined): string | null {
     return t ? t : null;
 }
 
-/** Sözleşme: `types` tekrarlı parametre, `includeVoided` yalnız `true` iken, `cursor` aynen (opak) geri gönderilir. */
+/** Sözleşme: `types` tekrarlı parametre, `fromUtc`/`toUtc` yarı açık İstanbul günü aralığı, `includeVoided` yalnız `true` iken, `cursor` aynen (opak) geri gönderilir. */
 export function petTimelineQueryToHttpParams(query: PetTimelineQuery): HttpParams {
     let params = new HttpParams();
     for (const type of query.types ?? []) {
         params = params.append('types', type);
+    }
+    const range = istanbulDateRangeToUtcIso(query.fromDate, query.toDate);
+    if (range.fromUtc) {
+        params = params.set('fromUtc', range.fromUtc);
+    }
+    if (range.toUtc) {
+        params = params.set('toUtc', range.toUtc);
     }
     if (query.includeVoided) {
         params = params.set('includeVoided', 'true');

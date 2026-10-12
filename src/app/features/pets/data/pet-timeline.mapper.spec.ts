@@ -11,6 +11,13 @@ describe('petTimelineQueryToHttpParams', () => {
         expect(params.get('cursor')).toBe('a+b/c==');
     });
 
+    it('tarih aralığı İstanbul gün sınırıyla yarı açık fromUtc/toUtc olur (bitiş günü dahil)', () => {
+        const params = petTimelineQueryToHttpParams({ fromDate: '2026-10-10', toDate: '2026-10-11' });
+
+        expect(params.get('fromUtc')).toBe('2026-10-09T21:00:00.000Z');
+        expect(params.get('toUtc')).toBe('2026-10-11T21:00:00.000Z');
+    });
+
     it('varsayılan sorguda parametre eklenmez', () => {
         const params = petTimelineQueryToHttpParams({ types: [], includeVoided: false, cursor: null });
 

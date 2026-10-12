@@ -17,6 +17,8 @@ import {
     petTimelineTypeIcon,
     petTimelineTypeLabel
 } from '@/app/features/pets/utils/pet-timeline.utils';
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -37,6 +39,8 @@ const PAGE_SIZE = 20;
         RouterLink,
         ButtonModule,
         CheckboxModule,
+        DateInputComponent,
+        FilterFieldComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -73,6 +77,14 @@ const PAGE_SIZE = 20;
             @if (selectedTypes().length === 0) {
                 <p class="m-0 mt-2 text-muted-color text-sm">Tür seçilmedi: yetkili olduğunuz tüm kayıt türleri gösterilir.</p>
             }
+            <div class="flex flex-wrap items-end gap-3 mt-4">
+                <app-filter-field label="Başlangıç" labelFor="tl-from" [active]="fromDate() !== ''" width="date">
+                    <app-date-input inputId="tl-from" type="date" min="1900-01-01" limit="past" [ngModel]="fromDate()" (ngModelChange)="setDateRange($event, toDate())" />
+                </app-filter-field>
+                <app-filter-field label="Bitiş" labelFor="tl-to" [active]="toDate() !== ''" width="date">
+                    <app-date-input inputId="tl-to" type="date" min="1900-01-01" limit="past" [ngModel]="toDate()" (ngModelChange)="setDateRange(fromDate(), $event)" />
+                </app-filter-field>
+            </div>
         </div>
 
         @if (omittedTypes().length > 0) {
@@ -176,6 +188,8 @@ export class PetTimelinePageComponent implements OnInit {
     readonly petName = signal<string | null>(null);
     readonly selectedTypes = signal<PetTimelineType[]>([]);
     readonly includeVoided = signal(false);
+    readonly fromDate = signal('');
+    readonly toDate = signal('');
 
     readonly items = signal<PetTimelineItemVm[]>([]);
     readonly nextCursor = signal<string | null>(null);
@@ -187,7 +201,7 @@ export class PetTimelinePageComponent implements OnInit {
 
     readonly omittedLabel = computed(() => petTimelineOmittedTypesLabel(this.omittedTypes()));
     readonly emptyMessage = computed(() =>
-        this.includeVoided() || this.selectedTypes().length > 0
+        this.includeVoided() || this.selectedTypes().length > 0 || this.fromDate() || this.toDate()
             ? 'Seçili süzgeçlere uyan kayıt yok.'
             : 'Henüz kayıt yok. İptal / yanlış işaretli kayıtlar varsayılan olarak gizlidir.'
     );
@@ -221,6 +235,21 @@ export class PetTimelinePageComponent implements OnInit {
             next.push(type);
         }
         this.selectedTypes.set(PET_TIMELINE_TYPES.map((d) => d.value).filter((v) => next.includes(v)));
+        this.reload();
+    }
+
+    /** Başlangıç bitişten büyükse uçlar yer değiştirir (diğer liste süzgeçleriyle aynı); değişmediyse yeniden yüklenmez. */
+    setDateRange(from: string | null, to: string | null): void {
+        let nextFrom = from?.trim() ?? '';
+        let nextTo = to?.trim() ?? '';
+        if (nextFrom && nextTo && nextFrom > nextTo) {
+            [nextFrom, nextTo] = [nextTo, nextFrom];
+        }
+        if (nextFrom === this.fromDate() && nextTo === this.toDate()) {
+            return;
+        }
+        this.fromDate.set(nextFrom);
+        this.toDate.set(nextTo);
         this.reload();
     }
 
@@ -282,6 +311,8 @@ export class PetTimelinePageComponent implements OnInit {
     private query(cursor: string | null) {
         return {
             types: this.selectedTypes(),
+            fromDate: this.fromDate(),
+            toDate: this.toDate(),
             includeVoided: this.includeVoided(),
             limit: PAGE_SIZE,
             cursor
