@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
@@ -16,6 +16,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     APPOINTMENTS_NOSHOW_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
+    HOSPITALIZATIONS_READ_CLAIM,
     PAYMENTS_CREATE_CLAIM,
     VISITS_CORRECT_CLAIM,
     VISITS_CREATE_CLAIM,
@@ -31,6 +32,7 @@ import {
     careStatusLabel,
     careStatusSeverity,
     formatElapsedSince,
+    formatHospitalizationStay,
     groupTodayItems,
     todayItemActions,
     todaySecondaryActions,
@@ -52,7 +54,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
@@ -65,7 +67,7 @@ type TodayScope = 'mine' | 'all';
 
 /**
  * Bugün: o günün randevuları ve gelen hastalar tek listede (randevulu Visit tek satır).
- * Ödeme ve yatış rozetleri bakım durumundan ayrıdır; açık iş göstergesi backend'de yoktur.
+ * Ödeme ve yatış rozetleri bakım durumundan ayrıdır; aktif yatışlar ayrı bölümde listelenir; açık iş göstergesi backend'de yoktur.
  */
 @Component({
     selector: 'app-today-page',
@@ -76,6 +78,7 @@ type TodayScope = 'mine' | 'all';
         FormsModule,
         SelectButtonModule,
         MenuModule,
+        RouterLink,
         TableModule,
         ToastModule,
         AppPageHeaderComponent,
@@ -387,6 +390,43 @@ type TodayScope = 'mine' | 'all';
             }
         }
 
+        @if (!loading() && !loadError() && hospitalizations().length > 0) {
+            <section class="card mb-4" aria-label="Aktif yatışlar">
+                <div class="font-medium mb-3 flex items-center gap-2">
+                    <span>Aktif yatışlar</span>
+                    <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="hospitalizations().length + ' kayıt'">{{ hospitalizations().length }}</span>
+                </div>
+                <p-table [value]="hospitalizations()" dataKey="hospitalizationId" styleClass="p-datatable-sm">
+                    <ng-template #header>
+                        <tr>
+                            <th>Hasta</th>
+                            <th>Sahip</th>
+                            <th class="whitespace-nowrap">Giriş</th>
+                            <th class="whitespace-nowrap">Yatış süresi</th>
+                            <th class="whitespace-nowrap">Planlı taburcu</th>
+                            @if (canReadHospitalization) {
+                                <th></th>
+                            }
+                        </tr>
+                    </ng-template>
+                    <ng-template #body let-h>
+                        <tr>
+                            <td class="font-medium">{{ h.petName }}</td>
+                            <td>{{ h.clientName }}</td>
+                            <td class="whitespace-nowrap">{{ admittedAt(h.admittedAtUtc) }}</td>
+                            <td class="whitespace-nowrap">{{ stay(h.admittedAtUtc) ?? '—' }}</td>
+                            <td class="whitespace-nowrap">{{ h.plannedDischargeAtUtc ? date(h.plannedDischargeAtUtc) : '—' }}</td>
+                            @if (canReadHospitalization) {
+                                <td class="text-right">
+                                    <a [routerLink]="['/panel/hospitalizations', h.hospitalizationId]" class="p-button p-button-text p-button-sm">Yatış detayı</a>
+                                </td>
+                            }
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </section>
+        }
+
         <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" />
         @if (canCreateVisit) {
             <app-visit-arrival-dialog [(visible)]="arrivalOpen" [appointment]="arrivalAppointment()" (arrived)="onArrived($event)" />
@@ -414,6 +454,7 @@ export class TodayPageComponent implements OnInit {
     readonly canUpdateVisit = this.auth.hasOperationClaim(VISITS_UPDATE_CLAIM);
     readonly canCorrect = this.auth.hasOperationClaim(VISITS_CORRECT_CLAIM);
     readonly canNoShow = this.auth.hasOperationClaim(APPOINTMENTS_NOSHOW_CLAIM);
+    readonly canReadHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
     readonly canCollectPayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
 
@@ -423,6 +464,7 @@ export class TodayPageComponent implements OnInit {
     /** Otomatik yenileme hatası: eski liste kalır, yalnızca uyarı gösterilir. */
     readonly refreshError = signal<string | null>(null);
     readonly today = signal<TodayVm | null>(null);
+    readonly hospitalizations = computed(() => this.today()?.activeHospitalizations ?? []);
     readonly groups = computed(() => groupTodayItems(this.today()?.items ?? []));
 
     /** Bekleme süresini canlı tutan saat (her yenilemede güncellenir). */
@@ -522,6 +564,18 @@ export class TodayPageComponent implements OnInit {
 
     time(utc: string | null): string {
         return formatUtcIsoAsLocalTimeDisplay(utc);
+    }
+
+    date(utc: string | null): string {
+        return formatUtcIsoAsLocalDateDisplay(utc);
+    }
+
+    admittedAt(utc: string): string {
+        return `${this.date(utc)} ${this.time(utc)}`;
+    }
+
+    stay(admittedAtUtc: string): string | null {
+        return formatHospitalizationStay(admittedAtUtc, this.now());
     }
 
     /** Yalnızca açık (bekleyen / devam eden) satırlarda gelişten bu yana geçen süre. */

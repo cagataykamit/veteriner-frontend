@@ -60,11 +60,22 @@ export interface TodayItemDto {
     voidReason?: string | null;
 }
 
+/** `TodayHospitalizationDto`: kliniğin tarihten bağımsız aktif yatışları (`VISITS_API_CONTRACT.md`). */
+export interface TodayHospitalizationDto {
+    hospitalizationId: string;
+    petId: string;
+    petName?: string | null;
+    clientName?: string | null;
+    admittedAtUtc: string;
+    plannedDischargeAtUtc?: string | null;
+}
+
 export interface TodayDto {
     date: string;
     clinicId: string;
     generatedAtUtc: string;
     items: TodayItemDto[];
+    activeHospitalizations?: TodayHospitalizationDto[] | null;
 }
 
 export interface VeterinarianDto {

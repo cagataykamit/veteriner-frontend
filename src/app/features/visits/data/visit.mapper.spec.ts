@@ -94,6 +94,21 @@ describe('visit mapper — okuma', () => {
         expect([zero.chargedAmount, zero.clientOutstandingAmount]).toEqual([0, 0]);
     });
 
+    it('aktif yatışlar eşlenir; alan yoksa boş liste, boş ad — olur, planlı taburcu yoksa null', () => {
+        const base = { date: 'd', clinicId: 'c', generatedAtUtc: 'g', items: [] };
+        expect(mapTodayDtoToVm(base).activeHospitalizations).toEqual([]);
+        expect(mapTodayDtoToVm({ ...base, activeHospitalizations: null }).activeHospitalizations).toEqual([]);
+        const [full, bare] = mapTodayDtoToVm({
+            ...base,
+            activeHospitalizations: [
+                { hospitalizationId: 'h1', petId: 'p1', petName: ' Pamuk ', clientName: 'Ali Veli', admittedAtUtc: '2026-10-08T09:00:00Z', plannedDischargeAtUtc: '2026-10-12T09:00:00Z' },
+                { hospitalizationId: 'h2', petId: 'p2', petName: ' ', clientName: null, admittedAtUtc: '2026-10-09T09:00:00Z' }
+            ]
+        }).activeHospitalizations;
+        expect(full).toEqual({ hospitalizationId: 'h1', petId: 'p1', petName: 'Pamuk', clientName: 'Ali Veli', admittedAtUtc: '2026-10-08T09:00:00Z', plannedDischargeAtUtc: '2026-10-12T09:00:00Z' });
+        expect([bare.petName, bare.clientName, bare.plannedDischargeAtUtc]).toEqual(['—', '—', null]);
+    });
+
     it('hekim adı yoksa — gösterir', () => {
         expect(mapVeterinarianDtoToVm({ userId: 'u1', name: null })).toEqual({ userId: 'u1', name: '—' });
     });
