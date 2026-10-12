@@ -40,7 +40,7 @@ export function petTimelineEventLink(item: PetTimelineItemVm): string[] | null {
     return path ? [path, item.linkId] : null;
 }
 
-/** Olay başka bir muayeneye bağlıysa (tedavi, reçete, lab, aşı, yatış) o muayenenin rotası. */
+/** Olay bir muayeneye bağlıysa (tedavi, reçete, lab, aşı, yatış; geliş için en yeni bağlı muayene) o muayenenin rotası. */
 export function petTimelineExaminationLink(item: PetTimelineItemVm): string[] | null {
     return item.type !== 'Examination' && item.relatedExaminationId ? ['/panel/examinations', item.relatedExaminationId] : null;
 }

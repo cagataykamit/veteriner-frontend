@@ -56,7 +56,8 @@ describe('pet timeline yardımcıları', () => {
             { type: 'Visit', sourceId: 'vi1', status: 'InProgress', title: 'Geliş' },
             { type: 'Examination', sourceId: 'e1', title: 'Kontrol' },
             { type: 'LabResult', sourceId: 'l1', title: 'Kan', relatedExaminationId: 'e1' },
-            { type: 'Payment', sourceId: 'pay1', title: 'Ödeme', status: 'Garip' }
+            { type: 'Payment', sourceId: 'pay1', title: 'Ödeme', status: 'Garip' },
+            { type: 'Visit', sourceId: 'vi2', title: 'Geliş', relatedExaminationId: 'e9' }
         ]
     }).items;
 
@@ -70,6 +71,11 @@ describe('pet timeline yardımcıları', () => {
     it('bağlı muayene bağlantısı yalnız muayene dışı satırlarda', () => {
         expect(petTimelineExaminationLink(base[2])).toEqual(['/panel/examinations', 'e1']);
         expect(petTimelineExaminationLink(base[1])).toBeNull();
+    });
+
+    it('geliş satırı: relatedExaminationId doluysa bağlı muayene rotası, null ise bağlantı yok', () => {
+        expect(petTimelineExaminationLink(base[4])).toEqual(['/panel/examinations', 'e9']);
+        expect(petTimelineExaminationLink(base[0])).toBeNull();
     });
 
     it('durum etiketi Türkçe; bilinmeyen durum etiketsiz; bilinmeyen tür genel simge', () => {

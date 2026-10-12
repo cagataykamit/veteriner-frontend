@@ -71,6 +71,15 @@ describe('PetTimelinePageComponent', () => {
         expect(el().textContent).toContain('Pamuk');
     });
 
+    it('geliş satırında relatedExaminationId doluysa "Bağlı muayene" bağlantısı çıkar; null ise çıkmaz', () => {
+        responder = () => of(page([item('Visit', 'v1', { relatedExaminationId: 'e7' }), item('Visit', 'v2')]));
+        create();
+
+        const links = el().querySelectorAll('[data-testid="examination-link"]');
+        expect(links.length).toBe(1);
+        expect(links[0].getAttribute('href')).toContain('/panel/examinations/e7');
+    });
+
     it('"Daha fazla yükle" aynı süzgeçle son imleci gönderir, sonucu ekler ve imleç bitince düğme kalkar', () => {
         responder = (q) => (q.cursor ? of(page([item('Visit', 'v2')])) : of(page([item('Visit', 'v1')], 'CUR1')));
         create();
