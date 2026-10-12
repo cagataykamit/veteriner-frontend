@@ -2,6 +2,14 @@
  * Reçete oluşturma / güncelleme — UI / servis isteği.
  */
 
+/** Reçete satırı (istek): `name` yoksa `productId` zorunlu; ürün adı sunucuda kopyalanır. */
+export interface PrescriptionItemInput {
+    name: string;
+    productId?: string | null;
+    instructions?: string | null;
+    quantity?: number | null;
+}
+
 export interface CreatePrescriptionRequest {
     clinicId: string;
     petId: string;
@@ -12,4 +20,6 @@ export interface CreatePrescriptionRequest {
     content: string;
     notes?: string | null;
     followUpDateUtc?: string | null;
+    /** `undefined`: satırlara dokunma (PUT); dizi (boş dâhil): sunucudaki satırları bu liste ile değiştir. */
+    items?: PrescriptionItemInput[];
 }

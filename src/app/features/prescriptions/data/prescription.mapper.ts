@@ -1,13 +1,15 @@
 import { HttpParams } from '@angular/common/http';
 import type {
     PrescriptionDetailDto,
+    PrescriptionItemDto,
     PrescriptionListItemDto,
     PrescriptionListItemDtoPagedResult,
+    PrescriptionItemWriteDto,
     PrescriptionWriteRequestDto
 } from '@/app/features/prescriptions/models/prescription-api.model';
-import type { CreatePrescriptionRequest } from '@/app/features/prescriptions/models/prescription-create.model';
+import type { CreatePrescriptionRequest, PrescriptionItemInput } from '@/app/features/prescriptions/models/prescription-create.model';
 import type { PrescriptionsListQuery } from '@/app/features/prescriptions/models/prescription-query.model';
-import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
+import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionItemVm, PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
 import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 const EM = '—';
 
@@ -92,6 +94,27 @@ function canonicalUpdatedAt(dto: PrescriptionDetailDto): string | null {
     return firstTrimmed(dto.updatedAtUtc, readDtoString(dto, ['UpdatedAtUtc']));
 }
 
+/** Eski (serbest metin) reçetelerde `items` yoktur; boş dizi olarak açılır. */
+export function mapPrescriptionItemDtosToVm(items: PrescriptionItemDto[] | null | undefined): PrescriptionItemVm[] {
+    return [...(items ?? [])]
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((i) => ({
+            name: i.name ?? '',
+            productId: firstTrimmed(i.productId),
+            instructions: i.instructions?.trim() ?? '',
+            quantity: i.quantity ?? null
+        }));
+}
+
+function mapPrescriptionItemInputsToApi(items: PrescriptionItemInput[]): PrescriptionItemWriteDto[] {
+    return items.map((i) => ({
+        name: i.name.trim(),
+        productId: firstTrimmed(i.productId),
+        instructions: firstTrimmed(i.instructions),
+        quantity: i.quantity ?? null
+    }));
+}
+
 export function mapPrescriptionListItemDtoToVm(dto: PrescriptionListItemDto): PrescriptionListItemVm {
     return {
         id: dto.id,
@@ -124,7 +147,8 @@ export function mapPrescriptionDetailDtoToVm(dto: PrescriptionDetailDto): Prescr
         notes: canonicalNotes(dto),
         followUpDateUtc: canonicalFollowUp(dto),
         createdAtUtc: canonicalCreatedAt(dto),
-        updatedAtUtc: canonicalUpdatedAt(dto)
+        updatedAtUtc: canonicalUpdatedAt(dto),
+        items: mapPrescriptionItemDtosToVm(dto.items)
     };
 }
 
@@ -146,7 +170,8 @@ export function mapPrescriptionDetailDtoToEditVm(dto: PrescriptionDetailDto): Pr
         title: firstTrimmed(dto.title, readDtoString(dto, ['Title'])) ?? '',
         content: firstTrimmed(dto.content, readDtoString(dto, ['Content'])) ?? '',
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
-        followUpDateInput: followUpDateToInput(canonicalFollowUp(dto))
+        followUpDateInput: followUpDateToInput(canonicalFollowUp(dto)),
+        items: mapPrescriptionItemDtosToVm(dto.items)
     };
 }
 
@@ -236,6 +261,9 @@ export function mapCreatePrescriptionToApiBody(req: CreatePrescriptionRequest): 
     if (tr) {
         dto.treatmentId = tr;
     }
+    if (req.items !== undefined) {
+        dto.items = mapPrescriptionItemInputsToApi(req.items);
+    }
     return dto;
 }
 
@@ -249,10 +277,12 @@ export interface PrescriptionUpsertFormAdapterInput {
     content: string;
     notes?: string | null;
     followUpDateUtc?: string | null;
+    items?: PrescriptionItemInput[];
 }
 
 export function mapPrescriptionUpsertFormToCreateRequest(input: PrescriptionUpsertFormAdapterInput): CreatePrescriptionRequest {
     return {
+        items: input.items,
         clinicId: input.clinicId.trim(),
         petId: input.petId.trim(),
         examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null,

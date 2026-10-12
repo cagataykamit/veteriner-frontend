@@ -32,6 +32,7 @@ export interface PrescriptionDetailVm {
     followUpDateUtc: string | null;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
+    items: PrescriptionItemVm[];
 }
 
 export interface PrescriptionEditVm {
@@ -48,4 +49,13 @@ export interface PrescriptionEditVm {
     content: string;
     notes: string;
     followUpDateInput: string;
+    items: PrescriptionItemVm[];
+}
+
+export interface PrescriptionItemVm {
+    name: string;
+    /** Katalog ürün bağı varsa kimlik; serbest satırda `null`. */
+    productId: string | null;
+    instructions: string;
+    quantity: number | null;
 }
