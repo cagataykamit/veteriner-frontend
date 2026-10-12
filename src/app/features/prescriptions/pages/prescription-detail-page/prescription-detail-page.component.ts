@@ -155,6 +155,28 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
                         <p class="mt-0 mb-0 whitespace-pre-wrap">{{ row()!.notes }}</p>
                     </div>
                 </div>
+                @if (row()!.items.length > 0) {
+                    <div class="col-span-12">
+                        <div class="card" data-testid="prescription-items">
+                            <h5 class="mt-0 mb-4">İlaç / ürün satırları</h5>
+                            <ul class="list-none m-0 p-0">
+                                @for (item of row()!.items; track $index) {
+                                    <li class="mb-3 last:mb-0 min-w-0">
+                                        <div class="font-medium break-words">
+                                            {{ item.name }}
+                                            @if (item.quantity !== null) {
+                                                <span class="text-muted-color font-normal"> · Miktar: {{ item.quantity }}</span>
+                                            }
+                                        </div>
+                                        @if (item.instructions) {
+                                            <div class="text-sm text-muted-color break-words">{{ item.instructions }}</div>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
             </div>
         }
     `

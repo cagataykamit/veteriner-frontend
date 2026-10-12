@@ -20,7 +20,9 @@ import {
     mapPrescriptionUpsertFormToCreateRequest
 } from '@/app/features/prescriptions/data/prescription.mapper';
 import type { PrescriptionEditVm } from '@/app/features/prescriptions/models/prescription-vm.model';
+import { PrescriptionItemsEditorComponent } from '@/app/features/prescriptions/components/prescription-items-editor.component';
 import { PrescriptionsService } from '@/app/features/prescriptions/services/prescriptions.service';
+import { createPrescriptionItemGroup, createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/features/prescriptions/utils/prescription-items-form.utils';
 import {
     type PrescriptionUpsertFieldErrors,
     type PrescriptionUpsertFormFieldKey,
@@ -72,7 +74,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, PrescriptionItemsEditorComponent
     ],
     template: `
         <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline inline-block mb-4">← Reçete listesine dön</a>
@@ -199,6 +201,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             }
                         </div>
                         <div class="col-span-12">
+                            <app-prescription-items-editor [items]="form.controls.items" />
+                        </div>
+                        <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                             @if (apiFieldErrors().notes) {
@@ -280,7 +285,8 @@ export class PrescriptionEditPageComponent implements OnInit {
         treatmentId: [''],
         title: ['', Validators.required],
         content: ['', Validators.required],
-        notes: ['']
+        notes: [''],
+        items: createPrescriptionItemsArray()
     });
 
     constructor() {
@@ -386,6 +392,10 @@ export class PrescriptionEditPageComponent implements OnInit {
         this.prescriptionsService.getPrescriptionForEditById(this.prescriptionId).subscribe({
             next: (x) => {
                 this.editVmCache = x;
+                this.form.controls.items.clear({ emitEvent: false });
+                for (const item of x.items) {
+                    this.form.controls.items.push(createPrescriptionItemGroup(item), { emitEvent: false });
+                }
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
@@ -457,6 +467,7 @@ export class PrescriptionEditPageComponent implements OnInit {
             title: v.title,
             content: v.content,
             notes: v.notes,
+            items: prescriptionItemsFormToInputs(this.form.controls.items),
             followUpDateUtc
         });
 

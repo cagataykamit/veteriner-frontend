@@ -89,6 +89,12 @@ export const PRESCRIPTIONS_READ_CLAIM = 'Prescriptions.Read' as const;
 export const PRESCRIPTIONS_CREATE_CLAIM = 'Prescriptions.Create' as const;
 export const PRESCRIPTIONS_UPDATE_CLAIM = 'Prescriptions.Update' as const;
 
+/** Uygulama kaydı (stok düşer) — `docs/ADMINISTRATIONS_API_CONTRACT.md` §2; Sekreter yalnız okur. */
+export const ADMINISTRATIONS_READ_CLAIM = 'Administrations.Read' as const;
+export const ADMINISTRATIONS_CREATE_CLAIM = 'Administrations.Create' as const;
+/** Uygulama iptali (gerekçeli; stok geri verilir). */
+export const ADMINISTRATIONS_CORRECT_CLAIM = 'Administrations.Correct' as const;
+
 export const LAB_RESULTS_READ_CLAIM = 'LabResults.Read' as const;
 export const LAB_RESULTS_CREATE_CLAIM = 'LabResults.Create' as const;
 export const LAB_RESULTS_UPDATE_CLAIM = 'LabResults.Update' as const;

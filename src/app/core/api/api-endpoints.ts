@@ -164,6 +164,13 @@ export const ApiEndpoints = {
         list: () => `/api/v1/prescriptions`,
         byId: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}`
     },
+    administrations: {
+        /** GET (`Administrations.Read`; query: `Page`, `PageSize`, `clinicId`, `petId`, `examinationId`, `treatmentId`, `productId`, `includeVoided`), POST (`Administrations.Create`). */
+        list: () => `/api/v1/administrations`,
+        byId: (id: string) => `/api/v1/administrations/${encodeURIComponent(id)}`,
+        /** POST (`Administrations.Correct`, gerekçe zorunlu); stok ters hareketle geri verilir. */
+        void: (id: string) => `/api/v1/administrations/${encodeURIComponent(id)}/void`
+    },
     labResults: {
         /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/lab-results`,
