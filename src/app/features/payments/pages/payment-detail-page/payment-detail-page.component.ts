@@ -20,7 +20,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 
 @Component({
     selector: 'app-payment-detail-page',
@@ -32,7 +33,8 @@ import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constant
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        ReasonConfirmDialogComponent
     ],
     template: `
         <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
@@ -69,6 +71,9 @@ import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constant
                         [disabled]="true"
                         class="p-button-secondary"
                     ></button>
+                }
+                @if (canVoidPayment && !ro.mutationBlocked()) {
+                    <button actions pButton type="button" label="İptal et" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="voidVisible = true"></button>
                 }
             </app-page-header>
 
@@ -200,6 +205,17 @@ import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constant
                 </div>
             </div>
         }
+
+        <app-reason-confirm-dialog
+            [(visible)]="voidVisible"
+            header="Ödemeyi iptal et"
+            [summary]="payment() ? payment()!.clientName + ' · ' + headerDescription(payment()!) : null"
+            description="Ödeme hiç alınmamış sayılır: bağlı olduğu ücretlerin açık tutarı artar, listelerden ve bakiyeden düşer. Geri alınamaz; yanlışsa doğrusu yeni ödeme olarak girilir."
+            confirmLabel="Ödemeyi iptal et"
+            failureFallback="Ödeme iptal edilemedi."
+            [execute]="voidPayment"
+            (confirmed)="afterVoid()"
+        />
     `
 })
 export class PaymentDetailPageComponent implements OnInit {
@@ -213,6 +229,9 @@ export class PaymentDetailPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly showSavedBanner = signal(false);
     readonly canUpdatePayment = this.auth.hasOperationClaim(PAYMENTS_UPDATE_CLAIM);
+    readonly canVoidPayment = this.auth.hasOperationClaim(PAYMENTS_CORRECT_CLAIM);
+    voidVisible = false;
+    readonly voidPayment = (reason: string) => this.paymentsService.voidPayment(this.payment()!.id, reason);
 
     readonly emptyMark = '—';
 
@@ -288,6 +307,11 @@ export class PaymentDetailPageComponent implements OnInit {
                     this.loading.set(false);
                 }
             });
+    }
+
+    /** İptal edilen ödeme artık okunamaz (404); listeye dönülür. */
+    afterVoid(): void {
+        void this.router.navigate(['/panel/payments']);
     }
 
     reload(): void {
