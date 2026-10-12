@@ -427,6 +427,30 @@ export function dateOnlyInputToIstanbulEndUtcIso(ymd: string): string {
     return nextStart === null ? '' : new Date(nextStart - 1).toISOString();
 }
 
+/**
+ * Liste filtresi için İstanbul günü aralığı (`yyyy-MM-dd`) → yarı açık `[fromUtc, toUtc)` UTC ISO anları.
+ * Bitiş: seçilen bitiş gününün ertesi gününün başlangıcı (hariç sınır). Boş/geçersiz uç atlanır.
+ */
+export function istanbulDateRangeToUtcIso(fromDate: string | undefined, toDate: string | undefined): { fromUtc?: string; toUtc?: string } {
+    const out: { fromUtc?: string; toUtc?: string } = {};
+    const from = fromDate?.trim();
+    if (from) {
+        const iso = dateOnlyInputToIstanbulStartUtcIso(from);
+        if (iso) {
+            out.fromUtc = iso;
+        }
+    }
+    const to = toDate?.trim();
+    if (to) {
+        const next = addGregorianDaysToYmd(to, 1);
+        const iso = next ? dateOnlyInputToIstanbulStartUtcIso(next) : '';
+        if (iso) {
+            out.toUtc = iso;
+        }
+    }
+    return out;
+}
+
 /** Dosya adı damgası: `yyyyMMdd-HHmm` (ör. `stok-durumu-20260509-1430.csv`). */
 export function localDateTimeYyyyMmDd_HHmmForFileName(d: Date = new Date()): string {
     const y = d.getFullYear();

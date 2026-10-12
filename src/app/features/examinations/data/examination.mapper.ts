@@ -30,10 +30,9 @@ import type {
     ExaminationWriteResultVm
 } from '@/app/features/examinations/models/examination-vm.model';
 import {
-    addGregorianDaysToYmd,
-    dateOnlyInputToIstanbulStartUtcIso,
     fromIstanbulDateAndTimeToUtcIso,
     fromIstanbulDateTimeLocalInputToUtcIso,
+    istanbulDateRangeToUtcIso,
     toIstanbulDateTimeLocalInputValue
 } from '@/app/shared/utils/date.utils';
 
@@ -413,34 +412,6 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
 }
 
 /**
- * Liste filtresi için İstanbul günü (`yyyy-MM-dd`) → `[dateFromUtc, dateToUtc)`.
- * Bitiş: seçilen bitiş gününün ertesi gününün başlangıcı (hariç sınır).
- * Tek dönüşüm noktası burasıdır; çağıran taraf UTC üretmez.
- */
-export function examinationDateRangeToUtcParams(
-    fromDate: string | undefined,
-    toDate: string | undefined
-): { dateFromUtc?: string; dateToUtc?: string } {
-    const out: { dateFromUtc?: string; dateToUtc?: string } = {};
-    const from = fromDate?.trim();
-    if (from) {
-        const iso = dateOnlyInputToIstanbulStartUtcIso(from);
-        if (iso) {
-            out.dateFromUtc = iso;
-        }
-    }
-    const to = toDate?.trim();
-    if (to) {
-        const next = addGregorianDaysToYmd(to, 1);
-        const iso = next ? dateOnlyInputToIstanbulStartUtcIso(next) : '';
-        if (iso) {
-            out.dateToUtc = iso;
-        }
-    }
-    return out;
-}
-
-/**
  * GET `/api/v1/examinations` — canonical query:
  * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `appointmentId`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order`.
  * `examinedOnLocalDate` ile birlikte kullanılamaz; bu istemci yalnızca UTC aralığı gönderir.
@@ -466,12 +437,12 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     if (query.appointmentId?.trim()) {
         p = p.set('appointmentId', query.appointmentId.trim());
     }
-    const range = examinationDateRangeToUtcParams(query.fromDate, query.toDate);
-    if (range.dateFromUtc) {
-        p = p.set('dateFromUtc', range.dateFromUtc);
+    const range = istanbulDateRangeToUtcIso(query.fromDate, query.toDate);
+    if (range.fromUtc) {
+        p = p.set('dateFromUtc', range.fromUtc);
     }
-    if (range.dateToUtc) {
-        p = p.set('dateToUtc', range.dateToUtc);
+    if (range.toUtc) {
+        p = p.set('dateToUtc', range.toUtc);
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
