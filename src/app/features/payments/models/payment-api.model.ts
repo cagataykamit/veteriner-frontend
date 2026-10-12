@@ -72,3 +72,9 @@ export interface PaymentCreateRequestDto {
     paidAtUtc: string;
     notes?: string | null;
 }
+
+/** POST /payments gövdesi — `PAYMENT_ALLOCATION_API_CONTRACT.md` §2 (kırıcı: `requestId` ve `allocations` zorunlu). */
+export interface PaymentCreateWithAllocationsRequestDto extends PaymentCreateRequestDto {
+    requestId: string;
+    allocations: Array<{ chargeId: string; amount: number }>;
+}

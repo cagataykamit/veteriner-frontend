@@ -3,28 +3,32 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { mapPaymentUpsertFormToCreateRequest } from '@/app/features/payments/data/payment.mapper';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { ClientOpenChargeVm } from '@/app/features/clients/models/client-balance-vm.model';
+import { mapPaymentUpsertFormToWriteRequest } from '@/app/features/payments/data/payment.mapper';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
+import {
+    allocationAmountError,
+    allocationTotal,
+    buildAllocations,
+    PAYMENT_CURRENCY
+} from '@/app/features/payments/utils/payment-allocation.utils';
 import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/features/payments/utils/payment-method.utils';
 import {
     type PaymentUpsertFieldErrors,
     parsePaymentUpsertHttpError
 } from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
-import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
-import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import {
     dateTimeYearRangeValidator,
     effectiveDateTimeLocalInputMin
@@ -34,10 +38,17 @@ import {
     paymentDateNotTooFarPastValidator,
     paymentDateTimeLocalMinAllowed
 } from '@/app/features/payments/utils/payment-date-validation.utils';
-import { parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
+import { formatMoney } from '@/app/shared/utils/money.utils';
+import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+
+/** Açık tutar bu arada değişti: güncel bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
+const STALE_BALANCE_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'Payments.ConcurrencyConflict']);
+const STALE_BALANCE_MESSAGE = 'Açık tutarlar değişti; güncel tutarlar yüklendi. Kontrol edip tekrar kaydedin.';
+const DUPLICATE_MISMATCH_MESSAGE =
+    'Bu form için ödeme daha önce kaydedilmiş olabilir. Ödeme listesini kontrol edin; gerekirse sayfayı yenileyip yeni bir ödeme girin.';
 
 @Component({
     selector: 'app-payment-new-page',
@@ -47,14 +58,14 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         ReactiveFormsModule,
         RouterLink,
         ButtonModule,
-        InputTextModule,
         SelectModule,
+        TableModule,
         AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
 
-        <app-page-header title="Yeni Ödeme" subtitle="Finans" description="Ödeme kaydı oluşturun." />
+        <app-page-header title="Yeni Ödeme" subtitle="Finans" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
@@ -62,15 +73,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                     İşletme salt okunur moddadır; kayıt oluşturulamaz.
                 </p>
             }
-            @if (selectionError()) {
-                <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
-            }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
-            @if (contextFromExamination()) {
-                <p class="text-sm text-muted-color mt-0 mb-4">
-                    Bu muayene kaydından bağlam taşındı; müşteri ve hayvan kilitlidir; ödeme ilgili muayeneye bağlanır.
-                </p>
-            }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -89,27 +92,79 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-4">
-                        <label for="amount" class="block text-sm font-medium text-muted-color mb-2">Tutar *</label>
-                        <input id="amount" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="amount" />
-                        @if (form.controls.amount.invalid && form.controls.amount.touched) {
-                            <small class="text-red-500">Geçerli tutar girin.</small>
-                        } @else if (apiFieldErrors().amount) {
-                            <small class="text-red-500">{{ apiFieldErrors().amount }}</small>
+
+                    <div class="col-span-12">
+                        <span class="block text-sm font-medium text-muted-color mb-2">Hangi ücrete? *</span>
+                        @if (!clientSelected()) {
+                            <p class="text-sm text-muted-color m-0">Önce müşteriyi seçin.</p>
+                        } @else if (balanceLoading()) {
+                            <p class="text-sm text-muted-color m-0" role="status">Açık ücretler yükleniyor…</p>
+                        } @else if (balanceError()) {
+                            <p class="text-red-500 m-0" role="alert">{{ balanceError() }}</p>
+                        } @else if (openCharges().length === 0) {
+                            <p class="text-sm m-0" role="status">
+                                Bu müşterinin açık ücreti yok. Ödeme alabilmek için önce
+                                <a [routerLink]="['/panel/charges/new']" [queryParams]="{ clientId: clientIdValue() }" class="text-primary font-medium no-underline">ücret ekleyin</a>.
+                            </p>
+                        } @else {
+                            <div class="overflow-x-auto">
+                                <p-table [value]="openCharges()" dataKey="chargeId" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '44rem' }">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Ücret</th>
+                                            <th>Tarih</th>
+                                            <th class="text-right">Kalan</th>
+                                            <th class="text-right" style="width: 14rem">Bu ödemeden</th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td>
+                                                <div class="break-words">{{ row.description }}</div>
+                                                @if (row.petName) {
+                                                    <div class="text-sm text-muted-color">{{ row.petName }}</div>
+                                                }
+                                            </td>
+                                            <td class="whitespace-nowrap">{{ formatDate(row.createdAtUtc) }}</td>
+                                            <td class="text-right whitespace-nowrap">{{ money(row.outstandingAmount) }}</td>
+                                            <td class="text-right">
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        inputmode="decimal"
+                                                        class="p-inputtext p-component w-28 text-right"
+                                                        [attr.aria-label]="'Ödenecek tutar: ' + row.description"
+                                                        [value]="amountOf(row)"
+                                                        (input)="onAmountInput(row, $any($event.target).value)"
+                                                    />
+                                                    <p-button
+                                                        type="button"
+                                                        label="Tamamı"
+                                                        size="small"
+                                                        severity="secondary"
+                                                        [text]="true"
+                                                        (onClick)="fillOutstanding(row)"
+                                                    />
+                                                </div>
+                                                @if (rowError(row); as err) {
+                                                    <small class="text-red-500">{{ err }}</small>
+                                                }
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
                         }
                     </div>
+
                     <div class="col-span-12 md:col-span-4">
-                        <label for="currency" class="block text-sm font-medium text-muted-color mb-2">Para birimi *</label>
-                        <p-select
-                            inputId="currency"
-                            [options]="currencyOptions"
-                            formControlName="currency"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                        />
-                        @if (apiFieldErrors().currency) {
-                            <small class="text-red-500">{{ apiFieldErrors().currency }}</small>
+                        <span class="block text-sm font-medium text-muted-color mb-2">Ödeme tutarı</span>
+                        <div class="p-inputtext p-component w-full font-semibold" aria-live="polite">{{ money(total()) }}</div>
+                        <small class="text-muted-color">Seçilen ücretlerin toplamıdır; yalnız TRY.</small>
+                        @if (apiFieldErrors().amount) {
+                            <small class="text-red-500 block">{{ apiFieldErrors().amount }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-4">
@@ -158,7 +213,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || applyingRouteContext() || ro.mutationBlocked()"
+                        [disabled]="!canSubmit() || submitting() || ro.mutationBlocked()"
                     />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -173,71 +228,77 @@ export class PaymentNewPageComponent implements OnInit {
 
     private readonly fb = inject(FormBuilder);
     private readonly paymentsService = inject(PaymentsService);
-    private readonly examinationsService = inject(ExaminationsService);
     private readonly clientsService = inject(ClientsService);
-    private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly contextFromExamination = signal(false);
-    readonly applyingRouteContext = signal(false);
-    readonly examinationRouteContextId = signal<string | null>(null);
+    /** Form başına bir kez üretilir; hata sonrası yeniden denemede de aynı kalır (ikinci ödeme oluşmaz). */
+    private readonly requestId = crypto.randomUUID();
+
+    /** Muayene/geliş bağlamı yalnız bağlamın müşterisi seçiliyken geçerlidir. */
+    private context: { clientId: string; examinationId: string | null; visitId: string | null } | null = null;
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
-    readonly selectionError = signal<string | null>(null);
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
     readonly apiFieldErrors = signal<PaymentUpsertFieldErrors>({});
 
+    readonly clientIdValue = signal('');
+    readonly clientSelected = computed(() => this.clientIdValue() !== '');
+    readonly balanceLoading = signal(false);
+    readonly balanceError = signal<string | null>(null);
+    /** Aktif kliniğin açık ücretleri (başka klinik ücretine tahsis edilemez). */
+    readonly openCharges = signal<ClientOpenChargeVm[]>([]);
+    private readonly amounts = signal<Record<string, number | null>>({});
 
-
-
-    readonly currencyOptions = [
-        { label: 'TRY', value: 'TRY' },
-        { label: 'USD', value: 'USD' },
-        { label: 'EUR', value: 'EUR' }
-    ];
+    readonly allocations = computed(() => buildAllocations(this.openCharges(), this.amounts()));
+    readonly total = computed(() => allocationTotal(this.allocations()));
+    private readonly hasRowErrors = computed(() => this.openCharges().some((c) => this.rowError(c) !== null));
+    private readonly formValid = signal(false);
+    readonly canSubmit = computed(() => this.formValid() && this.total() > 0 && !this.hasRowErrors() && !this.balanceLoading());
 
     readonly methodOptions = [...PAYMENT_WRITE_METHOD_OPTIONS];
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }],
-        amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
-        currency: ['TRY', Validators.required],
         method: ['cash', Validators.required],
         paidAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), paymentDateNotTooFarPastValidator()]],
         note: ['']
     });
 
+    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
+    readonly money = (amount: number | null) => formatMoney(amount, PAYMENT_CURRENCY);
+
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
+        this.form.statusChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.formValid.set(this.form.valid));
+        this.formValid.set(this.form.valid);
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
-            if (this.contextFromExamination()) {
-                return;
-            }
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
-            this.selectionError.set(null);
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
             const id = trimClientIdControlValue(this.form.controls.clientId.value);
+            this.clientIdValue.set(id);
+            if (this.context && this.context.clientId !== id) {
+                this.context = null;
+            }
             if (!id) {
                 this.form.controls.petId.disable({ emitEvent: false });
+                this.resetCharges();
                 return;
             }
             this.form.controls.petId.enable({ emitEvent: false });
+            this.loadBalance(id);
         });
+        this.applyRouteContext();
     }
-
-
-
-
 
     paymentDateMinAllowed(): string {
         return effectiveDateTimeLocalInputMin(paymentDateTimeLocalMinAllowed());
@@ -247,20 +308,38 @@ export class PaymentNewPageComponent implements OnInit {
         void this.router.navigate(['/panel/payments']);
     }
 
+    amountOf(row: ClientOpenChargeVm): number | string {
+        return this.amounts()[row.chargeId] ?? '';
+    }
+
+    onAmountInput(row: ClientOpenChargeVm, raw: string): void {
+        this.amounts.update((a) => ({ ...a, [row.chargeId]: parseDecimalFormInput(raw) }));
+    }
+
+    fillOutstanding(row: ClientOpenChargeVm): void {
+        this.amounts.update((a) => ({ ...a, [row.chargeId]: row.outstandingAmount }));
+    }
+
+    rowError(row: ClientOpenChargeVm): string | null {
+        return allocationAmountError(this.amounts()[row.chargeId], row.outstandingAmount);
+    }
+
     onSubmit(): void {
+        if (this.submitting() || this.ro.mutationBlocked()) {
+            return;
+        }
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
         }
-
-        const v = this.form.getRawValue();
-        const amount = parseAmountFormValue(v.amount);
-        if (amount == null || amount < 0.01) {
-            this.submitError.set('Geçerli bir tutar girin.');
+        if (!this.canSubmit()) {
+            this.submitError.set('En az bir ücrete geçerli bir tutar girin.');
             return;
         }
+
+        const v = this.form.getRawValue();
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
@@ -274,30 +353,33 @@ export class PaymentNewPageComponent implements OnInit {
             return;
         }
 
-        const payload = mapPaymentUpsertFormToCreateRequest({
-            clinicId,
-            clientId: v.clientId,
-            petId: v.petId,
-            examinationId: this.examinationRouteContextId(),
-            amount,
-            currency: v.currency,
-            method: v.method,
-            paidAtUtc,
-            note: v.note
-        });
+        const allocations = this.allocations();
+        const payload = {
+            ...mapPaymentUpsertFormToWriteRequest({
+                clinicId,
+                clientId: v.clientId,
+                petId: v.petId,
+                examinationId: this.context?.examinationId,
+                amount: allocationTotal(allocations),
+                currency: PAYMENT_CURRENCY,
+                method: v.method,
+                paidAtUtc,
+                note: v.note
+            }),
+            requestId: this.requestId,
+            allocations
+        };
 
         this.submitting.set(true);
         this.paymentsService.createPayment(payload).subscribe({
             next: ({ id }) => {
-                this.submitting.set(false);
+                // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar kayıt zaten oluşmaz.
                 void this.router.navigate(['/panel/payments', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
                 if (e instanceof HttpErrorResponse) {
-                    const parsed = parsePaymentUpsertHttpError(e);
-                    this.apiFieldErrors.set(parsed.fieldErrors);
-                    this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+                    this.handleHttpError(e);
                     return;
                 }
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
@@ -305,48 +387,99 @@ export class PaymentNewPageComponent implements OnInit {
         });
     }
 
-
-    private tryApplyExaminationRouteContext(): void {
-        const ctx = parseExaminationCreateRouteContext(this.route.snapshot.queryParamMap);
-        if (!ctx) {
+    private handleHttpError(e: HttpErrorResponse): void {
+        const code = problemCodeFromHttpError(e);
+        if (code && STALE_BALANCE_CODES.has(code)) {
+            this.submitError.set(STALE_BALANCE_MESSAGE);
+            this.loadBalance(this.clientIdValue(), true);
             return;
         }
-        this.applyingRouteContext.set(true);
-        this.selectionError.set(null);
-        this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
-            next: (ex) => {
-                const cId = ex.clientId?.trim() ?? '';
-                const pId = ex.petId?.trim() ?? '';
-                if (cId !== ctx.clientId || pId !== ctx.petId) {
-                    this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
-                    this.applyingRouteContext.set(false);
+        if (code === 'Payments.DuplicateRequestMismatch') {
+            this.submitError.set(DUPLICATE_MISMATCH_MESSAGE);
+            return;
+        }
+        const parsed = parsePaymentUpsertHttpError(e);
+        this.apiFieldErrors.set(parsed.fieldErrors);
+        this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+    }
+
+    /** Muayene/geliş ekranlarından gelen bağlam: müşteri (ve hayvan) ön seçilir, o muayene/gelişin ücretleri dolu gelir. */
+    private applyRouteContext(): void {
+        const q = this.route.snapshot.queryParamMap;
+        const clientId = q.get('clientId')?.trim() ?? '';
+        if (!clientId) {
+            return;
+        }
+        this.context = {
+            clientId,
+            examinationId: q.get('examinationId')?.trim() || null,
+            visitId: q.get('visitId')?.trim() || null
+        };
+        this.form.controls.clientId.setValue(clientId);
+        const petId = q.get('petId')?.trim() ?? '';
+        if (petId) {
+            this.form.controls.petId.setValue(petId);
+        }
+    }
+
+    private resetCharges(): void {
+        this.openCharges.set([]);
+        this.amounts.set({});
+        this.balanceError.set(null);
+        this.balanceLoading.set(false);
+    }
+
+    private loadBalance(clientId: string, keepAmounts = false): void {
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        if (!keepAmounts) {
+            this.resetCharges();
+        }
+        this.balanceLoading.set(true);
+        this.balanceError.set(null);
+        this.clientsService.getClientBalance(clientId).subscribe({
+            next: (b) => {
+                if (clientId !== this.clientIdValue()) {
                     return;
                 }
-                this.examinationRouteContextId.set(ctx.examinationId);
-                this.form.controls.petId.enable({ emitEvent: false });
-                this.form.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
-                this.form.controls.clientId.disable({ emitEvent: false });
-                this.form.controls.petId.disable({ emitEvent: false });
-                this.contextFromExamination.set(true);
-                this.applyingRouteContext.set(false);
+                const charges = b.openCharges.filter((c) => c.clinicId === clinicId);
+                this.openCharges.set(charges);
+                this.amounts.update((a) => (keepAmounts ? this.keepEnteredAmounts(charges, a) : this.contextAmounts(charges)));
+                this.balanceLoading.set(false);
             },
-            error: () => {
-                this.selectionError.set('Muayene bağlamı yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
-                this.applyingRouteContext.set(false);
+            error: (e: Error) => {
+                if (clientId !== this.clientIdValue()) {
+                    return;
+                }
+                this.balanceError.set(e.message ?? 'Açık ücretler yüklenemedi.');
+                this.balanceLoading.set(false);
             }
         });
     }
 
-
-
-    private mapLoadError(e: unknown, fallback: string): string {
-        if (e instanceof HttpErrorResponse) {
-            const parsed = parsePaymentUpsertHttpError(e);
-            if (parsed.summaryMessage) {
-                return parsed.summaryMessage;
-            }
-            return messageFromHttpError(e, fallback);
+    /** Bağlamdaki muayene veya gelişe ait açık ücretler tam tutarla dolu başlar; bağlam yoksa boş. */
+    private contextAmounts(charges: ClientOpenChargeVm[]): Record<string, number | null> {
+        const ctx = this.context;
+        const filled: Record<string, number | null> = {};
+        if (!ctx || (!ctx.examinationId && !ctx.visitId)) {
+            return filled;
         }
-        return e instanceof Error ? e.message : fallback;
+        for (const c of charges) {
+            const matches = ctx.examinationId ? c.examinationId === ctx.examinationId : c.visitId === ctx.visitId;
+            if (matches) {
+                filled[c.chargeId] = c.outstandingAmount;
+            }
+        }
+        return filled;
+    }
+
+    /** Yeniden okumada girilen tutarlar korunur (kapanmış ücretinki atılır); yeni kalanı aşan tutar satır hatası gösterir. */
+    private keepEnteredAmounts(charges: ClientOpenChargeVm[], previous: Record<string, number | null>): Record<string, number | null> {
+        const kept: Record<string, number | null> = {};
+        for (const c of charges) {
+            if (previous[c.chargeId] != null) {
+                kept[c.chargeId] = previous[c.chargeId];
+            }
+        }
+        return kept;
     }
 }

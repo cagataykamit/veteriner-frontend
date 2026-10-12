@@ -6,13 +6,14 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     mapCreatePaymentToApiBody,
+    mapUpdatePaymentToApiBody,
     mapPaymentDetailDtoToEditVm,
     mapPaymentDetailDtoToVm,
     mapPagedPaymentsToVm,
     paymentsQueryToHttpParams
 } from '@/app/features/payments/data/payment.mapper';
 import type { PaymentDetailDto, PaymentListItemDtoPagedResult } from '@/app/features/payments/models/payment-api.model';
-import type { CreatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
+import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
 import type { PaymentsListQuery } from '@/app/features/payments/models/payment-query.model';
 import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -103,10 +104,10 @@ export class PaymentsService {
         );
     }
 
-    updatePayment(id: string, payload: CreatePaymentRequest): Observable<void> {
+    updatePayment(id: string, payload: UpdatePaymentRequest): Observable<void> {
         let body: unknown;
         try {
-            body = mapCreatePaymentToApiBody(payload);
+            body = mapUpdatePaymentToApiBody(payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'PAYMENT_WRITE_METHOD_UNSUPPORTED') {
                 return throwError(() => new Error('Ödeme yöntemi desteklenmiyor. Lütfen geçerli bir yöntem seçin.'));

@@ -11,7 +11,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { mapPaymentUpsertFormToCreateRequest } from '@/app/features/payments/data/payment.mapper';
+import { mapPaymentUpsertFormToWriteRequest } from '@/app/features/payments/data/payment.mapper';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/features/payments/utils/payment-method.utils';
 import {
@@ -322,7 +322,7 @@ export class PaymentEditPageComponent implements OnInit {
             return;
         }
 
-        const payload = mapPaymentUpsertFormToCreateRequest({
+        const payload = mapPaymentUpsertFormToWriteRequest({
             clinicId,
             clientId: v.clientId,
             petId: v.petId,

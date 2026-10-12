@@ -1,11 +1,12 @@
 import { HttpParams } from '@angular/common/http';
 import type {
     PaymentCreateRequestDto,
+    PaymentCreateWithAllocationsRequestDto,
     PaymentDetailDto,
     PaymentListItemDto,
     PaymentListItemDtoPagedResult
 } from '@/app/features/payments/models/payment-api.model';
-import type { CreatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
+import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
 import type { PaymentsListQuery } from '@/app/features/payments/models/payment-query.model';
 import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import {
@@ -244,7 +245,8 @@ export function paymentsQueryToHttpParams(query: PaymentsListQuery, opts?: { omi
     return p;
 }
 
-export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCreateRequestDto {
+/** PUT gövdesi; POST için `mapCreatePaymentToApiBody` aynı alanlara `requestId` ve tahsisleri ekler. */
+export function mapUpdatePaymentToApiBody(req: UpdatePaymentRequest): PaymentCreateRequestDto {
     const clientId = req.clientId.trim();
     const petId = req.petId?.trim() ? req.petId.trim() : null;
     const clinicId = req.clinicId.trim();
@@ -273,6 +275,14 @@ export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCre
     return body;
 }
 
+export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCreateWithAllocationsRequestDto {
+    return {
+        ...mapUpdatePaymentToApiBody(req),
+        requestId: req.requestId.trim(),
+        allocations: req.allocations.map((a) => ({ chargeId: a.chargeId.trim(), amount: a.amount }))
+    };
+}
+
 export interface PaymentUpsertFormAdapterInput {
     clinicId: string;
     clientId: string;
@@ -287,7 +297,7 @@ export interface PaymentUpsertFormAdapterInput {
     note?: string | null;
 }
 
-export function mapPaymentUpsertFormToCreateRequest(input: PaymentUpsertFormAdapterInput): CreatePaymentRequest {
+export function mapPaymentUpsertFormToWriteRequest(input: PaymentUpsertFormAdapterInput): UpdatePaymentRequest {
     const petRaw = input.petId;
     const petId = typeof petRaw === 'string' && petRaw.trim() ? petRaw.trim() : null;
     return {
