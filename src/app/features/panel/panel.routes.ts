@@ -49,5 +49,6 @@ export default [
     { path: 'treatments', loadChildren: () => import('../treatments/routes/treatments.routes') },
     { path: 'prescriptions', loadChildren: () => import('../prescriptions/routes/prescriptions.routes') },
     { path: 'lab-results', loadChildren: () => import('../lab-results/routes/lab-results.routes') },
-    { path: 'hospitalizations', loadChildren: () => import('../hospitalizations/routes/hospitalizations.routes') }
+    { path: 'hospitalizations', loadChildren: () => import('../hospitalizations/routes/hospitalizations.routes') },
+    { path: '**', loadComponent: () => import('./pages/panel-notfound.component').then((m) => m.PanelNotfoundComponent) }
 ] as Routes;
