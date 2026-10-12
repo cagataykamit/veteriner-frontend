@@ -338,6 +338,7 @@ export class PrescriptionNewPageComponent implements OnInit {
                 this.form.controls.examinationId.setValue(ex, { emitEvent: true });
             }
         });
+        this.tryApplyRouteContexts();
     }
 
     private syncPrescriptionRelationSelects(): void {

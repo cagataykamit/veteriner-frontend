@@ -354,6 +354,7 @@ export class VaccinationNewPageComponent implements OnInit {
             }
         });
         this.loadVaccineDefinitionsForSpecies(null);
+        this.tryApplyVaccinationRouteContext();
     }
 
     private loadVaccineDefinitionsForSpecies(speciesId: string | null): void {

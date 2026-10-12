@@ -259,6 +259,7 @@ export class LabResultNewPageComponent implements OnInit {
             }
             this.loadExaminationsForPet(pid);
         });
+        this.tryApplyExaminationRouteContext();
     }
 
     private syncExaminationSelectState(): void {
