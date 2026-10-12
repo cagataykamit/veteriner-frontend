@@ -22,6 +22,8 @@ export interface PaymentDetailVm {
     clientName: string;
     petId: string | null;
     petName: string;
+    /** Birden fazla hayvana yayılan ödemede true (petName etiket olur, petId null). */
+    hasMultiplePets: boolean;
     amount: number | null;
     currency: string;
     method: string | null;
