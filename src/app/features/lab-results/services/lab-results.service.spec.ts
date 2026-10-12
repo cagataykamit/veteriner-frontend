@@ -76,4 +76,50 @@ describe('LabResultsService', () => {
             rowVersion: 'AAAAAAAAB9E='
         });
     });
+
+    it('sonuçsuz istem: sonuç alanları null gider (Requested)', (done) => {
+        service.createLabResult(updateReq({ resultDateUtc: null, resultText: '', rowVersion: undefined })).subscribe(() => done());
+        const req = http.expectOne('http://api.test/api/v1/lab-results');
+        expect(req.request.body.resultDateUtc).toBeNull();
+        expect(req.request.body.resultText).toBeNull();
+        req.flush({ id: 'l9' });
+    });
+
+    it('yalnız sonuç metni (tarihsiz) istek atmadan reddedilir', (done) => {
+        service.createLabResult(updateReq({ resultDateUtc: null })).subscribe({
+            error: (e: Error) => {
+                expect(e.message).toContain('birlikte');
+                http.expectNone('http://api.test/api/v1/lab-results');
+                done();
+            }
+        });
+    });
+
+    it('iptal: gerekçe ve rowVersion cancel ucuna gider', (done) => {
+        service.cancelLabResult('l1', '  Yanlış hayvan  ', 'AAAAAAAAB9E=').subscribe(() => done());
+        const req = http.expectOne('http://api.test/api/v1/lab-results/l1/cancel');
+        expect(req.request.method).toBe('POST');
+        expect(req.request.body).toEqual({ reason: 'Yanlış hayvan', rowVersion: 'AAAAAAAAB9E=' });
+        req.flush({ id: 'l1', rowVersion: 'x' });
+    });
+
+    it('iptal: Examinations.Finalized anlaşılır mesaja çevrilir', (done) => {
+        service.cancelLabResult('l1', 'Yanlış hayvan', 'v').subscribe({
+            error: (e: Error) => {
+                expect(e.message).toContain('kesinleşmiş muayeneye bağlı');
+                done();
+            }
+        });
+        http.expectOne('http://api.test/api/v1/lab-results/l1/cancel').flush(
+            { extensions: { code: 'Examinations.Finalized' } },
+            { status: 409, statusText: 'Conflict' }
+        );
+    });
+
+    it('liste süzgeci status parametresi olarak gider; boşsa gönderilmez', (done) => {
+        service.getLabResults({ status: 'Cancelled' }).subscribe(() => done());
+        const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/lab-results');
+        expect(req.request.params.get('Status')).toBe('Cancelled');
+        req.flush({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 });
+    });
 });
