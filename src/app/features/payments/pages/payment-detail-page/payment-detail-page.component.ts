@@ -170,7 +170,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                             <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (!payment()!.petId) {
-                            <app-empty-state message="Hayvan bilgisi yok; randevu özeti gösterilemiyor." />
+                            <app-empty-state [message]="payment()!.hasMultiplePets ? 'Ödeme birden fazla hayvana ait; randevu özeti gösterilemiyor.' : 'Hayvan bilgisi yok; randevu özeti gösterilemiyor.'" />
                         } @else if (apptLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (apptError()) {

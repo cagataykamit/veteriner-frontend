@@ -14,6 +14,7 @@ const payment: PaymentDetailVm = {
     clientName: 'Ali Veli',
     petId: null,
     petName: '',
+    hasMultiplePets: false,
     amount: 600,
     currency: 'TRY',
     method: 'cash',

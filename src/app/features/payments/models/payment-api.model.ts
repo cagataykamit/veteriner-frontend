@@ -22,6 +22,8 @@ export interface PaymentListItemDto {
     petId?: string | null;
     /** Boş string olabilir; null da gelebilir. */
     petName?: string | null;
+    /** Tahsis edilen ücretlerin farklı hayvan sayısı; 1'den büyükse petId null. Query DB yolunda null. */
+    petCount?: number | null;
     amount?: number | string | null;
     currency?: string | null;
     /** Backend enum (0 / 1 / 2) veya string. */
@@ -51,6 +53,8 @@ export interface PaymentDetailDto {
     petId?: string | null;
     /** Boş string olabilir. */
     petName?: string | null;
+    /** Bkz. liste petCount. */
+    petCount?: number | null;
     appointmentId?: string | null;
     examinationId?: string | null;
     amount?: number | string | null;
