@@ -16,7 +16,7 @@ import type { PaymentDetailDto, PaymentListItemDtoPagedResult } from '@/app/feat
 import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
 import type { PaymentsListQuery } from '@/app/features/payments/models/payment-query.model';
 import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface PaymentsPagedVm {
     items: PaymentListItemVm[];
@@ -131,6 +131,13 @@ export class PaymentsService {
                 );
             })
         );
+    }
+
+    /** `Payments.Correct`; "hiç alınmamış sayılır": tahsisler geri alınır, ücretlerin açık tutarı artar. 204. */
+    voidPayment(id: string, reason: string): Observable<void> {
+        return this.api
+            .post<void>(ApiEndpoints.payments.void(id), { reason: reason.trim() })
+            .pipe(map(() => void 0), toUserError('Ödeme iptal edilemedi.'));
     }
 }
 

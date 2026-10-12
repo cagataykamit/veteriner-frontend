@@ -128,6 +128,54 @@ describe('ChargesService', () => {
         });
         http.expectNone('http://api.test/api/v1/charges');
     });
+
+    it('düzeltme: PUT gövdesi kırpılmış alanlar ve gerekçeyle gider, güncel ücret döner', (done) => {
+        service.correctCharge('ch1', { description: ' Genel muayene ', quantity: 1, unitPrice: 600, reason: ' Fiyat yanlış okundu ' }).subscribe((r) => {
+            expect(r.amount).toBe(600);
+            done();
+        });
+        const req = http.expectOne('http://api.test/api/v1/charges/ch1');
+        expect(req.request.method).toBe('PUT');
+        expect(req.request.body).toEqual({ description: 'Genel muayene', quantity: 1, unitPrice: 600, reason: 'Fiyat yanlış okundu' });
+        req.flush({ ...charge, unitPrice: 600, amount: 600 });
+    });
+
+    it('düzeltme 409 tahsis altı: Türkçe mesajlı Error', (done) => {
+        service.correctCharge('ch1', { description: 'x', quantity: 1, unitPrice: 1, reason: 'yanlış tutar' }).subscribe({
+            error: (e: Error) => {
+                expect(e.message).toContain('ödemelerin toplamının altında');
+                done();
+            }
+        });
+        http.expectOne('http://api.test/api/v1/charges/ch1').flush(
+            { title: 'Conflict', extensions: { code: 'Charges.CorrectionBelowAllocated' } },
+            { status: 409, statusText: 'Conflict' }
+        );
+    });
+
+    it('iptal: POST void ucuna yalnız kırpılmış gerekçe gider; 204 boş döner', (done) => {
+        service.voidCharge('ch1', ' Yanlış girildi ').subscribe((r) => {
+            expect(r).toBeUndefined();
+            done();
+        });
+        const req = http.expectOne('http://api.test/api/v1/charges/ch1/void');
+        expect(req.request.method).toBe('POST');
+        expect(req.request.body).toEqual({ reason: 'Yanlış girildi' });
+        req.flush(null, { status: 204, statusText: 'No Content' });
+    });
+
+    it('iptal 409 tahsisli ücret: önce ödemeyi iptal etme yönlendirmesi', (done) => {
+        service.voidCharge('ch1', 'Yanlış girildi').subscribe({
+            error: (e: Error) => {
+                expect(e.message).toContain('Önce ilgili ödemeyi iptal edin');
+                done();
+            }
+        });
+        http.expectOne('http://api.test/api/v1/charges/ch1/void').flush(
+            { title: 'Conflict', extensions: { code: 'Charges.VoidBlockedByAllocation' } },
+            { status: 409, statusText: 'Conflict' }
+        );
+    });
 });
 
 describe('Charge hata kodları (messageFromHttpError)', () => {
@@ -146,7 +194,16 @@ describe('Charge hata kodları (messageFromHttpError)', () => {
         'Charges.ExaminationClinicMismatch',
         'Charges.ExaminationClientMismatch',
         'Charges.ExaminationPetMismatch',
-        'Charges.ExaminationVisitMismatch'
+        'Charges.ExaminationVisitMismatch',
+        'Charges.VoidBlockedByAllocation',
+        'Charges.CorrectionBelowAllocated',
+        'Charges.AlreadyVoided',
+        'Charges.RequestIdVoided',
+        'Charges.ConcurrencyConflict',
+        'Payments.NotFound',
+        'Payments.AlreadyVoided',
+        'Payments.RequestIdVoided',
+        'Payments.ConcurrencyConflict'
     ];
 
     for (const code of codes) {
@@ -154,7 +211,7 @@ describe('Charge hata kodları (messageFromHttpError)', () => {
             const err = new HttpErrorResponse({ status: 400, error: { title: 'Bad Request', extensions: { code } } });
             const msg = messageFromHttpError(err, 'varsayılan');
             expect(msg).not.toBe('varsayılan');
-            expect(msg).not.toContain('Charges.');
+            expect(msg).not.toMatch(/Charges\.|Payments\./);
             expect(msg.endsWith('.')).toBeTrue();
         });
     }
