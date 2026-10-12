@@ -7,8 +7,10 @@ export default [
     { path: 'today', loadChildren: () => import('../visits/routes/visits.routes') },
     { path: 'clients', loadChildren: () => import('../clients/routes/clients.routes') },
     { path: 'pets', loadChildren: () => import('../pets/routes/pets.routes') },
-    { path: 'species', loadChildren: () => import('../species/routes/species.routes') },
-    { path: 'breeds', loadChildren: () => import('../breeds/routes/breeds.routes') },
+    // Tür, ırk ve kategori Ayarlar > Tanımlar altına taşındı; eski adresler alt yollarıyla yönlenir.
+    { path: 'species', redirectTo: 'settings/definitions/species' },
+    { path: 'breeds', redirectTo: 'settings/definitions/breeds' },
+    { path: 'product-categories', redirectTo: 'settings/definitions/product-categories' },
     { path: 'appointments', loadChildren: () => import('../appointments/routes/appointments.routes') },
     { path: 'examinations', loadChildren: () => import('../examinations/routes/examinations.routes') },
     { path: 'vaccinations', loadChildren: () => import('../vaccinations/routes/vaccinations.routes') },
@@ -17,12 +19,14 @@ export default [
     { path: 'administrations', loadChildren: () => import('../administrations/routes/administrations.routes') },
     { path: 'products', loadChildren: () => import('../inventory/routes/inventory.routes') },
     { path: 'stocks', loadChildren: () => import('../inventory/routes/product-stocks.routes') },
-    {
-        path: 'product-categories',
-        loadChildren: () => import('../inventory/routes/product-categories.routes')
-    },
     { path: 'stock-movements', loadChildren: () => import('../inventory/routes/stock-movements.routes') },
     { path: 'reports', loadChildren: () => import('../reports/reports.routes') },
+    {
+        path: 'settings',
+        pathMatch: 'full',
+        loadComponent: () => import('../settings/pages/settings-home-page.component').then((m) => m.SettingsHomePageComponent)
+    },
+    { path: 'settings/definitions', loadChildren: () => import('../settings/routes/definitions.routes') },
     {
         path: 'settings/subscription',
         loadChildren: () => import('../subscriptions/routes/subscriptions.routes'),

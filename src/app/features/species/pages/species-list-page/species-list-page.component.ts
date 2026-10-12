@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { SPECIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import { SPECIES_CREATE_CLAIM, SPECIES_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import type { SpeciesListItemVm } from '@/app/features/species/models/species-vm.model';
@@ -32,7 +33,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     template: `
         <app-page-header title="Türler" subtitle="Referans yönetimi" description="Tür kayıtlarını yönetin.">
             @if (canCreateSpecies() && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/species/new" pButton type="button" label="Yeni Tür" icon="pi pi-plus" class="p-button-primary"></a>
+                <a actions [routerLink]="[speciesRoute, 'new']" pButton type="button" label="Yeni Tür" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateSpecies() && ro.mutationBlocked()) {
                 <button
                     actions
@@ -93,7 +94,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         <td>{{ row.displayOrder }}</td>
                                         <td>
                                             @if (canUpdateSpecies() && !ro.mutationBlocked()) {
-                                                <a [routerLink]="['/panel/species', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                                <a [routerLink]="[speciesRoute, row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
                                             } @else if (canUpdateSpecies() && ro.mutationBlocked()) {
                                                 <span class="text-muted-color">Düzenle (salt okunur)</span>
                                             } @else {
@@ -120,7 +121,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     </div>
                                     <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                         @if (canUpdateSpecies() && !ro.mutationBlocked()) {
-                                            <a [routerLink]="['/panel/species', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
+                                            <a [routerLink]="[speciesRoute, row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
                                         } @else if (canUpdateSpecies() && ro.mutationBlocked()) {
                                             <span class="text-muted-color">Düzenle (salt okunur)</span>
                                         } @else {
@@ -138,6 +139,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class SpeciesListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly speciesRoute = SPECIES_ROUTE;
     private readonly auth = inject(AuthService);
     private readonly speciesService = inject(SpeciesService);
     readonly ro = inject(TenantReadOnlyContextService);

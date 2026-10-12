@@ -1,0 +1,23 @@
+import { Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { DEFINITION_ENTRIES, SETTINGS_ROUTE, visibleEntries } from '@/app/core/routing/panel-navigation';
+import { NavigationCardsComponent } from '@/app/features/settings/components/navigation-cards.component';
+import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+
+@Component({
+    selector: 'app-definitions-page',
+    standalone: true,
+    imports: [RouterLink, AppPageHeaderComponent, NavigationCardsComponent],
+    template: `
+        <a [routerLink]="settingsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Ayarlar</a>
+        <app-page-header title="Tanımlar" description="Tür, ırk ve ürün kategorisi gibi referans kayıtlarını yönetin." />
+        <app-navigation-cards [entries]="entries" />
+    `
+})
+export class DefinitionsPageComponent {
+    private readonly auth = inject(AuthService);
+
+    readonly settingsRoute = SETTINGS_ROUTE;
+    readonly entries = visibleEntries(DEFINITION_ENTRIES, (claim) => this.auth.hasOperationClaim(claim));
+}

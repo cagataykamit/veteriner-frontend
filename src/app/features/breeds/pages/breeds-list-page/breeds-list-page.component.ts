@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { BREEDS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import type { BreedListItemVm } from '@/app/features/breeds/models/breed-vm.model';
@@ -37,7 +38,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     template: `
         <app-page-header title="Irklar" subtitle="Referans yönetimi" description="Irk kayıtlarını yönetin.">
             @if (canCreateBreed() && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/breeds/new" pButton type="button" label="Yeni Irk" icon="pi pi-plus" class="p-button-primary"></a>
+                <a actions [routerLink]="[breedsRoute, 'new']" pButton type="button" label="Yeni Irk" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateBreed() && ro.mutationBlocked()) {
                 <button
                     actions
@@ -111,7 +112,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         </td>
                                         <td>
                                             @if (canUpdateBreed() && !ro.mutationBlocked()) {
-                                                <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                                <a [routerLink]="[breedsRoute, row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
                                             } @else if (canUpdateBreed() && ro.mutationBlocked()) {
                                                 <span class="text-muted-color">Düzenle (salt okunur)</span>
                                             } @else {
@@ -137,7 +138,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     </div>
                                     <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                         @if (canUpdateBreed() && !ro.mutationBlocked()) {
-                                            <a [routerLink]="['/panel/breeds', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
+                                            <a [routerLink]="[breedsRoute, row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
                                         } @else if (canUpdateBreed() && ro.mutationBlocked()) {
                                             <span class="text-muted-color">Düzenle (salt okunur)</span>
                                         } @else {
@@ -155,6 +156,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 })
 export class BreedsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly breedsRoute = BREEDS_ROUTE;
     private readonly auth = inject(AuthService);
     private readonly breedsService = inject(BreedsService);
     readonly ro = inject(TenantReadOnlyContextService);

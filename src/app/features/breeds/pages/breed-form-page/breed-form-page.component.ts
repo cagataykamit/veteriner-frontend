@@ -15,6 +15,7 @@ import {
     parseBreedUpsertHttpError
 } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { BREEDS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
@@ -41,7 +42,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         QuickSpeciesDialogComponent
     ],
     template: `
-        <a routerLink="/panel/breeds" class="text-primary font-medium no-underline inline-block mb-4">← Irk listesine dön</a>
+        <a [routerLink]="breedsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Irk listesine dön</a>
 
         @if (editing() && loading()) {
             <app-loading-state message="Irk bilgileri yükleniyor…" />
@@ -160,6 +161,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 })
 export class BreedFormPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly breedsRoute = BREEDS_ROUTE;
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
@@ -263,7 +265,7 @@ export class BreedFormPageComponent implements OnInit {
             this.breedsService.updateBreed(this.currentId()!, payload).subscribe({
                 next: () => {
                     this.submitting.set(false);
-                    void this.router.navigate(['/panel/breeds']);
+                    void this.router.navigate([BREEDS_ROUTE]);
                 },
                 error: (e: unknown) => this.onSubmitError(e)
             });
@@ -277,14 +279,14 @@ export class BreedFormPageComponent implements OnInit {
         this.breedsService.createBreed(createPayload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/breeds', id, 'edit'], { queryParams: { saved: '1' } });
+                void this.router.navigate([BREEDS_ROUTE, id, 'edit'], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => this.onSubmitError(e)
         });
     }
 
     goList(): void {
-        void this.router.navigate(['/panel/breeds']);
+        void this.router.navigate([BREEDS_ROUTE]);
     }
 
     onQuickSpeciesCreated(speciesId: string): void {

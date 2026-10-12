@@ -14,6 +14,7 @@ import {
     parseSpeciesUpsertHttpError
 } from '@/app/features/species/utils/species-upsert-validation-parse.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { SPECIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import { SPECIES_CREATE_CLAIM, SPECIES_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -37,7 +38,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         AppErrorStateComponent
     ],
     template: `
-        <a routerLink="/panel/species" class="text-primary font-medium no-underline inline-block mb-4">← Tür listesine dön</a>
+        <a [routerLink]="speciesRoute" class="text-primary font-medium no-underline inline-block mb-4">← Tür listesine dön</a>
 
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium" role="status">Tür kaydı oluşturuldu.</p>
@@ -147,6 +148,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 })
 export class SpeciesFormPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly speciesRoute = SPECIES_ROUTE;
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
@@ -239,7 +241,7 @@ export class SpeciesFormPageComponent implements OnInit {
             this.speciesService.updateSpecies(this.currentId()!, payload).subscribe({
                 next: () => {
                     this.submitting.set(false);
-                    void this.router.navigate(['/panel/species']);
+                    void this.router.navigate([SPECIES_ROUTE]);
                 },
                 error: (e: unknown) => this.onSubmitError(e)
             });
@@ -249,14 +251,14 @@ export class SpeciesFormPageComponent implements OnInit {
         this.speciesService.createSpecies(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/species', id, 'edit'], { queryParams: { saved: '1' } });
+                void this.router.navigate([SPECIES_ROUTE, id, 'edit'], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => this.onSubmitError(e)
         });
     }
 
     goList(): void {
-        void this.router.navigate(['/panel/species']);
+        void this.router.navigate([SPECIES_ROUTE]);
     }
 
     private onSubmitError(e: unknown): void {

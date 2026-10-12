@@ -13,6 +13,7 @@ import { ProductCategoryService } from '@/app/features/inventory/services/produc
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PRODUCT_CATEGORIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import {
     PRODUCT_CATEGORIES_CREATE_CLAIM,
     PRODUCT_CATEGORIES_READ_CLAIM
@@ -71,7 +72,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 <p class="text-muted-color text-sm mt-1 mb-0" role="status">
                                     Henüz ürün kategorisi yok. Kategori eklemek için Kategoriler ekranını kullanabilirsiniz.
                                     @if (canCreateCategories) {
-                                        <a routerLink="/panel/product-categories" class="text-primary font-medium no-underline ms-1">Kategori ekle</a>
+                                        <a [routerLink]="categoriesRoute" class="text-primary font-medium no-underline ms-1">Kategori ekle</a>
                                     }
                                 </p>
                             }
@@ -157,6 +158,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 })
 export class ProductCreatePageComponent implements OnInit {
     readonly copy = PANEL_COPY;
+    readonly categoriesRoute = PRODUCT_CATEGORIES_ROUTE;
 
     private readonly fb = inject(FormBuilder);
     private readonly router = inject(Router);
