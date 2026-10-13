@@ -285,6 +285,29 @@ function labResultPanelProblemUserMessage(err: HttpErrorResponse): string | null
     return code ? (LAB_RESULT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
+/** Yatış ve bakım talimatı — `docs/HOSPITALIZATION_MODEL_API_CONTRACT.md` §2, §4, §6, §8; `*.Validation` backend `detail` ile gösterilir. */
+const HOSPITALIZATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Hospitalizations.ConcurrencyConflict': 'Bu yatış kaydı siz düzenlerken başka biri tarafından güncellendi.',
+    'Hospitalizations.ExaminationVisitMismatch': 'Seçilen geliş, bağlı muayenenin gelişiyle uyuşmuyor.',
+    'Hospitalizations.VisitPetMismatch': 'Geliş kaydı seçilen hayvanla uyuşmuyor.',
+    'Hospitalizations.VisitClinicMismatch': 'Geliş kaydı aktif klinikte değil.',
+    'CareInstructions.ConcurrencyConflict': 'Bu bakım talimatı siz düzenlerken başka biri tarafından güncellendi.',
+    'CareInstructions.HospitalizationPetMismatch': 'Yatış seçilen hayvanla uyuşmuyor.',
+    'CareInstructions.HospitalizationClinicMismatch': 'Yatış aktif klinikte değil.',
+    'CareInstructions.ExaminationPetMismatch': 'Muayene seçilen hayvanla uyuşmuyor.',
+    'CareInstructions.ExaminationClinicMismatch': 'Muayene aktif klinikte değil.',
+    'CareInstructions.HospitalizationExaminationMismatch': 'Muayene, yatışın bağlı olduğu muayeneyle uyuşmuyor.',
+    'CareInstructions.VisitMismatch': 'Geliş kaydı, yatışın gelişiyle uyuşmuyor.',
+    'CareInstructions.ExaminationVisitMismatch': 'Geliş kaydı, muayenenin gelişiyle uyuşmuyor.',
+    'Hospitalizations.NotFound': 'Yatış kaydı bulunamadı.',
+    'CareInstructions.NotFound': 'Bakım talimatı bulunamadı.'
+};
+
+function hospitalizationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    return code ? (HOSPITALIZATION_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
+}
+
 /** Uygulama kaydı ve iptali — `docs/ADMINISTRATIONS_API_CONTRACT.md` §3–§6; `Administrations.Validation` backend `detail` ile gösterilir. */
 const ADMINISTRATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Administrations.InsufficientStock': 'Bu ürünün klinik stoğu yetersiz; uygulama kaydedilmedi. Önce stok girişi yapın veya miktarı düşürün.',
@@ -409,6 +432,10 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     const labResultPanelMsg = labResultPanelProblemUserMessage(err);
     if (labResultPanelMsg) {
         return labResultPanelMsg;
+    }
+    const hospitalizationPanelMsg = hospitalizationPanelProblemUserMessage(err);
+    if (hospitalizationPanelMsg) {
+        return hospitalizationPanelMsg;
     }
     const examinationFinalizeMsg = examinationFinalizeProblemUserMessage(err);
     if (examinationFinalizeMsg) {

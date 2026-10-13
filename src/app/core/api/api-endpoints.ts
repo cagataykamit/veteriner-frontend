@@ -183,6 +183,12 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
     },
+    careInstructions: {
+        /** GET (Query: `Page`, `PageSize`, `clinicId`, `petId`, `hospitalizationId`, `examinationId`, `visitId`; en yeni üstte) ve POST. */
+        list: () => `/api/v1/care-instructions`,
+        /** GET; PUT = metin düzeltme (`rowVersion` zorunlu). */
+        byId: (id: string) => `/api/v1/care-instructions/${encodeURIComponent(id)}`
+    },
     productCategories: {
         list: () => `/api/v1/product-categories`,
         byId: (id: string) => `/api/v1/product-categories/${encodeURIComponent(id)}`,

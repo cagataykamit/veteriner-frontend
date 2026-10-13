@@ -104,6 +104,10 @@ export const HOSPITALIZATIONS_CREATE_CLAIM = 'Hospitalizations.Create' as const;
 export const HOSPITALIZATIONS_UPDATE_CLAIM = 'Hospitalizations.Update' as const;
 export const HOSPITALIZATIONS_DISCHARGE_CLAIM = 'Hospitalizations.Discharge' as const;
 
+export const CARE_INSTRUCTIONS_READ_CLAIM = 'CareInstructions.Read' as const;
+export const CARE_INSTRUCTIONS_CREATE_CLAIM = 'CareInstructions.Create' as const;
+export const CARE_INSTRUCTIONS_UPDATE_CLAIM = 'CareInstructions.Update' as const;
+
 /** Ürün kategorileri — liste/detay */
 export const PRODUCT_CATEGORIES_READ_CLAIM = 'ProductCategories.Read' as const;
 
