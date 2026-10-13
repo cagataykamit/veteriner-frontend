@@ -18,6 +18,7 @@ describe('outstanding balances report mapper', () => {
         expect(vm.totalOutstandingAmount).toBe(690);
         expect(vm.items.map((i) => i.clientId)).toEqual(['a', 'b']);
         expect(vm.items[0].id).toBe('a');
+        expect(vm.items[0].phone).toBe('+90 532 111 22 33');
         expect(vm.items[1].phone).toBeNull();
         expect(vm.page).toBe(1);
     });

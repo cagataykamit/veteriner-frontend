@@ -1,3 +1,4 @@
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import type { OutstandingBalancesReportDto } from '@/app/features/reports/outstanding-balances/models/outstanding-balances-report-api.model';
 import type { OutstandingBalancesReportResultVm } from '@/app/features/reports/outstanding-balances/models/outstanding-balances-report.model';
 
@@ -10,7 +11,7 @@ export function mapOutstandingBalancesReportDtoToVm(
             id: i.clientId,
             clientId: i.clientId,
             clientName: i.clientName,
-            phone: i.phone?.trim() || null,
+            phone: i.phone?.trim() ? formatClientPhoneForDisplay(i.phone) : null,
             outstandingAmount: i.outstandingAmount,
             openChargeCount: i.openChargeCount,
             oldestOpenChargeAtUtc: i.oldestOpenChargeAtUtc

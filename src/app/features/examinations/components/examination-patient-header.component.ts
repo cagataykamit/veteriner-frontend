@@ -7,6 +7,7 @@ import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 const EM = '—';
 
@@ -94,7 +95,7 @@ export class ExaminationPatientHeaderComponent {
         return parts.length ? parts.join(' · ') : EM;
     });
     readonly age = computed(() => formatPetAgeTr(this.pet()?.birthDate) ?? EM);
-    readonly phone = computed(() => this.client()?.phone ?? EM);
+    readonly phone = computed(() => formatClientPhoneForDisplay(this.client()?.phone ?? EM));
     readonly email = computed(() => this.client()?.email ?? EM);
 
     constructor() {
