@@ -56,6 +56,18 @@ describe('AppMenu', () => {
         expect(fixture.nativeElement.querySelectorAll('.layout-menu-divider[role="separator"]').length).toBe(3);
     });
 
+    it('simge şeridinde her öğe tek bağlantıdır; simge ve ad aynı tıklanabilir satırın içindedir', () => {
+        rail.set(true);
+        const items = Array.from((create().nativeElement as HTMLElement).querySelectorAll('li[app-menuitem]'));
+        expect(items.length).toBeGreaterThan(0);
+        for (const li of items) {
+            const links = li.querySelectorAll('a');
+            expect(links.length).toBe(1);
+            expect(links[0].querySelector('.layout-menuitem-icon')).not.toBeNull();
+            expect(links[0].querySelector('.layout-menuitem-text')?.textContent?.trim()).toBeTruthy();
+        }
+    });
+
     it('sayaç bekleyen sayıyı gösterir; 0 gizli, 99 üstü 99+', () => {
         counts = { waitingVisits: 3, requestedLabResults: 250 };
         const fixture = create();
