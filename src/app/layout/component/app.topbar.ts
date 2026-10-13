@@ -9,6 +9,7 @@ import { finalize } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { AppClinicSwitcher } from './app-clinic-switcher.component';
+import { AppGlobalSearch } from './app-global-search.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
 /** Topbar user `p-menu` body overlay — clinic switcher menüsünden ayrı hedeflenir. */
@@ -24,7 +25,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, AppClinicSwitcher, MenuModule, ButtonModule, ConfirmDialogModule],
+    imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, MenuModule, ButtonModule, ConfirmDialogModule],
     providers: [ConfirmationService],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -43,6 +44,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
         </div>
 
         <div class="layout-topbar-actions">
+            <app-global-search />
             <app-clinic-switcher />
 
             <div class="layout-config-menu">

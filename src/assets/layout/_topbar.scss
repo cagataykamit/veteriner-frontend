@@ -112,6 +112,43 @@
         margin-right: 0.5rem;
     }
 
+    // Geniş ekranda "Ara… Ctrl K" hapı, dar ekranda yalnız simge.
+    .layout-topbar-search-label,
+    .layout-topbar-search-key {
+        display: none;
+    }
+
+    @media (min-width: 992px) {
+        .layout-topbar-search-trigger {
+            width: 14rem;
+            gap: 0.5rem;
+            padding: 0 0.75rem;
+            border-radius: var(--content-border-radius);
+            border: 1px solid var(--surface-border);
+            justify-content: flex-start;
+            color: var(--text-color-secondary);
+
+            i {
+                font-size: 1rem;
+            }
+
+            .layout-topbar-search-label {
+                display: inline;
+                font-size: 0.875rem;
+            }
+
+            .layout-topbar-search-key {
+                display: inline;
+                margin-left: auto;
+                font-family: inherit;
+                font-size: 0.75rem;
+                padding: 0.1rem 0.4rem;
+                border-radius: 0.25rem;
+                background-color: var(--surface-hover);
+            }
+        }
+    }
+
     .layout-topbar-menu-button {
         display: none;
     }
@@ -370,5 +407,21 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+    }
+}
+
+// Global arama sonucu satırı (pencere body'ye eklendiği için topbar kapsamı dışında).
+.global-search-option {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--content-border-radius);
+    color: var(--text-color);
+    text-decoration: none;
+    cursor: pointer;
+
+    &.is-active,
+    &:hover {
+        background-color: var(--surface-hover);
     }
 }
