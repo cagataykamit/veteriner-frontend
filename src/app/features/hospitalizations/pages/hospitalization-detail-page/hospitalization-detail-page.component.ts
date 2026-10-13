@@ -1,7 +1,7 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -16,7 +16,7 @@ import {
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import {
     DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator
@@ -28,6 +28,9 @@ import {
     HOSPITALIZATIONS_UPDATE_CLAIM,
     PAYMENTS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
+
+/** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
+const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
 
 @Component({
     selector: 'app-hospitalization-detail-page',
@@ -45,8 +48,8 @@ import {
     template: `
         <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
 
-        @if (showSavedBanner()) {
-            <p class="mb-4 m-0 text-sm font-medium">Kayıt güncellendi.</p>
+        @if (savedMessage(); as message) {
+            <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
         }
         @if (showDischargedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Taburcu işlemi kaydedildi.</p>
@@ -222,6 +225,7 @@ import {
             [(visible)]="dischargeDialogVisible"
             [style]="{ width: 'min(32rem, 95vw)' }"
             [draggable]="false"
+            [focusOnShow]="false"
             (onHide)="onDischargeDialogHide()"
         >
             <p class="text-sm text-muted-color mt-0 mb-4">Taburcu tarihi ve saati zorunludur. İşlem sonrası kayıt kapatılır.</p>
@@ -229,10 +233,10 @@ import {
                 <div class="flex flex-col gap-4">
                     <div>
                         <label for="dischargedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Taburcu tarihi / saati *</label>
-                        <app-date-input inputId="dischargedAtLocal" type="datetime-local" formControlName="dischargedAtLocal" [min]="datetimeLocalInputMin" limit="past" />
+                        <app-date-input inputId="dischargedAtLocal" type="datetime-local" formControlName="dischargedAtLocal" [min]="dischargeMin()" limit="past" />
                         @if (dischargeForm.controls.dischargedAtLocal.hasError('dateYearInvalid') && dischargeForm.controls.dischargedAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
-                        } @else if (dischargeForm.controls.dischargedAtLocal.invalid && dischargeForm.controls.dischargedAtLocal.touched) {
+                        } @else if (dischargeForm.controls.dischargedAtLocal.hasError('required') && dischargeForm.controls.dischargedAtLocal.touched) {
                             <small class="text-red-500">Zorunlu.</small>
                         } @else if (dischargeFieldErrors().dischargedAtLocal) {
                             <small class="text-red-500">{{ dischargeFieldErrors().dischargedAtLocal }}</small>
@@ -279,7 +283,11 @@ import {
     `
 })
 export class HospitalizationDetailPageComponent implements OnInit {
-    protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
+    /** Taburcu yatıştan önce olamaz; yatış bilinmiyorsa yalnız genel alt sınır. */
+    protected readonly dischargeMin = computed(() => {
+        const admittedUtc = this.row()?.admittedAtUtc;
+        return (admittedUtc ? toIstanbulDateTimeLocalInputValue(admittedUtc) : '') || DATETIME_LOCAL_INPUT_MIN;
+    });
     private readonly route = inject(ActivatedRoute);
     private readonly hospitalizationsService = inject(HospitalizationsService);
     private readonly fb = inject(FormBuilder);
@@ -289,7 +297,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly row = signal<HospitalizationDetailVm | null>(null);
-    readonly showSavedBanner = signal(false);
+    readonly savedMessage = signal<string | null>(null);
     readonly showDischargedBanner = signal(false);
 
     dischargeDialogVisible = false;
@@ -318,7 +326,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
             return;
         }
         this.hospitalizationId = id;
-        this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
+        this.savedMessage.set(SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null);
         this.reload();
     }
 
