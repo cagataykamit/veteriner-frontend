@@ -2,6 +2,7 @@ import { AbstractControl, FormBuilder, ValidationErrors, ValidatorFn, Validators
 import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { createStockBatchFormGroup, getStockBatchRequest } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import type {
     StockMovementFormMovementType,
     StockMovementUpsertFormValue
@@ -73,14 +74,15 @@ export function createStockMovementFormGroup(fb: FormBuilder) {
         unitCost: [null as number | null, optionalNonNegativeValidator()],
         reason: [''],
         occurredAtUtcLocal: ['', dateTimeYearRangeValidator()],
-        notes: ['']
+        notes: [''],
+        batch: createStockBatchFormGroup(fb)
     });
 }
 
 export type StockMovementFormGroup = ReturnType<typeof createStockMovementFormGroup>;
 
 /** Reactive form → domain value (`mapStockMovementUpsertFormValueToCreateRequest` için). */
-export function getStockMovementFormValue(form: StockMovementFormGroup): StockMovementUpsertFormValue {
+export function getStockMovementFormValue(form: StockMovementFormGroup, requestId: string | null = null): StockMovementUpsertFormValue {
     const v = form.getRawValue();
     const qRaw = v.quantity;
     const qty =
@@ -113,6 +115,8 @@ export function getStockMovementFormValue(form: StockMovementFormGroup): StockMo
         unitCost: unitCost !== null && Number.isFinite(unitCost) ? unitCost : null,
         reason: reasonT === '' ? null : reasonT,
         occurredAtUtc: iso ?? null,
-        notes: notesT === '' ? null : notesT
+        notes: notesT === '' ? null : notesT,
+        batch: v.movementType === 'In' || v.movementType === 'Initial' ? getStockBatchRequest(form.controls.batch) : null,
+        requestId
     };
 }

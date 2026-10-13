@@ -212,7 +212,9 @@ export const ApiEndpoints = {
         activate: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/activate`,
         deactivate: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/deactivate`,
         stocks: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stocks`,
-        stockMovements: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-movements`
+        stockMovements: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-movements`,
+        /** GET `?clinicId=` — parti bakiyesi (FEFO sıralı) + partisiz bakiye (`StockMovements.Read`). */
+        stockBatches: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-batches`
     },
     productStocks: {
         list: () => `/api/v1/product-stocks`,

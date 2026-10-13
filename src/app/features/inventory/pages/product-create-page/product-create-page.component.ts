@@ -19,6 +19,7 @@ import {
     PRODUCT_CATEGORIES_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
+import { ProductClassificationFieldsComponent } from '@/app/features/inventory/components/product-classification-fields/product-classification-fields.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -34,7 +35,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         InputTextModule,
         SelectModule,
         TextareaModule,
-        AppPageHeaderComponent
+        AppPageHeaderComponent,
+        ProductClassificationFieldsComponent
     ],
     template: `
         <a routerLink="/panel/products" class="text-primary font-medium no-underline inline-block mb-4">← Ürün listesine dön</a>
@@ -125,6 +127,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             <small class="text-red-500">Para birimi zorunludur.</small>
                         }
                     </div>
+                    <app-product-classification-fields [form]="form" idPrefix="product" />
                     <div class="col-span-12 flex flex-col gap-1">
                         <label for="description" class="block text-sm font-medium text-muted-color">Açıklama</label>
                         <textarea id="description" pTextarea rows="3" class="w-full" formControlName="description"></textarea>
@@ -219,7 +222,12 @@ export class ProductCreatePageComponent implements OnInit {
             unit: raw.unit,
             unitPrice: raw.unitPrice,
             currency: raw.currency,
-            description: raw.description
+            description: raw.description,
+            kind: raw.kind,
+            controlledClass: raw.controlledClass,
+            pharmacologicalForm: raw.pharmacologicalForm,
+            presentationForm: raw.presentationForm,
+            packaging: raw.packaging
         };
         this.submitting.set(true);
         this.submitError.set(null);

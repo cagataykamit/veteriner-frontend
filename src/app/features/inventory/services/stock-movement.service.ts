@@ -25,12 +25,19 @@ export interface StockMovementsPagedVm {
 
 const STOCK_MOVEMENT_CREATE_MESSAGES: Record<string, string> = {
     'StockMovements.InsufficientStock':
-        'Yetersiz stok. Çıkış miktarı eldeki stoktan fazla olamaz.',
+        'Yetersiz stok. Çıkış miktarı eldeki stoktan (veya seçilen partinin kalanından) fazla olamaz.',
     'StockMovements.StockAlreadyInitialized':
         'Bu ürün için bu klinikte başlangıç stoğu daha önce oluşturulmuş.',
     'StockMovements.AdjustmentUnchanged': 'Stok miktarı zaten girilen değerle aynı.',
     'StockMovements.ConcurrencyConflict':
         'Stok bilgisi başka bir işlemle güncellendi. Lütfen listeyi yenileyip tekrar deneyin.',
+    'StockBatches.LotAndExpiryRequired':
+        'Aşı ve kontrollü ürünlerde seri/lot no ile son kullanma tarihi (SKT) zorunludur.',
+    'StockBatches.Validation': 'Parti bilgileri geçersiz. Depo çıkış tarihi geliş / teslim tarihinden sonra olamaz.',
+    'StockBatches.NotFound': 'Parti bulunamadı.',
+    'StockMovements.BatchRequired': 'Düzeltilecek parti seçilmelidir.',
+    'StockMovements.DuplicateRequestId':
+        'Bu istek kimliği farklı bir stok hareketi için kullanılmış. Formu yeniden açıp tekrar deneyin.',
     'StockMovements.ClinicContextMismatch': 'Seçili klinik ile aktif klinik bağlamı uyuşmuyor.',
     'Clinics.AccessDenied': 'Bu klinik için stok işlemi yapma yetkiniz yok.'
 };

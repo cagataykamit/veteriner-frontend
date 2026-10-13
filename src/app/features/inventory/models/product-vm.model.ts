@@ -1,3 +1,4 @@
+import type { ProductControlledClassApi, ProductKindApi } from '@/app/features/inventory/models/product-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 export interface ProductListItemVm {
@@ -28,6 +29,15 @@ export interface ProductDetailVm {
     sku: string;
     barcode: string;
     description: string;
+    kind: ProductKindApi;
+    kindLabel: string;
+    controlledClass: ProductControlledClassApi;
+    controlledClassLabel: string;
+    /** Aşı / kontrollü ürün: stok girişinde seri no ve SKT zorunlu. */
+    requiresLotAndExpiry: boolean;
+    pharmacologicalForm: string;
+    presentationForm: string;
+    packaging: string;
     categoryName: string;
     unit: string;
     unitPriceText: string;

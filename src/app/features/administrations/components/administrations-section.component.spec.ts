@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, EMPTY } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
 import type { AdministrationsPagedVm, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
@@ -26,7 +27,10 @@ const row: AdministrationVm = {
     voidStockOutcome: null,
     addedAfterFinalization: false,
     lateEntryReason: null,
-    createdAtUtc: '2026-10-13T08:00:00Z'
+    createdAtUtc: '2026-10-13T08:00:00Z',
+    batchId: null,
+    lotNumber: null,
+    expiryDate: null
 };
 
 const page = (items: AdministrationVm[]): AdministrationsPagedVm => ({ items, page: 1, pageSize: 50, totalItems: items.length, totalPages: 1 });
@@ -44,6 +48,7 @@ describe('AdministrationsSectionComponent', () => {
                 provideRouter([]),
                 { provide: AdministrationsService, useValue: service },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
+                { provide: StockBatchService, useValue: { getByProduct: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
             ]

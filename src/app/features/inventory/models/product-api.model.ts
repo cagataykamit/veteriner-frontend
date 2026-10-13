@@ -2,6 +2,10 @@
  * Backend — ürün DTO’ları (GET /products, GET /products/{id}).
  */
 
+/** `docs/BATCH_STOCK_API_CONTRACT.md` §2 — string enum. */
+export type ProductKindApi = 'Other' | 'Medicine' | 'Vaccine';
+export type ProductControlledClassApi = 'None' | 'Narcotic' | 'Psychotropic';
+
 /** Liste öğesi / detay — backend ile hizalı alan kümesi. */
 export interface ProductDto {
     id: string;
@@ -15,6 +19,11 @@ export interface ProductDto {
     unitPrice?: number | string | null;
     currency?: string | null;
     isActive?: boolean | null;
+    kind?: ProductKindApi | null;
+    controlledClass?: ProductControlledClassApi | null;
+    pharmacologicalForm?: string | null;
+    presentationForm?: string | null;
+    packaging?: string | null;
 }
 
 export interface ProductDtoPagedResult {
@@ -35,6 +44,12 @@ export interface CreateProductRequest {
     unit: string;
     unitPrice: number;
     currency: string;
+    kind: ProductKindApi;
+    controlledClass: ProductControlledClassApi;
+    /** PUT'ta `null` dokunmaz, `""` temizler (`BATCH_STOCK_API_CONTRACT.md` §2). */
+    pharmacologicalForm: string | null;
+    presentationForm: string | null;
+    packaging: string | null;
 }
 
 /**
