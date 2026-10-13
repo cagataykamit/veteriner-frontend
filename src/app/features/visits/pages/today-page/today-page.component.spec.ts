@@ -487,6 +487,47 @@ describe('TodayPageComponent', () => {
             expect(root.querySelector('[data-testid="today-card"]')).toBeNull();
             expect(root.querySelectorAll('section table tbody tr').length).toBe(2);
         });
+
+        describe('aktif yatışlar', () => {
+            const withHosp: TodayVm = {
+                date: 'd',
+                items: [],
+                activeHospitalizations: [
+                    { hospitalizationId: 'h1', petId: 'p1', petName: 'Pamuk', clientName: 'Ali Veli', admittedAtUtc: new Date(Date.now() - 3 * 86_400_000 - 60_000).toISOString(), plannedDischargeAtUtc: null },
+                    { hospitalizationId: 'h2', petId: 'p2', petName: 'Boncuk', clientName: 'Ayşe Kaya', admittedAtUtc: new Date(Date.now() - 86_400_000 - 60_000).toISOString(), plannedDischargeAtUtc: null }
+                ]
+            };
+
+            it('dar ekranda yatış başına bir kart; tablo yok; alanlar ve bağlantı kartta', async () => {
+                narrow(true);
+                const f = await create(['Visits.Read', 'Hospitalizations.Read'], withHosp);
+                const root = f.nativeElement as HTMLElement;
+                const cards = Array.from(root.querySelectorAll('[data-testid="hospitalization-card"]'));
+                expect(cards.length).toBe(2);
+                expect(root.querySelector('section[aria-label="Aktif yatışlar"] table')).toBeNull();
+                const t = cards[0].textContent ?? '';
+                for (const part of ['Pamuk', 'Ali Veli', 'Giriş', '3 gün', 'Planlı taburcu']) {
+                    expect(t).toContain(part);
+                }
+                expect(cards[0].querySelector('a')?.getAttribute('href')).toBe('/panel/hospitalizations/h1');
+            });
+
+            it('dar ekranda Hospitalizations.Read yoksa kartta bağlantı yok', async () => {
+                narrow(true);
+                const f = await create(['Visits.Read'], withHosp);
+                const root = f.nativeElement as HTMLElement;
+                expect(root.querySelectorAll('[data-testid="hospitalization-card"]').length).toBe(2);
+                expect(root.querySelector('[data-testid="hospitalization-card"] a')).toBeNull();
+            });
+
+            it('geniş ekranda yatışlar tabloda kalır', async () => {
+                narrow(false);
+                const f = await create(['Visits.Read'], withHosp);
+                const root = f.nativeElement as HTMLElement;
+                expect(root.querySelector('[data-testid="hospitalization-card"]')).toBeNull();
+                expect(root.querySelectorAll('section[aria-label="Aktif yatışlar"] tbody tr').length).toBe(2);
+            });
+        });
     });
 });
 
