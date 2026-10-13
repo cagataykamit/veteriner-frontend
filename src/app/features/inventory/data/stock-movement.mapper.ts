@@ -248,6 +248,8 @@ export function mapStockMovementUpsertFormValueToCreateRequest(
         referenceType: null,
         referenceId: null,
         occurredAtUtc: value.occurredAtUtc,
-        notes: value.notes
+        notes: value.notes,
+        ...(value.requestId ? { requestId: value.requestId } : {}),
+        ...(value.batch ? { batch: value.batch } : {})
     };
 }

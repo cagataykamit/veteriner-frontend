@@ -9,6 +9,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TextareaModule } from 'primeng/textarea';
+import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
+import { createStockBatchFormGroup, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import type { ProductDetailVm } from '@/app/features/inventory/models/product-vm.model';
 import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
@@ -82,7 +84,8 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        StockBatchFieldsComponent
     ],
     providers: [ConfirmationService],
     styles: [
@@ -475,6 +478,11 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                     <small class="text-red-500">Birim maliyet 0’dan küçük olamaz.</small>
                                 }
                             </div>
+                            <app-stock-batch-fields
+                                [group]="stockOperationForm.controls.batch"
+                                [required]="product()?.requiresLotAndExpiry === true"
+                                idPrefix="soBatch"
+                            />
                             <div class="flex flex-col gap-1">
                                 <label for="soNotesIn" class="block text-sm font-medium text-muted-color">Açıklama</label>
                                 <textarea
@@ -623,8 +631,12 @@ export class ProductDetailPageComponent implements OnInit {
         amount: [null as number | null],
         unitCost: [null as number | null],
         notes: ['', Validators.maxLength(2000)],
-        minimumStockLevel: [null as number | null]
+        minimumStockLevel: [null as number | null],
+        batch: createStockBatchFormGroup(this.fb)
     });
+
+    /** Form başına bir kez üretilir; hata sonrası yeniden denemede aynı kalır, diyalog kapanınca yenilenir. */
+    private requestId = crypto.randomUUID();
 
     private lastId: string | null = null;
 
@@ -805,6 +817,10 @@ export class ProductDetailPageComponent implements OnInit {
         amountCtrl.updateValueAndValidity({ emitEvent: false });
         unitCostCtrl.updateValueAndValidity({ emitEvent: false });
         minCtrl.updateValueAndValidity({ emitEvent: false });
+        syncStockBatchGroup(this.stockOperationForm.controls.batch, {
+            active: op === 'in',
+            required: this.product()?.requiresLotAndExpiry === true
+        });
     }
 
     ngOnInit(): void {
@@ -955,6 +971,7 @@ export class ProductDetailPageComponent implements OnInit {
         );
         this.applyOperationTypeValidators('in');
         this.stockOperationForm.markAsUntouched();
+        this.requestId = crypto.randomUUID();
     }
 
     onStockOperationDialogVisibleChange(visible: boolean): void {
@@ -1070,7 +1087,9 @@ export class ProductDetailPageComponent implements OnInit {
                     referenceType: null,
                     referenceId: null,
                     occurredAtUtc: new Date().toISOString(),
-                    notes: notesTrimmed === '' ? null : notesTrimmed
+                    notes: notesTrimmed === '' ? null : notesTrimmed,
+                    requestId: this.requestId,
+                    ...this.batchRequestFor(op)
                 })
                 .subscribe({
                     next: () => {
@@ -1105,6 +1124,12 @@ export class ProductDetailPageComponent implements OnInit {
                 this.stockOperationSubmitError.set(e.message ?? 'Minimum stok güncellenemedi.');
             }
         });
+    }
+
+    /** Parti bloğu yalnız stok girişinde ve en az bir alan doluyken gönderilir. */
+    private batchRequestFor(op: StockOperationKind): { batch?: NonNullable<ReturnType<typeof getStockBatchRequest>> } {
+        const batch = op === 'in' ? getStockBatchRequest(this.stockOperationForm.controls.batch) : null;
+        return batch ? { batch } : {};
     }
 
     onDeactivateClick(): void {
