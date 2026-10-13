@@ -1,30 +1,43 @@
+.register-print-title {
+    display: none;
+}
+
+.register-meta {
+    margin: 0 0 .75rem;
+}
+
 .register-table {
     width: 100%;
-    min-width: 110rem;
-    border-collapse: collapse;
-    font-size: 0.8rem;
-    color: var(--text-color);
+    border-collapse: separate;
+    font-size: 0.85rem;
 
     th,
     td {
-        border: 1px solid var(--surface-border);
-        padding: 0.35rem 0.5rem;
+        border-bottom: 1px solid var(--surface-border);
+        padding: .6rem .75rem;
         text-align: left;
         vertical-align: top;
-        overflow-wrap: anywhere;
-    }
-
-    .register-title-row th {
-        background: #991b1b;
-        color: #fff;
-        font-size: 1rem;
-        text-align: center;
     }
 
     .register-head-row th {
         background: var(--surface-ground);
+        font-weight: 600;
         text-align: center;
         white-space: nowrap;
+    }
+
+    .register-nowrap {
+        white-space: nowrap;
+    }
+
+    .register-sticky {
+        position: sticky;
+        left: 0;
+        background: var(--surface-card);
+    }
+
+    .register-head-row .register-sticky {
+        background: var(--surface-ground);
     }
 }
 
@@ -51,16 +64,26 @@
             overflow: visible;
         }
 
+        .register-print-title {
+            display: block;
+            margin: 0 0 2mm;
+            font-size: 12pt;
+        }
+
+        .register-meta {
+            font-size: 8pt;
+        }
+
         .register-table {
-            min-width: 0;
-            table-layout: fixed;
+            border-collapse: collapse;
             font-size: 7pt;
             color: #000;
 
             th,
             td {
+                min-width: 0 !important;
                 padding: 1px 3px;
-                border-color: #000;
+                border: 1px solid #000;
             }
 
             thead {
@@ -71,16 +94,12 @@
                 break-inside: avoid;
             }
 
-            .register-title-row th,
-            .register-head-row th {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
             .register-head-row th {
                 white-space: normal;
                 background: #e5e7eb;
                 color: #000;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
 

@@ -78,7 +78,7 @@ describe('RegisterPageComponent', () => {
 
     it('reçete defteri: defter başlığı, gruplu üst başlıklar, sıra no ve tek hücrede ilaçlar', () => {
         const el: HTMLElement = create('prescriptions').nativeElement;
-        expect(el.querySelector('.register-title-row')!.textContent).toContain('Reçete Kayıt Defteri');
+        expect(el.querySelector('.register-print-title')!.textContent).toContain('Reçete Kayıt Defteri');
         const groups = Array.from(el.querySelectorAll('.register-head-row')[0].querySelectorAll('th')).map((th) => th.textContent!.trim());
         expect(groups).toEqual(['Sıra No', 'REÇETENİN', 'VETERİNER HEKİMİN', 'HAYVAN SAHİBİNİN', 'HAYVANIN', 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi']);
         const cells = Array.from(el.querySelectorAll('tbody tr td')).map((td) => td.textContent!.trim());
@@ -110,12 +110,12 @@ describe('RegisterPageComponent', () => {
         expect(api.getBlob.calls.count()).toBe(2);
     });
 
-    it('yazdırma görünümü: başlık bandı, tekrar eden thead, imza alanı ve ekran-dışı sınıflar; gövde sınıfı sayfayla yaşar', () => {
+    it('yazdırma görünümü: sade başlık, tekrar eden thead, imza alanı ve ekran-dışı sınıflar; gövde sınıfı sayfayla yaşar', () => {
         const fixture = create('examinations');
         const el: HTMLElement = fixture.nativeElement;
         expect(document.body.classList).toContain('register-page-active');
-        expect(el.querySelector('table.register-table thead .register-title-row')).not.toBeNull();
-        expect(el.querySelector('thead .register-meta-row')!.textContent).toContain('Tarih aralığı');
+        expect(el.querySelector('.register-print-title')).not.toBeNull();
+        expect(el.querySelector('.register-meta')!.textContent).toContain('Tarih aralığı');
         expect(el.querySelector('.register-signature-box')!.textContent).toContain('Veteriner Hekim imza/kaşe');
         expect(el.querySelector('.register-signature-note')!.textContent).toContain('doğrulanmadı');
         expect(el.querySelector('app-report-filter-bar')!.classList).toContain('register-screen-only');

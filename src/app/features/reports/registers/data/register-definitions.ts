@@ -47,24 +47,24 @@ export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto>
     exportFilePrefix: 'muayene-defteri',
     stateKey: 'panel:reports:registers:examinations:listState',
     columns: [
-        { header: 'Sıra No', cell: (r) => String(r.rowNumber) },
-        { header: 'Muayene Tarihi', cell: (r) => formatDateDisplay(r.examinedAtUtc) },
-        { header: 'Hasta Sahibinin Adı Soyadı', cell: (r) => r.ownerName },
-        { header: 'Telefonu', cell: (r) => r.ownerPhone ?? '' },
-        { header: 'Adresi', cell: (r) => r.ownerAddress ?? '' },
-        { group: PATIENT, header: 'Ad', cell: (r) => r.petName },
-        { group: PATIENT, header: 'Tür', cell: (r) => r.species },
-        { group: PATIENT, header: 'Irk', cell: (r) => r.breed ?? '' },
-        { group: PATIENT, header: 'Cinsiyet', cell: (r) => r.gender ?? '' },
-        { group: PATIENT, header: 'Yaş', cell: (r) => r.age ?? '' },
-        { group: PATIENT, header: 'Kart No', cell: (r) => r.cardNumber ?? '' },
-        { group: PATIENT, header: 'Çip No', cell: (r) => r.microchipNumber ?? '' },
-        { group: PATIENT, header: 'Protokol No', cell: (r) => r.protocolNumber ?? '' },
-        { group: PATIENT, header: 'e-Reçete Kimlik', cell: (r) => r.ePrescriptionId ?? '' },
-        { header: 'Hastanın Şikayeti', cell: (r) => r.complaint },
-        { header: 'Teşhis Edilen Hastalık', cell: (r) => r.diagnosis ?? '' },
-        { header: 'Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar', cell: treatmentPrescriptionSaleText },
-        { header: 'Veteriner Hekimin Adı Soyadı', cell: (r) => r.veterinarianName ?? '' }
+        { header: 'Sıra No', minWidth: '4.5rem', nowrap: true, cell: (r) => String(r.rowNumber) },
+        { header: 'Muayene Tarihi', minWidth: '7rem', nowrap: true, cell: (r) => formatDateDisplay(r.examinedAtUtc) },
+        { header: 'Hasta Sahibinin Adı Soyadı', minWidth: '11rem', cell: (r) => r.ownerName },
+        { header: 'Telefonu', minWidth: '8.5rem', nowrap: true, cell: (r) => r.ownerPhone ?? '' },
+        { header: 'Adresi', minWidth: '16rem', cell: (r) => r.ownerAddress ?? '' },
+        { group: PATIENT, header: 'Ad', minWidth: '6rem', cell: (r) => r.petName },
+        { group: PATIENT, header: 'Tür', minWidth: '5rem', nowrap: true, cell: (r) => r.species },
+        { group: PATIENT, header: 'Irk', minWidth: '7rem', cell: (r) => r.breed ?? '' },
+        { group: PATIENT, header: 'Cinsiyet', minWidth: '5.5rem', nowrap: true, cell: (r) => r.gender ?? '' },
+        { group: PATIENT, header: 'Yaş', minWidth: '4rem', nowrap: true, cell: (r) => r.age ?? '' },
+        { group: PATIENT, header: 'Kart No', minWidth: '6rem', nowrap: true, cell: (r) => r.cardNumber ?? '' },
+        { group: PATIENT, header: 'Çip No', minWidth: '9.5rem', nowrap: true, cell: (r) => r.microchipNumber ?? '' },
+        { group: PATIENT, header: 'Protokol No', minWidth: '6.5rem', nowrap: true, cell: (r) => r.protocolNumber ?? '' },
+        { group: PATIENT, header: 'e-Reçete Kimlik', minWidth: '8rem', nowrap: true, cell: (r) => r.ePrescriptionId ?? '' },
+        { header: 'Hastanın Şikayeti', minWidth: '14rem', cell: (r) => r.complaint },
+        { header: 'Teşhis Edilen Hastalık', minWidth: '14rem', cell: (r) => r.diagnosis ?? '' },
+        { header: 'Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar', minWidth: '26rem', cell: treatmentPrescriptionSaleText },
+        { header: 'Veteriner Hekimin Adı Soyadı', minWidth: '11rem', cell: (r) => r.veterinarianName ?? '' }
     ]
 };
 
@@ -76,18 +76,18 @@ export const PRESCRIPTION_REGISTER: RegisterDefinition<PrescriptionRegisterRowDt
     exportFilePrefix: 'recete-defteri',
     stateKey: 'panel:reports:registers:prescriptions:listState',
     columns: [
-        { header: 'Sıra No', cell: (r) => String(r.rowNumber) },
-        { group: 'REÇETENİN', header: 'Tarihi', cell: (r) => formatDateDisplay(r.prescribedAtUtc) },
-        { group: 'REÇETENİN', header: 'Sınıfı', cell: (r) => r.prescriptionClass ?? '' },
-        { group: 'REÇETENİN', header: 'Cilt/Sıra No', cell: (r) => r.volumeSequenceNumber ?? '' },
-        { group: 'VETERİNER HEKİMİN', header: 'Adı Soyadı', cell: (r) => r.veterinarianName ?? '' },
-        { group: 'VETERİNER HEKİMİN', header: 'Adresi', cell: (r) => r.veterinarianAddress ?? '' },
-        { group: 'HAYVAN SAHİBİNİN', header: 'Adı Soyadı', cell: (r) => r.ownerName },
-        { group: 'HAYVAN SAHİBİNİN', header: 'Adresi', cell: (r) => r.ownerAddress ?? '' },
-        { group: 'HAYVANIN', header: 'Türü', cell: (r) => r.species },
-        { group: 'HAYVANIN', header: 'Kulak/İşletme No', cell: (r) => r.earTagNumber ?? '' },
-        { group: 'HAYVANIN', header: 'Sayısı', cell: (r) => String(r.animalCount) },
-        { header: 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi', cell: (r) => r.items.map(prescribedItemText).join('; ') }
+        { header: 'Sıra No', minWidth: '4.5rem', nowrap: true, cell: (r) => String(r.rowNumber) },
+        { group: 'REÇETENİN', header: 'Tarihi', minWidth: '6.5rem', nowrap: true, cell: (r) => formatDateDisplay(r.prescribedAtUtc) },
+        { group: 'REÇETENİN', header: 'Sınıfı', minWidth: '4.5rem', nowrap: true, cell: (r) => r.prescriptionClass ?? '' },
+        { group: 'REÇETENİN', header: 'Cilt/Sıra No', minWidth: '6rem', nowrap: true, cell: (r) => r.volumeSequenceNumber ?? '' },
+        { group: 'VETERİNER HEKİMİN', header: 'Adı Soyadı', minWidth: '11rem', cell: (r) => r.veterinarianName ?? '' },
+        { group: 'VETERİNER HEKİMİN', header: 'Adresi', minWidth: '16rem', cell: (r) => r.veterinarianAddress ?? '' },
+        { group: 'HAYVAN SAHİBİNİN', header: 'Adı Soyadı', minWidth: '11rem', cell: (r) => r.ownerName },
+        { group: 'HAYVAN SAHİBİNİN', header: 'Adresi', minWidth: '16rem', cell: (r) => r.ownerAddress ?? '' },
+        { group: 'HAYVANIN', header: 'Türü', minWidth: '5rem', nowrap: true, cell: (r) => r.species },
+        { group: 'HAYVANIN', header: 'Kulak/İşletme No', minWidth: '8rem', nowrap: true, cell: (r) => r.earTagNumber ?? '' },
+        { group: 'HAYVANIN', header: 'Sayısı', minWidth: '4.5rem', nowrap: true, cell: (r) => String(r.animalCount) },
+        { header: 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi', minWidth: '24rem', cell: (r) => r.items.map(prescribedItemText).join('; ') }
     ]
 };
 

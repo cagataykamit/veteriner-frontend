@@ -52,18 +52,16 @@ const ymdToDisplay = (ymd: string) => ymd.split('-').reverse().join('.');
 
             <app-report-results [state]="state" [alwaysPaginate]="true" [emptyMessage]="copy.registerEmptyMessage" [emptyHint]="copy.registerEmptyHint">
                 <ng-template #rows>
+                    <div class="register-print-head">
+                        <h2 class="register-print-title">{{ definition.title }}</h2>
+                        <p class="register-meta text-sm text-muted-color">{{ meta() }}</p>
+                    </div>
                     <div class="register-scroll overflow-x-auto">
                         <table class="register-table">
                             <thead>
-                                <tr class="register-title-row">
-                                    <th [attr.colspan]="definition.columns.length">{{ definition.title }}</th>
-                                </tr>
-                                <tr class="register-meta-row">
-                                    <th [attr.colspan]="definition.columns.length">{{ meta() }}</th>
-                                </tr>
                                 <tr class="register-head-row">
                                     @for (cell of header.top; track $index) {
-                                        <th [attr.colspan]="cell.colSpan" [attr.rowspan]="cell.rowSpan">{{ cell.label }}</th>
+                                        <th [attr.colspan]="cell.colSpan" [attr.rowspan]="cell.rowSpan" [class.register-sticky]="$first">{{ cell.label }}</th>
                                     }
                                 </tr>
                                 @if (header.sub.length) {
@@ -78,7 +76,7 @@ const ymdToDisplay = (ymd: string) => ymd.split('-').reverse().join('.');
                                 @for (row of rowsOnPage(); track row.rowNumber) {
                                     <tr>
                                         @for (col of definition.columns; track $index) {
-                                            <td>{{ col.cell(row) }}</td>
+                                            <td [style.min-width]="col.minWidth" [class.register-nowrap]="col.nowrap" [class.register-sticky]="$first">{{ col.cell(row) }}</td>
                                         }
                                     </tr>
                                 }

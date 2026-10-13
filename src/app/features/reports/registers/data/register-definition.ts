@@ -2,6 +2,10 @@
 export interface RegisterColumn<T> {
     readonly group?: string;
     readonly header: string;
+    /** Ekranda sütunun en küçük genişliği (kelime ortasında kırılmasın diye); verilmezse içeriğe göre. */
+    readonly minWidth?: string;
+    /** Kısa alanlar tek satırda kalır. */
+    readonly nowrap?: boolean;
     readonly cell: (row: T) => string;
 }
 
