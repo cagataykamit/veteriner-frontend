@@ -1,6 +1,6 @@
 .register-table {
     width: 100%;
-    min-width: 90rem;
+    min-width: 110rem;
     border-collapse: collapse;
     font-size: 0.8rem;
     color: var(--text-color);
@@ -24,6 +24,7 @@
     .register-head-row th {
         background: var(--surface-ground);
         text-align: center;
+        white-space: nowrap;
     }
 }
 
@@ -77,6 +78,7 @@
             }
 
             .register-head-row th {
+                white-space: normal;
                 background: #e5e7eb;
                 color: #000;
             }
