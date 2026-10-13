@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Build, test, artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Sürüm kuralı: v<MAJOR>.<MINOR>.<PATCH>[-önsürüm] etiketi → sürüm. Etiketsiz koşu: 0.0.0-ci.<koşu no>.
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="${GITHUB_REF_NAME}"
+            if [[ ! "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$ ]]; then
+              echo "::error::Etiket SemVer olmalı (örn. v1.2.3 veya v1.2.3-rc.1): $tag"
+              exit 1
+            fi
+            version="${tag#v}"
+          else
+            version="0.0.0-ci.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Sürüm: $version" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install
+        run: npm ci
+
+      # Üretim API adresi depo DEĞİŞKENİ (gizli değil): Settings → Secrets and variables → Actions → Variables → API_BASE_URL.
+      # Tanımsızsa derleme depodaki varsayılanla sürer; etiket (sürüm) derlemesinde tanımsızlık hatadır.
+      - name: Set production API URL
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          if [ -n "$API_BASE_URL" ]; then
+            node scripts/set-api-base-url.mjs
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "::error::Sürüm derlemesi için API_BASE_URL deposu değişkeni tanımlı olmalı."
+            exit 1
+          else
+            echo "::warning::API_BASE_URL tanımlı değil; environment.ts içindeki varsayılan apiBaseUrl kullanılacak (dağıtılabilir değil)."
+          fi
+
+      - name: Build (production)
+        run: npx ng build --configuration production
+
+      - name: Test (headless)
+        run: npx ng test --watch=false --karma-config=karma.ci.conf.cjs
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-${{ steps.version.outputs.version }}
+          path: dist
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 90 || 30 }}
