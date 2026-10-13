@@ -66,8 +66,42 @@ app-menu {
         }
     }
 
+    // Başlıksız üst öğeler (Bugün, Özet, Ayarlar) doğrudan .layout-menu altındadır; bağlantı stili iç içe ul'a bağlı olmamalı.
     a {
         user-select: none;
+        display: flex;
+        align-items: center;
+        position: relative;
+        outline: 0 none;
+        color: var(--text-color);
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: var(--content-border-radius);
+        transition:
+            box-shadow var(--element-transition-duration);
+
+        .layout-menuitem-icon {
+            margin-right: 0.5rem;
+        }
+
+        .layout-submenu-toggler {
+            font-size: 75%;
+            margin-left: auto;
+            transition: transform var(--element-transition-duration);
+        }
+
+        &.active-route {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        &:hover {
+            background-color: var(--surface-hover);
+        }
+
+        &:focus {
+            @include focused-inset();
+        }
 
         &.active-menuitem {
             > .layout-submenu-toggler {
@@ -88,42 +122,6 @@ app-menu {
         margin: 0;
         padding: 0;
         list-style-type: none;
-
-        a {
-            display: flex;
-            align-items: center;
-            position: relative;
-            outline: 0 none;
-            color: var(--text-color);
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: var(--content-border-radius);
-            transition:
-                box-shadow var(--element-transition-duration);
-
-            .layout-menuitem-icon {
-                margin-right: 0.5rem;
-            }
-
-            .layout-submenu-toggler {
-                font-size: 75%;
-                margin-left: auto;
-                transition: transform var(--element-transition-duration);
-            }
-
-            &.active-route {
-                font-weight: 700;
-                color: var(--primary-color);
-            }
-
-            &:hover {
-                background-color: var(--surface-hover);
-            }
-
-            &:focus {
-                @include focused-inset();
-            }
-        }
 
         ul {
             overflow: hidden;
