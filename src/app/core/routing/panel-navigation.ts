@@ -129,6 +129,25 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 description: 'Müşterilerin şu anki kalan borcu.'
             }
         ]
+    },
+    {
+        label: 'Kayıt defterleri',
+        entries: [
+            {
+                label: 'Muayene Kayıt Defteri',
+                icon: 'pi pi-fw pi-book',
+                route: `${REPORTS_ROUTE}/registers/examinations`,
+                claims: [EXAMINATIONS_READ_CLAIM],
+                description: 'Hayvan muayene kayıt defteri; yazdırma ve dışa aktarma.'
+            },
+            {
+                label: 'Reçete Kayıt Defteri',
+                icon: 'pi pi-fw pi-book',
+                route: `${REPORTS_ROUTE}/registers/prescriptions`,
+                claims: [PRESCRIPTIONS_READ_CLAIM],
+                description: 'Reçete kayıt defteri; yazdırma ve dışa aktarma.'
+            }
+        ]
     }
 ];
 
