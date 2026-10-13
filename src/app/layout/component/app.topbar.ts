@@ -29,7 +29,12 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
     providers: [ConfirmationService],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
-            <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
+            <button
+                type="button"
+                class="layout-menu-button layout-topbar-action"
+                [attr.aria-label]="layoutService.isMenuRail() ? 'Menüyü genişlet' : 'Menü'"
+                (click)="layoutService.onMenuToggle()"
+            >
                 <i class="pi pi-bars"></i>
             </button>
             <a class="layout-topbar-logo" routerLink="/panel">

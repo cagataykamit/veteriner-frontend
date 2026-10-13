@@ -1,6 +1,7 @@
 import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppTopbar } from './app.topbar';
 import { AppSidebar } from './app.sidebar';
@@ -28,12 +29,14 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 })
 export class AppLayout {
     layoutService = inject(LayoutService);
+    private readonly auth = inject(AuthService);
     private readonly tenantReadOnlyContext = inject(TenantReadOnlyContextService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly primePanelOverlayHostEl = viewChild<ElementRef<HTMLElement>>('primePanelOverlayHost');
 
     constructor() {
         this.tenantReadOnlyContext.loadForPanel();
+        this.layoutService.restoreMenuCollapsed(this.auth.getUserId());
 
         effect(() => {
             const state = this.layoutService.layoutState();

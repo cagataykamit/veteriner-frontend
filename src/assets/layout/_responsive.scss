@@ -45,14 +45,9 @@
             }
 
             &.layout-static-inactive {
-                .layout-sidebar {
-                    transform: translateX(-100%);
-                    left: 0;
-                }
-
+                // Simge şeridi: kenar çubuğu 4.5 rem'e daralır (bkz. _menu.scss), içerik buna göre genişler.
                 .layout-main-container {
-                    margin-left: 0;
-                    padding-left: 2rem;
+                    margin-left: 6.5rem;
                 }
             }
         }

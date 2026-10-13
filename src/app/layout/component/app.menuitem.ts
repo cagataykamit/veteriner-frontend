@@ -2,12 +2,13 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RippleModule } from 'primeng/ripple';
+import { TooltipModule } from 'primeng/tooltip';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
     selector: '[app-menuitem]',
-    imports: [CommonModule, RouterModule, RippleModule],
+    imports: [CommonModule, RouterModule, RippleModule, TooltipModule],
     template: `
         @if (root() && isVisible()) {
             <div class="layout-menuitem-root-text">{{ item().label }}</div>
@@ -38,9 +39,17 @@ import { filter } from 'rxjs/operators';
                 [attr.target]="item().target"
                 tabindex="0"
                 pRipple
+                [pTooltip]="railTooltip()"
+                [tooltipDisabled]="!layoutService.isMenuRail()"
+                tooltipPosition="right"
+                tooltipEvent="both"
+                appendTo="body"
             >
                 <i [ngClass]="item().icon" class="layout-menuitem-icon"></i>
                 <span class="layout-menuitem-text">{{ item().label }}</span>
+                @if (item().badge) {
+                    <span class="layout-menuitem-badge">{{ item().badge }}<span class="sr-only"> bekleyen</span></span>
+                }
                 @if (hasChildren()) {
                     <i class="pi pi-fw pi-angle-down layout-submenu-toggler"></i>
                 }
@@ -106,6 +115,12 @@ export class AppMenuitem {
     isVisible = computed(() => this.item()?.visible !== false);
 
     hasChildren = computed(() => this.item()?.items && this.item()?.items.length > 0);
+
+    /** Simge şeridinde metin görünmez; ad ve sayaç ipucunda (hover/odak) verilir. */
+    railTooltip = computed(() => {
+        const item = this.item();
+        return item?.badge ? `${item.label} · ${item.badge} bekleyen` : (item?.label ?? '');
+    });
 
     hasRouterLink = computed(() => !!this.item()?.routerLink);
 
