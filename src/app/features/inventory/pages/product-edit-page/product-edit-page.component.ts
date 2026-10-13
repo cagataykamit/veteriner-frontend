@@ -22,6 +22,7 @@ import {
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { ProductClassificationFieldsComponent } from '@/app/features/inventory/components/product-classification-fields/product-classification-fields.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -40,7 +41,8 @@ import { EMPTY, map, switchMap } from 'rxjs';
         TextareaModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        ProductClassificationFieldsComponent
     ],
     template: `
         <a [routerLink]="productId() ? ['/panel/products', productId()!] : ['/panel/products']" class="text-primary font-medium no-underline inline-block mb-4">← Ürün detayına dön</a>
@@ -138,6 +140,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                 <small class="text-red-500">Para birimi zorunludur.</small>
                             }
                         </div>
+                        <app-product-classification-fields [form]="form" idPrefix="productEdit" />
                         <div class="col-span-12 flex flex-col gap-1">
                             <label for="descriptionEdit" class="block text-sm font-medium text-muted-color">Açıklama</label>
                             <textarea id="descriptionEdit" pTextarea rows="3" class="w-full" formControlName="description"></textarea>
@@ -287,7 +290,12 @@ export class ProductEditPageComponent implements OnInit {
             unit: raw.unit,
             unitPrice: raw.unitPrice,
             currency: raw.currency,
-            description: raw.description
+            description: raw.description,
+            kind: raw.kind,
+            controlledClass: raw.controlledClass,
+            pharmacologicalForm: raw.pharmacologicalForm,
+            presentationForm: raw.presentationForm,
+            packaging: raw.packaging
         };
         this.submitting.set(true);
         this.submitError.set(null);

@@ -9,6 +9,13 @@ import type {
 import type { ProductCategoriesListQuery, ProductsListQuery } from '@/app/features/inventory/models/product-query.model';
 import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
 import type { ProductDetailVm, ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
+import {
+    productControlledClassFromApi,
+    productControlledClassLabel,
+    productKindFromApi,
+    productKindLabel,
+    productRequiresLotAndExpiry
+} from '@/app/features/inventory/utils/product-classification.utils';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -59,12 +66,23 @@ export function mapProductUpsertFormValueToCreateRequest(value: ProductUpsertFor
         description: optionalTrimmedOrNull(value.description),
         unit: value.unit.trim(),
         unitPrice,
-        currency
+        currency,
+        kind: value.kind,
+        controlledClass: value.controlledClass,
+        pharmacologicalForm: optionalTrimmedOrNull(value.pharmacologicalForm),
+        presentationForm: optionalTrimmedOrNull(value.presentationForm),
+        packaging: optionalTrimmedOrNull(value.packaging)
     };
 }
 
+/** Sözleşme §2: PUT'ta `null` dokunmaz; boşaltılan metin alanı `""` ile temizlenir. */
 export function mapProductUpsertFormValueToUpdateRequest(value: ProductUpsertFormValue): UpdateProductRequest {
-    return mapProductUpsertFormValueToCreateRequest(value);
+    return {
+        ...mapProductUpsertFormValueToCreateRequest(value),
+        pharmacologicalForm: value.pharmacologicalForm.trim(),
+        presentationForm: value.presentationForm.trim(),
+        packaging: value.packaging.trim()
+    };
 }
 
 export function mapProductDtoToUpsertFormValue(dto: ProductDto): ProductUpsertFormValue {
@@ -77,7 +95,12 @@ export function mapProductDtoToUpsertFormValue(dto: ProductDto): ProductUpsertFo
         unit: dto.unit?.trim() ?? '',
         unitPrice: price,
         currency: currencyCode(dto),
-        description: dto.description?.trim() ?? ''
+        description: dto.description?.trim() ?? '',
+        kind: productKindFromApi(dto.kind),
+        controlledClass: productControlledClassFromApi(dto.controlledClass),
+        pharmacologicalForm: dto.pharmacologicalForm?.trim() ?? '',
+        presentationForm: dto.presentationForm?.trim() ?? '',
+        packaging: dto.packaging?.trim() ?? ''
     };
 }
 
@@ -126,12 +149,22 @@ export function mapProductDtoToDetailVm(dto: ProductDto): ProductDetailVm {
     const currency = currencyCode(dto);
     const unitPrice = num(dto.unitPrice);
     const desc = dto.description?.trim() ?? '';
+    const kind = productKindFromApi(dto.kind);
+    const controlledClass = productControlledClassFromApi(dto.controlledClass);
     return {
         id: dto.id,
         name: str(dto.name),
         sku: str(dto.sku),
         barcode: str(dto.barcode),
         description: desc || EM,
+        kind,
+        kindLabel: productKindLabel(kind),
+        controlledClass,
+        controlledClassLabel: productControlledClassLabel(controlledClass),
+        requiresLotAndExpiry: productRequiresLotAndExpiry(kind, controlledClass),
+        pharmacologicalForm: str(dto.pharmacologicalForm),
+        presentationForm: str(dto.presentationForm),
+        packaging: str(dto.packaging),
         categoryName: str(dto.productCategoryName),
         unit: str(dto.unit),
         unitPriceText: formatMoney(unitPrice, currency),
