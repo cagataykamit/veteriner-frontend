@@ -43,7 +43,8 @@ export function examinationListItemFromDetail(d: ExaminationDetailVm): Examinati
         petId: d.petId,
         petName: d.petName,
         appointmentId: d.appointmentId,
-        visitReason: d.visitReason
+        visitReason: d.visitReason,
+        status: d.status
     };
 }
 

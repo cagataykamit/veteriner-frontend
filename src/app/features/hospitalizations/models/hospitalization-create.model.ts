@@ -6,13 +6,25 @@ export interface CreateHospitalizationRequest {
     clinicId: string;
     petId: string;
     examinationId?: string | null;
+    visitId?: string | null;
+    /** Güncellemede `null` = dokunma, boş metin = temizle. */
+    location?: string | null;
     admittedAtUtc: string;
     plannedDischargeAtUtc?: string | null;
     reason: string;
     notes?: string | null;
+    /** Yalnız güncellemede; GET’ten alınan sürüm. */
+    rowVersion?: string;
 }
 
 export interface DischargeHospitalizationRequest {
     dischargedAtUtc: string;
-    notes?: string | null;
+    dischargeNote?: string | null;
+    rowVersion?: string;
+}
+
+/** PUT / taburcu sonucu: kaydın yeni sürümü. */
+export interface HospitalizationWriteResult {
+    id: string;
+    rowVersion: string | null;
 }

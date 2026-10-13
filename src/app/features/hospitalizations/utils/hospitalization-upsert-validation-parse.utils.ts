@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import {
     extractRawValidationErrors,
     firstStringMessage,
@@ -13,12 +13,29 @@ import {
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 
+export const HOSPITALIZATION_CONCURRENCY_CONFLICT_CODE = 'Hospitalizations.ConcurrencyConflict';
+
+/** Yatışta yalnız muayene bağı kilitlidir (sözleşme §3); diğer alanlar kesinleşmiş muayenede de serbesttir. */
+export const HOSPITALIZATION_EXAMINATION_FINALIZED_MESSAGE =
+    'Kesinleşmiş muayeneye yatış bağlanamaz ve bağlı olduğu kesinleşmiş muayeneden ayrılamaz. Gerekirse muayeneye ek not ekleyin veya yatışı muayene olmadan, geliş kaydıyla bağlayın.';
+
+function isConcurrencyConflict(err: HttpErrorResponse): boolean {
+    return err.status === 409 && problemCodeFromHttpError(err) === HOSPITALIZATION_CONCURRENCY_CONFLICT_CODE;
+}
+
+/** Kod → yatışa özel mesaj; yoksa `null` (genel ayrıştırma sürer). */
+function examinationFinalizedMessage(err: HttpErrorResponse): string | null {
+    return err.status === 409 && problemCodeFromHttpError(err) === 'Examinations.Finalized' ? HOSPITALIZATION_EXAMINATION_FINALIZED_MESSAGE : null;
+}
+
 export type HospitalizationUpsertFormFieldKey =
     | 'clientId'
     | 'petId'
     | 'admittedAtLocal'
     | 'plannedDischargeAtLocal'
     | 'examinationId'
+    | 'visitId'
+    | 'location'
     | 'reason'
     | 'notes';
 
@@ -27,6 +44,8 @@ export type HospitalizationUpsertFieldErrors = Partial<Record<HospitalizationUps
 export interface ParsedHospitalizationUpsertHttpError {
     fieldErrors: HospitalizationUpsertFieldErrors;
     summaryMessage: string | null;
+    /** 409 + `Hospitalizations.ConcurrencyConflict`: kayıt başka biri tarafından değişti, yeniden yükleme gerekir. */
+    isConcurrencyConflict: boolean;
 }
 
 const FIELD_MAP: Record<string, HospitalizationUpsertFormFieldKey> = {
@@ -41,6 +60,8 @@ const FIELD_MAP: Record<string, HospitalizationUpsertFormFieldKey> = {
     planneddischargeatutc: 'plannedDischargeAtLocal',
     planneddischargeat: 'plannedDischargeAtLocal',
     examinationid: 'examinationId',
+    visitid: 'visitId',
+    location: 'location',
     reason: 'reason',
     notes: 'notes',
     note: 'notes'
@@ -94,6 +115,14 @@ function promoteHospitalizationDatePastFromUnmappedErrors(err: HttpErrorResponse
 }
 
 export function parseHospitalizationUpsertHttpError(err: HttpErrorResponse): ParsedHospitalizationUpsertHttpError {
+    const finalized = examinationFinalizedMessage(err);
+    if (finalized) {
+        return { fieldErrors: { examinationId: finalized }, summaryMessage: SUMMARY_FIELD_ERRORS, isConcurrencyConflict: false };
+    }
+    return { ...parseUpsertFieldErrors(err), isConcurrencyConflict: isConcurrencyConflict(err) };
+}
+
+function parseUpsertFieldErrors(err: HttpErrorResponse): Omit<ParsedHospitalizationUpsertHttpError, 'isConcurrencyConflict'> {
     const parsed = parseValidationHttpError<HospitalizationUpsertFormFieldKey>(err, {
         fieldMap: FIELD_MAP,
         normalizeMessage: normalizeHospitalizationUpsertFieldMessage,
@@ -125,28 +154,31 @@ export function parseHospitalizationUpsertHttpError(err: HttpErrorResponse): Par
     return parsed;
 }
 
-export type HospitalizationDischargeFormFieldKey = 'dischargedAtLocal' | 'notes';
+export type HospitalizationDischargeFormFieldKey = 'dischargedAtLocal' | 'dischargeNote';
 
 export type HospitalizationDischargeFieldErrors = Partial<Record<HospitalizationDischargeFormFieldKey, string>>;
 
 export interface ParsedHospitalizationDischargeHttpError {
     fieldErrors: HospitalizationDischargeFieldErrors;
     summaryMessage: string | null;
+    isConcurrencyConflict: boolean;
 }
 
 const DISCHARGE_FIELD_MAP: Record<string, HospitalizationDischargeFormFieldKey> = {
     dischargedatutc: 'dischargedAtLocal',
     dischargedat: 'dischargedAtLocal',
-    notes: 'notes',
-    note: 'notes'
+    dischargenote: 'dischargeNote',
+    notes: 'dischargeNote',
+    note: 'dischargeNote'
 };
 
 export function parseHospitalizationDischargeHttpError(
     err: HttpErrorResponse
 ): ParsedHospitalizationDischargeHttpError {
-    return parseValidationHttpError<HospitalizationDischargeFormFieldKey>(err, {
+    const parsed = parseValidationHttpError<HospitalizationDischargeFormFieldKey>(err, {
         fieldMap: DISCHARGE_FIELD_MAP,
         nonFieldMessage: (e) => messageFromHttpError(e, 'Taburcu işlemi tamamlanamadı.'),
         fieldErrorsSummaryMessage: SUMMARY_FIELD_ERRORS
     });
+    return { ...parsed, isConcurrencyConflict: isConcurrencyConflict(err) };
 }

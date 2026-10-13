@@ -4,9 +4,14 @@ import type {
     HospitalizationDetailDto,
     HospitalizationListItemDto,
     HospitalizationListItemDtoPagedResult,
-    HospitalizationWriteRequestDto
+    HospitalizationWriteRequestDto,
+    HospitalizationWriteResultDto
 } from '@/app/features/hospitalizations/models/hospitalization-api.model';
-import type { CreateHospitalizationRequest } from '@/app/features/hospitalizations/models/hospitalization-create.model';
+import type {
+    CreateHospitalizationRequest,
+    DischargeHospitalizationRequest,
+    HospitalizationWriteResult
+} from '@/app/features/hospitalizations/models/hospitalization-create.model';
 import type { HospitalizationsListQuery } from '@/app/features/hospitalizations/models/hospitalization-query.model';
 import type {
     HospitalizationDetailVm,
@@ -82,6 +87,14 @@ function canonicalExaminationId(dto: HospitalizationListItemDto | Hospitalizatio
     return firstTrimmed(dto.examinationId, readDtoString(dto, ['ExaminationId']));
 }
 
+function canonicalVisitId(dto: HospitalizationListItemDto | HospitalizationDetailDto): string | null {
+    return firstTrimmed(dto.visitId, readDtoString(dto, ['VisitId']));
+}
+
+function canonicalLocation(dto: HospitalizationListItemDto | HospitalizationDetailDto): string {
+    return firstTrimmed(dto.location, readDtoString(dto, ['Location'])) ?? '';
+}
+
 function canonicalAdmittedAt(dto: HospitalizationListItemDto | HospitalizationDetailDto): string | null {
     return firstTrimmed(dto.admittedAtUtc, readDtoString(dto, ['AdmittedAtUtc']));
 }
@@ -100,6 +113,14 @@ function canonicalReason(dto: HospitalizationListItemDto | HospitalizationDetail
 
 function canonicalNotes(dto: HospitalizationDetailDto): string {
     return str(firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])));
+}
+
+function canonicalDischargeNote(dto: HospitalizationDetailDto): string {
+    return firstTrimmed(dto.dischargeNote, readDtoString(dto, ['DischargeNote'])) ?? '';
+}
+
+function canonicalRowVersion(dto: HospitalizationDetailDto): string {
+    return firstTrimmed(dto.rowVersion, readDtoString(dto, ['RowVersion'])) ?? '';
 }
 
 function canonicalCreatedAt(dto: HospitalizationDetailDto): string | null {
@@ -130,6 +151,8 @@ export function mapHospitalizationListItemDtoToVm(dto: HospitalizationListItemDt
         clientId: canonicalClientId(dto),
         clientName: canonicalClientName(dto),
         examinationId: canonicalExaminationId(dto),
+        visitId: canonicalVisitId(dto),
+        location: canonicalLocation(dto),
         admittedAtUtc: canonicalAdmittedAt(dto),
         plannedDischargeAtUtc: canonicalPlannedDischargeAt(dto),
         dischargedAtUtc: canonicalDischargedAt(dto),
@@ -147,14 +170,18 @@ export function mapHospitalizationDetailDtoToVm(dto: HospitalizationDetailDto): 
         clientId: canonicalClientId(dto),
         clientName: canonicalClientName(dto),
         examinationId: canonicalExaminationId(dto),
+        visitId: canonicalVisitId(dto),
+        location: canonicalLocation(dto),
         admittedAtUtc: canonicalAdmittedAt(dto),
         plannedDischargeAtUtc: canonicalPlannedDischargeAt(dto),
         dischargedAtUtc: canonicalDischargedAt(dto),
         reason: canonicalReason(dto),
         notes: canonicalNotes(dto),
+        dischargeNote: canonicalDischargeNote(dto),
         createdAtUtc: canonicalCreatedAt(dto),
         updatedAtUtc: canonicalUpdatedAt(dto),
-        isActive: canonicalIsActive(dto)
+        isActive: canonicalIsActive(dto),
+        rowVersion: canonicalRowVersion(dto)
     };
 }
 
@@ -167,11 +194,14 @@ export function mapHospitalizationDetailDtoToEditVm(dto: HospitalizationDetailDt
         clientName: firstTrimmed(dto.clientName, readDtoString(dto, ['ClientName'])),
         petName: firstTrimmed(dto.petName, readDtoString(dto, ['PetName'])),
         examinationId: canonicalExaminationId(dto) ?? '',
+        visitId: canonicalVisitId(dto) ?? '',
+        location: canonicalLocation(dto),
         admittedAtUtc: canonicalAdmittedAt(dto),
         plannedDischargeAtUtc: canonicalPlannedDischargeAt(dto),
         reason: firstTrimmed(dto.reason, readDtoString(dto, ['Reason'])) ?? '',
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
-        isActive: canonicalIsActive(dto)
+        isActive: canonicalIsActive(dto),
+        rowVersion: canonicalRowVersion(dto)
     };
 }
 
@@ -263,6 +293,17 @@ export function mapCreateHospitalizationToApiBody(req: CreateHospitalizationRequ
     if (ex) {
         dto.examinationId = ex;
     }
+    const visitId = req.visitId?.trim();
+    if (visitId) {
+        dto.visitId = visitId;
+    }
+    if (req.location != null) {
+        dto.location = req.location.trim();
+    }
+    const rowVersion = req.rowVersion?.trim();
+    if (rowVersion) {
+        dto.rowVersion = rowVersion;
+    }
     return dto;
 }
 
@@ -274,6 +315,9 @@ export interface HospitalizationUpsertFormAdapterInput {
     reason: string;
     notes?: string | null;
     examinationId?: string | null;
+    visitId?: string | null;
+    location?: string | null;
+    rowVersion?: string;
 }
 
 export function mapHospitalizationUpsertFormToCreateRequest(
@@ -286,20 +330,29 @@ export function mapHospitalizationUpsertFormToCreateRequest(
         plannedDischargeAtUtc: input.plannedDischargeAtUtc?.trim() ? input.plannedDischargeAtUtc.trim() : null,
         reason: input.reason.trim(),
         notes: input.notes?.trim() ? input.notes.trim() : null,
-        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null
+        examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null,
+        visitId: input.visitId?.trim() ? input.visitId.trim() : null,
+        location: input.location == null ? null : input.location.trim(),
+        rowVersion: input.rowVersion
     };
 }
 
-export function mapDischargeHospitalizationToApiBody(
-    dischargedAtUtc: string,
-    notes?: string | null
-): DischargeHospitalizationRequestDto {
-    const d = dischargedAtUtc.trim();
+export function mapDischargeHospitalizationToApiBody(req: DischargeHospitalizationRequest): DischargeHospitalizationRequestDto {
+    const d = req.dischargedAtUtc.trim();
     if (!d) {
         throw new Error('HOSPITALIZATION_DISCHARGE_DATE_REQUIRED');
     }
-    return {
+    const dto: DischargeHospitalizationRequestDto = {
         dischargedAtUtc: d,
-        notes: notes?.trim() ? notes.trim() : null
+        dischargeNote: req.dischargeNote?.trim() ? req.dischargeNote.trim() : null
     };
+    const rowVersion = req.rowVersion?.trim();
+    if (rowVersion) {
+        dto.rowVersion = rowVersion;
+    }
+    return dto;
+}
+
+export function mapHospitalizationWriteResultDto(dto: HospitalizationWriteResultDto | null | undefined, fallbackId: string): HospitalizationWriteResult {
+    return { id: firstTrimmed(dto?.id) ?? fallbackId, rowVersion: firstTrimmed(dto?.rowVersion) };
 }

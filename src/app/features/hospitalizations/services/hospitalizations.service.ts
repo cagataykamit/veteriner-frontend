@@ -9,16 +9,19 @@ import {
     mapDischargeHospitalizationToApiBody,
     mapHospitalizationDetailDtoToEditVm,
     mapHospitalizationDetailDtoToVm,
+    mapHospitalizationWriteResultDto,
     mapPagedHospitalizationsToVm,
     hospitalizationsQueryToHttpParams
 } from '@/app/features/hospitalizations/data/hospitalization.mapper';
 import type {
     HospitalizationDetailDto,
-    HospitalizationListItemDtoPagedResult
+    HospitalizationListItemDtoPagedResult,
+    HospitalizationWriteResultDto
 } from '@/app/features/hospitalizations/models/hospitalization-api.model';
 import type {
     CreateHospitalizationRequest,
-    DischargeHospitalizationRequest
+    DischargeHospitalizationRequest,
+    HospitalizationWriteResult
 } from '@/app/features/hospitalizations/models/hospitalization-create.model';
 import type { HospitalizationsListQuery } from '@/app/features/hospitalizations/models/hospitalization-query.model';
 import type {
@@ -69,9 +72,22 @@ export class HospitalizationsService {
 
     getHospitalizationForEditById(id: string): Observable<HospitalizationEditVm> {
         return this.api.get<HospitalizationDetailDto>(ApiEndpoints.hospitalizations.byId(id)).pipe(
-            map((dto) => mapHospitalizationDetailDtoToEditVm(dto)),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Düzenleme bilgileri yüklenemedi.')))
+            map((dto) => {
+                const vm = mapHospitalizationDetailDtoToEditVm(dto);
+                if (!vm.rowVersion) {
+                    // Sürümsüz kayıt eşzamanlılık korumasız yazılır; sürüm yoksa düzenlemeye izin verme.
+                    throw new Error('Sunucu kayıt sürümünü (rowVersion) döndürmedi; düzenleme yapılamaz.');
+                }
+                return vm;
+            }),
+            catchError((err: unknown) =>
+                throwError(() =>
+                    err instanceof HttpErrorResponse
+                        ? new Error(messageFromHttpError(err, 'Düzenleme bilgileri yüklenemedi.'))
+                        : err instanceof Error
+                          ? err
+                          : new Error('Düzenleme bilgileri yüklenemedi.')
+                )
             )
         );
     }
@@ -120,7 +136,8 @@ export class HospitalizationsService {
         );
     }
 
-    updateHospitalization(id: string, payload: CreateHospitalizationRequest): Observable<void> {
+    /** PUT; `rowVersion` GET'ten alınan sürümdür. Hata, kodu ayrıştırabilmek için ham `HttpErrorResponse` olarak iletilir. */
+    updateHospitalization(id: string, payload: CreateHospitalizationRequest): Observable<HospitalizationWriteResult> {
         let body: unknown;
         try {
             body = mapCreateHospitalizationToApiBody(payload);
@@ -139,8 +156,8 @@ export class HospitalizationsService {
             }
             return throwError(() => (e instanceof Error ? e : new Error('Kayıt güncellenemedi.')));
         }
-        return this.api.put<unknown>(ApiEndpoints.hospitalizations.byId(id), body).pipe(
-            map(() => void 0),
+        return this.api.put<HospitalizationWriteResultDto>(ApiEndpoints.hospitalizations.byId(id), body).pipe(
+            map((dto) => mapHospitalizationWriteResultDto(dto, id)),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
@@ -150,18 +167,18 @@ export class HospitalizationsService {
         );
     }
 
-    dischargeHospitalization(id: string, payload: DischargeHospitalizationRequest): Observable<void> {
+    dischargeHospitalization(id: string, payload: DischargeHospitalizationRequest): Observable<HospitalizationWriteResult> {
         let body: unknown;
         try {
-            body = mapDischargeHospitalizationToApiBody(payload.dischargedAtUtc, payload.notes);
+            body = mapDischargeHospitalizationToApiBody(payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'HOSPITALIZATION_DISCHARGE_DATE_REQUIRED') {
                 return throwError(() => new Error('Taburcu tarihi / saati zorunludur.'));
             }
             return throwError(() => (e instanceof Error ? e : new Error('Taburcu işlemi yapılamadı.')));
         }
-        return this.api.post<unknown>(ApiEndpoints.hospitalizations.discharge(id), body).pipe(
-            map(() => void 0),
+        return this.api.post<HospitalizationWriteResultDto>(ApiEndpoints.hospitalizations.discharge(id), body).pipe(
+            map((dto) => mapHospitalizationWriteResultDto(dto, id)),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);

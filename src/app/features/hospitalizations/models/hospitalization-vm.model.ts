@@ -10,6 +10,8 @@ export interface HospitalizationListItemVm {
     clientId: string | null;
     clientName: string;
     examinationId: string | null;
+    visitId: string | null;
+    location: string;
     admittedAtUtc: string | null;
     plannedDischargeAtUtc: string | null;
     dischargedAtUtc: string | null;
@@ -25,14 +27,19 @@ export interface HospitalizationDetailVm {
     clientId: string | null;
     clientName: string;
     examinationId: string | null;
+    visitId: string | null;
+    location: string;
     admittedAtUtc: string | null;
     plannedDischargeAtUtc: string | null;
     dischargedAtUtc: string | null;
     reason: string;
     notes: string;
+    dischargeNote: string;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
     isActive: boolean;
+    /** Yazma çağrılarına aynen geri gönderilir. */
+    rowVersion: string;
 }
 
 export interface HospitalizationEditVm {
@@ -43,9 +50,12 @@ export interface HospitalizationEditVm {
     clientName: string | null;
     petName: string | null;
     examinationId: string;
+    visitId: string;
+    location: string;
     admittedAtUtc: string | null;
     plannedDischargeAtUtc: string | null;
     reason: string;
     notes: string;
     isActive: boolean;
+    rowVersion: string;
 }
