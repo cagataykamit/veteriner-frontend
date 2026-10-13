@@ -3,3 +3,11 @@
     --code-background: var(--p-surface-800);
     --code-color: var(--p-surface-100);
 }
+
+/* Koyu temada gri düğme/sekme, gri kart üstünde sınırsız kalıyordu (bileşen sınırı ~1.2:1); WCAG 1.4.11 için ≥3:1 sınır. */
+:root[class*='app-dark'] {
+    .p-button.p-button-secondary:not(.p-button-text),
+    .p-togglebutton:not(.p-togglebutton-checked) {
+        border: 1px solid var(--p-surface-500);
+    }
+}
