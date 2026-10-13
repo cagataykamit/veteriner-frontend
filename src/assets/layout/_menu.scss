@@ -13,7 +13,8 @@
     left: 2rem;
     transition:
         transform var(--layout-section-transition-duration),
-        left var(--layout-section-transition-duration);
+        left var(--layout-section-transition-duration),
+        width var(--layout-section-transition-duration);
     background-color: var(--surface-overlay);
     border-radius: var(--content-border-radius);
     padding: 0.5rem 1.5rem;
@@ -201,5 +202,71 @@ app-menu {
     .layout-menu a {
         padding-top: 0.35rem;
         padding-bottom: 0.35rem;
+    }
+}
+
+// Sayaç rozeti: açık menüde öğenin sağında, simge şeridinde simgenin köşesinde.
+.layout-menuitem-badge {
+    margin-left: auto;
+    min-width: 1.4rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background-color: var(--primary-color);
+    color: var(--primary-contrast-color);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+}
+
+// Simge şeridi (masaüstünde ☰ ile daraltılmış menü): yalnız simgeler; ad ipucunda ve ekran okuyucuda.
+@media (min-width: 992px) {
+    .layout-wrapper.layout-static.layout-static-inactive {
+        .layout-sidebar {
+            width: 4.5rem;
+            padding: 0.5rem 0.5rem;
+            overflow-x: hidden;
+        }
+
+        .layout-menu {
+            a {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+
+                .layout-menuitem-icon {
+                    margin-right: 0;
+                    font-size: 1.15rem;
+                }
+
+                .layout-menuitem-text {
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    overflow: hidden;
+                    clip-path: inset(50%);
+                    white-space: nowrap;
+                }
+
+                &.active-route {
+                    background-color: color-mix(in srgb, var(--primary-color) 12%, transparent);
+                }
+            }
+
+            .layout-menuitem-badge {
+                position: absolute;
+                top: 0.1rem;
+                right: 0.15rem;
+                min-width: 1.1rem;
+                padding: 0 0.3rem;
+                font-size: 0.65rem;
+            }
+
+            .layout-menu-divider {
+                height: 1px;
+                margin: 0.4rem 0.5rem;
+                background-color: var(--surface-border);
+            }
+        }
     }
 }

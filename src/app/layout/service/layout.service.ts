@@ -1,4 +1,8 @@
 import { Injectable, effect, signal, computed } from '@angular/core';
+import { readMenuCollapsed, writeMenuCollapsed } from './menu-collapsed-state';
+
+/** `isDesktop()` (> 991 px) ve `_responsive.scss` (min-width: 992px) ile aynı eşik. */
+const DESKTOP_MEDIA_QUERY = '(min-width: 992px)';
 
 export interface LayoutConfig {
     preset: string;
@@ -9,6 +13,7 @@ export interface LayoutConfig {
 }
 
 interface LayoutState {
+    /** Menü masaüstünde simge şeridine daraltılmış (kullanıcı tercihi). */
     staticMenuDesktopInactive: boolean;
     overlayMenuActive: boolean;
     configSidebarVisible: boolean;
@@ -70,12 +75,22 @@ export class LayoutService {
 
     private initialized = false;
 
+    private menuPreferenceUserId: string | null = null;
+
+    /** Masaüstü genişliği (>= 992 px); altında menü çekmece olarak açılır. Simge şeridi yalnız masaüstünde uygulanır. */
+    private readonly desktopViewport = signal(window.matchMedia(DESKTOP_MEDIA_QUERY).matches);
+
+    /** Menü masaüstünde simge şeridine daraltılmış mı (daraltma tercihi + masaüstü genişliği). */
+    isMenuRail = computed(() => this.layoutConfig().menuMode === 'static' && this.layoutState().staticMenuDesktopInactive && this.desktopViewport());
+
     constructor() {
         const storedTheme = this.readStoredTheme();
         if (storedTheme !== null) {
             this.layoutConfig.update((state) => ({ ...state, darkTheme: storedTheme === 'dark' }));
         }
         this.applyDarkModeClass(this.layoutConfig().darkTheme);
+
+        window.matchMedia(DESKTOP_MEDIA_QUERY).addEventListener('change', (event) => this.desktopViewport.set(event.matches));
 
         effect(() => {
             const config = this.layoutConfig();
@@ -150,13 +165,21 @@ export class LayoutService {
         document.documentElement.classList.toggle('app-dark', enabled);
     }
 
+    /** Giriş yapan kullanıcının menü daraltma tercihini yükler; sonraki değişiklikler bu kullanıcı adına saklanır. */
+    restoreMenuCollapsed(userId: string | null): void {
+        this.menuPreferenceUserId = userId;
+        this.layoutState.update((prev) => ({ ...prev, staticMenuDesktopInactive: readMenuCollapsed(userId) }));
+    }
+
     onMenuToggle() {
         if (this.isOverlay()) {
             this.layoutState.update((prev) => ({ ...prev, overlayMenuActive: !this.layoutState().overlayMenuActive }));
         }
 
         if (this.isDesktop()) {
-            this.layoutState.update((prev) => ({ ...prev, staticMenuDesktopInactive: !this.layoutState().staticMenuDesktopInactive }));
+            const collapsed = !this.layoutState().staticMenuDesktopInactive;
+            this.layoutState.update((prev) => ({ ...prev, staticMenuDesktopInactive: collapsed }));
+            writeMenuCollapsed(this.menuPreferenceUserId, collapsed);
         } else {
             this.layoutState.update((prev) => ({ ...prev, mobileMenuActive: !this.layoutState().mobileMenuActive }));
         }

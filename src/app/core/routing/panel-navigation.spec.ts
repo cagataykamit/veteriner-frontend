@@ -10,6 +10,19 @@ describe('panel-navigation', () => {
         expect(labels(groups)).not.toContain('Giriş');
     });
 
+    it('her menü öğesinin simgesi ayrıdır (simge şeridinde öğeler ayırt edilebilir)', () => {
+        const icons = MENU_GROUPS.flatMap((g) => g.entries.map((e) => e.icon));
+        expect(new Set(icons).size).toBe(icons.length);
+    });
+
+    it('sayaç yalnız Bugün ve Lab sonuçları öğelerinde tanımlıdır', () => {
+        const badged = MENU_GROUPS.flatMap((g) => g.entries).filter((e) => e.badge);
+        expect(badged.map((e) => [e.label, e.badge])).toEqual([
+            ['Bugün', 'waitingVisits'],
+            ['Lab sonuçları', 'requestedLabResults']
+        ]);
+    });
+
     it('Tür, Irk ve Kategori ana menüde yer almaz', () => {
         const groups = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
         expect(labels(groups)).not.toContain('Türler');

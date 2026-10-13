@@ -7,6 +7,8 @@ import { filter } from 'rxjs';
 import { AppMenuitem } from './app.menuitem';
 import { readMenuGroupPreferences, writeMenuGroupPreferences } from './menu-group-state';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { LayoutService } from '@/app/layout/service/layout.service';
+import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badge.service';
 import { groupForUrl, MENU_GROUPS, visibleGroups } from '@/app/core/routing/panel-navigation';
 
 /** Alt yollarda da (`/panel/pets/:id`) vurgulanır. */
@@ -27,7 +29,12 @@ interface MenuSection {
     template: `
         <ul class="layout-menu">
             @for (section of scrollingSections(); track $index) {
-                @if (section.label) {
+                @if (section.label && rail()) {
+                    <li class="layout-menu-divider" role="separator"></li>
+                    @for (item of section.items; track item.label) {
+                        <li app-menuitem [item]="item" [root]="false"></li>
+                    }
+                } @else if (section.label) {
                     <li class="layout-menu-group">
                         <button
                             type="button"
@@ -68,6 +75,10 @@ interface MenuSection {
 export class AppMenu {
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
+    private readonly badges = inject(MenuBadgeService);
+
+    /** Simge şeridinde tüm öğeler görünür; grup başlıkları ince ayırıcıya dönüşür. */
+    protected readonly rail = inject(LayoutService).isMenuRail;
 
     private readonly preferences = signal(readMenuGroupPreferences());
 
@@ -81,6 +92,7 @@ export class AppMenu {
                 label: entry.label,
                 icon: entry.icon,
                 routerLink: [entry.route],
+                badge: (entry.badge && menuBadgeLabel(this.badges.count(entry.badge))) || undefined,
                 ...(entry.exact ? {} : { routerLinkActiveOptions: SUBSET_ACTIVE_OPTIONS })
             }))
         }));
@@ -90,6 +102,7 @@ export class AppMenu {
     protected readonly pinnedSections = computed(() => this.sections().filter((s) => s.pinned));
 
     constructor() {
+        this.badges.connect(inject(DestroyRef));
         this.openGroupOf(this.router.url);
         this.router.events
             .pipe(
