@@ -306,10 +306,6 @@ $menu-fixed-height: calc(6rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-
                     .layout-menuitem-text {
                         opacity: 0;
                     }
-
-                    &.active-route {
-                        background-color: color-mix(in srgb, var(--primary-color) 12%, transparent);
-                    }
                 }
 
                 .layout-menuitem-badge {
