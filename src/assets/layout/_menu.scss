@@ -213,7 +213,7 @@ app-menu {
     text-align: center;
 }
 
-// Masaüstü (static kip): tek kenar çubuğu, sol kenara ve üst çubuğun altına dayalı. Simge sütunu sabit genişliktedir;
+// Masaüstü (static kip): tek kenar çubuğu, yüzen kart görünümünde (üstte/altta boşluk) ama sol kenara dayalı. Simge sütunu sabit genişliktedir;
 // açıkken etiketler simgenin sağına doğru açılır, kapalıyken kenar çubuğu yalnız simge sütununa daralır (simge x konumu ve boyutu değişmez).
 // Satır yüksekliği pencereye göre ayarlanır; tüm öğeler kaydırmasız sığar (çok kısa pencerede alt sınırda kalıp kaydırılır).
 $menu-icon-column: 64px;
@@ -221,25 +221,24 @@ $menu-open-width: 17rem;
 $menu-item-count: 19;
 $menu-group-row: 28px; // grup başlığı (açık) ve ayırıcı satırı (kapalı) aynı yükseklik
 $menu-edge-padding: 8px; // şeridin üstünde ve altında (Ayarlar) boşluk
-$menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-padding}); // üst çubuk, grup satırları, Ayarlar üst çizgisi, kenar boşlukları
+$menu-fixed-height: calc(6rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-padding}); // üstte 5 rem, altta 1 rem boşluk, grup satırları, Ayarlar üst çizgisi, kenar boşlukları
 
 @media (min-width: 992px) {
     .layout-wrapper.layout-static {
         .layout-sidebar {
-            top: 4rem;
+            top: 5rem;
             left: 0;
             width: $menu-open-width;
-            height: calc(100vh - 4rem);
+            height: calc(100vh - 6rem);
             padding: $menu-edge-padding 0 0;
-            border-radius: 0;
-            border-right: 1px solid var(--surface-border);
+            border-radius: 0 var(--content-border-radius) var(--content-border-radius) 0;
             overflow-x: hidden;
             scrollbar-width: none;
         }
 
         .layout-menu {
             a {
-                height: clamp(30px, calc((100vh - #{$menu-fixed-height}) / #{$menu-item-count}), 40px);
+                height: clamp(26px, calc((100vh - #{$menu-fixed-height}) / #{$menu-item-count}), 40px);
                 margin-left: 0;
                 padding: 0;
                 border-radius: 0;
