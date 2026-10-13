@@ -199,14 +199,6 @@ app-menu {
     transition: max-height 1s ease-in-out;
 }
 
-// Masaüstünde Klinik, Para ve Stok açıkken menü 730 px yükseklikte kaydırmasız sığsın (QA M-1).
-@media (min-width: 992px) {
-    .layout-menu a {
-        padding-top: 0.35rem;
-        padding-bottom: 0.35rem;
-    }
-}
-
 // Sayaç rozeti: açık menüde öğenin sağında, simge şeridinde simgenin köşesinde.
 .layout-menuitem-badge {
     margin-left: auto;
@@ -221,71 +213,111 @@ app-menu {
     text-align: center;
 }
 
-// Simge şeridi (masaüstünde ☰ ile daraltılmış menü): yalnız simgeler; ad ipucunda ve ekran okuyucuda.
-// Şerit sol kenara ve üst çubuğun altına dayalıdır; her öğe şerit genişliğinde tek tıklanabilir satırdır.
-// Satır yüksekliği pencereye göre ayarlanır: tüm öğeler (en çok $rail-item-count) kaydırmasız sığar; çok kısa pencerede alt sınırda kalıp kaydırılır.
-$rail-item-count: 19;
-$rail-chrome-height: 6rem; // üst çubuk 4 rem + ayırıcı çizgiler ve kenarlık payı
+// Masaüstü (static kip): tek kenar çubuğu, yüzen kart görünümünde (üstte/altta boşluk) ama sol kenara dayalı. Simge sütunu sabit genişliktedir;
+// açıkken etiketler simgenin sağına doğru açılır, kapalıyken kenar çubuğu yalnız simge sütununa daralır (simge x konumu ve boyutu değişmez).
+// Satır yüksekliği pencereye göre ayarlanır; tüm öğeler kaydırmasız sığar (çok kısa pencerede alt sınırda kalıp kaydırılır).
+$menu-icon-column: 64px;
+$menu-open-width: 17rem;
+$menu-item-count: 19;
+$menu-group-row: 28px; // grup başlığı (açık) ve ayırıcı satırı (kapalı) aynı yükseklik
+$menu-edge-padding: 8px; // şeridin üstünde ve altında (Ayarlar) boşluk
+$menu-fixed-height: calc(6rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-padding}); // üstte 5 rem, altta 1 rem boşluk, grup satırları, Ayarlar üst çizgisi, kenar boşlukları
+
 @media (min-width: 992px) {
-    .layout-wrapper.layout-static.layout-static-inactive {
+    .layout-wrapper.layout-static {
         .layout-sidebar {
-            top: 4rem;
+            top: 5rem;
             left: 0;
-            width: 5rem;
-            height: calc(100vh - 4rem);
-            padding: 0;
-            border-radius: 0;
-            border-right: 1px solid var(--surface-border);
+            width: $menu-open-width;
+            height: calc(100vh - 6rem);
+            padding: $menu-edge-padding 0 0;
+            border-radius: 0 var(--content-border-radius) var(--content-border-radius) 0;
             overflow-x: hidden;
             scrollbar-width: none;
         }
 
         .layout-menu {
             a {
-                justify-content: center;
-                min-height: clamp(2.1rem, calc((100vh - #{$rail-chrome-height}) / #{$rail-item-count}), 2.85rem);
+                height: clamp(26px, calc((100vh - #{$menu-fixed-height}) / #{$menu-item-count}), 40px);
+                margin-left: 0;
                 padding: 0;
                 border-radius: 0;
+                white-space: nowrap;
 
                 .layout-menuitem-icon {
+                    flex: 0 0 $menu-icon-column;
+                    width: $menu-icon-column;
                     margin-right: 0;
-                    font-size: 1.55rem;
-                    -webkit-text-stroke: 0.3px currentColor;
+                    font-size: 1.43rem;
+                    text-align: center;
+                    color: var(--text-color-secondary);
+                    -webkit-text-stroke: 0.1px currentColor;
+                }
+
+                &.active-route .layout-menuitem-icon {
+                    color: inherit;
                 }
 
                 .layout-menuitem-text {
-                    position: absolute;
-                    width: 1px;
-                    height: 1px;
                     overflow: hidden;
-                    clip-path: inset(50%);
-                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    transition: opacity var(--layout-section-transition-duration);
                 }
+            }
 
-                &.active-route {
-                    background-color: color-mix(in srgb, var(--primary-color) 12%, transparent);
-                }
+            .layout-menu-group-toggle {
+                height: $menu-group-row;
+                margin: 0;
+                padding: 0 1rem;
+                border-radius: 0;
+                border-top: 1px solid var(--surface-border);
             }
 
             .layout-menuitem-badge {
-                position: absolute;
-                top: 0.3rem;
-                right: 0.9rem;
-                min-width: 1.1rem;
-                padding: 0 0.3rem;
-                font-size: 0.65rem;
+                margin-right: 0.75rem;
             }
 
             .layout-menu-divider {
-                height: 1px;
-                margin: 0.25rem 0.75rem;
-                background-color: var(--surface-border);
+                display: flex;
+                align-items: flex-start;
+                height: $menu-group-row;
+
+                &::before {
+                    content: '';
+                    flex: 1;
+                    height: 1px;
+                    background-color: var(--surface-border);
+                }
             }
         }
 
         .layout-menu.layout-menu-pinned {
             bottom: 0;
-            padding: 0;
+            padding: 0 0 $menu-edge-padding;
+        }
+
+        &.layout-static-inactive {
+            .layout-sidebar {
+                width: $menu-icon-column;
+            }
+
+            .layout-menu {
+                a {
+                    .layout-menuitem-text {
+                        opacity: 0;
+                    }
+                }
+
+                .layout-menuitem-badge {
+                    position: absolute;
+                    top: 0.35rem;
+                    right: 0.5rem;
+                    min-width: 1.1rem;
+                    margin-right: 0;
+                    padding: 0 0.3rem;
+                    font-size: 0.65rem;
+                }
+            }
         }
     }
 }
