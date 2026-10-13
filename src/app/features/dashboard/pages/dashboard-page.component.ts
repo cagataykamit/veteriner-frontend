@@ -31,7 +31,9 @@ import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.ut
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 import type { DashboardActionSeverity } from '@/app/features/dashboard/models/dashboard-operational-alerts.model';
-import { PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PRODUCTS_READ_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
@@ -49,7 +51,8 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppStatusTagComponent,
-        DashboardMiniTrendChartComponent
+        DashboardMiniTrendChartComponent,
+        VisitArrivalDialogComponent
     ],
     template: `
         <app-page-header title="Özet" [description]="pageDescription()" />
@@ -86,6 +89,17 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                             @if (canOpenAppointments()) {
                                 <a routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-sm"></a>
                             }
+                            @if (canCreateVisit) {
+                                <button
+                                    pButton
+                                    type="button"
+                                    label="Randevusuz geliş"
+                                    icon="pi pi-user-plus"
+                                    class="p-button-sm"
+                                    [disabled]="ro.mutationBlocked()"
+                                    (click)="walkInOpen.set(true)"
+                                ></button>
+                            }
                             @if (canOpenClients()) {
                                 <a routerLink="/panel/clients" pButton type="button" label="Müşteriler" icon="pi pi-users" severity="secondary" class="p-button-sm"></a>
                             }
@@ -96,6 +110,9 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                 <a routerLink="/panel/payments" pButton type="button" label="Ödemeler" icon="pi pi-credit-card" severity="secondary" class="p-button-sm"></a>
                             }
                         </div>
+                        @if (canCreateVisit) {
+                            <app-visit-arrival-dialog [(visible)]="walkInOpen" (arrived)="onWalkInArrived()" />
+                        }
                     </div>
                 </div>
                 @if (!loading() && dash(); as d) {
@@ -866,6 +883,7 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
     private readonly dashboardService = inject(DashboardService);
     private readonly productStockService = inject(ProductStockService);
     private readonly auth = inject(AuthService);
+    readonly ro = inject(TenantReadOnlyContextService);
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly belowFoldTriggerEl = viewChild<ElementRef<HTMLElement>>('belowFoldTrigger');
@@ -1003,6 +1021,14 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
             return d.canViewFinance;
         }
         return this.auth.hasOperationClaim('Payments.Read');
+    }
+
+    /** Randevusuz geliş Bugün sayfasıyla aynı kuralla (`Visits.Create`) sunulur; kaydedilen geliş Bugün kuyruğunda görünür. */
+    readonly canCreateVisit = this.auth.hasOperationClaim(VISITS_CREATE_CLAIM);
+    readonly walkInOpen = signal(false);
+
+    onWalkInArrived(): void {
+        void this.router.navigate(['/panel/today']);
     }
 
     canOpenAppointments(): boolean {
