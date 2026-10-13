@@ -2,7 +2,7 @@ import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { CardEntry } from '@/app/core/routing/panel-navigation';
 
-/** Ayarlar ve Tanımlar sayfalarında ortak kart ızgarası. */
+/** Ayarlar, Tanımlar ve Rapor Merkezi sayfalarında ortak kart ızgarası. */
 @Component({
     selector: 'app-navigation-cards',
     standalone: true,

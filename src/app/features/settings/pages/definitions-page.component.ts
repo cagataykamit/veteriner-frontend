@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { DEFINITION_ENTRIES, SETTINGS_ROUTE, visibleEntries } from '@/app/core/routing/panel-navigation';
-import { NavigationCardsComponent } from '@/app/features/settings/components/navigation-cards.component';
+import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navigation-cards.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
 @Component({
