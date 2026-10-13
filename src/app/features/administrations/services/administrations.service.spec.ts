@@ -84,6 +84,7 @@ describe('AdministrationsService', () => {
             quantity: 0.5,
             administeredAtUtc: null,
             notes: null,
+            lateEntryReason: null,
             requestId: 'rid-1'
         });
         req.flush({ created: true, administration: dto, stock: { quantityOnHand: 1, minimumStockLevel: 5, isBelowMinimum: true } }, { status: 201, statusText: 'Created' });
@@ -112,21 +113,48 @@ describe('AdministrationsService', () => {
         http.expectNone('http://api.test/api/v1/administrations');
     });
 
-    it('iptal: gerekçe kırpılarak /void a gider, iptal edilmiş kayıt döner', (done) => {
+    it('iptal: gerekçe kırpılarak /void a gider; varsayılan sonuç StockReturned, iptal edilmiş kayıt döner', (done) => {
         service.voidAdministration('a1', '  Yanlış ürün seçildi ').subscribe((r) => {
             expect(r.isVoided).toBeTrue();
+            expect(r.voidStockOutcome).toBe('StockReturned');
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/administrations/a1/void');
         expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual({ reason: 'Yanlış ürün seçildi' });
-        req.flush({ ...dto, status: 'Voided', voidReason: 'Yanlış ürün seçildi' });
+        expect(req.request.body).toEqual({ reason: 'Yanlış ürün seçildi', stockOutcome: 'StockReturned' });
+        req.flush({ ...dto, status: 'Voided', voidReason: 'Yanlış ürün seçildi', voidStockOutcome: 'StockReturned' });
+    });
+
+    it('iptal: zarar/imha seçimi stockOutcome=WrittenOff olarak gider ve yanıttan okunur', (done) => {
+        service.voidAdministration('a1', 'Şişe kırıldı', 'WrittenOff').subscribe((r) => {
+            expect(r.voidStockOutcome).toBe('WrittenOff');
+            done();
+        });
+        const req = http.expectOne('http://api.test/api/v1/administrations/a1/void');
+        expect(req.request.body).toEqual({ reason: 'Şişe kırıldı', stockOutcome: 'WrittenOff' });
+        req.flush({ ...dto, status: 'Voided', voidReason: 'Şişe kırıldı', voidStockOutcome: 'WrittenOff' });
+    });
+
+    it('ekleme: lateEntryReason gövdeye girer; sonradan ekleme alanları okunur', (done) => {
+        service.createAdministration({ ...request, lateEntryReason: ' Unutulmuş ' }).subscribe((r) => {
+            expect(r.administration.addedAfterFinalization).toBeTrue();
+            expect(r.administration.lateEntryReason).toBe('Unutulmuş');
+            done();
+        });
+        const req = http.expectOne('http://api.test/api/v1/administrations');
+        expect(req.request.body.lateEntryReason).toBe('Unutulmuş');
+        req.flush({
+            created: true,
+            administration: { ...dto, addedAfterFinalization: true, lateEntryReason: 'Unutulmuş' },
+            stock: { quantityOnHand: 1, minimumStockLevel: 0, isBelowMinimum: false }
+        });
     });
 
     it('hata kodları Türkçe mesaja çevrilir', () => {
         const problem = (code: string, status: number) => new HttpErrorResponse({ status, error: { title: 'x', extensions: { code } } });
         expect(messageFromHttpError(problem('Administrations.InsufficientStock', 400), 'f')).toContain('stoğu yetersiz');
         expect(messageFromHttpError(problem('Administrations.AlreadyVoided', 409), 'f')).toContain('zaten iptal');
+        expect(messageFromHttpError(problem('Administrations.LateEntryReasonRequired', 400), 'f')).toContain('gerekçe');
         expect(messageFromHttpError(problem('Examinations.Finalized', 409), 'f')).toContain('kesinleştirilmiş');
         expect(messageFromHttpError(problem('StockMovements.ConcurrencyConflict', 409), 'f')).toContain('Tekrar deneyin');
     });

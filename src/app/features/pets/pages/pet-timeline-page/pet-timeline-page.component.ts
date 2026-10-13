@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Subscription } from 'rxjs';
+import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/features/administrations/utils/administration-labels';
 import type { PetTimelineItemVm, PetTimelineType } from '@/app/features/pets/models/pet-timeline-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import {
@@ -121,6 +122,9 @@ const PAGE_SIZE = 20;
                                 @if (statusLabel(item); as status) {
                                     <span class="text-sm" data-testid="status">· {{ status }}</span>
                                 }
+                                @if (item.addedAfterFinalization) {
+                                    <span class="text-sm font-medium text-amber-700 dark:text-amber-400" data-testid="late-entry">· {{ lateEntryLabel }}</span>
+                                }
                                 @if (item.isVoided) {
                                     <span class="text-sm font-medium text-red-600 dark:text-red-400" data-testid="voided">· {{ voidedLabel }}</span>
                                 }
@@ -132,7 +136,7 @@ const PAGE_SIZE = 20;
                                     {{ item.title }}
                                 }
                                 @if (item.summary) {
-                                    <span class="text-sm font-normal text-red-600 dark:text-red-400"> · {{ item.summary }}</span>
+                                    <span class="text-sm font-normal" [class]="item.type === 'Visit' ? 'text-red-600 dark:text-red-400' : 'text-muted-color'" data-testid="summary"> · {{ item.summary }}</span>
                                 }
                             </div>
                             <div class="flex flex-wrap gap-x-3 text-sm text-muted-color">
@@ -177,6 +181,7 @@ export class PetTimelinePageComponent implements OnInit {
 
     readonly typeOptions = PET_TIMELINE_TYPES;
     readonly voidedLabel = PET_TIMELINE_VOIDED_LABEL;
+    readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
     readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly icon = petTimelineTypeIcon;
     readonly typeLabel = petTimelineTypeLabel;

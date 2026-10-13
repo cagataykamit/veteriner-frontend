@@ -10,14 +10,14 @@ import {
     ADMINISTRATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { AdministrationCreateDialogComponent } from '@/app/features/administrations/components/administration-create-dialog.component';
-import type { AdministrationCreateResultVm, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
+import { AdministrationRowMarksComponent } from '@/app/features/administrations/components/administration-row-marks.component';
+import { AdministrationVoidDialogComponent } from '@/app/features/administrations/components/administration-void-dialog.component';
+import type { AdministrationCreateResultVm, AdministrationStockOutcome, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 /**
@@ -33,11 +33,11 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         ButtonModule,
         TableModule,
         AdministrationCreateDialogComponent,
-        ReasonConfirmDialogComponent,
+        AdministrationRowMarksComponent,
+        AdministrationVoidDialogComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
+        AppErrorStateComponent
     ],
     template: `
         @if (canRead) {
@@ -54,7 +54,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 
                 @if (canCreate && locked()) {
                     <p class="text-sm text-muted-color mt-0 mb-3" role="note" data-testid="administrations-locked">
-                        Muayene kesinleştirildiği için yeni uygulama eklenemez. Mevcut bir uygulama yanlışsa iptal edilebilir.
+                        Muayene kesinleştirildi. Unutulan uygulama gerekçe yazılarak sonradan eklenebilir; yanlış kayıt iptal edilebilir.
                     </p>
                 }
                 @if (notice()) {
@@ -86,12 +86,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                     <td>{{ formatDate(row.administeredAtUtc) }}</td>
                                     <td class="break-words">
                                         {{ row.productName }}
-                                        @if (row.isVoided) {
-                                            <app-status-tag label="İptal" severity="danger" />
-                                            @if (row.voidReason) {
-                                                <div class="text-xs text-muted-color">{{ row.voidReason }}</div>
-                                            }
-                                        }
+                                        <app-administration-row-marks [row]="row" />
                                     </td>
                                     <td class="text-right whitespace-nowrap">{{ row.quantity }} {{ row.unit }}</td>
                                     <td class="break-words">{{ row.notes || '—' }}</td>
@@ -115,18 +110,10 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 [petName]="petName()"
                 [examinationId]="examinationId()"
                 [treatmentId]="treatmentId()"
+                [lateEntry]="locked()"
                 (saved)="onSaved($event)"
             />
-            <app-reason-confirm-dialog
-                [(visible)]="voidVisible"
-                header="Uygulamayı iptal et"
-                [summary]="voidSummary()"
-                description="Uygulama silinmez, iptal edildi olarak işaretlenir ve ürün stoğa geri verilir. Yanlış miktar/ürün için iptal edip yeniden kaydedin."
-                confirmLabel="Uygulamayı iptal et"
-                failureFallback="Uygulama iptal edilemedi."
-                [execute]="voidAdministration"
-                (confirmed)="onVoided()"
-            />
+            <app-administration-void-dialog [(visible)]="voidVisible" [target]="voidTarget()" (voided)="onVoided($event)" />
         }
     `
 })
@@ -135,7 +122,7 @@ export class AdministrationsSectionComponent {
     readonly petName = input<string | null>(null);
     readonly examinationId = input<string | null>(null);
     readonly treatmentId = input<string | null>(null);
-    /** Bağlı muayene kesinleşmişse yeni uygulama eklenemez (iptal edilebilir). */
+    /** Bağlı muayene kesinleşmişse uygulama yalnız gerekçeyle sonradan eklenir (ADR-013). */
     readonly locked = input(false);
 
     private readonly administrationsService = inject(AdministrationsService);
@@ -146,7 +133,7 @@ export class AdministrationsSectionComponent {
     readonly canCreate = this.auth.hasOperationClaim(ADMINISTRATIONS_CREATE_CLAIM);
     readonly canCorrect = this.auth.hasOperationClaim(ADMINISTRATIONS_CORRECT_CLAIM);
 
-    readonly canAdd = computed(() => this.canCreate && !this.locked() && !this.ro.mutationBlocked());
+    readonly canAdd = computed(() => this.canCreate && !this.ro.mutationBlocked());
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -157,12 +144,6 @@ export class AdministrationsSectionComponent {
     readonly voidTarget = signal<AdministrationVm | null>(null);
     createVisible = false;
     voidVisible = false;
-
-    readonly voidSummary = computed(() => {
-        const a = this.voidTarget();
-        return a ? `${a.productName} · ${a.quantity} ${a.unit}` : null;
-    });
-    readonly voidAdministration = (reason: string) => this.administrationsService.voidAdministration(this.voidTarget()!.id, reason);
 
     readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
@@ -204,8 +185,8 @@ export class AdministrationsSectionComponent {
         this.voidVisible = true;
     }
 
-    onVoided(): void {
-        this.notice.set('Uygulama iptal edildi; ürün stoğa geri verildi.');
+    onVoided(outcome: AdministrationStockOutcome): void {
+        this.notice.set(outcome === 'WrittenOff' ? 'Uygulama iptal edildi; zarar/imha olarak yazıldı, stok geri artmadı.' : 'Uygulama iptal edildi; ürün stoğa geri verildi.');
         this.noticeIsWarning.set(false);
         this.reload();
     }
