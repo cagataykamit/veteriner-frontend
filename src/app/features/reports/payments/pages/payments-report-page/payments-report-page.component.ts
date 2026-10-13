@@ -12,6 +12,7 @@ import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-f
 import { ReportListState } from '@/app/features/reports/shared/report-list-state';
 import { reportClinicLabel } from '@/app/features/reports/shared/report-my-clinic.utils';
 import { ReportResultsComponent } from '@/app/features/reports/shared/report-results.component';
+import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -22,6 +23,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent],
     template: `
+        <a [routerLink]="reportsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Raporlar</a>
         <app-page-header
             [title]="copy.paymentsReportTitle"
             [subtitle]="copy.reportsNavGroup"
@@ -148,6 +150,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     `
 })
 export class PaymentsReportPageComponent implements OnInit {
+    readonly reportsRoute = REPORTS_ROUTE;
     readonly copy = PANEL_COPY;
     readonly reportTableRowTrackKey = reportTableRowTrackKey;
     readonly displayClinicLabel = reportClinicLabel;

@@ -11,6 +11,7 @@ import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-f
 import { ReportListState } from '@/app/features/reports/shared/report-list-state';
 import { reportClinicLabel } from '@/app/features/reports/shared/report-my-clinic.utils';
 import { ReportResultsComponent } from '@/app/features/reports/shared/report-results.component';
+import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -22,6 +23,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, AppStatusTagComponent],
     template: `
+        <a [routerLink]="reportsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Raporlar</a>
         <app-page-header
             [title]="copy.appointmentsReportTitle"
             [subtitle]="copy.reportsNavGroup"
@@ -151,6 +153,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     `
 })
 export class AppointmentsReportPageComponent implements OnInit {
+    readonly reportsRoute = REPORTS_ROUTE;
     readonly copy = PANEL_COPY;
     readonly reportTableRowTrackKey = reportTableRowTrackKey;
     readonly displayClinicLabel = reportClinicLabel;
