@@ -14,6 +14,7 @@ import {
     selector: 'app-product-classification-fields',
     standalone: true,
     imports: [ReactiveFormsModule, InputTextModule, SelectModule],
+    host: { class: 'contents' },
     template: `
         <div [formGroup]="form()" class="contents">
             <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
