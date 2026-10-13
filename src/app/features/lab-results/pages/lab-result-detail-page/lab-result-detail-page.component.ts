@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import type { LabResultDetailVm } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
 import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
+import { isLabResultEditable, labResultEditLabel } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -42,38 +43,37 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
             </div>
         } @else if (row()) {
             <app-page-header title="Lab sonucu" [description]="row()!.testName">
-                @if (canUpdateLabResult && row()!.status !== 'Cancelled') {
-                    @if (ro.mutationBlocked()) {
-                        <button
-                            actions
-                            pButton
-                            type="button"
-                            label="Düzenle (salt okunur)"
-                            icon="pi pi-lock"
-                            [disabled]="true"
-                            class="p-button-secondary"
-                        ></button>
-                    } @else {
-                        <a
-                            actions
-                            [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
-                            pButton
-                            type="button"
-                            [label]="row()!.status === 'Requested' ? 'Sonuç gir' : 'Düzenle'"
-                            [icon]="row()!.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"
-                            [class]="row()!.status === 'Requested' ? 'p-button-primary' : 'p-button-secondary'"
-                        ></a>
-                        <button
-                            actions
-                            pButton
-                            type="button"
-                            label="İptal et"
-                            icon="pi pi-ban"
-                            class="p-button-danger p-button-outlined"
-                            (click)="cancelVisible = true"
-                        ></button>
+                <div actions class="flex flex-wrap gap-2">
+                    @if (canUpdateLabResult && isEditable(row()!.status)) {
+                        @if (ro.mutationBlocked()) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Düzenle (salt okunur)"
+                                icon="pi pi-lock"
+                                [disabled]="true"
+                                class="p-button-secondary"
+                            ></button>
+                        } @else {
+                            <a
+                                [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
+                                pButton
+                                type="button"
+                                [label]="editLabel(row()!.status)"
+                                [icon]="row()!.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"
+                                [class]="row()!.status === 'Requested' ? 'p-button-primary' : 'p-button-secondary'"
+                            ></a>
+                            <button
+                                pButton
+                                type="button"
+                                label="İptal et"
+                                icon="pi pi-ban"
+                                class="p-button-danger p-button-outlined"
+                                (click)="cancelVisible = true"
+                            ></button>
+                        }
                     }
-                }
+                </div>
             </app-page-header>
 
             <div class="grid grid-cols-12 gap-8">
@@ -178,6 +178,8 @@ export class LabResultDetailPageComponent implements OnInit {
     cancelVisible = false;
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
 
+    readonly isEditable = isLabResultEditable;
+    readonly editLabel = labResultEditLabel;
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     readonly cancelLabResult = (reason: string) => this.labResultsService.cancelLabResult(this.labResultId, reason, this.row()!.rowVersion);

@@ -13,7 +13,7 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { LabResultListItemVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
-import { LAB_RESULT_STATUS_FILTER_OPTIONS } from '@/app/features/lab-results/utils/lab-result-status.utils';
+import { isLabResultEditable, LAB_RESULT_STATUS_FILTER_OPTIONS, labResultEditLabel } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import { SelectModule } from 'primeng/select';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -24,7 +24,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { LAB_RESULTS_CREATE_CLAIM, LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-lab-results-list-page',
@@ -157,7 +157,12 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                                     </td>
                                     <td>{{ row.testName }}</td>
                                     <td>
-                                        <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        <div class="flex flex-wrap gap-x-3 gap-y-1">
+                                            <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                            @if (canEditRow(row)) {
+                                                <a [routerLink]="['/panel/lab-results', row.id, 'edit']" class="text-primary font-medium no-underline">{{ editLabel(row.status) }}</a>
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -196,7 +201,10 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
                                     </div>
                                 </div>
                                 <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-3 min-w-0 break-words">{{ row.testName }}</div>
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end gap-4 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                    @if (canEditRow(row)) {
+                                        <a [routerLink]="['/panel/lab-results', row.id, 'edit']" class="text-primary font-medium no-underline">{{ editLabel(row.status) }}</a>
+                                    }
                                     <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline">Detay →</a>
                                 </div>
                             </div>
@@ -250,6 +258,12 @@ export class LabResultsListPageComponent implements OnInit {
     readonly statusOptions = LAB_RESULT_STATUS_FILTER_OPTIONS;
     readonly displayedRows = computed(() => this.rawItems());
     readonly canCreateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_CREATE_CLAIM);
+    readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
+    readonly editLabel = labResultEditLabel;
+
+    canEditRow(row: { status: LabResultStatus | null }): boolean {
+        return this.canUpdateLabResult && !this.ro.mutationBlocked() && isLabResultEditable(row.status);
+    }
 
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
