@@ -195,7 +195,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         }
         expect(el.querySelector('a[href*="/panel/lab-results/new"]')).not.toBeNull();
         expect(el.querySelector('a[href*="/panel/hospitalizations/new"]')).not.toBeNull();
-        expect(el.querySelector('[data-testid="finalized-locked-hint"]')?.textContent).toContain('ek not ekleyebilirsiniz');
+        expect(el.querySelector('[data-testid="finalized-locked-hint"]')?.textContent).toContain('uygulama gerekçeyle eklenebilir; ek not ekleyebilirsiniz');
     });
 
     it('Addendum izni olmayan kullanıcı ek notları okur ama "Ek not ekle" görmez', async () => {

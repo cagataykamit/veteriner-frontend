@@ -17,6 +17,7 @@ import type {
 } from '@/app/features/administrations/models/administration-api.model';
 import type {
     AdministrationCreateResultVm,
+    AdministrationStockOutcome,
     AdministrationsListQuery,
     AdministrationsPagedVm,
     AdministrationVm,
@@ -48,10 +49,10 @@ export class AdministrationsService {
             .pipe(map(mapAdministrationCreateResultDtoToVm), toUserError('Uygulama kaydedilemedi.'));
     }
 
-    /** `Administrations.Correct`; stok ters hareketle geri verilir. Güncel (iptal edilmiş) kaydı döner. */
-    voidAdministration(id: string, reason: string): Observable<AdministrationVm> {
+    /** `Administrations.Correct`; `StockReturned` stoğu ters hareketle geri verir, `WrittenOff` (zarar/imha) stoğa dokunmaz. Güncel (iptal edilmiş) kaydı döner. */
+    voidAdministration(id: string, reason: string, stockOutcome: AdministrationStockOutcome = 'StockReturned'): Observable<AdministrationVm> {
         return this.api
-            .post<AdministrationDto>(ApiEndpoints.administrations.void(id), { reason: reason.trim() })
+            .post<AdministrationDto>(ApiEndpoints.administrations.void(id), { reason: reason.trim(), stockOutcome })
             .pipe(map(mapAdministrationDtoToVm), toUserError('Uygulama iptal edilemedi.'));
     }
 }

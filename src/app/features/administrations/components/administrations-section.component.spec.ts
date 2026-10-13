@@ -23,6 +23,9 @@ const row: AdministrationVm = {
     isVoided: false,
     voidedAtUtc: null,
     voidReason: null,
+    voidStockOutcome: null,
+    addedAfterFinalization: false,
+    lateEntryReason: null,
     createdAtUtc: '2026-10-13T08:00:00Z'
 };
 
@@ -97,12 +100,45 @@ describe('AdministrationsSectionComponent', () => {
         expect(text()).toContain('İptal et');
     });
 
-    it('kesinleşmiş muayenede ekleme gizlenir, açıklama görünür, iptal sürer', async () => {
+    it('kesinleşmiş muayenede ekleme görünür (sonradan ekleme), açıklama görünür, iptal sürer', async () => {
         claims.add('Administrations.Create').add('Administrations.Correct');
         await setup({ locked: true });
-        expect(has('administration-add')).toBeFalse();
+        expect(has('administration-add')).toBeTrue();
         expect(has('administrations-locked')).toBeTrue();
+        expect(text()).toContain('gerekçe yazılarak sonradan eklenebilir');
         expect(text()).toContain('İptal et');
+    });
+
+    it('kesinleşmiş muayenede Create izni yoksa ekleme gizli', async () => {
+        await setup({ locked: true });
+        expect(has('administration-add')).toBeFalse();
+    });
+
+    it('sonradan eklenen satırda rozet ve gerekçe görünür; taslak satırda görünmez', async () => {
+        service.getAdministrations.and.returnValue(of(page([{ ...row, addedAfterFinalization: true, lateEntryReason: 'Unutulan serum' }, { ...row, id: 'a2' }])));
+        await setup();
+        expect(fixture.nativeElement.querySelectorAll('[data-testid="late-entry"]').length).toBe(1);
+        expect(text()).toContain('Kesinleştirmeden sonra eklendi');
+        expect(text()).toContain('Unutulan serum');
+    });
+
+    it('iptal edilmiş satırda stok sonucu görünür (iade / zarar)', async () => {
+        service.getAdministrations.and.returnValue(
+            of(page([{ ...row, isVoided: true, voidReason: 'Döküldü', voidStockOutcome: 'WrittenOff' }, { ...row, id: 'a2', isVoided: true, voidReason: 'Yanlış', voidStockOutcome: 'StockReturned' }]))
+        );
+        await setup();
+        expect(text()).toContain('Zarar / imha olarak yazıldı');
+        expect(text()).toContain('Stoğa iade edildi');
+    });
+
+    it('iptal bildirimi seçilen stok sonucuna göre değişir', async () => {
+        await setup();
+        fixture.componentInstance.onVoided('WrittenOff');
+        fixture.detectChanges();
+        expect(text()).toContain('stok geri artmadı');
+        fixture.componentInstance.onVoided('StockReturned');
+        fixture.detectChanges();
+        expect(text()).toContain('stoğa geri verildi');
     });
 
     it('salt okunur kiracıda ekleme ve iptal gizlenir', async () => {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -9,6 +9,8 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ADMINISTRATIONS_CORRECT_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { AdministrationRowMarksComponent } from '@/app/features/administrations/components/administration-row-marks.component';
+import { AdministrationVoidDialogComponent } from '@/app/features/administrations/components/administration-void-dialog.component';
 import type { AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
@@ -18,7 +20,6 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
@@ -34,7 +35,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         CheckboxModule,
         SelectModule,
         FilterFieldComponent,
-        ReasonConfirmDialogComponent,
+        AdministrationRowMarksComponent,
+        AdministrationVoidDialogComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -116,12 +118,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                 <td>{{ formatDate(row.administeredAtUtc) }}</td>
                                 <td class="break-words">
                                     {{ row.productName }}
-                                    @if (row.isVoided) {
-                                        <app-status-tag label="İptal" severity="danger" />
-                                        @if (row.voidReason) {
-                                            <div class="text-xs text-muted-color">{{ row.voidReason }}</div>
-                                        }
-                                    }
+                                    <app-administration-row-marks [row]="row" />
                                 </td>
                                 <td class="text-right whitespace-nowrap">{{ row.quantity }} {{ row.unit }}</td>
                                 <td class="whitespace-nowrap">
@@ -148,16 +145,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
             }
         </div>
 
-        <app-reason-confirm-dialog
-            [(visible)]="voidVisible"
-            header="Uygulamayı iptal et"
-            [summary]="voidSummary()"
-            description="Uygulama silinmez, iptal edildi olarak işaretlenir ve ürün stoğa geri verilir."
-            confirmLabel="Uygulamayı iptal et"
-            failureFallback="Uygulama iptal edilemedi."
-            [execute]="voidAdministration"
-            (confirmed)="reload()"
-        />
+        <app-administration-void-dialog [(visible)]="voidVisible" [target]="voidTarget()" (voided)="reload()" />
     `
 })
 export class AdministrationsListPageComponent implements OnInit {
@@ -183,11 +171,6 @@ export class AdministrationsListPageComponent implements OnInit {
 
     readonly voidTarget = signal<AdministrationVm | null>(null);
     voidVisible = false;
-    readonly voidSummary = computed(() => {
-        const a = this.voidTarget();
-        return a ? `${a.productName} · ${a.quantity} ${a.unit}` : null;
-    });
-    readonly voidAdministration = (reason: string) => this.administrationsService.voidAdministration(this.voidTarget()!.id, reason);
 
     readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 

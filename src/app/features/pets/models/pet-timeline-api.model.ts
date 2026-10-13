@@ -18,6 +18,7 @@ export interface PetTimelineItemDto {
     relatedExaminationId?: string | null;
     relatedVisitId?: string | null;
     relatedAppointmentId?: string | null;
+    addedAfterFinalization?: boolean | null;
     updatedAtUtc?: string | null;
 }
 

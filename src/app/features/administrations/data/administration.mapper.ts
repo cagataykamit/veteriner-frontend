@@ -9,6 +9,7 @@ import type {
     AdministrationCreateResultVm,
     AdministrationsListQuery,
     AdministrationsPagedVm,
+    AdministrationStockOutcome,
     AdministrationVm,
     CreateAdministrationRequest
 } from '@/app/features/administrations/models/administration-vm.model';
@@ -16,6 +17,10 @@ import type {
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
     return t ? t : null;
+}
+
+function mapStockOutcome(v: string | null | undefined): AdministrationStockOutcome | null {
+    return v === 'StockReturned' || v === 'WrittenOff' ? v : null;
 }
 
 export function mapAdministrationDtoToVm(dto: AdministrationDto): AdministrationVm {
@@ -34,6 +39,9 @@ export function mapAdministrationDtoToVm(dto: AdministrationDto): Administration
         isVoided: dto.status === 'Voided',
         voidedAtUtc: trimmedOrNull(dto.voidedAtUtc),
         voidReason: trimmedOrNull(dto.voidReason),
+        voidStockOutcome: mapStockOutcome(dto.voidStockOutcome),
+        addedAfterFinalization: dto.addedAfterFinalization === true,
+        lateEntryReason: trimmedOrNull(dto.lateEntryReason),
         createdAtUtc: dto.createdAtUtc
     };
 }
@@ -85,6 +93,7 @@ export function mapCreateAdministrationToApiBody(clinicId: string, req: CreateAd
         quantity: req.quantity,
         administeredAtUtc: trimmedOrNull(req.administeredAtUtc),
         notes: trimmedOrNull(req.notes),
+        lateEntryReason: trimmedOrNull(req.lateEntryReason),
         requestId: trimmedOrNull(req.requestId)
     };
 }

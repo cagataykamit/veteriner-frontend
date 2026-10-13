@@ -148,7 +148,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                                 ></a>
                             } @else {
                                 <span class="self-center text-sm text-muted-color" data-testid="finalized-locked-hint">
-                                    Kesinleşmiş muayeneye tedavi, reçete veya aşı eklenemez; ek not ekleyebilirsiniz.
+                                    Kesinleşmiş muayeneye tedavi, reçete veya aşı eklenemez; uygulama gerekçeyle eklenebilir; ek not ekleyebilirsiniz.
                                 </span>
                             }
                             <a

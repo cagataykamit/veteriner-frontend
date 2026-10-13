@@ -10,7 +10,7 @@ interface PetTimelineTypeDefinition {
     readonly detailPath: string | null;
 }
 
-/** Sıra, filtre seçeneklerinin sırasıdır. Visit için detay sayfası yoktur (Bugün listesi günlüktür). */
+/** Sıra, filtre seçeneklerinin sırasıdır. Visit için detay sayfası yoktur (Bugün listesi günlüktür); Administration için de yoktur (kayıt muayene/tedavi sayfasındaki bölümde görünür). */
 export const PET_TIMELINE_TYPES: ReadonlyArray<PetTimelineTypeDefinition> = [
     { value: 'Visit', label: 'Geliş', icon: 'pi-sign-in', detailPath: null },
     { value: 'Examination', label: 'Muayene', icon: 'pi-file-edit', detailPath: '/panel/examinations' },
@@ -18,7 +18,8 @@ export const PET_TIMELINE_TYPES: ReadonlyArray<PetTimelineTypeDefinition> = [
     { value: 'Prescription', label: 'Reçete', icon: 'pi-file', detailPath: '/panel/prescriptions' },
     { value: 'LabResult', label: 'Laboratuvar', icon: 'pi-chart-bar', detailPath: '/panel/lab-results' },
     { value: 'Vaccination', label: 'Aşı', icon: 'pi-shield', detailPath: '/panel/vaccinations' },
-    { value: 'Hospitalization', label: 'Yatış', icon: 'pi-building', detailPath: '/panel/hospitalizations' }
+    { value: 'Hospitalization', label: 'Yatış', icon: 'pi-building', detailPath: '/panel/hospitalizations' },
+    { value: 'Administration', label: 'Uygulama', icon: 'pi-box', detailPath: null }
 ];
 
 const BY_TYPE: ReadonlyMap<string, PetTimelineTypeDefinition> = new Map(PET_TIMELINE_TYPES.map((d) => [d.value, d]));
@@ -60,7 +61,8 @@ const CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress', 'Co
 
 /** Bilinmeyen durum ham metin gösterilmez (null) — yanlış etiket yerine etiketsiz bırakılır. */
 export function petTimelineStatusLabel(item: PetTimelineItemVm): string | null {
-    if (!item.status) {
+    // Uygulamanın Active/Voided durumu yatışınkiyle karışmasın; iptal ortak "iptal" etiketiyle gösterilir.
+    if (!item.status || item.type === 'Administration') {
         return null;
     }
     if (item.type === 'Visit' && CARE_STATUSES.has(item.status)) {
