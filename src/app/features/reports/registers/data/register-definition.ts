@@ -5,9 +5,10 @@ export interface RegisterColumn<T> {
     readonly cell: (row: T) => string;
 }
 
-/** Ekran hücresindeki tek satır: `tone` vurguyu belirler; metni boş satır çizilmez. */
+/** Ekran hücresindeki tek satır: düz `text` ya da `items` (parçalar yan yana sarılır, ayırıcı satır başına düşmez); `tone` vurguyu belirler. Boş satır çizilmez. */
 export interface RegisterCellLine {
-    readonly text: string;
+    readonly text?: string;
+    readonly items?: readonly string[];
     readonly tone?: 'strong' | 'muted';
 }
 

@@ -1,6 +1,5 @@
 .register-print-title {
-    margin: 0 0 .25rem;
-    font-size: 1.25rem;
+    display: none;
 }
 
 .register-meta {
@@ -27,6 +26,7 @@
         }
 
         .register-print-title {
+            display: block;
             margin: 0 0 2mm;
             font-size: 12pt;
         }

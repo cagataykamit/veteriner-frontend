@@ -117,9 +117,10 @@ describe('RegisterPageComponent', () => {
         expect(el.querySelector('.register-print-title')).not.toBeNull();
         expect(el.querySelector('.register-meta')!.textContent).toContain('Tarih aralığı');
         expect(el.querySelector('.register-signature-box')!.textContent).toContain('Veteriner Hekim imza/kaşe');
-        expect(el.querySelector('.register-signature-note')!.textContent).toContain('doğrulanmadı');
+        expect(el.querySelector('.register-signature-note')!.textContent).toContain('doğrulanmamıştır');
         expect(el.querySelector('app-report-filter-bar')!.classList).toContain('register-screen-only');
-        expect(el.querySelector('.report-summary')).not.toBeNull();
+        expect(el.querySelector('.report-summary')).toBeNull();
+        expect(el.querySelector('.register-meta')!.textContent).toContain('1 kayıt');
         fixture.destroy();
         expect(document.body.classList).not.toContain('register-page-active');
     });

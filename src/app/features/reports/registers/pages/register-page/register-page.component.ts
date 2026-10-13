@@ -46,11 +46,12 @@ const ymdToDisplay = (ymd: string) => ymd.split('-').reverse().join('.');
                 dateLimit="past"
                 [periodHint]="copy.registerPeriodHint"
                 searchPlaceholder=""
+                [activeBadges]="false"
             >
-                <p-button barActions [label]="copy.registerPrint" icon="pi pi-print" severity="secondary" (onClick)="print()" [disabled]="state.loading() || !state.report()?.items?.length" />
+                <p-button barActions [label]="copy.registerPrint" icon="pi pi-print" severity="secondary" [outlined]="true" (onClick)="print()" [disabled]="state.loading() || !state.report()?.items?.length" />
             </app-report-filter-bar>
 
-            <app-report-results [state]="state" [alwaysPaginate]="true" [emptyMessage]="copy.registerEmptyMessage" [emptyHint]="copy.registerEmptyHint">
+            <app-report-results [state]="state" [alwaysPaginate]="true" [showSummary]="false" [emptyMessage]="copy.registerEmptyMessage" [emptyHint]="copy.registerEmptyHint">
                 <ng-template #rows>
                     <div class="register-print-head">
                         <h2 class="register-print-title">{{ definition.title }}</h2>
@@ -84,12 +85,13 @@ export class RegisterPageComponent implements OnInit, OnDestroy {
 
     readonly rowsOnPage = computed(() => this.state.report()?.items ?? []);
 
-    /** Yazdırma üstbilgisi: tarih aralığı, klinik ve yazdırma zamanı. */
+    /** Tablo üstbilgisi: kayıt sayısı, tarih aralığı, klinik ve yazdırma zamanı. */
     readonly meta = computed(() => {
+        const count = `${this.state.report()?.totalCount ?? 0} ${PANEL_COPY.registerRecordCount}`;
         const clinicId = this.state.activeClinicId();
         const clinic = this.state.clinicOptions().find((o) => o.value === clinicId)?.label ?? PANEL_COPY.reportsClinicPanelDefault;
         const range = `${ymdToDisplay(this.state.activeFromDate())} – ${ymdToDisplay(this.state.activeToDate())}`;
-        return `${PANEL_COPY.registerDateRange}: ${range} · ${PANEL_COPY.reportsFilterClinic}: ${clinic} · ${PANEL_COPY.registerPrintedAt}: ${formatDateTimeDisplay(new Date())}`;
+        return `${count} · ${PANEL_COPY.registerDateRange}: ${range} · ${PANEL_COPY.reportsFilterClinic}: ${clinic} · ${PANEL_COPY.registerPrintedAt}: ${formatDateTimeDisplay(new Date())}`;
     });
 
     ngOnInit(): void {

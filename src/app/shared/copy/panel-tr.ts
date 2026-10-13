@@ -40,8 +40,9 @@ export const PANEL_COPY = {
     reportsLoadErrorFallback: 'Rapor verileri yüklenemedi.',
     /** Kayıt defterleri (muayene, reçete) */
     registerPeriodHint: 'Tarih aralığını seçip Filtrele düğmesine basın. Defterler en çok 366 günlük aralıkla okunur.',
-    registerFormatUnverified: 'Resmî biçime uygunluk doğrulanmadı: sütunlar bir rakip yazılımın ekranından alınmıştır.',
+    registerFormatUnverified: 'Resmî defter biçimine uygunluk doğrulanmamıştır; yasal gereklilikler için mevzuatı kontrol edin.',
     registerPrint: 'Yazdır',
+    registerRecordCount: 'kayıt',
     registerSignature: 'Veteriner Hekim imza/kaşe',
     registerDateRange: 'Tarih aralığı',
     registerPrintedAt: 'Yazdırma',

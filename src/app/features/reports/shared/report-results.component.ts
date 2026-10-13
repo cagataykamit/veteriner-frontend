@@ -24,6 +24,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
                 <app-error-state [detail]="s.error()!" (retry)="s.reload()" />
             </div>
         } @else if (s.report(); as r) {
+            @if (showSummary()) {
             <div class="card mb-4 report-summary">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 sm:col-span-6">
@@ -35,6 +36,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
                     }
                 </div>
             </div>
+            }
 
             @if (r.items.length === 0) {
                 <div class="card">
@@ -68,6 +70,9 @@ export class ReportResultsComponent {
 
     /** Tablo kendi sayfalayıcısını taşımıyorsa (düz tablo) sayfalayıcı her genişlikte görünür. */
     readonly alwaysPaginate = input(false);
+
+    /** Toplam kayıt kartı; sayıyı başka yerde gösteren sade ekranlar kapatır. */
+    readonly showSummary = input(true);
 
     @ContentChild('summary') summaryTpl?: TemplateRef<unknown>;
     @ContentChild('rows') rowsTpl?: TemplateRef<unknown>;

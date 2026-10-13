@@ -29,6 +29,15 @@
         margin-top: 0.15rem;
     }
 
+    .register-item {
+        white-space: nowrap;
+    }
+
+    .register-item:not(:last-child)::after {
+        content: ' ·';
+        white-space: normal;
+    }
+
     .register-line-strong {
         font-weight: 600;
     }

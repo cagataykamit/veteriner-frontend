@@ -51,7 +51,7 @@ describe('kayıt defteri tanımları', () => {
             'Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar',
             'Veteriner Hekim'
         ]);
-        const lines = (header: string, row = exam) => EXAMINATION_REGISTER.screenColumns.find((c) => c.header === header)!.lines(row).filter((l) => l.text).map((l) => l.text);
+        const lines = (header: string, row = exam) => EXAMINATION_REGISTER.screenColumns.find((c) => c.header === header)!.lines(row).map((l) => l.text ?? l.items!.join(' · ')).filter(Boolean);
         expect(lines('Hasta Sahibi')).toEqual(['Ayşe Yılmaz']);
         expect(lines('Hasta Sahibi', { ...exam, ownerPhone: '0555', ownerAddress: 'Kadıköy' })).toEqual(['Ayşe Yılmaz', '0555', 'Kadıköy']);
         expect(lines('Hasta')).toEqual(['Pamuk', 'Kedi']);

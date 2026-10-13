@@ -28,7 +28,15 @@ import type { AnyRegisterDefinition } from '@/app/features/reports/registers/dat
                             @for (col of definition().screenColumns; track $index) {
                                 <td [style.min-width]="col.minWidth">
                                     @for (line of filled(col.lines(row)); track $index) {
-                                        <div [class]="'register-line register-line-' + (line.tone ?? 'plain')">{{ line.text }}</div>
+                                        <div [class]="'register-line register-line-' + (line.tone ?? 'plain')">
+                                            @if (line.items) {
+                                                @for (item of line.items; track $index) {
+                                                    <span class="register-item">{{ item }}</span>
+                                                }
+                                            } @else {
+                                                {{ line.text }}
+                                            }
+                                        </div>
                                     } @empty {
                                         <span class="register-line-muted">—</span>
                                     }
@@ -74,6 +82,6 @@ export class RegisterTableComponent {
     readonly header = computed(() => registerHeaderLayout(this.definition().columns));
 
     filled(lines: readonly RegisterCellLine[]): readonly RegisterCellLine[] {
-        return lines.filter((l) => l.text);
+        return lines.filter((l) => l.text || l.items?.length);
     }
 }

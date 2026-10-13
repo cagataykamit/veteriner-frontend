@@ -48,14 +48,14 @@ export interface ReportExtraFilter {
             <p class="text-sm text-muted-color m-0 mb-4">{{ periodHint() }}</p>
             <div class="flex flex-wrap items-end gap-3">
                 @if (!s.snapshot) {
-                    <app-filter-field [label]="copy.reportsFilterDateFrom" [labelFor]="idPrefix() + 'From'" [active]="s.isFromDateActive()" width="date">
+                    <app-filter-field [label]="copy.reportsFilterDateFrom" [labelFor]="idPrefix() + 'From'" [active]="activeBadges() && s.isFromDateActive()" width="date">
                         <app-date-input [inputId]="idPrefix() + 'From'" type="date" min="1900-01-01" [limit]="dateLimit()" [ngModel]="s.fromDateInput" (ngModelChange)="s.fromDateInput = $event; s.scheduleApply()" />
                     </app-filter-field>
-                    <app-filter-field [label]="copy.reportsFilterDateTo" [labelFor]="idPrefix() + 'To'" [active]="s.isToDateActive()" width="date">
+                    <app-filter-field [label]="copy.reportsFilterDateTo" [labelFor]="idPrefix() + 'To'" [active]="activeBadges() && s.isToDateActive()" width="date">
                         <app-date-input [inputId]="idPrefix() + 'To'" type="date" min="1900-01-01" [limit]="dateLimit()" [ngModel]="s.toDateInput" (ngModelChange)="s.toDateInput = $event; s.scheduleApply()" />
                     </app-filter-field>
                 }
-                <app-filter-field [label]="copy.reportsFilterClinic" [labelId]="idPrefix() + 'ClinicLabel'" [active]="s.isClinicActive()" width="select">
+                <app-filter-field [label]="copy.reportsFilterClinic" [labelId]="idPrefix() + 'ClinicLabel'" [active]="activeBadges() && s.isClinicActive()" width="select">
                     <p-select
                         [ariaLabelledBy]="idPrefix() + 'ClinicLabel'"
                         [inputId]="idPrefix() + 'Clinic'"
@@ -70,7 +70,7 @@ export interface ReportExtraFilter {
                 </app-filter-field>
                 @if (extraFilter(); as extra) {
                     @if (extra.options) {
-                        <app-filter-field [label]="extra.label" [labelId]="idPrefix() + 'ExtraLabel'" [active]="s.isExtraActive()" width="select">
+                        <app-filter-field [label]="extra.label" [labelId]="idPrefix() + 'ExtraLabel'" [active]="activeBadges() && s.isExtraActive()" width="select">
                             <p-select
                                 [ariaLabelledBy]="idPrefix() + 'ExtraLabel'"
                                 [inputId]="idPrefix() + 'Extra'"
@@ -84,7 +84,7 @@ export interface ReportExtraFilter {
                                 [showClear]="true" />
                         </app-filter-field>
                     } @else {
-                        <app-filter-field [label]="extra.label" [labelFor]="idPrefix() + 'Extra'" [active]="s.isExtraActive()" width="select">
+                        <app-filter-field [label]="extra.label" [labelFor]="idPrefix() + 'Extra'" [active]="activeBadges() && s.isExtraActive()" width="select">
                             <p-inputNumber
                                 [inputId]="idPrefix() + 'Extra'"
                                 [ngModel]="s.extraFilter === '' ? null : +s.extraFilter"
@@ -99,15 +99,15 @@ export interface ReportExtraFilter {
                     }
                 }
                 @if (!s.snapshot && !s.dateRangeOnly) {
-                    <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="s.isClientFilterActive()" width="grow">
+                    <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="activeBadges() && s.isClientFilterActive()" width="grow">
                         <app-client-search [inputId]="idPrefix() + 'Client'" [ngModel]="s.clientIdFilter" (ngModelChange)="s.onClientFilterChange($event)" />
                     </app-filter-field>
-                    <app-filter-field [label]="copy.labelPet" [labelId]="idPrefix() + 'PetLabel'" [active]="s.isPetFilterActive()" width="grow">
+                    <app-filter-field [label]="copy.labelPet" [labelId]="idPrefix() + 'PetLabel'" [active]="activeBadges() && s.isPetFilterActive()" width="grow">
                         <app-pet-search [inputId]="idPrefix() + 'Pet'" [requireClient]="false" [clientId]="s.clientIdFilter" [ngModel]="s.petIdFilter" (ngModelChange)="s.petIdFilter = $event; s.scheduleApply()" />
                     </app-filter-field>
                 }
                 @if (!s.dateRangeOnly) {
-                    <app-filter-field [label]="copy.reportsFilterSearch" [labelFor]="idPrefix() + 'Search'" [active]="s.isSearchActive()" width="grow">
+                    <app-filter-field [label]="copy.reportsFilterSearch" [labelFor]="idPrefix() + 'Search'" [active]="activeBadges() && s.isSearchActive()" width="grow">
                         <app-search-input [inputId]="idPrefix() + 'Search'" [placeholder]="searchPlaceholder()" [(value)]="s.searchInput" (search)="s.applyFilters()" />
                     </app-filter-field>
                 }
@@ -120,7 +120,8 @@ export interface ReportExtraFilter {
                         <p-button
                             [label]="copy.reportsExportXlsx"
                             icon="pi pi-file-excel"
-                            severity="success"
+                            severity="secondary"
+                            [outlined]="true"
                             (onClick)="s.exportXlsx()"
                             [loading]="s.isExporting('xlsx')"
                             [disabled]="s.loading() || s.exporting()"
@@ -128,7 +129,8 @@ export interface ReportExtraFilter {
                         <p-button
                             [label]="copy.reportsExportCsv"
                             icon="pi pi-download"
-                            severity="help"
+                            severity="secondary"
+                            [outlined]="true"
                             (onClick)="s.exportCsv()"
                             [loading]="s.isExporting('csv')"
                             [disabled]="s.loading() || s.exporting()"
@@ -150,4 +152,6 @@ export class ReportFilterBarComponent {
     /** Tarih seçicinin üst sınırı: geçmiş kayıtlar (`past`) veya planlanan kayıtlar (`planned`). */
     readonly dateLimit = input.required<DateInputLimit>();
     readonly extraFilter = input<ReportExtraFilter | null>(null);
+    /** Etkin süzgeçlerde "Aktif" rozeti gösterilsin mi (sade ekranlarda kapatılır). */
+    readonly activeBadges = input(true);
 }

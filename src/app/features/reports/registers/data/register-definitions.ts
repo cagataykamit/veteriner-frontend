@@ -29,8 +29,8 @@ const strong = (text: string): RegisterCellLine => ({ text, tone: 'strong' });
 const muted = (text: string): RegisterCellLine => ({ text, tone: 'muted' });
 const plain = (text: string | null | undefined): RegisterCellLine => ({ text: text ?? '' });
 
-/** Dolu parçaları ayırıcıyla birleştirir; boş alan hiç görünmez. */
-const joinFilled = (parts: readonly (string | null | undefined | false)[], separator = ' · ') => parts.filter(Boolean).join(separator);
+/** Dolu parçalar yan yana; boş alan hiç görünmez. */
+const items = (parts: readonly (string | null | undefined | false)[], tone?: RegisterCellLine['tone']): RegisterCellLine => ({ items: parts.filter(Boolean) as string[], tone });
 
 const PATIENT = 'Hasta';
 
@@ -72,14 +72,15 @@ export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto>
             minWidth: '13rem',
             lines: (r) => [
                 strong(r.petName),
-                plain(joinFilled([r.species, r.breed, r.gender, r.age])),
-                muted(
-                    joinFilled([
-                        r.cardNumber && `Kart: ${r.cardNumber}`,
-                        r.microchipNumber && `Çip: ${r.microchipNumber}`,
-                        r.protocolNumber && `Protokol: ${r.protocolNumber}`,
-                        r.ePrescriptionId && `e-Reçete: ${r.ePrescriptionId}`
-                    ])
+                items([r.species, r.breed, r.gender, r.age]),
+                items(
+                    [
+                            r.cardNumber && `Kart: ${r.cardNumber}`,
+                            r.microchipNumber && `Çip: ${r.microchipNumber}`,
+                            r.protocolNumber && `Protokol: ${r.protocolNumber}`,
+                            r.ePrescriptionId && `e-Reçete: ${r.ePrescriptionId}`
+                    ],
+                    'muted'
                 )
             ]
         },
@@ -124,14 +125,14 @@ export const PRESCRIPTION_REGISTER: RegisterDefinition<PrescriptionRegisterRowDt
         {
             header: 'Reçete',
             minWidth: '8rem',
-            lines: (r) => [strong(formatDateDisplay(r.prescribedAtUtc)), muted(joinFilled([r.prescriptionClass && `Sınıf: ${r.prescriptionClass}`, r.volumeSequenceNumber && `Cilt/Sıra: ${r.volumeSequenceNumber}`]))]
+            lines: (r) => [strong(formatDateDisplay(r.prescribedAtUtc)), items([r.prescriptionClass && `Sınıf: ${r.prescriptionClass}`, r.volumeSequenceNumber && `Cilt/Sıra: ${r.volumeSequenceNumber}`], 'muted')]
         },
         { header: 'Veteriner Hekim', minWidth: '12rem', lines: (r) => [strong(r.veterinarianName ?? ''), muted(r.veterinarianAddress ?? '')] },
         { header: 'Hayvan Sahibi', minWidth: '12rem', lines: (r) => [strong(r.ownerName), muted(r.ownerAddress ?? '')] },
         {
             header: 'Hayvan',
             minWidth: '9rem',
-            lines: (r) => [strong(r.species), muted(joinFilled([r.earTagNumber && `Kulak/İşletme No: ${r.earTagNumber}`, `Sayı: ${r.animalCount}`]))]
+            lines: (r) => [strong(r.species), items([r.earTagNumber && `Kulak/İşletme No: ${r.earTagNumber}`, `Sayı: ${r.animalCount}`], 'muted')]
         },
         { header: 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi', minWidth: '18rem', lines: (r) => r.items.map((i) => plain(prescribedItemText(i))) }
     ]
