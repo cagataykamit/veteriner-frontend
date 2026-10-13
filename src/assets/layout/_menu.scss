@@ -5,11 +5,11 @@
     flex-direction: column;
     position: fixed;
     width: 20rem;
-    height: calc(100vh - 8rem);
+    height: calc(100vh - 6rem);
     z-index: 999;
     overflow-y: auto;
     user-select: none;
-    top: 6rem;
+    top: 5rem;
     left: 2rem;
     transition:
         transform var(--layout-section-transition-duration),
@@ -194,4 +194,12 @@ app-menu {
 .layout-submenu-enter-active {
     overflow: hidden;
     transition: max-height 1s ease-in-out;
+}
+
+// Masaüstünde Klinik, Para ve Stok açıkken menü 730 px yükseklikte kaydırmasız sığsın (QA M-1).
+@media (min-width: 992px) {
+    .layout-menu a {
+        padding-top: 0.35rem;
+        padding-bottom: 0.35rem;
+    }
 }
