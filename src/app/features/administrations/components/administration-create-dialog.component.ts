@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { startWith } from 'rxjs';
+import { merge, startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
@@ -82,7 +82,7 @@ const NOTES_MAX_LENGTH = 2000;
                             Miktar *@if (unit()) { <span> ({{ unit() }})</span> }
                         </label>
                         <input id="ad-quantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
-                        @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
+                        @if (form.controls.quantity.invalid && form.controls.quantity.dirty) {
                             <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
                         } @else if (unit()) {
                             <small class="text-muted-color">Miktar ürünün stok birimindedir: {{ unit() }}. Örnek: birim "şişe" ise 0,5 yarım şişedir.</small>
@@ -172,6 +172,10 @@ export class AdministrationCreateDialogComponent {
     });
 
     constructor() {
+        // Sunucudan dönen hata (ör. yetersiz stok) ürün veya miktar değişince eskimiş olur.
+        merge(this.form.controls.productId.valueChanges, this.form.controls.quantity.valueChanges)
+            .pipe(takeUntilDestroyed())
+            .subscribe(() => this.submitError.set(null));
         effect(() => {
             if (this.visible()) {
                 untracked(() => {

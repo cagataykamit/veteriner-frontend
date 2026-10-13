@@ -90,6 +90,26 @@ describe('AdministrationCreateDialogComponent', () => {
         expect(saved.length).toBe(1);
     });
 
+    it('sunucu hatası (ör. yetersiz stok) miktar veya ürün değişince temizlenir', () => {
+        service.createAdministration.and.returnValue(throwError(() => new Error('Yetersiz stok.')));
+        cmp.form.patchValue({ productId: 'pr1', quantity: 10 });
+        cmp.onSubmit();
+        expect(cmp.submitError()).toBe('Yetersiz stok.');
+        cmp.form.controls.quantity.setValue(2);
+        expect(cmp.submitError()).toBeNull();
+    });
+
+    it('ürün seçilince Miktar hatası kullanıcı yazmadan görünmez', () => {
+        cmp.form.controls.productId.setValue('pr1');
+        cmp.form.controls.quantity.markAsTouched();
+        fixture.detectChanges();
+        expect(document.body.textContent).not.toContain('0\'dan büyük');
+        cmp.form.controls.quantity.setValue(0);
+        cmp.form.controls.quantity.markAsDirty();
+        fixture.detectChanges();
+        expect(document.body.textContent).toContain('0\'dan büyük');
+    });
+
     it('hata sonrası yeniden denemede aynı requestId kullanılır; başarıdan sonra yenilenir', () => {
         service.createAdministration.and.returnValue(throwError(() => new Error('Stok aynı anda başka bir işlemle değişti.')));
         cmp.form.patchValue({ productId: 'pr1', quantity: 1 });
