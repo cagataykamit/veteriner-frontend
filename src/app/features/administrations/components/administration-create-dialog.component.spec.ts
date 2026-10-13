@@ -24,6 +24,9 @@ const result = (created: boolean): AdministrationCreateResultVm => ({
         isVoided: false,
         voidedAtUtc: null,
         voidReason: null,
+        voidStockOutcome: null,
+        addedAfterFinalization: false,
+        lateEntryReason: null,
         createdAtUtc: '2026-10-13T08:00:00Z'
     },
     stock: { quantityOnHand: 4.5, minimumStockLevel: 2, isBelowMinimum: false }
@@ -103,6 +106,32 @@ describe('AdministrationCreateDialogComponent', () => {
         cmp.form.patchValue({ productId: 'pr1', quantity: 1 });
         cmp.onSubmit();
         expect(service.createAdministration.calls.mostRecent().args[0].requestId).not.toBe(first);
+    });
+
+    it('taslak muayenede gerekçe alanı yok ve lateEntryReason gönderilmez', () => {
+        expect((fixture.nativeElement as HTMLElement).ownerDocument.querySelector('[data-testid="late-entry-reason"]')).toBeNull();
+        cmp.form.patchValue({ productId: 'pr1', quantity: 1, lateEntryReason: 'yok sayılmalı' });
+        cmp.onSubmit();
+        expect(service.createAdministration.calls.mostRecent().args[0].lateEntryReason).toBeNull();
+    });
+
+    it('sonradan eklemede gerekçe 5–500 karakter zorunlu; geçerliyse lateEntryReason ile gider', () => {
+        fixture.componentRef.setInput('lateEntry', true);
+        cmp.visible.set(false);
+        fixture.detectChanges();
+        cmp.visible.set(true);
+        fixture.detectChanges();
+        const doc = (fixture.nativeElement as HTMLElement).ownerDocument;
+        expect(doc.querySelector('[data-testid="late-entry-reason"]')).not.toBeNull();
+        expect(doc.body.textContent).toContain('Kesinleştirmeden sonra eklendi');
+
+        cmp.form.patchValue({ productId: 'pr1', quantity: 1, lateEntryReason: 'abc' });
+        cmp.onSubmit();
+        expect(service.createAdministration).not.toHaveBeenCalled();
+
+        cmp.form.patchValue({ lateEntryReason: '  İlaç yazılmayı unutuldu ' });
+        cmp.onSubmit();
+        expect(service.createAdministration.calls.mostRecent().args[0].lateEntryReason).toBe('  İlaç yazılmayı unutuldu ');
     });
 
     it('çağrı sürerken ikinci gönderim yoksayılır', () => {

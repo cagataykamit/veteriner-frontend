@@ -17,6 +17,7 @@ import type { ProductListItemVm } from '@/app/features/inventory/models/product-
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 
@@ -25,6 +26,7 @@ const NOTES_MAX_LENGTH = 2000;
 /**
  * Hastaya uygulanan ürünün kaydı (`Administrations.Create`): stok aynı işlemde düşer, yetersiz stok kaydı engeller.
  * Miktar ürünün stok birimindedir (birim dönüşümü yok). Yetki denetimi çağıran bileşende yapılır.
+ * `lateEntry` (bağlı muayene kesinleşmiş, ADR-013): gerekçe zorunlu alanı görünür ve `lateEntryReason` olarak gider; taslakta gerekçe sorulmaz.
  */
 @Component({
     selector: 'app-administration-create-dialog',
@@ -32,7 +34,7 @@ const NOTES_MAX_LENGTH = 2000;
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent],
     template: `
         <p-dialog
-            header="Uygulama kaydet"
+            [header]="lateEntry() ? 'Uygulama kaydet (sonradan ekleme)' : 'Uygulama kaydet'"
             [modal]="true"
             [dismissableMask]="!submitting()"
             [closable]="!submitting()"
@@ -45,6 +47,11 @@ const NOTES_MAX_LENGTH = 2000;
             <p class="mt-0 mb-4 text-sm text-muted-color">
                 Klinikte hastaya uygulanan ürün kaydedilir ve stoktan düşülür. Dışarıdan alınacak ilaç için reçete yazın; reçete stok düşmez.
             </p>
+            @if (lateEntry()) {
+                <p class="mt-0 mb-4 text-sm" role="note" data-testid="late-entry-note">
+                    Bu muayene kesinleşmiş. Uygulama, <strong>"Kesinleştirmeden sonra eklendi"</strong> işaretiyle ve gerekçenizle ayrı kayıt olarak eklenir; muayenenin kendisi değişmez.
+                </p>
+            }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
@@ -90,6 +97,15 @@ const NOTES_MAX_LENGTH = 2000;
                             <small class="text-muted-color">Boş bırakılırsa şimdi kaydedilir (en fazla 7 gün geriye).</small>
                         }
                     </div>
+                    @if (lateEntry()) {
+                        <div class="col-span-12">
+                            <label for="ad-late-reason" class="block text-sm font-medium text-muted-color mb-2">Sonradan ekleme gerekçesi *</label>
+                            <textarea id="ad-late-reason" rows="2" class="w-full p-inputtext p-component" formControlName="lateEntryReason" data-testid="late-entry-reason"></textarea>
+                            @if (form.controls.lateEntryReason.invalid && form.controls.lateEntryReason.touched) {
+                                <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                            }
+                        </div>
+                    }
                     <div class="col-span-12">
                         <label for="ad-notes" class="block text-sm font-medium text-muted-color mb-2">Not</label>
                         <textarea id="ad-notes" rows="2" class="w-full p-inputtext p-component" formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
@@ -112,6 +128,8 @@ export class AdministrationCreateDialogComponent {
     readonly petName = input<string | null>(null);
     readonly examinationId = input<string | null>(null);
     readonly treatmentId = input<string | null>(null);
+    /** Bağlı muayene kesinleşmişse sonradan ekleme: gerekçe zorunlu. */
+    readonly lateEntry = input(false);
     readonly saved = output<AdministrationCreateResultVm>();
 
     private readonly fb = inject(FormBuilder);
@@ -121,6 +139,8 @@ export class AdministrationCreateDialogComponent {
     protected readonly quantityMax = CHARGE_QUANTITY_MAX;
     protected readonly quantityDecimals = CHARGE_QUANTITY_MAX_DECIMALS;
     protected readonly notesMaxLength = NOTES_MAX_LENGTH;
+    protected readonly reasonMin = REASON_MIN;
+    protected readonly reasonMax = REASON_MAX;
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -136,7 +156,8 @@ export class AdministrationCreateDialogComponent {
         productId: this.fb.nonNullable.control('', Validators.required),
         quantity: this.fb.control<number | null>(null, [Validators.required, chargeNumberValidator(CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS)]),
         administeredAtLocal: this.fb.nonNullable.control('', dateTimeYearRangeValidator()),
-        notes: this.fb.nonNullable.control('', Validators.maxLength(NOTES_MAX_LENGTH))
+        notes: this.fb.nonNullable.control('', Validators.maxLength(NOTES_MAX_LENGTH)),
+        lateEntryReason: this.fb.nonNullable.control('')
     });
 
     private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(null)), { initialValue: null });
@@ -155,7 +176,9 @@ export class AdministrationCreateDialogComponent {
             if (this.visible()) {
                 untracked(() => {
                     this.submitError.set(null);
-                    this.form.reset({ productId: '', quantity: null, administeredAtLocal: '', notes: '' });
+                    this.form.reset({ productId: '', quantity: null, administeredAtLocal: '', notes: '', lateEntryReason: '' });
+                    this.form.controls.lateEntryReason.setValidators(this.lateEntry() ? reasonLength : null);
+                    this.form.controls.lateEntryReason.updateValueAndValidity();
                     this.loadProducts();
                 });
             }
@@ -192,6 +215,7 @@ export class AdministrationCreateDialogComponent {
                 quantity: v.quantity!,
                 administeredAtUtc,
                 notes: v.notes,
+                lateEntryReason: this.lateEntry() ? v.lateEntryReason : null,
                 requestId: this.requestId
             })
             .subscribe({
