@@ -28,6 +28,7 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['reports/appointments', 'Randevu Raporu'],
     ['reports/examinations', 'Muayene Raporu'],
     ['reports/vaccinations', 'Aşı Raporu'],
+    ['reports/outstanding-balances', 'Borç Raporu'],
     ['settings', 'Ayarlar'],
     ['settings/definitions', 'Tanımlar'],
     ['settings/definitions/species', 'Türler'],

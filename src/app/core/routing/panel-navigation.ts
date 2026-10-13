@@ -113,6 +113,13 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 route: `${REPORTS_ROUTE}/payments`,
                 claims: [PAYMENTS_READ_CLAIM],
                 description: 'Tahsilatlar ve ödeme yöntemine göre toplam.'
+            },
+            {
+                label: 'Borç Raporu',
+                icon: 'pi pi-fw pi-wallet',
+                route: `${REPORTS_ROUTE}/outstanding-balances`,
+                claims: [CHARGES_READ_CLAIM],
+                description: 'Müşterilerin şu anki kalan borcu.'
             }
         ]
     }

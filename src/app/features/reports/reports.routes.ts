@@ -3,6 +3,7 @@ import { CanActivateFn, Router, Routes } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     APPOINTMENTS_READ_CLAIM,
+    CHARGES_READ_CLAIM,
     EXAMINATIONS_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM
@@ -56,6 +57,14 @@ export default [
         loadComponent: () =>
             import('@/app/features/reports/vaccinations/pages/vaccinations-report-page/vaccinations-report-page.component').then(
                 (m) => m.VaccinationsReportPageComponent
+            )
+    },
+    {
+        path: 'outstanding-balances',
+        canActivate: [requireAnyClaim([CHARGES_READ_CLAIM])],
+        loadComponent: () =>
+            import('@/app/features/reports/outstanding-balances/pages/outstanding-balances-report-page/outstanding-balances-report-page.component').then(
+                (m) => m.OutstandingBalancesReportPageComponent
             )
     }
 ] as Routes;
