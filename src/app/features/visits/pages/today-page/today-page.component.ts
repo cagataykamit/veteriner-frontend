@@ -338,6 +338,30 @@ type TodayScope = 'mine' | 'all';
                     <span>Aktif yatışlar</span>
                     <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="hospitalizations().length + ' kayıt'">{{ hospitalizations().length }}</span>
                 </div>
+                @if (compact()) {
+                    <div class="flex flex-col gap-3" data-testid="hospitalization-cards">
+                        @for (h of hospitalizations(); track h.hospitalizationId) {
+                            <article class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-3 min-w-0" data-testid="hospitalization-card">
+                                <div class="font-medium break-words min-w-0">{{ h.petName }}</div>
+                                <dl class="m-0 mt-2 grid grid-cols-[6rem_1fr] gap-x-2 gap-y-1 text-sm">
+                                    <dt class="text-muted-color">Sahip</dt>
+                                    <dd class="m-0 min-w-0 break-words">{{ h.clientName }}</dd>
+                                    <dt class="text-muted-color">Giriş</dt>
+                                    <dd class="m-0">{{ admittedAt(h.admittedAtUtc) }}</dd>
+                                    <dt class="text-muted-color">Yatış süresi</dt>
+                                    <dd class="m-0">{{ stay(h.admittedAtUtc) ?? '—' }}</dd>
+                                    <dt class="text-muted-color">Planlı taburcu</dt>
+                                    <dd class="m-0">{{ h.plannedDischargeAtUtc ? date(h.plannedDischargeAtUtc) : '—' }}</dd>
+                                </dl>
+                                @if (canReadHospitalization) {
+                                    <div class="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                                        <a [routerLink]="['/panel/hospitalizations', h.hospitalizationId]" class="p-button p-button-outlined p-button-sm">Yatış detayı</a>
+                                    </div>
+                                }
+                            </article>
+                        }
+                    </div>
+                } @else {
                 <p-table [value]="hospitalizations()" dataKey="hospitalizationId" styleClass="p-datatable-sm">
                     <ng-template #header>
                         <tr>
@@ -366,6 +390,7 @@ type TodayScope = 'mine' | 'all';
                         </tr>
                     </ng-template>
                 </p-table>
+                }
             </section>
         }
 
