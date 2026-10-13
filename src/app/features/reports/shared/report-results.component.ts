@@ -24,7 +24,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
                 <app-error-state [detail]="s.error()!" (retry)="s.reload()" />
             </div>
         } @else if (s.report(); as r) {
-            <div class="card mb-4">
+            <div class="card mb-4 report-summary">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 sm:col-span-6">
                         <span class="block text-muted-color text-sm mb-1">{{ totalLabel() }}</span>
@@ -43,7 +43,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
             } @else {
                 <div class="card">
                     <ng-container [ngTemplateOutlet]="rowsTpl" />
-                    <div class="lg:hidden mt-4">
+                    <div [class]="alwaysPaginate() ? 'register-screen-only mt-4' : 'lg:hidden mt-4'">
                         <p-paginator
                             [rows]="s.pageSize()"
                             [totalRecords]="r.totalCount"
@@ -65,6 +65,9 @@ export class ReportResultsComponent {
     readonly totalLabel = input<string>(PANEL_COPY.reportsTotalRecords);
     readonly emptyMessage = input.required<string>();
     readonly emptyHint = input.required<string>();
+
+    /** Tablo kendi sayfalayıcısını taşımıyorsa (düz tablo) sayfalayıcı her genişlikte görünür. */
+    readonly alwaysPaginate = input(false);
 
     @ContentChild('summary') summaryTpl?: TemplateRef<unknown>;
     @ContentChild('rows') rowsTpl?: TemplateRef<unknown>;

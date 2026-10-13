@@ -57,6 +57,27 @@ describe('ReportListState', () => {
         expect(state.clinicOptions().map((o) => o.value)).toEqual(['', 'c1']);
     });
 
+    it('dateRangeOnly: from/to takvim günü (yyyy-MM-dd) gider; sayfa boyutu seçenekleri yapılandırılır', () => {
+        const state = TestBed.runInInjectionContext(
+            () =>
+                new ReportListState<Query, Result>({
+                    source,
+                    stateKey: KEY,
+                    readClaim: 'Test.Read',
+                    exportFilePrefix: 'defter',
+                    dateRangeOnly: true,
+                    rowsPerPageOptions: [25, 200]
+                })
+        );
+        state.init();
+        const q = source.loadReport.calls.mostRecent().args[0];
+        expect(q.from).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(q.to).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(state.dateRangeOnly).toBeTrue();
+        expect(state.rowsPerPageOptions).toEqual([25, 200]);
+        expect(create().rowsPerPageOptions).toEqual([10, 20, 25, 50]);
+    });
+
     it('rapora özgü süzgeç yalnız yapılandırılmışsa sorguya girer', () => {
         const withExtra = create('status');
         withExtra.init();
