@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { ApiClient } from '@/app/core/api/api.client';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
-import { registerHeaderLayout } from '@/app/features/reports/registers/data/register-definition';
+import { RegisterTableComponent } from '@/app/features/reports/registers/components/register-table.component';
 import { REGISTER_DEFINITIONS } from '@/app/features/reports/registers/data/register-definitions';
 import type { RegisterResultVm } from '@/app/features/reports/registers/models/register.model';
 import { RegisterReportSource } from '@/app/features/reports/registers/services/register-report.source';
@@ -30,7 +30,7 @@ const ymdToDisplay = (ymd: string) => ymd.split('-').reverse().join('.');
 @Component({
     selector: 'app-register-page',
     standalone: true,
-    imports: [RouterLink, ButtonModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent],
+    imports: [RouterLink, ButtonModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, RegisterTableComponent],
     styleUrl: './register-page.component.scss',
     encapsulation: ViewEncapsulation.None,
     template: `
@@ -56,33 +56,7 @@ const ymdToDisplay = (ymd: string) => ymd.split('-').reverse().join('.');
                         <h2 class="register-print-title">{{ definition.title }}</h2>
                         <p class="register-meta text-sm text-muted-color">{{ meta() }}</p>
                     </div>
-                    <div class="register-scroll overflow-x-auto">
-                        <table class="register-table">
-                            <thead>
-                                <tr class="register-head-row">
-                                    @for (cell of header.top; track $index) {
-                                        <th [attr.colspan]="cell.colSpan" [attr.rowspan]="cell.rowSpan" [class.register-sticky]="$first">{{ cell.label }}</th>
-                                    }
-                                </tr>
-                                @if (header.sub.length) {
-                                    <tr class="register-head-row">
-                                        @for (label of header.sub; track $index) {
-                                            <th>{{ label }}</th>
-                                        }
-                                    </tr>
-                                }
-                            </thead>
-                            <tbody>
-                                @for (row of rowsOnPage(); track row.rowNumber) {
-                                    <tr>
-                                        @for (col of definition.columns; track $index) {
-                                            <td [style.min-width]="col.minWidth" [class.register-nowrap]="col.nowrap" [class.register-sticky]="$first">{{ col.cell(row) }}</td>
-                                        }
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                    <app-register-table [definition]="definition" [rows]="rowsOnPage()" />
                     <div class="register-signature">
                         <div class="register-signature-box">{{ copy.registerSignature }}</div>
                         <p class="register-signature-note">{{ copy.registerFormatUnverified }}</p>
@@ -98,7 +72,6 @@ export class RegisterPageComponent implements OnInit, OnDestroy {
     private readonly document = inject(DOCUMENT);
 
     readonly definition = REGISTER_DEFINITIONS[inject(ActivatedRoute).snapshot.data['register'] as string];
-    readonly header = registerHeaderLayout(this.definition.columns);
 
     readonly state = new ReportListState<ReportListQueryBase, RegisterResultVm<RegisterRow>>({
         source: new RegisterReportSource<RegisterRow>(inject(ApiClient), inject(AuthService), this.definition.book),

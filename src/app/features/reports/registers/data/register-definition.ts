@@ -2,11 +2,21 @@
 export interface RegisterColumn<T> {
     readonly group?: string;
     readonly header: string;
-    /** Ekranda sütunun en küçük genişliği (kelime ortasında kırılmasın diye); verilmezse içeriğe göre. */
-    readonly minWidth?: string;
-    /** Kısa alanlar tek satırda kalır. */
-    readonly nowrap?: boolean;
     readonly cell: (row: T) => string;
+}
+
+/** Ekran hücresindeki tek satır: `tone` vurguyu belirler; metni boş satır çizilmez. */
+export interface RegisterCellLine {
+    readonly text: string;
+    readonly tone?: 'strong' | 'muted';
+}
+
+/** Ekran sütunu: birkaç veri sütunu çok satırlı tek hücrede birleşir; çıktı (yazdırma) `columns` ile tam ve ayrı kalır. */
+export interface RegisterScreenColumn<T> {
+    readonly header: string;
+    /** Kelime ortasında kırılmaması için sütunun en küçük genişliği. */
+    readonly minWidth: string;
+    readonly lines: (row: T) => readonly RegisterCellLine[];
 }
 
 /** Bir kayıt defterinin tek tanımı: uç, izin, başlık ve sütunlar. Yeni defter = yeni tanım + rota + Rapor Merkezi kartı. */
@@ -18,7 +28,10 @@ export interface RegisterDefinition<T> {
     readonly readClaim: string;
     readonly exportFilePrefix: string;
     readonly stateKey: string;
+    /** Çıktı sütunları: yazdırma görünümü ve dışa aktarma ile aynı tam, ayrı sütun listesi. */
     readonly columns: readonly RegisterColumn<T>[];
+    /** Ekran sütunları: hangi alanların tek hücrede birleşeceği. */
+    readonly screenColumns: readonly RegisterScreenColumn<T>[];
 }
 
 export interface RegisterHeaderCell {

@@ -31,18 +31,37 @@ describe('kayıt defteri tanımları', () => {
             'Hasta',
             'Hastanın Şikayeti',
             'Teşhis Edilen Hastalık',
-            'Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar',
+            'Tedavi Şekli',
+            'Reçete Bilgileri',
+            'Satışa Eklenen İlaçlar',
             'Veteriner Hekimin Adı Soyadı'
         ]);
         expect(layout.top.find((c) => c.label === 'Hasta')!.colSpan).toBe(9);
         expect(layout.sub).toEqual(['Ad', 'Tür', 'Irk', 'Cinsiyet', 'Yaş', 'Kart No', 'Çip No', 'Protokol No', 'e-Reçete Kimlik']);
     });
 
-    it('birleşik hücre: boş bölümler atlanır', () => {
-        const cell = EXAMINATION_REGISTER.columns[16].cell;
-        expect(cell({ ...exam, treatments: [], administrations: [] })).toBe('Reçete: Reçete 1: Dectomax ×2, Vitamin');
-        expect(cell({ ...exam, prescriptions: [] })).toBe('Serum; Enjeksiyon | Satış: Aşı X 1 doz (sonradan eklendi); Y 2 ml (iptal)');
-        expect(cell({ ...exam, treatments: [], prescriptions: [], administrations: [] })).toBe('');
+    it('muayene ekran sütunları: sahip ve hasta birleşik, tedavi/reçete/satış tek hücrede', () => {
+        expect(EXAMINATION_REGISTER.screenColumns.map((c) => c.header)).toEqual([
+            'Sıra No',
+            'Tarih',
+            'Hasta Sahibi',
+            'Hasta',
+            'Şikâyet',
+            'Teşhis',
+            'Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar',
+            'Veteriner Hekim'
+        ]);
+        const lines = (header: string, row = exam) => EXAMINATION_REGISTER.screenColumns.find((c) => c.header === header)!.lines(row).filter((l) => l.text).map((l) => l.text);
+        expect(lines('Hasta Sahibi')).toEqual(['Ayşe Yılmaz']);
+        expect(lines('Hasta Sahibi', { ...exam, ownerPhone: '0555', ownerAddress: 'Kadıköy' })).toEqual(['Ayşe Yılmaz', '0555', 'Kadıköy']);
+        expect(lines('Hasta')).toEqual(['Pamuk', 'Kedi']);
+        expect(lines('Hasta', { ...exam, breed: 'Van', age: '2', cardNumber: 'K1', protocolNumber: 'P9' })).toEqual(['Pamuk', 'Kedi · Van · 2', 'Kart: K1 · Protokol: P9']);
+        expect(lines('Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar')).toEqual([
+            'Serum; Enjeksiyon',
+            'Reçete: Reçete 1: Dectomax ×2, Vitamin',
+            'Satış: Aşı X 1 doz (sonradan eklendi)',
+            'Satış: Y 2 ml (iptal)'
+        ]);
     });
 
     it('reçete defteri dört gruplu üst başlık ve tek ilaç sütunu taşır', () => {
@@ -77,7 +96,9 @@ describe('kayıt defteri tanımları', () => {
             '',
             'İştahsızlık',
             '',
-            'Serum; Enjeksiyon | Reçete: Reçete 1: Dectomax ×2, Vitamin | Satış: Aşı X 1 doz (sonradan eklendi); Y 2 ml (iptal)',
+            'Serum; Enjeksiyon',
+            'Reçete 1: Dectomax ×2, Vitamin',
+            'Aşı X 1 doz (sonradan eklendi); Y 2 ml (iptal)',
             ''
         ]);
     });

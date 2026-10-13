@@ -7,43 +7,6 @@
     margin: 0 0 .75rem;
 }
 
-.register-table {
-    width: 100%;
-    border-collapse: separate;
-    font-size: 0.85rem;
-
-    th,
-    td {
-        border-bottom: 1px solid var(--surface-border);
-        padding: .6rem .75rem;
-        text-align: left;
-        vertical-align: top;
-    }
-
-    .register-head-row th {
-        background: var(--surface-ground);
-        font-weight: 600;
-        text-align: center;
-        white-space: nowrap;
-    }
-
-    .register-nowrap {
-        white-space: nowrap;
-    }
-
-    .register-sticky {
-        position: sticky;
-        left: 0;
-        z-index: 1;
-        background: var(--surface-card);
-    }
-
-    .register-head-row .register-sticky {
-        z-index: 2;
-        background: linear-gradient(var(--surface-ground), var(--surface-ground)), var(--surface-card);
-    }
-}
-
 .register-signature {
     display: none;
 }
@@ -63,10 +26,6 @@
             background: transparent;
         }
 
-        .register-scroll {
-            overflow: visible;
-        }
-
         .register-print-title {
             margin: 0 0 2mm;
             font-size: 12pt;
@@ -74,35 +33,6 @@
 
         .register-meta {
             font-size: 8pt;
-        }
-
-        .register-table {
-            border-collapse: collapse;
-            font-size: 7pt;
-            color: #000;
-
-            th,
-            td {
-                min-width: 0 !important;
-                padding: 1px 3px;
-                border: 1px solid #000;
-            }
-
-            thead {
-                display: table-header-group;
-            }
-
-            tr {
-                break-inside: avoid;
-            }
-
-            .register-head-row th {
-                white-space: normal;
-                background: #e5e7eb;
-                color: #000;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
         }
 
         .register-signature {
