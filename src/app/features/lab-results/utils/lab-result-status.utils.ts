@@ -35,3 +35,12 @@ export const LAB_RESULT_STATUS_FILTER_OPTIONS: Array<{ label: string; value: Lab
     { label: LABELS.Resulted, value: 'Resulted' },
     { label: LABELS.Cancelled, value: 'Cancelled' }
 ];
+
+/** İptal edilen kayıt düzenlenemez; Requested ve Resulted düzenlenir (ADR-013: kesinleşmiş muayenede de). */
+export function isLabResultEditable(status: LabResultStatus | null): boolean {
+    return status !== 'Cancelled';
+}
+
+export function labResultEditLabel(status: LabResultStatus | null): string {
+    return status === 'Requested' ? 'Sonuç gir' : 'Düzenle';
+}

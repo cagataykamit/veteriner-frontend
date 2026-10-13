@@ -456,6 +456,38 @@ describe('TodayPageComponent', () => {
             expect(hints.length).toBe(1);
         });
     });
+
+    describe('dar ekranda kart düzeni', () => {
+        const narrow = (matches: boolean) =>
+            spyOn(window, 'matchMedia').and.returnValue({ matches, addEventListener: () => undefined, removeEventListener: () => undefined } as unknown as MediaQueryList);
+        const today: TodayVm = {
+            date: 'd',
+            activeHospitalizations: [],
+            items: [item({ key: 'a', clientPhone: '905439580091', outstandingAmount: 600, chargedAmount: 1000, allocatedAmount: 400 }), item({ key: 'b', petName: 'Boncuk' })]
+        };
+
+        it('dar ekranda satır başına bir kart; tablo yok; alanlar ve eylemler kartta', async () => {
+            narrow(true);
+            const f = await create(['Visits.Read', 'Visits.Update', 'Examinations.Create'], today);
+            const root = f.nativeElement as HTMLElement;
+            const cards = Array.from(root.querySelectorAll('[data-testid="today-card"]'));
+            expect(cards.length).toBe(2);
+            expect(root.querySelector('table')).toBeNull();
+            const t = cards[0].textContent ?? '';
+            for (const part of ['Geliş', 'Pamuk', 'Kedi', 'Ali Veli', 'Dr. Ayşe', 'Bekliyor', 'Kısmi ödendi', 'Başlat', 'Muayene aç']) {
+                expect(t).toContain(part);
+            }
+            expect(t).toMatch(/12 dk/);
+        });
+
+        it('geniş ekranda tablo düzeni değişmez', async () => {
+            narrow(false);
+            const f = await create(['Visits.Read'], today);
+            const root = f.nativeElement as HTMLElement;
+            expect(root.querySelector('[data-testid="today-card"]')).toBeNull();
+            expect(root.querySelectorAll('section table tbody tr').length).toBe(2);
+        });
+    });
 });
 
 describe('TodayPageComponent — Benim hastalarım', () => {
