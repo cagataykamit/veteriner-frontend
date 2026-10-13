@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, afterNextRender, inject, Injector, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
 import { catchError, debounceTime, of, Subject, switchMap } from 'rxjs';
@@ -172,6 +172,7 @@ export class AppGlobalSearch {
 
     private readonly search = inject(GlobalSearchService);
     private readonly router = inject(Router);
+    private readonly injector = inject(Injector);
     private readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
 
     protected readonly enabled = this.search.canSearch();
@@ -219,6 +220,8 @@ export class AppGlobalSearch {
 
     protected open(): void {
         this.visible.set(true);
+        // Açılış animasyonu (onShow) bitmeden yazılan ilk karakterler kaybolmasın diye hemen odaklanır.
+        afterNextRender(() => this.focusInput(), { injector: this.injector });
     }
 
     protected close(): void {

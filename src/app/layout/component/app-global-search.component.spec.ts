@@ -74,6 +74,13 @@ describe('AppGlobalSearch', () => {
         expect(dialogOpen()).toBeTrue();
     });
 
+    it('açılır açılmaz giriş alanına odaklanır (animasyon beklenmez)', () => {
+        create();
+        key({ key: 'k', ctrlKey: true });
+        fixture.detectChanges();
+        expect(document.activeElement).toBe(document.querySelector('.p-dialog input'));
+    });
+
     it('en az 2 karakter yazılınca arar ve müşteri/hayvan gruplarını gösterir', async () => {
         create();
         key({ key: '/' });
