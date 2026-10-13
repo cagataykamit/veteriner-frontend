@@ -43,8 +43,13 @@ export interface MenuEntry extends NavigationEntry {
 }
 
 export interface MenuGroup {
-    readonly label: string;
+    /** Yoksa grup başlıksızdır: öğeleri her zaman görünür, açılıp kapanmaz. */
+    readonly label?: string;
     readonly entries: readonly MenuEntry[];
+    /** Kullanıcı tercihi yokken açık başlar; aktif rotanın grubu her zaman açılır. */
+    readonly defaultOpen?: boolean;
+    /** Menünün en altına sabitlenir. */
+    readonly pinned?: boolean;
 }
 
 export interface CardEntry extends NavigationEntry {
@@ -113,7 +118,6 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
 
 export const MENU_GROUPS: readonly MenuGroup[] = [
     {
-        label: 'Panel',
         entries: [
             { label: 'Bugün', icon: 'pi pi-fw pi-calendar-clock', route: '/panel/today', claims: [VISITS_READ_CLAIM] },
             { label: 'Özet', icon: 'pi pi-fw pi-home', route: '/panel/dashboard' }
@@ -121,6 +125,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
     },
     {
         label: 'Klinik',
+        defaultOpen: true,
         entries: [
             // Takvim ayrı öğe olduğu sürece Randevular yalnız liste adresinde vurgulanır.
             { label: 'Randevular', icon: 'pi pi-fw pi-calendar', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM], exact: true },
@@ -137,9 +142,16 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
     },
     {
         label: 'Para',
+        defaultOpen: true,
         entries: [
             { label: 'Ücretler', icon: 'pi pi-fw pi-receipt', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
-            { label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] }
+            { label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
+            {
+                label: 'Raporlar',
+                icon: 'pi pi-fw pi-chart-line',
+                route: REPORTS_ROUTE,
+                claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
+            }
         ]
     },
     {
@@ -151,18 +163,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
         ]
     },
     {
-        label: 'Raporlar',
-        entries: [
-            {
-                label: 'Raporlar',
-                icon: 'pi pi-fw pi-chart-line',
-                route: REPORTS_ROUTE,
-                claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
-            }
-        ]
-    },
-    {
-        label: 'Ayarlar',
+        pinned: true,
         entries: [{ label: 'Ayarlar', icon: 'pi pi-fw pi-cog', route: SETTINGS_ROUTE }]
     }
 ];
@@ -235,6 +236,21 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
         ]
     }
 ];
+
+/** Adresi (sorgu ve parça hariç) kapsayan en uzun menü yolunun grubu; eşleşme yoksa `undefined`. */
+export function groupForUrl(groups: readonly MenuGroup[], url: string): MenuGroup | undefined {
+    const path = url.split(/[?#]/)[0];
+    let best: { group: MenuGroup; length: number } | undefined;
+    for (const group of groups) {
+        for (const { route } of group.entries) {
+            const matches = path === route || path.startsWith(`${route}/`);
+            if (matches && route.length > (best?.length ?? -1)) {
+                best = { group, length: route.length };
+            }
+        }
+    }
+    return best?.group;
+}
 
 type HasClaim = (claim: string) => boolean;
 

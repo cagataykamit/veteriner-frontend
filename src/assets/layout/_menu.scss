@@ -1,6 +1,8 @@
 @use 'mixins' as *;
 
 .layout-sidebar {
+    display: flex;
+    flex-direction: column;
     position: fixed;
     width: 20rem;
     height: calc(100vh - 8rem);
@@ -17,23 +19,50 @@
     padding: 0.5rem 1.5rem;
 }
 
+app-menu {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+}
+
 .layout-menu {
     margin: 0;
     padding: 0;
     list-style-type: none;
     font-family: inherit;
 
-    .layout-root-menuitem {
-        > .layout-menuitem-root-text {
-            font-size: 0.857rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--text-color);
-            margin: 0.75rem 0;
+    .layout-menu-group-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin: 0.25rem 0;
+        padding: 0.5rem 1rem;
+        border: 0 none;
+        border-radius: var(--content-border-radius);
+        background: transparent;
+        font: inherit;
+        font-size: 0.857rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--text-color);
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--surface-hover);
         }
 
-        > a {
-            display: none;
+        &:focus-visible {
+            @include focused-inset();
+        }
+    }
+
+    .layout-menu-group-chevron {
+        font-size: 75%;
+        transition: transform var(--element-transition-duration);
+
+        &.is-open {
+            transform: rotate(-180deg);
         }
     }
 
@@ -67,7 +96,7 @@
             outline: 0 none;
             color: var(--text-color);
             cursor: pointer;
-            padding: 0.75rem 1rem;
+            padding: 0.5rem 1rem;
             border-radius: var(--content-border-radius);
             transition:
                 box-shadow var(--element-transition-duration);
@@ -137,6 +166,16 @@
             }
         }
     }
+}
+
+// Ayarlar gibi sabit öğeler: menü kısa kalınca da en altta, uzayınca kaydırmada görünür kalır.
+.layout-menu.layout-menu-pinned {
+    position: sticky;
+    bottom: -0.5rem;
+    margin-top: auto;
+    padding: 0.25rem 0 0.5rem;
+    border-top: 1px solid var(--surface-border);
+    background-color: var(--surface-overlay);
 }
 
 .layout-submenu-enter-from,
