@@ -87,6 +87,20 @@ export const PANEL_COPY = {
     vaccinationsReportSearchPlaceholder: 'Aşı adı, not; müşteri, hayvan, tür veya ırk metni…',
     vaccinationsReportEmptyMessage: 'Rapor kaydı bulunamadı.',
     vaccinationsReportEmptyHint: 'Seçili filtrelere uygun kayıt yok. Tarih aralığını veya diğer filtreleri değiştirip tekrar deneyin.',
+    outstandingBalancesReportTitle: 'Borç raporu',
+    outstandingBalancesReportDescription: 'Müşterilerin şu anki kalan borcunu, en yüksek tutardan başlayarak inceleyin.',
+    outstandingBalancesReportPeriodHint:
+        'Şu anki kalan tutarı gösterir; geçmiş bir tarihe göre borç gösterilmez. Eski ödemeler ücretlere bağlanmadıkça borçtan düşülmez.',
+    outstandingBalancesReportTotalAmount: 'Toplam borç',
+    outstandingBalancesReportTotalCount: 'Borçlu müşteri',
+    outstandingBalancesReportMinAmount: 'En az tutar (₺)',
+    outstandingBalancesReportColOutstanding: 'Kalan tutar',
+    outstandingBalancesReportColOpenCharges: 'Açık ücret',
+    outstandingBalancesReportColOldest: 'En eski açık ücret',
+    outstandingBalancesReportCharges: 'Ücretler',
+    outstandingBalancesReportSearchPlaceholder: 'Müşteri adı, telefon veya e-posta ile ara…',
+    outstandingBalancesReportEmptyMessage: 'Borçlu müşteri bulunamadı.',
+    outstandingBalancesReportEmptyHint: 'Seçili filtrelere uygun açık bakiye yok. En az tutarı veya aramayı değiştirip tekrar deneyin.',
     /** Kiracı — rol yetki matrisi (salt okunur) */
     tenantRoleMatrixTitle: 'Rol Yetki Özeti',
     tenantRoleMatrixDescription:

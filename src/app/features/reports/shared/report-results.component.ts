@@ -27,7 +27,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
             <div class="card mb-4">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 sm:col-span-6">
-                        <span class="block text-muted-color text-sm mb-1">{{ copy.reportsTotalRecords }}</span>
+                        <span class="block text-muted-color text-sm mb-1">{{ totalLabel() }}</span>
                         <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totalCount }}</div>
                     </div>
                     @if (summaryTpl) {
@@ -62,6 +62,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 export class ReportResultsComponent {
     readonly copy = PANEL_COPY;
     readonly state = input.required<AnyReportListState>();
+    readonly totalLabel = input<string>(PANEL_COPY.reportsTotalRecords);
     readonly emptyMessage = input.required<string>();
     readonly emptyHint = input.required<string>();
 

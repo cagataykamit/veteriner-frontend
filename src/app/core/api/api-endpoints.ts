@@ -152,7 +152,11 @@ export const ApiEndpoints = {
         /** Faz 6C.4 — Vaccinations reporting (`from`, `to`, `clinicId`, `status`, `search`, `clientId`, `petId`, `page`, `pageSize`). */
         vaccinations: () => `/api/v1/reports/vaccinations`,
         vaccinationsExport: () => `/api/v1/reports/vaccinations/export`,
-        vaccinationsExportXlsx: () => `/api/v1/reports/vaccinations/export-xlsx`
+        vaccinationsExportXlsx: () => `/api/v1/reports/vaccinations/export-xlsx`,
+        /** Borç raporu — şu anki kalan (`clinicId`, `minAmount`, `search`, `page`, `pageSize`); izin `Charges.Read`. */
+        outstandingBalances: () => `/api/v1/reports/outstanding-balances`,
+        outstandingBalancesExport: () => `/api/v1/reports/outstanding-balances/export`,
+        outstandingBalancesExportXlsx: () => `/api/v1/reports/outstanding-balances/export-xlsx`
     },
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
