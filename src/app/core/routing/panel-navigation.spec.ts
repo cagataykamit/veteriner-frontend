@@ -111,10 +111,19 @@ describe('panel-navigation', () => {
 
     it('Rapor Merkezi kartları izne göre süzülür ve gruplanır', () => {
         const all = visibleGroups(REPORT_SECTIONS, () => true);
-        expect(all.map((g) => g.label)).toEqual(['Randevu ve ziyaret', 'Klinik', 'Para']);
-        expect(labels(all)).toEqual(['Randevu Raporu', 'Muayene Raporu', 'Aşı Raporu', 'Ödeme Raporu', 'Borç Raporu']);
+        expect(all.map((g) => g.label)).toEqual(['Randevu ve ziyaret', 'Klinik', 'Para', 'Kayıt defterleri']);
+        expect(labels(all)).toEqual([
+            'Randevu Raporu',
+            'Muayene Raporu',
+            'Aşı Raporu',
+            'Ödeme Raporu',
+            'Borç Raporu',
+            'Muayene Kayıt Defteri',
+            'Reçete Kayıt Defteri'
+        ]);
         const some = visibleGroups(REPORT_SECTIONS, (c) => c === 'Payments.Read' || c === 'Examinations.Read');
-        expect(labels(some)).toEqual(['Muayene Raporu', 'Ödeme Raporu']);
+        expect(labels(some)).toEqual(['Muayene Raporu', 'Ödeme Raporu', 'Muayene Kayıt Defteri']);
+        expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Prescriptions.Read'))).toEqual(['Reçete Kayıt Defteri']);
         expect(visibleGroups(REPORT_SECTIONS, () => false)).toEqual([]);
     });
 });

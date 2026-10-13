@@ -54,9 +54,15 @@ export interface ReportListConfig<Q, R> {
     extraFilterKey?: 'method' | 'status' | 'minAmount';
     /** "Şu anki" durum raporu: tarih aralığı, müşteri ve hayvan süzgeci yoktur (borç raporu). */
     snapshot?: boolean;
+    /** Kayıt defterleri: yalnız tarih aralığı + klinik süzgeci; `from`/`to` takvim günü (`yyyy-MM-dd`) olarak gider, arama/müşteri/hayvan yoktur. */
+    dateRangeOnly?: boolean;
+    /** Sayfa boyutu seçenekleri (varsayılan 10-50). */
+    rowsPerPageOptions?: number[];
 }
 
 type ExportKind = 'csv' | 'xlsx';
+
+const DEFAULT_ROWS_PER_PAGE_OPTIONS = [10, 20, 25, 50];
 
 const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
@@ -78,7 +84,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     readonly dateFilterError = signal<string | null>(null);
     readonly report = signal<R | null>(null);
 
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
     readonly pageSize = signal(25);
     readonly first = signal(0);
     readonly currentPage = signal(1);
@@ -110,6 +115,14 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 
     get snapshot(): boolean {
         return !!this.config.snapshot;
+    }
+
+    get dateRangeOnly(): boolean {
+        return !!this.config.dateRangeOnly;
+    }
+
+    get rowsPerPageOptions(): number[] {
+        return this.config.rowsPerPageOptions ?? DEFAULT_ROWS_PER_PAGE_OPTIONS;
     }
 
     exporting(): boolean {
@@ -380,12 +393,13 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         const fromYmd = this.activeFromDate().trim();
         const toYmd = this.activeToDate().trim();
         const extraKey = this.config.extraFilterKey;
+        const dayOnly = this.config.dateRangeOnly;
         return {
             page,
             pageSize,
             search: this.activeSearch() || undefined,
-            from: (fromYmd ? dateOnlyInputToIstanbulStartUtcIso(fromYmd) : '') || undefined,
-            to: (toYmd ? dateOnlyInputToIstanbulEndUtcIso(toYmd) : '') || undefined,
+            from: (dayOnly ? fromYmd : fromYmd ? dateOnlyInputToIstanbulStartUtcIso(fromYmd) : '') || undefined,
+            to: (dayOnly ? toYmd : toYmd ? dateOnlyInputToIstanbulEndUtcIso(toYmd) : '') || undefined,
             ...(extraKey ? { [extraKey]: this.activeExtra() || undefined } : {}),
             clinicId: this.activeClinicId().trim() || undefined,
             clientId: this.activeClientId().trim() || undefined,

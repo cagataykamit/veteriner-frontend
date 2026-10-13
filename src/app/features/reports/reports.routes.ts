@@ -6,6 +6,7 @@ import {
     CHARGES_READ_CLAIM,
     EXAMINATIONS_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
+    PRESCRIPTIONS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { REPORT_SECTIONS } from '@/app/core/routing/panel-navigation';
@@ -58,6 +59,18 @@ export default [
             import('@/app/features/reports/vaccinations/pages/vaccinations-report-page/vaccinations-report-page.component').then(
                 (m) => m.VaccinationsReportPageComponent
             )
+    },
+    {
+        path: 'registers/examinations',
+        canActivate: [requireAnyClaim([EXAMINATIONS_READ_CLAIM])],
+        data: { register: 'examinations' },
+        loadComponent: () => import('@/app/features/reports/registers/pages/register-page/register-page.component').then((m) => m.RegisterPageComponent)
+    },
+    {
+        path: 'registers/prescriptions',
+        canActivate: [requireAnyClaim([PRESCRIPTIONS_READ_CLAIM])],
+        data: { register: 'prescriptions' },
+        loadComponent: () => import('@/app/features/reports/registers/pages/register-page/register-page.component').then((m) => m.RegisterPageComponent)
     },
     {
         path: 'outstanding-balances',
