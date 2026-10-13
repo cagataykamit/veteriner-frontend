@@ -220,7 +220,8 @@ $menu-icon-column: 64px;
 $menu-open-width: 17rem;
 $menu-item-count: 19;
 $menu-group-row: 28px; // grup başlığı (açık) ve ayırıcı satırı (kapalı) aynı yükseklik
-$menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px); // üst çubuk, grup satırları, Ayarlar üst çizgisi
+$menu-edge-padding: 8px; // şeridin üstünde ve altında (Ayarlar) boşluk
+$menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-padding}); // üst çubuk, grup satırları, Ayarlar üst çizgisi, kenar boşlukları
 
 @media (min-width: 992px) {
     .layout-wrapper.layout-static {
@@ -229,7 +230,7 @@ $menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px); // üst çubuk, g
             left: 0;
             width: $menu-open-width;
             height: calc(100vh - 4rem);
-            padding: 0;
+            padding: $menu-edge-padding 0 0;
             border-radius: 0;
             border-right: 1px solid var(--surface-border);
             overflow-x: hidden;
@@ -248,9 +249,14 @@ $menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px); // üst çubuk, g
                     flex: 0 0 $menu-icon-column;
                     width: $menu-icon-column;
                     margin-right: 0;
-                    font-size: 1.55rem;
+                    font-size: 1.43rem;
                     text-align: center;
-                    -webkit-text-stroke: 0.3px currentColor;
+                    color: var(--text-color-secondary);
+                    -webkit-text-stroke: 0.1px currentColor;
+                }
+
+                &.active-route .layout-menuitem-icon {
+                    color: inherit;
                 }
 
                 .layout-menuitem-text {
@@ -265,6 +271,7 @@ $menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px); // üst çubuk, g
                 margin: 0;
                 padding: 0 1rem;
                 border-radius: 0;
+                border-top: 1px solid var(--surface-border);
             }
 
             .layout-menuitem-badge {
@@ -273,14 +280,13 @@ $menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px); // üst çubuk, g
 
             .layout-menu-divider {
                 display: flex;
-                align-items: center;
+                align-items: flex-start;
                 height: $menu-group-row;
 
                 &::before {
                     content: '';
                     flex: 1;
                     height: 1px;
-                    margin: 0 0.75rem;
                     background-color: var(--surface-border);
                 }
             }
@@ -288,7 +294,7 @@ $menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px); // üst çubuk, g
 
         .layout-menu.layout-menu-pinned {
             bottom: 0;
-            padding: 0;
+            padding: 0 0 $menu-edge-padding;
         }
 
         &.layout-static-inactive {
@@ -309,7 +315,7 @@ $menu-fixed-height: calc(4rem + 3 * #{$menu-group-row} + 1px); // üst çubuk, g
 
                 .layout-menuitem-badge {
                     position: absolute;
-                    top: 0.25rem;
+                    top: 0.35rem;
                     right: 0.5rem;
                     min-width: 1.1rem;
                     margin-right: 0;
