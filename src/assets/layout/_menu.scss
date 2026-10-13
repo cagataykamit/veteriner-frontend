@@ -81,8 +81,11 @@ app-menu {
         transition:
             box-shadow var(--element-transition-duration);
 
+        // Simge boyutu açık menüde ve şeritte aynıdır (daralınca zıplama olmaz); ince çizgili simge yazı konturuyla hafif kalınlaştırılır.
         .layout-menuitem-icon {
-            margin-right: 0.5rem;
+            margin-right: 0.75rem;
+            font-size: 1.75rem;
+            -webkit-text-stroke: 0.4px currentColor;
         }
 
         .layout-submenu-toggler {
@@ -100,8 +103,10 @@ app-menu {
             background-color: var(--surface-hover);
         }
 
-        &:focus {
-            @include focused-inset();
+        // Tema odak gölgesi tanımsız olduğundan halka açıkça çizilir; satırın içine oturur, şeritte kırpılmaz.
+        &:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: -2px;
         }
 
         &.active-menuitem {
@@ -200,8 +205,8 @@ app-menu {
 // Masaüstünde Klinik, Para ve Stok açıkken menü 730 px yükseklikte kaydırmasız sığsın (QA M-1).
 @media (min-width: 992px) {
     .layout-menu a {
-        padding-top: 0.35rem;
-        padding-bottom: 0.35rem;
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
     }
 }
 
@@ -220,23 +225,30 @@ app-menu {
 }
 
 // Simge şeridi (masaüstünde ☰ ile daraltılmış menü): yalnız simgeler; ad ipucunda ve ekran okuyucuda.
+// Şerit sol kenara ve üst çubuğun altına dayalıdır; her öğe şerit genişliğinde tek tıklanabilir satırdır (WCAG 2.2 hedef boyutu).
 @media (min-width: 992px) {
     .layout-wrapper.layout-static.layout-static-inactive {
         .layout-sidebar {
-            width: 4.5rem;
-            padding: 0.5rem 0.5rem;
+            top: 4rem;
+            left: 0;
+            width: 5rem;
+            height: calc(100vh - 4rem);
+            padding: 0;
+            border-radius: 0;
+            border-right: 1px solid var(--surface-border);
             overflow-x: hidden;
+            scrollbar-width: none;
         }
 
         .layout-menu {
             a {
                 justify-content: center;
-                padding-left: 0;
-                padding-right: 0;
+                min-height: 3.15rem;
+                padding: 0;
+                border-radius: 0;
 
                 .layout-menuitem-icon {
                     margin-right: 0;
-                    font-size: 1.15rem;
                 }
 
                 .layout-menuitem-text {
@@ -255,8 +267,8 @@ app-menu {
 
             .layout-menuitem-badge {
                 position: absolute;
-                top: 0.1rem;
-                right: 0.15rem;
+                top: 0.3rem;
+                right: 0.9rem;
                 min-width: 1.1rem;
                 padding: 0 0.3rem;
                 font-size: 0.65rem;
@@ -264,9 +276,14 @@ app-menu {
 
             .layout-menu-divider {
                 height: 1px;
-                margin: 0.4rem 0.5rem;
+                margin: 0.25rem 0.75rem;
                 background-color: var(--surface-border);
             }
+        }
+
+        .layout-menu.layout-menu-pinned {
+            bottom: 0;
+            padding: 0;
         }
     }
 }

@@ -45,9 +45,9 @@
             }
 
             &.layout-static-inactive {
-                // Simge şeridi: kenar çubuğu 4.5 rem'e daralır (bkz. _menu.scss), içerik buna göre genişler.
+                // Simge şeridi: kenar çubuğu sol kenara dayalı 5 rem'e daralır (bkz. _menu.scss), içerik buna göre genişler.
                 .layout-main-container {
-                    margin-left: 6.5rem;
+                    margin-left: 5rem;
                 }
             }
         }
