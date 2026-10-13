@@ -86,7 +86,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Reçeteyi Düzenle" subtitle="Klinik" description="Reçete kaydını güncelleyin." />
+            <app-page-header title="Reçeteyi Düzenle" description="Reçete kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

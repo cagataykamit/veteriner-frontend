@@ -62,7 +62,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Randevular" subtitle="Operasyon" description="Randevu listesi ve durum takibi.">
+        <app-page-header title="Randevular" description="Randevu listesi ve durum takibi.">
             @if (canReadAppointments) {
                 <a actions routerLink="/panel/appointments/calendar" pButton type="button" label="Takvim Görünümü" icon="pi pi-calendar" severity="secondary"></a>
             }

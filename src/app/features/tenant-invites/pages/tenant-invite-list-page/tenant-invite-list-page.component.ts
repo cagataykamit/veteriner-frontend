@@ -41,7 +41,7 @@ import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites
         AppStatusTagComponent, SearchInputComponent
     ],
     template: `
-        <app-page-header title="Davetler" subtitle="Hesap" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
+        <app-page-header title="Davetler" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
             @if (canManageTenantAccess()) {
                 <a actions routerLink="/panel/settings/invites" pButton type="button" label="Davet oluştur" icon="pi pi-plus" class="p-button-primary"></a>
             }

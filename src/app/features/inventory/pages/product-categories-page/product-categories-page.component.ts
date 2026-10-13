@@ -77,7 +77,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
     ],
     providers: [ConfirmationService],
     template: `
-        <app-page-header title="Ürün kategorileri" subtitle="Ürün ve Stok" description="Kategori oluşturun veya düzenleyin.">
+        <app-page-header title="Ürün kategorileri" description="Kategori oluşturun veya düzenleyin.">
             @if (canCreateCategories && !ro.mutationBlocked()) {
                 <button
                     actions

@@ -41,7 +41,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     template: `
         <a routerLink="/panel/charges" class="text-primary font-medium no-underline inline-block mb-4">← Ücret listesine dön</a>
 
-        <app-page-header title="Yeni Ücret" subtitle="Finans" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
+        <app-page-header title="Yeni Ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

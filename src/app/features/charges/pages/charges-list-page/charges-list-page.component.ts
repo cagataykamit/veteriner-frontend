@@ -40,7 +40,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Ücretler" subtitle="Finans" description="Müşterilere yazılan ücret satırları.">
+        <app-page-header title="Ücretler" description="Müşterilere yazılan ücret satırları.">
             @if (canCreate && !ro.mutationBlocked()) {
                 <a
                     actions

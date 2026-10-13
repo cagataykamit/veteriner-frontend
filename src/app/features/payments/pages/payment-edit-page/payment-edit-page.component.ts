@@ -66,7 +66,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <app-error-state [detail]="loadError()!" [showRetry]="paymentLoadRetryEnabled()" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Ödemeyi Düzenle" subtitle="Finans" description="Ödeme kaydını güncelleyin." />
+            <app-page-header title="Ödemeyi Düzenle" description="Ödeme kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

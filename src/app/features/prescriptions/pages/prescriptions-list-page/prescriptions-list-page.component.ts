@@ -52,7 +52,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Reçeteler" subtitle="Klinik" description="Reçete kayıtları.">
+        <app-page-header title="Reçeteler" description="Reçete kayıtları.">
             @if (canCreatePrescription && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/prescriptions/new" pButton type="button" label="Yeni Reçete" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreatePrescription && ro.mutationBlocked()) {

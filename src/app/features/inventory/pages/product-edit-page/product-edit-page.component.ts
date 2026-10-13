@@ -45,7 +45,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
     template: `
         <a [routerLink]="productId() ? ['/panel/products', productId()!] : ['/panel/products']" class="text-primary font-medium no-underline inline-block mb-4">← Ürün detayına dön</a>
 
-        <app-page-header title="Ürünü düzenle" subtitle="Ürün ve Stok" description="Ürün kartını güncelleyin." />
+        <app-page-header title="Ürünü düzenle" description="Ürün kartını güncelleyin." />
 
         @if (loading()) {
             <app-loading-state message="Ürün bilgileri yükleniyor…" />

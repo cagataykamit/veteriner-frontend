@@ -53,7 +53,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         } @else {
             <app-page-header
                 [title]="editing() ? 'Irk Düzenle' : 'Yeni Irk'"
-                subtitle="Referans yönetimi"
                 [description]="editing() ? 'Irk kaydını güncelleyin.' : 'Yeni ırk kaydı oluşturun.'"
             />
 

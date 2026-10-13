@@ -57,7 +57,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Muayeneler" subtitle="Klinik" description="Muayene kayıtları ve takip.">
+        <app-page-header title="Muayeneler" description="Muayene kayıtları ve takip.">
             @if (canCreateExamination && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/examinations/new" pButton type="button" label="Yeni Muayene" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateExamination && ro.mutationBlocked()) {

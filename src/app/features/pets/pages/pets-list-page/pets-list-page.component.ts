@@ -54,7 +54,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Hayvanlar" subtitle="Hasta yönetimi" description="Kayıtlı hayvan listesi ve detay.">
+        <app-page-header title="Hayvanlar" description="Kayıtlı hayvan listesi ve detay.">
             @if (canCreatePet && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hayvan" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreatePet && ro.mutationBlocked()) {

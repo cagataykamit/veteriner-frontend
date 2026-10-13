@@ -50,7 +50,7 @@ const PAGE_SIZE = 20;
     template: `
         <a [routerLink]="['/panel/pets', petId()]" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan kartına dön</a>
 
-        <app-page-header title="Zaman çizelgesi" subtitle="Hasta geçmişi" [description]="petName() ?? ''" />
+        <app-page-header title="Zaman çizelgesi" [description]="petName() ?? ''" />
 
         <div class="card mb-4">
             <div class="flex flex-wrap items-center gap-x-6 gap-y-3" role="group" aria-label="Süzgeçler">

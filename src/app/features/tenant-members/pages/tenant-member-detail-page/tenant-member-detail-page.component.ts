@@ -66,7 +66,6 @@ import { catchError, forkJoin, of } from 'rxjs';
         <p-toast position="bottom-right" />
         <app-page-header
             title="Üye detayı"
-            subtitle="Hesap"
             description="Kurum üyeliği bilgileri. Salt okunur kurumda rol değişikliği yapılamaz."
         >
             <a actions routerLink="/panel/settings/members" pButton type="button" label="Listeye dön" icon="pi pi-arrow-left" class="p-button-secondary"></a>

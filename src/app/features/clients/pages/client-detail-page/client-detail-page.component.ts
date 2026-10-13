@@ -50,7 +50,7 @@ import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (client()) {
-            <app-page-header [title]="client()!.fullName" subtitle="Müşteri" [description]="'Kayıt: ' + formatDt(client()!.createdAtUtc)">
+            <app-page-header [title]="client()!.fullName" [description]="'Kayıt: ' + formatDt(client()!.createdAtUtc)">
                 @if (canUpdateClient && !ro.mutationBlocked()) {
                     <a
                         actions

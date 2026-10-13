@@ -57,7 +57,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     template: `
         <a routerLink="/panel/appointments" class="text-primary font-medium no-underline inline-block mb-4">← Randevu listesine dön</a>
 
-        <app-page-header title="Yeni Randevu" subtitle="Operasyon" description="Randevu kaydı oluşturun." />
+        <app-page-header title="Yeni Randevu" description="Randevu kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

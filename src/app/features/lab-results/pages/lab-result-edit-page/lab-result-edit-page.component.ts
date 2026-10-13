@@ -79,7 +79,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         } @else {
             <app-page-header
                 [title]="status() === 'Requested' ? 'Lab sonucu gir' : 'Lab sonucunu düzenle'"
-                subtitle="Klinik"
                 [description]="status() === 'Requested' ? 'Sonuç tarihi ve metnini girince kayıt Sonuçlandı olur.' : 'Kaydı güncelleyin.'"
             />
 

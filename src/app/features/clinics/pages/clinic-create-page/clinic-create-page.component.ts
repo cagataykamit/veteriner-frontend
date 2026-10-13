@@ -48,7 +48,6 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
         <app-page-header
             title="Yeni Klinik"
-            subtitle="Hesap"
             description="Kurumunuza yeni bir klinik kaydı oluşturun. Ad ve şehir zorunludur; iletişim ve profil alanları isteğe bağlıdır."
         />
 

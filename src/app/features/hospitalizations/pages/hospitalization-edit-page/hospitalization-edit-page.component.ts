@@ -87,7 +87,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <a [routerLink]="['/panel/hospitalizations', hospitalizationId]" class="text-primary font-medium no-underline">Detaya git →</a>
             </div>
         } @else {
-            <app-page-header title="Yatışı düzenle" subtitle="Klinik" description="Kaydı güncelleyin." />
+            <app-page-header title="Yatışı düzenle" description="Kaydı güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

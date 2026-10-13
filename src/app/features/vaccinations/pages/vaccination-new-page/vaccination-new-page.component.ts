@@ -60,7 +60,7 @@ import {
     template: `
         <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
 
-        <app-page-header title="Yeni Aşı" subtitle="Klinik" description="Aşı kaydı oluşturun." />
+        <app-page-header title="Yeni Aşı" description="Aşı kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

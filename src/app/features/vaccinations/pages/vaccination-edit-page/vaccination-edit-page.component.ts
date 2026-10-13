@@ -71,7 +71,7 @@ import {
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Aşıyı Düzenle" subtitle="Klinik" description="Aşı kaydını güncelleyin." />
+            <app-page-header title="Aşıyı Düzenle" description="Aşı kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

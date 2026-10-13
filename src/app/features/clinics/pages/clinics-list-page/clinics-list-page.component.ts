@@ -31,7 +31,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     template: `
         <app-page-header
             title="Klinikler"
-            subtitle="Hesap"
             description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları."
         >
             @if (canCreateClinic() && !ro.mutationBlocked()) {

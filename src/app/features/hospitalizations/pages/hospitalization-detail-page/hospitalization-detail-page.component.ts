@@ -59,7 +59,7 @@ import {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (row()) {
-            <app-page-header title="Yatış" subtitle="Klinik" [description]="row()!.reason">
+            <app-page-header title="Yatış" [description]="row()!.reason">
                 @if (
                     row()!.isActive ||
                     (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim())

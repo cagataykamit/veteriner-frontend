@@ -62,7 +62,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
     ],
     providers: [ConfirmationService],
     template: `
-        <app-page-header title="Ürünler" subtitle="Ürün ve Stok" description="Ürün kataloğu.">
+        <app-page-header title="Ürünler" description="Ürün kataloğu.">
             @if (canCreateProduct && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/products/new" pButton type="button" label="Yeni ürün" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateProduct && ro.mutationBlocked()) {

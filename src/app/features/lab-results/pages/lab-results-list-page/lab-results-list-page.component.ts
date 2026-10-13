@@ -43,7 +43,7 @@ import { LAB_RESULTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.const
         AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent
     ],
     template: `
-        <app-page-header title="Lab sonuçları" subtitle="Klinik" description="Laboratuvar sonuç kayıtları.">
+        <app-page-header title="Lab sonuçları" description="Laboratuvar sonuç kayıtları.">
             @if (canCreateLabResult && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/lab-results/new" pButton type="button" label="Yeni kayıt" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateLabResult && ro.mutationBlocked()) {

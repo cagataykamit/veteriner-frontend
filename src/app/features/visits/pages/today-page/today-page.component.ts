@@ -95,7 +95,7 @@ type TodayScope = 'mine' | 'all';
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header title="Bugün" subtitle="Klinik" description="Bugünün randevuları ve gelen hastalar.">
+        <app-page-header title="Bugün" description="Bugünün randevuları ve gelen hastalar.">
             <div actions class="flex flex-wrap gap-2">
                 <p-button
                     type="button"

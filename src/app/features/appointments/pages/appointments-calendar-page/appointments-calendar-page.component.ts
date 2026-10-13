@@ -37,7 +37,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header [title]="pageTitle()" subtitle="Operasyon" [description]="pageDescription()">
+        <app-page-header [title]="pageTitle()" [description]="pageDescription()">
             @if (canCreateAppointment && !ro.mutationBlocked()) {
                 <button actions pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary" (click)="createAppointment()"></button>
             } @else if (canCreateAppointment && ro.mutationBlocked()) {

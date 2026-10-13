@@ -39,7 +39,7 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (row()) {
-            <app-page-header title="Tedavi" subtitle="Klinik" [description]="row()!.title">
+            <app-page-header title="Tedavi" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdateTreatment && !ro.mutationBlocked()) {
                         <a

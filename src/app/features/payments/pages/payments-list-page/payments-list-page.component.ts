@@ -59,7 +59,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         ReasonConfirmDialogComponent
     ],
     template: `
-        <app-page-header title="Ödemeler" subtitle="Finans" description="Ödeme kayıtları.">
+        <app-page-header title="Ödemeler" description="Ödeme kayıtları.">
             @if (canCreatePayment && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/payments/new" pButton type="button" label="Yeni Ödeme" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreatePayment && ro.mutationBlocked()) {

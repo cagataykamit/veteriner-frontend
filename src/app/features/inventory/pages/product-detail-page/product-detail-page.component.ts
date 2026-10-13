@@ -106,7 +106,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (product(); as p) {
-            <app-page-header title="Ürün detayı" subtitle="Ürün ve Stok" [description]="p.name + ' · ' + p.sku">
+            <app-page-header title="Ürün detayı" [description]="p.name + ' · ' + p.sku">
                 <div actions class="flex flex-wrap items-center gap-2 justify-end">
                     @if (canUpdateProduct && !ro.mutationBlocked()) {
                         <a

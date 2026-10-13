@@ -38,7 +38,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     template: `
         <app-page-header
             title="Kullanıcı daveti"
-            subtitle="Hesap"
             description="Kuruma katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez."
         >
             <a actions routerLink="/panel/settings/invites/list" pButton type="button" label="Davet listesi" icon="pi pi-list" class="p-button-secondary"></a>

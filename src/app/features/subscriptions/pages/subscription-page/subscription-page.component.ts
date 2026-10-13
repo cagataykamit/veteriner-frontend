@@ -88,7 +88,7 @@ interface ReturnBannerVm {
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header title="Abonelik" subtitle="Paket & Abonelik" [description]="subscriptionHeaderDescription()" />
+        <app-page-header title="Abonelik" [description]="subscriptionHeaderDescription()" />
 
         @if (summary(); as s) {
             @if (isExpiredReadOnlySubscription(s)) {

@@ -65,7 +65,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <app-error-state [detail]="loadError()!" [showRetry]="petLoadRetryEnabled()" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Hayvanı Düzenle" subtitle="Hasta yönetimi" description="Hayvan kaydını güncelleyin." />
+            <app-page-header title="Hayvanı Düzenle" description="Hayvan kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

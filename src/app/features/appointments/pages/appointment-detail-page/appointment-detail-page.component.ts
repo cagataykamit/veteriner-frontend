@@ -66,7 +66,6 @@ import {
         } @else if (appt()) {
             <app-page-header
                 title="Randevu"
-                subtitle="Operasyon"
                 [description]="
                     formatDateTime(appt()!.scheduledAtUtc) + ' · ' + statusLabel(appt()!.status) + ' · ' + typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)
                 "

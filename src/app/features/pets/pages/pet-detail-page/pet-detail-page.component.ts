@@ -65,7 +65,6 @@ const EM = '—';
         } @else if (pet()) {
             <app-page-header
                 [title]="pet()!.name"
-                subtitle="Hayvan"
                 [description]="'Doğum: ' + formatDateOnly(pet()!.birthDate) + ' · ' + pet()!.speciesName"
             >
                 @if (canUpdatePet && !ro.mutationBlocked()) {

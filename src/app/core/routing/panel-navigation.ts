@@ -45,6 +45,8 @@ export interface MenuEntry extends NavigationEntry {
 export interface MenuGroup {
     /** Yoksa grup başlıksızdır: öğeleri her zaman görünür, açılıp kapanmaz. */
     readonly label?: string;
+    /** Başlıksız grubun sayfa başlığı üstündeki kategori adı; başlıklı grupta `label` kullanılır. */
+    readonly category?: string;
     readonly entries: readonly MenuEntry[];
     /** Kullanıcı tercihi yokken açık başlar; aktif rotanın grubu her zaman açılır. */
     readonly defaultOpen?: boolean;
@@ -118,6 +120,7 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
 
 export const MENU_GROUPS: readonly MenuGroup[] = [
     {
+        category: 'Panel',
         entries: [
             { label: 'Bugün', icon: 'pi pi-fw pi-calendar-clock', route: '/panel/today', claims: [VISITS_READ_CLAIM] },
             { label: 'Özet', icon: 'pi pi-fw pi-home', route: '/panel/dashboard' }
@@ -164,6 +167,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
     },
     {
         pinned: true,
+        category: 'Ayarlar',
         entries: [{ label: 'Ayarlar', icon: 'pi pi-fw pi-cog', route: SETTINGS_ROUTE }]
     }
 ];
@@ -250,6 +254,12 @@ export function groupForUrl(groups: readonly MenuGroup[], url: string): MenuGrou
         }
     }
     return best?.group;
+}
+
+/** Sayfa başlığı üstündeki kategori etiketi: adresi kapsayan menü grubunun adı; menüde olmayan adres için `undefined`. */
+export function categoryForUrl(groups: readonly MenuGroup[], url: string): string | undefined {
+    const group = groupForUrl(groups, url);
+    return group?.label ?? group?.category;
 }
 
 type HasClaim = (claim: string) => boolean;

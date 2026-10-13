@@ -59,7 +59,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Aşılar" subtitle="Klinik" description="Aşı kayıtları ve takip.">
+        <app-page-header title="Aşılar" description="Aşı kayıtları ve takip.">
             @if (canCreateVaccination && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/vaccinations/new" pButton type="button" label="Yeni Aşı" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateVaccination && ro.mutationBlocked()) {

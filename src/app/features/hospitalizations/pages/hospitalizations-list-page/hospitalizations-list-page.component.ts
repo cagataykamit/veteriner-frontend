@@ -56,7 +56,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Yatışlar" subtitle="Klinik" description="Yatış ve gözlem kayıtları.">
+        <app-page-header title="Yatışlar" description="Yatış ve gözlem kayıtları.">
             @if (canCreateHospitalization && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/hospitalizations/new" pButton type="button" label="Yeni yatış" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateHospitalization && ro.mutationBlocked()) {

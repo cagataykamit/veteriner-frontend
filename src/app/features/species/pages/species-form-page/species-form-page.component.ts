@@ -53,7 +53,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         } @else {
             <app-page-header
                 [title]="editing() ? 'Tür Düzenle' : 'Yeni Tür'"
-                subtitle="Referans yönetimi"
                 [description]="editing() ? 'Tür kaydını güncelleyin.' : 'Yeni tür kaydı oluşturun.'"
             />
 

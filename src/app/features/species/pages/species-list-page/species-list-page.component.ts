@@ -31,7 +31,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Türler" subtitle="Referans yönetimi" description="Tür kayıtlarını yönetin.">
+        <app-page-header title="Türler" description="Tür kayıtlarını yönetin.">
             @if (canCreateSpecies() && !ro.mutationBlocked()) {
                 <a actions [routerLink]="[speciesRoute, 'new']" pButton type="button" label="Yeni Tür" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateSpecies() && ro.mutationBlocked()) {

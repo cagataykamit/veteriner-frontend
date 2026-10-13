@@ -72,7 +72,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     template: `
         <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
 
-        <app-page-header title="Yeni yatış" subtitle="Klinik" description="Yatış kaydı oluşturun." />
+        <app-page-header title="Yeni yatış" description="Yatış kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

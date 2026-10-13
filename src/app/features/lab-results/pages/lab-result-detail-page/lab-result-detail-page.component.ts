@@ -41,7 +41,7 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (row()) {
-            <app-page-header title="Lab sonucu" subtitle="Klinik" [description]="row()!.testName">
+            <app-page-header title="Lab sonucu" [description]="row()!.testName">
                 @if (canUpdateLabResult && row()!.status !== 'Cancelled') {
                     @if (ro.mutationBlocked()) {
                         <button

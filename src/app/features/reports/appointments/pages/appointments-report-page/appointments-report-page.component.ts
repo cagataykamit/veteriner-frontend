@@ -26,7 +26,6 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
         <a [routerLink]="reportsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Raporlar</a>
         <app-page-header
             [title]="copy.appointmentsReportTitle"
-            [subtitle]="copy.reportsNavGroup"
             [description]="copy.appointmentsReportDescription"
         />
 

@@ -40,7 +40,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     template: `
         <app-page-header
             title="Kurum üyeleri"
-            subtitle="Hesap"
             description="Bu kuruma bağlı kullanıcıların salt okunur listesi."
         >
             @if (canManageTenantAccess()) {

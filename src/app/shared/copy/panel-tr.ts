@@ -28,7 +28,6 @@ export const PANEL_COPY = {
     noShowAppointmentExamCreateBlocked: 'Gelmedi işaretli randevu için muayene oluşturulamaz. Hasta geldiyse önce geliş kaydı açın veya gelmedi işaretini geri alın.',
     cancelledAppointmentExamCreateHint: 'Bu işlem sadece aktif randevu akışlarında kullanılabilir.',
     /** Raporlar — panel */
-    reportsNavGroup: 'Raporlar',
     reportsFilterDateFrom: 'Başlangıç tarihi',
     reportsFilterDateTo: 'Bitiş tarihi',
     reportsFilterClinic: 'Klinik',
@@ -89,7 +88,6 @@ export const PANEL_COPY = {
     vaccinationsReportEmptyMessage: 'Rapor kaydı bulunamadı.',
     vaccinationsReportEmptyHint: 'Seçili filtrelere uygun kayıt yok. Tarih aralığını veya diğer filtreleri değiştirip tekrar deneyin.',
     /** Kiracı — rol yetki matrisi (salt okunur) */
-    tenantRoleMatrixNavTitle: 'Hesap',
     tenantRoleMatrixTitle: 'Rol Yetki Özeti',
     tenantRoleMatrixDescription:
         'Bu ekran salt okunur bir özet görünümüdür. Sunucuda tanımlı rol-yetki bağlarını gösterir; tenant panelinden düzenleme yapılamaz.',

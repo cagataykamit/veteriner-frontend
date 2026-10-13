@@ -46,7 +46,6 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
         } @else if (vac()) {
             <app-page-header
                 title="Aşı kaydı"
-                subtitle="Klinik"
                 [description]="headerDescription(vac()!)"
             >
                 @if (canUpdateVaccination && !ro.mutationBlocked()) {

@@ -75,7 +75,6 @@ type ProductStockMovementsListState = {
 
         <app-page-header
             title="Ürün stok hareketleri"
-            subtitle="Ürün ve Stok"
             description="Bu ürüne ait stok hareketleri; liste salt okunur. Yetkiniz varsa yeni kayıt ekleyebilirsiniz."
         >
             @if (canCreateStockMovement && !ro.mutationBlocked()) {

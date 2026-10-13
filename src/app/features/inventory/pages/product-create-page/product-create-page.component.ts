@@ -39,7 +39,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     template: `
         <a routerLink="/panel/products" class="text-primary font-medium no-underline inline-block mb-4">← Ürün listesine dön</a>
 
-        <app-page-header title="Yeni ürün" subtitle="Ürün ve Stok" description="Ürün kartı oluşturun." />
+        <app-page-header title="Yeni ürün" description="Ürün kartı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

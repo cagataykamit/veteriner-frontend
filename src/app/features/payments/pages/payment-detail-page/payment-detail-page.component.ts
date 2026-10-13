@@ -50,7 +50,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (payment()) {
-            <app-page-header title="Ödeme" subtitle="Finans" [description]="headerDescription(payment()!)">
+            <app-page-header title="Ödeme" [description]="headerDescription(payment()!)">
                 @if (canUpdatePayment && !ro.mutationBlocked()) {
                     <a
                         actions

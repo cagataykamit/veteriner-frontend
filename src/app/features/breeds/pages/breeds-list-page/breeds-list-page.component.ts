@@ -36,7 +36,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppStatusTagComponent, SearchInputComponent
     ],
     template: `
-        <app-page-header title="Irklar" subtitle="Referans yönetimi" description="Irk kayıtlarını yönetin.">
+        <app-page-header title="Irklar" description="Irk kayıtlarını yönetin.">
             @if (canCreateBreed() && !ro.mutationBlocked()) {
                 <a actions [routerLink]="[breedsRoute, 'new']" pButton type="button" label="Yeni Irk" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateBreed() && ro.mutationBlocked()) {

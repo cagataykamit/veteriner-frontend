@@ -42,7 +42,6 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
 
         <app-page-header
             title="Kurum Bilgileri"
-            subtitle="Hesap"
             description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın."
         />
 

@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { Router } from '@angular/router';
+import { categoryForUrl, MENU_GROUPS } from '@/app/core/routing/panel-navigation';
 
 @Component({
     selector: 'app-page-header',
@@ -7,8 +9,8 @@ import { Component, input } from '@angular/core';
     imports: [CommonModule],
     template: `
         <div class="mb-6">
-            @if (subtitle()) {
-                <span class="block text-muted-color font-medium mb-2">{{ subtitle() }}</span>
+            @if (category()) {
+                <span class="block text-muted-color font-medium mb-2">{{ category() }}</span>
             }
             <div class="flex flex-wrap gap-4 items-center justify-between">
                 <div>
@@ -26,6 +28,11 @@ import { Component, input } from '@angular/core';
 })
 export class AppPageHeaderComponent {
     readonly title = input.required<string>();
+    /** Menüde karşılığı olmayan sayfalar için kategori adı; yoksa menü grubundan türetilir. */
     readonly subtitle = input<string>();
     readonly description = input<string>();
+
+    private readonly router = inject(Router);
+    private readonly menuCategory = categoryForUrl(MENU_GROUPS, this.router.url);
+    protected readonly category = computed(() => this.subtitle() ?? this.menuCategory);
 }

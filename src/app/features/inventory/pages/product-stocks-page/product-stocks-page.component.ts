@@ -77,7 +77,6 @@ const PRODUCT_STOCK_CSV_HEADERS = [
     template: `
         <app-page-header
             title="Stok durumu"
-            subtitle="Ürün ve Stok"
             description="Aktif klinik bağlamındaki ürün stokları."
         />
 

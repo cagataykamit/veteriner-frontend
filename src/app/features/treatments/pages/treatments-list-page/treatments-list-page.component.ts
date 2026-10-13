@@ -40,7 +40,7 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
         AppErrorStateComponent, DateInputComponent, SearchInputComponent
     ],
     template: `
-        <app-page-header title="Tedaviler" subtitle="Klinik" description="Tedavi kayıtları.">
+        <app-page-header title="Tedaviler" description="Tedavi kayıtları.">
             @if (canCreateTreatment && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/treatments/new" pButton type="button" label="Yeni Tedavi" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateTreatment && ro.mutationBlocked()) {

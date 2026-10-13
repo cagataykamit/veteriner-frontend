@@ -103,7 +103,6 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         } @else {
             <app-page-header
                 [title]="isEdit ? 'Muayene' : 'Yeni Muayene'"
-                subtitle="Klinik"
                 [description]="isEdit ? 'Klinik notları ve vital değerleri güncelleyin.' : 'Muayene kaydı oluşturun.'"
             >
                 <div actions class="flex flex-wrap gap-2">

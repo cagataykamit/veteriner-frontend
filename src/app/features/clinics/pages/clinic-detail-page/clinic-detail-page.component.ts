@@ -83,7 +83,6 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         } @else if (detail(); as d) {
             <app-page-header
                 title="Klinik ayarları"
-                subtitle="Hesap"
                 description="Klinik bilgileri, iletişim ve profil alanlarını güncelleyebilir; kliniği pasife alabilir veya yeniden aktifleştirebilirsiniz."
             />
 

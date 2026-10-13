@@ -49,7 +49,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Müşteriler" subtitle="Hasta yönetimi" description="Kayıtlı müşteri listesi ve detay.">
+        <app-page-header title="Müşteriler" description="Kayıtlı müşteri listesi ve detay.">
             @if (canCreateClient && !ro.mutationBlocked()) {
                 <a actions routerLink="/panel/clients/new" pButton type="button" label="Yeni Müşteri" icon="pi pi-plus" class="p-button-primary"></a>
             } @else if (canCreateClient && ro.mutationBlocked()) {

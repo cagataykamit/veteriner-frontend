@@ -80,7 +80,6 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         } @else if (exam()) {
             <app-page-header
                 title="Muayene"
-                subtitle="Klinik"
                 [description]="formatDateTime(exam()!.examinedAtUtc)"
             >
                 <div actions class="flex flex-wrap gap-2">

@@ -37,7 +37,7 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (row()) {
-            <app-page-header title="Reçete" subtitle="Klinik" [description]="row()!.title">
+            <app-page-header title="Reçete" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdatePrescription && !ro.mutationBlocked()) {
                         <a

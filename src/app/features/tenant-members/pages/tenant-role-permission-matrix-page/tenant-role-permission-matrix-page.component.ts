@@ -32,7 +32,6 @@ type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroup
     template: `
         <app-page-header
             [title]="copy.tenantRoleMatrixTitle"
-            [subtitle]="copy.tenantRoleMatrixNavTitle"
             [description]="copy.tenantRoleMatrixDescription"
         >
             <a actions routerLink="/panel/settings/members" pButton type="button" [label]="copy.tenantRoleMatrixBackMembers" icon="pi pi-arrow-left" class="p-button-secondary"></a>

@@ -36,7 +36,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     template: `
         <a routerLink="/panel/clients" class="text-primary font-medium no-underline inline-block mb-4">← Müşteri listesine dön</a>
 
-        <app-page-header title="Yeni Müşteri" subtitle="Hasta yönetimi" description="Müşteri kaydı oluşturun." />
+        <app-page-header title="Yeni Müşteri" description="Müşteri kaydı oluşturun." />
 
         <div class="card">
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
