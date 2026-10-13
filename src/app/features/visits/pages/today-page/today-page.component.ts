@@ -427,7 +427,7 @@ type TodayScope = 'mine' | 'all';
             </section>
         }
 
-        <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" />
+        <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" (onHide)="openPendingPayment()" />
         @if (canCreateVisit) {
             <app-visit-arrival-dialog [(visible)]="arrivalOpen" [appointment]="arrivalAppointment()" (arrived)="onArrived($event)" />
         }
@@ -479,6 +479,8 @@ export class TodayPageComponent implements OnInit {
     readonly restoreItem = signal<TodayItemVm | null>(null);
     private readonly rowMenu = viewChild<Menu>('rowMenu');
     readonly rowMenuItems = signal<MenuItem[]>([]);
+    /** Menü kapanış animasyonu bitmeden sayfa değişirse kaplama gövdede asılı kalır; ödeme sayfasına menü kapandıktan sonra gidilir. */
+    private readonly paymentAfterMenu = signal<TodayItemVm | null>(null);
     readonly noShowOpen = signal(false);
     readonly noShowItem = signal<TodayItemVm | null>(null);
     readonly noShowMode = signal<'mark' | 'revert'>('mark');
@@ -674,7 +676,7 @@ export class TodayPageComponent implements OnInit {
             revertNoShow: () => this.openNoShow(item, 'revert'),
             restore: () => this.openRestore(item),
             correct: () => this.openCorrection(item),
-            collectPayment: () => this.openPayment(item)
+            collectPayment: () => this.paymentAfterMenu.set(item)
         };
         const blocked = this.ro.mutationBlocked() || this.isBusy(item);
         this.rowMenuItems.set(actions.map((a) => ({ label: a.label, icon: a.icon, disabled: blocked, command: handlers[a.key] })));
@@ -748,6 +750,14 @@ export class TodayPageComponent implements OnInit {
     }
 
     /** Müşteri ve (varsa) geliş bağlamı ödeme formuna taşınır; o gelişin açık ücretleri dolu gelir. */
+    openPendingPayment(): void {
+        const item = this.paymentAfterMenu();
+        this.paymentAfterMenu.set(null);
+        if (item) {
+            this.openPayment(item);
+        }
+    }
+
     openPayment(item: TodayItemVm): void {
         void this.router.navigate(['/panel/payments/new'], { queryParams: { clientId: item.clientId, visitId: item.visitId } });
     }

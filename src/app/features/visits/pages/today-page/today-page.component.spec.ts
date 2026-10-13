@@ -270,6 +270,20 @@ describe('TodayPageComponent', () => {
         expect(navigate).toHaveBeenCalledWith(['/panel/payments/new'], { queryParams: { clientId: 'cl7', visitId: 'v9' } });
     });
 
+    it('menüden Ödeme al, menü kapanana (onHide) kadar sayfa değiştirmez', async () => {
+        const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item({ visitId: 'v9', clientId: 'cl7' })] };
+        const f = await create(['Visits.Read', 'Payments.Create'], today);
+        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const c = f.componentInstance;
+        c.openRowMenu(new Event('click'), today.items[0], [{ key: 'collectPayment', label: 'Ödeme al', icon: 'pi pi-wallet' } as never]);
+        c.rowMenuItems()[0].command?.({});
+        expect(navigate).not.toHaveBeenCalled();
+        c.openPendingPayment();
+        expect(navigate).toHaveBeenCalledWith(['/panel/payments/new'], { queryParams: { clientId: 'cl7', visitId: 'v9' } });
+        c.openPendingPayment();
+        expect(navigate).toHaveBeenCalledTimes(1);
+    });
+
     it('Geldi ve Randevusuz geliş Visits.Create ister; Muayene aç Examinations.Create ister', async () => {
         const planned = item({ key: 'a1', visitId: null, appointmentId: 'a1', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T07:00:00Z' });
         const waiting = item({ key: 'w' });
