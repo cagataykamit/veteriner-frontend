@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ReportListQueryBase, ReportListResultBase, ReportListSource, ReportListState } from './report-list-state';
 
-type Query = ReportListQueryBase & { status?: string };
+type Query = ReportListQueryBase & { status?: string; minAmount?: string };
 type Result = ReportListResultBase;
 
 const KEY = 'panel:reports:test:listState';
@@ -18,9 +18,9 @@ describe('ReportListState', () => {
     let claims: Set<string>;
     let jwtClinic: string | null;
 
-    function create(extraFilterKey?: 'status'): ReportListState<Query, Result> {
+    function create(extraFilterKey?: 'status' | 'minAmount', snapshot = false): ReportListState<Query, Result> {
         return TestBed.runInInjectionContext(
-            () => new ReportListState<Query, Result>({ source, stateKey: KEY, readClaim: 'Test.Read', exportFilePrefix: 'test-raporu', extraFilterKey })
+            () => new ReportListState<Query, Result>({ source, stateKey: KEY, readClaim: 'Test.Read', exportFilePrefix: 'test-raporu', extraFilterKey, snapshot })
         );
     }
 
@@ -191,5 +191,32 @@ describe('ReportListState', () => {
         state.init();
         expect(state.error()).toBeTruthy();
         expect(state.loading()).toBeFalse();
+    });
+
+    it('anlık görüntü raporu tarih göndermez; tutar süzgeci liste ve dışa aktarmada aynıdır', () => {
+        const state = create('minAmount', true);
+        state.init();
+        const first = source.loadReport.calls.mostRecent().args[0];
+        expect(first.from).toBeUndefined();
+        expect(first.to).toBeUndefined();
+        expect(state.fromDateInput).toBe('');
+
+        state.extraFilter = '250';
+        state.searchInput = 'ayse';
+        state.applyFilters();
+        const listQ = source.loadReport.calls.mostRecent().args[0];
+        expect(listQ.minAmount).toBe('250');
+        expect(listQ.search).toBe('ayse');
+        expect(state.dateFilterError()).toBeNull();
+
+        source.exportXlsxBlob.and.returnValue(of(new HttpResponse({ body: new Blob(['x']), headers: new HttpHeaders() })));
+        spyOn(HTMLAnchorElement.prototype, 'click');
+        state.exportXlsx();
+        expect(source.exportXlsxBlob.calls.mostRecent().args[0]).toEqual({ ...listQ, page: 1 });
+
+        state.resetFilters();
+        const reset = source.loadReport.calls.mostRecent().args[0];
+        expect(reset.minAmount).toBeUndefined();
+        expect(reset.from).toBeUndefined();
     });
 });

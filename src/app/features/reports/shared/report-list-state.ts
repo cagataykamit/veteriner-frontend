@@ -50,8 +50,10 @@ export interface ReportListConfig<Q, R> {
     readClaim: string;
     /** Content-Disposition yoksa dosya adı: `<önek>-<tarih>.csv|xlsx`. */
     exportFilePrefix: string;
-    /** Rapora özgü tek açılır süzgeç (ödeme: `method`, randevu ve aşı: `status`). */
-    extraFilterKey?: 'method' | 'status';
+    /** Rapora özgü tek süzgeç (ödeme: `method`, randevu ve aşı: `status`, borç: `minAmount`). */
+    extraFilterKey?: 'method' | 'status' | 'minAmount';
+    /** "Şu anki" durum raporu: tarih aralığı, müşteri ve hayvan süzgeci yoktur (borç raporu). */
+    snapshot?: boolean;
 }
 
 type ExportKind = 'csv' | 'xlsx';
@@ -105,6 +107,10 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     private latestReportLoadSeq = 0;
 
     constructor(private readonly config: ReportListConfig<Q, R>) {}
+
+    get snapshot(): boolean {
+        return !!this.config.snapshot;
+    }
 
     exporting(): boolean {
         return this.exportKind() !== null;
@@ -287,6 +293,9 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     }
 
     private bootstrapDefaultDates(): void {
+        if (this.snapshot) {
+            return;
+        }
         this.fromDateInput = defaultReportFromYyyyMmDd();
         this.toDateInput = localDateYyyyMmDd();
     }

@@ -1,6 +1,7 @@
 import { Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -11,12 +12,13 @@ import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.com
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 
+/** Rapora özgü süzgeç: `options` varsa açılır liste, yoksa tutar alanı. */
 export interface ReportExtraFilter {
     readonly label: string;
-    readonly options: { label: string; value: string }[];
+    readonly options?: { label: string; value: string }[];
 }
 
-/** Rapor sayfalarının ortak süzgeç kartı: tarih aralığı, klinik, rapora özgü açılır süzgeç, müşteri, hayvan, arama ve dışa aktarma. */
+/** Rapor sayfalarının ortak süzgeç kartı: tarih aralığı, klinik, rapora özgü süzgeç, müşteri, hayvan, arama ve dışa aktarma (anlık görüntü raporlarında tarih, müşteri ve hayvan yok). */
 @Component({
     selector: 'app-report-filter-bar',
     standalone: true,
@@ -24,6 +26,7 @@ export interface ReportExtraFilter {
         FormsModule,
         ButtonModule,
         SelectModule,
+        InputNumberModule,
         FilterFieldComponent,
         DateInputComponent,
         ClientSearchComponent,
@@ -44,12 +47,14 @@ export interface ReportExtraFilter {
             }
             <p class="text-sm text-muted-color m-0 mb-4">{{ periodHint() }}</p>
             <div class="flex flex-wrap items-end gap-3">
-                <app-filter-field [label]="copy.reportsFilterDateFrom" [labelFor]="idPrefix() + 'From'" [active]="s.isFromDateActive()" width="date">
-                    <app-date-input [inputId]="idPrefix() + 'From'" type="date" min="1900-01-01" [limit]="dateLimit()" [ngModel]="s.fromDateInput" (ngModelChange)="s.fromDateInput = $event; s.scheduleApply()" />
-                </app-filter-field>
-                <app-filter-field [label]="copy.reportsFilterDateTo" [labelFor]="idPrefix() + 'To'" [active]="s.isToDateActive()" width="date">
-                    <app-date-input [inputId]="idPrefix() + 'To'" type="date" min="1900-01-01" [limit]="dateLimit()" [ngModel]="s.toDateInput" (ngModelChange)="s.toDateInput = $event; s.scheduleApply()" />
-                </app-filter-field>
+                @if (!s.snapshot) {
+                    <app-filter-field [label]="copy.reportsFilterDateFrom" [labelFor]="idPrefix() + 'From'" [active]="s.isFromDateActive()" width="date">
+                        <app-date-input [inputId]="idPrefix() + 'From'" type="date" min="1900-01-01" [limit]="dateLimit()" [ngModel]="s.fromDateInput" (ngModelChange)="s.fromDateInput = $event; s.scheduleApply()" />
+                    </app-filter-field>
+                    <app-filter-field [label]="copy.reportsFilterDateTo" [labelFor]="idPrefix() + 'To'" [active]="s.isToDateActive()" width="date">
+                        <app-date-input [inputId]="idPrefix() + 'To'" type="date" min="1900-01-01" [limit]="dateLimit()" [ngModel]="s.toDateInput" (ngModelChange)="s.toDateInput = $event; s.scheduleApply()" />
+                    </app-filter-field>
+                }
                 <app-filter-field [label]="copy.reportsFilterClinic" [labelId]="idPrefix() + 'ClinicLabel'" [active]="s.isClinicActive()" width="select">
                     <p-select
                         [ariaLabelledBy]="idPrefix() + 'ClinicLabel'"
@@ -64,26 +69,43 @@ export interface ReportExtraFilter {
                         [showClear]="true" />
                 </app-filter-field>
                 @if (extraFilter(); as extra) {
-                    <app-filter-field [label]="extra.label" [labelId]="idPrefix() + 'ExtraLabel'" [active]="s.isExtraActive()" width="select">
-                        <p-select
-                            [ariaLabelledBy]="idPrefix() + 'ExtraLabel'"
-                            [inputId]="idPrefix() + 'Extra'"
-                            [options]="extra.options"
-                            [ngModel]="s.extraFilter"
-                            (ngModelChange)="s.extraFilter = $event; s.scheduleApply()"
-                            optionLabel="label"
-                            optionValue="value"
-                            [placeholder]="copy.filterPlaceholderAll"
-                            styleClass="w-full"
-                            [showClear]="true" />
+                    @if (extra.options) {
+                        <app-filter-field [label]="extra.label" [labelId]="idPrefix() + 'ExtraLabel'" [active]="s.isExtraActive()" width="select">
+                            <p-select
+                                [ariaLabelledBy]="idPrefix() + 'ExtraLabel'"
+                                [inputId]="idPrefix() + 'Extra'"
+                                [options]="extra.options"
+                                [ngModel]="s.extraFilter"
+                                (ngModelChange)="s.extraFilter = $event; s.scheduleApply()"
+                                optionLabel="label"
+                                optionValue="value"
+                                [placeholder]="copy.filterPlaceholderAll"
+                                styleClass="w-full"
+                                [showClear]="true" />
+                        </app-filter-field>
+                    } @else {
+                        <app-filter-field [label]="extra.label" [labelFor]="idPrefix() + 'Extra'" [active]="s.isExtraActive()" width="select">
+                            <p-inputNumber
+                                [inputId]="idPrefix() + 'Extra'"
+                                [ngModel]="s.extraFilter === '' ? null : +s.extraFilter"
+                                (ngModelChange)="s.extraFilter = $event == null ? '' : '' + $event; s.scheduleApply()"
+                                mode="decimal"
+                                locale="tr-TR"
+                                [min]="0"
+                                [maxFractionDigits]="2"
+                                styleClass="w-full"
+                                inputStyleClass="w-full" />
+                        </app-filter-field>
+                    }
+                }
+                @if (!s.snapshot) {
+                    <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="s.isClientFilterActive()" width="grow">
+                        <app-client-search [inputId]="idPrefix() + 'Client'" [ngModel]="s.clientIdFilter" (ngModelChange)="s.onClientFilterChange($event)" />
+                    </app-filter-field>
+                    <app-filter-field [label]="copy.labelPet" [labelId]="idPrefix() + 'PetLabel'" [active]="s.isPetFilterActive()" width="grow">
+                        <app-pet-search [inputId]="idPrefix() + 'Pet'" [requireClient]="false" [clientId]="s.clientIdFilter" [ngModel]="s.petIdFilter" (ngModelChange)="s.petIdFilter = $event; s.scheduleApply()" />
                     </app-filter-field>
                 }
-                <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="s.isClientFilterActive()" width="grow">
-                    <app-client-search [inputId]="idPrefix() + 'Client'" [ngModel]="s.clientIdFilter" (ngModelChange)="s.onClientFilterChange($event)" />
-                </app-filter-field>
-                <app-filter-field [label]="copy.labelPet" [labelId]="idPrefix() + 'PetLabel'" [active]="s.isPetFilterActive()" width="grow">
-                    <app-pet-search [inputId]="idPrefix() + 'Pet'" [requireClient]="false" [clientId]="s.clientIdFilter" [ngModel]="s.petIdFilter" (ngModelChange)="s.petIdFilter = $event; s.scheduleApply()" />
-                </app-filter-field>
                 <app-filter-field [label]="copy.reportsFilterSearch" [labelFor]="idPrefix() + 'Search'" [active]="s.isSearchActive()" width="grow">
                     <app-search-input [inputId]="idPrefix() + 'Search'" [placeholder]="searchPlaceholder()" [(value)]="s.searchInput" (search)="s.applyFilters()" />
                 </app-filter-field>
