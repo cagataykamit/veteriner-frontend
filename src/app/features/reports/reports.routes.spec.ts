@@ -24,3 +24,33 @@ describe('reports.routes — borç raporu yetkisi', () => {
         expect(canActivate(['Payments.Read'])).toBe('/notfound' as unknown as UrlTree);
     });
 });
+
+describe('reports.routes — kayıt defteri yetkisi', () => {
+    const route = (path: string) => (routes as Route[]).find((r) => r.path === path)!;
+
+    function canActivate(path: string, claims: string[]): boolean | UrlTree {
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: Router, useValue: { createUrlTree: (cmds: string[]) => cmds.join('/') as unknown as UrlTree } }
+            ]
+        });
+        return TestBed.runInInjectionContext(() => (route(path).canActivate![0] as () => boolean | UrlTree)());
+    }
+
+    it('muayene defteri Examinations.Read, reçete defteri Prescriptions.Read ister', () => {
+        expect(canActivate('registers/examinations', ['Examinations.Read'])).toBeTrue();
+        expect(canActivate('registers/prescriptions', ['Prescriptions.Read'])).toBeTrue();
+    });
+
+    it('karşı izin yetmez; /notfound yönlenir', () => {
+        expect(canActivate('registers/examinations', ['Prescriptions.Read'])).toBe('/notfound' as unknown as UrlTree);
+        expect(canActivate('registers/prescriptions', ['Examinations.Read'])).toBe('/notfound' as unknown as UrlTree);
+    });
+
+    it('rota verisi tanımlı bir defteri seçer', () => {
+        expect(route('registers/examinations').data).toEqual({ register: 'examinations' });
+        expect(route('registers/prescriptions').data).toEqual({ register: 'prescriptions' });
+    });
+});
