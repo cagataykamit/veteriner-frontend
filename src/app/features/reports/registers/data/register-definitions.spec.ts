@@ -31,13 +31,18 @@ describe('kayıt defteri tanımları', () => {
             'Hasta',
             'Hastanın Şikayeti',
             'Teşhis Edilen Hastalık',
-            'Tedavi Şekli',
-            'Reçete Bilgileri',
-            'Satışa Eklenen İlaçlar',
+            'Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar',
             'Veteriner Hekimin Adı Soyadı'
         ]);
         expect(layout.top.find((c) => c.label === 'Hasta')!.colSpan).toBe(9);
         expect(layout.sub).toEqual(['Ad', 'Tür', 'Irk', 'Cinsiyet', 'Yaş', 'Kart No', 'Çip No', 'Protokol No', 'e-Reçete Kimlik']);
+    });
+
+    it('birleşik hücre: boş bölümler atlanır', () => {
+        const cell = EXAMINATION_REGISTER.columns[16].cell;
+        expect(cell({ ...exam, treatments: [], administrations: [] })).toBe('Reçete: Reçete 1: Dectomax ×2, Vitamin');
+        expect(cell({ ...exam, prescriptions: [] })).toBe('Serum; Enjeksiyon | Satış: Aşı X 1 doz (sonradan eklendi); Y 2 ml (iptal)');
+        expect(cell({ ...exam, treatments: [], prescriptions: [], administrations: [] })).toBe('');
     });
 
     it('reçete defteri dört gruplu üst başlık ve tek ilaç sütunu taşır', () => {
@@ -72,9 +77,7 @@ describe('kayıt defteri tanımları', () => {
             '',
             'İştahsızlık',
             '',
-            'Serum; Enjeksiyon',
-            'Reçete 1: Dectomax ×2, Vitamin',
-            'Aşı X 1 doz (sonradan eklendi); Y 2 ml (iptal)',
+            'Serum; Enjeksiyon | Reçete: Reçete 1: Dectomax ×2, Vitamin | Satış: Aşı X 1 doz (sonradan eklendi); Y 2 ml (iptal)',
             ''
         ]);
     });

@@ -20,6 +20,18 @@ const prescriptionText = (p: RegisterPrescriptionDto) => {
 const administrationText = (a: RegisterAdministrationDto) =>
     `${a.productName} ${quantityText(a.quantity)} ${a.unit}`.trim() + (a.addedAfterFinalization ? ' (sonradan eklendi)' : '') + (a.isVoided ? ' (iptal)' : '');
 
+const SECTION_SEPARATOR = ' | ';
+
+/** Tedavi, ardından "Reçete: ..." ve "Satış: ..." bölümleri; boş bölümler atlanır. */
+const treatmentPrescriptionSaleText = (r: ExaminationRegisterRowDto) =>
+    [
+        r.treatments.join('; '),
+        r.prescriptions.length > 0 && `Reçete: ${r.prescriptions.map(prescriptionText).join('; ')}`,
+        r.administrations.length > 0 && `Satış: ${r.administrations.map(administrationText).join('; ')}`
+    ]
+        .filter(Boolean)
+        .join(SECTION_SEPARATOR);
+
 const prescribedItemText = (i: PrescriptionRegisterItemDto) => {
     const detail = [i.pharmacologicalForm, i.packaging].filter(Boolean).join(', ');
     return [i.name, detail && `(${detail})`, i.quantity != null && `×${quantityText(i.quantity)}`].filter(Boolean).join(' ');
@@ -51,9 +63,7 @@ export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto>
         { group: PATIENT, header: 'e-Reçete Kimlik', cell: (r) => r.ePrescriptionId ?? '' },
         { header: 'Hastanın Şikayeti', cell: (r) => r.complaint },
         { header: 'Teşhis Edilen Hastalık', cell: (r) => r.diagnosis ?? '' },
-        { header: 'Tedavi Şekli', cell: (r) => r.treatments.join('; ') },
-        { header: 'Reçete Bilgileri', cell: (r) => r.prescriptions.map(prescriptionText).join('; ') },
-        { header: 'Satışa Eklenen İlaçlar', cell: (r) => r.administrations.map(administrationText).join('; ') },
+        { header: 'Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar', cell: treatmentPrescriptionSaleText },
         { header: 'Veteriner Hekimin Adı Soyadı', cell: (r) => r.veterinarianName ?? '' }
     ]
 };
