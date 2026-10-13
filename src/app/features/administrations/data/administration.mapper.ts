@@ -13,6 +13,7 @@ import type {
     AdministrationVm,
     CreateAdministrationRequest
 } from '@/app/features/administrations/models/administration-vm.model';
+import { toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
@@ -42,7 +43,10 @@ export function mapAdministrationDtoToVm(dto: AdministrationDto): Administration
         voidStockOutcome: mapStockOutcome(dto.voidStockOutcome),
         addedAfterFinalization: dto.addedAfterFinalization === true,
         lateEntryReason: trimmedOrNull(dto.lateEntryReason),
-        createdAtUtc: dto.createdAtUtc
+        createdAtUtc: dto.createdAtUtc,
+        batchId: trimmedOrNull(dto.batchId),
+        lotNumber: trimmedOrNull(dto.lotNumber),
+        expiryDate: toYmdOrNull(dto.expiryDate)
     };
 }
 
@@ -94,6 +98,7 @@ export function mapCreateAdministrationToApiBody(clinicId: string, req: CreateAd
         administeredAtUtc: trimmedOrNull(req.administeredAtUtc),
         notes: trimmedOrNull(req.notes),
         lateEntryReason: trimmedOrNull(req.lateEntryReason),
-        requestId: trimmedOrNull(req.requestId)
+        requestId: trimmedOrNull(req.requestId),
+        batchId: trimmedOrNull(req.batchId)
     };
 }

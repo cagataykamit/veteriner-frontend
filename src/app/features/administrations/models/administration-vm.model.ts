@@ -22,6 +22,11 @@ export interface AdministrationVm {
     addedAfterFinalization: boolean;
     lateEntryReason: string | null;
     createdAtUtc: string;
+    /** Düşülen parti; `null` = partisiz bakiye. */
+    batchId: string | null;
+    lotNumber: string | null;
+    /** `yyyy-MM-dd`. */
+    expiryDate: string | null;
 }
 
 export interface AdministrationStockVm {
@@ -63,6 +68,8 @@ export interface CreateAdministrationRequest {
     lateEntryReason?: string | null;
     /** Form başına bir kez üretilen anahtar; aynı anahtarla tekrar istek ikinci düşüm üretmez. */
     requestId: string;
+    /** Boşsa sunucu FEFO ile seçer. */
+    batchId?: string | null;
 }
 
 export interface AdministrationCreateResultVm {
