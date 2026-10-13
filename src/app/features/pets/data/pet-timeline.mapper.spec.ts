@@ -44,6 +44,22 @@ describe('mapPetTimelinePageDtoToVm', () => {
         expect(page.omittedTypes).toEqual(['LabResult']);
     });
 
+    it('Administration satırı: addedAfterFinalization eşlenir (yoksa false), durum etiketi yatışla karışmaz', () => {
+        const page = mapPetTimelinePageDtoToVm({
+            items: [
+                { type: 'Administration', sourceId: 'a1', title: 'Serum', summary: '1.5 şişe', status: 'Active', addedAfterFinalization: true, relatedExaminationId: 'e1' },
+                { type: 'Administration', sourceId: 'a2', title: 'Serum', status: 'Voided', isVoided: true }
+            ]
+        });
+
+        expect(page.items[0]).toEqual(jasmine.objectContaining({ summary: '1.5 şişe', addedAfterFinalization: true, relatedExaminationId: 'e1' }));
+        expect(page.items[1].addedAfterFinalization).toBeFalse();
+        expect(petTimelineStatusLabel(page.items[0])).toBeNull();
+        expect(petTimelineStatusLabel(page.items[1])).toBeNull();
+        expect(petTimelineEventLink(page.items[0])).toBeNull();
+        expect(petTimelineExaminationLink(page.items[0])).toEqual(['/panel/examinations', 'e1']);
+    });
+
     it('nextCursor boş/yoksa null (sayfa sonu); omittedTypes yoksa boş', () => {
         expect(mapPetTimelinePageDtoToVm({ items: [], nextCursor: '' })).toEqual({ items: [], nextCursor: null, omittedTypes: [] });
         expect(mapPetTimelinePageDtoToVm({})).toEqual({ items: [], nextCursor: null, omittedTypes: [] });

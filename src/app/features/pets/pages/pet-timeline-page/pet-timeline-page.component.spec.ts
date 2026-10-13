@@ -18,6 +18,7 @@ const item = (type: string, id: string, over: Record<string, unknown> = {}) => (
     linkType: type,
     linkId: id,
     relatedExaminationId: null,
+    addedAfterFinalization: false,
     ...over
 });
 
@@ -69,6 +70,26 @@ describe('PetTimelinePageComponent', () => {
         expect(el().querySelectorAll('[data-testid="event-link"]').length).toBe(2);
         expect(el().querySelectorAll('[data-testid="examination-link"]').length).toBe(1);
         expect(el().textContent).toContain('Pamuk');
+    });
+
+    it('uygulama satırı: miktar özeti kırmızı değil, sonradan eklendi rozeti yalnız işaretli satırda', () => {
+        responder = () =>
+            of(
+                page([
+                    item('Administration', 'a1', { summary: '1.5 şişe', addedAfterFinalization: true, relatedExaminationId: 'e1' }),
+                    item('Administration', 'a2', { summary: '1 şişe' }),
+                    item('Visit', 'v1', { summary: 'Acil' })
+                ])
+            );
+        create();
+
+        expect(el().querySelectorAll('[data-testid="late-entry"]').length).toBe(1);
+        expect(el().textContent).toContain('Kesinleştirmeden sonra eklendi');
+        const summaries = Array.from(el().querySelectorAll('[data-testid="summary"]'));
+        expect(summaries[0].className).toContain('text-muted-color');
+        expect(summaries[2].className).toContain('text-red-600');
+        expect(el().querySelectorAll('[data-testid="event-link"]').length).toBe(0);
+        expect(el().querySelectorAll('[data-testid="examination-link"]').length).toBe(1);
     });
 
     it('geliş satırında relatedExaminationId doluysa "Bağlı muayene" bağlantısı çıkar; null ise çıkmaz', () => {
