@@ -228,21 +228,23 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     }
 
     private rangeMessage(): string {
-        // Mesajda yalnız gün gösterilir (saat dakikalı sınırlar anlamsız gürültü olur).
-        const type: DateInputType = 'date';
+        // Tarih-saat alanında sınır saati de gösterilir (aynı gün içindeki hata "tarih doğru" gibi görünmesin).
+        const withTime = this.type() === 'datetime-local';
+        const type: DateInputType = withTime ? 'datetime-local' : 'date';
+        const subject = withTime ? 'Tarih ve saat' : 'Tarih';
         const min = this.minDate();
         const max = this.resolveMax();
         // 1900 / 9999 gibi uç sınırlar kullanıcıya anlamlı değil; yalnız gerçek (dar) sınırlar mesaja girer.
         const useMin = !!min && min.getFullYear() > 1900;
         const useMax = !!max && max.getFullYear() < 9999;
         if (useMin && useMax) {
-            return `Tarih ${formatDateInputDisplay(type, min)} ile ${formatDateInputDisplay(type, max)} arasında olmalıdır.`;
+            return `${subject} ${formatDateInputDisplay(type, min)} ile ${formatDateInputDisplay(type, max)} arasında olmalıdır.`;
         }
         if (useMin) {
-            return `Tarih ${formatDateInputDisplay(type, min)} veya sonrası olmalıdır.`;
+            return `${subject} ${formatDateInputDisplay(type, min)} veya sonrası olmalıdır.`;
         }
         if (useMax) {
-            return `Tarih ${formatDateInputDisplay(type, max)} veya öncesi olmalıdır.`;
+            return `${subject} ${formatDateInputDisplay(type, max)} veya öncesi olmalıdır.`;
         }
         return 'Tarih izin verilen aralığın dışında.';
     }

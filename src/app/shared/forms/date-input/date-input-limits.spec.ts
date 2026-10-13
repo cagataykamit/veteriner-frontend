@@ -100,14 +100,13 @@ describe('DateInputComponent — limit', () => {
         expect(host.control.hasError('dateOutOfRange')).toBeTrue();
     });
 
-    it('past/datetime: gelecekteki saat reddedilir (mesajda yalnız gün), geçmiş serbest', async () => {
+    it('past/datetime: gelecekteki saat reddedilir (mesajda sınır saati de görünür), geçmiş serbest', async () => {
         await create('datetime-local', 'past');
         await typeText('241119911430');
         expect(host.control.errors).toBeNull();
         await typeText(ymd(1) + '1000');
         expect(host.control.hasError('dateOutOfRange')).toBeTrue();
-        expect(fixture.nativeElement.textContent).toMatch(/Tarih \d{2}\.\d{2}\.\d{4} veya öncesi olmalıdır\./);
-        expect(fixture.nativeElement.textContent).not.toMatch(/\d{2}:\d{2} (veya|ile)/);
+        expect(fixture.nativeElement.textContent).toMatch(/Tarih ve saat \d{2}\.\d{2}\.\d{4} \d{2}:\d{2} veya öncesi olmalıdır\./);
     });
 
     it('planned: 5 yıl içi serbest, ötesi (5555) reddedilir', async () => {

@@ -1,5 +1,6 @@
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { formatDateInputDisplay, parseDateInputValue } from '@/app/shared/forms/date-input/date-input-value.utils';
 
 /** Yatış tarihi en fazla bu kadar gün geçmişe girilebilir (backend ile uyumlu). */
 export const HOSPITALIZATION_DATE_MAX_PAST_DAYS = 7;
@@ -52,7 +53,11 @@ export function isHospitalizationDateTooFarPastBackendMessage(message: string): 
 
 export const HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY = 'plannedDischargeBeforeAdmission';
 
-export const HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_MESSAGE = 'Planlı taburcu, yatış tarihinden önce olamaz.';
+/** Saat dahil: aynı gün içindeki hata "tarih doğru" gibi görünmesin. */
+export function hospitalizationPlannedBeforeAdmissionMessage(admittedLocal: string | null | undefined): string {
+    const admitted = parseDateInputValue('datetime-local', admittedLocal);
+    return admitted ? `Planlı taburcu, yatış tarihinden (${formatDateInputDisplay('datetime-local', admitted)}) önce olamaz.` : 'Planlı taburcu, yatış tarihinden önce olamaz.';
+}
 
 const DATETIME_LOCAL_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 

@@ -50,7 +50,7 @@ import {
 import {
     HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE,
     HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY,
-    HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_MESSAGE,
+    hospitalizationPlannedBeforeAdmissionMessage,
     hospitalizationDateNotTooFarPastValidator,
     hospitalizationDateTimeLocalMinAllowed,
     hospitalizationPlannedDischargeMin,
@@ -143,7 +143,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             @if (form.controls.plannedDischargeAtLocal.hasError('dateYearInvalid') && form.controls.plannedDischargeAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (form.hasError(plannedBeforeAdmissionKey) && !form.controls.plannedDischargeAtLocal.hasError('dateOutOfRange') && form.controls.plannedDischargeAtLocal.touched) {
-                                <small class="text-red-500 block">{{ plannedBeforeAdmissionMessage }}</small>
+                                <small class="text-red-500 block">{{ plannedBeforeAdmissionMessage() }}</small>
                             } @else if (apiFieldErrors().plannedDischargeAtLocal) {
                                 <small class="text-red-500">{{ apiFieldErrors().plannedDischargeAtLocal }}</small>
                             }
@@ -259,7 +259,9 @@ export class HospitalizationEditPageComponent implements OnInit {
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
     protected readonly hospitalizationDateTooFarPastMessage = HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE;
     protected readonly plannedBeforeAdmissionKey = HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY;
-    protected readonly plannedBeforeAdmissionMessage = HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_MESSAGE;
+    protected plannedBeforeAdmissionMessage(): string {
+        return hospitalizationPlannedBeforeAdmissionMessage(this.form.controls.admittedAtLocal.value);
+    }
 
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);

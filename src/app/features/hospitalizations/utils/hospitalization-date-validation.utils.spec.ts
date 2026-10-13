@@ -1,6 +1,7 @@
 import { FormControl, FormGroup } from '@angular/forms';
 import {
     HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY,
+    hospitalizationPlannedBeforeAdmissionMessage,
     hospitalizationPlannedDischargeMin,
     plannedDischargeNotBeforeAdmissionValidator
 } from './hospitalization-date-validation.utils';
@@ -32,5 +33,15 @@ describe('planlı taburcu / yatış tarihi kuralı', () => {
         expect(hospitalizationPlannedDischargeMin('2026-10-12T10:00', '1900-01-01T00:00')).toBe('2026-10-12T10:00');
         expect(hospitalizationPlannedDischargeMin('', '1900-01-01T00:00')).toBe('1900-01-01T00:00');
         expect(hospitalizationPlannedDischargeMin('2026-10-1', '1900-01-01T00:00')).toBe('1900-01-01T00:00');
+    });
+});
+
+describe('hospitalizationPlannedBeforeAdmissionMessage', () => {
+    it('yatış tarih ve saatini mesaja koyar', () => {
+        expect(hospitalizationPlannedBeforeAdmissionMessage('2026-10-13T19:00')).toBe('Planlı taburcu, yatış tarihinden (13.10.2026 19:00) önce olamaz.');
+    });
+
+    it('yatış tarihi çözümlenemezse saatsiz genel mesaj verir', () => {
+        expect(hospitalizationPlannedBeforeAdmissionMessage('')).toBe('Planlı taburcu, yatış tarihinden önce olamaz.');
     });
 });
