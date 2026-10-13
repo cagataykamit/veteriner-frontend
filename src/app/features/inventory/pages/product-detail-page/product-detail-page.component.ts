@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TextareaModule } from 'primeng/textarea';
+import { ProductStockBatchesComponent } from '@/app/features/inventory/components/product-stock-batches/product-stock-batches.component';
 import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
 import { createStockBatchFormGroup, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import type { ProductDetailVm } from '@/app/features/inventory/models/product-vm.model';
@@ -85,7 +86,8 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
-        StockBatchFieldsComponent
+        StockBatchFieldsComponent,
+        ProductStockBatchesComponent
     ],
     providers: [ConfirmationService],
     styles: [
@@ -350,6 +352,22 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                         }
                     </div>
                 </div>
+
+                @if (canReadStockMovements && !stocksLoading() && stocksRows().length > 0) {
+                    <div class="col-span-12">
+                        <div class="card" data-testid="product-batches-card">
+                            <h5 class="mt-0 mb-4 text-base font-semibold text-surface-900 dark:text-surface-0">Partiler</h5>
+                            @for (row of stocksRows(); track row.id) {
+                                <app-product-stock-batches
+                                    [productId]="p.id"
+                                    [clinicId]="row.clinicId"
+                                    [clinicName]="row.clinicName"
+                                    [reloadKey]="batchesReloadKey()"
+                                />
+                            }
+                        </div>
+                    </div>
+                }
             </div>
         }
 
@@ -614,6 +632,8 @@ export class ProductDetailPageComponent implements OnInit {
     readonly stocksLoading = signal(false);
     readonly stocksError = signal<string | null>(null);
     readonly stocksRows = signal<ProductStockVm[]>([]);
+    /** Stok yeniden yüklenince parti listeleri de yenilensin. */
+    readonly batchesReloadKey = signal(0);
     readonly stocksRowsView = computed(() => sliceDetailRelatedList(this.stocksRows()));
 
     readonly stockOperationDialogOpen = signal(false);
@@ -917,6 +937,7 @@ export class ProductDetailPageComponent implements OnInit {
         this.productService.getStocksByProductId(productId).subscribe({
             next: (rows) => {
                 this.stocksRows.set(rows);
+                this.batchesReloadKey.update((k) => k + 1);
                 this.stocksLoading.set(false);
             },
             error: (e: Error) => {
