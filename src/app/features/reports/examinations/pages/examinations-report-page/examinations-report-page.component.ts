@@ -1,75 +1,24 @@
-import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
-import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
-import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
-import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
-import type { ClinicSummary } from '@/app/core/auth/auth.models';
-import { AuthService } from '@/app/core/auth/auth.service';
 import { EXAMINATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-my-clinics-to-select-options';
-import { isReportUiClinicIdMisalignedWithJwt, isReportUiClinicIdUnknownToMyClinics } from '@/app/features/reports/shared/report-my-clinic.utils';
 import type { ExaminationsReportQuery } from '@/app/features/reports/examinations/models/examinations-report-query.model';
 import type { ExaminationsReportResultVm } from '@/app/features/reports/examinations/models/examinations-report.model';
 import { ExaminationsReportService } from '@/app/features/reports/examinations/services/examinations-report.service';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
-import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
-import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-filter-bar.component';
+import { ReportListState } from '@/app/features/reports/shared/report-list-state';
+import { reportClinicLabel } from '@/app/features/reports/shared/report-my-clinic.utils';
+import { ReportResultsComponent } from '@/app/features/reports/shared/report-results.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import {
-    dateOnlyInputToIstanbulEndUtcIso,
-    dateOnlyInputToIstanbulStartUtcIso,
-    formatUtcIsoAsLocalDateTimeDisplay,
-    localDateYyyyMmDd
-} from '@/app/shared/utils/date.utils';
-import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
+import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.utils';
-import { isReportRecoverableClinicConstraint403, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-
-type ExaminationsReportState = {
-    search: string;
-    fromDate: string;
-    toDate: string;
-    clinicId: string;
-    clientId: string;
-    petId: string;
-    page: number;
-    pageSize: number;
-};
-
-const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
 
 @Component({
     selector: 'app-examinations-report-page',
     standalone: true,
-    imports: [
-        FilterFieldComponent,
-        CommonModule,
-        FormsModule,
-        RouterLink,
-        TableModule,
-        Paginator,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppEmptyStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, SearchInputComponent
-    ],
+    imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent],
     template: `
         <app-page-header
             [title]="copy.examinationsReportTitle"
@@ -77,102 +26,27 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
             [description]="copy.examinationsReportDescription"
         />
 
-        @if (exportError()) {
-            <div class="card mb-4 border-red-200 dark:border-red-800">
-                <p class="text-red-500 m-0 text-sm" role="alert">{{ exportError() }}</p>
-            </div>
-        }
+        <app-report-filter-bar
+            [state]="state"
+            idPrefix="examRep"
+            dateLimit="past"
+            [periodHint]="copy.examinationsReportDefaultPeriodHint"
+            [searchPlaceholder]="copy.examinationsReportSearchPlaceholder"
+        />
 
-        <div class="card mb-4">
-            @if (dateFilterError()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ dateFilterError() }}</p>
-            }
-            <p class="text-sm text-muted-color m-0 mb-4">{{ copy.examinationsReportDefaultPeriodHint }}</p>
-            <div class="flex flex-wrap items-end gap-3">
-                <app-filter-field [label]="copy.reportsFilterDateFrom" labelFor="examRepFrom" [active]="isFromDateActive()" width="date">
-                    <app-date-input inputId="examRepFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                </app-filter-field>
-                <app-filter-field [label]="copy.reportsFilterDateTo" labelFor="examRepTo" [active]="isToDateActive()" width="date">
-                    <app-date-input inputId="examRepTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                </app-filter-field>
-                <app-filter-field [label]="copy.reportsFilterClinic" labelId="lblExamRepClinic" [active]="isClinicActive()" width="select">
-                    <p-select
-                        ariaLabelledBy="lblExamRepClinic"
-                        inputId="examRepClinic"
-                        [options]="clinicOptions()"
-                        [(ngModel)]="clinicIdFilter"
-                        optionLabel="label"
-                        optionValue="value"
-                        [placeholder]="copy.reportsClinicPanelDefault"
-                        styleClass="w-full"
-                        [showClear]="true" (ngModelChange)="scheduleApply()" />
-                </app-filter-field>
-                <app-filter-field [label]="copy.labelClient" labelId="lblExamRepClient" [active]="isClientFilterActive()" width="grow">
-                    <app-client-search inputId="examRepClient" [ngModel]="clientIdFilter" (ngModelChange)="onClientFilterChange($event)" />
-                </app-filter-field>
-                <app-filter-field [label]="copy.labelPet" labelId="lblExamRepPet" [active]="isPetFilterActive()" width="grow">
-                    <app-pet-search inputId="examRepPet" [requireClient]="false" [clientId]="clientIdFilter" [(ngModel)]="petIdFilter" (ngModelChange)="scheduleApply()" />
-                </app-filter-field>
-                <app-filter-field [label]="copy.reportsFilterSearch" labelFor="examRepSearch" [active]="isSearchActive()" width="grow">
-                    <app-search-input inputId="examRepSearch" [placeholder]="copy.examinationsReportSearchPlaceholder" [(value)]="searchInput" (search)="applyFilters()" />
-                </app-filter-field>
-                <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
-                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                    @if (canExportReport()) {
-                        <p-button
-                            [label]="copy.reportsExportXlsx"
-                            icon="pi pi-file-excel"
-                            severity="success"
-                            (onClick)="exportXlsx()"
-                            [loading]="isExporting('xlsx')"
-                            [disabled]="loading() || exporting()"
-                        />
-                        <p-button
-                            [label]="copy.reportsExportCsv"
-                            icon="pi pi-download"
-                            severity="help"
-                            (onClick)="exportCsv()"
-                            [loading]="isExporting('csv')"
-                            [disabled]="loading() || exporting()"
-                        />
-                    }
-                </div>
-            </div>
-        </div>
-
-        @if (loading()) {
-            <app-loading-state [message]="copy.reportsLoadingMessage" />
-        } @else if (error()) {
-            <div class="card">
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            </div>
-        } @else if (report(); as r) {
-            <div class="card mb-4">
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 sm:col-span-6">
-                        <span class="block text-muted-color text-sm mb-1">{{ copy.reportsTotalRecords }}</span>
-                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totalCount }}</div>
-                    </div>
-                </div>
-            </div>
-
-            @if (r.items.length === 0) {
-                <div class="card">
-                    <app-empty-state [message]="copy.examinationsReportEmptyMessage" [hint]="copy.examinationsReportEmptyHint" />
-                </div>
-            } @else {
-                <div class="card">
+        <app-report-results [state]="state" [emptyMessage]="copy.examinationsReportEmptyMessage" [emptyHint]="copy.examinationsReportEmptyHint">
+            <ng-template #rows>
                     <div class="hidden lg:block overflow-x-auto">
                         <p-table
                             [value]="displayedRows()"
                             [paginator]="true"
-                            [rows]="pageSize()"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
+                            [rows]="state.pageSize()"
+                            [rowsPerPageOptions]="state.rowsPerPageOptions"
                             [paginatorDropdownAppendTo]="'body'"
-                            [totalRecords]="r.totalCount"
+                            [totalRecords]="totalCount()"
                             [lazy]="true"
-                            [first]="first()"
-                            (onLazyLoad)="onTableLazyLoad($event)"
+                            [first]="state.first()"
+                            (onLazyLoad)="state.onTableLazyLoad($event)"
                             [tableStyle]="{ 'min-width': '58rem' }"
                             [showCurrentPageReport]="true"
                             currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -267,480 +141,28 @@ const EXAMINATIONS_REPORT_STATE_KEY = 'panel:reports:examinations:listState';
                             </div>
                         }
                     </div>
-
-                    <div class="lg:hidden mt-4">
-                        <p-paginator
-                            [rows]="pageSize()"
-                            [totalRecords]="r.totalCount"
-                            [first]="first()"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            (onPageChange)="onMobilePageChange($event)"
-                        />
-                    </div>
-                </div>
-            }
-        }
+            </ng-template>
+        </app-report-results>
     `
 })
 export class ExaminationsReportPageComponent implements OnInit {
-    protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
     readonly reportTableRowTrackKey = reportTableRowTrackKey;
-    private readonly reportService = inject(ExaminationsReportService);
-    private readonly auth = inject(AuthService);
+    readonly displayClinicLabel = reportClinicLabel;
 
-    readonly canExportReport = computed(() => this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM));
+    readonly state = new ReportListState<ExaminationsReportQuery, ExaminationsReportResultVm>({
+        source: inject(ExaminationsReportService),
+        stateKey: 'panel:reports:examinations:listState',
+        readClaim: EXAMINATIONS_READ_CLAIM,
+        exportFilePrefix: 'muayene-raporu'
+    });
 
-    readonly loading = signal(true);
-    readonly exportKind = signal<'csv' | 'xlsx' | null>(null);
-    readonly error = signal<string | null>(null);
-    readonly exportError = signal<string | null>(null);
-    readonly dateFilterError = signal<string | null>(null);
-    readonly report = signal<ExaminationsReportResultVm | null>(null);
-
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(25);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
-
-    readonly activeSearch = signal('');
-    readonly activeFromDate = signal('');
-    readonly activeToDate = signal('');
-    readonly activeClinicId = signal('');
-    readonly activeClientId = signal('');
-    readonly activePetId = signal('');
-
-    fromDateInput = '';
-    toDateInput = '';
-    searchInput = '';
-    clinicIdFilter = '';
-    clientIdFilter = '';
-    petIdFilter = '';
-
-    readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
-
-    readonly displayedRows = computed(() => [...(this.report()?.items ?? [])]);
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-    private clinicSummariesLoadedOk = false;
-    private latestReportLoadSeq = 0;
+    readonly displayedRows = computed(() => [...(this.state.report()?.items ?? [])]);
+    readonly totalCount = computed(() => this.state.report()?.totalCount ?? 0);
 
     readonly formatExaminedAt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly exporting = () => this.exportKind() !== null;
-
-    displayClinicLabel(clinicLabel: string): string {
-        return clinicLabel === '—' ? this.copy.reportsClinicPanelDefault : clinicLabel;
-    }
-
-    isExporting(kind: 'csv' | 'xlsx'): boolean {
-        return this.exportKind() === kind;
-    }
 
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
-        if (!restored) {
-            this.bootstrapDefaultDates();
-            this.activeFromDate.set(this.fromDateInput.trim());
-            this.activeToDate.set(this.toDateInput.trim());
-            this.currentPage.set(1);
-            this.first.set(0);
-        }
-        this.suppressNextLazy = true;
-        this.bootstrapReportAfterMyClinics();
+        this.state.init();
     }
-
-    onClientFilterChange(clientId: string | null): void {
-        this.clientIdFilter = clientId ?? '';
-        this.petIdFilter = '';
-        this.scheduleApply();
-    }
-
-    applyFilters(): void {
-        this.dateFilterError.set(null);
-        const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
-
-        let from = safeTrim(this.fromDateInput);
-        let to = safeTrim(this.toDateInput);
-
-        if ((from && !to) || (!from && to)) {
-            this.dateFilterError.set(this.copy.reportsDateRangeBothRequired);
-            return;
-        }
-        if (!from && !to) {
-            this.bootstrapDefaultDates();
-            from = safeTrim(this.fromDateInput);
-            to = safeTrim(this.toDateInput);
-        }
-        if (from && to && from > to) {
-            const t = from;
-            from = to;
-            to = t;
-            this.fromDateInput = from;
-            this.toDateInput = to;
-        }
-        this.activeSearch.set(safeTrim(this.searchInput));
-        this.activeFromDate.set(from);
-        this.activeToDate.set(to);
-        this.activeClinicId.set(safeTrim(this.clinicIdFilter));
-        this.activeClientId.set(safeTrim(this.clientIdFilter));
-        this.activePetId.set(safeTrim(this.petIdFilter));
-        this.stripJwtMisalignedReportClinicIfNeeded();
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize());
-    }
-
-    resetFilters(): void {
-        this.dateFilterError.set(null);
-        this.searchInput = '';
-        this.clinicIdFilter = '';
-        this.clientIdFilter = '';
-        this.petIdFilter = '';
-        this.activeSearch.set('');
-        this.activeClinicId.set('');
-        this.activeClientId.set('');
-        this.activePetId.set('');
-        this.bootstrapDefaultDates();
-        this.activeFromDate.set(this.fromDateInput.trim());
-        this.activeToDate.set(this.toDateInput.trim());
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize());
-    }
-
-    reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-            return;
-        }
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows);
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows);
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows);
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows);
-    }
-
-    exportCsv(): void {
-        this.export('csv');
-    }
-
-    exportXlsx(): void {
-        this.export('xlsx');
-    }
-
-    private export(kind: 'csv' | 'xlsx'): void {
-        if (!this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM)) {
-            return;
-        }
-        this.exportError.set(null);
-        this.exportKind.set(kind);
-        this.sanitizeExportClinicFilterIfStale();
-        const q = this.buildQuery(1, this.pageSize());
-        const req$ = kind === 'xlsx' ? this.reportService.exportXlsxBlob(q) : this.reportService.exportCsvBlob(q);
-        req$.subscribe({
-            next: (res) => {
-                this.exportKind.set(null);
-                this.exportError.set(null);
-                const blob = res.body;
-                if (!blob) {
-                    this.exportError.set(this.copy.reportsExportResponseEmpty);
-                    return;
-                }
-                const fromCd = fileNameFromContentDisposition(res.headers.get('Content-Disposition'));
-                const ext = kind === 'xlsx' ? 'xlsx' : 'csv';
-                const name = fromCd ?? `muayene-raporu-${localDateYyyyMmDd()}.${ext}`;
-                triggerBlobDownload(blob, name);
-            },
-            error: (e: Error) => {
-                this.exportKind.set(null);
-                this.exportError.set(e.message?.trim() || this.copy.reportsExportFailedFallback);
-            }
-        });
-    }
-
-    private bootstrapDefaultDates(): void {
-        this.fromDateInput = defaultReportFromYyyyMmDd();
-        this.toDateInput = localDateYyyyMmDd();
-    }
-
-    private bootstrapReportAfterMyClinics(): void {
-        this.auth.getMyClinics().subscribe({
-            next: (list: ClinicSummary[]) => {
-                this.clinicSummariesLoadedOk = true;
-                this.clinicOptions.set(mapMyClinicsToSelectOptions(list, this.copy.reportsClinicPanelDefault));
-                const stale = this.clearStaleRestoredClinicIfNeeded(list);
-                if (stale) {
-                    this.suppressNextLazy = true;
-                    this.loadFromServer(1, this.pageSize(), true);
-                } else {
-                    this.loadFromServer(this.currentPage(), this.pageSize());
-                }
-            },
-            error: () => {
-                this.clinicSummariesLoadedOk = false;
-                this.clinicOptions.set([{ label: this.copy.reportsClinicPanelDefault, value: '' }]);
-                this.loadFromServer(this.currentPage(), this.pageSize());
-            }
-        });
-    }
-
-    private clearStaleRestoredClinicIfNeeded(summaries: ClinicSummary[]): boolean {
-        const id = this.activeClinicId().trim();
-        if (!id) {
-            return false;
-        }
-        const jwtClinic = this.auth.getJwtClinicId();
-        if (
-            isReportUiClinicIdUnknownToMyClinics(id, summaries) ||
-            isReportUiClinicIdMisalignedWithJwt(id, jwtClinic)
-        ) {
-            this.clearStaleUiClinicFilterSilently();
-            return true;
-        }
-        return false;
-    }
-
-    private clearJwtMisalignedUiClinicOnly(): void {
-        this.clinicIdFilter = '';
-        this.activeClinicId.set('');
-        this.persistStateToSessionStorage(this.currentPage(), this.pageSize());
-    }
-
-    private stripJwtMisalignedReportClinicIfNeeded(): void {
-        const id = this.activeClinicId().trim();
-        if (!id) {
-            return;
-        }
-        if (isReportUiClinicIdMisalignedWithJwt(id, this.auth.getJwtClinicId())) {
-            this.clearJwtMisalignedUiClinicOnly();
-        }
-    }
-
-    private clearStaleUiClinicFilterSilently(): void {
-        this.clinicIdFilter = '';
-        this.activeClinicId.set('');
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-    }
-
-    private sanitizeExportClinicFilterIfStale(): void {
-        if (!this.clinicSummariesLoadedOk) {
-            return;
-        }
-        const id = this.activeClinicId().trim();
-        if (!id) {
-            return;
-        }
-        const jwtClinic = this.auth.getJwtClinicId();
-        if (!this.clinicOptions().some((o) => o.value === id)) {
-            this.clearStaleUiClinicFilterSilently();
-            return;
-        }
-        if (isReportUiClinicIdMisalignedWithJwt(id, jwtClinic)) {
-            this.clearJwtMisalignedUiClinicOnly();
-        }
-    }
-
-    private buildQuery(page: number, pageSize: number): ExaminationsReportQuery {
-        const clinicRaw = this.activeClinicId();
-        const clinicId = typeof clinicRaw === 'string' && clinicRaw.trim() ? clinicRaw.trim() : undefined;
-        const fromYmd = this.activeFromDate().trim();
-        const toYmd = this.activeToDate().trim();
-        const fromUtc = fromYmd ? dateOnlyInputToIstanbulStartUtcIso(fromYmd) : '';
-        const toUtc = toYmd ? dateOnlyInputToIstanbulEndUtcIso(toYmd) : '';
-        const clientId = this.activeClientId().trim() || undefined;
-        const petId = this.activePetId().trim() || undefined;
-        return {
-            page,
-            pageSize,
-            search: this.activeSearch() || undefined,
-            from: fromUtc || undefined,
-            to: toUtc || undefined,
-            clinicId,
-            clientId,
-            petId
-        };
-    }
-
-    private loadFromServer(page: number, pageSize: number, force = false): void {
-        this.stripJwtMisalignedReportClinicIfNeeded();
-        const q = this.buildQuery(page, pageSize);
-        const explicitQueryClinicId = !!q.clinicId;
-        const requestKey = JSON.stringify(q);
-        if (!force && requestKey === this.lastLoadKey) {
-            return;
-        }
-        this.lastLoadKey = requestKey;
-        const seq = ++this.latestReportLoadSeq;
-        this.loading.set(true);
-        this.error.set(null);
-        this.reportService.loadReport(q).subscribe({
-            next: (r) => {
-                if (seq !== this.latestReportLoadSeq) {
-                    return;
-                }
-                this.report.set(r);
-                this.pageSize.set(r.pageSize);
-                this.currentPage.set(r.page);
-                this.first.set((r.page - 1) * r.pageSize);
-                this.persistStateToSessionStorage(r.page, r.pageSize);
-                this.loading.set(false);
-            },
-            error: (err: unknown) => {
-                if (seq !== this.latestReportLoadSeq) {
-                    return;
-                }
-                if (
-                    err instanceof HttpErrorResponse &&
-                    explicitQueryClinicId &&
-                    isReportRecoverableClinicConstraint403(err)
-                ) {
-                    this.lastLoadKey = '';
-                    this.clearStaleUiClinicFilterSilently();
-                    this.suppressNextLazy = true;
-                    this.loadFromServer(1, this.pageSize(), true);
-                    return;
-                }
-                this.error.set(panelHttpFailureMessage(err, this.copy.reportsLoadErrorFallback));
-                this.loading.set(false);
-            }
-        });
-    }
-
-    isSearchActive(): boolean {
-        return !!this.activeSearch().trim();
-    }
-
-    isFromDateActive(): boolean {
-        return !!this.activeFromDate().trim();
-    }
-
-    isToDateActive(): boolean {
-        return !!this.activeToDate().trim();
-    }
-
-    isClinicActive(): boolean {
-        return !!this.activeClinicId().trim();
-    }
-
-    isClientFilterActive(): boolean {
-        return !!this.activeClientId().trim();
-    }
-
-    isPetFilterActive(): boolean {
-        return !!this.activePetId().trim();
-    }
-
-    activeInputClass(active: boolean): string {
-        return active ? 'border-primary-300 dark:border-primary-600 bg-primary-50/30 dark:bg-primary-900/15' : '';
-    }
-
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(EXAMINATIONS_REPORT_STATE_KEY);
-        if (!raw) {
-            return false;
-        }
-        try {
-            const parsed = JSON.parse(raw) as Partial<ExaminationsReportState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(EXAMINATIONS_REPORT_STATE_KEY);
-                return false;
-            }
-            const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
-            this.searchInput = safeTrim(parsed.search);
-            this.fromDateInput = safeTrim(parsed.fromDate);
-            this.toDateInput = safeTrim(parsed.toDate);
-            this.clinicIdFilter = safeTrim(parsed.clinicId);
-            this.clientIdFilter = safeTrim(parsed.clientId);
-            this.petIdFilter = safeTrim(parsed.petId);
-
-            const from = safeTrim(this.fromDateInput);
-            const to = safeTrim(this.toDateInput);
-            if ((from && !to) || (!from && to)) {
-                this.bootstrapDefaultDates();
-                this.fromDateInput = safeTrim(this.fromDateInput);
-                this.toDateInput = safeTrim(this.toDateInput);
-            }
-
-            this.activeSearch.set(safeTrim(this.searchInput));
-            this.activeFromDate.set(safeTrim(this.fromDateInput));
-            this.activeToDate.set(safeTrim(this.toDateInput));
-            this.activeClinicId.set(safeTrim(this.clinicIdFilter));
-            this.activeClientId.set(safeTrim(this.clientIdFilter));
-            this.activePetId.set(safeTrim(this.petIdFilter));
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-            return true;
-        } catch {
-            sessionStorage.removeItem(EXAMINATIONS_REPORT_STATE_KEY);
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
-        const state: ExaminationsReportState = {
-            search: safeTrim(this.searchInput),
-            fromDate: safeTrim(this.fromDateInput),
-            toDate: safeTrim(this.toDateInput),
-            clinicId: safeTrim(this.clinicIdFilter),
-            clientId: safeTrim(this.clientIdFilter),
-            petId: safeTrim(this.petIdFilter),
-            page,
-            pageSize
-        };
-        sessionStorage.setItem(EXAMINATIONS_REPORT_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(EXAMINATIONS_REPORT_STATE_KEY);
-    }
-}
-
-function defaultReportFromYyyyMmDd(): string {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    return `${y}-${m}-01`;
 }
