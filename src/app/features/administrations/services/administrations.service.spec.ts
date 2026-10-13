@@ -152,7 +152,7 @@ describe('AdministrationsService', () => {
 
     it('hata kodları Türkçe mesaja çevrilir', () => {
         const problem = (code: string, status: number) => new HttpErrorResponse({ status, error: { title: 'x', extensions: { code } } });
-        expect(messageFromHttpError(problem('Administrations.InsufficientStock', 400), 'f')).toContain('stoğu yetersiz');
+        expect(messageFromHttpError(problem('Administrations.InsufficientStock', 400), 'f')).toContain('yeterli miktar yok');
         expect(messageFromHttpError(problem('Administrations.AlreadyVoided', 409), 'f')).toContain('zaten iptal');
         expect(messageFromHttpError(problem('Administrations.LateEntryReasonRequired', 400), 'f')).toContain('gerekçe');
         expect(messageFromHttpError(problem('Examinations.Finalized', 409), 'f')).toContain('kesinleştirilmiş');

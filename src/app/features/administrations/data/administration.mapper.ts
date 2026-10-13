@@ -99,6 +99,6 @@ export function mapCreateAdministrationToApiBody(clinicId: string, req: CreateAd
         notes: trimmedOrNull(req.notes),
         lateEntryReason: trimmedOrNull(req.lateEntryReason),
         requestId: trimmedOrNull(req.requestId),
-        batchId: trimmedOrNull(req.batchId)
+        ...(trimmedOrNull(req.batchId) ? { batchId: req.batchId!.trim() } : {})
     };
 }

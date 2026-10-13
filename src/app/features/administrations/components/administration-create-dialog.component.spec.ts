@@ -3,9 +3,43 @@ import { of, Subject, throwError } from 'rxjs';
 import { AdministrationCreateDialogComponent } from '@/app/features/administrations/components/administration-create-dialog.component';
 import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import type { ProductStockBatchesVm, StockBatchVm } from '@/app/features/inventory/models/stock-batch-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
+import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
 
 const product = { id: 'pr1', name: 'Serum', sku: 'SRM-1', categoryName: '—', unit: 'şişe', unitPriceText: '—', currency: 'TRY', isActive: true, statusLabel: 'Aktif', statusSeverity: 'success' };
+
+const batch = (id: string, over: Partial<StockBatchVm> = {}): StockBatchVm => ({
+    id,
+    lotNumber: `LOT-${id}`,
+    expiryDate: '2027-01-01',
+    expiryText: '01.01.2027',
+    expiryStatus: 'ok',
+    expiryBadgeLabel: '',
+    expiryBadgeSeverity: 'secondary',
+    isExpired: false,
+    initialQuantity: 10,
+    remainingQuantity: 4,
+    remainingText: '4',
+    unit: 'şişe',
+    supplierName: '—',
+    invoiceText: '—',
+    receivedText: '—',
+    ...over
+});
+
+const batchInfo = (batches: StockBatchVm[], unbatchedQuantity = 0): ProductStockBatchesVm => ({
+    productId: 'pr1',
+    clinicId: 'c1',
+    unit: 'şişe',
+    quantityOnHand: 10,
+    quantityOnHandText: '10',
+    batchedQuantityText: '8',
+    unbatchedQuantity,
+    unbatchedQuantityText: String(unbatchedQuantity),
+    batches
+});
 
 const result = (created: boolean): AdministrationCreateResultVm => ({
     created,
@@ -27,7 +61,10 @@ const result = (created: boolean): AdministrationCreateResultVm => ({
         voidStockOutcome: null,
         addedAfterFinalization: false,
         lateEntryReason: null,
-        createdAtUtc: '2026-10-13T08:00:00Z'
+        createdAtUtc: '2026-10-13T08:00:00Z',
+        batchId: null,
+        lotNumber: null,
+        expiryDate: null
     },
     stock: { quantityOnHand: 4.5, minimumStockLevel: 2, isBelowMinimum: false }
 });
@@ -37,14 +74,19 @@ describe('AdministrationCreateDialogComponent', () => {
     let cmp: AdministrationCreateDialogComponent;
     let service: jasmine.SpyObj<AdministrationsService>;
     let saved: AdministrationCreateResultVm[];
+    let batches: jasmine.SpyObj<StockBatchService>;
 
     beforeEach(async () => {
         service = jasmine.createSpyObj<AdministrationsService>('AdministrationsService', ['createAdministration']);
         service.createAdministration.and.returnValue(of(result(true)));
+        batches = jasmine.createSpyObj<StockBatchService>('StockBatchService', ['getByProduct']);
+        batches.getByProduct.and.returnValue(of(batchInfo([batch('b1', { expiryDate: '2026-12-01' }), batch('b2', { remainingQuantity: 9, remainingText: '9' })])));
         await TestBed.configureTestingModule({
             imports: [AdministrationCreateDialogComponent],
             providers: [
                 { provide: AdministrationsService, useValue: service },
+                { provide: StockBatchService, useValue: batches },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1' } },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [product], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 }) } }
             ]
         }).compileComponents();
@@ -152,6 +194,62 @@ describe('AdministrationCreateDialogComponent', () => {
         cmp.form.patchValue({ lateEntryReason: '  İlaç yazılmayı unutuldu ' });
         cmp.onSubmit();
         expect(service.createAdministration.calls.mostRecent().args[0].lateEntryReason).toBe('  İlaç yazılmayı unutuldu ');
+    });
+
+    it('ürün seçilince aktif klinik için parti listesi istenir ve otomatik seçenek varsayılandır', () => {
+        cmp.form.patchValue({ productId: 'pr1' });
+        fixture.detectChanges();
+        expect(batches.getByProduct).toHaveBeenCalledWith('pr1', 'c1');
+        expect(cmp.form.controls.batchId.value).toBe('');
+        expect(cmp.batchOptions().map((o) => o.value)).toEqual(['', 'b1', 'b2']);
+    });
+
+    it('otomatikte batchId gönderilmez ve SKT\'si en yakın yeterli parti önerilir', () => {
+        cmp.form.patchValue({ productId: 'pr1', quantity: 2 });
+        fixture.detectChanges();
+        expect(cmp.batchGuide()?.text).toContain('LOT-b1');
+        cmp.onSubmit();
+        expect(service.createAdministration.calls.mostRecent().args[0].batchId).toBeNull();
+    });
+
+    it('miktar ilk partiyi aşınca öneri sıradaki yeterli partiye geçer', () => {
+        cmp.form.patchValue({ productId: 'pr1', quantity: 6 });
+        expect(cmp.batchGuide()?.text).toContain('LOT-b2');
+    });
+
+    it('seçilen parti batchId olarak gider; kalanı aşan miktar uyarılır', () => {
+        cmp.form.patchValue({ productId: 'pr1', quantity: 5 });
+        cmp.form.controls.batchId.setValue('b1');
+        expect(cmp.batchGuide()).toEqual(jasmine.objectContaining({ warn: true }));
+        cmp.form.controls.quantity.setValue(3);
+        expect(cmp.batchGuide()?.warn).toBeFalse();
+        expect(cmp.batchGuide()?.text).toContain('kalan 4');
+        cmp.onSubmit();
+        expect(service.createAdministration.calls.mostRecent().args[0].batchId).toBe('b1');
+    });
+
+    it('süresi geçmiş parti seçilemez (devre dışı)', () => {
+        batches.getByProduct.and.returnValue(of(batchInfo([batch('old', { isExpired: true, expiryStatus: 'expired' }), batch('b2')])));
+        cmp.form.patchValue({ productId: 'pr2' });
+        const old = cmp.batchOptions().find((o) => o.value === 'old');
+        expect(old?.disabled).toBeTrue();
+        expect(old?.label).toContain('süresi geçmiş');
+    });
+
+    it('parti okunamazsa (yetki vb.) uygulama otomatik FEFO ile kaydedilebilir', () => {
+        batches.getByProduct.and.returnValue(throwError(() => new Error('Parti bilgileri yüklenemedi.')));
+        cmp.form.patchValue({ productId: 'pr1', quantity: 1 });
+        fixture.detectChanges();
+        expect(cmp.batchesError()).toBe('Parti bilgileri yüklenemedi.');
+        cmp.onSubmit();
+        expect(service.createAdministration.calls.mostRecent().args[0].batchId).toBeNull();
+    });
+
+    it('ürün değişince seçili parti sıfırlanır', () => {
+        cmp.form.patchValue({ productId: 'pr1' });
+        cmp.form.controls.batchId.setValue('b1');
+        cmp.form.controls.productId.setValue('pr9');
+        expect(cmp.form.controls.batchId.value).toBe('');
     });
 
     it('çağrı sürerken ikinci gönderim yoksayılır', () => {
