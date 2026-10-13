@@ -1,12 +1,12 @@
-import { MENU_GROUPS, REPORT_SECTIONS, SETTINGS_SECTIONS, visibleGroups } from './panel-navigation';
+import { groupForUrl, MENU_GROUPS, REPORT_SECTIONS, SETTINGS_SECTIONS, visibleGroups } from './panel-navigation';
 
 const allClaims = new Set<string>([...MENU_GROUPS, ...SETTINGS_SECTIONS].flatMap((g) => g.entries.flatMap((e) => e.claims ?? [])));
 const labels = (groups: { entries: readonly { label: string }[] }[]) => groups.flatMap((g) => g.entries.map((e) => e.label));
 
 describe('panel-navigation', () => {
-    it('en geniş izinle altı grup görünür ve Giriş öğesi yoktur', () => {
+    it('en geniş izinle başlıklı gruplar Klinik, Para, Stok olur; Panel ve Ayarlar başlıksızdır', () => {
         const groups = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
-        expect(groups.map((g) => g.label)).toEqual(['Panel', 'Klinik', 'Para', 'Stok', 'Raporlar', 'Ayarlar']);
+        expect(groups.map((g) => g.label)).toEqual([undefined, 'Klinik', 'Para', 'Stok', undefined]);
         expect(labels(groups)).not.toContain('Giriş');
     });
 
@@ -34,6 +34,22 @@ describe('panel-navigation', () => {
         expect(withCategory).toEqual(['Hesabım', 'Tanımlar']);
     });
 
+    it('Ayarlar başlıksız tek öğe olarak en alta sabitlenir; Raporlar Para grubunun altındadır', () => {
+        const groups = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
+        const last = groups[groups.length - 1];
+        expect(last.pinned).toBeTrue();
+        expect(last.label).toBeUndefined();
+        expect(labels([last])).toEqual(['Ayarlar']);
+        expect(groups.filter((g) => g.pinned)).toHaveSize(1);
+        expect(labels([groups.find((g) => g.label === 'Para')!])).toEqual(['Ücretler', 'Ödemeler', 'Raporlar']);
+    });
+
+    it('Bugün ve Özet başlıksız ilk grupta, her zaman görünür', () => {
+        const groups = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
+        expect(groups[0].label).toBeUndefined();
+        expect(labels([groups[0]])).toEqual(['Bugün', 'Özet']);
+    });
+
     it('menüde tek Raporlar girişi vardır; ayrı rapor öğeleri yoktur', () => {
         const all = labels(visibleGroups(MENU_GROUPS, (c) => allClaims.has(c)));
         expect(all.filter((l) => l === 'Raporlar')).toHaveSize(1);
@@ -43,6 +59,18 @@ describe('panel-navigation', () => {
     it('Raporlar girişi herhangi bir rapor izniyle görünür, hiçbiriyle görünmez', () => {
         expect(labels(visibleGroups(MENU_GROUPS, (c) => c === 'Vaccinations.Read'))).toContain('Raporlar');
         expect(labels(visibleGroups(MENU_GROUPS, () => false))).not.toContain('Raporlar');
+    });
+
+    it('groupForUrl en uzun eşleşen menü yolunun grubunu bulur', () => {
+        const label = (url: string) => groupForUrl(MENU_GROUPS, url)?.label;
+        expect(label('/panel/pets/abc?tab=1')).toBe('Klinik');
+        expect(label('/panel/appointments/calendar')).toBe('Klinik');
+        expect(label('/panel/payments')).toBe('Para');
+        expect(label('/panel/reports/payments')).toBe('Para');
+        expect(label('/panel/stocks#x')).toBe('Stok');
+        expect(label('/panel/today')).toBeUndefined();
+        expect(groupForUrl(MENU_GROUPS, '/panel/settings/account')?.pinned).toBeTrue();
+        expect(groupForUrl(MENU_GROUPS, '/panel/petsx')).toBeUndefined();
     });
 
     it('Rapor Merkezi kartları izne göre süzülür ve gruplanır', () => {
