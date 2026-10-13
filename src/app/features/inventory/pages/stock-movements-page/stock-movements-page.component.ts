@@ -76,8 +76,6 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
     template: `
         <p-toast position="bottom-right" />
 
-        <a routerLink="/panel/products" class="text-primary font-medium no-underline inline-block mb-4">← Ürünler</a>
-
         <app-page-header title="Stok hareketleri" description="Klinik bazlı stok hareketleri; liste salt okunur. Yetkiniz varsa yeni kayıt ekleyebilirsiniz.">
             @if (canCreateStockMovement && !ro.mutationBlocked()) {
                 <button

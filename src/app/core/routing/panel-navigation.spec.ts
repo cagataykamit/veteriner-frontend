@@ -87,7 +87,8 @@ describe('panel-navigation', () => {
         expect(category('/panel/appointments')).toBe('Klinik');
         expect(category('/panel/appointments/calendar')).toBe('Klinik');
         expect(category('/panel/payments')).toBe('Para');
-        expect(category('/panel/reports/appointments')).toBe('Para');
+        expect(category('/panel/reports/appointments')).toBe('Raporlar');
+        expect(category('/panel/reports')).toBe('Raporlar');
         expect(category('/panel/products/abc')).toBe('Stok');
         expect(category('/panel/today')).toBe('Panel');
         expect(category('/panel/dashboard')).toBe('Panel');

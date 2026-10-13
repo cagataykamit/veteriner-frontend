@@ -40,6 +40,8 @@ export interface MenuEntry extends NavigationEntry {
     readonly icon: string;
     /** `true`: yalnız tam adres vurgulanır; varsayılan alt yollarda da vurgulanır. */
     readonly exact?: boolean;
+    /** Sayfa başlığı üstündeki etiket; yoksa grubun adı/kategorisi kullanılır (ör. Para altındaki Raporlar). */
+    readonly category?: string;
 }
 
 export interface MenuGroup {
@@ -158,6 +160,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             { label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
             {
                 label: 'Raporlar',
+                category: 'Raporlar',
                 icon: 'pi pi-fw pi-chart-line',
                 route: REPORTS_ROUTE,
                 claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
@@ -168,7 +171,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
         label: 'Stok',
         entries: [
             { label: 'Ürünler', icon: 'pi pi-fw pi-box', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
-            { label: 'Stok Durumu', icon: 'pi pi-fw pi-chart-bar', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
+            { label: 'Stok durumu', icon: 'pi pi-fw pi-chart-bar', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
             { label: 'Stok hareketleri', icon: 'pi pi-fw pi-arrow-right-arrow-left', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] }
         ]
     },
@@ -248,25 +251,30 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
     }
 ];
 
-/** Adresi (sorgu ve parça hariç) kapsayan en uzun menü yolunun grubu; eşleşme yoksa `undefined`. */
-export function groupForUrl(groups: readonly MenuGroup[], url: string): MenuGroup | undefined {
+/** Adresi (sorgu ve parça hariç) kapsayan en uzun menü yolunun grubu ve girişi; eşleşme yoksa `undefined`. */
+function matchForUrl(groups: readonly MenuGroup[], url: string): { group: MenuGroup; entry: MenuEntry } | undefined {
     const path = url.split(/[?#]/)[0];
-    let best: { group: MenuGroup; length: number } | undefined;
+    let best: { group: MenuGroup; entry: MenuEntry } | undefined;
     for (const group of groups) {
-        for (const { route } of group.entries) {
-            const matches = path === route || path.startsWith(`${route}/`);
-            if (matches && route.length > (best?.length ?? -1)) {
-                best = { group, length: route.length };
+        for (const entry of group.entries) {
+            const matches = path === entry.route || path.startsWith(`${entry.route}/`);
+            if (matches && entry.route.length > (best?.entry.route.length ?? -1)) {
+                best = { group, entry };
             }
         }
     }
-    return best?.group;
+    return best;
 }
 
-/** Sayfa başlığı üstündeki kategori etiketi: adresi kapsayan menü grubunun adı; menüde olmayan adres için `undefined`. */
+/** Adresi kapsayan en uzun menü yolunun grubu; eşleşme yoksa `undefined`. */
+export function groupForUrl(groups: readonly MenuGroup[], url: string): MenuGroup | undefined {
+    return matchForUrl(groups, url)?.group;
+}
+
+/** Sayfa başlığı üstündeki kategori etiketi: girişin kendi kategorisi, yoksa grubun adı; menüde olmayan adres için `undefined`. */
 export function categoryForUrl(groups: readonly MenuGroup[], url: string): string | undefined {
-    const group = groupForUrl(groups, url);
-    return group?.label ?? group?.category;
+    const match = matchForUrl(groups, url);
+    return match?.entry.category ?? match?.group.label ?? match?.group.category;
 }
 
 type HasClaim = (claim: string) => boolean;

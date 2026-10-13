@@ -10,7 +10,7 @@ import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navig
     standalone: true,
     imports: [AppPageHeaderComponent, NavigationCardsComponent],
     template: `
-        <app-page-header title="Raporlar" description="Randevu, klinik ve para raporlarına buradan ulaşın." />
+        <app-page-header title="Raporlar" subtitle="" description="Randevu, klinik ve para raporlarına buradan ulaşın." />
 
         @for (section of sections; track section.label) {
             <h5 class="mt-0 mb-3">{{ section.label }}</h5>

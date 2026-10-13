@@ -52,7 +52,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
         DashboardMiniTrendChartComponent
     ],
     template: `
-        <app-page-header title="Operasyon Özeti" [description]="pageDescription()" />
+        <app-page-header title="Özet" [description]="pageDescription()" />
 
         @if (!clinicContextOk()) {
             <div class="card">

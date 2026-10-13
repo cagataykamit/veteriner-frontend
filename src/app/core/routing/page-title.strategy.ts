@@ -21,7 +21,7 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['charges', 'Ücretler'],
     ['payments', 'Ödemeler'],
     ['products', 'Ürünler'],
-    ['stocks', 'Stok Durumu'],
+    ['stocks', 'Stok durumu'],
     ['stock-movements', 'Stok hareketleri'],
     ['reports', 'Raporlar'],
     ['reports/payments', 'Ödeme Raporu'],
