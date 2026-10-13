@@ -63,8 +63,8 @@ export class ProductClassificationFieldsComponent {
     /** Aynı sayfada tekrar kullanımda benzersiz id'ler için. */
     readonly idPrefix = input('product');
 
-    protected readonly kindOptions = PRODUCT_KIND_OPTIONS;
-    protected readonly controlledClassOptions = PRODUCT_CONTROLLED_CLASS_OPTIONS;
+    protected readonly kindOptions = [...PRODUCT_KIND_OPTIONS];
+    protected readonly controlledClassOptions = [...PRODUCT_CONTROLLED_CLASS_OPTIONS];
     protected readonly textMax = PRODUCT_CLASSIFICATION_TEXT_MAX;
 
     protected requiresLot(): boolean {
