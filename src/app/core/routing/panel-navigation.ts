@@ -62,6 +62,54 @@ export const DEFINITIONS_ROUTE = '/panel/settings/definitions';
 export const SPECIES_ROUTE = `${DEFINITIONS_ROUTE}/species`;
 export const BREEDS_ROUTE = `${DEFINITIONS_ROUTE}/breeds`;
 export const PRODUCT_CATEGORIES_ROUTE = `${DEFINITIONS_ROUTE}/product-categories`;
+export const REPORTS_ROUTE = '/panel/reports';
+
+/** Rapor Merkezi kartları; menüde tek "Raporlar" girişi vardır (ADR-003). Yeni rapor buraya kart olarak eklenir. */
+export const REPORT_SECTIONS: readonly CardSection[] = [
+    {
+        label: 'Randevu ve ziyaret',
+        entries: [
+            {
+                label: 'Randevu Raporu',
+                icon: 'pi pi-fw pi-calendar-plus',
+                route: `${REPORTS_ROUTE}/appointments`,
+                claims: [APPOINTMENTS_READ_CLAIM],
+                description: 'Randevular ve durum dağılımı; Gelmedi sayısı.'
+            }
+        ]
+    },
+    {
+        label: 'Klinik',
+        entries: [
+            {
+                label: 'Muayene Raporu',
+                icon: 'pi pi-fw pi-file-edit',
+                route: `${REPORTS_ROUTE}/examinations`,
+                claims: [EXAMINATIONS_READ_CLAIM],
+                description: 'Yapılan muayeneler.'
+            },
+            {
+                label: 'Aşı Raporu',
+                icon: 'pi pi-fw pi-shield',
+                route: `${REPORTS_ROUTE}/vaccinations`,
+                claims: [VACCINATIONS_READ_CLAIM],
+                description: 'Planlanan ve uygulanan aşılar.'
+            }
+        ]
+    },
+    {
+        label: 'Para',
+        entries: [
+            {
+                label: 'Ödeme Raporu',
+                icon: 'pi pi-fw pi-file-export',
+                route: `${REPORTS_ROUTE}/payments`,
+                claims: [PAYMENTS_READ_CLAIM],
+                description: 'Tahsilatlar ve ödeme yöntemine göre toplam.'
+            }
+        ]
+    }
+];
 
 export const MENU_GROUPS: readonly MenuGroup[] = [
     {
@@ -105,10 +153,12 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
     {
         label: 'Raporlar',
         entries: [
-            { label: 'Ödeme Raporu', icon: 'pi pi-fw pi-file-export', route: '/panel/reports/payments', claims: [PAYMENTS_READ_CLAIM] },
-            { label: 'Randevu Raporu', icon: 'pi pi-fw pi-calendar-plus', route: '/panel/reports/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
-            { label: 'Muayene Raporu', icon: 'pi pi-fw pi-file-edit', route: '/panel/reports/examinations', claims: [EXAMINATIONS_READ_CLAIM] },
-            { label: 'Aşı Raporu', icon: 'pi pi-fw pi-shield', route: '/panel/reports/vaccinations', claims: [VACCINATIONS_READ_CLAIM] }
+            {
+                label: 'Raporlar',
+                icon: 'pi pi-fw pi-chart-line',
+                route: REPORTS_ROUTE,
+                claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
+            }
         ]
     },
     {

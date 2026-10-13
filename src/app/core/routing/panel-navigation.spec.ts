@@ -1,4 +1,4 @@
-import { MENU_GROUPS, SETTINGS_SECTIONS, visibleGroups } from './panel-navigation';
+import { MENU_GROUPS, REPORT_SECTIONS, SETTINGS_SECTIONS, visibleGroups } from './panel-navigation';
 
 const allClaims = new Set<string>([...MENU_GROUPS, ...SETTINGS_SECTIONS].flatMap((g) => g.entries.flatMap((e) => e.claims ?? [])));
 const labels = (groups: { entries: readonly { label: string }[] }[]) => groups.flatMap((g) => g.entries.map((e) => e.label));
@@ -32,5 +32,25 @@ describe('panel-navigation', () => {
         expect(none).toEqual(['Hesabım']);
         const withCategory = labels(visibleGroups(SETTINGS_SECTIONS, (c) => c === 'ProductCategories.Read'));
         expect(withCategory).toEqual(['Hesabım', 'Tanımlar']);
+    });
+
+    it('menüde tek Raporlar girişi vardır; ayrı rapor öğeleri yoktur', () => {
+        const all = labels(visibleGroups(MENU_GROUPS, (c) => allClaims.has(c)));
+        expect(all.filter((l) => l === 'Raporlar')).toHaveSize(1);
+        expect(all.filter((l) => l.endsWith('Raporu'))).toEqual([]);
+    });
+
+    it('Raporlar girişi herhangi bir rapor izniyle görünür, hiçbiriyle görünmez', () => {
+        expect(labels(visibleGroups(MENU_GROUPS, (c) => c === 'Vaccinations.Read'))).toContain('Raporlar');
+        expect(labels(visibleGroups(MENU_GROUPS, () => false))).not.toContain('Raporlar');
+    });
+
+    it('Rapor Merkezi kartları izne göre süzülür ve gruplanır', () => {
+        const all = visibleGroups(REPORT_SECTIONS, () => true);
+        expect(all.map((g) => g.label)).toEqual(['Randevu ve ziyaret', 'Klinik', 'Para']);
+        expect(labels(all)).toEqual(['Randevu Raporu', 'Muayene Raporu', 'Aşı Raporu', 'Ödeme Raporu']);
+        const some = visibleGroups(REPORT_SECTIONS, (c) => c === 'Payments.Read' || c === 'Examinations.Read');
+        expect(labels(some)).toEqual(['Muayene Raporu', 'Ödeme Raporu']);
+        expect(visibleGroups(REPORT_SECTIONS, () => false)).toEqual([]);
     });
 });

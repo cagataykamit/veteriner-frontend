@@ -1,4 +1,5 @@
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
 /** UI’daki rapor klinik filtresi, `/me/clinics` özet listesinde yoksa (restore / drift). */
 export function isReportUiClinicIdUnknownToMyClinics(uiClinicId: string, summaries: ClinicSummary[]): boolean {
@@ -23,4 +24,9 @@ export function isReportUiClinicIdMisalignedWithJwt(uiClinicId: string, jwtClini
         return false;
     }
     return ui !== jwt;
+}
+
+/** Rapor satırında klinik adı yoksa (`—`) panel varsayılan klinik etiketi gösterilir. */
+export function reportClinicLabel(clinicLabel: string): string {
+    return clinicLabel === '—' ? PANEL_COPY.reportsClinicPanelDefault : clinicLabel;
 }

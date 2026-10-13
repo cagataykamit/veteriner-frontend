@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SETTINGS_SECTIONS, visibleGroups } from '@/app/core/routing/panel-navigation';
-import { NavigationCardsComponent } from '@/app/features/settings/components/navigation-cards.component';
+import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navigation-cards.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
 @Component({
