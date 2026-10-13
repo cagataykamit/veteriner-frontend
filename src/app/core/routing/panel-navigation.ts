@@ -36,7 +36,12 @@ export interface NavigationEntry {
     readonly claims?: readonly string[];
 }
 
+/** Menüde öğenin yanında bekleyen iş sayısı gösterilen sayaçlar; değerlerini `MenuBadgeService` sağlar. */
+export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults';
+
 export interface MenuEntry extends NavigationEntry {
+    /** Öğenin yanında gösterilecek bekleyen iş sayacı; 0 iken gizlenir. */
+    readonly badge?: MenuBadgeKey;
     readonly icon: string;
     /** `true`: yalnız tam adres vurgulanır; varsayılan alt yollarda da vurgulanır. */
     readonly exact?: boolean;
@@ -131,7 +136,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
     {
         category: 'Panel',
         entries: [
-            { label: 'Bugün', icon: 'pi pi-fw pi-calendar-clock', route: '/panel/today', claims: [VISITS_READ_CLAIM] },
+            { label: 'Bugün', icon: 'pi pi-fw pi-calendar-clock', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
             { label: 'Özet', icon: 'pi pi-fw pi-home', route: '/panel/dashboard' }
         ]
     },
@@ -141,15 +146,15 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
         entries: [
             // Takvim ayrı öğe olduğu sürece Randevular yalnız liste adresinde vurgulanır.
             { label: 'Randevular', icon: 'pi pi-fw pi-calendar', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM], exact: true },
-            { label: 'Randevu Takvimi', icon: 'pi pi-fw pi-calendar-clock', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] },
+            { label: 'Randevu Takvimi', icon: 'pi pi-fw pi-table', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] },
             { label: 'Müşteriler', icon: 'pi pi-fw pi-users', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
             { label: 'Hayvanlar', icon: 'pi pi-fw pi-heart', route: '/panel/pets', claims: [PETS_READ_CLAIM] },
-            { label: 'Muayeneler', icon: 'pi pi-fw pi-file-edit', route: '/panel/examinations', claims: [EXAMINATIONS_READ_CLAIM] },
+            { label: 'Muayeneler', icon: 'pi pi-fw pi-clipboard', route: '/panel/examinations', claims: [EXAMINATIONS_READ_CLAIM] },
             { label: 'Yatışlar', icon: 'pi pi-fw pi-building', route: '/panel/hospitalizations', claims: [HOSPITALIZATIONS_READ_CLAIM] },
             { label: 'Aşılar', icon: 'pi pi-fw pi-shield', route: '/panel/vaccinations', claims: [VACCINATIONS_READ_CLAIM] },
-            { label: 'Lab sonuçları', icon: 'pi pi-fw pi-chart-bar', route: '/panel/lab-results', claims: [LAB_RESULTS_READ_CLAIM] },
-            { label: 'Tedaviler', icon: 'pi pi-fw pi-briefcase', route: '/panel/treatments', claims: [TREATMENTS_READ_CLAIM] },
-            { label: 'Reçeteler', icon: 'pi pi-fw pi-file', route: '/panel/prescriptions', claims: [PRESCRIPTIONS_READ_CLAIM] }
+            { label: 'Lab sonuçları', icon: 'pi pi-fw pi-chart-bar', route: '/panel/lab-results', claims: [LAB_RESULTS_READ_CLAIM], badge: 'requestedLabResults' },
+            { label: 'Tedaviler', icon: 'pi pi-fw pi-wave-pulse', route: '/panel/treatments', claims: [TREATMENTS_READ_CLAIM] },
+            { label: 'Reçeteler', icon: 'pi pi-fw pi-file-edit', route: '/panel/prescriptions', claims: [PRESCRIPTIONS_READ_CLAIM] }
         ]
     },
     {
@@ -171,7 +176,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
         label: 'Stok',
         entries: [
             { label: 'Ürünler', icon: 'pi pi-fw pi-box', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
-            { label: 'Stok durumu', icon: 'pi pi-fw pi-chart-bar', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
+            { label: 'Stok durumu', icon: 'pi pi-fw pi-warehouse', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
             { label: 'Stok hareketleri', icon: 'pi pi-fw pi-arrow-right-arrow-left', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] }
         ]
     },
