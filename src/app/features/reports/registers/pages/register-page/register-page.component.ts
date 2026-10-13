@@ -36,7 +36,7 @@ const ymdToDisplay = (ymd: string) => ymd.split('-').reverse().join('.');
     template: `
         <div class="register-page">
             <a [routerLink]="reportsRoute" class="register-screen-only text-primary font-medium no-underline inline-block mb-4">← Raporlar</a>
-            <app-page-header class="register-screen-only" [title]="definition.title" [description]="definition.description" />
+            <app-page-header class="register-screen-only" [title]="definition.title" [description]="definition.description" subtitle="" />
             <p class="register-screen-only text-sm text-muted-color mt-0 mb-4" role="note">{{ copy.registerFormatUnverified }}</p>
 
             <app-report-filter-bar

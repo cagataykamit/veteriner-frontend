@@ -64,8 +64,8 @@ export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto>
         { header: 'Veteriner Hekimin Adı Soyadı', cell: (r) => r.veterinarianName ?? '' }
     ],
     screenColumns: [
-        { header: 'Sıra No', minWidth: '4rem', lines: (r) => [plain(String(r.rowNumber))] },
-        { header: 'Tarih', minWidth: '6rem', lines: (r) => [plain(formatDateDisplay(r.examinedAtUtc))] },
+        { header: 'Sıra No', minWidth: '3.25rem', lines: (r) => [plain(String(r.rowNumber))] },
+        { header: 'Tarih', minWidth: '5.5rem', lines: (r) => [plain(formatDateDisplay(r.examinedAtUtc))] },
         { header: 'Hasta Sahibi', minWidth: '12rem', lines: (r) => [strong(r.ownerName), plain(r.ownerPhone), muted(r.ownerAddress ?? '')] },
         {
             header: 'Hasta',
@@ -88,14 +88,14 @@ export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto>
         { header: 'Teşhis', minWidth: '10rem', lines: (r) => [plain(r.diagnosis)] },
         {
             header: 'Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar',
-            minWidth: '18rem',
+            minWidth: '14rem',
             lines: (r) => [
                 plain(r.treatments.join('; ')),
                 ...r.prescriptions.map((p) => plain(`Reçete: ${prescriptionText(p)}`)),
                 ...r.administrations.map((a) => plain(`Satış: ${administrationText(a)}`))
             ]
         },
-        { header: 'Veteriner Hekim', minWidth: '8rem', lines: (r) => [plain(r.veterinarianName)] }
+        { header: 'Veteriner Hekim', minWidth: '7rem', lines: (r) => [plain(r.veterinarianName)] }
     ]
 };
 

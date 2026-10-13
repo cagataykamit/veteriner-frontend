@@ -15,10 +15,13 @@
         vertical-align: top;
     }
 
+    td {
+        overflow-wrap: anywhere;
+    }
+
     th {
         background: var(--surface-ground);
         font-weight: 600;
-        white-space: nowrap;
     }
 
     tbody tr:hover td {
@@ -30,12 +33,14 @@
     }
 
     .register-item {
+        display: inline-block;
+        margin-right: 0.35rem;
         white-space: nowrap;
     }
 
     .register-item:not(:last-child)::after {
-        content: ' ·';
-        white-space: normal;
+        content: '·';
+        margin-left: 0.35rem;
     }
 
     .register-line-strong {
