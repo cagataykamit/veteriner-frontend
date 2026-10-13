@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -11,6 +11,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import {
@@ -21,13 +22,18 @@ import {
     type HospitalizationUpsertFieldErrors,
     parseHospitalizationUpsertHttpError
 } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
-import { PetsService } from '@/app/features/pets/services/pets.service';
 import {
-    examinationListItemFromDetail,
-    prescriptionExaminationSelectOption
-} from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+    FINALIZED_EXAMINATION_OPTION_HINT,
+    hospitalizationExaminationOption,
+    hospitalizationVisitOptions,
+    type HospitalizationRelationOption
+} from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
+import { PetsService } from '@/app/features/pets/services/pets.service';
+import { examinationListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
+import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
+import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
@@ -45,7 +51,10 @@ import {
     hospitalizationPlannedDischargeMin,
     plannedDischargeNotBeforeAdmissionValidator
 } from '@/app/features/hospitalizations/utils/hospitalization-date-validation.utils';
-import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
+import {
+    parseExaminationCreateRouteContext,
+    parseVisitExaminationRouteContext
+} from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -78,6 +87,11 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             @if (contextFromExamination()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">
                     Bu muayene kaydından bağlam taşındı; müşteri, hayvan ve bağlı muayene alanları kilitlidir.
+                </p>
+            }
+            @if (contextFromVisit()) {
+                <p class="text-sm text-muted-color mt-0 mb-4">
+                    Bu geliş kaydından bağlam taşındı; müşteri, hayvan ve geliş alanları kilitlidir.
                 </p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -136,12 +150,42 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             [filter]="true"
                             filterPlaceholder="Ara…"
                             filterBy="label"
+                            optionDisabled="disabled"
                             [showClear]="true"
                             styleClass="w-full"
                             [loading]="loadingExaminations()"
                         />
                         @if (apiFieldErrors().examinationId) {
                             <small class="text-red-500">{{ apiFieldErrors().examinationId }}</small>
+                        } @else {
+                            <small class="text-muted-color">Kesinleşmiş muayeneye yatış bağlanamaz; bu muayeneler pasif listelenir ({{ finalizedHint }}).</small>
+                        }
+                    </div>
+                    @if (canLinkVisit) {
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="visitId" class="block text-sm font-medium text-muted-color mb-2">Geliş (bugün)</label>
+                            <p-select
+                                inputId="visitId"
+                                formControlName="visitId"
+                                [options]="visitOptions()"
+                                optionLabel="label"
+                                optionValue="value"
+                                [placeholder]="visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu hayvan için bugün geliş yok'"
+                                [showClear]="true"
+                                styleClass="w-full"
+                            />
+                            @if (apiFieldErrors().visitId) {
+                                <small class="text-red-500">{{ apiFieldErrors().visitId }}</small>
+                            } @else {
+                                <small class="text-muted-color">Boş bırakılırsa bağlı muayenenin gelişi (varsa) kullanılır.</small>
+                            }
+                        </div>
+                    }
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="location" class="block text-sm font-medium text-muted-color mb-2">Konum</label>
+                        <input id="location" type="text" maxlength="200" class="w-full p-inputtext p-component" placeholder="Ör. Kafes 3" formControlName="location" />
+                        @if (apiFieldErrors().location) {
+                            <small class="text-red-500">{{ apiFieldErrors().location }}</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -195,18 +239,27 @@ export class HospitalizationNewPageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
+    private readonly visitsService = inject(VisitsService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly contextFromExamination = signal(false);
+    readonly contextFromVisit = signal(false);
+    private readonly contextLocked = computed(() => this.contextFromExamination() || this.contextFromVisit());
     readonly applyingRouteContext = signal(false);
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
 
     readonly loadingExaminations = signal(false);
-    readonly examinationOptions = signal<SelectOption[]>([]);
+    readonly examinationOptions = signal<HospitalizationRelationOption[]>([]);
+    protected readonly finalizedHint = FINALIZED_EXAMINATION_OPTION_HINT;
+    readonly canLinkVisit = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
+    private readonly todayItems = signal<TodayItemVm[]>([]);
+    private readonly selectedPetId = signal('');
+    private readonly contextVisitId = signal('');
+    readonly visitOptions = computed(() => hospitalizationVisitOptions(this.todayItems(), this.selectedPetId(), this.contextVisitId()));
     private relationLoadSeq = 0;
     readonly apiFieldErrors = signal<HospitalizationUpsertFieldErrors>({});
 
@@ -216,6 +269,8 @@ export class HospitalizationNewPageComponent implements OnInit {
         admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), hospitalizationDateNotTooFarPastValidator()]],
         plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
         examinationId: [''],
+        visitId: [''],
+        location: ['', Validators.maxLength(200)],
         reason: ['', Validators.required],
         notes: ['']
     }, { validators: [plannedDischargeNotBeforeAdmissionValidator()] });
@@ -228,8 +283,14 @@ export class HospitalizationNewPageComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.form.controls.examinationId.disable({ emitEvent: false });
+        if (this.canLinkVisit) {
+            this.visitsService.getToday().subscribe({
+                next: (t) => this.todayItems.set(t.items),
+                error: () => this.todayItems.set([])
+            });
+        }
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-            if (this.contextFromExamination()) {
+            if (this.contextLocked()) {
                 return;
             }
             this.form.controls.petId.setValue('');
@@ -245,11 +306,12 @@ export class HospitalizationNewPageComponent implements OnInit {
         });
 
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-            if (this.contextFromExamination()) {
+            if (this.contextLocked()) {
                 return;
             }
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
-            this.form.patchValue({ examinationId: '' }, { emitEvent: false });
+            this.selectedPetId.set(pid);
+            this.form.patchValue({ examinationId: '', visitId: '' }, { emitEvent: false });
             if (!pid) {
                 this.relationLoadSeq += 1;
                 this.examinationOptions.set([]);
@@ -260,6 +322,7 @@ export class HospitalizationNewPageComponent implements OnInit {
             this.loadExaminationsForPet(pid);
         });
         this.tryApplyExaminationRouteContext();
+        this.tryApplyVisitRouteContext();
     }
 
     private syncExaminationSelectState(): void {
@@ -325,7 +388,9 @@ export class HospitalizationNewPageComponent implements OnInit {
             plannedDischargeAtUtc,
             reason: v.reason,
             notes: v.notes,
-            examinationId: v.examinationId
+            examinationId: v.examinationId,
+            visitId: v.visitId,
+            location: v.location.trim() || null
         });
 
         this.submitting.set(true);
@@ -362,7 +427,7 @@ export class HospitalizationNewPageComponent implements OnInit {
                 if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                     return;
                 }
-                this.examinationOptions.set(ex.items.map(prescriptionExaminationSelectOption));
+                this.examinationOptions.set(ex.items.map(hospitalizationExaminationOption));
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
             },
@@ -394,8 +459,12 @@ export class HospitalizationNewPageComponent implements OnInit {
                     this.applyingRouteContext.set(false);
                     return;
                 }
+                if (ex.status === 'Finalized') {
+                    this.applyFinalizedExaminationContext(cId, pId);
+                    return;
+                }
                 const listItem = examinationListItemFromDetail(ex);
-                this.examinationOptions.set([prescriptionExaminationSelectOption(listItem)]);
+                this.examinationOptions.set([hospitalizationExaminationOption(listItem)]);
                 this.relationLoadSeq += 1;
                 this.form.patchValue(
                     {
@@ -420,6 +489,34 @@ export class HospitalizationNewPageComponent implements OnInit {
     }
 
 
+
+    /** Kesinleşmiş muayeneye yatış bağlanamaz (`Examinations.Finalized`): müşteri/hayvan taşınır, muayene bağı kurulmaz. */
+    private applyFinalizedExaminationContext(clientId: string, petId: string): void {
+        this.selectionError.set(
+            'Bağlam taşınan muayene kesinleşmiş; yatış kesinleşmiş muayeneye bağlanamaz. Müşteri ve hayvan dolduruldu; yatışı geliş kaydıyla veya muayenesiz oluşturabilirsiniz.'
+        );
+        this.form.controls.clientId.setValue(clientId);
+        this.form.controls.petId.setValue(petId);
+        this.applyingRouteContext.set(false);
+    }
+
+    private tryApplyVisitRouteContext(): void {
+        if (parseExaminationCreateRouteContext(this.route.snapshot.queryParamMap)) {
+            return;
+        }
+        const ctx = parseVisitExaminationRouteContext(this.route.snapshot.queryParamMap);
+        if (!ctx) {
+            return;
+        }
+        this.form.patchValue({ clientId: ctx.clientId, petId: ctx.petId, visitId: ctx.visitId }, { emitEvent: false });
+        for (const c of [this.form.controls.clientId, this.form.controls.petId, this.form.controls.visitId]) {
+            c.disable({ emitEvent: false });
+        }
+        this.selectedPetId.set(ctx.petId);
+        this.contextVisitId.set(ctx.visitId);
+        this.contextFromVisit.set(true);
+        this.loadExaminationsForPet(ctx.petId);
+    }
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {

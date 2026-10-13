@@ -6,6 +6,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { CareInstructionsSectionComponent } from '@/app/features/care-instructions/components/care-instructions-section.component';
 import type { HospitalizationDetailVm } from '@/app/features/hospitalizations/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
 import {
@@ -39,7 +40,7 @@ import {
         DialogModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, DateInputComponent
+        AppErrorStateComponent, DateInputComponent, CareInstructionsSectionComponent
     ],
     template: `
         <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
@@ -146,6 +147,10 @@ import {
                                     Taburcu
                                 }
                             </dd>
+                            @if (row()!.location) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Konum</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.location }}</dd>
+                            }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Yatış</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.admittedAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlı taburcu</dt>
@@ -197,8 +202,17 @@ import {
                         <h5 class="mt-0 mb-4">Notlar</h5>
                         <h6 class="mt-0 mb-2 text-muted-color text-sm">Yatış notları</h6>
                         <p class="mt-0 mb-0 whitespace-pre-wrap">{{ row()!.notes }}</p>
+                        @if (row()!.dischargeNote) {
+                            <h6 class="mt-4 mb-2 text-muted-color text-sm">Taburcu notu</h6>
+                            <p class="mt-0 mb-0 whitespace-pre-wrap" data-testid="discharge-note">{{ row()!.dischargeNote }}</p>
+                        }
                     </div>
                 </div>
+                @if (row()!.petId) {
+                    <div class="col-span-12">
+                        <app-care-instructions-section [hospitalizationId]="row()!.id" [petId]="row()!.petId!" />
+                    </div>
+                }
             </div>
         }
 
@@ -225,14 +239,29 @@ import {
                         }
                     </div>
                     <div>
-                        <label for="dischargeNotes" class="block text-sm font-medium text-muted-color mb-2">Taburcu notu</label>
-                        <textarea id="dischargeNotes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
-                        @if (dischargeFieldErrors().notes) {
-                            <small class="text-red-500">{{ dischargeFieldErrors().notes }}</small>
+                        <label for="dischargeNote" class="block text-sm font-medium text-muted-color mb-2">Taburcu notu</label>
+                        <textarea id="dischargeNote" rows="3" class="w-full p-inputtext p-component" formControlName="dischargeNote"></textarea>
+                        <small class="text-muted-color">Giriş notunu değiştirmez; hasta sahibine verilecek talimat için “Bakım talimatları” bölümünü kullanın.</small>
+                        @if (dischargeFieldErrors().dischargeNote) {
+                            <small class="text-red-500 block">{{ dischargeFieldErrors().dischargeNote }}</small>
                         }
                     </div>
                 </div>
-                @if (dischargeSubmitError()) {
+                @if (dischargeConflict()) {
+                    <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
+                        <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ dischargeSubmitError() }}</p>
+                        <div class="mt-3">
+                            <p-button
+                                type="button"
+                                label="Yazdıklarımı atıp güncel kaydı yükle"
+                                icon="pi pi-refresh"
+                                severity="secondary"
+                                size="small"
+                                (onClick)="discardDischargeAndReload()"
+                            />
+                        </div>
+                    </div>
+                } @else if (dischargeSubmitError()) {
                     <p class="text-red-500 mt-4 mb-0" role="alert">{{ dischargeSubmitError() }}</p>
                 }
                 <div class="flex flex-wrap justify-end gap-2 mt-4">
@@ -267,10 +296,11 @@ export class HospitalizationDetailPageComponent implements OnInit {
     readonly dischargeSubmitting = signal(false);
     readonly dischargeSubmitError = signal<string | null>(null);
     readonly dischargeFieldErrors = signal<HospitalizationDischargeFieldErrors>({});
+    readonly dischargeConflict = signal(false);
 
     readonly dischargeForm = this.fb.nonNullable.group({
         dischargedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator()]],
-        notes: ['']
+        dischargeNote: ['']
     });
 
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
@@ -296,15 +326,23 @@ export class HospitalizationDetailPageComponent implements OnInit {
         if (this.ro.mutationBlocked() || !this.canDischargeHospitalization) {
             return;
         }
-        this.dischargeForm.reset({ dischargedAtLocal: '', notes: '' });
+        this.dischargeForm.reset({ dischargedAtLocal: '', dischargeNote: '' });
         this.dischargeSubmitError.set(null);
         this.dischargeFieldErrors.set({});
+        this.dischargeConflict.set(false);
         this.dischargeDialogVisible = true;
     }
 
     onDischargeDialogHide(): void {
         this.dischargeSubmitError.set(null);
         this.dischargeFieldErrors.set({});
+        this.dischargeConflict.set(false);
+    }
+
+    /** Çakışmada yazılanlar atılır; kayıt (yeni `rowVersion` ile) yeniden yüklenir. */
+    discardDischargeAndReload(): void {
+        this.dischargeDialogVisible = false;
+        this.reload();
     }
 
     onDischargeSubmit(): void {
@@ -313,6 +351,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
         }
         this.dischargeSubmitError.set(null);
         this.dischargeFieldErrors.set({});
+        this.dischargeConflict.set(false);
         if (this.dischargeForm.invalid) {
             this.dischargeForm.markAllAsTouched();
             return;
@@ -328,7 +367,8 @@ export class HospitalizationDetailPageComponent implements OnInit {
         this.hospitalizationsService
             .dischargeHospitalization(this.hospitalizationId, {
                 dischargedAtUtc,
-                notes: v.notes?.trim() ? v.notes.trim() : null
+                dischargeNote: v.dischargeNote,
+                rowVersion: this.row()?.rowVersion
             })
             .subscribe({
                 next: () => {
@@ -342,6 +382,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
                     if (e instanceof HttpErrorResponse) {
                         const parsed = parseHospitalizationDischargeHttpError(e);
                         this.dischargeFieldErrors.set(parsed.fieldErrors);
+                        this.dischargeConflict.set(parsed.isConcurrencyConflict);
                         this.dischargeSubmitError.set(parsed.summaryMessage);
                         return;
                     }
