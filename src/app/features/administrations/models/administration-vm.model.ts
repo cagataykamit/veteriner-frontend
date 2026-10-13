@@ -1,3 +1,6 @@
+/** İptalde stok sonucu: iade (stok artar) veya zarar/imha (stok artmaz). */
+export type AdministrationStockOutcome = 'StockReturned' | 'WrittenOff';
+
 export interface AdministrationVm {
     id: string;
     petId: string;
@@ -13,6 +16,11 @@ export interface AdministrationVm {
     isVoided: boolean;
     voidedAtUtc: string | null;
     voidReason: string | null;
+    /** Yalnız iptal edilmiş kayıtta; bilinmeyen değer `null`. */
+    voidStockOutcome: AdministrationStockOutcome | null;
+    /** Bağlı muayene kayıt anında kesinleşmişti; gerekçesi `lateEntryReason`. */
+    addedAfterFinalization: boolean;
+    lateEntryReason: string | null;
     createdAtUtc: string;
 }
 
@@ -51,6 +59,8 @@ export interface CreateAdministrationRequest {
     /** Boşsa sunucu "şimdi" kullanır. */
     administeredAtUtc?: string | null;
     notes?: string | null;
+    /** Bağlı muayene kesinleşmişse zorunlu (5–500); taslakta/muayenesizde gönderilmez. */
+    lateEntryReason?: string | null;
     /** Form başına bir kez üretilen anahtar; aynı anahtarla tekrar istek ikinci düşüm üretmez. */
     requestId: string;
 }

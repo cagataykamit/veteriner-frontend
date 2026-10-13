@@ -20,6 +20,10 @@ export interface AdministrationDto {
     voidedAtUtc?: string | null;
     voidedByUserId?: string | null;
     voidReason?: string | null;
+    /** `StockReturned` | `WrittenOff`; yalnız iptalde. */
+    voidStockOutcome?: string | null;
+    addedAfterFinalization?: boolean | null;
+    lateEntryReason?: string | null;
     createdByUserId: string;
     createdAtUtc: string;
     requestId?: string | null;
@@ -55,5 +59,6 @@ export interface AdministrationCreateRequestDto {
     quantity: number;
     administeredAtUtc?: string | null;
     notes?: string | null;
+    lateEntryReason?: string | null;
     requestId?: string | null;
 }

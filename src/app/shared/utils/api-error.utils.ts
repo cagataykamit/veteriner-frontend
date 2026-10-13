@@ -291,6 +291,7 @@ const ADMINISTRATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Administrations.DuplicateRequestId': 'Bu istek kimliği farklı bir uygulama için kullanılmış. Formu yeniden açıp tekrar deneyin.',
     'Administrations.RequestIdVoided': 'Bu uygulama kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
     'Administrations.AlreadyVoided': 'Bu uygulama zaten iptal edilmiş. Listeyi yenileyin.',
+    'Administrations.LateEntryReasonRequired': 'Muayene kesinleşmiş; gerekçe (5–500 karakter) zorunludur. Uygulamayı muayene sayfasından ekleyin.',
     'Administrations.NotFound': 'Uygulama kaydı bulunamadı.',
     'Administrations.StockMovementNotFound': 'Uygulamanın stok hareketi bulunamadı; lütfen destek ile iletişime geçin.',
     'Administrations.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
