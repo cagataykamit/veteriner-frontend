@@ -15,6 +15,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
+/** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
+const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
+
 @Component({
     selector: 'app-lab-result-detail-page',
     standalone: true,
@@ -31,8 +34,8 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
     template: `
         <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
 
-        @if (showSavedBanner()) {
-            <p class="mb-4 m-0 text-sm font-medium">Kayıt güncellendi.</p>
+        @if (savedMessage(); as message) {
+            <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
         }
 
         @if (loading()) {
@@ -174,7 +177,7 @@ export class LabResultDetailPageComponent implements OnInit {
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly row = signal<LabResultDetailVm | null>(null);
-    readonly showSavedBanner = signal(false);
+    readonly savedMessage = signal<string | null>(null);
     cancelVisible = false;
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
 
@@ -194,7 +197,7 @@ export class LabResultDetailPageComponent implements OnInit {
             return;
         }
         this.labResultId = id;
-        this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
+        this.savedMessage.set(SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null);
         this.reload();
     }
 

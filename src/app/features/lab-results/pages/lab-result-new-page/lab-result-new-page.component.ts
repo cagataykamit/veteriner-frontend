@@ -330,7 +330,7 @@ export class LabResultNewPageComponent implements OnInit {
         this.labResultsService.createLabResult(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/lab-results', id], { queryParams: { saved: '1' } });
+                void this.router.navigate(['/panel/lab-results', id], { queryParams: { saved: 'created' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);

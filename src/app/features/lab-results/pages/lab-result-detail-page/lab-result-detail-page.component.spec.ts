@@ -68,3 +68,29 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
         expect(render('Requested', true, true)).toEqual(['Düzenle (salt okunur)']);
     });
 });
+
+describe('LabResultDetailPageComponent — kayıt sonrası onay', () => {
+    const bannerFor = (saved: string | null): string | null => {
+        TestBed.configureTestingModule({
+            imports: [LabResultDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap(saved ? { saved } : {}) } } },
+                { provide: LabResultsService, useValue: { getLabResultById: () => of(vm('Requested')) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(LabResultDetailPageComponent);
+        fixture.detectChanges();
+        return (fixture.nativeElement as HTMLElement).querySelector('p.text-sm.font-medium')?.textContent?.trim() ?? null;
+    };
+
+    it('oluşturma sonrası "Kayıt oluşturuldu.", düzenleme sonrası "Kayıt güncellendi."', () => {
+        expect(bannerFor('created')).toBe('Kayıt oluşturuldu.');
+        TestBed.resetTestingModule();
+        expect(bannerFor('1')).toBe('Kayıt güncellendi.');
+        TestBed.resetTestingModule();
+        expect(bannerFor(null)).toBeNull();
+    });
+});
