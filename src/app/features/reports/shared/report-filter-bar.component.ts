@@ -98,7 +98,7 @@ export interface ReportExtraFilter {
                         </app-filter-field>
                     }
                 }
-                @if (!s.snapshot) {
+                @if (!s.snapshot && !s.dateRangeOnly) {
                     <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="s.isClientFilterActive()" width="grow">
                         <app-client-search [inputId]="idPrefix() + 'Client'" [ngModel]="s.clientIdFilter" (ngModelChange)="s.onClientFilterChange($event)" />
                     </app-filter-field>
@@ -106,11 +106,16 @@ export interface ReportExtraFilter {
                         <app-pet-search [inputId]="idPrefix() + 'Pet'" [requireClient]="false" [clientId]="s.clientIdFilter" [ngModel]="s.petIdFilter" (ngModelChange)="s.petIdFilter = $event; s.scheduleApply()" />
                     </app-filter-field>
                 }
-                <app-filter-field [label]="copy.reportsFilterSearch" [labelFor]="idPrefix() + 'Search'" [active]="s.isSearchActive()" width="grow">
-                    <app-search-input [inputId]="idPrefix() + 'Search'" [placeholder]="searchPlaceholder()" [(value)]="s.searchInput" (search)="s.applyFilters()" />
-                </app-filter-field>
+                @if (!s.dateRangeOnly) {
+                    <app-filter-field [label]="copy.reportsFilterSearch" [labelFor]="idPrefix() + 'Search'" [active]="s.isSearchActive()" width="grow">
+                        <app-search-input [inputId]="idPrefix() + 'Search'" [placeholder]="searchPlaceholder()" [(value)]="s.searchInput" (search)="s.applyFilters()" />
+                    </app-filter-field>
+                }
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="s.resetFilters()" [disabled]="s.loading()" />
+                    @if (s.dateRangeOnly) {
+                        <p-button [label]="copy.reportsApplyFilter" icon="pi pi-filter" (onClick)="s.applyFilters()" [disabled]="s.loading()" />
+                    }
                     @if (s.canExport()) {
                         <p-button
                             [label]="copy.reportsExportXlsx"
@@ -129,6 +134,7 @@ export interface ReportExtraFilter {
                             [disabled]="s.loading() || s.exporting()"
                         />
                     }
+                    <ng-content select="[barActions]" />
                 </div>
             </div>
         </div>

@@ -1,14 +1,17 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import type { AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
-import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationStockOutcomeLabel } from '@/app/features/administrations/utils/administration-labels';
+import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationBatchText, administrationStockOutcomeLabel } from '@/app/features/administrations/utils/administration-labels';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
-/** Uygulama satırının işaretleri: "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */
+/** Uygulama satırının işaretleri: düşülen parti (seri no, SKT), "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */
 @Component({
     selector: 'app-administration-row-marks',
     standalone: true,
     imports: [AppStatusTagComponent],
     template: `
+        @if (batchText(); as text) {
+            <div class="text-xs text-muted-color" data-testid="batch-info">{{ text }}</div>
+        }
         @if (row().addedAfterFinalization) {
             <div data-testid="late-entry">
                 <app-status-tag [label]="lateEntryLabel" severity="warn" />
@@ -35,4 +38,5 @@ export class AdministrationRowMarksComponent {
 
     protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
     protected readonly outcomeLabel = administrationStockOutcomeLabel;
+    protected readonly batchText = computed(() => administrationBatchText(this.row()));
 }

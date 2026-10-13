@@ -2,6 +2,7 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { CommonModule } from '@angular/common';
 import {
     Component,
+    computed,
     DestroyRef,
     effect,
     inject,
@@ -10,11 +11,14 @@ import {
     signal,
     untracked
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { catchError, of, startWith, switchMap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
+import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
+import { syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import { mapStockMovementUpsertFormValueToCreateRequest } from '@/app/features/inventory/data/stock-movement.mapper';
 import {
     createStockMovementFormGroup,
@@ -36,7 +40,7 @@ type SelectOption = { label: string; value: string };
 @Component({
     selector: 'app-stock-movement-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent],
     template: `
         <p-dialog
             header="Stok hareketi ekle"
@@ -161,6 +165,10 @@ type SelectOption = { label: string; value: string };
                     }
                 </div>
 
+                @if (batchActive()) {
+                    <app-stock-batch-fields [group]="form.controls.batch" [required]="batchRequired()" idPrefix="smcBatch" />
+                }
+
                 <div>
                     <label for="smcReason" class="block text-sm font-medium text-muted-color mb-2">Neden</label>
                     <input id="smcReason" type="text" class="w-full p-inputtext p-component" formControlName="reason" autocomplete="off" />
@@ -223,6 +231,19 @@ export class StockMovementCreateDialogComponent {
 
     readonly form = createStockMovementFormGroup(this.fb);
 
+    /** Form başına bir kez üretilir; hata sonrası yeniden denemede aynı kalır, her açılışta yenilenir. */
+    private requestId = crypto.randomUUID();
+
+    private readonly movementType = toSignal(
+        this.form.controls.movementType.valueChanges.pipe(startWith(this.form.controls.movementType.value)),
+        { initialValue: this.form.controls.movementType.value }
+    );
+    /** Seçili ürün aşı / kontrollü ise parti zorunludur (ürün kartından gelir). */
+    private readonly productRequiresLot = signal(false);
+    /** Parti bilgisi yalnız stok girişinde (`In`/`Initial`) alınır. */
+    readonly batchActive = computed(() => this.movementType() === 'In' || this.movementType() === 'Initial');
+    readonly batchRequired = computed(() => this.batchActive() && this.productRequiresLot());
+
     readonly movementTypeOptions = [...STOCK_MOVEMENT_CREATE_MOVEMENT_OPTIONS];
 
     readonly clinicOptions = signal<SelectOption[]>([]);
@@ -243,6 +264,22 @@ export class StockMovementCreateDialogComponent {
     constructor() {
         this.form.controls.movementType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
             this.form.controls.quantity.updateValueAndValidity({ emitEvent: false });
+        });
+
+        this.form.controls.productId.valueChanges
+            .pipe(
+                startWith(this.form.controls.productId.value),
+                switchMap((id) =>
+                    id?.trim()
+                        ? this.productService.getById(id.trim()).pipe(catchError(() => of(null)))
+                        : of(null)
+                ),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe((p) => this.productRequiresLot.set(p?.requiresLotAndExpiry ?? false));
+
+        effect(() => {
+            syncStockBatchGroup(this.form.controls.batch, { active: this.batchActive(), required: this.batchRequired() });
         });
 
         effect(() => {
@@ -291,7 +328,7 @@ export class StockMovementCreateDialogComponent {
         }
         let body;
         try {
-            body = mapStockMovementUpsertFormValueToCreateRequest(getStockMovementFormValue(this.form));
+            body = mapStockMovementUpsertFormValueToCreateRequest(getStockMovementFormValue(this.form, this.requestId));
         } catch {
             this.submitError.set('Form doğrulanamadı.');
             return;
@@ -300,6 +337,7 @@ export class StockMovementCreateDialogComponent {
         this.submitError.set(null);
         this.stockMovementService.create(body).subscribe({
             next: () => {
+                this.requestId = crypto.randomUUID();
                 this.submitting.set(false);
                 this.created.emit();
                 this.visibleChange.emit(false);
@@ -327,6 +365,7 @@ export class StockMovementCreateDialogComponent {
             occurredAtUtcLocal: '',
             notes: ''
         });
+        this.requestId = crypto.randomUUID();
 
         const fixedPid = this.fixedProductId()?.trim() ?? '';
         if (fixedPid) {

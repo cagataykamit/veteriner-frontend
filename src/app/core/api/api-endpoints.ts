@@ -156,7 +156,9 @@ export const ApiEndpoints = {
         /** Borç raporu — şu anki kalan (`clinicId`, `minAmount`, `search`, `page`, `pageSize`); izin `Charges.Read`. */
         outstandingBalances: () => `/api/v1/reports/outstanding-balances`,
         outstandingBalancesExport: () => `/api/v1/reports/outstanding-balances/export`,
-        outstandingBalancesExportXlsx: () => `/api/v1/reports/outstanding-balances/export-xlsx`
+        outstandingBalancesExportXlsx: () => `/api/v1/reports/outstanding-balances/export-xlsx`,
+        /** Kayıt defterleri (`examinations` | `prescriptions`): liste, `/export` (CSV), `/export-xlsx`; `from`, `to` (yyyy-MM-dd), `clinicId`, `page`, `pageSize`. */
+        register: (book: string) => `/api/v1/reports/registers/${book}`
     },
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
@@ -210,7 +212,9 @@ export const ApiEndpoints = {
         activate: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/activate`,
         deactivate: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/deactivate`,
         stocks: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stocks`,
-        stockMovements: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-movements`
+        stockMovements: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-movements`,
+        /** GET `?clinicId=` — parti bakiyesi (FEFO sıralı) + partisiz bakiye (`StockMovements.Read`). */
+        stockBatches: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-batches`
     },
     productStocks: {
         list: () => `/api/v1/product-stocks`,

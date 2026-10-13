@@ -1,3 +1,5 @@
+import type { StockMovementBatchRequest } from '@/app/features/inventory/models/stock-batch-api.model';
+
 /**
  * Backend — stok hareketi DTO’ları (GET /stock-movements, GET /products/{id}/stock-movements).
  */
@@ -49,4 +51,8 @@ export interface CreateStockMovementRequest {
     referenceId: string | null;
     occurredAtUtc: string | null;
     notes: string | null;
+    /** Tekrar koruması: aynı anahtar stoğu ikinci kez değiştirmez (`STOCK_MOVEMENT_SAFETY_API_CONTRACT.md`). */
+    requestId?: string;
+    /** Yalnız `In`/`Initial`: yeni parti açar; yoksa partisiz bakiyeye eklenir. */
+    batch?: StockMovementBatchRequest;
 }

@@ -310,7 +310,11 @@ function hospitalizationPanelProblemUserMessage(err: HttpErrorResponse): string 
 
 /** Uygulama kaydı ve iptali — `docs/ADMINISTRATIONS_API_CONTRACT.md` §3–§6; `Administrations.Validation` backend `detail` ile gösterilir. */
 const ADMINISTRATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Administrations.InsufficientStock': 'Bu ürünün klinik stoğu yetersiz; uygulama kaydedilmedi. Önce stok girişi yapın veya miktarı düşürün.',
+    'Administrations.InsufficientStock':
+        'Seçilen partide veya klinik stoğunda yeterli miktar yok; uygulama kaydedilmedi. Bir uygulama iki partiye bölünmez: miktarı azaltıp kalanı ayrı kayıt olarak girin, başka parti seçin ya da önce stok girişi yapın.',
+    'Administrations.BatchExpired':
+        'Partinin son kullanma tarihi geçmiş; süresi geçmiş partiyle uygulama kaydedilemez. Süresi geçmemiş bir parti seçin. Süresi geçmiş stok, stok çıkışı veya düzeltme ile (imha/sayım) düşülür.',
+    'StockBatches.NotFound': 'Seçilen parti bulunamadı. Formu yeniden açıp partiyi tekrar seçin.',
     'Administrations.DuplicateRequestId': 'Bu istek kimliği farklı bir uygulama için kullanılmış. Formu yeniden açıp tekrar deneyin.',
     'Administrations.RequestIdVoided': 'Bu uygulama kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
     'Administrations.AlreadyVoided': 'Bu uygulama zaten iptal edilmiş. Listeyi yenileyin.',

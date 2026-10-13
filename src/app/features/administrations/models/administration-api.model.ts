@@ -27,6 +27,10 @@ export interface AdministrationDto {
     createdByUserId: string;
     createdAtUtc: string;
     requestId?: string | null;
+    /** Düşülen parti; `null` = partisiz bakiye (`BATCH_STOCK_API_CONTRACT.md` §6). */
+    batchId?: string | null;
+    lotNumber?: string | null;
+    expiryDate?: string | null;
 }
 
 /** Yalnız oluşturma yanıtında; düşümden sonraki stok. */
@@ -61,4 +65,6 @@ export interface AdministrationCreateRequestDto {
     notes?: string | null;
     lateEntryReason?: string | null;
     requestId?: string | null;
+    /** Verilmezse sunucu FEFO ile seçer. */
+    batchId?: string | null;
 }

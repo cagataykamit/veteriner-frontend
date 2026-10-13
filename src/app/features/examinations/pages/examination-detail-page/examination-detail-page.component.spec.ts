@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { of } from 'rxjs';
+import { of, EMPTY } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -77,6 +78,7 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
                 },
                 { provide: AdministrationsService, useValue: { getAdministrations: () => of({ items: [], page: 1, pageSize: 50, totalItems: 0, totalPages: 0 }) } },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
+                { provide: StockBatchService, useValue: { getByProduct: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
@@ -137,6 +139,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
                 },
                 { provide: AdministrationsService, useValue: { getAdministrations: () => of({ items: [], page: 1, pageSize: 50, totalItems: 0, totalPages: 0 }) } },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
+                { provide: StockBatchService, useValue: { getByProduct: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]

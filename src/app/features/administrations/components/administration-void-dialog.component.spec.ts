@@ -23,7 +23,10 @@ const target: AdministrationVm = {
     voidStockOutcome: null,
     addedAfterFinalization: false,
     lateEntryReason: null,
-    createdAtUtc: '2026-10-13T08:00:00Z'
+    createdAtUtc: '2026-10-13T08:00:00Z',
+    batchId: null,
+    lotNumber: null,
+    expiryDate: null
 };
 
 describe('AdministrationVoidDialogComponent', () => {
