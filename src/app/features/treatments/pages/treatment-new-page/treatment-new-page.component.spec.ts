@@ -24,9 +24,9 @@ const exam = {
 } as ExaminationDetailVm;
 
 describe('TreatmentNewPageComponent — muayene bağlamı', () => {
-    const setup = (queryParams: Record<string, string>) => {
+    const setup = (queryParams: Record<string, string>, examination: ExaminationDetailVm = exam) => {
         const examinations = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getExaminationById', 'getExaminations']);
-        examinations.getExaminationById.and.returnValue(of(exam));
+        examinations.getExaminationById.and.returnValue(of(examination));
         TestBed.configureTestingModule({
             imports: [TreatmentNewPageComponent],
             providers: [
@@ -57,6 +57,14 @@ describe('TreatmentNewPageComponent — muayene bağlamı', () => {
         expect(raw.petId).toBe('pet-1');
         expect(raw.examinationId).toBe('e1');
         expect(fixture.componentInstance.contextFromExamination()).toBeTrue();
+    });
+
+    it('kesinleşmiş muayene bağlamıyla açılınca kilit uyarısı formun üstünde, Kaydet öncesinde görünür', () => {
+        const { fixture } = setup({ clientId: 'client-1', petId: 'pet-1', examinationId: 'e1' }, { ...exam, status: 'Finalized' } as ExaminationDetailVm);
+        fixture.detectChanges();
+
+        const alert = (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]');
+        expect(alert?.textContent).toContain('kesinleştirilmiş');
     });
 
     it('bağlamsız açılışta form boş kalır ve muayene çağrısı yapılmaz', () => {

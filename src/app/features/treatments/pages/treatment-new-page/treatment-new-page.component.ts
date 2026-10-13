@@ -389,6 +389,9 @@ export class TreatmentNewPageComponent implements OnInit {
                 this.form.controls.petId.disable({ emitEvent: false });
                 this.form.controls.examinationId.disable({ emitEvent: false });
                 this.contextFromExamination.set(true);
+                if (ex.status === 'Finalized') {
+                    this.selectionError.set('Bu muayene kesinleştirilmiş; tedavi eklenemez. Gerekirse muayeneye ek not ekleyin.');
+                }
                 this.loadingExaminations.set(false);
                 this.applyingRouteContext.set(false);
             },
