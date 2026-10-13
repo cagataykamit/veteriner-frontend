@@ -81,11 +81,8 @@ app-menu {
         transition:
             box-shadow var(--element-transition-duration);
 
-        // Simge boyutu açık menüde ve şeritte aynıdır (daralınca zıplama olmaz); ince çizgili simge yazı konturuyla hafif kalınlaştırılır.
         .layout-menuitem-icon {
-            margin-right: 0.75rem;
-            font-size: 1.75rem;
-            -webkit-text-stroke: 0.4px currentColor;
+            margin-right: 0.5rem;
         }
 
         .layout-submenu-toggler {
@@ -205,8 +202,8 @@ app-menu {
 // Masaüstünde Klinik, Para ve Stok açıkken menü 730 px yükseklikte kaydırmasız sığsın (QA M-1).
 @media (min-width: 992px) {
     .layout-menu a {
-        padding-top: 0.2rem;
-        padding-bottom: 0.2rem;
+        padding-top: 0.35rem;
+        padding-bottom: 0.35rem;
     }
 }
 
@@ -225,7 +222,10 @@ app-menu {
 }
 
 // Simge şeridi (masaüstünde ☰ ile daraltılmış menü): yalnız simgeler; ad ipucunda ve ekran okuyucuda.
-// Şerit sol kenara ve üst çubuğun altına dayalıdır; her öğe şerit genişliğinde tek tıklanabilir satırdır (WCAG 2.2 hedef boyutu).
+// Şerit sol kenara ve üst çubuğun altına dayalıdır; her öğe şerit genişliğinde tek tıklanabilir satırdır.
+// Satır yüksekliği pencereye göre ayarlanır: tüm öğeler (en çok $rail-item-count) kaydırmasız sığar; çok kısa pencerede alt sınırda kalıp kaydırılır.
+$rail-item-count: 19;
+$rail-chrome-height: 6rem; // üst çubuk 4 rem + ayırıcı çizgiler ve kenarlık payı
 @media (min-width: 992px) {
     .layout-wrapper.layout-static.layout-static-inactive {
         .layout-sidebar {
@@ -243,12 +243,14 @@ app-menu {
         .layout-menu {
             a {
                 justify-content: center;
-                min-height: 3.15rem;
+                min-height: clamp(2.1rem, calc((100vh - #{$rail-chrome-height}) / #{$rail-item-count}), 2.85rem);
                 padding: 0;
                 border-radius: 0;
 
                 .layout-menuitem-icon {
                     margin-right: 0;
+                    font-size: 1.55rem;
+                    -webkit-text-stroke: 0.3px currentColor;
                 }
 
                 .layout-menuitem-text {
