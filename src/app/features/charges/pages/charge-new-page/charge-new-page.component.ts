@@ -31,7 +31,7 @@ import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.com
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 @Component({
@@ -182,6 +182,9 @@ export class ChargeNewPageComponent implements OnInit {
     readonly loadingExaminations = signal(false);
     readonly examinationOptions = signal<SelectOption[]>([]);
     private readonly todayItems = signal<TodayItemVm[]>([]);
+    /** "Bugün" listesinin tarihi (yyyy-MM-dd); önceki günden süren gelişler bağlanabilir geliş sayılmaz. */
+    private readonly todayDate = signal('');
+    private visitPresetId = this.route.snapshot.queryParamMap.get('visitId')?.trim() || null;
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -214,7 +217,7 @@ export class ChargeNewPageComponent implements OnInit {
         const cid = trimClientIdControlValue(clientId);
         const pid = trimClientIdControlValue(petId);
         return this.todayItems()
-            .filter((i) => i.visitId && !i.isVoided && i.clientId === cid && (!pid || i.petId === pid))
+            .filter((i) => i.visitId && !i.isVoided && this.arrivedToday(i) && i.clientId === cid && (!pid || i.petId === pid))
             .map((i) => ({
                 value: i.visitId as string,
                 label: `${i.petName} — ${formatUtcIsoAsLocalTimeDisplay(i.arrivedAtUtc)} gelişi`
@@ -224,7 +227,11 @@ export class ChargeNewPageComponent implements OnInit {
     ngOnInit(): void {
         if (this.canLinkVisit) {
             this.visitsService.getToday().subscribe({
-                next: (t) => this.todayItems.set(t.items),
+                next: (t) => {
+                    this.todayDate.set(t.date);
+                    this.todayItems.set(t.items);
+                    this.applyVisitPreset();
+                },
                 error: () => this.todayItems.set([])
             });
         }
@@ -245,6 +252,23 @@ export class ChargeNewPageComponent implements OnInit {
         if (preset) {
             this.form.controls.clientId.setValue(preset);
         }
+        this.applyVisitPreset();
+    }
+
+    private arrivedToday(item: TodayItemVm): boolean {
+        return !!item.arrivedAtUtc && toIstanbulDateInputValue(item.arrivedAtUtc) === this.todayDate();
+    }
+
+    /** Ödeme ekranından gelen `visitId`: geliş bugünün listesindeyse hayvan ve geliş önceden seçilir (bir kez). */
+    private applyVisitPreset(): void {
+        const visitId = this.visitPresetId;
+        const item = visitId ? this.todayItems().find((i) => i.visitId === visitId && this.arrivedToday(i)) : undefined;
+        if (!item || item.clientId !== trimClientIdControlValue(this.form.controls.clientId.value)) {
+            return;
+        }
+        this.visitPresetId = null;
+        this.form.controls.petId.setValue(item.petId);
+        this.form.controls.visitId.setValue(item.visitId as string, { emitEvent: false });
     }
 
     goList(): void {

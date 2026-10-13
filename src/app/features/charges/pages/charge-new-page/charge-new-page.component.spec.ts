@@ -43,6 +43,7 @@ describe('ChargeNewPageComponent', () => {
     let claims: Set<string>;
     let mutationBlocked: boolean;
     let queryClientId: string | null;
+    let queryVisitId: string | null = null;
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -72,6 +73,7 @@ describe('ChargeNewPageComponent', () => {
                                     todayItem({ visitId: 'v2', petId: 'p2', petName: 'Boncuk' }),
                                     todayItem({ visitId: 'v3', isVoided: true }),
                                     todayItem({ visitId: 'v4', clientId: 'cl2' }),
+                                    todayItem({ visitId: 'v5', arrivedAtUtc: '2026-10-08T07:00:00Z' }), // önceki günden süren geliş
                                     todayItem({ visitId: null, key: 'a1' })
                                 ]
                             })
@@ -79,7 +81,7 @@ describe('ChargeNewPageComponent', () => {
                 },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : null) } } } }
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : null) } } } }
             ]
         }).compileComponents();
         router = TestBed.inject(Router);
@@ -98,6 +100,7 @@ describe('ChargeNewPageComponent', () => {
         charges = jasmine.createSpyObj<ChargesService>('ChargesService', ['createCharge']);
         claims = new Set(['Visits.Read', 'Examinations.Read']);
         mutationBlocked = false;
+        queryVisitId = null;
         queryClientId = null;
     });
 
@@ -203,6 +206,18 @@ describe('ChargeNewPageComponent', () => {
         expect(cmp.visitOptions().map((o) => o.value)).toEqual(['v1', 'v2']);
         cmp.form.controls.petId.setValue('p2');
         expect(cmp.visitOptions().map((o) => o.value)).toEqual(['v2']);
+    });
+
+    it('query visitId ile bugünkü geliş ve hayvanı önceden seçilir; önceki günün gelişi seçilmez', async () => {
+        queryClientId = 'cl1';
+        queryVisitId = 'v2';
+        await setup();
+        expect(cmp.form.controls.petId.value).toBe('p2');
+        expect(cmp.form.controls.visitId.value).toBe('v2');
+        TestBed.resetTestingModule();
+        queryVisitId = 'v5';
+        await setup();
+        expect(cmp.form.controls.visitId.value).toBe('');
     });
 
     it('müşteri değişince hayvan, geliş ve muayene seçimi sıfırlanır', async () => {

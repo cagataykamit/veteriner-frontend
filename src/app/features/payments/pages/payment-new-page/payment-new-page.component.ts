@@ -96,7 +96,7 @@ const DUPLICATE_MISMATCH_MESSAGE =
                         } @else if (openCharges().length === 0) {
                             <p class="text-sm m-0" role="status">
                                 Bu müşterinin açık ücreti yok. Ödeme alabilmek için önce
-                                <a [routerLink]="['/panel/charges/new']" [queryParams]="{ clientId: clientIdValue() }" class="text-primary font-medium no-underline">ücret ekleyin</a>.
+                                <a [routerLink]="['/panel/charges/new']" [queryParams]="chargeNewQueryParams()" class="text-primary font-medium no-underline">ücret ekleyin</a>.
                             </p>
                         } @else {
                             <div class="overflow-x-auto">
@@ -241,6 +241,8 @@ export class PaymentNewPageComponent implements OnInit {
 
     readonly clientIdValue = signal('');
     readonly clientSelected = computed(() => this.clientIdValue() !== '');
+    /** "Ücret ekleyin" bağlantısı: müşteri yanında bilinen geliş de taşınır (Yeni Ücret'te yeniden seçmek gerekmesin). */
+    readonly chargeNewQueryParams = computed(() => ({ clientId: this.clientIdValue(), ...(this.context?.visitId ? { visitId: this.context.visitId } : {}) }));
     readonly balanceLoading = signal(false);
     readonly balanceError = signal<string | null>(null);
     /** Aktif kliniğin açık ücretleri (başka klinik ücretine tahsis edilemez). */

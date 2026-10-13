@@ -203,6 +203,15 @@ describe('PaymentNewPageComponent', () => {
         expect(cmp.canSubmit()).toBeFalse();
     });
 
+    it('geliş bağlamıyla gelindiyse ücret ekleme bağlantısı müşteri yanında visitId de taşır', async () => {
+        query = { clientId: 'cl1', visitId: 'v1' };
+        clients.getClientBalance.and.returnValue(of(balance([])));
+        await setup();
+        const href = (fixture.nativeElement.querySelector('a[href*="/panel/charges/new"]') as HTMLAnchorElement).getAttribute('href');
+        expect(href).toContain('clientId=cl1');
+        expect(href).toContain('visitId=v1');
+    });
+
     it('bakiye yüklenemezse hata gösterir', async () => {
         clients.getClientBalance.and.returnValue(throwError(() => new Error('Müşteri bakiyesi yüklenemedi.')));
         await setup();
