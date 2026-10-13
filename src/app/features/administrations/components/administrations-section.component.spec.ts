@@ -86,11 +86,21 @@ describe('AdministrationsSectionComponent', () => {
 
     it('muayene bağlamında muayeneye göre süzer; tedavi bağlamında tedaviye göre', async () => {
         await setup();
-        expect(service.getAdministrations.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ examinationId: 'e1', treatmentId: undefined, includeVoided: true }));
+        expect(service.getAdministrations.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ examinationId: 'e1', treatmentId: undefined, includeVoided: false }));
         TestBed.resetTestingModule();
         service.getAdministrations.calls.reset();
         await setup({ treatmentId: 't1' });
         expect(service.getAdministrations.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ treatmentId: 't1', examinationId: undefined }));
+    });
+
+    it('iptal edilenler varsayılan gizlidir; "İptal edilenleri göster" ile yeniden yüklenir', async () => {
+        await setup();
+        expect(service.getAdministrations.calls.mostRecent().args[0]?.includeVoided).toBeFalse();
+        service.getAdministrations.calls.reset();
+        fixture.componentInstance.setShowVoided(true);
+        expect(service.getAdministrations.calls.mostRecent().args[0]?.includeVoided).toBeTrue();
+        fixture.detectChanges();
+        expect(text()).toContain('İptal edilenleri göster');
     });
 
     it('Create izniyle Uygulama ekle görünür; Correct izniyle İptal et görünür', async () => {

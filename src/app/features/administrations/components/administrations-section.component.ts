@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -29,7 +31,9 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         RouterLink,
+        CheckboxModule,
         ButtonModule,
         TableModule,
         AdministrationCreateDialogComponent,
@@ -50,6 +54,11 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                             <p-button label="Uygulama ekle" icon="pi pi-plus" size="small" data-testid="administration-add" (onClick)="createVisible = true" />
                         }
                     </div>
+                </div>
+
+                <div class="flex items-center gap-2 mb-3">
+                    <p-checkbox inputId="administrationsShowVoided" [binary]="true" [ngModel]="showVoided()" (ngModelChange)="setShowVoided($event)" data-testid="administrations-show-voided" />
+                    <label for="administrationsShowVoided" class="text-sm cursor-pointer">İptal edilenleri göster</label>
                 </div>
 
                 @if (canCreate && locked()) {
@@ -138,6 +147,8 @@ export class AdministrationsSectionComponent {
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly rows = signal<AdministrationVm[]>([]);
+    /** İptal edilen uygulamalar varsayılan gizli (ADR-013); açıkça istenince listelenir. */
+    readonly showVoided = signal(false);
     readonly notice = signal<string | null>(null);
     readonly noticeIsWarning = signal(false);
 
@@ -166,7 +177,7 @@ export class AdministrationsSectionComponent {
                 treatmentId: this.treatmentId() ?? undefined,
                 examinationId: this.treatmentId() ? undefined : (this.examinationId() ?? undefined),
                 petId: this.treatmentId() || this.examinationId() ? undefined : this.petId(),
-                includeVoided: true
+                includeVoided: this.showVoided()
             })
             .subscribe({
                 next: (r) => {
@@ -178,6 +189,11 @@ export class AdministrationsSectionComponent {
                     this.loading.set(false);
                 }
             });
+    }
+
+    setShowVoided(show: boolean): void {
+        this.showVoided.set(show);
+        this.reload();
     }
 
     openVoid(row: AdministrationVm): void {
