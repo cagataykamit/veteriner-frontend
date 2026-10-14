@@ -94,13 +94,13 @@ app-menu {
         cursor: pointer;
         padding: 0.5rem 1rem;
         border-radius: var(--content-border-radius);
-        font-size: 1.05rem; // 14.7 px (kök 14 px); 14 px küçük, 15.4 ve 17.5 px büyük bulundu (ADR-023)
+        font-size: 1rem; // 14 px (kök 14 px); referans menü ölçüsü (kullanıcı onayı), ADR-023
         transition:
             box-shadow var(--element-transition-duration);
 
         .layout-menuitem-icon {
             margin-right: 0.5rem;
-            font-size: 1.5rem; // 21 px
+            font-size: 1.15rem; // 16 px
         }
 
         .layout-submenu-toggler {
@@ -251,7 +251,7 @@ $menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-roundi
 @media (min-width: 992px) {
     .layout-wrapper.layout-static {
         .layout-sidebar {
-            --menu-row: clamp(22px, calc((100vh - #{$menu-fixed-height}) / #{$menu-row-units}), 40px);
+            --menu-row: clamp(22px, calc((100vh - #{$menu-fixed-height}) / #{$menu-row-units}), 38px);
             top: 5rem;
             left: 0;
             width: $menu-open-width;
@@ -277,7 +277,7 @@ $menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-roundi
             .layout-menu-heading {
                 display: flex;
                 align-items: flex-end;
-                padding: 0 1rem calc(var(--menu-row) * 0.15) calc((#{$menu-icon-column} - 1.5rem) / 2);
+                padding: 0 1rem calc(var(--menu-row) * 0.15) calc((#{$menu-icon-column} - 1.15rem) / 2);
                 overflow: hidden;
             }
 
