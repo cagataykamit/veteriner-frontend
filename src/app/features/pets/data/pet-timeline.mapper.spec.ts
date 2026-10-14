@@ -72,7 +72,7 @@ describe('pet timeline yardımcıları', () => {
             { type: 'Visit', sourceId: 'vi1', status: 'InProgress', title: 'Geliş' },
             { type: 'Examination', sourceId: 'e1', title: 'Kontrol' },
             { type: 'LabResult', sourceId: 'l1', title: 'Kan', relatedExaminationId: 'e1' },
-            { type: 'Payment', sourceId: 'pay1', title: 'Ödeme', status: 'Garip' },
+            { type: 'Appointment', sourceId: 'ap1', title: 'Randevu', status: 'Garip' },
             { type: 'Visit', sourceId: 'vi2', title: 'Geliş', relatedExaminationId: 'e9' }
         ]
     }).items;
@@ -97,7 +97,7 @@ describe('pet timeline yardımcıları', () => {
     it('durum etiketi Türkçe; bilinmeyen durum etiketsiz; bilinmeyen tür genel simge', () => {
         expect(petTimelineStatusLabel(base[0])).toBe('Devam ediyor');
         expect(petTimelineStatusLabel(base[3])).toBeNull();
-        expect(petTimelineTypeIcon('Payment')).toBe('pi-circle');
+        expect(petTimelineTypeIcon('Appointment')).toBe('pi-circle');
         expect(petTimelineTypeIcon('Vaccination')).toBe('pi-shield');
     });
 });

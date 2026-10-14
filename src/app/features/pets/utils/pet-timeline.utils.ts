@@ -1,6 +1,7 @@
 import type { PetTimelineItemVm, PetTimelineType } from '@/app/features/pets/models/pet-timeline-vm.model';
 import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';
+import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 interface PetTimelineTypeDefinition {
     readonly value: PetTimelineType;
@@ -22,7 +23,15 @@ export const PET_TIMELINE_TYPES: ReadonlyArray<PetTimelineTypeDefinition> = [
     { value: 'Administration', label: 'Uygulama', icon: 'pi-box', detailPath: null }
 ];
 
-const BY_TYPE: ReadonlyMap<string, PetTimelineTypeDefinition> = new Map(PET_TIMELINE_TYPES.map((d) => [d.value, d]));
+/** Timeline ucu ödemeyi henüz döndürmez (`types=Payment` → 400); hasta kartında geçmiş özetindeki ödemeler bu türle aynı listeye karışır. */
+export const PET_TIMELINE_PAYMENT_TYPE = 'Payment';
+
+type TypeDisplay = Omit<PetTimelineTypeDefinition, 'value'>;
+
+const BY_TYPE: ReadonlyMap<string, TypeDisplay> = new Map<string, TypeDisplay>([
+    ...PET_TIMELINE_TYPES.map((d): [string, TypeDisplay] => [d.value, d]),
+    [PET_TIMELINE_PAYMENT_TYPE, { label: 'Ödeme', icon: 'pi-wallet', detailPath: '/panel/payments' }]
+]);
 
 const FALLBACK_ICON = 'pi-circle';
 
@@ -73,6 +82,57 @@ export function petTimelineStatusLabel(item: PetTimelineItemVm): string | null {
 
 /** İptal edilmiş aşı ve yanlış işaretli geliş ortak etiketi. */
 export const PET_TIMELINE_VOIDED_LABEL = 'İptal / yanlış işaretli';
+
+export type PetCardTimelineFilter = 'all' | 'examination' | 'vaccination' | 'lab' | 'treatment' | 'payment';
+
+interface PetCardTimelineFilterDefinition {
+    readonly value: PetCardTimelineFilter;
+    readonly label: string;
+    /** Timeline ucuna giden türler; boş = yetkili tüm türler. `payment` uca gitmez (geçmiş özetinden gelir). */
+    readonly types: readonly PetTimelineType[];
+}
+
+/** Hasta kartındaki tek zaman çizelgesinin süzgeçleri (ADR-020 karar 2d); sıra ekrandaki sıradır. */
+export const PET_CARD_TIMELINE_FILTERS: ReadonlyArray<PetCardTimelineFilterDefinition> = [
+    { value: 'all', label: 'Tümü', types: [] },
+    { value: 'examination', label: 'Muayene', types: ['Examination'] },
+    { value: 'vaccination', label: 'Aşı', types: ['Vaccination'] },
+    { value: 'lab', label: 'Lab', types: ['LabResult'] },
+    { value: 'treatment', label: 'Tedavi', types: ['Treatment', 'Prescription', 'Administration'] },
+    { value: 'payment', label: 'Ödeme', types: [] }
+];
+
+/** Geçmiş özetindeki ödeme satırı timeline olayı olarak (başlık: tutar, özet: ödeme yöntemi). */
+export function paymentToPetTimelineItem(
+    p: { id: string; paidAtUtc: string | null; clinicName: string | null },
+    title: string,
+    methodLabel: string | null
+): PetTimelineItemVm {
+    return {
+        key: `${PET_TIMELINE_PAYMENT_TYPE}:${p.id}`,
+        type: PET_TIMELINE_PAYMENT_TYPE,
+        sourceId: p.id,
+        eventAtUtc: p.paidAtUtc,
+        clinicName: p.clinicName,
+        title,
+        summary: methodLabel,
+        status: null,
+        isVoided: false,
+        linkType: PET_TIMELINE_PAYMENT_TYPE,
+        linkId: p.id,
+        relatedExaminationId: null,
+        addedAfterFinalization: false
+    };
+}
+
+/**
+ * İki yeniden-eskiye liste birleşir, en yeni `limit` olay kalır. Her liste en az `limit` olay (ya da tamamını) içerdiği sürece
+ * sonuç kesindir: en yeni `limit` olayın hiçbiri listelerin dışında kalamaz.
+ */
+export function mergePetTimelineItems(a: readonly PetTimelineItemVm[], b: readonly PetTimelineItemVm[], limit: number): PetTimelineItemVm[] {
+    const at = (i: PetTimelineItemVm) => parseUtcApiInstantIsoString(i.eventAtUtc)?.getTime() ?? 0;
+    return [...a, ...b].sort((x, y) => at(y) - at(x)).slice(0, limit);
+}
 
 /** Yetki yok nedeniyle gösterilmeyen türlerin okunabilir listesi. */
 export function petTimelineOmittedTypesLabel(types: readonly string[]): string {
