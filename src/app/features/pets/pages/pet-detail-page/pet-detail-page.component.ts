@@ -22,7 +22,6 @@ import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fie
 import {
     buildPetTodo,
     nextScheduledAppointment,
-    okData,
     type PetCardSection,
     petCardEmphasis,
     petIdentityParts
@@ -100,7 +99,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 />
             }
             @if (canUpdatePet && !ro.mutationBlocked()) {
-                <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" [nextAppointment]="nextAppointmentData()" (changed)="onStatusChanged($event)" (stale)="refreshPet()" />
+                <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" (changed)="onStatusChanged($event)" (stale)="refreshPet()" (appointmentsCancelled)="retryHistory()" />
             }
 
             <app-pet-card-header [pet]="p" [summary]="summary()" [balance]="balance()" [nextAppointment]="nextAppointment()" />
@@ -212,7 +211,6 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
 
     readonly payments = computed(() => this.historyBlock('Payments', (h) => h.recentPayments));
     readonly nextAppointment = computed(() => this.historyBlock('Appointments', (h) => nextScheduledAppointment(h.recentAppointments)));
-    readonly nextAppointmentData = computed(() => okData(this.nextAppointment()) ?? null);
     readonly statusDialogOpen = signal(false);
 
     readonly todo = computed(() =>

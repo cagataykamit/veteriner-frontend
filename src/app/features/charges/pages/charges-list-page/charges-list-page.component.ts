@@ -121,6 +121,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 </td>
                                 @if (hasRowActions) {
                                     <td class="whitespace-nowrap">
+                                        <div class="flex items-center justify-end">
                                         @if (ro.mutationBlocked()) {
                                             <span class="text-muted-color text-sm">Salt okunur</span>
                                         } @else {
@@ -140,6 +141,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                                 <p-button icon="pi pi-ban" size="small" severity="danger" [text]="true" ariaLabel="İptal et" [attr.title]="'İptal et'" (onClick)="openVoid(row)" />
                                             }
                                         }
+                                        </div>
                                     </td>
                                 }
                             </tr>
