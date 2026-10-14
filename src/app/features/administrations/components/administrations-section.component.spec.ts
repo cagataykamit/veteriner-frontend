@@ -109,6 +109,18 @@ describe('AdministrationsSectionComponent', () => {
         expect(text()).toContain('İptal edilenleri göster');
     });
 
+    it('kayıt yokken boş durum tek satır; süzgeç ve Uygulama ekle başlık satırında kalır', async () => {
+        claims.add('Administrations.Create');
+        service.getAdministrations.and.returnValue(of(page([])));
+        await setup();
+        const el = fixture.nativeElement as HTMLElement;
+        expect(el.querySelector('[data-testid="administrations-empty"]')?.textContent).toContain('Bu kayıtta uygulanan ürün yok.');
+        expect(el.querySelector('app-empty-state')).toBeNull();
+        const header = el.querySelector('h5')!.parentElement!;
+        expect(header.querySelector('[data-testid="administrations-show-voided"]')).not.toBeNull();
+        expect(header.querySelector('[data-testid="administration-add"]')).not.toBeNull();
+    });
+
     it('Create izniyle Uygulama ekle görünür; Correct izniyle İptal et görünür', async () => {
         claims.add('Administrations.Create').add('Administrations.Correct');
         await setup();

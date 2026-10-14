@@ -18,7 +18,6 @@ import { AdministrationVoidDialogComponent } from '@/app/features/administration
 import type { AdministrationCreateResultVm, AdministrationStockOutcome, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -41,7 +40,6 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         AdministrationRowMarksComponent,
         AdministrationVoidDialogComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
         AppErrorStateComponent
     ],
     template: `
@@ -49,17 +47,17 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
             <div class="card" data-testid="administrations-section">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <h5 class="mt-0 mb-0">Uygulanan ürünler</h5>
-                    <div class="flex flex-wrap items-center gap-2">
+                    <!-- Süzgeç başlık satırında: kayıt yokken bölüm ayrı bir satır kaplamaz. -->
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <div class="flex items-center gap-2">
+                            <p-checkbox inputId="administrationsShowVoided" [binary]="true" [ngModel]="showVoided()" (ngModelChange)="setShowVoided($event)" data-testid="administrations-show-voided" />
+                            <label for="administrationsShowVoided" class="text-sm cursor-pointer">İptal edilenleri göster</label>
+                        </div>
                         <a routerLink="/panel/administrations" [queryParams]="{ petId: petId() }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         @if (canAdd()) {
                             <p-button label="Uygulama ekle" icon="pi pi-plus" size="small" data-testid="administration-add" (onClick)="createVisible = true" />
                         }
                     </div>
-                </div>
-
-                <div class="flex items-center gap-2 mb-3">
-                    <p-checkbox inputId="administrationsShowVoided" [binary]="true" [ngModel]="showVoided()" (ngModelChange)="setShowVoided($event)" data-testid="administrations-show-voided" />
-                    <label for="administrationsShowVoided" class="text-sm cursor-pointer">İptal edilenleri göster</label>
                 </div>
 
                 @if (canCreate && locked()) {
@@ -76,7 +74,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 } @else if (loading()) {
                     <app-loading-state message="Uygulamalar yükleniyor…" />
                 } @else if (rows().length === 0) {
-                    <app-empty-state message="Bu kayıtta uygulanan ürün yok." />
+                    <p class="text-muted-color text-sm m-0" data-testid="administrations-empty">Bu kayıtta uygulanan ürün yok.</p>
                 } @else {
                     <div class="overflow-x-auto">
                         <p-table [value]="rows()" [tableStyle]="{ 'min-width': '34rem' }">
