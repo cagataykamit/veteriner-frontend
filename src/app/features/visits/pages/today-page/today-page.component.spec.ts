@@ -312,6 +312,17 @@ describe('TodayPageComponent', () => {
         expect(buttons(full)).toContain('Muayene aç');
     });
 
+    it('Hızlı satış kısayolu yalnız Sales.Create ile görünür ve satış ekranına gider', async () => {
+        const data = { date: 'd', activeHospitalizations: [], items: [] };
+        const without = await create(['Visits.Read'], data);
+        expect((without.nativeElement as HTMLElement).querySelector('a[href="/panel/sales/new"]')).toBeNull();
+        TestBed.resetTestingModule();
+
+        const withClaim = await create(['Visits.Read', 'Sales.Create'], data);
+        const link = (withClaim.nativeElement as HTMLElement).querySelector('a[href="/panel/sales/new"]');
+        expect(link?.textContent).toContain('Hızlı satış');
+    });
+
     it('muayeneye geçiş: visitId ile hasta bağlamı query olarak taşınır', async () => {
         const f = await create(['Visits.Read', 'Examinations.Create'], { date: 'd', activeHospitalizations: [], items: [item()] });
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
