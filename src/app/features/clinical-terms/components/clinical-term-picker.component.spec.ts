@@ -56,7 +56,7 @@ describe('ClinicalTermPickerComponent', () => {
     beforeEach(() => {
         claims = new Set(['ClinicalTerms.Read', 'ClinicalTerms.Create']);
         blocked = false;
-        terms = jasmine.createSpyObj<ClinicalTermsService>('ClinicalTermsService', ['list', 'create']);
+        terms = jasmine.createSpyObj<ClinicalTermsService>('ClinicalTermsService', ['list', 'create', 'setActive']);
         terms.list.and.returnValue(paged([term('İshal'), term('Kanlı ishal')]));
     });
 
@@ -74,13 +74,14 @@ describe('ClinicalTermPickerComponent', () => {
         expect(root().querySelector('[data-testid="clinical-term-picker"]')).toBeNull();
     });
 
-    it('arama aktif terimleri türe göre sunucudan ister', async () => {
+    it('arama türe göre pasifler dahil sunucudan ister; yalnız aktifler seçilebilir', async () => {
+        terms.list.and.returnValue(paged([term('İshal'), term('Kanlı ishal', { isActive: false, isSystem: false })]));
         await create();
         picker().onComplete({ query: 'ishal', originalEvent: new Event('x') });
         await wait(0);
-        expect(terms.list).toHaveBeenCalledWith(jasmine.objectContaining({ kind: 'Complaint', search: 'ishal', page: 1 }));
-        expect(terms.list.calls.mostRecent().args[0].includeInactive).toBeUndefined();
-        expect(picker().suggestions().map((t) => t.name)).toEqual(['İshal', 'Kanlı ishal']);
+        expect(terms.list).toHaveBeenCalledWith(jasmine.objectContaining({ kind: 'Complaint', search: 'ishal', includeInactive: true, page: 1 }));
+        expect(picker().suggestions().map((t) => t.name)).toEqual(['İshal']);
+        expect(picker().inactiveMatches().map((t) => t.name)).toEqual(['Kanlı ishal']);
     });
 
     it('gerçek input: yazınca debounce sonrası tek arama yapılır', async () => {
@@ -121,7 +122,101 @@ describe('ClinicalTermPickerComponent', () => {
         picker().addLastQuery();
         fixture.detectChanges();
         expect(host.control.value).toBe('Kusma');
-        expect(picker().addError()).toBe('Bu ad sözlükte zaten var.');
+        expect(picker().actionError()).toBe('Bu ad sözlükte zaten var.');
+    });
+
+    describe('pasif eşleşme', () => {
+        const passive = term('Kulak akıntısı', { id: 'p1', isActive: false, isSystem: false });
+
+        beforeEach(() => {
+            terms.list.and.returnValue(paged([passive]));
+            terms.setActive.and.returnValue(of(undefined));
+        });
+
+        async function searchPassive(query = 'KULAK  akintisi'): Promise<void> {
+            await create();
+            picker().onComplete({ query, originalEvent: new Event('x') });
+            await wait(0);
+            fixture.detectChanges();
+        }
+
+        /** Öneri paneli `appendTo="body"` ile gövdeye eklenir. */
+        function openPanelFor(text: string): Promise<void> {
+            const input = root().querySelector('input') as HTMLInputElement;
+            input.focus();
+            input.value = text;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            return wait(500).then(() => fixture.detectChanges());
+        }
+
+        it('aynı adlı pasif kayıt varken "sözlüğe ekle" sunulmaz', async () => {
+            await searchPassive();
+            expect(picker().suggestions()).toEqual([]);
+            expect(picker().canAdd()).toBeFalse();
+        });
+
+        it('yalnız kısmen eşleşen pasif kayıt "sözlüğe ekle"yi engellemez', async () => {
+            await searchPassive('kulak');
+            expect(picker().canAdd()).toBeTrue();
+        });
+
+        it('panelde soluk ad, "Pasif" rozeti ve Etkinleştir düğmesi görünür; ekle düğmesi yok', async () => {
+            claims.add('ClinicalTerms.Deactivate');
+            await create();
+            await openPanelFor('kulak akıntısı');
+            const row = document.body.querySelector('[data-testid="clinical-term-inactive-row"]') as HTMLElement;
+            expect(row).not.toBeNull();
+            expect(row.textContent).toContain('Kulak akıntısı');
+            expect(row.textContent).toContain('Pasif');
+            expect(row.querySelector('[data-testid="clinical-term-activate"]')).not.toBeNull();
+            expect(document.body.querySelector('[data-testid="clinical-term-add"]')).toBeNull();
+        });
+
+        it('izin yoksa satırda yöneticiye başvurma notu görünür, düğme yok', async () => {
+            await create();
+            await openPanelFor('kulak akıntısı');
+            const row = document.body.querySelector('[data-testid="clinical-term-inactive-row"]') as HTMLElement;
+            expect(row.textContent).toContain('yöneticiye başvurun');
+            expect(row.querySelector('[data-testid="clinical-term-activate"]')).toBeNull();
+        });
+
+        it('Etkinleştir: sunucuda etkinleştirir ve adı alana yazar', async () => {
+            claims.add('ClinicalTerms.Deactivate');
+            await searchPassive();
+            expect(picker().canActivate()).toBeTrue();
+            picker().activate(passive);
+            expect(terms.setActive).toHaveBeenCalledOnceWith('p1', true);
+            expect(host.control.value).toBe('Kusma, Kulak akıntısı');
+            expect(host.control.dirty).toBeTrue();
+            expect(picker().inactiveMatches()).toEqual([]);
+            expect(picker().activatingId()).toBeNull();
+        });
+
+        it('etkinleştirme hatası gösterilir, alan değişmez', async () => {
+            claims.add('ClinicalTerms.Deactivate');
+            terms.setActive.and.returnValue(throwError(() => new ClinicalTermError('Terim etkinleştirilemedi.', false)));
+            await searchPassive();
+            picker().activate(passive);
+            expect(host.control.value).toBe('Kusma');
+            expect(picker().actionError()).toBe('Terim etkinleştirilemedi.');
+            expect(picker().activatingId()).toBeNull();
+        });
+
+        it('izin yoksa veya kiracı salt okunursa etkinleştirilmez', async () => {
+            await searchPassive();
+            expect(picker().canActivate()).toBeFalse();
+            picker().activate(passive);
+            expect(terms.setActive).not.toHaveBeenCalled();
+        });
+
+        it('salt okunur kiracıda izin olsa da etkinleştirilmez', async () => {
+            claims.add('ClinicalTerms.Deactivate');
+            blocked = true;
+            await searchPassive();
+            expect(picker().canActivate()).toBeFalse();
+            picker().activate(passive);
+            expect(terms.setActive).not.toHaveBeenCalled();
+        });
     });
 
     it('ekleme izni yoksa veya kiracı salt okunursa "Sözlüğe ekle" sunulmaz', async () => {
