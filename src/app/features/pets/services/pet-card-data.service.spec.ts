@@ -5,6 +5,7 @@ import { ChargeSuggestionsService } from '@/app/features/charges/services/charge
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
+import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import { VaccinationsService, type VaccinationsPagedVm } from '@/app/features/vaccinations/services/vaccinations.service';
@@ -16,6 +17,8 @@ describe('PetCardDataService', () => {
     const vaccinations = jasmine.createSpyObj<VaccinationsService>('VaccinationsService', ['getVaccinations']);
     const labResults = jasmine.createSpyObj<LabResultsService>('LabResultsService', ['getLabResults']);
     const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClientBalance']);
+    const chargeSuggestions = jasmine.createSpyObj<ChargeSuggestionsService>('ChargeSuggestionsService', ['getPending']);
+    const pets = jasmine.createSpyObj<PetsService>('PetsService', ['getPets']);
 
     const collect = <T>(source: { subscribe(fn: (v: PetCardSection<T>) => void): unknown }) => {
         const values: PetCardSection<T>[] = [];
@@ -27,15 +30,17 @@ describe('PetCardDataService', () => {
         claims = new Set(['Vaccinations.Read', 'LabResults.Read']);
         vaccinations.getVaccinations.calls.reset();
         clients.getClientBalance.calls.reset();
+        chargeSuggestions.getPending.calls.reset();
         TestBed.configureTestingModule({
             providers: [
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
                 { provide: VaccinationsService, useValue: vaccinations },
                 { provide: LabResultsService, useValue: labResults },
                 { provide: ClientsService, useValue: clients },
-                { provide: ChargeSuggestionsService, useValue: {} },
+                { provide: ChargeSuggestionsService, useValue: chargeSuggestions },
                 { provide: ExaminationsService, useValue: {} },
-                { provide: TreatmentsService, useValue: {} }
+                { provide: TreatmentsService, useValue: {} },
+                { provide: PetsService, useValue: pets }
             ]
         });
         service = TestBed.inject(PetCardDataService);
@@ -68,5 +73,24 @@ describe('PetCardDataService', () => {
         claims.add('Examinations.Read');
         expect(collect(service.ownerBalance(null))).toEqual([null]);
         expect(collect(service.examination(null))).toEqual([null]);
+    });
+
+    it('müşteri kartı: hayvanlar müşteriye süzülür; ücret bekleyenler hayvan başına okunup birleşir, hayvan yoksa istek atılmaz', () => {
+        claims.add('Pets.Read');
+        claims.add('Charges.Read');
+        pets.getPets.and.returnValue(of({ items: [{ id: 'p1', clientId: 'c1' }, { id: 'p9', clientId: 'c9' }] }) as never);
+        const petValues = collect(service.clientPets('c1'));
+        expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1' }));
+        const lastPets = petValues[1];
+        expect(lastPets?.state === 'ok' ? lastPets.data.map((p) => p.id) : null).toEqual(['p1']);
+
+        chargeSuggestions.getPending.and.callFake((q) => of({ items: [{ id: `s-${q?.petId}`, petId: q?.petId }] }) as never);
+        const values = collect(service.clientPendingCharges(['p1', 'p2']));
+        const last = values[1];
+        expect(last?.state === 'ok' ? last.data.map((c) => c.id) : null).toEqual(['s-p1', 's-p2']);
+
+        chargeSuggestions.getPending.calls.reset();
+        expect(collect(service.clientPendingCharges([]))).toEqual([{ state: 'loading' }, { state: 'ok', data: [] }]);
+        expect(chargeSuggestions.getPending).not.toHaveBeenCalled();
     });
 });

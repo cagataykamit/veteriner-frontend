@@ -1,10 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, type Observable, of, startWith } from 'rxjs';
+import { catchError, forkJoin, map, type Observable, of, startWith } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     CHARGES_READ_CLAIM,
     EXAMINATIONS_READ_CLAIM,
     LAB_RESULTS_READ_CLAIM,
+    PETS_READ_CLAIM,
     TREATMENTS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
@@ -16,6 +17,8 @@ import type { ExaminationDetailVm } from '@/app/features/examinations/models/exa
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import type { LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
+import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import { PetsService } from '@/app/features/pets/services/pets.service';
 import { activeFollowUpTreatments, type PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
@@ -29,7 +32,7 @@ const FETCH_SIZE = 50;
 const SCHEDULED_VACCINATION_STATUS = '0';
 
 /**
- * Hasta kartının ek okumaları (ADR-020): hasta bazlı tek "yapılacaklar" ucu yok; mevcut liste uçları hayvana süzülerek okunur.
+ * Hasta ve müşteri kartının ek okumaları (ADR-020): hasta/müşteri bazlı tek "yapılacaklar" ucu yok; mevcut liste uçları hayvana süzülerek okunur.
  * Her akış önce `loading`, sonra `ok`/`error` yayar ve hata fırlatmaz; okuma izni yoksa istek atılmaz, `null` yayılır.
  */
 @Injectable({ providedIn: 'root' })
@@ -41,6 +44,7 @@ export class PetCardDataService {
     private readonly clients = inject(ClientsService);
     private readonly examinations = inject(ExaminationsService);
     private readonly treatments = inject(TreatmentsService);
+    private readonly pets = inject(PetsService);
 
     scheduledVaccinations(petId: string): Observable<PetCardSection<VaccinationListItemVm[]>> {
         return this.section(VACCINATIONS_READ_CLAIM, () =>
@@ -73,6 +77,22 @@ export class PetCardDataService {
     followUpTreatments(petId: string): Observable<PetCardSection<TreatmentListItemVm[]>> {
         return this.section(TREATMENTS_READ_CLAIM, () =>
             this.treatments.getTreatments({ page: 1, pageSize: FETCH_SIZE, petId }).pipe(map((r) => activeFollowUpTreatments(r.items.filter((t) => t.petId === petId))))
+        );
+    }
+
+    /** Müşterinin hayvanları (müşteri kartı); liste ucu `ClientId` süzgecini yok sayarsa istemcide daraltılır. */
+    clientPets(clientId: string): Observable<PetCardSection<PetListItemVm[]>> {
+        return this.section(PETS_READ_CLAIM, () =>
+            this.pets.getPets({ page: 1, pageSize: FETCH_SIZE, clientId }).pipe(map((r) => r.items.filter((p) => (p.clientId ?? '').trim() === clientId)))
+        );
+    }
+
+    /** Müşterinin ücret bekleyen işlemleri: öneri ucunda müşteri süzgeci yok, hayvan başına okunur (müşterinin hayvan sayısı küçüktür). */
+    clientPendingCharges(petIds: readonly string[]): Observable<PetCardSection<ChargeSuggestionVm[]>> {
+        return this.section(CHARGES_READ_CLAIM, () =>
+            petIds.length === 0
+                ? of([])
+                : forkJoin(petIds.map((petId) => this.chargeSuggestions.getPending({ page: 1, pageSize: FETCH_SIZE, petId }).pipe(map((r) => r.items)))).pipe(map((lists) => lists.flat()))
         );
     }
 
