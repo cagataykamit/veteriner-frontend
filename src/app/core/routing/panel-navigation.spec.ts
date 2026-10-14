@@ -107,6 +107,12 @@ describe('panel-navigation', () => {
         expect(withCategory).toEqual(['Hesabım', 'Tanımlar']);
     });
 
+    it('Veri içe aktarma kartı Ayarlar altında yalnız Imports.Read ile görünür; menüye öğe eklenmez', () => {
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, () => false))).not.toContain('Veri içe aktarma');
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Imports.Read')))).toContain('Veri içe aktarma');
+        expect(labels(visibleGroups(MENU_GROUPS, only('Imports.Read')))).toEqual(['Ayarlar']);
+    });
+
     it('menüde tek Raporlar girişi vardır; ayrı rapor öğeleri yoktur', () => {
         const all = labels(visibleGroups(MENU_GROUPS, (c) => allClaims.has(c)));
         expect(all.filter((l) => l === 'Raporlar')).toHaveSize(1);

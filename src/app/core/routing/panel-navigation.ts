@@ -8,6 +8,7 @@ import {
     CLINICS_READ_CLAIM,
     EXAMINATIONS_READ_CLAIM,
     HOSPITALIZATIONS_READ_CLAIM,
+    IMPORTS_READ_CLAIM,
     LAB_RESULTS_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
     PETS_READ_CLAIM,
@@ -89,6 +90,7 @@ export const DEFINITIONS_ROUTE = '/panel/settings/definitions';
 export const SPECIES_ROUTE = `${DEFINITIONS_ROUTE}/species`;
 export const BREEDS_ROUTE = `${DEFINITIONS_ROUTE}/breeds`;
 export const PRODUCT_CATEGORIES_ROUTE = `${DEFINITIONS_ROUTE}/product-categories`;
+export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const REPORTS_ROUTE = '/panel/reports';
 
 /** Rapor Merkezi kartları; menüde tek "Raporlar" girişi vardır (ADR-003). Yeni rapor buraya kart olarak eklenir. */
@@ -331,6 +333,18 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: DEFINITIONS_ROUTE,
                 claims: DEFINITION_ENTRIES.flatMap((e) => e.claims ?? []),
                 description: 'Tür, ırk ve ürün kategorisi gibi referans kayıtları.'
+            }
+        ]
+    },
+    {
+        label: 'Veri',
+        entries: [
+            {
+                label: 'Veri içe aktarma',
+                icon: 'pi pi-fw pi-upload',
+                route: IMPORTS_ROUTE,
+                claims: [IMPORTS_READ_CLAIM],
+                description: 'Eski sistemdeki müşteri, hasta ve aşı kayıtlarını Excel veya CSV ile aktarın.'
             }
         ]
     }

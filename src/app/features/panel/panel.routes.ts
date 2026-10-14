@@ -40,6 +40,7 @@ export default [
         loadChildren: () => import('../organization/routes/organization.routes'),
         canActivate: [tenantManagementGuard]
     },
+    { path: 'settings/imports', loadChildren: () => import('../imports/routes/imports.routes') },
     { path: 'settings/clinics', loadChildren: () => import('../clinics/routes/clinics.routes') },
     { path: 'settings/reminders', loadChildren: () => import('../reminders/routes/reminders.routes') },
     { path: 'settings/account', loadChildren: () => import('../account/routes/account.routes') },
