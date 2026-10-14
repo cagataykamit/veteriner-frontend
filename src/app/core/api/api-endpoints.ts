@@ -167,7 +167,13 @@ export const ApiEndpoints = {
         outstandingBalancesExport: () => `/api/v1/reports/outstanding-balances/export`,
         outstandingBalancesExportXlsx: () => `/api/v1/reports/outstanding-balances/export-xlsx`,
         /** Kayıt defterleri (`examinations` | `prescriptions`): liste, `/export` (CSV), `/export-xlsx`; `from`, `to` (yyyy-MM-dd), `clinicId`, `page`, `pageSize`. */
-        register: (book: string) => `/api/v1/reports/registers/${book}`
+        register: (book: string) => `/api/v1/reports/registers/${book}`,
+        /** Gün sonu (D6): günlük işlem dökümü (`Payments.Read` + `Charges.Read`), liste, `/export`, `/export-xlsx`; `from`, `to` (yyyy-MM-dd), `clinicId`, `kind`, `paymentMethod`, `performedByUserId`, `page`, `pageSize`. */
+        dailyTransactions: () => `/api/v1/reports/daily-transactions`,
+        /** Tahsilat/kasa özeti (`Payments.Read`); `from`, `to`, `clinicId`. */
+        cashSummary: () => `/api/v1/reports/cash-summary`,
+        /** Gün sonu açık işler (`Visits.Read`); `from`, `to`, tek klinik zorunlu. */
+        endOfDayOpenItems: () => `/api/v1/reports/end-of-day/open-items`
     },
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
