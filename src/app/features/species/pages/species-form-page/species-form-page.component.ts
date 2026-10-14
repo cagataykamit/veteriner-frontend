@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -29,7 +29,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         InputTextModule,
         SelectModule,
@@ -38,8 +37,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         AppErrorStateComponent
     ],
     template: `
-        <a [routerLink]="speciesRoute" class="text-primary font-medium no-underline inline-block mb-4">← Tür listesine dön</a>
-
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium" role="status">Tür kaydı oluşturuldu.</p>
         }
@@ -52,6 +49,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
             </div>
         } @else {
             <app-page-header
+                [categoryLink]="speciesRoute"
+                categoryLinkLabel="Tür listesine dön"
                 [title]="editing() ? 'Tür Düzenle' : 'Yeni Tür'"
                 [description]="editing() ? 'Tür kaydını güncelleyin.' : 'Yeni tür kaydı oluşturun.'"
             />

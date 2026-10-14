@@ -58,8 +58,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         AppErrorStateComponent
     ],
     template: `
-        <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
-
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Hayvan kaydedildi.</p>
         }
@@ -71,7 +69,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (pet(); as p) {
-            <app-page-header [title]="p.name" [description]="identity()">
+            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hayvan listesine dön" [title]="p.name" [description]="identity()">
                 @if (canUpdatePet && !ro.mutationBlocked()) {
                     <!-- İki eylem tek kökte: denetim akışı bloğunda birden çok kök [actions] yuvasına yansıtılmaz. -->
                     <ng-container actions>

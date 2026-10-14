@@ -39,9 +39,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         ProductClassificationFieldsComponent
     ],
     template: `
-        <a routerLink="/panel/products" class="text-primary font-medium no-underline inline-block mb-4">← Ürün listesine dön</a>
-
-        <app-page-header title="Yeni ürün" description="Ürün kartı oluşturun." />
+        <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

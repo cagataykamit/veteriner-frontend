@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -32,7 +32,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         InputTextModule,
         SelectModule,
@@ -42,8 +41,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         QuickSpeciesDialogComponent
     ],
     template: `
-        <a [routerLink]="breedsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Irk listesine dön</a>
-
         @if (editing() && loading()) {
             <app-loading-state message="Irk bilgileri yükleniyor…" />
         } @else if (editing() && loadError()) {
@@ -52,6 +49,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
             </div>
         } @else {
             <app-page-header
+                [categoryLink]="breedsRoute"
+                categoryLinkLabel="Irk listesine dön"
                 [title]="editing() ? 'Irk Düzenle' : 'Yeni Irk'"
                 [description]="editing() ? 'Irk kaydını güncelleyin.' : 'Yeni ırk kaydı oluşturun.'"
             />

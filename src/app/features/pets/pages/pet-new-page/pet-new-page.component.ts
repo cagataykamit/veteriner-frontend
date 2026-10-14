@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
@@ -40,7 +40,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         CheckboxModule,
         PetAlertFieldsComponent,
@@ -51,9 +50,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         QuickBreedDialogComponent, ClientSearchComponent, DateInputComponent
     ],
     template: `
-        <a routerLink="/panel/pets" class="text-primary font-medium no-underline inline-block mb-4">← Hayvan listesine dön</a>
-
-        <app-page-header title="Yeni Hayvan" description="Hayvan kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hayvan listesine dön" title="Yeni Hayvan" description="Hayvan kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

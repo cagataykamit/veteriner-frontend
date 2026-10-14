@@ -30,14 +30,12 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         SaleVoidDialogComponent
     ],
     template: `
-        <a routerLink="/panel/sales" class="text-primary font-medium no-underline inline-block mb-4">← Satış listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Satış yükleniyor…" />
         } @else if (error()) {
             <div class="card"><app-error-state [detail]="error()!" (retry)="load()" /></div>
         } @else if (sale(); as s) {
-            <app-page-header title="Satış" [description]="soldAt(s)">
+            <app-page-header categoryLink="/panel/sales" categoryLinkLabel="Satış listesine dön" title="Satış" [description]="soldAt(s)">
                 <div actions class="flex flex-wrap gap-2">
                     <p-button type="button" label="Fişi yazdır" icon="pi pi-print" severity="secondary" (onClick)="print()" />
                     @if (canVoid && !s.isVoided && !ro.mutationBlocked()) {

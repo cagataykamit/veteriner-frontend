@@ -4,7 +4,7 @@ import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { Paginator } from 'primeng/paginator';
@@ -55,7 +55,6 @@ type ProductStockMovementsListState = {
         CommonModule,
         FormsModule,
         FilterFieldComponent,
-        RouterLink,
         TableModule,
         Paginator,
         ButtonModule,
@@ -71,9 +70,9 @@ type ProductStockMovementsListState = {
     template: `
         <p-toast position="bottom-right" />
 
-        <a [routerLink]="productDetailLink()" class="text-primary font-medium no-underline inline-block mb-4">← Ürün detayına dön</a>
-
         <app-page-header
+            [categoryLink]="productDetailLink()"
+            categoryLinkLabel="Ürün detayına dön"
             title="Ürün stok hareketleri"
             description="Bu ürüne ait stok hareketleri; liste salt okunur. Yetkiniz varsa yeni kayıt ekleyebilirsiniz."
         >

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PrescriptionFormComponent } from '@/app/features/prescriptions/components/prescription-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
@@ -7,11 +7,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 @Component({
     selector: 'app-prescription-new-page',
     standalone: true,
-    imports: [RouterLink, AppPageHeaderComponent, PrescriptionFormComponent],
+    imports: [AppPageHeaderComponent, PrescriptionFormComponent],
     template: `
-        <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline inline-block mb-4">← Reçete listesine dön</a>
-
-        <app-page-header title="Yeni Reçete" description="Reçete kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Yeni Reçete" description="Reçete kaydı oluşturun." />
         <app-prescription-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
     `
 })

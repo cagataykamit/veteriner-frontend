@@ -97,8 +97,6 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         ClinicalTermPickerComponent
     ],
     template: `
-        <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Muayene yükleniyor…" />
         } @else if (loadError()) {
@@ -107,6 +105,8 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
             </div>
         } @else {
             <app-page-header
+                categoryLink="/panel/examinations"
+                categoryLinkLabel="Muayene listesine dön"
                 [title]="isEdit ? 'Muayene' : 'Yeni Muayene'"
                 [description]="isEdit ? 'Klinik notları ve vital değerleri güncelleyin.' : 'Muayene kaydı oluşturun.'"
             >

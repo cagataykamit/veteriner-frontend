@@ -34,8 +34,6 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         ReasonConfirmDialogComponent
     ],
     template: `
-        <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
-
         @if (savedMessage(); as message) {
             <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
         }
@@ -47,7 +45,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (row()) {
-            <app-page-header title="Lab sonucu" [description]="row()!.testName">
+            <app-page-header categoryLink="/panel/lab-results" categoryLinkLabel="Listeye dön" title="Lab sonucu" [description]="row()!.testName">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdateLabResult && isEditable(row()!.status)) {
                         @if (ro.mutationBlocked()) {

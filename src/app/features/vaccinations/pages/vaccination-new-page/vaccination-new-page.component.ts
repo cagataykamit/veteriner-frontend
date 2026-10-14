@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/features/vaccinations/components/vaccination-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
@@ -7,11 +7,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 @Component({
     selector: 'app-vaccination-new-page',
     standalone: true,
-    imports: [RouterLink, AppPageHeaderComponent, VaccinationFormComponent],
+    imports: [AppPageHeaderComponent, VaccinationFormComponent],
     template: `
-        <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
-
-        <app-page-header title="Yeni Aşı" description="Aşı kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Yeni Aşı" description="Aşı kaydı oluşturun." />
         <app-vaccination-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
     `
 })

@@ -23,8 +23,9 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent],
     template: `
-        <a [routerLink]="reportsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Raporlar</a>
         <app-page-header
+            [categoryLink]="reportsRoute"
+            categoryLinkLabel="Raporlar"
             [title]="copy.paymentsReportTitle"
             [description]="copy.paymentsReportDescription"
         />

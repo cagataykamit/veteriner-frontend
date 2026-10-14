@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import type { ClinicUpsertFormValue } from '@/app/features/clinics/models/clinic-upsert.model';
 import type { ClinicDetailVm } from '@/app/features/clinics/models/clinic-vm.model';
@@ -59,7 +59,6 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         CommonModule,
         ReactiveFormsModule,
         DateInputComponent,
-        RouterLink,
         ButtonModule,
         InputTextModule,
         CheckboxModule,
@@ -72,8 +71,6 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
-        <a routerLink="/panel/settings/clinics" class="text-primary font-medium no-underline inline-block mb-4">← Klinik listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Klinik bilgileri yükleniyor…" />
         } @else if (loadError()) {
@@ -82,6 +79,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
             </div>
         } @else if (detail(); as d) {
             <app-page-header
+                categoryLink="/panel/settings/clinics"
+                categoryLinkLabel="Klinik listesine dön"
                 title="Klinik ayarları"
                 description="Klinik bilgileri, iletişim ve profil alanlarını güncelleyebilir; kliniği pasife alabilir veya yeniden aktifleştirebilirsiniz."
             />

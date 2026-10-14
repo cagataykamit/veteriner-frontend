@@ -1,6 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -45,7 +44,6 @@ const PAGE_SIZE = 50;
     imports: [
         FormsModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         ConfirmDialogModule,
         DialogModule,
@@ -62,8 +60,9 @@ const PAGE_SIZE = 50;
     ],
     providers: [ConfirmationService],
     template: `
-        <a [routerLink]="definitionsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Tanımlar</a>
         <app-page-header
+            [categoryLink]="definitionsRoute"
+            categoryLinkLabel="Tanımlar"
             title="Tanı ve şikâyet sözlüğü"
             description="Muayenede şikâyet ve tanı alanlarında aranan liste. Sistem terimleri ortaktır; kliniğinize özel terim ekleyebilirsiniz."
         >

@@ -103,8 +103,6 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
         `
     ],
     template: `
-        <a routerLink="/panel/products" class="text-primary font-medium no-underline inline-block mb-4">← Ürün listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Ürün yükleniyor…" />
         } @else if (error()) {
@@ -112,7 +110,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (product(); as p) {
-            <app-page-header title="Ürün detayı" [description]="p.name + ' · ' + p.sku">
+            <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Ürün detayı" [description]="p.name + ' · ' + p.sku">
                 <div actions class="flex flex-wrap items-center gap-2 justify-end">
                     @if (canUpdateProduct && !ro.mutationBlocked()) {
                         <a

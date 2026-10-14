@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HospitalizationFormComponent } from '@/app/features/hospitalizations/components/hospitalization-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
@@ -7,11 +7,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 @Component({
     selector: 'app-hospitalization-new-page',
     standalone: true,
-    imports: [RouterLink, AppPageHeaderComponent, HospitalizationFormComponent],
+    imports: [AppPageHeaderComponent, HospitalizationFormComponent],
     template: `
-        <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
-
-        <app-page-header title="Yeni yatış" description="Yatış kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/hospitalizations" categoryLinkLabel="Listeye dön" title="Yeni yatış" description="Yatış kaydı oluşturun." />
         <app-hospitalization-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
     `
 })

@@ -26,8 +26,6 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
         AppErrorStateComponent
     ],
     template: `
-        <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline inline-block mb-4">← Reçete listesine dön</a>
-
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Reçete kaydedildi.</p>
         }
@@ -39,7 +37,7 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (row()) {
-            <app-page-header title="Reçete" [description]="row()!.title">
+            <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Reçete" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdatePrescription && !ro.mutationBlocked()) {
                         <a

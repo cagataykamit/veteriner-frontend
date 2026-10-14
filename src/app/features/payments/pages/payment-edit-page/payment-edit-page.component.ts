@@ -6,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -48,7 +48,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         InputTextModule,
         SelectModule,
@@ -57,8 +56,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
-        <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Ödeme düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
@@ -66,7 +63,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <app-error-state [detail]="loadError()!" [showRetry]="paymentLoadRetryEnabled()" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Ödemeyi Düzenle" description="Ödeme kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Ödemeyi Düzenle" description="Ödeme kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

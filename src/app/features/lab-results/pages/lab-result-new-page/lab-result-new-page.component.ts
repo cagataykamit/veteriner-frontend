@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LabResultFormComponent } from '@/app/features/lab-results/components/lab-result-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
@@ -7,11 +7,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 @Component({
     selector: 'app-lab-result-new-page',
     standalone: true,
-    imports: [RouterLink, AppPageHeaderComponent, LabResultFormComponent],
+    imports: [AppPageHeaderComponent, LabResultFormComponent],
     template: `
-        <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
-
-        <app-page-header title="Yeni lab istemi" description="Lab istemi oluşturun; sonuç henüz yoksa sonuç alanlarını boş bırakın, sonra girebilirsiniz." />
+        <app-page-header categoryLink="/panel/lab-results" categoryLinkLabel="Listeye dön" title="Yeni lab istemi" description="Lab istemi oluşturun; sonuç henüz yoksa sonuç alanlarını boş bırakın, sonra girebilirsiniz." />
         <app-lab-result-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
     `
 })

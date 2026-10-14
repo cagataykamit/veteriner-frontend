@@ -33,8 +33,6 @@ import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/cor
         AppStatusTagComponent
     ],
     template: `
-        <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
-
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Aşı kaydı kaydedildi.</p>
         }
@@ -50,6 +48,8 @@ import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/cor
             </div>
         } @else if (vac()) {
             <app-page-header
+                categoryLink="/panel/vaccinations"
+                categoryLinkLabel="Aşı listesine dön"
                 title="Aşı kaydı"
                 [description]="headerDescription(vac()!)"
             >

@@ -62,9 +62,7 @@ const DUPLICATE_MISMATCH_MESSAGE =
         AppPageHeaderComponent, ClientSearchComponent, DateInputComponent
     ],
     template: `
-        <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
-
-        <app-page-header title="Yeni Ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
+        <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni Ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

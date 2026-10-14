@@ -11,7 +11,7 @@ import {
     clinicOptionalEmailValidator
 } from '@/app/features/clinics/utils/clinic-profile-form.validators';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -34,7 +34,6 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         InputTextModule,
         TextareaModule,
@@ -44,9 +43,9 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
-        <a routerLink="/panel/settings/clinics" class="text-primary font-medium no-underline inline-block mb-4">← Klinik listesine dön</a>
-
         <app-page-header
+            categoryLink="/panel/settings/clinics"
+            categoryLinkLabel="Klinik listesine dön"
             title="Yeni Klinik"
             description="Kurumunuza yeni bir klinik kaydı oluşturun. Ad ve şehir zorunludur; iletişim ve profil alanları isteğe bağlıdır."
         />

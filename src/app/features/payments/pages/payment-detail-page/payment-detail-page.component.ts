@@ -37,8 +37,6 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
         ReasonConfirmDialogComponent
     ],
     template: `
-        <a routerLink="/panel/payments" class="text-primary font-medium no-underline inline-block mb-4">← Ödeme listesine dön</a>
-
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Ödeme kaydedildi.</p>
         }
@@ -50,7 +48,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (payment()) {
-            <app-page-header title="Ödeme" [description]="headerDescription(payment()!)">
+            <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Ödeme" [description]="headerDescription(payment()!)">
                 @if (canUpdatePayment && !ro.mutationBlocked()) {
                     <a
                         actions

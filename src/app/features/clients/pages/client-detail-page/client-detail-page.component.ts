@@ -54,8 +54,6 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
         AppErrorStateComponent
     ],
     template: `
-        <a routerLink="/panel/clients" class="text-primary font-medium no-underline inline-block mb-4">← Müşteri listesine dön</a>
-
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Müşteri kaydedildi.</p>
         }
@@ -67,7 +65,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (client(); as c) {
-            <app-page-header [title]="c.fullName" [description]="registrationLine()">
+            <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" [title]="c.fullName" [description]="registrationLine()">
                 @if (canUpdateClient && !ro.mutationBlocked()) {
                     <a actions [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                 } @else if (canUpdateClient && ro.mutationBlocked()) {

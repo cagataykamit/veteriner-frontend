@@ -6,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -69,7 +69,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         InputTextModule,
         SelectModule,
@@ -79,8 +78,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, PrescriptionItemsEditorComponent
     ],
     template: `
-        <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline inline-block mb-4">← Reçete listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Reçete düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
@@ -88,7 +85,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Reçeteyi Düzenle" description="Reçete kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Reçeteyi Düzenle" description="Reçete kaydını güncelleyin." />
             <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
             <div class="card">

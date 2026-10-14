@@ -55,8 +55,7 @@ interface OpenItemRow {
     encapsulation: ViewEncapsulation.None,
     template: `
         <div class="end-of-day-page">
-            <a [routerLink]="reportsRoute" class="eod-screen-only text-primary font-medium no-underline inline-block mb-4">← Raporlar</a>
-            <app-page-header class="eod-screen-only" title="Gün sonu" subtitle="" description="Günün ücret, tahsilat ve açık işlerini tek yerde görün. Kasa sayımı ve günü kilitleme yoktur." />
+            <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="eod-screen-only" title="Gün sonu" description="Günün ücret, tahsilat ve açık işlerini tek yerde görün. Kasa sayımı ve günü kilitleme yoktur." />
 
             <app-report-filter-bar
                 class="eod-screen-only block"

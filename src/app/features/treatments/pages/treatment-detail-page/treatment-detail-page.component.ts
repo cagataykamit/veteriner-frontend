@@ -28,8 +28,6 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
         AppErrorStateComponent
     ],
     template: `
-        <a routerLink="/panel/treatments" class="text-primary font-medium no-underline inline-block mb-4">← Tedavi listesine dön</a>
-
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Tedavi kaydedildi.</p>
         }
@@ -41,7 +39,7 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (row()) {
-            <app-page-header title="Tedavi" [description]="row()!.title">
+            <app-page-header categoryLink="/panel/treatments" categoryLinkLabel="Tedavi listesine dön" title="Tedavi" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdateTreatment && !ro.mutationBlocked()) {
                         <a

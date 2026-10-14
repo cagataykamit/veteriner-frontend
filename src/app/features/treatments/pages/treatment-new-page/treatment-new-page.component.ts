@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TreatmentFormComponent } from '@/app/features/treatments/components/treatment-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
@@ -7,11 +7,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 @Component({
     selector: 'app-treatment-new-page',
     standalone: true,
-    imports: [RouterLink, AppPageHeaderComponent, TreatmentFormComponent],
+    imports: [AppPageHeaderComponent, TreatmentFormComponent],
     template: `
-        <a routerLink="/panel/treatments" class="text-primary font-medium no-underline inline-block mb-4">← Tedavi listesine dön</a>
-
-        <app-page-header title="Yeni Tedavi" description="Tedavi kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/treatments" categoryLinkLabel="Tedavi listesine dön" title="Yeni Tedavi" description="Tedavi kaydı oluşturun." />
         <app-treatment-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
     `
 })

@@ -107,8 +107,6 @@ const RECORD_TEXT_SECTIONS: readonly {
                 />
             }
         }
-        <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Muayene yükleniyor…" />
         } @else if (error()) {
@@ -117,6 +115,8 @@ const RECORD_TEXT_SECTIONS: readonly {
             </div>
         } @else if (exam()) {
             <app-page-header
+                categoryLink="/panel/examinations"
+                categoryLinkLabel="Muayene listesine dön"
                 title="Muayene"
                 [description]="formatDateTime(exam()!.examinedAtUtc)"
             >

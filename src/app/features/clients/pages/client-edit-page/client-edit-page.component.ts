@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ClientContactPreferenceFieldsComponent } from '@/app/features/clients/components/client-contact-preference-fields.component';
@@ -33,7 +33,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink,
         ButtonModule,
         InputTextModule,
         ClientContactPreferenceFieldsComponent,
@@ -42,8 +41,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppErrorStateComponent
     ],
     template: `
-        <a routerLink="/panel/clients" class="text-primary font-medium no-underline inline-block mb-4">← Müşteri listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Müşteri bilgileri yükleniyor…" />
         } @else if (loadError()) {
@@ -51,7 +48,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <app-error-state [detail]="loadError()!" [showRetry]="!!currentId()" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Müşteri Düzenle" description="Müşteri kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Müşteri Düzenle" description="Müşteri kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

@@ -1,5 +1,4 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { DEFINITION_ENTRIES, SETTINGS_ROUTE, visibleEntries } from '@/app/core/routing/panel-navigation';
 import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navigation-cards.component';
@@ -8,10 +7,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 @Component({
     selector: 'app-definitions-page',
     standalone: true,
-    imports: [RouterLink, AppPageHeaderComponent, NavigationCardsComponent],
+    imports: [AppPageHeaderComponent, NavigationCardsComponent],
     template: `
-        <a [routerLink]="settingsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Ayarlar</a>
-        <app-page-header title="Tanımlar" description="Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü ve muayene şablonları gibi referans kayıtlarını yönetin." />
+        <app-page-header [categoryLink]="settingsRoute" categoryLinkLabel="Ayarlar" title="Tanımlar" description="Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü ve muayene şablonları gibi referans kayıtlarını yönetin." />
         <app-navigation-cards [entries]="entries" />
     `
 })

@@ -75,8 +75,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
-        <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
-
         @if (loading()) {
             <app-loading-state message="Düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
@@ -89,7 +87,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <a [routerLink]="['/panel/hospitalizations', hospitalizationId]" class="text-primary font-medium no-underline">Detaya git →</a>
             </div>
         } @else {
-            <app-page-header title="Yatışı düzenle" description="Kaydı güncelleyin." />
+            <app-page-header categoryLink="/panel/hospitalizations" categoryLinkLabel="Listeye dön" title="Yatışı düzenle" description="Kaydı güncelleyin." />
             <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
             <div class="card">

@@ -48,8 +48,6 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         AppErrorStateComponent, DateInputComponent, CareInstructionsSectionComponent
     ],
     template: `
-        <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline inline-block mb-4">← Listeye dön</a>
-
         @if (savedMessage(); as message) {
             <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
         }
@@ -64,7 +62,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (row()) {
-            <app-page-header title="Yatış" [description]="row()!.reason">
+            <app-page-header categoryLink="/panel/hospitalizations" categoryLinkLabel="Listeye dön" title="Yatış" [description]="row()!.reason">
                 @if (
                     row()!.isActive ||
                     (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim())

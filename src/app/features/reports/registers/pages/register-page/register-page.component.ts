@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, OnDestroy, OnInit, ViewEncapsulation, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
@@ -35,13 +35,12 @@ type RegisterRow = { readonly rowNumber: number };
 @Component({
     selector: 'app-register-page',
     standalone: true,
-    imports: [RouterLink, FormsModule, ButtonModule, CheckboxModule, SelectModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, RegisterTableComponent],
+    imports: [FormsModule, ButtonModule, CheckboxModule, SelectModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, RegisterTableComponent],
     styleUrl: './register-page.component.scss',
     encapsulation: ViewEncapsulation.None,
     template: `
         <div class="register-page">
-            <a [routerLink]="reportsRoute" class="register-screen-only text-primary font-medium no-underline inline-block mb-4">← Raporlar</a>
-            <app-page-header class="register-screen-only" [title]="definition.title" [description]="definition.description" subtitle="" />
+            <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="register-screen-only" [title]="definition.title" [description]="definition.description" />
             <p class="register-screen-only text-sm text-muted-color mt-0 mb-4" role="note">{{ copy.registerFormatUnverified }}</p>
             @if (definition.screenHint) {
                 <p class="register-screen-only text-sm text-muted-color mt-0 mb-4" role="note">{{ definition.screenHint }}</p>

@@ -1,5 +1,4 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -39,7 +38,6 @@ const PAGE_SIZE = 50;
     selector: 'app-examination-templates-page',
     standalone: true,
     imports: [
-        RouterLink,
         ButtonModule,
         ConfirmDialogModule,
         TableModule,
@@ -53,8 +51,9 @@ const PAGE_SIZE = 50;
     ],
     providers: [ConfirmationService],
     template: `
-        <a [routerLink]="definitionsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Tanımlar</a>
         <app-page-header
+            [categoryLink]="definitionsRoute"
+            categoryLinkLabel="Tanımlar"
             title="Muayene şablonları"
             description="Muayenede tek seçimle şikâyet, bulgu, plan ve işlem satırlarını ön dolduran paketler. Sistem şablonları ortaktır; kopyalayıp kliniğinize uyarlayabilirsiniz."
         >

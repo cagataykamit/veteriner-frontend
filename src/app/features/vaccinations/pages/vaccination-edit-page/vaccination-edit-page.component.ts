@@ -64,8 +64,6 @@ import {
         AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
-        <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
-
         @if (loading()) {
             <app-loading-state message="Aşı düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
@@ -73,7 +71,7 @@ import {
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Aşıyı Düzenle" description="Aşı kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Aşıyı Düzenle" description="Aşı kaydını güncelleyin." />
             <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
             <div class="card">
