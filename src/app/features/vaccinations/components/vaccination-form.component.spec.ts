@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
@@ -11,7 +11,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
-import { VaccinationNewPageComponent } from './vaccination-new-page.component';
+import { VaccinationFormComponent, type VaccinationSavedEvent } from './vaccination-form.component';
 
 const product = (id: string, name: string, kind: string) => ({ id, name, kind, sku: '—', categoryName: '—', unit: 'doz', unitPriceText: '—', currency: 'TRY', isActive: true, statusLabel: 'Aktif', statusSeverity: 'success' });
 
@@ -25,17 +25,16 @@ const stockResult = (over: Partial<AdministrationCreateResultVm['stock']> = {}, 
     stock: { quantityOnHand: 9, availableQuantity: 8, minimumStockLevel: 2, isBelowMinimum: false, ...over }
 });
 
-describe('VaccinationNewPageComponent — aşı + stoktan düşen uygulama', () => {
+describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => {
     let service: jasmine.SpyObj<VaccinationsService>;
-    let router: Router;
+    let saved: VaccinationSavedEvent[];
     let canStock: boolean;
 
-    const create = (): VaccinationNewPageComponent => {
+    const create = (): VaccinationFormComponent => {
         TestBed.configureTestingModule({
-            imports: [VaccinationNewPageComponent],
+            imports: [VaccinationFormComponent],
             providers: [
                 provideRouter([]),
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: VaccinationsService, useValue: service },
                 { provide: VaccineDefinitionsService, useValue: { getVaccineDefinitions: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 { provide: ClientsService, useValue: {} },
@@ -46,9 +45,8 @@ describe('VaccinationNewPageComponent — aşı + stoktan düşen uygulama', () 
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
-        router = TestBed.inject(Router);
-        spyOn(router, 'navigate').and.resolveTo(true);
-        const cmp = TestBed.createComponent(VaccinationNewPageComponent).componentInstance;
+        const cmp = TestBed.createComponent(VaccinationFormComponent).componentInstance;
+        cmp.saved.subscribe((e) => saved.push(e));
         cmp.ngOnInit();
         cmp.form.patchValue({ clientId: 'cl1', vaccineDefinitionId: 'd1' }, { emitEvent: false });
         cmp.form.controls.petId.enable({ emitEvent: false });
@@ -61,6 +59,7 @@ describe('VaccinationNewPageComponent — aşı + stoktan düşen uygulama', () 
     beforeEach(() => {
         localStorage.removeItem('vetinity.vaccine.lastProductId');
         canStock = true;
+        saved = [];
         service = jasmine.createSpyObj<VaccinationsService>('VaccinationsService', ['createVaccination']);
         service.createVaccination.and.returnValue(of({ id: 'v1', stockResult: null }));
     });
@@ -82,7 +81,7 @@ describe('VaccinationNewPageComponent — aşı + stoktan düşen uygulama', () 
         const payload = service.createVaccination.calls.mostRecent().args[0];
         expect(payload.productId).toBeUndefined();
         expect(payload.requestId).toBeUndefined();
-        expect(router.navigate).toHaveBeenCalledWith(['/panel/vaccinations', 'v1'], jasmine.objectContaining({ queryParams: { saved: '1' } }));
+        expect(saved).toEqual([{ id: 'v1', stockNotice: undefined }]);
     });
 
     it('ürün seçilince miktar varsayılan 1 olur, zorunlu hale gelir; ürün kalkınca temizlenir', () => {
@@ -106,8 +105,7 @@ describe('VaccinationNewPageComponent — aşı + stoktan düşen uygulama', () 
         const payload = service.createVaccination.calls.mostRecent().args[0];
         expect(payload).toEqual(jasmine.objectContaining({ productId: 'pr1', quantity: 2, batchId: 'b9' }));
         expect(payload.requestId).toBeTruthy();
-        const nav = (router.navigate as jasmine.Spy).calls.mostRecent().args[1];
-        expect(nav.state.stockNotice.text).toContain('kalan kullanılabilir stok 8 doz');
+        expect(saved[0].stockNotice?.text).toContain('kalan kullanılabilir stok 8 doz');
         expect(localStorage.getItem('vetinity.vaccine.lastProductId')).toBe('pr1');
     });
 
