@@ -110,7 +110,9 @@ app-menu {
         }
 
         &.active-route {
-            font-weight: 700;
+            // Aktif satır: yazı genişliği değişmesin (kalın harf metni yana kaydırıyordu); kalınlık ince bir kontur ile verilir (ADR-023)
+            font-weight: inherit;
+            -webkit-text-stroke: 0.4px currentColor;
             color: var(--primary-color);
         }
 
