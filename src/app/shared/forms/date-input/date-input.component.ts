@@ -26,6 +26,16 @@ const INVALID_MESSAGES: Record<DateInputType, string> = {
 
 const TIME_MISSING_MESSAGE = 'Saati de girin (gg.aa.yyyy ss:dd).';
 
+/** PrimeNG DatePicker'ın bu bileşenin kapatma/sorgulama için kullandığı iç alanları (genel API yalnız `hideOverlay` verir, o da odağı girdiye çeker). */
+interface PickerInternals {
+    overlayVisible: boolean;
+    overlay: HTMLElement | null;
+    cd: { markForCheck(): void };
+}
+
+/** Sayfada aynı anda en çok bir takvim paneli açık kalır: yenisi açılınca öncekini kapatır. */
+let openInstance: DateInputComponent | null = null;
+
 /**
  * Ortak tarih / tarih-saat / saat alanı (PrimeNG DatePicker). Alana tıklayınca takvim açılır; klavyeyle yazarken maske
  * uygulanır (`24111991` → `24.11.1991`, saatli: `24.11.1991 14:30`; yalnız rakam, uzunluk biçimle sınırlı); × temizler.
@@ -65,6 +75,8 @@ const TIME_MISSING_MESSAGE = 'Saati de girin (gg.aa.yyyy ss:dd).';
             [fluid]="true"
             appendTo="body"
             (onBlur)="onBlur()"
+            (onShow)="onPanelShow()"
+            (onClose)="onPanelClose()"
         />
         @if (errorMessage(); as message) {
             <small class="text-red-500 block" role="alert">{{ message }}</small>
@@ -120,11 +132,22 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
                 this.lastMasked = event.target.value;
             }
         };
+        // Odak, alanın ve panelin dışındaki bir kontrole (Filtrele, sonraki alan vb.) geçince panel kapanır; panel içi tıklamalar (odak panelde) kapatmaz.
+        const onFocusOut = (event: FocusEvent): void => {
+            const next = event.relatedTarget;
+            const panel = (this.picker() as unknown as PickerInternals | undefined)?.overlay;
+            if (next instanceof Node && !host.contains(next) && !panel?.contains(next)) {
+                this.closePanel();
+            }
+        };
         host.addEventListener('input', onInput, true);
         host.addEventListener('focusin', onFocus, true);
+        host.addEventListener('focusout', onFocusOut, true);
         inject(DestroyRef).onDestroy(() => {
             host.removeEventListener('input', onInput, true);
             host.removeEventListener('focusin', onFocus, true);
+            host.removeEventListener('focusout', onFocusOut, true);
+            this.onPanelClose();
         });
     }
 
@@ -147,6 +170,28 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         const picker = this.picker() as unknown as { isKeydown: boolean } | undefined;
         if (picker) {
             picker.isKeydown = true;
+        }
+    }
+
+    onPanelShow(): void {
+        if (openInstance && openInstance !== this) {
+            openInstance.closePanel();
+        }
+        openInstance = this;
+    }
+
+    onPanelClose(): void {
+        if (openInstance === this) {
+            openInstance = null;
+        }
+    }
+
+    /** Paneli odağı girdiye çekmeden kapatır (`hideOverlay` odağı geri alıp sonraki alanı bölerdi). */
+    private closePanel(): void {
+        const picker = this.picker() as unknown as PickerInternals | undefined;
+        if (picker?.overlayVisible) {
+            picker.overlayVisible = false;
+            picker.cd.markForCheck();
         }
     }
 

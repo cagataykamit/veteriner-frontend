@@ -25,7 +25,7 @@ describe('DateInputComponent', () => {
 
     const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
     const input = () => fixture.nativeElement.querySelector('input#d') as HTMLInputElement;
-    const panel = () => document.querySelector('.p-datepicker-panel, .p-datepicker') as HTMLElement | null;
+    const panel = () => document.querySelector('.p-datepicker-panel') as HTMLElement | null;
 
     /** Gerçek kullanıcı gibi: tuş basışı + metin + input olayı (PrimeNG yalnız tuşla gelen girdiyi işler). */
     const typeText = async (text: string) => {
@@ -189,5 +189,115 @@ describe('DateInputComponent', () => {
         await typeText('11.10.2026 13:30');
         expect(host.control.value).toBe('2026-10-11T13:30');
         expect(fromIstanbulDateTimeLocalInputToUtcIso(host.control.value)).toBe('2026-10-11T10:30:00.000Z');
+    });
+
+    describe('takvim paneli kapanma', () => {
+        const openPanel = async () => {
+            input().focus();
+            input().click();
+            fixture.detectChanges();
+            await wait(400);
+            expect(panel()).not.toBeNull();
+        };
+        const panelOpen = () => {
+            const p = panel();
+            return !!p && p.isConnected && getComputedStyle(p).visibility !== 'hidden' && getComputedStyle(p).opacity !== '0';
+        };
+
+        it('dışarıya (başka düğmeye) basınca panel kapanır', async () => {
+            await create('date');
+            const btn = document.createElement('button');
+            document.body.appendChild(btn);
+            await openPanel();
+            btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            btn.focus();
+            fixture.detectChanges();
+            await wait(600);
+            expect(panelOpen()).toBeFalse();
+            btn.remove();
+        });
+
+        it('yazıp Tab ile alandan çıkınca panel kapanır', async () => {
+            await create('date');
+            const btn = document.createElement('button');
+            document.body.appendChild(btn);
+            await openPanel();
+            await typeText('11.10.2026');
+            input().dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', keyCode: 9, bubbles: true }));
+            btn.focus();
+            fixture.detectChanges();
+            await wait(600);
+            expect(panelOpen()).toBeFalse();
+            btn.remove();
+        });
+
+        it('tarih-saat: gün seçince tarih+saat paneli açık kalır, dışarı basınca kapanır', async () => {
+            await create('datetime-local');
+            const btn = document.createElement('button');
+            document.body.appendChild(btn);
+            await openPanel();
+            btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            btn.focus();
+            fixture.detectChanges();
+            await wait(600);
+            expect(document.querySelectorAll('.p-datepicker-panel').length).toBe(0);
+            btn.remove();
+        });
+
+        it('gün seçince (yalnız tarih) panel kapanır', async () => {
+            await create('date');
+            host.control.setValue('2026-10-11');
+            fixture.detectChanges();
+            await wait(50);
+            await openPanel();
+            const day = [...document.querySelectorAll('.p-datepicker-day')].find((d) => d.textContent?.trim() === '15' && !d.classList.contains('p-datepicker-other-month')) as HTMLElement;
+            day.click();
+            fixture.detectChanges();
+            await wait(600);
+            expect(panelOpen()).toBeFalse();
+        });
+
+        it('yazılan tam tarihten sonra dışarı basınca panel kapanır (maske yolu)', async () => {
+            await create('date');
+            const btn = document.createElement('button');
+            document.body.appendChild(btn);
+            await typeText('11.10.2026');
+            await wait(400);
+            btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            btn.focus();
+            fixture.detectChanges();
+            await wait(600);
+            expect(panelOpen()).toBeFalse();
+            btn.remove();
+        });
+
+        it('odak dışarıdaki bir düğmeye geçince (mousedown olmadan) panel kapanır', async () => {
+            await create('date');
+            const btn = document.createElement('button');
+            document.body.appendChild(btn);
+            await openPanel();
+            btn.focus();
+            fixture.detectChanges();
+            await wait(600);
+            expect(panelOpen()).toBeFalse();
+            btn.remove();
+        });
+
+        it('ikinci takvim açılınca birincinin paneli kapanır (en çok bir panel)', async () => {
+            await create('date');
+            const second = TestBed.createComponent(HostComponent);
+            document.body.appendChild(second.nativeElement);
+            second.detectChanges();
+            await wait(50);
+            await openPanel();
+            const secondInput = second.nativeElement.querySelector('input#d') as HTMLInputElement;
+            secondInput.focus();
+            secondInput.click();
+            second.detectChanges();
+            fixture.detectChanges();
+            await wait(600);
+            expect(document.querySelectorAll('.p-datepicker-panel').length).toBe(1);
+            second.destroy();
+        });
     });
 });
