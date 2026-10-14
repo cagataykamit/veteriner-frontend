@@ -13,7 +13,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     template: `
         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3">
             <div class="min-w-0">
-                <h1 class="m-0 text-xl leading-normal">{{ title() }}</h1>
+                <h1 class="m-0 text-xl! font-semibold! leading-normal">{{ title() }}</h1>
                 <ng-content select="[hint]" />
                 @if (count()) {
                     <span class="text-sm text-muted-color whitespace-nowrap">{{ count() }} kayıt</span>
