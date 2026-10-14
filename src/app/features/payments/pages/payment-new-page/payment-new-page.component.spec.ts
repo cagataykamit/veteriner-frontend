@@ -241,6 +241,13 @@ describe('PaymentNewPageComponent', () => {
         expect(cmp.allocations().map((a) => a.chargeId)).toEqual(['ch1']);
     });
 
+    it('ücret bağlamı: yalnız o ücret tam tutarla dolu gelir, aynı gelişin diğer ücretleri boş kalır', async () => {
+        query = { clientId: 'cl1', chargeId: 'ch2', visitId: 'v1' };
+        clients.getClientBalance.and.returnValue(of(balance([openCharge('ch1', { visitId: 'v1' }), openCharge('ch2', { visitId: 'v1' })])));
+        await setup();
+        expect(cmp.allocations().map((a) => a.chargeId)).toEqual(['ch2']);
+    });
+
     it('müşteri değişince bağlam düşer ve tutarlar sıfırlanır', async () => {
         query = { clientId: 'cl1', examinationId: 'ex1' };
         clients.getClientBalance.and.returnValue(of(balance([openCharge('ch1', { examinationId: 'ex1' })])));

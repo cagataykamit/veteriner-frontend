@@ -157,6 +157,31 @@ describe('ChargeNewPageComponent', () => {
         expect(router.navigate).toHaveBeenCalledWith(['/panel/charges'], { queryParams: { clientId: 'cl1' } });
     });
 
+    it('Payments.Create varsa ücret kaydından sonra ödeme formuna müşteri, ücret ve geliş bağlamıyla geçer', async () => {
+        claims.add('Payments.Create');
+        const withVisit = { ...created, visitId: 'v1', examinationId: 'ex1' };
+        charges.createCharge.and.returnValue(of({ created: true, charge: withVisit } as ChargeCreateResultVm));
+        await setup();
+        fill();
+        cmp.onSubmit(cmp.canCollectPayment);
+        expect(router.navigate).toHaveBeenCalledWith(['/panel/payments/new'], {
+            queryParams: { clientId: 'cl1', chargeId: 'ch1', visitId: 'v1', examinationId: 'ex1' }
+        });
+    });
+
+    it('Payments.Create varsa birincil düğme "Kaydet ve ödemeyi şimdi al", ikincil "Kaydet" listeye döner; yoksa tek "Kaydet"', async () => {
+        claims.add('Payments.Create');
+        await setup();
+        const labels = () => Array.from(fixture.nativeElement.querySelectorAll('form p-button')).map((b) => (b as HTMLElement).textContent?.trim());
+        expect(labels()).toContain('Kaydet ve ödemeyi şimdi al');
+        expect(labels()).toContain('Kaydet');
+        TestBed.resetTestingModule();
+        claims = new Set();
+        await setup();
+        expect(labels()).not.toContain('Kaydet ve ödemeyi şimdi al');
+        expect(labels()).toContain('Kaydet');
+    });
+
     it('çift tıklama: istek sürerken ikinci gönderim yapılmaz ve düğme kilitlidir', async () => {
         const pending = new Subject<ChargeCreateResultVm>();
         charges.createCharge.and.returnValue(pending);
