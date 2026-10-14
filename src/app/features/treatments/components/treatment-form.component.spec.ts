@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -10,8 +10,8 @@ import type { ExaminationDetailVm } from '@/app/features/examinations/models/exa
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
-import { TreatmentsService } from '../../services/treatments.service';
-import { TreatmentNewPageComponent } from './treatment-new-page.component';
+import { TreatmentsService } from '../services/treatments.service';
+import { TreatmentFormComponent } from './treatment-form.component';
 
 const exam = {
     id: 'e1',
@@ -23,18 +23,17 @@ const exam = {
     status: 'Draft'
 } as ExaminationDetailVm;
 
-describe('TreatmentNewPageComponent — muayene bağlamı', () => {
+describe('TreatmentFormComponent — muayene bağlamı', () => {
     const setup = (queryParams: Record<string, string>, examination: ExaminationDetailVm = exam) => {
         const examinations = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getExaminationById', 'getExaminations']);
         examinations.getExaminationById.and.returnValue(of(examination));
         TestBed.configureTestingModule({
-            imports: [TreatmentNewPageComponent],
+            imports: [TreatmentFormComponent],
             providers: [
                 provideRouter([]),
                 provideHttpClient(),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
                 { provide: ExaminationsService, useValue: examinations },
                 { provide: TreatmentsService, useValue: {} },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'client-1', fullName: 'Ali Veli' }) } },
@@ -43,7 +42,8 @@ describe('TreatmentNewPageComponent — muayene bağlamı', () => {
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
-        const fixture = TestBed.createComponent(TreatmentNewPageComponent);
+        const fixture = TestBed.createComponent(TreatmentFormComponent);
+        fixture.componentRef.setInput('contextParams', convertToParamMap(queryParams));
         fixture.detectChanges();
         return { fixture, examinations };
     };
