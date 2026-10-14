@@ -29,7 +29,7 @@ describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
             imports: [VaccinationDetailPageComponent],
             providers: [
                 provideRouter([]),
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'v1' }), queryParamMap: convertToParamMap({}) } } },
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
                 { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm(examinationId)) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
