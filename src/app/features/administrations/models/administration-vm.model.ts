@@ -31,6 +31,7 @@ export interface AdministrationVm {
 
 export interface AdministrationStockVm {
     quantityOnHand: number;
+    availableQuantity: number;
     minimumStockLevel: number;
     isBelowMinimum: boolean;
 }

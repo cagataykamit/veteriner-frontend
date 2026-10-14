@@ -177,10 +177,11 @@ describe('AdministrationsSectionComponent', () => {
         fixture.componentInstance.onSaved({
             created: true,
             administration: row,
-            stock: { quantityOnHand: 1, minimumStockLevel: 5, isBelowMinimum: true }
+            stock: { quantityOnHand: 4, availableQuantity: 1, minimumStockLevel: 5, isBelowMinimum: true }
         });
         fixture.detectChanges();
         expect(text()).toContain('minimum düzeyin altına indi');
+        expect(text()).toContain('kalan kullanılabilir 1 ');
     });
 
     it('aynı requestId ile dönen kayıtta stok tekrar düşülmedi bilgisi verilir', async () => {
@@ -188,7 +189,7 @@ describe('AdministrationsSectionComponent', () => {
         fixture.componentInstance.onSaved({
             created: false,
             administration: row,
-            stock: { quantityOnHand: 9, minimumStockLevel: 5, isBelowMinimum: false }
+            stock: { quantityOnHand: 9, availableQuantity: 9, minimumStockLevel: 5, isBelowMinimum: false }
         });
         fixture.detectChanges();
         expect(text()).toContain('stok tekrar düşülmedi');

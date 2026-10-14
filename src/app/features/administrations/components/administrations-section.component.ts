@@ -214,11 +214,11 @@ export class AdministrationsSectionComponent {
             this.noticeIsWarning.set(false);
         } else if (stock.isBelowMinimum) {
             this.notice.set(
-                `Uygulama kaydedildi. Dikkat: ${administration.productName} stoğu minimum düzeyin altına indi (kalan ${stock.quantityOnHand} ${administration.unit}, minimum ${stock.minimumStockLevel}).`
+                `Uygulama kaydedildi. Dikkat: ${administration.productName} stoğu minimum düzeyin altına indi (kalan kullanılabilir ${stock.availableQuantity} ${administration.unit}, minimum ${stock.minimumStockLevel}).`
             );
             this.noticeIsWarning.set(true);
         } else {
-            this.notice.set(`Uygulama kaydedildi; kalan stok ${stock.quantityOnHand} ${administration.unit}.`);
+            this.notice.set(`Uygulama kaydedildi; kalan kullanılabilir stok ${stock.availableQuantity} ${administration.unit}.`);
             this.noticeIsWarning.set(false);
         }
         this.reload();

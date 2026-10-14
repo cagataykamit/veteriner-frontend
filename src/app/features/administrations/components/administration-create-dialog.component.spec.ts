@@ -34,6 +34,9 @@ const batchInfo = (batches: StockBatchVm[], unbatchedQuantity = 0): ProductStock
     clinicId: 'c1',
     unit: 'şişe',
     quantityOnHand: 10,
+    availableText: '10',
+    expiredQuantity: 0,
+    expiredText: '0',
     quantityOnHandText: '10',
     batchedQuantityText: '8',
     unbatchedQuantity,
@@ -66,7 +69,7 @@ const result = (created: boolean): AdministrationCreateResultVm => ({
         lotNumber: null,
         expiryDate: null
     },
-    stock: { quantityOnHand: 4.5, minimumStockLevel: 2, isBelowMinimum: false }
+    stock: { quantityOnHand: 4.5, availableQuantity: 4.5, minimumStockLevel: 2, isBelowMinimum: false }
 });
 
 describe('AdministrationCreateDialogComponent', () => {

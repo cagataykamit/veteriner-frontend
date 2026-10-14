@@ -36,6 +36,8 @@ export interface AdministrationDto {
 /** Yalnız oluşturma yanıtında; düşümden sonraki stok. */
 export interface AdministrationStockDto {
     quantityOnHand: number;
+    /** Süresi geçmemiş miktar; "kalan stok" bildirimi buna göre. */
+    availableQuantity?: number;
     minimumStockLevel: number;
     isBelowMinimum: boolean;
 }

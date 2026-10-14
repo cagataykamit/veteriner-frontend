@@ -66,6 +66,7 @@ export function mapAdministrationCreateResultDtoToVm(dto: AdministrationCreateRe
         administration: mapAdministrationDtoToVm(dto.administration),
         stock: {
             quantityOnHand: dto.stock.quantityOnHand,
+            availableQuantity: dto.stock.availableQuantity ?? dto.stock.quantityOnHand,
             minimumStockLevel: dto.stock.minimumStockLevel,
             isBelowMinimum: dto.stock.isBelowMinimum
         }
