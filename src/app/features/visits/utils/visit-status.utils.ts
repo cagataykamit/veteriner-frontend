@@ -23,7 +23,7 @@ export function careStatusSeverity(status: VisitCareStatus): StatusTagSeverity {
     return CARE_STATUS_SEVERITY[status];
 }
 
-export type TodayOpenChipKey = 'chargeMissing' | 'awaitingLab' | 'paymentPending' | 'partiallyPaid';
+export type TodayOpenChipKey = 'chargePending' | 'chargeMissing' | 'awaitingLab' | 'paymentPending' | 'partiallyPaid';
 
 export interface TodayOpenChip {
     key: TodayOpenChipKey;
@@ -33,15 +33,29 @@ export interface TodayOpenChip {
     title: string;
     /** Çipten ödemeye geçilebilir (açık ücret var). */
     payable: boolean;
+    /** Çipten Ücretlendir ekranına (bekleyen kalemler) geçilebilir. */
+    reviewable: boolean;
 }
 
 /**
- * Satırın hesaplanan açık iş çipleri, kritik olan önce (Ücret yok, Lab bekliyor, sonra ödeme). `null` değer "yok" demek değildir
+ * Satırın hesaplanan açık iş çipleri, kritik olan önce (Ücret bekliyor / Ücret yok, Lab bekliyor, sonra ödeme). `null` değer "yok" demek değildir
  * (yetki yok veya planlı satır): çip üretilmez. `Paid` ve `NoChargeableWork` çip üretmez. "Önceki günden açık" Durum hücresindedir.
  */
-export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'chargeableWorkCount' | 'awaitingLabCount'>): TodayOpenChip[] {
+export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'chargeableWorkCount' | 'awaitingLabCount' | 'pendingChargeCount'>): TodayOpenChip[] {
     const chips: TodayOpenChip[] = [];
-    if (item.chargeIndicator === 'ChargeMissing') {
+    const pendingCharges = item.pendingChargeCount ?? 0;
+    if (pendingCharges > 0) {
+        // Bekleyen kalem varken "Ücret yok" yanıltıcıdır: ücret henüz yazılmadı ama karar bekleyen kalem var (ADR-018).
+        chips.push({
+            key: 'chargePending',
+            label: `Ücret bekliyor (${pendingCharges})`,
+            severity: 'warn',
+            icon: 'pi pi-receipt',
+            title: `${pendingCharges} kalem ücrete çevrilmeyi bekliyor`,
+            payable: false,
+            reviewable: true
+        });
+    } else if (item.chargeIndicator === 'ChargeMissing') {
         const n = item.chargeableWorkCount;
         chips.push({
             key: 'chargeMissing',
@@ -49,7 +63,8 @@ export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'char
             severity: 'danger',
             icon: 'pi pi-exclamation-circle',
             title: n && n > 0 ? `${n} işlem var, ücret kaydı yok` : 'İşlem var, ücret kaydı yok',
-            payable: false
+            payable: false,
+            reviewable: false
         });
     }
     if ((item.awaitingLabCount ?? 0) > 0) {
@@ -59,13 +74,14 @@ export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'char
             severity: 'warn',
             icon: 'pi pi-clock',
             title: 'Sonucu girilmemiş lab isteği var',
-            payable: false
+            payable: false,
+            reviewable: false
         });
     }
     if (item.chargeIndicator === 'PaymentPending') {
-        chips.push({ key: 'paymentPending', label: 'Ödeme bekliyor', severity: 'warn', icon: 'pi pi-wallet', title: 'Ücret açık, ödeme alınmadı', payable: true });
+        chips.push({ key: 'paymentPending', label: 'Ödeme bekliyor', severity: 'warn', icon: 'pi pi-wallet', title: 'Ücret açık, ödeme alınmadı', payable: true, reviewable: false });
     } else if (item.chargeIndicator === 'PartiallyPaid') {
-        chips.push({ key: 'partiallyPaid', label: 'Kısmi ödeme', severity: 'info', icon: 'pi pi-wallet', title: 'Ücretin bir kısmı ödendi, kalan açık', payable: true });
+        chips.push({ key: 'partiallyPaid', label: 'Kısmi ödeme', severity: 'info', icon: 'pi pi-wallet', title: 'Ücretin bir kısmı ödendi, kalan açık', payable: true, reviewable: false });
     }
     return chips;
 }

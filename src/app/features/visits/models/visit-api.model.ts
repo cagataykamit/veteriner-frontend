@@ -59,6 +59,8 @@ export interface TodayItemDto {
     chargeIndicator?: TodayChargeIndicatorDto | null;
     chargeableWorkCount?: number | null;
     awaitingLabCount?: number | null;
+    /** Ziyarete bağlı ücret bekleyen kalem sayısı (ADR-018); `Charges.Read` yoksa veya planlı satırda `null`. */
+    pendingChargeCount?: number | null;
     hasActiveHospitalization?: boolean | null;
     petAlerts?: PetAlertsDto | null;
     isVoided?: boolean | null;
