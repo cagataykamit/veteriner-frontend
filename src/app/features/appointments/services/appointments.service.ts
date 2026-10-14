@@ -121,9 +121,10 @@ export class AppointmentsService {
         );
     }
 
-    /** `Appointments.Cancel`. PUT ile durum geçişi kapatıldı; iptal kendi ucuyla yapılır. */
-    cancelAppointment(id: string): Observable<void> {
-        return this.postTransition(ApiEndpoints.appointments.cancel(id), {}, 'Randevu iptal edilemedi.');
+    /** `Appointments.Cancel`. PUT ile durum geçişi kapatıldı; iptal kendi ucuyla yapılır. Gerekçe opsiyonel (en çok 500). */
+    cancelAppointment(id: string, reason?: string): Observable<void> {
+        const trimmed = reason?.trim();
+        return this.postTransition(ApiEndpoints.appointments.cancel(id), trimmed ? { reason: trimmed } : {}, 'Randevu iptal edilemedi.');
     }
 
     /** `Appointments.Complete`. */

@@ -8,6 +8,7 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import { ClientDetailPageComponent } from '@/app/features/clients/pages/client-detail-page/client-detail-page.component';
 import { ClientEditPageComponent } from '@/app/features/clients/pages/client-edit-page/client-edit-page.component';
+import { ClientKvkkFormPageComponent } from '@/app/features/clients/pages/client-kvkk-form-page/client-kvkk-form-page.component';
 import { ClientNewPageComponent } from '@/app/features/clients/pages/client-new-page/client-new-page.component';
 import { ClientsListPageComponent } from '@/app/features/clients/pages/clients-list-page/clients-list-page.component';
 
@@ -38,6 +39,15 @@ export default [
             return auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClientEditPageComponent
+    },
+    {
+        path: ':id/kvkk-form',
+        canActivate: [() => {
+            const auth = inject(AuthService);
+            const router = inject(Router);
+            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+        }],
+        component: ClientKvkkFormPageComponent
     },
     {
         path: ':id',

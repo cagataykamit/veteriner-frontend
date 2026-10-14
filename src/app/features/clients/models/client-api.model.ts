@@ -36,7 +36,28 @@ export interface ClientDetailDto {
     preferredContactChannel?: string | null;
     /** `true`: otomatik aşı/randevu hatırlatma e-postası gönderilmez. */
     remindersOptedOut?: boolean | null;
+    /** KVKK rıza alanları ve kayıt sürümü (`KVKK_CONSENT_API_CONTRACT.md` §1); alan adları `ClientKvkkConsentDto` ile aynı. */
+    kvkkConsentStatus?: string | number | null;
+    /** `yyyy-MM-dd` (İstanbul takvim günü); yalnız `Accepted`/`Declined` iken dolu. */
+    kvkkConsentRecordedOn?: string | null;
+    kvkkConsentRecordedByUserId?: string | null;
+    kvkkConsentRecordedByName?: string | null;
+    /** Base64; `PUT /clients/{id}/kvkk-consent` için zorunlu. */
+    rowVersion?: string | null;
 }
+
+/** `PUT /clients/{id}/kvkk-consent` gövdesi; `None` iken `recordedOn` gönderilmez. */
+export interface ClientKvkkConsentUpdateRequestDto {
+    status: string;
+    recordedOn?: string;
+    rowVersion: string;
+}
+
+/** `PUT /clients/{id}/kvkk-consent` yanıtı (200). */
+export type ClientKvkkConsentDto = Pick<
+    ClientDetailDto,
+    'id' | 'kvkkConsentStatus' | 'kvkkConsentRecordedOn' | 'kvkkConsentRecordedByUserId' | 'kvkkConsentRecordedByName' | 'rowVersion'
+>;
 
 /**
  * POST/PUT /clients gövdesi — camelCase (Swagger ile doğrulanmalı).

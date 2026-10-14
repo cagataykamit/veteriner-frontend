@@ -34,6 +34,8 @@ export const ApiEndpoints = {
         deactivate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/deactivate`,
         workingHours: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/working-hours`,
         appointmentSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/appointment-settings`,
+        /** KVKK açık rıza formu şablonu; GET `Clinics.Read` | `Clinics.Update` | `Clients.Read`, PUT `Clinics.Update` (`KVKK_CONSENT_API_CONTRACT.md` §2). */
+        kvkkFormTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-form-template`,
         /** Geliş formundaki sorumlu hekim seçimi (`Visits.Create`). */
         veterinarians: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/veterinarians`
     },
@@ -81,7 +83,9 @@ export const ApiEndpoints = {
         recentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/recent-summary`,
         paymentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/payment-summary`,
         /** `Charges.Read`; yalnız açık ücretler, hayvan ve ziyaret kırılımıyla (`CLIENT_BALANCE_API_CONTRACT.md`). */
-        balance: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/balance`
+        balance: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/balance`,
+        /** PUT; `Clients.Update`, `rowVersion` zorunlu (`KVKK_CONSENT_API_CONTRACT.md` §1). */
+        kvkkConsent: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/kvkk-consent`
     },
     pets: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */

@@ -6,10 +6,11 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import { appointmentStatusLabel } from '@/app/features/appointments/utils/appointment-status.utils';
 import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import { ClientCardHeaderComponent } from '@/app/features/clients/components/client-card-header.component';
+import { ClientKvkkConsentDialogComponent } from '@/app/features/clients/components/client-kvkk-consent-dialog.component';
 import { ClientPetsPanelComponent } from '@/app/features/clients/components/client-pets-panel.component';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
-import type { ClientDetailVm, ClientPaymentSummaryVm } from '@/app/features/clients/models/client-vm.model';
+import type { ClientDetailVm, ClientKvkkConsentUpdateResult, ClientPaymentSummaryVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { buildClientPetRows, buildClientTodo, type ClientPetRow, soleActivePet } from '@/app/features/clients/utils/client-card.utils';
 import { PetTodoPanelComponent } from '@/app/features/pets/components/pet-todo-panel.component';
@@ -47,6 +48,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
         AppPageHeaderComponent,
         PatientActionBarComponent,
         ClientCardHeaderComponent,
+        ClientKvkkConsentDialogComponent,
         ClientPetsPanelComponent,
         PetTodoPanelComponent,
         AppLoadingStateComponent,
@@ -66,11 +68,22 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
             </div>
         } @else if (client(); as c) {
             <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" [title]="c.fullName" [description]="registrationLine()">
-                @if (canUpdateClient && !ro.mutationBlocked()) {
-                    <a actions [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
-                } @else if (canUpdateClient && ro.mutationBlocked()) {
-                    <button actions pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
-                }
+                <ng-container actions>
+                    <a
+                        [routerLink]="['/panel/clients', c.id, 'kvkk-form']"
+                        pButton
+                        type="button"
+                        label="KVKK formu yazdır"
+                        icon="pi pi-print"
+                        class="p-button-text p-button-secondary"
+                        data-testid="kvkk-print-action"
+                    ></a>
+                    @if (canUpdateClient && !ro.mutationBlocked()) {
+                        <a [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                    } @else if (canUpdateClient && ro.mutationBlocked()) {
+                        <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                    }
+                </ng-container>
             </app-page-header>
 
             <app-patient-action-bar [sticky]="true" [clientId]="c.id" [clientName]="c.fullName" [arrivalPet]="arrivalPet()" />
@@ -81,7 +94,24 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
                 [pendingCharges]="pendingCharges()"
                 [lastExamination]="lastExamination()"
                 [nextAppointment]="nextAppointment()"
-            />
+            >
+                @if (canUpdateClient) {
+                    <button
+                        kvkkAction
+                        pButton
+                        type="button"
+                        [label]="ro.mutationBlocked() ? 'Rıza durumunu işaretle (salt okunur)' : 'Rıza durumunu işaretle'"
+                        [icon]="ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-pencil'"
+                        class="p-button-text p-button-sm"
+                        [disabled]="ro.mutationBlocked()"
+                        data-testid="kvkk-mark-action"
+                        (click)="kvkkDialogOpen.set(true)"
+                    ></button>
+                }
+            </app-client-card-header>
+            @if (canUpdateClient && !ro.mutationBlocked()) {
+                <app-client-kvkk-consent-dialog [(visible)]="kvkkDialogOpen" [client]="c" (changed)="onKvkkChanged($event)" (stale)="refreshClient()" />
+            }
 
             <div class="grid grid-cols-12 gap-4 mb-4">
                 <div class="col-span-12 lg:col-span-5" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
@@ -288,6 +318,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     readonly client = signal<ClientDetailVm | null>(null);
     /** Yeni oluşturma sonrası kısa onay (query `saved=1`). */
     readonly showSavedBanner = signal(false);
+    readonly kvkkDialogOpen = signal(false);
 
     readonly pets = signal<PetCardSection<PetListItemVm[]>>(null);
     readonly balance = signal<PetCardSection<ClientBalanceVm>>(null);
@@ -418,6 +449,25 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
                 this.error.set(e.message ?? 'Yükleme hatası');
                 this.loading.set(false);
             }
+        });
+    }
+
+    /** Rıza yanıtı (durum + yeni `rowVersion`) karta birleştirilir; sonraki yazım yeni sürümle yapılır. */
+    onKvkkChanged(result: ClientKvkkConsentUpdateResult): void {
+        const c = this.client();
+        if (c) {
+            this.client.set({ ...c, ...result });
+        }
+    }
+
+    /** Yalnız müşteri kaydını yeniler (409 sonrası güncel rıza ve `rowVersion`); kartın diğer bölümleri yeniden yüklenmez. */
+    refreshClient(): void {
+        if (!this.lastId) {
+            return;
+        }
+        this.clientsService.getClientById(this.lastId).subscribe({
+            next: (c) => this.client.set(c),
+            error: () => undefined
         });
     }
 

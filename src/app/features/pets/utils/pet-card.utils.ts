@@ -72,14 +72,15 @@ export function petIdentityParts(pet: PetDetailVm, measuredWeightKg: number | nu
     ].filter(filled);
 }
 
+/** İleri tarihli `Planlandı` (açık) randevular, en yakın önce. */
+export function upcomingScheduledAppointments<T extends Pick<PetHistoryAppointmentItemVm, 'scheduledAtUtc' | 'status'>>(rows: readonly T[], now: Date = new Date()): T[] {
+    const at = (r: T) => parseUtcApiInstantIsoString(r.scheduledAtUtc)?.getTime() ?? NaN;
+    return rows.filter((r) => parseAppointmentStatusRawToEnum(r.status) === 0 && at(r) >= now.getTime()).sort((a, b) => at(a) - at(b));
+}
+
 /** Özet uçlarındaki (en yeni 10) randevulardan ileri tarihli en yakın `Planlandı` randevu (hasta geçmişi ve müşteri son özeti). */
 export function nextScheduledAppointment<T extends Pick<PetHistoryAppointmentItemVm, 'scheduledAtUtc' | 'status'>>(rows: readonly T[], now: Date = new Date()): T | null {
-    const at = (r: T) => parseUtcApiInstantIsoString(r.scheduledAtUtc)?.getTime() ?? NaN;
-    return (
-        rows
-            .filter((r) => parseAppointmentStatusRawToEnum(r.status) === 0 && at(r) >= now.getTime())
-            .sort((a, b) => at(a) - at(b))[0] ?? null
-    );
+    return upcomingScheduledAppointments(rows, now)[0] ?? null;
 }
 
 /** Tedavide durum alanı yok: "aktif tedavi" = takip tarihi bugün veya ileride olan tedavi; en yakın takip önce. */

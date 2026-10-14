@@ -17,7 +17,9 @@ const client: ClientDetailVm = {
     createdAtUtc: '2026-01-01T00:00:00Z',
     updatedAtUtc: null,
     preferredContactChannel: 'None',
-    remindersOptedOut: false
+    remindersOptedOut: false,
+    kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null },
+    rowVersion: 'rv1'
 };
 
 const pending = (items: Partial<ChargeSuggestionVm>[], totalItems = items.length): ChargeSuggestionsPagedVm => ({
@@ -77,6 +79,20 @@ describe('ClientCardHeaderComponent', () => {
         el = render({ client: { ...client, preferredContactChannel: 'WhatsApp', remindersOptedOut: true } });
         expect(el.querySelector('[data-testid="client-preferred-channel"]')?.textContent).toContain('WhatsApp');
         expect(el.querySelector('[data-testid="client-reminders-opted-out"]')?.textContent).toContain('hatırlatma istemiyor');
+    });
+
+    it('KVKK açık rıza: Yok iken "form alınmadı"; işaretliyken durum, tarih ve işaretleyen', () => {
+        let el = render({});
+        expect(el.querySelector('[data-testid="client-kvkk-status"]')?.textContent).toContain('Yok');
+        expect(el.querySelector('[data-testid="client-kvkk"]')?.textContent).toContain('form alınmadı');
+        expect(el.querySelector('[data-testid="client-kvkk-date"]')).toBeNull();
+
+        TestBed.resetTestingModule();
+        el = render({ client: { ...client, kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-15', recordedByName: 'Ayşe Yılmaz' } } });
+        expect(el.querySelector('[data-testid="client-kvkk-status"]')?.textContent).toContain('Kabul');
+        expect(el.querySelector('[data-testid="client-kvkk-date"]')?.textContent).toContain('15.10.2026');
+        expect(el.querySelector('[data-testid="client-kvkk-by"]')?.textContent).toContain('Ayşe Yılmaz');
+        expect(el.querySelector('[data-testid="client-kvkk"]')?.textContent).not.toContain('form alınmadı');
     });
 
     it('sayfa tüm kalemleri içermiyorsa sayı totalItems, tutar "en az" ile gösterilir', () => {

@@ -9,6 +9,8 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import type {
     ClientUpsertRequestDto,
     ClientDetailDto,
+    ClientKvkkConsentDto,
+    ClientKvkkConsentUpdateRequestDto,
     ClientListItemDto,
     ClientListItemDtoPagedResult,
     ClientPaymentSummaryDto,
@@ -21,6 +23,8 @@ import type { ClientUpsertFormValue } from '@/app/features/clients/forms/client-
 import type { CreateClientRequest, QuickRegisterRequest, QuickRegisterResult } from '@/app/features/clients/models/client-create.model';
 import type {
     ClientDetailVm,
+    ClientKvkkConsentUpdateRequest,
+    ClientKvkkConsentUpdateResult,
     ClientListItemVm,
     ClientPaymentSummaryVm,
     ClientRecentSummaryVm
@@ -28,6 +32,7 @@ import type {
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
+import { parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 
 const EM = '—';
 
@@ -248,8 +253,32 @@ export function mapClientDetailDtoToVm(dto: ClientDetailDto): ClientDetailVm {
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null,
         preferredContactChannel: parseClientContactChannel(dto.preferredContactChannel),
-        remindersOptedOut: dto.remindersOptedOut === true
+        remindersOptedOut: dto.remindersOptedOut === true,
+        ...mapClientKvkkConsentDtoToVm(dto)
     };
+}
+
+function trimmedOrNull(v: string | null | undefined): string | null {
+    return v?.trim() ? v.trim() : null;
+}
+
+/** Detay ve `PUT …/kvkk-consent` yanıtı aynı alan adlarını taşır; `None` iken tarih/işaretleyen gösterilmez. */
+export function mapClientKvkkConsentDtoToVm(dto: Omit<ClientKvkkConsentDto, 'id'>): ClientKvkkConsentUpdateResult {
+    const status = parseKvkkConsentStatus(dto.kvkkConsentStatus);
+    const recorded = status !== 'None';
+    return {
+        kvkkConsent: {
+            status,
+            recordedOn: recorded ? (trimmedOrNull(dto.kvkkConsentRecordedOn)?.slice(0, 10) ?? null) : null,
+            recordedByName: recorded ? trimmedOrNull(dto.kvkkConsentRecordedByName) : null
+        },
+        rowVersion: trimmedOrNull(dto.rowVersion)
+    };
+}
+
+export function mapClientKvkkConsentUpdateToApiBody(req: ClientKvkkConsentUpdateRequest): ClientKvkkConsentUpdateRequestDto {
+    const recordedOn = req.status === 'None' ? '' : (req.recordedOn?.trim() ?? '');
+    return { status: req.status, ...(recordedOn ? { recordedOn } : {}), rowVersion: req.rowVersion };
 }
 
 export function mapPagedClientsToVm(result: ClientListItemDtoPagedResult): {

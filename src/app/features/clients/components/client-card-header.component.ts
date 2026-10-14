@@ -6,16 +6,18 @@ import type { ClientBalanceVm } from '@/app/features/clients/models/client-balan
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { pendingChargesSummary } from '@/app/features/clients/utils/client-card.utils';
 import { clientContactChannelLabel } from '@/app/features/clients/utils/client-contact-preference.utils';
+import { kvkkConsentStatusLabel } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 /**
  * Müşteri kartı başlığı (ADR-020 karar 6): iletişim (aranabilir telefon, e-posta, adres, tercih edilen kanal; hatırlatma istemiyorsa belirgin not)
  * ve hesap durumu (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu). Ad ve "Düzenle" sayfa başlığındadır.
+ * KVKK açık rıza satırı (ADR-021): durum, form tarihi ve işaretleyen; işaretleme eylemi `[kvkkAction]` ile sayfadan yansıtılır (yetki sayfada).
  */
 @Component({
     selector: 'app-client-card-header',
@@ -50,6 +52,28 @@ import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/ut
                     <i class="pi pi-bell-slash" aria-hidden="true"></i>Otomatik hatırlatma istemiyor: aşı ve randevu hatırlatma e-postaları gönderilmez.
                 </p>
             }
+            <p class="m-0 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label="KVKK açık rıza" data-testid="client-kvkk">
+                <span class="text-muted-color"><i class="pi pi-file-check mr-1" aria-hidden="true"></i>KVKK açık rıza:</span>
+                @switch (client().kvkkConsent.status) {
+                    @case ('Accepted') {
+                        <span class="font-medium text-green-700 dark:text-green-400" data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
+                    }
+                    @case ('Declined') {
+                        <span class="font-medium text-amber-800 dark:text-amber-300" data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
+                    }
+                    @default {
+                        <span class="font-medium" data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
+                        <span class="text-muted-color">· imzalı form alınmadı</span>
+                    }
+                }
+                @if (client().kvkkConsent.recordedOn; as on) {
+                    <span class="text-muted-color" data-testid="client-kvkk-date">· {{ formatDate(on) }}</span>
+                }
+                @if (client().kvkkConsent.recordedByName; as by) {
+                    <span class="text-muted-color" data-testid="client-kvkk-by">· işaretleyen: {{ by }}</span>
+                }
+                <ng-content select="[kvkkAction]" />
+            </p>
 
             <app-card-account-status [balance]="balance()" [nextAppointment]="nextAppointment()">
                 @if (pendingCharges(); as p) {
@@ -132,4 +156,6 @@ export class ClientCardHeaderComponent {
     readonly phone = computed(() => formatClientPhoneForDisplay(this.client().phone));
     readonly phoneHref = computed(() => clientPhoneTelHref(this.client().phone));
     readonly channelLabel = computed(() => clientContactChannelLabel(this.client().preferredContactChannel));
+    readonly kvkkLabel = computed(() => kvkkConsentStatusLabel(this.client().kvkkConsent.status));
+    readonly formatDate = (v: string) => formatDateDisplay(v);
 }

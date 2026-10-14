@@ -6,6 +6,8 @@ import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     extractCreatedClientIdFromPostResponse,
     mapClientDetailDtoToVm,
+    mapClientKvkkConsentDtoToVm,
+    mapClientKvkkConsentUpdateToApiBody,
     mapClientPaymentSummaryDtoToVm,
     mapClientRecentSummaryDtoToVm,
     mapCreateClientToApiBody,
@@ -16,6 +18,7 @@ import {
 } from '@/app/features/clients/data/client.mapper';
 import type {
     ClientDetailDto,
+    ClientKvkkConsentDto,
     ClientListItemDtoPagedResult,
     ClientPaymentSummaryDto,
     ClientRecentSummaryDto,
@@ -25,6 +28,8 @@ import type { CreateClientRequest, QuickRegisterRequest, QuickRegisterResult } f
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 import type {
     ClientDetailVm,
+    ClientKvkkConsentUpdateRequest,
+    ClientKvkkConsentUpdateResult,
     ClientListItemVm,
     ClientPaymentSummaryVm,
     ClientRecentSummaryVm
@@ -141,6 +146,16 @@ export class ClientsService {
                 return result;
             })
         );
+    }
+
+    /**
+     * `PUT /clients/{id}/kvkk-consent` (`Clients.Update`): imzalı formun sonucu ve tarihi; `None` geri alır.
+     * HTTP hatası ham iletilir: 409 `Clients.ConcurrencyConflict` çağıranda detay yenilemesi gerektirir.
+     */
+    updateKvkkConsent(id: string, req: ClientKvkkConsentUpdateRequest): Observable<ClientKvkkConsentUpdateResult> {
+        return this.api
+            .put<ClientKvkkConsentDto>(ApiEndpoints.clients.kvkkConsent(id), mapClientKvkkConsentUpdateToApiBody(req))
+            .pipe(map(mapClientKvkkConsentDtoToVm));
     }
 
     updateClient(id: string, payload: CreateClientRequest): Observable<void> {

@@ -9,6 +9,7 @@ import {
     CLINICAL_TERMS_UPDATE_CLAIM,
     CLIENTS_READ_CLAIM,
     CLINICS_READ_CLAIM,
+    CLINICS_UPDATE_CLAIM,
     EXAMINATION_TEMPLATES_CREATE_CLAIM,
     EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM,
     EXAMINATION_TEMPLATES_UPDATE_CLAIM,
@@ -362,6 +363,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
         label: 'Klinik ve kurum',
         entries: [
             { label: 'Klinikler', icon: 'pi pi-fw pi-building', route: '/panel/settings/clinics', claims: [CLINICS_READ_CLAIM], description: 'Kuruma bağlı klinikler.' },
+            {
+                label: 'KVKK form metni',
+                icon: 'pi pi-fw pi-file-edit',
+                route: '/panel/settings/kvkk-form',
+                claims: [CLINICS_UPDATE_CLAIM],
+                description: 'Müşteriye imzalatılan açık rıza formunun aktif klinikteki metni.'
+            },
             { label: 'Organizasyon Ayarları', icon: 'pi pi-fw pi-building', route: '/panel/settings/organization', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Kurum ve fatura bilgileri.' },
             { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', route: '/panel/settings/members', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Üyeler ve rolleri.' },
             { label: 'Davetler', icon: 'pi pi-fw pi-list', route: '/panel/settings/invites/list', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Gönderilen davetler.' },
