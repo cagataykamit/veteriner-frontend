@@ -17,11 +17,11 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     template: `
         <section class="card mb-0 h-full" aria-labelledby="client-pets-title" data-testid="client-pets">
             <div class="flex flex-wrap items-center gap-2 mb-3">
-                <h5 id="client-pets-title" class="m-0">Hayvanlar</h5>
+                <h5 id="client-pets-title" class="m-0">Hastalar</h5>
                 @if (rows()?.state === 'ok') {
                     <span class="text-sm font-medium text-muted-color" data-testid="pets-count">({{ visibleRows().length }})</span>
                     @if (deceasedCount() > 0) {
-                        <div class="flex gap-1 text-sm" role="group" aria-label="Hayvan durumu süzgeci">
+                        <div class="flex gap-1 text-sm" role="group" aria-label="Hasta durumu süzgeci">
                             <button
                                 type="button"
                                 class="px-2 py-0.5 rounded-border border cursor-pointer"
@@ -86,21 +86,21 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                             }
                         </ul>
                     } @else if (deceasedCount() > 0) {
-                        <p class="m-0 text-muted-color" data-testid="pets-no-active">Aktif hayvan yok; vefat eden hayvanlar "Tümü" altında.</p>
+                        <p class="m-0 text-muted-color" data-testid="pets-no-active">Aktif hasta yok; vefat eden hastalar "Tümü" altında.</p>
                     } @else {
-                        <p class="m-0 text-muted-color" data-testid="pets-empty">Bu müşteriye kayıtlı hayvan yok.</p>
+                        <p class="m-0 text-muted-color" data-testid="pets-empty">Bu müşteriye kayıtlı hasta yok.</p>
                     }
                 }
                 @case ('error') {
                     <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="pets-failed">
-                        <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hayvan listesi alınamadı.
+                        <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.
                     </p>
                 }
                 @case ('loading') {
                     <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>
                 }
                 @default {
-                    <p class="m-0 text-muted-color text-sm"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Hayvanları görme yetkiniz yok.</p>
+                    <p class="m-0 text-muted-color text-sm"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Hastaları görme yetkiniz yok.</p>
                 }
             }
         </section>

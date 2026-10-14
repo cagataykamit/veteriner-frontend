@@ -158,7 +158,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
                                                 class="hidden lg:grid grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 px-0.5 pb-2 text-xs font-medium text-muted-color border-b border-surface-200 dark:border-surface-700"
                                             >
                                                 <span>Tarih</span>
-                                                <span>Hayvan / Klinik / Yöntem</span>
+                                                <span>Hasta / Klinik / Yöntem</span>
                                                 <span class="text-right">Tutar</span>
                                                 <span class="text-right">İşlem</span>
                                             </div>

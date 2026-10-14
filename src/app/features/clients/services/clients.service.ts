@@ -136,7 +136,7 @@ export class ClientsService {
             map((dto) => {
                 const result = mapQuickRegisterResultDtoToVm(dto);
                 if (!result) {
-                    throw new Error('Sunucu yanıtında müşteri/hayvan kimliği okunamadı. Kayıt oluşmuş olabilir; müşteri listesini kontrol edin.');
+                    throw new Error('Sunucu yanıtında müşteri/hasta kimliği okunamadı. Kayıt oluşmuş olabilir; müşteri listesini kontrol edin.');
                 }
                 return result;
             })
