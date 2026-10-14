@@ -17,8 +17,7 @@ import {
     PROCEDURE_LABEL,
     PROCEDURE_ROUTE_SEGMENT,
     procedureAddState,
-    type ProcedureKind,
-    type ProcedureRowVm
+    type ProcedureKind
 } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { HospitalizationFormComponent } from '@/app/features/hospitalizations/components/hospitalization-form.component';
 import { LabResultFormComponent } from '@/app/features/lab-results/components/lab-result-form.component';
@@ -26,7 +25,6 @@ import { PrescriptionFormComponent } from '@/app/features/prescriptions/componen
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { TreatmentFormComponent } from '@/app/features/treatments/components/treatment-form.component';
 import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/features/vaccinations/components/vaccination-form.component';
-import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -109,13 +107,20 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                 } @else if (loading() && rows().length === 0) {
                     <p class="text-muted-color text-sm m-0">Yükleniyor…</p>
                 } @else if (rows().length === 0) {
-                    <app-empty-state message="Bu muayeneye bağlı işlem kaydı yok." />
+                    <app-empty-state message="Gösterilecek işlem kaydı yok." />
                 } @else {
                     <ul class="list-none m-0 p-0" data-testid="procedure-list">
                         @for (row of rows(); track row.kind + row.id) {
-                            <li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0">
+                            <li
+                                class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0"
+                                [class.opacity-60]="row.cancelled"
+                                [attr.data-cancelled]="row.cancelled ? 'true' : null"
+                            >
                                 <app-status-tag [label]="label(row.kind)" severity="info" />
-                                <span class="font-medium min-w-0 break-words flex-1">{{ row.title }}</span>
+                                <span class="font-medium min-w-0 break-words flex-1" [class.line-through]="row.cancelled">{{ row.title }}</span>
+                                @if (row.stateLabel) {
+                                    <app-status-tag [label]="row.stateLabel" [severity]="row.cancelled ? 'secondary' : 'warn'" />
+                                }
                                 @if (row.detail) {
                                     <span class="text-sm text-muted-color">{{ row.detail }}</span>
                                 }
@@ -164,17 +169,13 @@ export class ExaminationProceduresSectionComponent {
     readonly retry = output<void>();
 
     private readonly auth = inject(AuthService);
-    private readonly vaccinationsService = inject(VaccinationsService);
     private readonly ro = inject(TenantReadOnlyContextService);
 
     readonly drawerVisible = signal(false);
     readonly activeKind = signal<ProcedureKind | null>(null);
     readonly notice = signal<string | null>(null);
     readonly noticeIsWarning = signal(false);
-    /** Özet uç yanıtında aşı yok; bu oturumda eklenen aşılar listeye yerel eklenir. */
-    private readonly addedVaccinations = signal<ProcedureRowVm[]>([]);
-
-    readonly rows = computed(() => buildProcedureRows(this.summary(), this.addedVaccinations()));
+    readonly rows = computed(() => buildProcedureRows(this.summary()));
     readonly visibleKinds = computed(() => PROCEDURE_KINDS.filter((k) => this.auth.hasOperationClaim(CREATE_CLAIM[k])));
     readonly canAddAny = computed(() => this.visibleKinds().length > 0);
     readonly drawerTitle = computed(() => {
@@ -209,11 +210,6 @@ export class ExaminationProceduresSectionComponent {
             : base;
     }
 
-    /** Eklenmiş (özet + oturum) kayıt sayısı; kesinleştirme kontrolü yerel aşıları da sayar. */
-    addedVaccinationCount(): number {
-        return this.addedVaccinations().length;
-    }
-
     open(kind: ProcedureKind): void {
         if (this.state(kind).disabled) {
             return;
@@ -237,15 +233,7 @@ export class ExaminationProceduresSectionComponent {
         this.close();
         const notice = event.stockNotice;
         this.setNotice(notice ? notice.text : 'Aşı kaydedildi.', notice?.warn ?? false);
-        this.vaccinationsService.getVaccinationById(event.id).subscribe({
-            next: (v) => this.addVaccinationRow({ kind: 'vaccination', id: v.id, atUtc: v.appliedAtUtc ?? v.dueAtUtc, title: v.vaccineName, detail: null }),
-            error: () => this.addVaccinationRow({ kind: 'vaccination', id: event.id, atUtc: null, title: 'Aşı kaydı', detail: null })
-        });
         this.changed.emit();
-    }
-
-    private addVaccinationRow(row: ProcedureRowVm): void {
-        this.addedVaccinations.update((rows) => [...rows, row]);
     }
 
     private setNotice(text: string, warn: boolean): void {
