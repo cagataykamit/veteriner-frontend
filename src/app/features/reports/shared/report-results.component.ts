@@ -21,7 +21,11 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
             <app-loading-state [message]="copy.reportsLoadingMessage" />
         } @else if (s.error()) {
             <div class="card">
-                <app-error-state [detail]="s.error()!" (retry)="s.reload()" />
+                @if (s.errorIsInvalidInput()) {
+                    <app-error-state [title]="s.error()!" [detail]="copy.reportsFixFilterHint" [showRetry]="false" />
+                } @else {
+                    <app-error-state [detail]="s.error()!" (retry)="s.reload()" />
+                }
             </div>
         } @else if (s.report(); as r) {
             @if (showSummary()) {

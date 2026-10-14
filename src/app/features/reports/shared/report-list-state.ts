@@ -76,10 +76,14 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     readonly scheduleApply = debouncedAction(() => this.applyFilters());
 
     readonly canExport = computed(() => this.auth.hasOperationClaim(this.config.readClaim));
+    /** Dışa aktarma yalnız yüklü, hatasız ve dolu bir sonuç varken anlamlıdır. */
+    readonly hasExportableRows = computed(() => !this.loading() && !this.error() && (this.report()?.items.length ?? 0) > 0);
 
     readonly loading = signal(true);
     readonly exportKind = signal<ExportKind | null>(null);
     readonly error = signal<string | null>(null);
+    /** Hata istek içeriğinden (400/422: ör. tarih aralığı çok geniş) kaynaklı: aynı istekle tekrar denemek işe yaramaz. */
+    readonly errorIsInvalidInput = signal(false);
     readonly exportError = signal<string | null>(null);
     readonly dateFilterError = signal<string | null>(null);
     readonly report = signal<R | null>(null);
@@ -419,6 +423,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         const seq = ++this.latestReportLoadSeq;
         this.loading.set(true);
         this.error.set(null);
+        this.errorIsInvalidInput.set(false);
         this.config.source.loadReport(q).subscribe({
             next: (r) => {
                 if (seq !== this.latestReportLoadSeq) {
@@ -443,6 +448,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
                     return;
                 }
                 this.error.set(panelHttpFailureMessage(err, PANEL_COPY.reportsLoadErrorFallback));
+                this.errorIsInvalidInput.set(err instanceof HttpErrorResponse && (err.status === 400 || err.status === 422));
                 this.loading.set(false);
             }
         });

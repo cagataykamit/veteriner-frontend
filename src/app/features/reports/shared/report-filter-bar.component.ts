@@ -124,7 +124,7 @@ export interface ReportExtraFilter {
                             [outlined]="true"
                             (onClick)="s.exportXlsx()"
                             [loading]="s.isExporting('xlsx')"
-                            [disabled]="s.loading() || s.exporting()"
+                            [disabled]="s.exporting() || !s.hasExportableRows()"
                         />
                         <p-button
                             [label]="copy.reportsExportCsv"
@@ -133,7 +133,7 @@ export interface ReportExtraFilter {
                             [outlined]="true"
                             (onClick)="s.exportCsv()"
                             [loading]="s.isExporting('csv')"
-                            [disabled]="s.loading() || s.exporting()"
+                            [disabled]="s.exporting() || !s.hasExportableRows()"
                         />
                     }
                     <ng-content select="[barActions]" />
