@@ -314,6 +314,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(cmp.form.disabled).toBeTrue();
         expect(cmp.saveDisabled()).toBeTrue();
         expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="finalized-notice"]')).not.toBeNull();
+        expect((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="clinical-term-picker"]').length).toBe(0);
 
         cmp.onSubmit();
         expect(service.updateExamination).not.toHaveBeenCalled();
@@ -327,5 +328,16 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
 
         expect(cmp.finalized()).toBeFalse();
         expect(cmp.form.enabled).toBeTrue();
+    });
+
+    it('taslak muayenede şikâyet ve tanı alanlarının altında sözlük seçicisi görünür', () => {
+        service.getExaminationForEditById.and.returnValue(of(editVm({ status: 'Draft' })));
+        cmp.reload();
+        fixture.detectChanges();
+
+        const el = fixture.nativeElement as HTMLElement;
+        expect(el.querySelectorAll('[data-testid="clinical-term-picker"]').length).toBe(2);
+        expect(el.querySelector('#visitReasonTerm')).not.toBeNull();
+        expect(el.querySelector('#assessmentTerm')).not.toBeNull();
     });
 });

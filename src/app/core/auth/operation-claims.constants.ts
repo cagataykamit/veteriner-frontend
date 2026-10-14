@@ -161,6 +161,18 @@ export const BREEDS_CREATE_CLAIM = 'Breeds.Create' as const;
 /** Irk güncelleme */
 export const BREEDS_UPDATE_CLAIM = 'Breeds.Update' as const;
 
+/** Tanı/şikâyet sözlüğü — liste/arama (muayene alanlarında seçim) */
+export const CLINICAL_TERMS_READ_CLAIM = 'ClinicalTerms.Read' as const;
+
+/** Sözlüğe kliniğe özel terim ekleme */
+export const CLINICAL_TERMS_CREATE_CLAIM = 'ClinicalTerms.Create' as const;
+
+/** Kliniğe özel terimin adını düzeltme */
+export const CLINICAL_TERMS_UPDATE_CLAIM = 'ClinicalTerms.Update' as const;
+
+/** Kliniğe özel terimi pasifleştirme / etkinleştirme */
+export const CLINICAL_TERMS_DEACTIVATE_CLAIM = 'ClinicalTerms.Deactivate' as const;
+
 /** Veri içe aktarma: parti listesi, önizleme ve şablon (yönetici düzeyi) */
 export const IMPORTS_READ_CLAIM = 'Imports.Read' as const;
 

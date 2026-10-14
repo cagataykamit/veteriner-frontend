@@ -11,7 +11,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     imports: [RouterLink, AppPageHeaderComponent, NavigationCardsComponent],
     template: `
         <a [routerLink]="settingsRoute" class="text-primary font-medium no-underline inline-block mb-4">← Ayarlar</a>
-        <app-page-header title="Tanımlar" description="Tür, ırk ve ürün kategorisi gibi referans kayıtlarını yönetin." />
+        <app-page-header title="Tanımlar" description="Tür, ırk, ürün kategorisi ve tanı/şikâyet sözlüğü gibi referans kayıtlarını yönetin." />
         <app-navigation-cards [entries]="entries" />
     `
 })
