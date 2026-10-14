@@ -288,6 +288,15 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                     </div>
                 }
 
+                @if ((relatedSummary()?.pendingChargeCount ?? 0) > 0) {
+                    <div class="col-span-12">
+                        <div class="card mb-0 flex flex-wrap items-center gap-3 justify-between" data-testid="pending-charges-link">
+                            <span class="font-medium"><i class="pi pi-receipt mr-2"></i>{{ relatedSummary()!.pendingChargeCount }} ücret bekliyor</span>
+                            <a routerLink="/panel/charges/pending" [queryParams]="{ examinationId: exam()!.id }" class="text-primary font-medium no-underline">Ücretlendir</a>
+                        </div>
+                    </div>
+                }
+
                 <div class="col-span-12">
                     <h4 class="mt-0 mb-4 text-xl font-semibold">İlgili kayıtlar</h4>
                 </div>

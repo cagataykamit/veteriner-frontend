@@ -20,6 +20,7 @@ const summary = (over: Partial<ExaminationRelatedSummaryVm> = {}): ExaminationRe
     hospitalizations: [],
     vaccinations: [],
     payments: [],
+    pendingChargeCount: null,
     ...over
 });
 
@@ -100,6 +101,14 @@ describe('finalizeWarnings', () => {
             summary({ treatments: [{ id: 't1', treatmentDateUtc: null, clinicId: null, clinicName: null, title: 'T' }] })
         );
         expect(w).toEqual([]);
+    });
+
+    it('ücret bekleyen kalem varsa uyarı verilir (engel değil); 0 veya null ise verilmez', () => {
+        const done = { assessment: 'x', plan: 'y' };
+        const withTreatment = { treatments: [{ id: 't1', treatmentDateUtc: null, clinicId: null, clinicName: null, title: 'T' }] };
+        expect(finalizeWarnings(done, summary({ ...withTreatment, pendingChargeCount: 2 }))).toEqual(['2 ücret bekliyor (resepsiyon ücrete çevirmedi veya ücretsiz saymadı).']);
+        expect(finalizeWarnings(done, summary({ ...withTreatment, pendingChargeCount: 0 }))).toEqual([]);
+        expect(finalizeWarnings(done, summary({ ...withTreatment, pendingChargeCount: null }))).toEqual([]);
     });
 
     it('özette yalnız aktif aşı varsa "işlem yok" uyarısı verilmez; yalnız iptal aşı varsa verilir', () => {

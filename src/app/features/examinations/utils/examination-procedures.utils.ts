@@ -111,8 +111,8 @@ function isBlank(value: string | null | undefined): boolean {
 }
 
 /**
- * Kesinleştirme öncesi tamamlanma kontrolü (uyarı, engel değil). Ücretlenmemiş kalem kontrolü ücret önerisi modeli
- * (ADR-018) gelince eklenecek; uygulama özet uç yanıtında olmadığından "işlem yok" denetimine girmez.
+ * Kesinleştirme öncesi tamamlanma kontrolü (uyarı, engel değil). Uygulama özet uç yanıtında olmadığından "işlem yok"
+ * denetimine girmez; ücret bekleyen kalem sayısı (ADR-018) ayrı uyarıdır.
  */
 export function finalizeWarnings(
     exam: Pick<ExaminationDetailVm, 'assessment' | 'plan'>,
@@ -127,6 +127,10 @@ export function finalizeWarnings(
     }
     if (summary && !buildProcedureRows(summary).some((r) => !r.cancelled)) {
         warnings.push('Muayeneye bağlı tedavi, reçete, aşı, lab istemi veya yatış kaydı yok (uygulama bu denetime dahil değildir).');
+    }
+    const pending = summary?.pendingChargeCount ?? 0;
+    if (pending > 0) {
+        warnings.push(`${pending} ücret bekliyor (resepsiyon ücrete çevirmedi veya ücretsiz saymadı).`);
     }
     return warnings;
 }
