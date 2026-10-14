@@ -190,6 +190,15 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(has(el, 'finalized-locked-hint')).toBeFalse();
     });
 
+    it('Ödeme Oluştur yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
+        const hekim = await setup(detailVm, ['Examinations.Update']);
+        expect(hekim.el.querySelector('a[href*="/panel/payments/new"]')).toBeNull();
+        TestBed.resetTestingModule();
+
+        const yetkili = await setup(detailVm, ['Examinations.Update', 'Payments.Create']);
+        expect(yetkili.el.querySelector('a[href*="/panel/payments/new"]')).not.toBeNull();
+    });
+
     it('kesinleşmiş muayenede tedavi/reçete/aşı oluştur gizli ve neden görünür; lab ve yatış açık kalır', async () => {
         const { el } = await setup(finalizedVm, ['Examinations.Update']);
 

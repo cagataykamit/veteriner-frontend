@@ -36,7 +36,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     EXAMINATIONS_ADDENDUM_CLAIM,
     EXAMINATIONS_FINALIZE_CLAIM,
-    EXAMINATIONS_UPDATE_CLAIM
+    EXAMINATIONS_UPDATE_CLAIM,
+    PAYMENTS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
@@ -176,19 +177,21 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                                 icon="pi pi-building"
                                 class="p-button-secondary"
                             ></a>
-                            <a
-                                [routerLink]="['/panel/payments/new']"
-                                [queryParams]="{
-                                    clientId: exam()!.clientId,
-                                    petId: exam()!.petId,
-                                    examinationId: exam()!.id
-                                }"
-                                pButton
-                                type="button"
-                                label="Ödeme Oluştur"
-                                icon="pi pi-wallet"
-                                class="p-button-secondary"
-                            ></a>
+                            @if (canCreatePayment) {
+                                <a
+                                    [routerLink]="['/panel/payments/new']"
+                                    [queryParams]="{
+                                        clientId: exam()!.clientId,
+                                        petId: exam()!.petId,
+                                        examinationId: exam()!.id
+                                    }"
+                                    pButton
+                                    type="button"
+                                    label="Ödeme Oluştur"
+                                    icon="pi pi-wallet"
+                                    class="p-button-secondary"
+                                ></a>
+                            }
                         }
                     } @else if (canUpdateExamination && ro.mutationBlocked()) {
                         @if (exam()!.status === 'Draft') {
@@ -689,7 +692,8 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly relatedSummary = signal<ExaminationRelatedSummaryVm | null>(null);
     readonly canUpdateExamination = this.auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM);
     readonly canFinalizeExamination = this.auth.hasOperationClaim(EXAMINATIONS_FINALIZE_CLAIM);
-    readonly canAddendumExamination = this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);
+    readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
+    readonly canAddendumExamination =this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);
     readonly statusLabel = examinationStatusLabel;
     readonly statusSeverity = examinationStatusSeverity;
     readonly finalizeDialogVisible = signal(false);
