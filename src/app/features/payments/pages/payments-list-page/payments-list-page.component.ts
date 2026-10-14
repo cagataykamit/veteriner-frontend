@@ -124,42 +124,42 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                             currentPageReportTemplate="{first} - {last} / {totalRecords}"
                         >
                             <ng-template #header>
-                                <tr>
+                                <tr class="whitespace-nowrap">
                                     <th>Müşteri</th>
                                     <th>Hayvan</th>
                                     <th class="text-right">Tutar</th>
                                     <th>Para birimi</th>
                                     <th>Yöntem</th>
                                     <th>Ödeme tarihi</th>
-                                    <th style="width: 12rem">İşlemler</th>
+                                    <th>İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr>
                                     <td>
                                         @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
+                                            <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[14rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{
                                                 row.clientName
                                             }}</a>
                                         } @else {
-                                            {{ row.clientName }}
+                                            <div class="max-w-[14rem] truncate" [title]="row.clientName">{{ row.clientName }}</div>
                                         }
                                     </td>
                                     <td>
                                         @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                            <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[11rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
                                         } @else {
-                                            {{ row.petName }}
+                                            <div class="max-w-[11rem] truncate" [title]="row.petName">{{ row.petName }}</div>
                                         }
                                     </td>
-                                    <td class="text-right font-medium">{{ money(row.amount, row.currency) }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium">{{ money(row.amount, row.currency) }}</td>
                                     <td>{{ row.currency }}</td>
-                                    <td>{{ methodLabel(row.method) }}</td>
-                                    <td>{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
+                                    <td class="whitespace-nowrap">{{ methodLabel(row.method) }}</td>
+                                    <td class="whitespace-nowrap">{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
                                     <td class="whitespace-nowrap">
                                         <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay</a>
                                         @if (canVoid && !ro.mutationBlocked()) {
-                                            <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                            <p-button icon="pi pi-ban" size="small" severity="danger" [text]="true" ariaLabel="İptal et" [attr.title]="'İptal et'" (onClick)="openVoid(row)" />
                                         }
                                     </td>
                                 </tr>

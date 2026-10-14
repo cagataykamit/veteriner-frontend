@@ -65,6 +65,29 @@ describe('PaymentsListPageComponent — iptal', () => {
         expect(fixture.nativeElement.textContent).not.toContain('İptal et');
     });
 
+    it('tablo satırında İptal et yalnız simgeyle yer tutar; erişilebilir ad ve ipucu korunur', async () => {
+        const iconButton = () => fixture.nativeElement.querySelector('button[aria-label="İptal et"]') as HTMLButtonElement | null;
+        await setup();
+        expect(iconButton()).toBeNull();
+        fixture.destroy();
+        TestBed.resetTestingModule();
+        claims.add('Payments.Correct');
+        await setup();
+        expect(iconButton()!.textContent!.trim()).toBe('');
+        expect(iconButton()!.closest('[title]')?.getAttribute('title')).toBe('İptal et');
+        iconButton()!.click();
+        expect(fixture.componentInstance.voidSummary()).toContain('Ali Veli');
+    });
+
+    it('uzun müşteri adı tabloda tek satırda kesilir; tam ad ipucunda kalır', async () => {
+        const longName = 'Ayşe Gülizar Karamanoğlu Yılmaz';
+        payments.getPayments.and.returnValue(of({ items: [{ ...row, clientName: longName }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
+        await setup();
+        const el = fixture.nativeElement.querySelector(`table [title="${longName}"]`) as HTMLElement;
+        expect(el.classList).toContain('truncate');
+        expect(el.textContent!.trim()).toBe(longName);
+    });
+
     it('iptal diyaloğu seçili ödemeyi gerekçeyle iptal eder', async () => {
         claims.add('Payments.Correct');
         payments.voidPayment.and.returnValue(of(void 0));
