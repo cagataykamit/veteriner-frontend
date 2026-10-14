@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink, UrlTree } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
-import { categoryForUrl, MENU_GROUPS } from '@/app/core/routing/panel-navigation';
+import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing/panel-navigation';
 
 @Component({
     selector: 'app-page-header',
@@ -38,16 +38,27 @@ import { categoryForUrl, MENU_GROUPS } from '@/app/core/routing/panel-navigation
 })
 export class AppPageHeaderComponent {
     readonly title = input.required<string>();
-    /** Menüde karşılığı olmayan sayfalar için kategori adı; yoksa menü grubundan türetilir. */
+    /** Menüde karşılığı olmayan sayfalar için kategori adı; yoksa menü grubundan türetilir. Bağlantının liste adı önce gelir. */
     readonly subtitle = input<string>();
     readonly description = input<string>();
-    /** Verilirse kategori satırı bu listeye götüren bağlantı olur; `categoryLinkLabel` ipucu ve erişilebilir ad olur. */
+    /**
+     * Verilirse kategori satırı bu listeye götüren bağlantı olur ve yazısı hedef listenin menü/sekme adıdır
+     * (`listLabelForUrl`); `categoryLinkLabel` ipucu ve erişilebilir ad olur.
+     */
     readonly categoryLink = input<string | readonly unknown[] | UrlTree>();
     readonly categoryLinkLabel = input<string>();
 
     private readonly router = inject(Router);
     private readonly menuCategory = categoryForUrl(MENU_GROUPS, this.router.url);
-    private readonly category = computed(() => this.subtitle() ?? this.menuCategory);
+    private readonly linkListLabel = computed(() => {
+        const link = this.categoryLink();
+        if (link == null) {
+            return undefined;
+        }
+        const url = typeof link === 'string' ? link : this.router.serializeUrl(link instanceof UrlTree ? link : this.router.createUrlTree([...link]));
+        return listLabelForUrl(url);
+    });
+    private readonly category = computed(() => this.linkListLabel() ?? this.subtitle() ?? this.menuCategory);
     /** Bağlantı varken kategori adı bulunamazsa geri dönüş yolu kaybolmasın diye bağlantı etiketi yazılır. */
     protected readonly categoryText = computed(() => this.category() || (this.categoryLink() ? this.categoryLinkLabel() : undefined));
     /** Erişilebilir ad görünen metni içerir (WCAG 2.5.3); hedef açıklaması ardından gelir. */

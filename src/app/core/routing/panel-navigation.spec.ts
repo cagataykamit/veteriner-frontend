@@ -4,6 +4,7 @@ import {
     entryForUrl,
     firstAccessibleRoute,
     groupForUrl,
+    listLabelForUrl,
     MANAGER_LEVEL_CLAIM,
     MENU_GROUPS,
     menuLinkRoute,
@@ -190,6 +191,18 @@ describe('panel-navigation', () => {
         expect(category('/panel/dashboard')).toBe('Panel');
         expect(category('/panel/settings/clinics')).toBe('Ayarlar');
         expect(category('/panel/yok')).toBeUndefined();
+    });
+
+    it('listLabelForUrl adresin tam karşılığı olan liste adını verir; genel sekme adları yerine liste adı', () => {
+        expect(listLabelForUrl('/panel/pets?clientId=c1')).toBe('Hastalar');
+        expect(listLabelForUrl('/panel/patients')).toBe('Hastalar');
+        expect(listLabelForUrl('/panel/appointments')).toBe('Randevular');
+        expect(listLabelForUrl('/panel/examinations')).toBe('Muayeneler');
+        expect(listLabelForUrl('/panel/today')).toBe('Bugün');
+        expect(listLabelForUrl('/panel/settings')).toBe('Ayarlar');
+        expect(listLabelForUrl('/panel/settings/clinics')).toBe('Klinikler');
+        expect(listLabelForUrl('/panel/settings/definitions/breeds')).toBe('Irklar');
+        expect(listLabelForUrl('/panel/pets/abc')).toBeUndefined();
     });
 
     describe('sekme çubuğu', () => {

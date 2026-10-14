@@ -55,6 +55,8 @@ export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults';
 /** Birleşik menü öğesinin sekmesi: mevcut liste sayfasının rotası; yetkisi olmayan sekme görünmez. */
 export interface MenuTab extends NavigationEntry {
     readonly badge?: MenuBadgeKey;
+    /** Sekme adı listeyi adlandırmıyorsa (Ara, Liste) başlık üstündeki geri bağlantısında yazılan liste adı. */
+    readonly listLabel?: string;
 }
 
 export interface MenuEntry extends NavigationEntry {
@@ -227,13 +229,13 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             { label: 'Bugün', icon: 'pi pi-fw pi-sun', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
             { label: 'Özet', icon: 'pi pi-fw pi-th-large', route: '/panel/dashboard', claims: [MANAGER_LEVEL_CLAIM] },
             tabbedEntry('Hastalar', 'pi pi-fw pi-heart', [
-                { label: 'Ara', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
+                { label: 'Ara', listLabel: 'Hastalar', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
                 { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
                 { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
             ]),
             tabbedEntry('Randevular', 'pi pi-fw pi-calendar', [
-                { label: 'Liste', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
-                { label: 'Takvim', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] }
+                { label: 'Liste', listLabel: 'Randevular', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
+                { label: 'Takvim', listLabel: 'Randevu takvimi', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] }
             ]),
             tabbedEntry('Para', 'pi pi-fw pi-wallet', [
                 { label: 'Ücretler', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
@@ -411,6 +413,21 @@ export function groupForUrl(groups: readonly MenuGroup[], url: string): MenuGrou
 export function categoryForUrl(groups: readonly MenuGroup[], url: string): string | undefined {
     const match = matchForUrl(groups, url);
     return match?.entry.category ?? match?.group.label ?? match?.group.category;
+}
+
+/**
+ * Adresin (sorgu ve parça hariç) tam karşılığı olan listenin adı: menü sekmesi, menü öğesi ya da Ayarlar, Tanımlar
+ * veya Rapor Merkezi kartı. Başlık üstündeki geri bağlantısının yazısı buradan gelir; karşılık yoksa `undefined`.
+ */
+export function listLabelForUrl(url: string): string | undefined {
+    const path = url.split(/[?#]/)[0];
+    const entries = MENU_GROUPS.flatMap((g) => g.entries);
+    const tab = entries.flatMap((e) => e.tabs ?? []).find((t) => t.route === path);
+    if (tab) {
+        return tab.listLabel ?? tab.label;
+    }
+    const cards = [...SETTINGS_SECTIONS, ...REPORT_SECTIONS].flatMap((s) => s.entries);
+    return [...entries, ...cards, ...DEFINITION_ENTRIES].find((e) => e.route === path)?.label;
 }
 
 type HasClaim = (claim: string) => boolean;
