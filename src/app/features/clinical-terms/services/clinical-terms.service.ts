@@ -12,19 +12,24 @@ import type {
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const CONCURRENCY_CONFLICT_CODE = 'ClinicalTerms.ConcurrencyConflict';
+const DUPLICATE_NAME_CODE = 'ClinicalTerms.DuplicateName';
 
 const CLINICAL_TERM_PROBLEM_MESSAGES: Record<string, string> = {
-    'ClinicalTerms.DuplicateName': 'Bu ad sözlükte zaten var (pasif kayıtlar dahil). Pasif kaydı etkinleştirin veya farklı bir ad yazın.',
+    [DUPLICATE_NAME_CODE]: 'Bu ad sözlükte zaten var (pasif kayıtlar dahil). Pasif kaydı etkinleştirin veya farklı bir ad yazın.',
     [CONCURRENCY_CONFLICT_CODE]: 'Kayıt bu arada değişmiş; liste yenilendi, tekrar deneyin.',
     'ClinicalTerms.SystemTermReadOnly': 'Sistem terimleri değiştirilemez.',
     'ClinicalTerms.NotFound': 'Terim bulunamadı.'
 };
 
-/** Kullanıcıya gösterilecek mesaj + eşzamanlılık çakışması bilgisi (çakışmada liste yenilenir). */
+/**
+ * Kullanıcıya gösterilecek mesaj + eşzamanlılık çakışması bilgisi (çakışmada liste yenilenir) + mükerrer ad bilgisi
+ * (aynı tür + ad sözlükte, pasifler dahil, zaten var).
+ */
 export class ClinicalTermError extends Error {
     constructor(
         message: string,
-        readonly isConflict: boolean
+        readonly isConflict: boolean,
+        readonly isDuplicateName = false
     ) {
         super(message);
     }
@@ -37,7 +42,7 @@ function toClinicalTermError<T>(fallback: string): MonoTypeOperatorFunction<T> {
         }
         const code = problemCodeFromHttpError(err);
         const message = (code && CLINICAL_TERM_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
-        return throwError(() => new ClinicalTermError(message, code === CONCURRENCY_CONFLICT_CODE));
+        return throwError(() => new ClinicalTermError(message, code === CONCURRENCY_CONFLICT_CODE, code === DUPLICATE_NAME_CODE));
     });
 }
 

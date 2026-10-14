@@ -63,6 +63,7 @@ describe('ClinicalTermsService', () => {
             { status: 409, statusText: 'Conflict' }
         );
         expect(conflict?.isConflict).toBeTrue();
+        expect(conflict?.isDuplicateName).toBeFalse();
 
         let duplicate: ClinicalTermError | undefined;
         service.create('Diagnosis', 'GASTROENTERİT').subscribe({ error: (e: ClinicalTermError) => (duplicate = e) });
@@ -71,6 +72,7 @@ describe('ClinicalTermsService', () => {
             { status: 409, statusText: 'Conflict' }
         );
         expect(duplicate?.isConflict).toBeFalse();
+        expect(duplicate?.isDuplicateName).toBeTrue();
         expect(duplicate?.message).toContain('zaten var');
     });
 });
