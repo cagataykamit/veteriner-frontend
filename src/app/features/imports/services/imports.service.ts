@@ -49,7 +49,11 @@ export class ImportsService {
         return this.api.put<ImportBatchDto>(ApiEndpoints.imports.mapping(id), body);
     }
 
-    /** Senkron: yanıt güncel parti nesnesidir (`Validated` | `ValidationFailed`). */
+    /**
+     * K13: doğrulamayı arka plan işi olarak kuyruğa alır ve hemen döner. 202 yeni iş, 200 parti zaten `Validating`
+     * (yeni iş başlamaz); ikisinde de gövde `Validating` partidir (`validationId` null). Sonuç `getProgress` yoklanarak
+     * beklenir; `validationId` iş bittikten sonra `getBatch`/`getPreview` ile okunur.
+     */
     validate(id: string): Observable<ImportBatchDto> {
         return this.api.post<ImportBatchDto>(ApiEndpoints.imports.validate(id), {});
     }
@@ -93,6 +97,7 @@ export class ImportsService {
         return this.api.post<ImportBatchDto>(ApiEndpoints.imports.commit(id), body);
     }
 
+    /** Doğrulama, uygulama ve geri alma işinin ilerlemesi; yoklama `pollImportProgress` ile yapılır. */
     getProgress(id: string): Observable<ImportCommitProgressDto> {
         return this.api.get<ImportCommitProgressDto>(ApiEndpoints.imports.progress(id));
     }

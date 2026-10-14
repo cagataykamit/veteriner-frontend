@@ -2,22 +2,33 @@ import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angula
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { EMPTY, Subscription, catchError, switchMap, takeWhile, timer } from 'rxjs';
+import { Observable, Subscription, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMPORTS_COMMIT_CLAIM, IMPORTS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { ImportCommitStepComponent } from '@/app/features/imports/components/import-commit-step.component';
+import { ImportJobProgressComponent } from '@/app/features/imports/components/import-job-progress.component';
 import { ImportMappingStepComponent } from '@/app/features/imports/components/import-mapping-step.component';
 import { ImportReviewStepComponent } from '@/app/features/imports/components/import-review-step.component';
-import type { ImportBatchDto, ImportCommitProgressDto, ImportDuplicateClientMode, ImportPreviewDto, ImportWarningDto } from '@/app/features/imports/models/import-api.model';
+import type {
+    ImportBatchDto,
+    ImportCommitProgressDto,
+    ImportDuplicateClientMode,
+    ImportJobStatus,
+    ImportPreviewDto,
+    ImportWarningDto
+} from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import {
+    importErrorCode,
     importErrorMessage,
     importStatusLabel,
     importStatusSeverity,
     isDiscardable,
+    isImportJobRunning,
     isPreviewable
 } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_POLL_CONNECTION_MESSAGE, pollImportProgress } from '@/app/features/imports/utils/import-progress-poll.utils';
 import { columnMapsToRequest, initialColumnMaps, type ImportColumnMaps } from '@/app/features/imports/utils/import-schema.utils';
 import { type ImportValueChoices, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -48,7 +59,8 @@ const STEPS: readonly { n: number; label: string }[] = [
         AppStatusTagComponent,
         ImportMappingStepComponent,
         ImportReviewStepComponent,
-        ImportCommitStepComponent
+        ImportCommitStepComponent,
+        ImportJobProgressComponent
     ],
     template: `
         <app-page-header [title]="batch()?.name || 'Veri içe aktarma'" description="Her adımda geri dönebilir, sonucu görmeden hiçbir kayıt oluşturmazsınız.">
@@ -124,11 +136,20 @@ const STEPS: readonly { n: number; label: string }[] = [
                         }
                         @case (3) {
                             <h5 class="mt-0">Adım 3 · Doğrulama sonucu</h5>
-                            @if (preview()) {
+                            @if (b.status === 'Validating') {
+                                <p class="mt-0">Satırlar doğrulanıyor. Sayfadan ayrılabilir veya sekmeyi kapatabilirsiniz; doğrulama arka planda sürer ve bu içe aktarmayı yeniden açtığınızda buradan izlenir.</p>
+                                <app-import-job-progress [progress]="progress()" [stalled]="stalled()" />
+                                <p-message severity="info" styleClass="w-full mt-4">
+                                    Doğrulama sürerken eşleme değiştirilemez, içe aktarma silinemez ve aktarma başlatılamaz. Başlamış doğrulama durdurulamaz; sonuç hazır olunca bu adım kendiliğinden güncellenir.
+                                </p-message>
+                            } @else if (preview()) {
                                 <app-import-review-step [batch]="b" [preview]="preview()" [canManage]="canManage && draft()" [busy]="busy()" [(choices)]="choices" (applyValues)="saveAndValidate()" />
                                 <div class="flex flex-wrap gap-2 mt-4">
                                     @if (canManage && draft()) {
                                         <p-button severity="secondary" icon="pi pi-arrow-left" label="Eşlemeye dön" (onClick)="step.set(2)" />
+                                    }
+                                    @if (canManage && b.status === 'ValidationFailed') {
+                                        <p-button severity="secondary" icon="pi pi-refresh" label="Yeniden doğrula" [loading]="busy()" (onClick)="revalidate()" />
                                     }
                                     <p-button icon="pi pi-arrow-right" iconPos="right" label="Onay adımına geç" [disabled]="!commitStepReachable()" (onClick)="step.set(4)" />
                                 </div>
@@ -140,13 +161,19 @@ const STEPS: readonly { n: number; label: string }[] = [
                         }
                         @case (4) {
                             <h5 class="mt-0">Adım 4 · Onay ve aktarma</h5>
-                            <app-import-commit-step [batch]="b" [preview]="preview()" [canCommitClaim]="canCommit" [progress]="progress()" (batchChange)="onBatchChange($event)" (previewStale)="loadPreview()" />
+                            <app-import-commit-step [batch]="b" [preview]="preview()" [canCommitClaim]="canCommit" [progress]="progress()" [stalled]="stalled()" (batchChange)="onBatchChange($event)" (previewStale)="loadPreview()" />
                             @if (b.status === 'Validated') {
                                 <div class="mt-4">
                                     <p-button severity="secondary" icon="pi pi-arrow-left" label="Doğrulama sonucuna dön" (onClick)="step.set(3)" />
                                 </div>
                             }
                         }
+                    }
+                    @if (jobRunning() && pollError()) {
+                        <p-message severity="warn" styleClass="w-full mt-4" role="alert">
+                            {{ pollError() }}
+                            <p-button size="small" severity="secondary" icon="pi pi-refresh" label="Yeniden dene" styleClass="ml-2" (onClick)="retryPolling()" />
+                        </p-message>
                     }
                 </div>
             }
@@ -172,7 +199,10 @@ export class ImportWizardPageComponent implements OnInit {
     readonly error = signal<string | null>(null);
     readonly busy = signal(false);
     readonly warnings = signal<ImportWarningDto[]>([]);
+    /** Süren işin (doğrulama veya uygulama) son yoklama yanıtı. */
     readonly progress = signal<ImportCommitProgressDto | null>(null);
+    readonly stalled = signal(false);
+    readonly pollError = signal<string | null>(null);
 
     /** Eşleme tercihleri sayfa durumunda tutulur; sunucu değer eşleme ve seçenekleri geri vermez. */
     maps = signal<ImportColumnMaps>({});
@@ -180,6 +210,7 @@ export class ImportWizardPageComponent implements OnInit {
     choices = signal<ImportValueChoices>({});
 
     protected readonly draft = computed(() => isDiscardable(this.batch()?.status ?? ''));
+    protected readonly jobRunning = computed(() => isImportJobRunning(this.batch()?.status ?? ''));
     protected readonly currentNumber = computed(() => this.step());
     protected statusLabel = importStatusLabel;
     protected statusSeverity = importStatusSeverity;
@@ -206,8 +237,8 @@ export class ImportWizardPageComponent implements OnInit {
                 if (isPreviewable(b.status)) {
                     this.loadPreview();
                 }
-                if (b.status === 'Committing') {
-                    this.startPolling(b.id);
+                if (isImportJobRunning(b.status)) {
+                    this.startPolling(b.id, b.status);
                 }
             },
             error: (e: unknown) => {
@@ -228,53 +259,96 @@ export class ImportWizardPageComponent implements OnInit {
         });
     }
 
-    /** Eşlemeyi kaydeder, ardından senkron doğrular ve sonucu gösterir. */
+    /** Eşlemeyi kaydeder, ardından doğrulamayı arka plan işi olarak başlatır (K13); sonuç yoklanarak beklenir. */
     saveAndValidate(): void {
         const b = this.batch();
         if (!b || this.busy()) {
             return;
         }
-        this.busy.set(true);
-        this.error.set(null);
-        this.imports
-            .saveMapping(b.id, {
-                columns: columnMapsToRequest(this.maps(), b.tables ?? []),
-                valueMappings: valueChoicesToRequest(this.choices()),
-                options: { onDuplicateClient: this.duplicateMode() }
-            })
-            .pipe(switchMap(() => this.imports.validate(b.id)))
-            .subscribe({
-                next: (validated) => {
-                    this.batch.update((cur) => (cur ? { ...validated, tables: validated.tables ?? cur.tables } : validated));
-                    this.busy.set(false);
-                    this.step.set(3);
-                    this.loadPreview();
-                },
-                error: (e: unknown) => {
-                    this.busy.set(false);
-                    this.error.set(importErrorMessage(e, 'Eşleme kaydedilemedi veya doğrulama yapılamadı.'));
-                }
-            });
+        this.startValidation(
+            this.imports
+                .saveMapping(b.id, {
+                    columns: columnMapsToRequest(this.maps(), b.tables ?? []),
+                    valueMappings: valueChoicesToRequest(this.choices()),
+                    options: { onDuplicateClient: this.duplicateMode() }
+                })
+                .pipe(switchMap(() => this.imports.validate(b.id))),
+            'Eşleme kaydedilemedi veya doğrulama başlatılamadı.'
+        );
+    }
+
+    /** Kayıtlı eşlemeyle yeniden doğrular (`ValidationFailed` sonrası); sayfadaki seçimler sunucudaki eşlemeyi ezmez. */
+    revalidate(): void {
+        const b = this.batch();
+        if (!b || this.busy()) {
+            return;
+        }
+        this.startValidation(this.imports.validate(b.id), 'Doğrulama başlatılamadı.');
     }
 
     onBatchChange(b: ImportBatchDto): void {
         this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables } : b));
-        if (b.status === 'Committing') {
-            this.startPolling(b.id);
+        if (isImportJobRunning(b.status)) {
+            this.startPolling(b.id, b.status);
         } else if (isPreviewable(b.status)) {
             this.loadPreview();
         }
     }
 
+    /** Bağlantı sorunundan sonra yoklamayı elle yeniden başlatır; iş bitmişse ilk yanıtla sonuç okunur. */
+    retryPolling(): void {
+        const b = this.batch();
+        if (b && isImportJobRunning(b.status)) {
+            this.startPolling(b.id, b.status);
+        }
+    }
+
+    /** POST validate 202 (yeni iş) veya 200 (zaten `Validating`) döner; ikisinde de gövde `Validating` partidir. */
+    private startValidation(request: Observable<ImportBatchDto>, fallback: string): void {
+        this.busy.set(true);
+        this.error.set(null);
+        request.subscribe({
+            next: (b) => {
+                this.busy.set(false);
+                this.preview.set(null);
+                this.step.set(3);
+                this.onBatchChange(b);
+            },
+            error: (e: unknown) => {
+                this.busy.set(false);
+                this.error.set(importErrorMessage(e, fallback));
+                if (importErrorCode(e) === 'Imports.InvalidState') {
+                    // Parti başka bir sekmede doğrulamaya alınmış olabilir: güncel durumu okuyup sürdür.
+                    this.reloadBatch();
+                }
+            }
+        });
+    }
+
+    /** Partiyi yeniden okur, adımı durumdan türetir; iş sürüyorsa yoklamaya, bittiyse önizlemeye geçer. */
+    private reloadBatch(): void {
+        const id = this.batch()?.id;
+        if (!id) {
+            return;
+        }
+        this.imports.getBatch(id).subscribe({
+            next: (b) => {
+                this.step.set(this.stepForStatus(b.status));
+                this.onBatchChange(b);
+            },
+            error: (e: unknown) => this.error.set(importErrorMessage(e, 'İçe aktarma durumu yüklenemedi.'))
+        });
+    }
+
     canGoTo(n: number): boolean {
-        if (n === 1 || this.busy()) {
+        if (n === 1 || this.busy() || this.jobRunning()) {
             return false;
         }
         if (n === 2) {
             return this.canManage && this.draft() && this.step() !== 2;
         }
         if (n === 3) {
-            return !!this.preview() && this.step() !== 3 && this.batch()?.status !== 'Committing';
+            return !!this.preview() && this.step() !== 3;
         }
         return this.step() !== 4 && this.commitStepReachable();
     }
@@ -295,37 +369,29 @@ export class ImportWizardPageComponent implements OnInit {
     }
 
     private stepForStatus(status: string): WizardStep {
-        if (status === 'Validated' || status === 'ValidationFailed') {
+        if (status === 'Validating' || status === 'Validated' || status === 'ValidationFailed') {
             return 3;
         }
         return ['Committing', 'Committed', 'CommitFailed', 'RollingBack', 'RolledBack', 'PartiallyRolledBack', 'RollbackFailed'].includes(status) ? 4 : 2;
     }
 
     /**
-     * B4: uygulama sürerken hafif `progress` ucunu 2 sn aralıkla yoklar (sayfa yenilenince de `load` buradan sürdürür).
-     * Durum `Committing` dışına çıkınca parti ve önizleme (hatırlatma etkisi) yeniden okunur.
+     * Süren işi (doğrulama K13, uygulama B4) ortak yoklayıcıyla izler; sayfa yenilenince veya geri dönülünce `load` buradan sürdürür.
+     * İş bitince parti ve önizleme yeniden okunur; doğrulamada `validationId` yalnız bu okumadan gelir.
      */
-    private startPolling(id: string): void {
+    private startPolling(id: string, job: ImportJobStatus): void {
         this.pollSub?.unsubscribe();
-        this.step.set(4);
-        this.pollSub = timer(0, 2000)
-            .pipe(
-                switchMap(() => this.imports.getProgress(id).pipe(catchError(() => EMPTY))),
-                takeWhile((p) => p.status === 'Committing', true)
-            )
-            .subscribe((p) => {
-                if (p.status === 'Committing') {
-                    this.progress.set(p);
-                    return;
+        this.pollError.set(null);
+        this.step.set(this.stepForStatus(job));
+        this.pollSub = pollImportProgress(() => this.imports.getProgress(id), job).subscribe({
+            next: ({ progress, running, stalled }) => {
+                this.progress.set(running ? progress : null);
+                this.stalled.set(running && stalled);
+                if (!running) {
+                    this.reloadBatch();
                 }
-                this.progress.set(null);
-                this.imports.getBatch(id).subscribe({
-                    next: (b) => {
-                        this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables } : b));
-                        this.loadPreview();
-                    },
-                    error: (e: unknown) => this.error.set(importErrorMessage(e, 'Aktarma sonucu yüklenemedi.'))
-                });
-            });
+            },
+            error: () => this.pollError.set(IMPORT_POLL_CONNECTION_MESSAGE)
+        });
     }
 }

@@ -37,11 +37,31 @@ describe('ImportsService', () => {
         req.flush({});
     });
 
-    it('doğrulamayı POST ile başlatır, eşlemeyi PUT ile kaydeder', () => {
-        service.validate('b1').subscribe();
-        http.expectOne({ method: 'POST', url: 'http://api.test/api/v1/imports/batches/b1/validate' }).flush({});
+    it('eşlemeyi PUT ile kaydeder', () => {
         service.saveMapping('b1', { columns: {}, valueMappings: [], options: { onDuplicateClient: 'Match' } }).subscribe();
-        http.expectOne({ method: 'PUT', url: 'http://api.test/api/v1/imports/batches/b1/mapping' }).flush({});
+        const req = http.expectOne({ method: 'PUT', url: 'http://api.test/api/v1/imports/batches/b1/mapping' });
+        expect(req.request.body.options).toEqual({ onDuplicateClient: 'Match' });
+        req.flush({});
+    });
+
+    it('K13: doğrulamayı POST ile kuyruğa alır; 202 yeni iş ve 200 tekrar aynı Validating partiyi verir', () => {
+        const validating = { id: 'b1', status: 'Validating', validationId: null };
+        const results: unknown[] = [];
+
+        service.validate('b1').subscribe((b) => results.push(b));
+        http.expectOne({ method: 'POST', url: 'http://api.test/api/v1/imports/batches/b1/validate' }).flush(validating, { status: 202, statusText: 'Accepted' });
+
+        service.validate('b1').subscribe((b) => results.push(b));
+        http.expectOne({ method: 'POST', url: 'http://api.test/api/v1/imports/batches/b1/validate' }).flush(validating, { status: 200, statusText: 'OK' });
+
+        expect(results).toEqual([validating, validating]);
+    });
+
+    it('K13: doğrulama hatasını (409 AnotherJobRunning) çağırana iletir', () => {
+        let error: unknown;
+        service.validate('b1').subscribe({ error: (e: unknown) => (error = e) });
+        http.expectOne('http://api.test/api/v1/imports/batches/b1/validate').flush({ code: 'Imports.AnotherJobRunning' }, { status: 409, statusText: 'Conflict' });
+        expect((error as { status: number }).status).toBe(409);
     });
 
     it('satır süzgeçlerini sorguya ekler, boş olanları eklemez', () => {

@@ -45,7 +45,9 @@ const ROW_PAGE_SIZE = 25;
     imports: [FormsModule, ButtonModule, MessageModule, Paginator, SelectModule, AppEmptyStateComponent, AppStatusTagComponent],
     template: `
         @if (preview(); as p) {
-            @if (p.status === 'ValidationFailed') {
+            @if (p.status === 'ValidationFailed' && p.blockers.length === 0) {
+                <p-message severity="error" styleClass="w-full mb-4" role="alert">Doğrulama beklenmeyen bir sorun nedeniyle tamamlanamadı; hiçbir kayıt oluşturulmadı. Yeniden doğrulayın; sorun sürerse destek ekibiyle iletişime geçin.</p-message>
+            } @else if (p.status === 'ValidationFailed') {
                 <p-message severity="error" styleClass="w-full mb-4" role="alert">Doğrulama tamamlanamadı. Aşağıdaki nedenleri giderip yeniden doğrulayın.</p-message>
             } @else if (p.canCommit) {
                 <p-message severity="success" styleClass="w-full mb-4">Doğrulama tamamlandı. Henüz hiçbir kayıt oluşturulmadı; aşağıdaki sonucu inceleyip onay adımına geçebilirsiniz.</p-message>
