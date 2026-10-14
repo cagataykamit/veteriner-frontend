@@ -78,6 +78,7 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         chargeIndicator: dto.chargeIndicator ?? null,
         chargeableWorkCount: dto.chargeableWorkCount ?? null,
         awaitingLabCount: dto.awaitingLabCount ?? null,
+        pendingChargeCount: dto.pendingChargeCount ?? null,
         hasActiveHospitalization: dto.hasActiveHospitalization === true,
         isVoided: dto.isVoided === true,
         voidReason: trimmedOrNull(dto.voidReason),

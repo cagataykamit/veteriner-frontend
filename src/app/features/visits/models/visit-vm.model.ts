@@ -57,6 +57,8 @@ export interface TodayItemVm {
     chargeableWorkCount: number | null;
     /** Bekleyen (istenmiş, sonuçsuz) lab sayısı. `null`: yetki yok veya planlı satır. */
     awaitingLabCount: number | null;
+    /** Ücret bekleyen kalem sayısı. `null`: yetki yok veya planlı satır. `> 0` iken "Ücret yok" gösterilmez. */
+    pendingChargeCount: number | null;
     hasActiveHospitalization: boolean;
     /** Yalnızca "Yanlış işaretlenenler" görünümünde `true`. */
     isVoided: boolean;

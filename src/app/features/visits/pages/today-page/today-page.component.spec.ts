@@ -34,6 +34,7 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     chargeIndicator: null,
     chargeableWorkCount: null,
     awaitingLabCount: null,
+    pendingChargeCount: null,
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,

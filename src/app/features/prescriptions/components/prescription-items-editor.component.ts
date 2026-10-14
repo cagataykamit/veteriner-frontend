@@ -122,7 +122,7 @@ export class PrescriptionItemsEditorComponent implements OnInit {
         if (!this.canPickProduct) {
             return;
         }
-        this.productService.getProducts({ page: 1, pageSize: 200, isActive: true }).subscribe({
+        this.productService.getProducts({ page: 1, pageSize: 200, isActive: true, stockTrackedOnly: true }).subscribe({
             next: (r) => this.products.set(r.items),
             error: () => this.products.set([])
         });

@@ -434,7 +434,8 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     method: x.method
                 };
             })
-            .filter((x): x is NonNullable<typeof x> => x != null)
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        pendingChargeCount: dto.pendingChargeCount ?? null
     };
 }
 

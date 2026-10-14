@@ -255,6 +255,14 @@ const CHARGE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Charges.AlreadyVoided': 'Bu ücret zaten iptal edilmiş. Listeyi yenileyin.',
     'Charges.RequestIdVoided': 'Bu ücret kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
     'Charges.ConcurrencyConflict': 'Ücret aynı anda başka biri tarafından değiştirildi. Listeyi yenileyip tekrar deneyin.',
+    'ChargeSuggestions.NotFound': 'Ücret bekleyen kalem bulunamadı veya artık listede değil. Listeyi yenileyin.',
+    'ChargeSuggestions.ClinicScopeRequired': 'Bekleyen ücretleri görmek için önce bir klinik seçmelisiniz.',
+    'ChargeSuggestions.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
+    'ChargeSuggestions.AlreadyConverted': 'Bu kalem zaten ücrete çevrilmiş. Listeyi yenileyin; aynı kalem için ikinci ücret yazılmaz.',
+    'ChargeSuggestions.AlreadyWaived': 'Bu kalem zaten ücretsiz sayılmış. Listeyi yenileyin.',
+    'ChargeSuggestions.SourceAlreadyVoided': 'Kalemin kaynağı olan uygulama iptal edilmiş; ücret yazılamaz. Listeyi yenileyin.',
+    'ChargeSuggestions.DuplicateRequestId': 'Bu istek kimliği başka bir ücret için kullanılmış. Listeyi yenileyip tekrar deneyin.',
+    'ChargeSuggestions.ConcurrencyConflict': 'Kalem aynı anda başka biri tarafından değiştirildi. Listeyi yenileyip tekrar deneyin.',
     'Payments.NotFound': 'Ödeme kaydı bulunamadı veya iptal edilmiş.',
     'Payments.AlreadyVoided': 'Bu ödeme zaten iptal edilmiş. Listeyi yenileyin.',
     'Payments.RequestIdVoided': 'Bu ödeme kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
@@ -370,6 +378,9 @@ const ADMINISTRATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Treatments.DateTooFarInFuture': 'Uygulama zamanı en fazla 2 yıl ileriye girilebilir.',
     'Products.NotFound': 'Ürün bulunamadı.',
     'Products.Inactive': 'Bu ürün pasif; kullanılamaz. Başka bir ürün seçin veya ürünü aktifleştirin.',
+    'Products.NotStockTracked': 'Hizmetler stok takipli değildir; uygulama, satış, reçete ve stok hareketinde kullanılamaz. Stoklu bir ürün seçin.',
+    'Products.KindChangeNotAllowed': 'Ürün türü hizmete veya hizmetten değiştirilemez. Yanlış kaydı pasif yapıp doğru türde yeni kayıt açın.',
+    'Administrations.ConcurrencyConflict': 'Uygulama aynı anda başka bir işlemle değişti (ör. ücrete çevrildi). Sayfayı yenileyip tekrar deneyin.',
     'StockMovements.ConcurrencyConflict': 'Stok aynı anda başka bir işlemle değişti. Tekrar deneyin; aynı kayıt iki kez düşülmez.'
 };
 

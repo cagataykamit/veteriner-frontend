@@ -259,7 +259,7 @@ export class AdministrationCreateDialogComponent {
         }
         this.loadingProducts.set(true);
         this.productsError.set(null);
-        this.productService.getProducts({ page: 1, pageSize: 200, isActive: true }).subscribe({
+        this.productService.getProducts({ page: 1, pageSize: 200, isActive: true, stockTrackedOnly: true }).subscribe({
             next: (r) => {
                 this.products.set(r.items);
                 this.productsLoaded = true;

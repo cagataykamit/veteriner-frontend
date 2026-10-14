@@ -1,7 +1,7 @@
 import { HttpParams } from '@angular/common/http';
 import { formatStockQuantityDisplay } from '@/app/features/inventory/data/product-stock.mapper';
 import type { ProductDto } from '@/app/features/inventory/models/product-api.model';
-import { productControlledClassFromApi, productKindFromApi } from '@/app/features/inventory/utils/product-classification.utils';
+import { isStockTrackedKind, productControlledClassFromApi, productKindFromApi } from '@/app/features/inventory/utils/product-classification.utils';
 import type {
     CreateSaleResponseDto,
     SaleDto,
@@ -157,7 +157,7 @@ export function mapProductDtoToSaleProductVm(dto: ProductDto): SaleProductVm {
     };
 }
 
-/** Aşı ve narkotik/psikotropik ürün satılamaz (ADR-016); sunucu da reddeder, arama önceden süzer. */
+/** Aşı, hizmet (stok takipsiz, `Products.NotStockTracked`) ve narkotik/psikotropik ürün satılamaz (ADR-016, ADR-018); sunucu da reddeder, arama önceden süzer. */
 export function isSellableProduct(product: Pick<SaleProductVm, 'kind' | 'controlledClass'>): boolean {
-    return product.kind !== 'Vaccine' && product.controlledClass === 'None';
+    return product.kind !== 'Vaccine' && isStockTrackedKind(product.kind) && product.controlledClass === 'None';
 }

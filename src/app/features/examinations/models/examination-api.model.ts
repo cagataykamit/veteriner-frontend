@@ -62,6 +62,8 @@ export interface ExaminationRelatedSummaryDto {
     /** Yalnız Vaccinations.Read izni varsa dolu; izinsizde [] (kayıt yok ile ayırt edilemez). */
     vaccinations?: ExaminationRelatedVaccinationItemDto[] | null;
     payments?: ExaminationRelatedPaymentItemDto[] | null;
+    /** Muayeneye bağlı ücret bekleyen kalem sayısı (ADR-018); `Charges.Read` yoksa `null`. */
+    pendingChargeCount?: number | null;
 }
 
 export interface ExaminationRelatedTreatmentItemDto {

@@ -23,6 +23,8 @@ import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { ProductClassificationFieldsComponent } from '@/app/features/inventory/components/product-classification-fields/product-classification-fields.component';
+import type { ProductKindApi } from '@/app/features/inventory/models/product-api.model';
+import { productKindFromApi } from '@/app/features/inventory/utils/product-classification.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -140,7 +142,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                 <small class="text-red-500">Para birimi zorunludur.</small>
                             }
                         </div>
-                        <app-product-classification-fields [form]="form" idPrefix="productEdit" />
+                        <app-product-classification-fields [form]="form" idPrefix="productEdit" [originalKind]="originalKind()" />
                         <div class="col-span-12 flex flex-col gap-1">
                             <label for="descriptionEdit" class="block text-sm font-medium text-muted-color">Açıklama</label>
                             <textarea id="descriptionEdit" pTextarea rows="3" class="w-full" formControlName="description"></textarea>
@@ -196,6 +198,8 @@ export class ProductEditPageComponent implements OnInit {
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly productId = signal<string | null>(null);
+    /** Kaydın yüklendiği andaki türü; hizmete/hizmetten çevrilemez. */
+    readonly originalKind = signal<ProductKindApi | null>(null);
 
     readonly currencyOptions = [
         { label: 'TRY', value: 'TRY' },
@@ -238,6 +242,7 @@ export class ProductEditPageComponent implements OnInit {
                 next: ({ id, dto }) => {
                     this.productId.set(id);
                     this.form.reset(mapProductDtoToUpsertFormValue(dto));
+                    this.originalKind.set(productKindFromApi(dto.kind));
                     this.loading.set(false);
                 },
                 error: (e: unknown) => {
@@ -257,6 +262,7 @@ export class ProductEditPageComponent implements OnInit {
         this.productService.getDtoById(id).subscribe({
             next: (dto) => {
                 this.form.reset(mapProductDtoToUpsertFormValue(dto));
+                    this.originalKind.set(productKindFromApi(dto.kind));
                 this.loading.set(false);
             },
             error: (e: unknown) => {

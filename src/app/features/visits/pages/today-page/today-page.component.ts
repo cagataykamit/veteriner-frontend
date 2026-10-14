@@ -434,7 +434,7 @@ type TodayScope = 'mine' | 'all';
 
         <ng-template #moneyTags let-item let-group="group">
             @if (group.key !== 'noShow') {
-                <app-today-money [item]="item" [canPay]="canCollectPayment && !ro.mutationBlocked() && !item.isVoided" (pay)="openPayment(item)" />
+                <app-today-money [item]="item" [canPay]="canCollectPayment && !ro.mutationBlocked() && !item.isVoided" (pay)="openPayment(item)" (review)="openPendingCharges(item)" />
             }
             @if (item.hasActiveHospitalization) {
                 <app-status-tag label="Yatışta" severity="warn" />
@@ -881,6 +881,11 @@ export class TodayPageComponent implements OnInit {
         if (item) {
             this.openPayment(item);
         }
+    }
+
+    /** O gelişin ücret bekleyen kalemleri Ücretlendir ekranında süzülü açılır. */
+    openPendingCharges(item: TodayItemVm): void {
+        void this.router.navigate(['/panel/charges/pending'], { queryParams: { visitId: item.visitId } });
     }
 
     openPayment(item: TodayItemVm): void {

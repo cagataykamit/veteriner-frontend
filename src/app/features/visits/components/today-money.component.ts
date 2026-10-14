@@ -6,7 +6,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /**
  * Bugün satırı: hesaplanan açık iş çipleri (renk + simge + metin), ziyaretin ücret / ödenen / kalan tutarı ve müşterinin toplam borcu.
- * Değerler yoksa (yetkisiz veya planlı satır) hiçbir şey göstermez. Ödemesi açık çip, `canPay` ise ödemeye geçiş düğmesidir.
+ * Değerler yoksa (yetkisiz veya planlı satır) hiçbir şey göstermez. Ödemesi açık çip, `canPay` ise ödemeye geçiş düğmesidir; "Ücret bekliyor" çipi Ücretlendir ekranına götürür.
  */
 @Component({
     selector: 'app-today-money',
@@ -15,7 +15,17 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     host: { class: 'flex flex-wrap gap-1 min-w-0' },
     template: `
         @for (chip of chips(); track chip.key) {
-            @if (chip.payable && canPay()) {
+            @if (chip.reviewable) {
+                <button
+                    type="button"
+                    class="p-0 border-0 bg-transparent cursor-pointer rounded-border"
+                    [attr.title]="chip.title + ' — Ücretlendir'"
+                    [attr.aria-label]="chip.label + ', Ücretlendir'"
+                    (click)="review.emit()"
+                >
+                    <p-tag [value]="chip.label" [severity]="chip.severity" [icon]="chip.icon" />
+                </button>
+            } @else if (chip.payable && canPay()) {
                 <button
                     type="button"
                     class="p-0 border-0 bg-transparent cursor-pointer rounded-border"
@@ -48,6 +58,8 @@ export class TodayMoneyComponent {
     /** Ödeme oluşturma yetkisi var ve işletme salt okunur değil. */
     readonly canPay = input(false);
     readonly pay = output<void>();
+    /** Ücret bekleyen kalemleri Ücretlendir ekranında aç. */
+    readonly review = output<void>();
     readonly chips = computed(() => todayOpenChips(this.item()));
     readonly money = (amount: number | null) => formatMoney(amount, 'TRY');
 }

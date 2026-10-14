@@ -87,6 +87,7 @@ describe('sale.mapper', () => {
         expect(isSellableProduct(normal)).toBeTrue();
         expect(isSellableProduct({ kind: 'Medicine', controlledClass: 'None' })).toBeTrue();
         expect(isSellableProduct({ kind: 'Vaccine', controlledClass: 'None' })).toBeFalse();
+        expect(isSellableProduct({ kind: 'Service', controlledClass: 'None' })).toBeFalse();
         expect(isSellableProduct({ kind: 'Medicine', controlledClass: 'Narcotic' })).toBeFalse();
         expect(isSellableProduct({ kind: 'Other', controlledClass: 'Psychotropic' })).toBeFalse();
     });

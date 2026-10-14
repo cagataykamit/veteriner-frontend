@@ -94,6 +94,16 @@ describe('visit mapper — okuma', () => {
         expect([zero.chargedAmount, zero.clientOutstandingAmount]).toEqual([0, 0]);
     });
 
+    it('pendingChargeCount eşlenir; yoksa null (yetki yok / planlı satır), 0 ile karışmaz', () => {
+        const [two, missing, zero] = mapTodayDtoToVm({
+            date: 'd',
+            clinicId: 'c',
+            generatedAtUtc: 'g',
+            items: [itemDto({ pendingChargeCount: 2 }), itemDto({}), itemDto({ pendingChargeCount: 0 })]
+        }).items;
+        expect([two.pendingChargeCount, missing.pendingChargeCount, zero.pendingChargeCount]).toEqual([2, null, 0]);
+    });
+
     it('açık iş alanları eşlenir; yoksa null (yetki yok / planlı satır), 0 ile karışmaz', () => {
         const [full, missing, zero] = mapTodayDtoToVm({
             date: 'd',

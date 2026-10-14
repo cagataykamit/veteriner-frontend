@@ -225,6 +225,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             ]),
             tabbedEntry('Para', 'pi pi-fw pi-wallet', [
                 { label: 'Ücretler', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
+                { label: 'Ücret bekleyenler', route: '/panel/charges/pending', claims: [CHARGES_READ_CLAIM] },
                 { label: 'Ödemeler', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
                 { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] }
             ]),

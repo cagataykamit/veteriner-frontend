@@ -2,8 +2,8 @@
  * Backend — ürün DTO’ları (GET /products, GET /products/{id}).
  */
 
-/** `docs/BATCH_STOCK_API_CONTRACT.md` §2 — string enum. */
-export type ProductKindApi = 'Other' | 'Medicine' | 'Vaccine';
+/** `docs/BATCH_STOCK_API_CONTRACT.md` §2 — string enum; `Service` (hizmet kataloğu, stok takipsiz) `CHARGE_SUGGESTION_API_CONTRACT.md` §7. */
+export type ProductKindApi = 'Other' | 'Medicine' | 'Vaccine' | 'Service';
 export type ProductControlledClassApi = 'None' | 'Narcotic' | 'Psychotropic';
 
 /** Liste öğesi / detay — backend ile hizalı alan kümesi. */

@@ -46,6 +46,7 @@ const plannedItem: TodayItemVm = {
     chargeIndicator: null,
     chargeableWorkCount: null,
     awaitingLabCount: null,
+    pendingChargeCount: null,
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,

@@ -125,6 +125,8 @@ export interface ExaminationRelatedSummaryVm {
     hospitalizations: ExaminationRelatedHospitalizationItemVm[];
     vaccinations: ExaminationRelatedVaccinationItemVm[];
     payments: ExaminationRelatedPaymentItemVm[];
+    /** Ücret bekleyen kalem sayısı. `null`: yetki yok ("yok" anlamına gelmez). */
+    pendingChargeCount: number | null;
 }
 
 /** Çalışma alanı formunu dolduran okuma modeli. Boş metin `''`; ölçülmeyen vital `null`. */

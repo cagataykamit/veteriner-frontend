@@ -331,6 +331,12 @@ describe('mapExaminationRelatedSummaryDtoToVm vaccinations', () => {
         expect(vm.vaccinations[1].dueAtUtc).toBe('2026-11-01T09:00:00Z');
     });
 
+    it('pendingChargeCount eşlenir; yoksa null (yetki yok), 0 ile karışmaz', () => {
+        expect(mapExaminationRelatedSummaryDtoToVm({ examinationId: 'e1', pendingChargeCount: 2 }).pendingChargeCount).toBe(2);
+        expect(mapExaminationRelatedSummaryDtoToVm({ examinationId: 'e1', pendingChargeCount: 0 }).pendingChargeCount).toBe(0);
+        expect(mapExaminationRelatedSummaryDtoToVm({ examinationId: 'e1' }).pendingChargeCount).toBeNull();
+    });
+
     it('vaccinations yoksa boş dizi döner', () => {
         expect(mapExaminationRelatedSummaryDtoToVm({ examinationId: 'e1' }).vaccinations).toEqual([]);
     });

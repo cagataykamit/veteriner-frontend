@@ -36,6 +36,7 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     chargeIndicator: null,
     chargeableWorkCount: null,
     awaitingLabCount: null,
+    pendingChargeCount: null,
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,
@@ -305,6 +306,24 @@ describe('todayOpenChips', () => {
     it('Ödeme bekliyor ve Kısmi ödeme ödemeye geçilebilir', () => {
         expect(chips({ chargeIndicator: 'PaymentPending' }).map((c) => [c.label, c.payable])).toEqual([['Ödeme bekliyor', true]]);
         expect(chips({ chargeIndicator: 'PartiallyPaid' }).map((c) => [c.label, c.payable])).toEqual([['Kısmi ödeme', true]]);
+    });
+
+    it('bekleyen kalem varsa Ücret bekliyor çıkar, Ücret yok çıkmaz (kural tek yerde)', () => {
+        const [c, ...rest] = chips({ chargeIndicator: 'ChargeMissing', chargeableWorkCount: 2, pendingChargeCount: 3 });
+        expect(c.key).toBe('chargePending');
+        expect(c.label).toBe('Ücret bekliyor (3)');
+        expect(c.reviewable).toBeTrue();
+        expect(rest).toEqual([]);
+    });
+
+    it('bekleyen kalem 0 veya null ise Ücret yok eskisi gibi çıkar', () => {
+        expect(chips({ chargeIndicator: 'ChargeMissing', pendingChargeCount: 0 }).map((c) => c.key)).toEqual(['chargeMissing']);
+        expect(chips({ chargeIndicator: 'ChargeMissing', pendingChargeCount: null }).map((c) => c.key)).toEqual(['chargeMissing']);
+        expect(chips({ pendingChargeCount: 0 })).toEqual([]);
+    });
+
+    it('Ücret bekliyor Lab bekliyor ve ödemeden önce gelir', () => {
+        expect(chips({ chargeIndicator: 'PaymentPending', awaitingLabCount: 1, pendingChargeCount: 1 }).map((c) => c.key)).toEqual(['chargePending', 'awaitingLab', 'paymentPending']);
     });
 
     it('Lab bekliyor sayıyı gösterir', () => {

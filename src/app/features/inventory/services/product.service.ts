@@ -25,6 +25,7 @@ import type { ProductStockVm } from '@/app/features/inventory/models/product-sto
 import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
 import type { ProductsListQuery } from '@/app/features/inventory/models/product-query.model';
 import type { ProductDetailVm, ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
+import { isStockTrackedKind } from '@/app/features/inventory/utils/product-classification.utils';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const PRODUCT_STOCK_CONCURRENCY_MESSAGE =
@@ -46,6 +47,7 @@ export class ProductService {
         const params = productsQueryToHttpParams(query);
         return this.api.get<ProductDtoPagedResult>(ApiEndpoints.products.list(), params).pipe(
             map((res) => mapPagedProductsToVm(res)),
+            map((paged) => (query.stockTrackedOnly ? { ...paged, items: paged.items.filter((p) => isStockTrackedKind(p.kind)) } : paged)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Ürün listesi yüklenemedi.')))
             )
