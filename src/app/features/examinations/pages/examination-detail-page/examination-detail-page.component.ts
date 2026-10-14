@@ -35,11 +35,20 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    ADMINISTRATIONS_CREATE_CLAIM,
+    EXAMINATION_TEMPLATES_APPLY_CLAIM,
+    EXAMINATION_TEMPLATES_READ_CLAIM,
     EXAMINATIONS_ADDENDUM_CLAIM,
     EXAMINATIONS_FINALIZE_CLAIM,
     EXAMINATIONS_UPDATE_CLAIM,
     PAYMENTS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
+import { ExaminationTemplateApplyDialogComponent } from '@/app/features/examination-templates/components/examination-template-apply-dialog.component';
+import type {
+    ExaminationTemplateApplyResultDto,
+    ExaminationTemplateDto
+} from '@/app/features/examination-templates/models/examination-template.model';
+import { templateApplySummary } from '@/app/features/examination-templates/utils/examination-template.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
@@ -74,6 +83,7 @@ const RECORD_TEXT_SECTIONS: readonly {
         ExaminationPatientContextComponent,
         ExaminationPatientHeaderComponent,
         ExaminationProceduresSectionComponent,
+        ExaminationTemplateApplyDialogComponent,
         ToastModule
     ],
     providers: [MessageService],
@@ -87,6 +97,15 @@ const RECORD_TEXT_SECTIONS: readonly {
                 [(visible)]="finalizeDialogVisible"
                 (finalized)="onFinalized($event)"
             />
+            @if (canApplyTemplate) {
+                <app-examination-template-apply-dialog
+                    [examinationId]="e.id"
+                    [rowVersion]="e.rowVersion"
+                    [(visible)]="templateDialogVisible"
+                    (applied)="onTemplateApplied($event)"
+                    (stale)="onTemplateStale($event)"
+                />
+            }
         }
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
 
@@ -102,6 +121,17 @@ const RECORD_TEXT_SECTIONS: readonly {
                 [description]="formatDateTime(exam()!.examinedAtUtc)"
             >
                 <div actions class="flex flex-wrap gap-2">
+                    @if (canApplyTemplateNow()) {
+                        <button
+                            pButton
+                            type="button"
+                            label="Şablon uygula"
+                            icon="pi pi-clone"
+                            class="p-button-secondary"
+                            data-testid="template-apply-open"
+                            (click)="templateDialogVisible.set(true)"
+                        ></button>
+                    }
                     @if (canFinalizeNow()) {
                         <button
                             pButton
@@ -376,8 +406,17 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly statusLabel = examinationStatusLabel;
     readonly statusSeverity = examinationStatusSeverity;
     readonly finalizeDialogVisible = signal(false);
+    /** Şablon uygulama metin + uygulama kaydı + ücret kalemi yazar: üç yazma izni (ve listeyi okuma) birlikte gerekir. */
+    readonly canApplyTemplate = [
+        EXAMINATION_TEMPLATES_READ_CLAIM,
+        EXAMINATION_TEMPLATES_APPLY_CLAIM,
+        EXAMINATIONS_UPDATE_CLAIM,
+        ADMINISTRATIONS_CREATE_CLAIM
+    ].every((c) => this.auth.hasOperationClaim(c));
+    readonly templateDialogVisible = signal(false);
 
     private readonly procedures = viewChild(ExaminationProceduresSectionComponent);
+    private readonly administrations = viewChild(AdministrationsSectionComponent);
 
     /** Kesinleştirme kontrol listesi (sağ panel) ve onaydaki uyarılar aynı kuraldan türer (engel değil). */
     readonly finalizeChecklist = computed(() => {
@@ -439,6 +478,28 @@ export class ExaminationDetailPageComponent implements OnInit {
     /** Kesinleştir yalnız taslakta, yetkiliyse ve kurum yazmaya açıkken görünür. */
     canFinalizeNow(): boolean {
         return this.canFinalizeExamination && this.exam()?.status === 'Draft' && !this.ro.mutationBlocked();
+    }
+
+    /** Şablon yalnız taslağa, yetkiliyse ve kurum yazmaya açıkken uygulanır (kesinleşmişte eylem görünmez). */
+    canApplyTemplateNow(): boolean {
+        return this.canApplyTemplate && this.exam()?.status === 'Draft' && !this.ro.mutationBlocked();
+    }
+
+    onTemplateApplied(event: { template: ExaminationTemplateDto; result: ExaminationTemplateApplyResultDto }): void {
+        addTracedToast(this.messages, 'ExaminationDetailPage', this.router.url, {
+            severity: 'success',
+            summary: 'Tamam',
+            detail: templateApplySummary(event.template, event.result)
+        });
+        this.refreshAfterTemplate();
+    }
+
+    /** Sürüm çakışması veya kesinleşme: kayıt sessizce yenilenir (yeni `rowVersion` diyaloğa geri gider). */
+    onTemplateStale(message: string): void {
+        if (!this.templateDialogVisible()) {
+            addTracedToast(this.messages, 'ExaminationDetailPage', this.router.url, { severity: 'warn', summary: 'Uyarı', detail: message });
+        }
+        this.refreshAfterTemplate();
     }
 
     canAddAddendum(): boolean {
@@ -538,6 +599,17 @@ export class ExaminationDetailPageComponent implements OnInit {
             return;
         }
         this.loadRelatedSummary(this.lastId);
+    }
+
+    /** Şablon sonrası: muayene metni/sürümü, ilgili kayıt özeti ve uygulama listesi yeniden okunur (sayfa yükleme durumuna girmeden). */
+    private refreshAfterTemplate(): void {
+        if (!this.lastId) {
+            return;
+        }
+        const id = this.lastId;
+        this.examinationsService.getExaminationById(id).subscribe({ next: (x) => this.exam.set(x), error: () => undefined });
+        this.loadRelatedSummary(id);
+        this.administrations()?.reload();
     }
 
     private resetRelatedSummary(): void {

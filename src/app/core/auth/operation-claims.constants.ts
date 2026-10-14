@@ -173,6 +173,21 @@ export const CLINICAL_TERMS_UPDATE_CLAIM = 'ClinicalTerms.Update' as const;
 /** Kliniğe özel terimi pasifleştirme / etkinleştirme */
 export const CLINICAL_TERMS_DEACTIVATE_CLAIM = 'ClinicalTerms.Deactivate' as const;
 
+/** Muayene şablonu — liste/arama (uygulama seçicisi ve yönetim) */
+export const EXAMINATION_TEMPLATES_READ_CLAIM = 'ExaminationTemplates.Read' as const;
+
+/** Kliniğe özel muayene şablonu ekleme (kopyala ve düzenle dahil) */
+export const EXAMINATION_TEMPLATES_CREATE_CLAIM = 'ExaminationTemplates.Create' as const;
+
+/** Kliniğe özel muayene şablonunu düzenleme */
+export const EXAMINATION_TEMPLATES_UPDATE_CLAIM = 'ExaminationTemplates.Update' as const;
+
+/** Kliniğe özel muayene şablonunu pasifleştirme / etkinleştirme */
+export const EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM = 'ExaminationTemplates.Deactivate' as const;
+
+/** Şablonu muayeneye uygulama; ayrıca `Examinations.Update` + `Administrations.Create` gerekir */
+export const EXAMINATION_TEMPLATES_APPLY_CLAIM = 'ExaminationTemplates.Apply' as const;
+
 /** Veri içe aktarma: parti listesi, önizleme ve şablon (yönetici düzeyi) */
 export const IMPORTS_READ_CLAIM = 'Imports.Read' as const;
 

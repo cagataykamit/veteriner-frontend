@@ -129,7 +129,9 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}`,
         relatedSummary: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/related-summary`,
         finalize: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/finalize`,
-        addenda: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/addenda`
+        addenda: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/addenda`,
+        /** POST `{ templateId, rowVersion }` (muayenenin sürümü). */
+        applyTemplate: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/apply-template`
     },
     vaccinations: {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
@@ -254,6 +256,14 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}`,
         activate: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}/activate`,
         deactivate: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}/deactivate`
+    },
+    examinationTemplates: {
+        /** GET (Query: `search`, `includeInactive`, `page`, `pageSize`) ve POST. */
+        list: () => `/api/v1/examination-templates`,
+        /** GET; PUT = tam güncelleme (`lines` ve `rowVersion` zorunlu). */
+        byId: (id: string) => `/api/v1/examination-templates/${encodeURIComponent(id)}`,
+        activate: (id: string) => `/api/v1/examination-templates/${encodeURIComponent(id)}/activate`,
+        deactivate: (id: string) => `/api/v1/examination-templates/${encodeURIComponent(id)}/deactivate`
     },
     productCategories: {
         list: () => `/api/v1/product-categories`,

@@ -116,6 +116,14 @@ describe('panel-navigation', () => {
         expect(labels(visibleGroups(MENU_GROUPS, only('ClinicalTerms.Create')))).toEqual(['Ayarlar']);
     });
 
+    it('muayene şablonları kartı Tanımlar altında yönetim izniyle görünür; okuma/uygulama izni kart açmaz', () => {
+        expect(visibleEntries(DEFINITION_ENTRIES, only('ExaminationTemplates.Read', 'ExaminationTemplates.Apply'))).toEqual([]);
+        expect(visibleEntries(DEFINITION_ENTRIES, only('ExaminationTemplates.Update')).map((e) => e.route)).toEqual([
+            '/panel/settings/definitions/examination-templates'
+        ]);
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('ExaminationTemplates.Deactivate')))).toContain('Tanımlar');
+    });
+
     it('Veri içe aktarma kartı Ayarlar altında yalnız Imports.Read ile görünür; menüye öğe eklenmez', () => {
         expect(labels(visibleGroups(SETTINGS_SECTIONS, () => false))).not.toContain('Veri içe aktarma');
         expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Imports.Read')))).toContain('Veri içe aktarma');

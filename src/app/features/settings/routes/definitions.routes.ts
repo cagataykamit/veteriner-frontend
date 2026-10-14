@@ -21,5 +21,6 @@ export default [
     { path: 'species', loadChildren: () => import('../../species/routes/species.routes') },
     { path: 'breeds', loadChildren: () => import('../../breeds/routes/breeds.routes') },
     { path: 'product-categories', loadChildren: () => import('../../inventory/routes/product-categories.routes') },
-    { path: 'clinical-terms', loadChildren: () => import('../../clinical-terms/routes/clinical-terms.routes') }
+    { path: 'clinical-terms', loadChildren: () => import('../../clinical-terms/routes/clinical-terms.routes') },
+    { path: 'examination-templates', loadChildren: () => import('../../examination-templates/routes/examination-templates.routes') }
 ] as Routes;

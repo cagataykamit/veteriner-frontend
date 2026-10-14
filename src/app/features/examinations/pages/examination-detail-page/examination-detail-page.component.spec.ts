@@ -328,6 +328,31 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(has(el, 'addendum-open')).toBeFalse();
     });
 
+    const TEMPLATE_CLAIMS = ['ExaminationTemplates.Read', 'ExaminationTemplates.Apply', 'Examinations.Update', 'Administrations.Create'];
+
+    it('Şablon uygula taslakta dört izin birlikteyken görünür; biri eksikse veya muayene kesinleşmişse görünmez', async () => {
+        expect(has((await setup(detailVm, TEMPLATE_CLAIMS)).el, 'template-apply-open')).toBeTrue();
+        TestBed.resetTestingModule();
+        expect(has((await setup(detailVm, TEMPLATE_CLAIMS.filter((c) => c !== 'Administrations.Create'))).el, 'template-apply-open')).toBeFalse();
+        TestBed.resetTestingModule();
+        expect(has((await setup(finalizedVm, TEMPLATE_CLAIMS)).el, 'template-apply-open')).toBeFalse();
+    });
+
+    it('şablon uygulandıktan sonra muayene ve ilgili kayıt özeti yeniden okunur', async () => {
+        const { fixture, service } = await setup(detailVm, TEMPLATE_CLAIMS);
+        service.getExaminationById.and.returnValue(of({ ...detailVm, visitReason: 'İştahsızlık, Kulak kaşıntısı', rowVersion: 'V2' }));
+        const relatedBefore = service.getExaminationRelatedSummary.calls.count();
+
+        fixture.componentInstance.onTemplateApplied({
+            template: { id: 't1', name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: null, isActive: true, isSystem: false, lines: [], rowVersion: 'T1' },
+            result: { examinationId: 'e1', rowVersion: 'V2', updatedFields: ['visitReason'], administrations: [], services: [] }
+        });
+
+        expect(fixture.componentInstance.exam()?.rowVersion).toBe('V2');
+        expect(fixture.componentInstance.exam()?.visitReason).toContain('Kulak kaşıntısı');
+        expect(service.getExaminationRelatedSummary.calls.count()).toBe(relatedBefore + 1);
+    });
+
     it('kesinleştirme sonrası durum Kesinleşti olur, sürüm yenilenir ve düğme kalkar', async () => {
         const { fixture, service, el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize']);
         service.getExaminationById.and.returnValue(of(finalizedVm));

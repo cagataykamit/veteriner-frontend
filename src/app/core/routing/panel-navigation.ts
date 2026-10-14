@@ -9,6 +9,9 @@ import {
     CLINICAL_TERMS_UPDATE_CLAIM,
     CLIENTS_READ_CLAIM,
     CLINICS_READ_CLAIM,
+    EXAMINATION_TEMPLATES_CREATE_CLAIM,
+    EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM,
+    EXAMINATION_TEMPLATES_UPDATE_CLAIM,
     EXAMINATIONS_READ_CLAIM,
     HOSPITALIZATIONS_READ_CLAIM,
     IMPORTS_READ_CLAIM,
@@ -94,6 +97,7 @@ export const SPECIES_ROUTE = `${DEFINITIONS_ROUTE}/species`;
 export const BREEDS_ROUTE = `${DEFINITIONS_ROUTE}/breeds`;
 export const PRODUCT_CATEGORIES_ROUTE = `${DEFINITIONS_ROUTE}/product-categories`;
 export const CLINICAL_TERMS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-terms`;
+export const EXAMINATION_TEMPLATES_ROUTE = `${DEFINITIONS_ROUTE}/examination-templates`;
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const REPORTS_ROUTE = '/panel/reports';
 
@@ -302,6 +306,14 @@ export const DEFINITION_ENTRIES: readonly CardEntry[] = [
         // Yalnız okuyabilen (ör. sekreter) sözlüğü muayene alanında kullanır; kart yönetebilene görünür.
         claims: [CLINICAL_TERMS_CREATE_CLAIM, CLINICAL_TERMS_UPDATE_CLAIM, CLINICAL_TERMS_DEACTIVATE_CLAIM],
         description: 'Muayenede aranan tanı ve şikâyet terimleri; kliniğe özel terim ekleyin.'
+    },
+    {
+        label: 'Muayene şablonları',
+        icon: 'pi pi-fw pi-clone',
+        route: EXAMINATION_TEMPLATES_ROUTE,
+        // Yalnız okuyan/uygulayan şablonu muayenede seçer; kart yönetebilene görünür (sözlük kartıyla aynı ilke).
+        claims: [EXAMINATION_TEMPLATES_CREATE_CLAIM, EXAMINATION_TEMPLATES_UPDATE_CLAIM, EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM],
+        description: 'Şikâyet, bulgu, plan ve işlem satırlarını tek seçimle dolduran paketler.'
     }
 ];
 
@@ -344,7 +356,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-book',
                 route: DEFINITIONS_ROUTE,
                 claims: DEFINITION_ENTRIES.flatMap((e) => e.claims ?? []),
-                description: 'Tür, ırk, ürün kategorisi ve tanı/şikâyet sözlüğü gibi referans kayıtları.'
+                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü ve muayene şablonları gibi referans kayıtları.'
             }
         ]
     },
