@@ -14,6 +14,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { isAppointmentCancelledStatus } from '@/app/features/appointments/utils/appointment-status.utils';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
 import {
     mapExaminationFormToCreateRequest,
@@ -90,6 +91,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
+        ExaminationPatientContextComponent,
         ExaminationPatientHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
@@ -187,180 +189,187 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                     }
                 }
 
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                    <div class="card mb-4">
-                        <div class="grid grid-cols-12 gap-4">
-                            <div class="col-span-12 md:col-span-6">
-                                <label for="examinationDate" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi *</label>
-                                <app-date-input inputId="examinationDate" type="date" formControlName="examinationDate" [min]="dateInputMin" limit="past" />
-                                @if (form.controls.examinationDate.hasError('dateYearInvalid') && form.controls.examinationDate.touched) {
-                                    <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
-                                } @else if (form.controls.examinationDate.invalid && form.controls.examinationDate.touched) {
-                                    <small class="text-red-500">Muayene tarihi seçilmelidir.</small>
-                                } @else if (apiFieldErrors().examinationDate) {
-                                    <small class="text-red-500">{{ apiFieldErrors().examinationDate }}</small>
-                                }
-                            </div>
-                            <div class="col-span-12 md:col-span-6">
-                                <label for="examinationTime" class="block text-sm font-medium text-muted-color mb-2">Muayene saati *</label>
-                                <p-select
-                                    inputId="examinationTime"
-                                    formControlName="examinationTime"
-                                    [options]="timeOptions()"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    placeholder="Muayene saati seçin"
-                                    [showClear]="true"
-                                    styleClass="w-full vet-time-select"
-                                    panelStyleClass="vet-time-select-panel"
-                                />
-                                @if (form.controls.examinationTime.invalid && form.controls.examinationTime.touched) {
-                                    <small class="text-red-500">Muayene saati seçilmelidir.</small>
-                                } @else if (apiFieldErrors().examinationTime) {
-                                    <small class="text-red-500">{{ apiFieldErrors().examinationTime }}</small>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-4">
-                        <h5 class="mt-0 mb-4">Şikâyet ve anamnez</h5>
-                        <div class="grid grid-cols-12 gap-4">
-                            <div class="col-span-12">
-                                <label for="visitReason" class="block text-sm font-medium text-muted-color mb-2">Ziyaret sebebi / şikâyet *</label>
-                                <textarea id="visitReason" rows="3" class="w-full p-inputtext p-component" formControlName="visitReason"></textarea>
-                                @if (apiFieldErrors().visitReason) {
-                                    <small class="text-red-500">{{ apiFieldErrors().visitReason }}</small>
-                                } @else if (form.controls.visitReason.invalid && form.controls.visitReason.touched) {
-                                    <small class="text-red-500">Ziyaret sebebi zorunludur.</small>
-                                }
-                            </div>
-                            <div class="col-span-12">
-                                <label for="anamnesis" class="block text-sm font-medium text-muted-color mb-2">Anamnez</label>
-                                <textarea id="anamnesis" rows="6" class="w-full p-inputtext p-component" formControlName="anamnesis"></textarea>
-                                @if (apiFieldErrors().anamnesis) {
-                                    <small class="text-red-500">{{ apiFieldErrors().anamnesis }}</small>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-4">
-                        <h5 class="mt-0 mb-4">Klinik bulgular ve vital değerler</h5>
-                        <div class="grid grid-cols-12 gap-4">
-                            <div class="col-span-12">
-                                <label for="findings" class="block text-sm font-medium text-muted-color mb-2">Klinik bulgular</label>
-                                <textarea id="findings" rows="6" class="w-full p-inputtext p-component" formControlName="findings"></textarea>
-                                @if (apiFieldErrors().findings) {
-                                    <small class="text-red-500">{{ apiFieldErrors().findings }}</small>
-                                }
-                            </div>
-                            <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                                <label for="weightKg" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg)</label>
-                                <input id="weightKg" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="weightKg" />
-                                @if (vitalError('weightKg'); as e) {
-                                    <small class="text-red-500">{{ e }}</small>
-                                }
-                            </div>
-                            <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                                <label for="temperatureC" class="block text-sm font-medium text-muted-color mb-2">Vücut sıcaklığı (°C)</label>
-                                <input id="temperatureC" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="temperatureC" />
-                                @if (vitalError('temperatureC'); as e) {
-                                    <small class="text-red-500">{{ e }}</small>
-                                }
-                            </div>
-                            <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                                <label for="heartRateBpm" class="block text-sm font-medium text-muted-color mb-2">Kalp atış hızı (atım/dk)</label>
-                                <input id="heartRateBpm" type="number" step="1" min="0" class="w-full p-inputtext p-component" formControlName="heartRateBpm" />
-                                @if (vitalError('heartRateBpm'); as e) {
-                                    <small class="text-red-500">{{ e }}</small>
-                                }
-                            </div>
-                            <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                                <label for="respiratoryRatePerMin" class="block text-sm font-medium text-muted-color mb-2">Solunum sayısı (soluk/dk)</label>
-                                <input id="respiratoryRatePerMin" type="number" step="1" min="0" class="w-full p-inputtext p-component" formControlName="respiratoryRatePerMin" />
-                                @if (vitalError('respiratoryRatePerMin'); as e) {
-                                    <small class="text-red-500">{{ e }}</small>
-                                }
-                            </div>
-                            <div class="col-span-12 md:col-span-6">
-                                <label for="vitalsMeasuredAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ölçüm zamanı</label>
-                                <app-date-input inputId="vitalsMeasuredAtLocal" type="datetime-local" formControlName="vitalsMeasuredAtLocal" limit="past" />
-                                <small class="text-muted-color block">Vital değerler opsiyoneldir. Boş bırakılırsa ilk ölçüm girişinde muayene zamanı kullanılır.</small>
-                                @if (form.hasError('partialVitalClear')) {
-                                    <small class="text-red-500 block" role="alert">Kayıttaki tek bir vital değer silinemez; tüm vital alanlarını boşaltın veya değeri yeniden girin.</small>
-                                }
-                                @if (apiFieldErrors().vitalsMeasuredAt) {
-                                    <small class="text-red-500">{{ apiFieldErrors().vitalsMeasuredAt }}</small>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-4">
-                        <h5 class="mt-0 mb-4">Değerlendirme / tanı</h5>
-                        <label for="assessment" class="block text-sm font-medium text-muted-color mb-2">Değerlendirme / tanı</label>
-                        <textarea id="assessment" rows="5" class="w-full p-inputtext p-component" formControlName="assessment"></textarea>
-                        @if (apiFieldErrors().assessment) {
-                            <small class="text-red-500">{{ apiFieldErrors().assessment }}</small>
-                        }
-                    </div>
-
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Plan / tedavi planı</h5>
-                        <div class="grid grid-cols-12 gap-4">
-                            <div class="col-span-12">
-                                <label for="plan" class="block text-sm font-medium text-muted-color mb-2">Plan / tedavi planı</label>
-                                <textarea id="plan" rows="5" class="w-full p-inputtext p-component" formControlName="plan"></textarea>
-                                @if (apiFieldErrors().plan) {
-                                    <small class="text-red-500">{{ apiFieldErrors().plan }}</small>
-                                }
-                            </div>
-                            <div class="col-span-12">
-                                <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Ek notlar</label>
-                                <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
-                                @if (apiFieldErrors().notes) {
-                                    <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
-                                }
-                            </div>
-                        </div>
-                        @if (conflict()) {
-                            <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
-                                <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
-                                <div class="flex flex-wrap gap-4 items-center mt-3">
-                                    <a
-                                        [routerLink]="['/panel/examinations', examinationId]"
-                                        target="_blank"
-                                        rel="noopener"
-                                        class="text-primary font-medium no-underline"
-                                        >Güncel kaydı yeni sekmede aç →</a
-                                    >
-                                    <p-button
-                                        type="button"
-                                        label="Yazdıklarımı atıp güncel kaydı yükle"
-                                        icon="pi pi-refresh"
-                                        severity="secondary"
-                                        size="small"
-                                        (onClick)="discardAndReload()"
+                <div class="grid grid-cols-12 gap-4 items-start">
+                    @if (contextPetId(); as pid) {
+                        <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-4">
+                            <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
+                        </aside>
+                    }
+                    <form class="col-span-12 min-w-0" [ngClass]="{ 'xl:col-span-9': !!contextPetId() }" [formGroup]="form" (ngSubmit)="onSubmit()">
+                        <div class="card mb-4">
+                            <div class="grid grid-cols-12 gap-4">
+                                <div class="col-span-12 md:col-span-6">
+                                    <label for="examinationDate" class="block text-sm font-medium text-muted-color mb-2">Muayene tarihi *</label>
+                                    <app-date-input inputId="examinationDate" type="date" formControlName="examinationDate" [min]="dateInputMin" limit="past" />
+                                    @if (form.controls.examinationDate.hasError('dateYearInvalid') && form.controls.examinationDate.touched) {
+                                        <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                    } @else if (form.controls.examinationDate.invalid && form.controls.examinationDate.touched) {
+                                        <small class="text-red-500">Muayene tarihi seçilmelidir.</small>
+                                    } @else if (apiFieldErrors().examinationDate) {
+                                        <small class="text-red-500">{{ apiFieldErrors().examinationDate }}</small>
+                                    }
+                                </div>
+                                <div class="col-span-12 md:col-span-6">
+                                    <label for="examinationTime" class="block text-sm font-medium text-muted-color mb-2">Muayene saati *</label>
+                                    <p-select
+                                        inputId="examinationTime"
+                                        formControlName="examinationTime"
+                                        [options]="timeOptions()"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Muayene saati seçin"
+                                        [showClear]="true"
+                                        styleClass="w-full vet-time-select"
+                                        panelStyleClass="vet-time-select-panel"
                                     />
+                                    @if (form.controls.examinationTime.invalid && form.controls.examinationTime.touched) {
+                                        <small class="text-red-500">Muayene saati seçilmelidir.</small>
+                                    } @else if (apiFieldErrors().examinationTime) {
+                                        <small class="text-red-500">{{ apiFieldErrors().examinationTime }}</small>
+                                    }
                                 </div>
                             </div>
-                        } @else if (submitError()) {
-                            <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
-                        }
-                        <div class="flex flex-wrap gap-2 mt-4">
-                            <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="saveDisabled()" />
-                            <p-button
-                                type="button"
-                                [label]="copy.buttonCancel"
-                                icon="pi pi-times"
-                                severity="secondary"
-                                (onClick)="onCancel()"
-                                [disabled]="submitting()"
-                            />
                         </div>
-                    </div>
-                </form>
+
+                        <div class="card mb-4">
+                            <h5 class="mt-0 mb-4">Şikâyet ve anamnez</h5>
+                            <div class="grid grid-cols-12 gap-4">
+                                <div class="col-span-12">
+                                    <label for="visitReason" class="block text-sm font-medium text-muted-color mb-2">Ziyaret sebebi / şikâyet *</label>
+                                    <textarea id="visitReason" rows="3" class="w-full p-inputtext p-component" formControlName="visitReason"></textarea>
+                                    @if (apiFieldErrors().visitReason) {
+                                        <small class="text-red-500">{{ apiFieldErrors().visitReason }}</small>
+                                    } @else if (form.controls.visitReason.invalid && form.controls.visitReason.touched) {
+                                        <small class="text-red-500">Ziyaret sebebi zorunludur.</small>
+                                    }
+                                </div>
+                                <div class="col-span-12">
+                                    <label for="anamnesis" class="block text-sm font-medium text-muted-color mb-2">Anamnez</label>
+                                    <textarea id="anamnesis" rows="6" class="w-full p-inputtext p-component" formControlName="anamnesis"></textarea>
+                                    @if (apiFieldErrors().anamnesis) {
+                                        <small class="text-red-500">{{ apiFieldErrors().anamnesis }}</small>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <h5 class="mt-0 mb-4">Klinik bulgular ve vital değerler</h5>
+                            <div class="grid grid-cols-12 gap-4">
+                                <div class="col-span-12">
+                                    <label for="findings" class="block text-sm font-medium text-muted-color mb-2">Klinik bulgular</label>
+                                    <textarea id="findings" rows="6" class="w-full p-inputtext p-component" formControlName="findings"></textarea>
+                                    @if (apiFieldErrors().findings) {
+                                        <small class="text-red-500">{{ apiFieldErrors().findings }}</small>
+                                    }
+                                </div>
+                                <div class="col-span-6 md:col-span-2">
+                                    <label for="weightKg" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg)</label>
+                                    <input id="weightKg" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="weightKg" />
+                                    @if (vitalError('weightKg'); as e) {
+                                        <small class="text-red-500">{{ e }}</small>
+                                    }
+                                </div>
+                                <div class="col-span-6 md:col-span-2">
+                                    <label for="temperatureC" class="block text-sm font-medium text-muted-color mb-2">Vücut sıcaklığı (°C)</label>
+                                    <input id="temperatureC" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="temperatureC" />
+                                    @if (vitalError('temperatureC'); as e) {
+                                        <small class="text-red-500">{{ e }}</small>
+                                    }
+                                </div>
+                                <div class="col-span-6 md:col-span-2">
+                                    <label for="heartRateBpm" class="block text-sm font-medium text-muted-color mb-2">Kalp atış hızı (atım/dk)</label>
+                                    <input id="heartRateBpm" type="number" step="1" min="0" class="w-full p-inputtext p-component" formControlName="heartRateBpm" />
+                                    @if (vitalError('heartRateBpm'); as e) {
+                                        <small class="text-red-500">{{ e }}</small>
+                                    }
+                                </div>
+                                <div class="col-span-6 md:col-span-2">
+                                    <label for="respiratoryRatePerMin" class="block text-sm font-medium text-muted-color mb-2">Solunum sayısı (soluk/dk)</label>
+                                    <input id="respiratoryRatePerMin" type="number" step="1" min="0" class="w-full p-inputtext p-component" formControlName="respiratoryRatePerMin" />
+                                    @if (vitalError('respiratoryRatePerMin'); as e) {
+                                        <small class="text-red-500">{{ e }}</small>
+                                    }
+                                </div>
+                                <div class="col-span-12 md:col-span-4">
+                                    <label for="vitalsMeasuredAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ölçüm zamanı</label>
+                                    <app-date-input inputId="vitalsMeasuredAtLocal" type="datetime-local" formControlName="vitalsMeasuredAtLocal" limit="past" />
+                                    <small class="text-muted-color block">Vital değerler opsiyoneldir. Boş bırakılırsa ilk ölçüm girişinde muayene zamanı kullanılır.</small>
+                                    @if (form.hasError('partialVitalClear')) {
+                                        <small class="text-red-500 block" role="alert">Kayıttaki tek bir vital değer silinemez; tüm vital alanlarını boşaltın veya değeri yeniden girin.</small>
+                                    }
+                                    @if (apiFieldErrors().vitalsMeasuredAt) {
+                                        <small class="text-red-500">{{ apiFieldErrors().vitalsMeasuredAt }}</small>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <h5 class="mt-0 mb-4">Değerlendirme / tanı</h5>
+                            <label for="assessment" class="block text-sm font-medium text-muted-color mb-2">Değerlendirme / tanı</label>
+                            <textarea id="assessment" rows="5" class="w-full p-inputtext p-component" formControlName="assessment"></textarea>
+                            @if (apiFieldErrors().assessment) {
+                                <small class="text-red-500">{{ apiFieldErrors().assessment }}</small>
+                            }
+                        </div>
+
+                        <div class="card">
+                            <h5 class="mt-0 mb-4">Plan / tedavi planı</h5>
+                            <div class="grid grid-cols-12 gap-4">
+                                <div class="col-span-12">
+                                    <label for="plan" class="block text-sm font-medium text-muted-color mb-2">Plan / tedavi planı</label>
+                                    <textarea id="plan" rows="5" class="w-full p-inputtext p-component" formControlName="plan"></textarea>
+                                    @if (apiFieldErrors().plan) {
+                                        <small class="text-red-500">{{ apiFieldErrors().plan }}</small>
+                                    }
+                                </div>
+                                <div class="col-span-12">
+                                    <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Ek notlar</label>
+                                    <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
+                                    @if (apiFieldErrors().notes) {
+                                        <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                                    }
+                                </div>
+                            </div>
+                            @if (conflict()) {
+                                <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
+                                    <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
+                                    <div class="flex flex-wrap gap-4 items-center mt-3">
+                                        <a
+                                            [routerLink]="['/panel/examinations', examinationId]"
+                                            target="_blank"
+                                            rel="noopener"
+                                            class="text-primary font-medium no-underline"
+                                            >Güncel kaydı yeni sekmede aç →</a
+                                        >
+                                        <p-button
+                                            type="button"
+                                            label="Yazdıklarımı atıp güncel kaydı yükle"
+                                            icon="pi pi-refresh"
+                                            severity="secondary"
+                                            size="small"
+                                            (onClick)="discardAndReload()"
+                                        />
+                                    </div>
+                                </div>
+                            } @else if (submitError()) {
+                                <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                            }
+                            <div class="flex flex-wrap gap-2 mt-4">
+                                <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="saveDisabled()" />
+                                <p-button
+                                    type="button"
+                                    [label]="copy.buttonCancel"
+                                    icon="pi pi-times"
+                                    severity="secondary"
+                                    (onClick)="onCancel()"
+                                    [disabled]="submitting()"
+                                />
+                            </div>
+                        </div>
+                    </form>
+                </div>
             }
 
             @if (!isEdit) {
@@ -496,6 +505,11 @@ export class ExaminationWorkspacePageComponent implements OnInit {
             this.submitting() ||
             this.ro.mutationBlocked()
         );
+    }
+
+    /** Yan paneldeki hasta bağlamı için hayvan: düzenlemede kayıttan, oluşturmada seçimden (seçilmeden panel yok). */
+    contextPetId(): string | null {
+        return (this.isEdit ? this.current?.petId : this.selectedPetId())?.trim() || null;
     }
 
     vitalError(key: VitalKey): string | null {

@@ -2,7 +2,7 @@ import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { EMPTY, of, Subject, throwError } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
@@ -11,6 +11,7 @@ import type { ExaminationEditVm } from '@/app/features/examinations/models/exami
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { EXAMINATION_CONCURRENCY_CONFLICT_MESSAGE } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
+import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ExaminationWorkspacePageComponent } from './examination-workspace-page.component';
 
@@ -84,7 +85,8 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
                 },
                 { provide: AppointmentsService, useValue: {} },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
-                { provide: PetsService, useValue: { getPetById: () => of({ name: 'Pamuk', speciesName: 'Kedi', breed: 'Van', birthDate: null }) } },
+                { provide: PetsService, useValue: { getPetById: () => of({ name: 'Pamuk', speciesName: 'Kedi', breed: 'Van', birthDate: null }), getPetSummary: () => EMPTY } },
+                { provide: DetailRelatedSummariesService, useValue: { loadSiblingExaminationsForPet: () => of([]) } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '555', email: '—' }) } }
             ]
         }).compileComponents();
@@ -100,6 +102,14 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         cmp.form.controls.plan.setValue('Sıvı tedavisi');
         cmp.form.controls.visitReason.setValue('İştahsızlık — güncellendi');
     };
+
+    it('düzenlemede hasta bağlamı paneli formun yanında açık muayenenin hayvanıyla çizilir', () => {
+        fixture.detectChanges();
+        const panel = (fixture.nativeElement as HTMLElement).querySelector('app-examination-patient-context');
+
+        expect(panel).not.toBeNull();
+        expect(cmp.contextPetId()).toBe('pet-1');
+    });
 
     it('kayıt sürümüyle yüklenir ve PUT a rowVersion ile mevcut appointmentId gönderilir', () => {
         service.updateExamination.and.returnValue(of({ id: 'e1', rowVersion: 'V2' }));
