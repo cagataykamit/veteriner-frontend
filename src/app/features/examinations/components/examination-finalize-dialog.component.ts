@@ -26,6 +26,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             <p class="mt-0">
                 Kesinleştirdikten sonra bu muayenenin içeriği <strong>değiştirilemez</strong>; işlem geri alınamaz.
                 Sonradan düzeltme gerekirse yalnızca gerekçeli bir <strong>ek not</strong> eklenebilir.
+                <strong data-testid="finalize-locks-linked">Kesinleştirdikten sonra tedavi, reçete, aşı ve yatış eklenemez.</strong>
             </p>
             <p class="mb-0 text-muted-color">Ekranda gördüğünüz içeriğin son kayıtlı içerik olduğundan emin olun.</p>
             @if (submitError()) {
