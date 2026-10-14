@@ -43,6 +43,8 @@ export interface ProductStockBatchesDto {
     clinicId: string;
     unit?: string | null;
     quantityOnHand: number | string;
+    availableQuantity?: number | string | null;
+    expiredQuantity?: number | string | null;
     batchedQuantity: number | string;
     unbatchedQuantity: number | string;
     batches?: StockBatchDto[] | null;

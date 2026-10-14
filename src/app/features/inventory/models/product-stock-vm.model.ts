@@ -11,6 +11,12 @@ export interface ProductStockVm {
     clinicName: string;
     quantityOnHand: number;
     quantityText: string;
+    /** Kullanılabilir = süresi geçmemiş; düşük stok yalnız buna bakar. */
+    availableQuantity: number;
+    availableText: string;
+    expiredQuantity: number;
+    expiredText: string;
+    hasExpired: boolean;
     minimumStockLevel: number;
     minimumStockLevelText: string;
     isBelowMinimum: boolean;

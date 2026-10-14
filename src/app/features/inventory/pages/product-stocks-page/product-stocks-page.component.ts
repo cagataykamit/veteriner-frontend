@@ -49,7 +49,8 @@ const PRODUCT_STOCK_CSV_HEADERS = [
     'SKU',
     'Kategori',
     'Klinik',
-    'Eldeki Stok',
+    'Kullanılabilir Stok',
+    'Süresi Geçmiş Stok',
     'Minimum Stok',
     'Durum',
     'Son Güncelleme'
@@ -183,7 +184,8 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                         <th>SKU</th>
                                         <th>Kategori</th>
                                         <th>Klinik</th>
-                                        <th class="text-right">Eldeki stok</th>
+                                        <th class="text-right">Kullanılabilir</th>
+                                        <th class="text-right">Süresi geçmiş</th>
                                         <th class="text-right">Minimum</th>
                                         <th>Durum</th>
                                         <th>Son güncelleme</th>
@@ -196,7 +198,8 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                         <td>{{ row.productSkuText }}</td>
                                         <td>{{ row.productCategoryName }}</td>
                                         <td>{{ row.clinicName }}</td>
-                                        <td class="text-right whitespace-nowrap">{{ row.quantityText }}</td>
+                                        <td class="text-right whitespace-nowrap">{{ row.availableText }}</td>
+                                        <td class="text-right whitespace-nowrap">@if (row.hasExpired) {<span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>} @else {<span class="text-muted-color">—</span>}</td>
                                         <td class="text-right whitespace-nowrap">{{ row.minimumStockLevelText }}</td>
                                         <td>
                                             <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
@@ -226,7 +229,10 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                     <div class="text-sm text-muted-color mb-2 break-words">Kategori: {{ row.productCategoryName }}</div>
                                     <div class="text-sm text-muted-color mb-2 break-words">Klinik: {{ row.clinicName }}</div>
                                     <div class="text-sm mb-2">
-                                        Eldeki: <span class="font-medium">{{ row.quantityText }}</span>
+                                        Kullanılabilir: <span class="font-medium">{{ row.availableText }}</span>
+                                        @if (row.hasExpired) {
+                                            · Süresi geçmiş: <span class="font-medium text-red-600 dark:text-red-400">{{ row.expiredText }}</span>
+                                        }
                                         · Min.: <span class="font-medium">{{ row.minimumStockLevelText }}</span>
                                     </div>
                                     <div class="mb-2">
@@ -575,7 +581,8 @@ export class ProductStocksPageComponent implements OnInit {
             this.exportDisplayCell(row.productSkuText),
             this.exportDisplayCell(row.productCategoryName),
             this.exportDisplayCell(row.clinicName),
-            this.exportDisplayCell(row.quantityText),
+            this.exportDisplayCell(row.availableText),
+            this.exportDisplayCell(row.expiredText),
             this.exportDisplayCell(row.minimumStockLevelText),
             statusLabel,
             this.exportDisplayCell(row.updatedAtText)

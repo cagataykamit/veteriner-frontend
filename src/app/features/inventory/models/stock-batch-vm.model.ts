@@ -28,6 +28,9 @@ export interface ProductStockBatchesVm {
     unit: string;
     quantityOnHand: number;
     quantityOnHandText: string;
+    availableText: string;
+    expiredQuantity: number;
+    expiredText: string;
     batchedQuantityText: string;
     unbatchedQuantity: number;
     unbatchedQuantityText: string;

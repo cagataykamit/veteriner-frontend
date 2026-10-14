@@ -11,7 +11,11 @@ export interface ProductStockDto {
     productCategoryName?: string | null;
     clinicId?: string | null;
     clinicName?: string | null;
+    /** Toplam eldeki (süresi geçmiş dahil). */
     quantityOnHand?: number | string | null;
+    /** Süresi geçmemiş partiler + partisiz bakiye; düşük stok buna göre hesaplanır. */
+    availableQuantity?: number | string | null;
+    expiredQuantity?: number | string | null;
     minimumStockLevel?: number | string | null;
     isBelowMinimum?: boolean | null;
     updatedAtUtc?: string | null;

@@ -24,7 +24,12 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 <app-error-state [detail]="error()!" (retry)="load()" />
             } @else if (data(); as d) {
                 <dl class="m-0 mb-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                    <div class="flex gap-1"><dt class="text-muted-color">Eldeki toplam:</dt><dd class="m-0 tabular-nums">{{ d.quantityOnHandText }} {{ d.unit }}</dd></div>
+                    <div class="flex gap-1"><dt class="text-muted-color">Kullanılabilir:</dt><dd class="m-0 tabular-nums font-medium" data-testid="available-quantity">{{ d.availableText }} {{ d.unit }}</dd></div>
+                    <div class="flex gap-1">
+                        <dt class="text-muted-color">Süresi geçmiş:</dt>
+                        <dd class="m-0 tabular-nums" [class.text-red-600]="d.expiredQuantity > 0" data-testid="expired-quantity">{{ d.expiredText }} {{ d.unit }}</dd>
+                    </div>
+                    <div class="flex gap-1"><dt class="text-muted-color">Toplam:</dt><dd class="m-0 tabular-nums">{{ d.quantityOnHandText }} {{ d.unit }}</dd></div>
                     <div class="flex gap-1"><dt class="text-muted-color">Partili:</dt><dd class="m-0 tabular-nums">{{ d.batchedQuantityText }} {{ d.unit }}</dd></div>
                     <div class="flex gap-1">
                         <dt class="text-muted-color">Partisiz / devir bakiye:</dt>

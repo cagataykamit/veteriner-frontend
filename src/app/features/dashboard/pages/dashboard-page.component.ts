@@ -268,7 +268,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                             </div>
                                             <div class="text-sm text-muted-color break-words">{{ row.clinicName }}</div>
                                             <div class="text-sm text-surface-700 dark:text-surface-200">
-                                                Eldeki: <span class="font-medium">{{ row.quantityText }}</span>
+                                                Kullanılabilir: <span class="font-medium">{{ row.availableText }}</span>
                                                 · Min.: <span class="font-medium">{{ row.minimumStockLevelText }}</span>
                                             </div>
                                             <div class="flex flex-wrap items-center gap-2">
@@ -292,7 +292,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                             <tr>
                                                 <th>Ürün</th>
                                                 <th>Klinik</th>
-                                                <th>Eldeki</th>
+                                                <th>Kullanılabilir</th>
                                                 <th>Minimum</th>
                                                 <th>Durum</th>
                                                 <th></th>
@@ -310,7 +310,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                                     }
                                                 </td>
                                                 <td>{{ row.clinicName }}</td>
-                                                <td>{{ row.quantityText }}</td>
+                                                <td>{{ row.availableText }}</td>
                                                 <td>{{ row.minimumStockLevelText }}</td>
                                                 <td>
                                                     <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />

@@ -79,6 +79,8 @@ export function mapPagedProductStocksToVm(res: ProductStockDtoPagedResult): Prod
 export function mapProductStockDtoToVm(dto: ProductStockDto): ProductStockVm {
     const qoh = num(dto.quantityOnHand);
     const minLvl = num(dto.minimumStockLevel);
+    const expired = num(dto.expiredQuantity) ?? 0;
+    const available = num(dto.availableQuantity) ?? qoh ?? 0;
     const below = dto.isBelowMinimum === true;
     const statusLabel = below ? 'Düşük stok' : 'Yeterli';
     const statusSeverity: StatusTagSeverity = below ? 'warn' : 'success';
@@ -98,6 +100,11 @@ export function mapProductStockDtoToVm(dto: ProductStockDto): ProductStockVm {
         clinicName,
         quantityOnHand: qoh ?? 0,
         quantityText: formatStockQuantityDisplay(qoh),
+        availableQuantity: available,
+        availableText: formatStockQuantityDisplay(available),
+        expiredQuantity: expired,
+        expiredText: formatStockQuantityDisplay(expired),
+        hasExpired: expired > 0,
         minimumStockLevel: minLvl ?? 0,
         minimumStockLevelText: formatStockQuantityDisplay(minLvl),
         isBelowMinimum: below,

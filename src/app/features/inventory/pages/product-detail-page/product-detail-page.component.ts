@@ -11,7 +11,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { TextareaModule } from 'primeng/textarea';
 import { ProductStockBatchesComponent } from '@/app/features/inventory/components/product-stock-batches/product-stock-batches.component';
 import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
-import { createStockBatchFormGroup, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
+import { createStockBatchFormGroup, getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import type { ProductDetailVm } from '@/app/features/inventory/models/product-vm.model';
 import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
@@ -95,7 +95,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
             /* Klinik stokları: 6 eşit kolon, dikey çizgi yok */
             .product-stock-desktop-grid {
                 display: grid;
-                grid-template-columns: repeat(6, minmax(0, 1fr));
+                grid-template-columns: repeat(7, minmax(0, 1fr));
                 column-gap: 1rem;
                 align-items: center;
             }
@@ -263,7 +263,8 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                         class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700"
                                     >
                                         <span class="text-sm font-semibold text-muted-color text-center block">Klinik</span>
-                                        <span class="text-sm font-semibold text-muted-color text-center block">Eldeki stok</span>
+                                        <span class="text-sm font-semibold text-muted-color text-center block">Kullanılabilir</span>
+                                        <span class="text-sm font-semibold text-muted-color text-center block">Süresi geçmiş</span>
                                         <span class="text-sm font-semibold text-muted-color text-center block">Minimum stok</span>
                                         <span class="text-sm font-semibold text-muted-color text-center block">Durum</span>
                                         <span class="text-sm font-semibold text-muted-color text-center block px-1">Son güncelleme</span>
@@ -278,8 +279,9 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                                 class="font-semibold text-base text-surface-900 dark:text-surface-0 min-w-0 break-words leading-snug text-center block"
                                                 >{{ row.clinicName }}</span>
                                             <span class="tabular-nums text-base font-medium text-surface-900 dark:text-surface-0 text-center block">{{
-                                                row.quantityText
+                                                row.availableText
                                             }}</span>
+                                            <span class="tabular-nums text-base text-center block">@if (row.hasExpired) {<span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>} @else {<span class="text-muted-color">—</span>}</span>
                                             <span class="tabular-nums text-base text-surface-900 dark:text-surface-0 text-center block">{{
                                                 row.minimumStockLevelText
                                             }}</span>
@@ -317,10 +319,12 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                             {{ row.clinicName }}
                                         </div>
                                         <dl class="m-0 grid grid-cols-12 gap-x-2 gap-y-2">
-                                            <dt class="col-span-5 text-muted-color text-sm">Eldeki stok</dt>
+                                            <dt class="col-span-5 text-muted-color text-sm">Kullanılabilir</dt>
                                             <dd class="col-span-7 m-0 text-right tabular-nums text-base font-medium text-surface-900 dark:text-surface-0">
-                                                {{ row.quantityText }}
+                                                {{ row.availableText }}
                                             </dd>
+                                            <dt class="col-span-5 text-muted-color text-sm">Süresi geçmiş</dt>
+                                            <dd class="col-span-7 m-0 text-right tabular-nums text-base">@if (row.hasExpired) {<span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>} @else {<span class="text-muted-color">—</span>}</dd>
                                             <dt class="col-span-5 text-muted-color text-sm">Minimum stok</dt>
                                             <dd class="col-span-7 m-0 text-right tabular-nums text-base text-surface-900 dark:text-surface-0">
                                                 {{ row.minimumStockLevelText }}
@@ -415,8 +419,11 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div class="flex flex-col gap-1">
-                                    <span class="block text-sm font-medium text-muted-color">Mevcut stok</span>
-                                    <span class="text-base tabular-nums text-surface-900 dark:text-surface-0">{{ stock.quantityText }}</span>
+                                    <span class="block text-sm font-medium text-muted-color">Kullanılabilir stok</span>
+                                    <span class="text-base tabular-nums text-surface-900 dark:text-surface-0">{{ stock.availableText }}</span>
+                                    @if (stock.hasExpired) {
+                                        <span class="text-sm tabular-nums text-red-600 dark:text-red-400">+ {{ stock.expiredText }} süresi geçmiş</span>
+                                    }
                                 </div>
                                 <div class="flex flex-col gap-1">
                                     <span class="block text-sm font-medium text-muted-color">Minimum stok</span>
@@ -1148,9 +1155,10 @@ export class ProductDetailPageComponent implements OnInit {
     }
 
     /** Parti bloğu yalnız stok girişinde ve en az bir alan doluyken gönderilir. */
-    private batchRequestFor(op: StockOperationKind): { batch?: NonNullable<ReturnType<typeof getStockBatchRequest>> } {
-        const batch = op === 'in' ? getStockBatchRequest(this.stockOperationForm.controls.batch) : null;
-        return batch ? { batch } : {};
+    private batchRequestFor(op: StockOperationKind): { batch?: NonNullable<ReturnType<typeof getStockBatchRequest>>; acknowledgeExpired?: true } {
+        const group = this.stockOperationForm.controls.batch;
+        const batch = op === 'in' ? getStockBatchRequest(group) : null;
+        return batch ? { batch, ...getAcknowledgeExpiredRequest(group) } : {};
     }
 
     onDeactivateClick(): void {
