@@ -27,8 +27,8 @@ import { filter } from 'rxjs/operators';
                 (click)="itemClick($event)"
                 [ngClass]="item().class"
                 [routerLink]="item().routerLink"
-                routerLinkActive="active-route"
-                [routerLinkActiveOptions]="item().routerLinkActiveOptions || { paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
+                [class.active-route]="item().active"
+                [attr.aria-current]="item().active ? 'page' : null"
                 [fragment]="item().fragment"
                 [queryParamsHandling]="item().queryParamsHandling"
                 [preserveFragment]="item().preserveFragment"
@@ -49,7 +49,7 @@ import { filter } from 'rxjs/operators';
                 <i [ngClass]="item().icon" class="layout-menuitem-icon"></i>
                 <span class="layout-menuitem-text">{{ item().label }}</span>
                 @if (item().badge) {
-                    <span class="layout-menuitem-badge">{{ item().badge }}<span class="sr-only"> bekleyen</span></span>
+                    <span class="layout-menuitem-badge">{{ item().badge }}<span class="sr-only"> {{ item().badgeText || 'bekleyen' }}</span></span>
                 }
                 @if (hasChildren()) {
                     <i class="pi pi-fw pi-angle-down layout-submenu-toggler"></i>
@@ -120,7 +120,7 @@ export class AppMenuitem {
     /** Simge şeridinde metin görünmez; ad ve sayaç ipucunda (hover/odak) verilir. */
     railTooltip = computed(() => {
         const item = this.item();
-        return item?.badge ? `${item.label} · ${item.badge} bekleyen` : (item?.label ?? '');
+        return item?.badge ? `${item.label} · ${item.badge} ${item.badgeText || 'bekleyen'}` : (item?.label ?? '');
     });
 
     hasRouterLink = computed(() => !!this.item()?.routerLink);

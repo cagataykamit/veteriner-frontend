@@ -1,8 +1,9 @@
 import { inject } from '@angular/core';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { firstAccessibleRoute, MENU_GROUPS, SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
 
-/** `/panel` açılış sayfası: günlük çalışma ekranı (Bugün) yetkisi olana Bugün, yoksa Özet. */
+/** `/panel` açılış sayfası: menüdeki ilk erişilebilir öğe; Bugün yetkisi olana Bugün (ADR-017 K5). */
 export function panelHomeRedirect(): string {
-    return inject(AuthService).hasOperationClaim(VISITS_READ_CLAIM) ? 'today' : 'dashboard';
+    const auth = inject(AuthService);
+    return firstAccessibleRoute(MENU_GROUPS, (claim) => auth.hasOperationClaim(claim)) ?? SETTINGS_ROUTE;
 }

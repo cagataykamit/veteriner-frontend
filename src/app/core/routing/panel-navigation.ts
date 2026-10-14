@@ -23,6 +23,7 @@ import {
     TENANT_MANAGEMENT_CLAIM,
     TREATMENTS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM,
+    VISITS_CORRECT_CLAIM,
     VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 
@@ -42,12 +43,19 @@ export interface NavigationEntry {
 /** Menüde öğenin yanında bekleyen iş sayısı gösterilen sayaçlar; değerlerini `MenuBadgeService` sağlar. */
 export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults';
 
+/** Birleşik menü öğesinin sekmesi: mevcut liste sayfasının rotası; yetkisi olmayan sekme görünmez. */
+export interface MenuTab extends NavigationEntry {
+    readonly badge?: MenuBadgeKey;
+}
+
 export interface MenuEntry extends NavigationEntry {
     /** Öğenin yanında gösterilecek bekleyen iş sayacı; 0 iken gizlenir. */
     readonly badge?: MenuBadgeKey;
+    /** Sayacın ne saydığı (ipucu ve ekran okuyucu için); yoksa "bekleyen". */
+    readonly badgeText?: string;
+    /** Birleşik öğe: sekmeler mevcut liste rotalarıdır; öğe yetkili ilk sekmeye açılır, tek sekme kalırsa sekme çubuğu çıkmaz. */
+    readonly tabs?: readonly MenuTab[];
     readonly icon: string;
-    /** `true`: yalnız tam adres vurgulanır; varsayılan alt yollarda da vurgulanır. */
-    readonly exact?: boolean;
     /** Sayfa başlığı üstündeki etiket; yoksa grubun adı/kategorisi kullanılır (ör. Para altındaki Raporlar). */
     readonly category?: string;
 }
@@ -184,37 +192,52 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
     }
 ];
 
+/** "Yönetici düzeyi": Admin, Owner ve ClinicAdmin'in birlikte sahip olduğu düzeltme izni; Özet bu izne bağlıdır (ADR-017 K5). */
+export const MANAGER_LEVEL_CLAIM = VISITS_CORRECT_CLAIM;
+
+/** Birleşik menü öğesi: yol ilk sekmeye açılır, izin sekme izinlerinin birleşimidir, sayfa başlığı kategorisi öğenin adıdır. */
+function tabbedEntry(label: string, icon: string, tabs: readonly MenuTab[], options: Pick<MenuEntry, 'badge' | 'badgeText'> = {}): MenuEntry {
+    return { label, icon, route: tabs[0].route, claims: tabs.flatMap((tab) => tab.claims ?? []), tabs, category: label, ...options };
+}
+
+/** Menü, iş akışına göre 8-9 öğedir (ADR-017); eski liste rotaları sekme olarak aynen çalışır. */
 export const MENU_GROUPS: readonly MenuGroup[] = [
     {
         category: 'Panel',
         entries: [
-            { label: 'Bugün', icon: 'pi pi-fw pi-calendar-clock', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
-            { label: 'Özet', icon: 'pi pi-fw pi-home', route: '/panel/dashboard' }
-        ]
-    },
-    {
-        label: 'Klinik',
-        defaultOpen: true,
-        entries: [
-            // Takvim ayrı öğe olduğu sürece Randevular yalnız liste adresinde vurgulanır.
-            { label: 'Randevular', icon: 'pi pi-fw pi-calendar', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM], exact: true },
-            { label: 'Randevu Takvimi', icon: 'pi pi-fw pi-table', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] },
-            { label: 'Müşteriler', icon: 'pi pi-fw pi-users', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
-            { label: 'Hayvanlar', icon: 'pi pi-fw pi-heart', route: '/panel/pets', claims: [PETS_READ_CLAIM] },
-            { label: 'Muayeneler', icon: 'pi pi-fw pi-clipboard', route: '/panel/examinations', claims: [EXAMINATIONS_READ_CLAIM] },
-            { label: 'Yatışlar', icon: 'pi pi-fw pi-building', route: '/panel/hospitalizations', claims: [HOSPITALIZATIONS_READ_CLAIM] },
-            { label: 'Aşılar', icon: 'pi pi-fw pi-shield', route: '/panel/vaccinations', claims: [VACCINATIONS_READ_CLAIM] },
-            { label: 'Lab sonuçları', icon: 'pi pi-fw pi-chart-bar', route: '/panel/lab-results', claims: [LAB_RESULTS_READ_CLAIM], badge: 'requestedLabResults' },
-            { label: 'Tedaviler', icon: 'pi pi-fw pi-wave-pulse', route: '/panel/treatments', claims: [TREATMENTS_READ_CLAIM] },
-            { label: 'Reçeteler', icon: 'pi pi-fw pi-file-edit', route: '/panel/prescriptions', claims: [PRESCRIPTIONS_READ_CLAIM] }
-        ]
-    },
-    {
-        label: 'Para',
-        defaultOpen: true,
-        entries: [
-            { label: 'Ücretler', icon: 'pi pi-fw pi-receipt', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
-            { label: 'Ödemeler', icon: 'pi pi-fw pi-credit-card', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
+            { label: 'Bugün', icon: 'pi pi-fw pi-sun', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
+            { label: 'Özet', icon: 'pi pi-fw pi-th-large', route: '/panel/dashboard', claims: [MANAGER_LEVEL_CLAIM] },
+            tabbedEntry('Hastalar', 'pi pi-fw pi-heart', [
+                { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
+                { label: 'Hayvanlar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
+            ]),
+            tabbedEntry('Randevular', 'pi pi-fw pi-calendar', [
+                { label: 'Liste', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
+                { label: 'Takvim', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] }
+            ]),
+            tabbedEntry('Para', 'pi pi-fw pi-wallet', [
+                { label: 'Ücretler', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
+                { label: 'Ödemeler', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] }
+            ]),
+            tabbedEntry('Stok', 'pi pi-fw pi-box', [
+                { label: 'Ürünler', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
+                { label: 'Stok durumu', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
+                { label: 'Stok hareketleri', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] }
+            ]),
+            tabbedEntry(
+                'Kayıtlar',
+                'pi pi-fw pi-clipboard',
+                [
+                    { label: 'Muayeneler', route: '/panel/examinations', claims: [EXAMINATIONS_READ_CLAIM] },
+                    { label: 'Tedaviler', route: '/panel/treatments', claims: [TREATMENTS_READ_CLAIM] },
+                    { label: 'Reçeteler', route: '/panel/prescriptions', claims: [PRESCRIPTIONS_READ_CLAIM] },
+                    { label: 'Aşılar', route: '/panel/vaccinations', claims: [VACCINATIONS_READ_CLAIM] },
+                    { label: 'Lab sonuçları', route: '/panel/lab-results', claims: [LAB_RESULTS_READ_CLAIM], badge: 'requestedLabResults' },
+                    { label: 'Yatışlar', route: '/panel/hospitalizations', claims: [HOSPITALIZATIONS_READ_CLAIM] },
+                    { label: 'Uygulamalar', route: '/panel/administrations', claims: [ADMINISTRATIONS_READ_CLAIM] }
+                ],
+                { badge: 'requestedLabResults', badgeText: 'sonuç bekleyen lab istemi' }
+            ),
             {
                 label: 'Raporlar',
                 category: 'Raporlar',
@@ -222,14 +245,6 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                 route: REPORTS_ROUTE,
                 claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
             }
-        ]
-    },
-    {
-        label: 'Stok',
-        entries: [
-            { label: 'Ürünler', icon: 'pi pi-fw pi-box', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
-            { label: 'Stok durumu', icon: 'pi pi-fw pi-warehouse', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
-            { label: 'Stok hareketleri', icon: 'pi pi-fw pi-arrow-right-arrow-left', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] }
         ]
     },
     {
@@ -308,19 +323,32 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
     }
 ];
 
+/** Öğenin sahip olduğu rotalar: birleşik öğede sekmelerin, değilse kendi yolu. */
+function entryRoutes(entry: MenuEntry): readonly string[] {
+    return entry.tabs?.map((tab) => tab.route) ?? [entry.route];
+}
+
 /** Adresi (sorgu ve parça hariç) kapsayan en uzun menü yolunun grubu ve girişi; eşleşme yoksa `undefined`. */
 function matchForUrl(groups: readonly MenuGroup[], url: string): { group: MenuGroup; entry: MenuEntry } | undefined {
     const path = url.split(/[?#]/)[0];
     let best: { group: MenuGroup; entry: MenuEntry } | undefined;
+    let bestLength = -1;
     for (const group of groups) {
         for (const entry of group.entries) {
-            const matches = path === entry.route || path.startsWith(`${entry.route}/`);
-            if (matches && entry.route.length > (best?.entry.route.length ?? -1)) {
-                best = { group, entry };
+            for (const route of entryRoutes(entry)) {
+                if ((path === route || path.startsWith(`${route}/`)) && route.length > bestLength) {
+                    best = { group, entry };
+                    bestLength = route.length;
+                }
             }
         }
     }
     return best;
+}
+
+/** Adresi kapsayan menü girişi; menüde olmayan adres için `undefined`. */
+export function entryForUrl(groups: readonly MenuGroup[], url: string): MenuEntry | undefined {
+    return matchForUrl(groups, url)?.entry;
 }
 
 /** Adresi kapsayan en uzun menü yolunun grubu; eşleşme yoksa `undefined`. */
@@ -343,4 +371,27 @@ export function visibleEntries<T extends NavigationEntry>(entries: readonly T[],
 /** İzne göre süzer; hiç girişi kalmayan grup/bölüm düşer. */
 export function visibleGroups<T extends { readonly entries: readonly NavigationEntry[] }>(groups: readonly T[], hasClaim: HasClaim): T[] {
     return groups.map((g) => ({ ...g, entries: visibleEntries(g.entries, hasClaim) })).filter((g) => g.entries.length > 0);
+}
+
+/** Menü bağlantısının gittiği yol: birleşik öğede yetkili ilk sekme (tek sekme kalırsa doğrudan o), değilse öğenin yolu. */
+export function menuLinkRoute(entry: MenuEntry, hasClaim: HasClaim): string {
+    return (entry.tabs && visibleEntries(entry.tabs, hasClaim)[0]?.route) || entry.route;
+}
+
+/** Giriş sonrası açılış sayfası: menüdeki ilk erişilebilir öğe (Bugün izni varsa Bugün). */
+export function firstAccessibleRoute(groups: readonly MenuGroup[], hasClaim: HasClaim): string | undefined {
+    const first = visibleGroups(groups, hasClaim)[0]?.entries[0];
+    return first && menuLinkRoute(first, hasClaim);
+}
+
+/**
+ * Adres bir birleşik öğenin liste sayfasıysa sekme çubuğu: yetkili sekmeler ve etkin sekme.
+ * Detay ve form adreslerinde, ya da yalnız tek sekme yetkiliyken `undefined`.
+ */
+export function tabsForUrl(groups: readonly MenuGroup[], url: string, hasClaim: HasClaim): { tabs: MenuTab[]; active: MenuTab } | undefined {
+    const path = url.split(/[?#]/)[0];
+    const entry = groups.flatMap((g) => g.entries).find((e) => e.tabs?.some((tab) => tab.route === path));
+    const tabs = entry?.tabs ? visibleEntries(entry.tabs, hasClaim) : [];
+    const active = tabs.find((tab) => tab.route === path);
+    return active && tabs.length > 1 ? { tabs, active } : undefined;
 }

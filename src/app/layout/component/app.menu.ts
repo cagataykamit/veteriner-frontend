@@ -9,10 +9,7 @@ import { readMenuGroupPreferences, writeMenuGroupPreferences } from './menu-grou
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badge.service';
-import { groupForUrl, MENU_GROUPS, visibleGroups } from '@/app/core/routing/panel-navigation';
-
-/** Alt yollarda da (`/panel/pets/:id`) vurgulanır. */
-const SUBSET_ACTIVE_OPTIONS = { paths: 'subset', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' } as const;
+import { entryForUrl, groupForUrl, MENU_GROUPS, menuLinkRoute, visibleGroups } from '@/app/core/routing/panel-navigation';
 
 interface MenuSection {
     /** Yoksa başlıksız: öğeler her zaman görünür. */
@@ -82,18 +79,24 @@ export class AppMenu {
 
     private readonly preferences = signal(readMenuGroupPreferences());
 
+    /** Öğe, sekmelerinden herhangi birinin (ve alt yollarının) sayfasındayken vurgulanır. */
+    private readonly currentUrl = signal(this.router.url);
+
     private readonly sections = computed<MenuSection[]>(() => {
         const preferences = this.preferences();
-        return visibleGroups(MENU_GROUPS, (claim) => this.auth.hasOperationClaim(claim)).map((group) => ({
+        const current = entryForUrl(MENU_GROUPS, this.currentUrl());
+        const hasClaim = (claim: string) => this.auth.hasOperationClaim(claim);
+        return visibleGroups(MENU_GROUPS, hasClaim).map((group) => ({
             label: group.label,
             pinned: group.pinned ?? false,
             open: !group.label || (preferences[group.label] ?? group.defaultOpen ?? false),
             items: group.entries.map((entry) => ({
                 label: entry.label,
                 icon: entry.icon,
-                routerLink: [entry.route],
+                routerLink: [menuLinkRoute(entry, hasClaim)],
                 badge: (entry.badge && menuBadgeLabel(this.badges.count(entry.badge))) || undefined,
-                ...(entry.exact ? {} : { routerLinkActiveOptions: SUBSET_ACTIVE_OPTIONS })
+                badgeText: entry.badgeText,
+                active: entry === current
             }))
         }));
     });
@@ -109,7 +112,10 @@ export class AppMenu {
                 filter((event): event is NavigationEnd => event instanceof NavigationEnd),
                 takeUntilDestroyed(inject(DestroyRef))
             )
-            .subscribe((event) => this.openGroupOf(event.urlAfterRedirects));
+            .subscribe((event) => {
+                this.currentUrl.set(event.urlAfterRedirects);
+                this.openGroupOf(event.urlAfterRedirects);
+            });
     }
 
     protected groupId(label: string): string {
