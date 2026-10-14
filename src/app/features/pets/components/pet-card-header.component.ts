@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
+import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
@@ -8,8 +9,7 @@ import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils'
 import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
-import { formatMoney } from '@/app/shared/utils/money.utils';
-import { CLIENT_PHONE_DISPLAY_PLACEHOLDER, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
+import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress', 'Completed']);
 
@@ -20,7 +20,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
 @Component({
     selector: 'app-pet-card-header',
     standalone: true,
-    imports: [RouterLink, PetAlertBadgesComponent],
+    imports: [RouterLink, PetAlertBadgesComponent, CardAccountStatusComponent],
     template: `
         <section class="card mb-4" aria-label="Sahip, uyarılar ve hesap durumu" data-testid="pet-card-header">
             @if (pet().petAlerts.flags.length > 0) {
@@ -43,29 +43,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                 }
             </p>
 
-            <dl class="m-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2" aria-label="Hesap durumu">
-                @if (balance(); as b) {
-                    <div data-testid="account-balance">
-                        <dt class="text-muted-color text-sm">Açık borç</dt>
-                        <dd class="m-0">
-                            @switch (b.state) {
-                                @case ('ok') {
-                                    @if (outstanding() > 0) {
-                                        <span class="font-semibold text-red-600 dark:text-red-400 tabular-nums">{{ outstandingLabel() }}</span>
-                                    } @else {
-                                        <span class="text-muted-color">Yok</span>
-                                    }
-                                }
-                                @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
-                                }
-                                @default {
-                                    <span class="text-muted-color text-sm">…</span>
-                                }
-                            }
-                        </dd>
-                    </div>
-                }
+            <app-card-account-status [balance]="balance()" [nextAppointment]="nextAppointment()">
                 <div data-testid="account-last-visit">
                     <dt class="text-muted-color text-sm">Son geliş</dt>
                     <dd class="m-0">
@@ -87,29 +65,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                         }
                     </dd>
                 </div>
-                @if (nextAppointment(); as n) {
-                    <div data-testid="account-next-appointment">
-                        <dt class="text-muted-color text-sm">Sonraki randevu</dt>
-                        <dd class="m-0">
-                            @switch (n.state) {
-                                @case ('ok') {
-                                    @if (n.data; as a) {
-                                        <a [routerLink]="['/panel/appointments', a.id]" class="text-primary font-medium no-underline">{{ formatDt(a.scheduledAtUtc) }}</a>
-                                    } @else {
-                                        <span class="text-muted-color">Yok</span>
-                                    }
-                                }
-                                @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
-                                }
-                                @default {
-                                    <span class="text-muted-color text-sm">…</span>
-                                }
-                            }
-                        </dd>
-                    </div>
-                }
-            </dl>
+            </app-card-account-status>
         </section>
     `
 })
@@ -123,18 +79,7 @@ export class PetCardHeaderComponent {
     readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     readonly phone = computed(() => formatClientPhoneForDisplay(this.pet().clientPhone));
-    readonly phoneHref = computed(() => {
-        const digits = (this.pet().clientPhone ?? '').replace(/[^\d+]/g, '');
-        return this.phone() !== CLIENT_PHONE_DISPLAY_PLACEHOLDER && digits ? `tel:${digits}` : null;
-    });
-    readonly outstanding = computed(() => {
-        const b = this.balance();
-        return b?.state === 'ok' ? b.data.outstandingAmount : 0;
-    });
-    readonly outstandingLabel = computed(() => {
-        const b = this.balance();
-        return b?.state === 'ok' ? formatMoney(b.data.outstandingAmount, b.data.currency || 'TRY') : '';
-    });
+    readonly phoneHref = computed(() => clientPhoneTelHref(this.pet().clientPhone));
 
     careLabel(status: string | null): string | null {
         return status && KNOWN_CARE_STATUSES.has(status) ? careStatusLabel(status as VisitCareStatus) : null;

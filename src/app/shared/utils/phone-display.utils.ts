@@ -38,3 +38,9 @@ function toTurkishMobileNational10(digits: string): string | null {
     }
     return null;
 }
+
+/** Aranabilir `tel:` bağlantısı; gösterilecek numara yoksa `null` (bağlantı çıkmaz). */
+export function clientPhoneTelHref(value: string | null | undefined): string | null {
+    const digits = (value ?? '').replace(/[^\d+]/g, '');
+    return formatClientPhoneForDisplay(value) !== CLIENT_PHONE_DISPLAY_PLACEHOLDER && digits ? `tel:${digits}` : null;
+}
