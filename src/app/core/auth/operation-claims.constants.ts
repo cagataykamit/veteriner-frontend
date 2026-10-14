@@ -160,3 +160,12 @@ export const BREEDS_CREATE_CLAIM = 'Breeds.Create' as const;
 
 /** Irk güncelleme */
 export const BREEDS_UPDATE_CLAIM = 'Breeds.Update' as const;
+
+/** Veri içe aktarma: parti listesi, önizleme ve şablon (yönetici düzeyi) */
+export const IMPORTS_READ_CLAIM = 'Imports.Read' as const;
+
+/** Veri içe aktarma: yükleme, eşleme, doğrulama ve taslağı silme */
+export const IMPORTS_MANAGE_CLAIM = 'Imports.Manage' as const;
+
+/** Veri içe aktarma: onaylayıp uygulama ve hatırlatmaları açma */
+export const IMPORTS_COMMIT_CLAIM = 'Imports.Commit' as const;

@@ -135,6 +135,26 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}`
     },
     /** FAZ 14C — aşı kataloğu; query: `Page`, `PageSize`, `search`, `speciesId`, `includeInactive`. */
+    /** Veri içe aktarma (ADR-019); sözleşme: Veteriner `docs/IMPORT_API_CONTRACT.md`. */
+    imports: {
+        /** GET: `format=xlsx` veya `format=csv&table=customers|pets|vaccinations`. */
+        template: () => `/api/v1/imports/template`,
+        /** GET (liste: `page`, `pageSize`, `status`) ve POST (multipart yükleme). */
+        batches: () => `/api/v1/imports/batches`,
+        /** GET ayrıntı; DELETE taslağı siler. */
+        batchById: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}`,
+        mapping: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/mapping`,
+        validate: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/validate`,
+        preview: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/preview`,
+        /** GET: `table`, `status`, `code`, `page`, `pageSize`. */
+        rows: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/rows`,
+        /** GET: `format=xlsx|csv` hata raporu dosyası. */
+        errors: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/errors`,
+        /** POST (B4, taslak): uygulamayı başlatır. */
+        commit: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/commit`,
+        /** POST (B4, taslak): içe aktarılan aşıların hatırlatmalarını açar. */
+        releaseReminders: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/release-reminders`
+    },
     vaccineDefinitions: {
         list: () => `/api/v1/vaccine-definitions`
     },
