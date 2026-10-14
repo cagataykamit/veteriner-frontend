@@ -4,8 +4,8 @@ const TURKISH_FOLD: Record<string, string> = { ı: 'i', ç: 'c', ğ: 'g', ö: 'o
 
 /**
  * Sunucunun mükerrer ad anahtarının (`TurkishTextKey`) istemci karşılığı: büyük/küçük harf, `I/ı/İ/i`, `ç/ğ/ö/ş/ü`,
- * `â/î/û` farkı ve fazla boşluk yok sayılır. Yalnız arayüz kararı içindir (ör. pasif eşi varken "sözlüğe ekle"yi gizlemek);
- * mükerreri reddeden sunucudur.
+ * `â/î/û` farkı ve fazla boşluk yok sayılır. Mükerrer kararını sunucu verir (`409 DuplicateName`); bu anahtar yalnız
+ * çakışan kaydı, kelime içeren arama sonuçları arasından seçmek içindir.
  */
 export function clinicalTermNameKey(name: string): string {
     return name
