@@ -9,7 +9,7 @@ import {
     todaySecondaryActions,
     todayUrgencyToggle,
     waitAlertLevel,
-    visitPaymentStatus,
+    todayOpenChips,
     waitAlertTitle
 } from '@/app/features/visits/utils/visit-status.utils';
 
@@ -33,6 +33,9 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     allocatedAmount: null,
     outstandingAmount: null,
     clientOutstandingAmount: null,
+    chargeIndicator: null,
+    chargeableWorkCount: null,
+    awaitingLabCount: null,
     hasActiveHospitalization: false,
     isVoided: false,
     voidReason: null,
@@ -279,24 +282,42 @@ describe('isPossiblyForgottenVisit', () => {
     });
 });
 
-describe('visitPaymentStatus', () => {
-    const amounts = (charged: number | null, allocated: number | null, outstanding: number | null) => ({
-        chargedAmount: charged,
-        allocatedAmount: allocated,
-        outstandingAmount: outstanding
+describe('todayOpenChips', () => {
+    const chips = (over: Partial<TodayItemVm>) => todayOpenChips(item(over));
+
+    it('null değerler (yetki yok veya planlı satır) çip üretmez', () => {
+        expect(chips({ chargeIndicator: null, chargeableWorkCount: null, awaitingLabCount: null })).toEqual([]);
     });
 
-    it('tutarlar yoksa (yetkisiz veya ziyaret yok) rozet yok', () => {
-        expect(visitPaymentStatus(amounts(null, null, null))).toBeNull();
+    it('Paid ve NoChargeableWork çip üretmez; awaitingLabCount 0 çip üretmez', () => {
+        expect(chips({ chargeIndicator: 'Paid', awaitingLabCount: 0 })).toEqual([]);
+        expect(chips({ chargeIndicator: 'NoChargeableWork' })).toEqual([]);
     });
 
-    it('ücret yazılmamış ziyaret', () => {
-        expect(visitPaymentStatus(amounts(0, 0, 0))).toEqual({ label: 'Ücret yok', severity: 'secondary' });
+    it('Ücret yok: danger, işlem sayısı ipucunda', () => {
+        const [c] = chips({ chargeIndicator: 'ChargeMissing', chargeableWorkCount: 3 });
+        expect(c.label).toBe('Ücret yok');
+        expect(c.severity).toBe('danger');
+        expect(c.title).toContain('3 işlem');
+        expect(c.payable).toBeFalse();
     });
 
-    it('hiç ödenmemiş, kısmi ve tam ödenmiş', () => {
-        expect(visitPaymentStatus(amounts(1000, 0, 1000))?.label).toBe('Ödenmedi');
-        expect(visitPaymentStatus(amounts(1000, 400, 600))?.label).toBe('Kısmi ödendi');
-        expect(visitPaymentStatus(amounts(1000, 1000, 0))).toEqual({ label: 'Ödendi', severity: 'success' });
+    it('Ödeme bekliyor ve Kısmi ödeme ödemeye geçilebilir', () => {
+        expect(chips({ chargeIndicator: 'PaymentPending' }).map((c) => [c.label, c.payable])).toEqual([['Ödeme bekliyor', true]]);
+        expect(chips({ chargeIndicator: 'PartiallyPaid' }).map((c) => [c.label, c.payable])).toEqual([['Kısmi ödeme', true]]);
+    });
+
+    it('Lab bekliyor sayıyı gösterir', () => {
+        expect(chips({ awaitingLabCount: 2 }).map((c) => c.label)).toEqual(['Lab bekliyor (2)']);
+    });
+
+    it('kritik olan önce: Ücret yok, Lab bekliyor, sonra ödeme', () => {
+        expect(chips({ chargeIndicator: 'ChargeMissing', awaitingLabCount: 1 }).map((c) => c.key)).toEqual(['chargeMissing', 'awaitingLab']);
+        expect(chips({ chargeIndicator: 'PaymentPending', awaitingLabCount: 1 }).map((c) => c.key)).toEqual(['awaitingLab', 'paymentPending']);
+    });
+
+    it('her çipin simgesi var (yalnız renkle ayrım yok)', () => {
+        const all = chips({ chargeIndicator: 'ChargeMissing', awaitingLabCount: 1 }).concat(chips({ chargeIndicator: 'PaymentPending' }));
+        expect(all.every((c) => c.icon.startsWith('pi '))).toBeTrue();
     });
 });

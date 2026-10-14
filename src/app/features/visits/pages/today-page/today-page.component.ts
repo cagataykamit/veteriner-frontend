@@ -25,6 +25,7 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
+import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
 import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
 import { VisitCorrectionDialogComponent } from '@/app/features/visits/components/visit-correction-dialog.component';
 import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
@@ -70,7 +71,7 @@ type TodayScope = 'mine' | 'all';
 
 /**
  * Bugün: o günün randevuları ve gelen hastalar tek listede (randevulu Visit tek satır).
- * Ödeme ve yatış rozetleri bakım durumundan ayrıdır; aktif yatışlar ayrı bölümde listelenir; açık iş göstergesi backend'de yoktur.
+ * Ödeme, lab ve yatış rozetleri bakım durumundan ayrıdır (hesaplanan açık iş çipleri); aktif yatışlar ayrı bölümde, klinik geneli açık iş özeti üstte.
  */
 @Component({
     selector: 'app-today-page',
@@ -90,6 +91,7 @@ type TodayScope = 'mine' | 'all';
         AppEmptyStateComponent,
         AppStatusTagComponent,
         TodayMoneyComponent,
+        TodayOpenItemsComponent,
         VisitArrivalDialogComponent,
         VisitCorrectionDialogComponent,
         AppointmentNoShowDialogComponent,
@@ -144,6 +146,9 @@ type TodayScope = 'mine' | 'all';
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
                     İşletme salt okunur moddadır; değişiklik kaydedilemez.
                 </p>
+            }
+            @if (today()?.openItems; as openItems) {
+                <app-today-open-items [summary]="openItems" />
             }
             @for (group of groups(); track group.key) {
                 <section class="card mb-4" [attr.aria-label]="group.title">
@@ -418,7 +423,7 @@ type TodayScope = 'mine' | 'all';
                 }
                 @if (item.isCarriedOver) {
                     <span [attr.title]="carriedOverTitle">
-                        <app-status-tag label="Önceki günden" severity="secondary" />
+                        <app-status-tag label="Önceki günden açık" severity="secondary" />
                     </span>
                 }
             </div>
@@ -429,7 +434,7 @@ type TodayScope = 'mine' | 'all';
 
         <ng-template #moneyTags let-item let-group="group">
             @if (group.key !== 'noShow') {
-                <app-today-money [item]="item" />
+                <app-today-money [item]="item" [canPay]="canCollectPayment && !ro.mutationBlocked() && !item.isVoided" (pay)="openPayment(item)" />
             }
             @if (item.hasActiveHospitalization) {
                 <app-status-tag label="Yatışta" severity="warn" />

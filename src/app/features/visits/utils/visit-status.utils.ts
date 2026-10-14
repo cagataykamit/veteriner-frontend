@@ -23,19 +23,51 @@ export function careStatusSeverity(status: VisitCareStatus): StatusTagSeverity {
     return CARE_STATUS_SEVERITY[status];
 }
 
-/** Ziyaret ücret durumu rozeti; tutarlar yoksa (yetkisiz veya ziyaret yok) `null`. Bakım durumundan bağımsızdır. */
-export function visitPaymentStatus(item: Pick<TodayItemVm, 'chargedAmount' | 'allocatedAmount' | 'outstandingAmount'>): { label: string; severity: StatusTagSeverity } | null {
-    const { chargedAmount, allocatedAmount, outstandingAmount } = item;
-    if (chargedAmount == null || allocatedAmount == null || outstandingAmount == null) {
-        return null;
+export type TodayOpenChipKey = 'chargeMissing' | 'awaitingLab' | 'paymentPending' | 'partiallyPaid';
+
+export interface TodayOpenChip {
+    key: TodayOpenChipKey;
+    label: string;
+    severity: StatusTagSeverity;
+    icon: string;
+    title: string;
+    /** Çipten ödemeye geçilebilir (açık ücret var). */
+    payable: boolean;
+}
+
+/**
+ * Satırın hesaplanan açık iş çipleri, kritik olan önce (Ücret yok, Lab bekliyor, sonra ödeme). `null` değer "yok" demek değildir
+ * (yetki yok veya planlı satır): çip üretilmez. `Paid` ve `NoChargeableWork` çip üretmez. "Önceki günden açık" Durum hücresindedir.
+ */
+export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'chargeableWorkCount' | 'awaitingLabCount'>): TodayOpenChip[] {
+    const chips: TodayOpenChip[] = [];
+    if (item.chargeIndicator === 'ChargeMissing') {
+        const n = item.chargeableWorkCount;
+        chips.push({
+            key: 'chargeMissing',
+            label: 'Ücret yok',
+            severity: 'danger',
+            icon: 'pi pi-exclamation-circle',
+            title: n && n > 0 ? `${n} işlem var, ücret kaydı yok` : 'İşlem var, ücret kaydı yok',
+            payable: false
+        });
     }
-    if (chargedAmount === 0) {
-        return { label: 'Ücret yok', severity: 'secondary' };
+    if ((item.awaitingLabCount ?? 0) > 0) {
+        chips.push({
+            key: 'awaitingLab',
+            label: `Lab bekliyor (${item.awaitingLabCount})`,
+            severity: 'warn',
+            icon: 'pi pi-clock',
+            title: 'Sonucu girilmemiş lab isteği var',
+            payable: false
+        });
     }
-    if (outstandingAmount === 0) {
-        return { label: 'Ödendi', severity: 'success' };
+    if (item.chargeIndicator === 'PaymentPending') {
+        chips.push({ key: 'paymentPending', label: 'Ödeme bekliyor', severity: 'warn', icon: 'pi pi-wallet', title: 'Ücret açık, ödeme alınmadı', payable: true });
+    } else if (item.chargeIndicator === 'PartiallyPaid') {
+        chips.push({ key: 'partiallyPaid', label: 'Kısmi ödeme', severity: 'info', icon: 'pi pi-wallet', title: 'Ücretin bir kısmı ödendi, kalan açık', payable: true });
     }
-    return allocatedAmount > 0 ? { label: 'Kısmi ödendi', severity: 'info' } : { label: 'Ödenmedi', severity: 'warn' };
+    return chips;
 }
 
 /** Düzeltme diyaloğu seçenekleri: mevcut durum hariç üç bakım durumu + yanlış geliş işareti. */
