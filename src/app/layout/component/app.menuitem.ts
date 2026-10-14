@@ -37,6 +37,7 @@ import { filter } from 'rxjs/operators';
                 [state]="item().state"
                 [queryParams]="item().queryParams"
                 [attr.target]="item().target"
+                [attr.aria-label]="layoutService.isMenuRail() ? railTooltip() : null"
                 tabindex="0"
                 pRipple
                 [pTooltip]="railTooltip()"

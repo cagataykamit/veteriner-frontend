@@ -74,11 +74,18 @@
             left: 0;
             top: 0;
             height: 100vh;
+            height: 100dvh; // mobil tarayıcı çubukları 100vh'yi taşırır; son satırlar kaydırmayla erişilir kalsın
+            overscroll-behavior: contain;
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
             transition:
                 transform 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99),
                 left 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99);
+
+            .layout-menu a {
+                padding-top: 0.4rem;
+                padding-bottom: 0.4rem;
+            }
         }
 
         .layout-mask {

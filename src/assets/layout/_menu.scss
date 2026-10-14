@@ -215,7 +215,7 @@ app-menu {
 
 // Masaüstü (static kip): tek kenar çubuğu, yüzen kart görünümünde (üstte/altta boşluk) ama sol kenara dayalı. Simge sütunu sabit genişliktedir;
 // açıkken etiketler simgenin sağına doğru açılır, kapalıyken kenar çubuğu yalnız simge sütununa daralır (simge x konumu ve boyutu değişmez).
-// Satır yüksekliği pencereye göre ayarlanır; tüm öğeler kaydırmasız sığar (çok kısa pencerede alt sınırda kalıp kaydırılır).
+// Satır yüksekliği pencereye göre ayarlanır; tüm öğeler kaydırmasız sığar (çok kısa pencerede 22 px alt sınırda kalıp kaydırılır).
 $menu-icon-column: 64px;
 $menu-open-width: 17rem;
 $menu-item-count: 19;
@@ -238,7 +238,7 @@ $menu-fixed-height: calc(6rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-
 
         .layout-menu {
             a {
-                height: clamp(26px, calc((100vh - #{$menu-fixed-height}) / #{$menu-item-count}), 40px);
+                height: clamp(22px, calc((100vh - #{$menu-fixed-height}) / #{$menu-item-count}), 40px);
                 margin-left: 0;
                 padding: 0;
                 border-radius: 0;
