@@ -101,7 +101,7 @@ export class HospitalizationsService {
                 return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_PET_ID_REQUIRED') {
-                return throwError(() => new Error('Hayvan seçimi zorunludur.'));
+                return throwError(() => new Error('Hasta seçimi zorunludur.'));
             }
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_ADMITTED_AT_REQUIRED') {
                 return throwError(() => new Error('Yatış tarihi / saati zorunludur.'));
@@ -146,7 +146,7 @@ export class HospitalizationsService {
                 return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_PET_ID_REQUIRED') {
-                return throwError(() => new Error('Hayvan seçimi zorunludur.'));
+                return throwError(() => new Error('Hasta seçimi zorunludur.'));
             }
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_ADMITTED_AT_REQUIRED') {
                 return throwError(() => new Error('Yatış tarihi / saati zorunludur.'));

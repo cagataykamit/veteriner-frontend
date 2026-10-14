@@ -144,7 +144,7 @@ export class LabResultsService {
 
 const WRITE_BODY_ERRORS: Record<string, string> = {
     LAB_RESULT_WRITE_CLINIC_ID_REQUIRED: 'Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.',
-    LAB_RESULT_WRITE_PET_ID_REQUIRED: 'Hayvan seçimi zorunludur.',
+    LAB_RESULT_WRITE_PET_ID_REQUIRED: 'Hasta seçimi zorunludur.',
     LAB_RESULT_WRITE_TEST_NAME_REQUIRED: 'Test adı zorunludur.',
     LAB_RESULT_WRITE_RESULT_INCOMPLETE: 'Sonuç tarihi ve sonuç metni birlikte girilmelidir.'
 };

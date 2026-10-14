@@ -84,11 +84,11 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromTreatment()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">
-                    Bu tedavi kaydından bağlam taşındı; müşteri, hayvan, bağlı muayene ve bağlı tedavi alanları kilitlidir.
+                    Bu tedavi kaydından bağlam taşındı; müşteri, hasta, bağlı muayene ve bağlı tedavi alanları kilitlidir.
                 </p>
             } @else if (contextFromExamination()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">
-                    Bu muayene kaydından bağlam taşındı; müşteri, hayvan ve bağlı muayene alanları kilitlidir.
+                    Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.
                 </p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -103,7 +103,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
+                        <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
@@ -553,7 +553,7 @@ export class PrescriptionFormComponent implements OnInit {
         const seq = ++this.relationLoadSeq;
         const pid = (t.petId ?? '').trim();
         if (!pid) {
-            this.selectionError.set('Tedavi kaydında hayvan bilgisi yok.');
+            this.selectionError.set('Tedavi kaydında hasta bilgisi yok.');
             this.applyingRouteContext.set(false);
             return;
         }

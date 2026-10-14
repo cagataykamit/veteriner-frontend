@@ -96,7 +96,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                 @if (examinationFinalized()) {
                     <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="finalized-identity-locked">
-                        Bağlı muayene kesinleşmiş; müşteri, hayvan, bağlı muayene ve test adı değiştirilemez. Sonuç, yorum ve notlar düzenlenebilir.
+                        Bağlı muayene kesinleşmiş; müşteri, hasta, bağlı muayene ve test adı değiştirilemez. Sonuç, yorum ve notlar düzenlenebilir.
                     </p>
                 }
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -111,12 +111,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
+                            <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                             @if (apiFieldErrors().petId) {
                                 <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
-                                <small class="text-red-500">Hayvan seçimi zorunludur.</small>
+                                <small class="text-red-500">Hasta seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">

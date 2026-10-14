@@ -72,7 +72,7 @@ export class TreatmentsService {
                 return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
             if (e instanceof Error && e.message === 'TREATMENT_WRITE_PET_ID_REQUIRED') {
-                return throwError(() => new Error('Hayvan seçimi zorunludur.'));
+                return throwError(() => new Error('Hasta seçimi zorunludur.'));
             }
             if (e instanceof Error && e.message === 'TREATMENT_WRITE_DATE_REQUIRED') {
                 return throwError(() => new Error('Tedavi tarihi / saati zorunludur.'));
@@ -120,7 +120,7 @@ export class TreatmentsService {
                 return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
             if (e instanceof Error && e.message === 'TREATMENT_WRITE_PET_ID_REQUIRED') {
-                return throwError(() => new Error('Hayvan seçimi zorunludur.'));
+                return throwError(() => new Error('Hasta seçimi zorunludur.'));
             }
             if (e instanceof Error && e.message === 'TREATMENT_WRITE_DATE_REQUIRED') {
                 return throwError(() => new Error('Tedavi tarihi / saati zorunludur.'));

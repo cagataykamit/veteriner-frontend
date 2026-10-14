@@ -71,7 +71,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 </app-filter-field>
                 @if (petId) {
                     <div class="flex items-center gap-2 pb-1">
-                        <app-status-tag label="Hayvan filtresi" severity="info" />
+                        <app-status-tag label="Hasta filtresi" severity="info" />
                         <p-button label="Temizle" icon="pi pi-times" size="small" severity="secondary" [text]="true" (onClick)="clearPet()" />
                     </div>
                 }
@@ -121,7 +121,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                 </td>
                                 <td class="text-right whitespace-nowrap">{{ row.quantity }} {{ row.unit }}</td>
                                 <td class="whitespace-nowrap">
-                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">Hayvan</a>
+                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">Hasta</a>
                                     @if (row.examinationId) {
                                         · <a [routerLink]="['/panel/examinations', row.examinationId]" class="text-primary font-medium no-underline">Muayene</a>
                                     }

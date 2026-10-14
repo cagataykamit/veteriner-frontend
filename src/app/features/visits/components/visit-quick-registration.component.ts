@@ -39,7 +39,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule],
     template: `
         <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt">
-            <h3 class="text-base font-semibold mt-0 mb-3">{{ owner() ? 'Bu sahibe yeni hayvan ekle' : 'Yeni müşteri ve hasta ekle' }}</h3>
+            <h3 class="text-base font-semibold mt-0 mb-3">{{ owner() ? 'Bu sahibe yeni hasta ekle' : 'Yeni müşteri ve hasta ekle' }}</h3>
             <div class="grid grid-cols-12 gap-3">
                 @if (owner(); as o) {
                     <div class="col-span-12">
@@ -62,7 +62,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                     </div>
                 }
                 <div class="col-span-12 md:col-span-6">
-                    <label for="vr-petName" class="block text-sm font-medium text-muted-color mb-2">Hayvan adı *</label>
+                    <label for="vr-petName" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
                     <input id="vr-petName" pInputText class="w-full" autocomplete="off" [formControl]="petForm.controls.name" />
                     @if (petForm.controls.name.invalid && petForm.controls.name.touched) {
                         <small class="text-red-500">Bu alan zorunludur.</small>
@@ -102,7 +102,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
             <div class="flex flex-wrap gap-2 mt-4">
                 <p-button
                     type="button"
-                    [label]="owner() ? 'Hayvanı kaydet ve geliş için seç' : 'Müşteri ve hastayı kaydet'"
+                    [label]="owner() ? 'Hastayı kaydet ve geliş için seç' : 'Müşteri ve hastayı kaydet'"
                     icon="pi pi-check"
                     [loading]="submitting()"
                     [disabled]="submitting() || !canSubmit()"
@@ -243,8 +243,8 @@ export class VisitQuickRegistrationComponent implements OnInit {
         this.submitting.set(false);
         this.stepError.set(
             e instanceof HttpErrorResponse
-                ? (parsePetCreateHttpError(e).summaryMessage ?? 'Hayvan kaydedilemedi. Bilgileri kontrol edin.')
-                : panelHttpFailureMessage(e, 'Hayvan kaydedilemedi.')
+                ? (parsePetCreateHttpError(e).summaryMessage ?? 'Hasta kaydedilemedi. Bilgileri kontrol edin.')
+                : panelHttpFailureMessage(e, 'Hasta kaydedilemedi.')
         );
     }
 

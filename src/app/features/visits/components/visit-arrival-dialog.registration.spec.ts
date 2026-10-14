@@ -66,17 +66,17 @@ it('yetkili için arama yapılmadan da "Hasta kayıtlı değil mi?" ile görün�
         TestBed.resetTestingModule();
         create([]);
         expect(links()).not.toContain('Yeni müşteri ve hasta ekle');
-        expect(links()).not.toContain('Bu sahibe yeni hayvan ekle');
+        expect(links()).not.toContain('Bu sahibe yeni hasta ekle');
     });
 
     it('"Bu sahibe yeni hayvan" yalnızca Pets.Create ister ve sahibi olan hasta seçilince görünür', () => {
         create(['Pets.Create']);
         expect(links()).not.toContain('Yeni müşteri ve hasta ekle');
-        expect(links()).not.toContain('Bu sahibe yeni hayvan ekle');
+        expect(links()).not.toContain('Bu sahibe yeni hasta ekle');
 
         cmp.form.controls.pet.setValue({ id: 'p1', label: 'Cedi — Köpek · Sahip: maksut', clientId: 'cl1', clientName: 'maksut' });
         fixture.detectChanges();
-        expect(links()).toContain('Bu sahibe yeni hayvan ekle');
+        expect(links()).toContain('Bu sahibe yeni hasta ekle');
         expect(cmp.selectedOwner()).toEqual({ id: 'cl1', name: 'maksut' });
     });
 

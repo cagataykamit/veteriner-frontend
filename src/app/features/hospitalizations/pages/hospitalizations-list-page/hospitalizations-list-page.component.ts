@@ -57,7 +57,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
     ],
     template: `
         @if (contextPetId()) {
-            <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
+            <app-context-filter-chip label="Seçili hastanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
         }
 
         <div class="card">
@@ -65,7 +65,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Yatışlar" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="hospSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="hospSearch" placeholder="Neden, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="hospSearch" placeholder="Neden, müşteri veya hasta…" [(value)]="searchInput" (search)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         </app-list-header>
@@ -119,7 +119,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                     <th>Taburcu</th>
                                     <th>Durum</th>
                                     <th>Müşteri</th>
-                                    <th>Hayvan</th>
+                                    <th>Hasta</th>
                                     <th>Neden</th>
                                     <th style="width: 8rem">İşlemler</th>
                                 </tr>
@@ -181,7 +181,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                         }
                                     </div>
                                     <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Hayvan: </span>
+                                        <span class="text-muted-color font-medium">Hasta: </span>
                                         @if (row.petId) {
                                             <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
                                                 row.petName

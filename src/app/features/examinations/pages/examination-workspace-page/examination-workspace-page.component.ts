@@ -160,7 +160,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                         <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                         @if (contextFromAppointment()) {
                             <p class="text-sm text-muted-color mt-0 mb-4">
-                                Bu randevu kaydından bağlam taşındı; müşteri ve hayvan kilitlidir; kayıt ilgili randevuya bağlanır.
+                                Bu randevu kaydından bağlam taşındı; müşteri ve hasta kilitlidir; kayıt ilgili randevuya bağlanır.
                             </p>
                         }
                         <form [formGroup]="selectionForm">
@@ -175,7 +175,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                     }
                                 </div>
                                 <div class="col-span-12 md:col-span-6">
-                                    <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
+                                    <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                                     <app-pet-search inputId="petId" formControlName="petId" [clientId]="selectionForm.controls.clientId.value" [activeOnly]="true" />
                                     @if (selectionForm.controls.petId.invalid && selectionForm.controls.petId.touched) {
                                         <small class="text-red-500">Zorunlu alan.</small>

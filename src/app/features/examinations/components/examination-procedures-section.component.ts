@@ -134,7 +134,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
         <p-drawer [(visible)]="drawerVisible" position="right" [header]="drawerTitle()" [style]="{ width: 'min(44rem, 100vw)' }" [dismissible]="false">
             @if (activeKind(); as kind) {
                 <p class="text-sm text-muted-color mt-0 mb-4" data-testid="procedure-drawer-context">
-                    {{ exam().petName }} · {{ exam().clientName }} — müşteri, hayvan ve muayene bu kayda otomatik bağlanır.
+                    {{ exam().petName }} · {{ exam().clientName }} — müşteri, hasta ve muayene bu kayda otomatik bağlanır.
                 </p>
                 @switch (kind) {
                     @case ('treatment') {
@@ -204,7 +204,7 @@ export class ExaminationProceduresSectionComponent {
     state(kind: ProcedureKind) {
         const base = procedureAddState(kind, { finalized: this.exam().status === 'Finalized', mutationBlocked: this.ro.mutationBlocked() });
         return !this.hasContext() && !base.disabled
-            ? { disabled: true, reason: 'Muayenede müşteri veya hayvan bilgisi yok; işlem eklenemez.', note: null }
+            ? { disabled: true, reason: 'Muayenede müşteri veya hasta bilgisi yok; işlem eklenemez.', note: null }
             : base;
     }
 

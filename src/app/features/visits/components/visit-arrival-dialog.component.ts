@@ -95,7 +95,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                     <small class="text-muted-color">Hasta kayıtlı değilse kaydı resepsiyon oluşturur.</small>
                                 }
                                 @if (canAddPet && selectedOwner(); as owner) {
-                                    <p-button type="button" label="Bu sahibe yeni hayvan ekle" icon="pi pi-plus" size="small" [text]="true" (onClick)="openRegistration(owner)" />
+                                    <p-button type="button" label="Bu sahibe yeni hasta ekle" icon="pi pi-plus" size="small" [text]="true" (onClick)="openRegistration(owner)" />
                                 }
                             </div>
                         }

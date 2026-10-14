@@ -66,7 +66,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Muayeneler" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="exSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="exSearch" placeholder="Sebep, bulgu, değerlendirme, not; müşteri, hayvan, tür veya ırk…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="exSearch" placeholder="Sebep, bulgu, değerlendirme, not; müşteri, hasta, tür veya ırk…" [(value)]="searchInput" (search)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         </app-list-header>
@@ -106,7 +106,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                 <tr>
                                     <th>Tarih</th>
                                     <th>Müşteri</th>
-                                    <th>Hayvan</th>
+                                    <th>Hasta</th>
                                     <th>Ziyaret sebebi</th>
                                     <th>Durum</th>
                                     <th style="width: 8rem">İşlemler</th>
@@ -165,7 +165,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         }
                                     </div>
                                     <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Hayvan: </span>
+                                        <span class="text-muted-color font-medium">Hasta: </span>
                                         @if (row.petId) {
                                             <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
                                                 row.petName
@@ -216,7 +216,7 @@ export class ExaminationsListPageComponent implements OnInit {
 
     readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
     readonly contextClientId = signal(readContextFilterParam(this.route, 'clientId'));
-    readonly contextFilterLabel = computed(() => (this.contextPetId() ? 'Seçili hayvanın kayıtları gösteriliyor' : 'Seçili müşterinin kayıtları gösteriliyor'));
+    readonly contextFilterLabel = computed(() => (this.contextPetId() ? 'Seçili hastanın kayıtları gösteriliyor' : 'Seçili müşterinin kayıtları gösteriliyor'));
 
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
     readonly loading = signal(true);

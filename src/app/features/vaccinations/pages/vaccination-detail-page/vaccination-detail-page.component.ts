@@ -118,7 +118,7 @@ import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/cor
                 }
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hayvan bilgileri</h5>
+                        <h5 class="mt-0 mb-4">Müşteri / hasta bilgileri</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">
@@ -128,7 +128,7 @@ import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/cor
                                     {{ vac()!.clientName }}
                                 }
                             </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">
                                 @if (vac()!.petId) {
                                     <a [routerLink]="['/panel/pets', vac()!.petId]" class="text-primary font-medium no-underline">{{ vac()!.petName }}</a>

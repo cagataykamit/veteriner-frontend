@@ -41,7 +41,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
     ],
     template: `
         @if (contextPetId()) {
-            <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
+            <app-context-filter-chip label="Seçili hastanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
         }
 
         <div class="card">
@@ -50,7 +50,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         <app-list-header class="mb-3" title="Tedaviler" [count]="totalItems()">
                             <div class="flex-1 min-w-0">
                                 <label for="trSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                <app-search-input inputId="trSearch" placeholder="Başlık, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="trSearch" placeholder="Başlık, müşteri veya hasta…" [(value)]="searchInput" (search)="applyFilters()" />
                             </div>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         </app-list-header>
@@ -92,7 +92,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                                 <tr>
                                     <th>Tarih</th>
                                     <th>Müşteri</th>
-                                    <th>Hayvan</th>
+                                    <th>Hasta</th>
                                     <th>Başlık</th>
                                     <th>Takip</th>
                                     <th style="width: 8rem">İşlemler</th>
@@ -147,7 +147,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                                         }
                                     </div>
                                     <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Hayvan: </span>
+                                        <span class="text-muted-color font-medium">Hasta: </span>
                                         @if (row.petId) {
                                             <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
                                                 row.petName

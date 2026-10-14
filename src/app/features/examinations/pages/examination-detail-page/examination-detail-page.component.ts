@@ -342,11 +342,11 @@ const RECORD_TEXT_SECTIONS: readonly {
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                            <h5 class="mt-0 mb-0">Randevular (aynı hayvan)</h5>
+                            <h5 class="mt-0 mb-0">Randevular (aynı hasta)</h5>
                             <a routerLink="/panel/appointments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (!exam()!.petId) {
-                            <p class="text-muted-color text-sm m-0">Hayvan bilgisi yok; liste gösterilemiyor.</p>
+                            <p class="text-muted-color text-sm m-0">Hasta bilgisi yok; liste gösterilemiyor.</p>
                         } @else if (apptLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (apptError()) {

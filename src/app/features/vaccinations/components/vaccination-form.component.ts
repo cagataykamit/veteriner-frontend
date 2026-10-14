@@ -109,7 +109,7 @@ export interface VaccinationSavedEvent {
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromRoute()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">
-                    Muayene bağlamı taşındı; müşteri ve hayvan seçimi kilitlidir. Aşı bilgilerini doldurun.
+                    Muayene bağlamı taşındı; müşteri ve hasta seçimi kilitlidir. Aşı bilgilerini doldurun.
                 </p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -124,7 +124,7 @@ export interface VaccinationSavedEvent {
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
+                        <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (apiFieldErrors().petId) {
                             <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
@@ -564,7 +564,7 @@ export class VaccinationFormComponent implements OnInit {
                     this.loadVaccineDefinitionsForSpecies(pet.speciesId?.trim() ? pet.speciesId : null);
                 }
             },
-            error: (e: unknown) => this.selectionError.set(this.mapLoadError(e, 'Hayvan bilgisi yüklenemedi.'))
+            error: (e: unknown) => this.selectionError.set(this.mapLoadError(e, 'Hasta bilgisi yüklenemedi.'))
         });
     }
 
@@ -662,7 +662,7 @@ export class VaccinationFormComponent implements OnInit {
         this.petsService.getPetById(ctx.petId).subscribe({
             next: (pet) => {
                 if ((pet.ownerId ?? '').trim() !== ctx.clientId.trim()) {
-                    this.selectionError.set('Hayvan bu müşteri için geçerli değil.');
+                    this.selectionError.set('Hasta bu müşteri için geçerli değil.');
                     this.applyingRouteContext.set(false);
                     return;
                 }
@@ -675,7 +675,7 @@ export class VaccinationFormComponent implements OnInit {
                 this.loadVaccineDefinitionsForSpecies(pet.speciesId?.trim() ? pet.speciesId : null);
             },
             error: () => {
-                this.selectionError.set('Bağlam hayvanı yüklenemedi.');
+                this.selectionError.set('Bağlam hastası yüklenemedi.');
                 this.applyingRouteContext.set(false);
             }
         });

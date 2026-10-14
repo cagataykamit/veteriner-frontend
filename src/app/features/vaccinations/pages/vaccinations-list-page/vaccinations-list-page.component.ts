@@ -74,7 +74,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Aşılar" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="vacSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="vacSearch" placeholder="Aşı adı, not; müşteri, hayvan, tür veya ırk…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="vacSearch" placeholder="Aşı adı, not; müşteri, hasta, tür veya ırk…" [(value)]="searchInput" (search)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         </app-list-header>
@@ -127,7 +127,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                                     <th>Uygulama</th>
                                     <th>Planlanan uygulama</th>
                                     <th>Aşı</th>
-                                    <th>Hayvan</th>
+                                    <th>Hasta</th>
                                     <th>Müşteri</th>
                                     <th>Durum</th>
                                     <th>İşlem</th>
@@ -191,7 +191,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                                         }
                                     </div>
                                     <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Hayvan: </span>
+                                        <span class="text-muted-color font-medium">Hasta: </span>
                                         @if (row.petId) {
                                             <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
                                                 row.petName

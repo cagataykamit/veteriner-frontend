@@ -142,6 +142,6 @@ describe('ExaminationProceduresSectionComponent', () => {
         create({ ...exam, petId: null } as ExaminationDetailVm);
 
         expect(cmp.state('treatment').disabled).toBeTrue();
-        expect(cmp.state('treatment').reason).toContain('hayvan');
+        expect(cmp.state('treatment').reason).toContain('hasta');
     });
 });
