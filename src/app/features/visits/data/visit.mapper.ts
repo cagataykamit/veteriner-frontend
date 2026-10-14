@@ -8,6 +8,7 @@ import type {
     TodayDto,
     TodayHospitalizationDto,
     TodayItemDto,
+    TodayOpenItemsDto,
     VeterinarianDto,
     VisitCreateResultDto,
     VisitDto
@@ -17,6 +18,7 @@ import type {
     CreateVisitRequest,
     TodayHospitalizationVm,
     TodayItemVm,
+    TodayOpenItemsVm,
     TodayQuery,
     TodayVm,
     VeterinarianVm,
@@ -73,6 +75,9 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         allocatedAmount: dto.allocatedAmount ?? null,
         outstandingAmount: dto.outstandingAmount ?? null,
         clientOutstandingAmount: dto.clientOutstandingAmount ?? null,
+        chargeIndicator: dto.chargeIndicator ?? null,
+        chargeableWorkCount: dto.chargeableWorkCount ?? null,
+        awaitingLabCount: dto.awaitingLabCount ?? null,
         hasActiveHospitalization: dto.hasActiveHospitalization === true,
         isVoided: dto.isVoided === true,
         voidReason: trimmedOrNull(dto.voidReason),
@@ -92,11 +97,22 @@ export function mapTodayHospitalizationDtoToVm(dto: TodayHospitalizationDto): To
     };
 }
 
+export function mapTodayOpenItemsDtoToVm(dto: TodayOpenItemsDto): TodayOpenItemsVm {
+    return {
+        unchargedVisitCount: dto.unchargedVisitCount ?? null,
+        outstandingVisitCount: dto.outstandingVisitCount ?? null,
+        outstandingAmount: dto.outstandingAmount ?? null,
+        awaitingLabCount: dto.awaitingLabCount ?? null,
+        incompleteVisitCount: dto.incompleteVisitCount
+    };
+}
+
 export function mapTodayDtoToVm(dto: TodayDto): TodayVm {
     return {
         date: dto.date,
         items: (dto.items ?? []).map(mapTodayItemDtoToVm),
-        activeHospitalizations: (dto.activeHospitalizations ?? []).map(mapTodayHospitalizationDtoToVm)
+        activeHospitalizations: (dto.activeHospitalizations ?? []).map(mapTodayHospitalizationDtoToVm),
+        openItems: dto.openItems ? mapTodayOpenItemsDtoToVm(dto.openItems) : null
     };
 }
 

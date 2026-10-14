@@ -1,9 +1,11 @@
 import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
-import type { TodayAppointmentStatusDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
+import type { TodayAppointmentStatusDto, TodayChargeIndicatorDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
 
 export type VisitCareStatus = VisitCareStatusDto;
 
 export type TodayAppointmentStatus = TodayAppointmentStatusDto;
+
+export type TodayChargeIndicator = TodayChargeIndicatorDto;
 
 export interface VisitVm {
     id: string;
@@ -49,6 +51,12 @@ export interface TodayItemVm {
     outstandingAmount: number | null;
     /** Müşterinin bu klinikteki toplam açık borcu (ziyaretten bağımsız). `null`: `Charges.Read` yok. */
     clientOutstandingAmount: number | null;
+    /** Hesaplanan ücret durumu. `null`: yetki yok veya planlı satır ("yok" anlamına gelmez). */
+    chargeIndicator: TodayChargeIndicator | null;
+    /** `null`: yetki yok veya planlı satır. */
+    chargeableWorkCount: number | null;
+    /** Bekleyen (istenmiş, sonuçsuz) lab sayısı. `null`: yetki yok veya planlı satır. */
+    awaitingLabCount: number | null;
     hasActiveHospitalization: boolean;
     /** Yalnızca "Yanlış işaretlenenler" görünümünde `true`. */
     isVoided: boolean;
@@ -67,10 +75,21 @@ export interface TodayHospitalizationVm {
     plannedDischargeAtUtc: string | null;
 }
 
+/** Bugün üstü açık iş özeti; her alan `null` olabilir (ilgili okuma izni yok). */
+export interface TodayOpenItemsVm {
+    unchargedVisitCount: number | null;
+    outstandingVisitCount: number | null;
+    outstandingAmount: number | null;
+    awaitingLabCount: number | null;
+    incompleteVisitCount: number;
+}
+
 export interface TodayVm {
     date: string;
     items: TodayItemVm[];
     activeHospitalizations: TodayHospitalizationVm[];
+    /** `null`: özet yok (yanlış işaretlenenler görünümü). */
+    openItems?: TodayOpenItemsVm | null;
 }
 
 export interface VeterinarianVm {

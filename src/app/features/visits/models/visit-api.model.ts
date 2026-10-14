@@ -31,6 +31,9 @@ export interface VisitCreateResultDto {
 
 export type TodayPaymentIndicatorDto = 'NoPaymentRecorded' | 'PaymentRecorded';
 
+/** Hesaplanan ücret durumu (`OPEN_ITEMS_API_CONTRACT.md` §3); `Charges.Read` yoksa veya planlı satırda alan `null`. */
+export type TodayChargeIndicatorDto = 'NoChargeableWork' | 'ChargeMissing' | 'PaymentPending' | 'PartiallyPaid' | 'Paid';
+
 export interface TodayItemDto {
     visitId?: string | null;
     appointmentId?: string | null;
@@ -53,6 +56,9 @@ export interface TodayItemDto {
     allocatedAmount?: number | null;
     outstandingAmount?: number | null;
     clientOutstandingAmount?: number | null;
+    chargeIndicator?: TodayChargeIndicatorDto | null;
+    chargeableWorkCount?: number | null;
+    awaitingLabCount?: number | null;
     hasActiveHospitalization?: boolean | null;
     petAlerts?: PetAlertsDto | null;
     isVoided?: boolean | null;
@@ -70,12 +76,22 @@ export interface TodayHospitalizationDto {
     plannedDischargeAtUtc?: string | null;
 }
 
+/** Klinik geneli açık iş özeti (`OPEN_ITEMS_API_CONTRACT.md` §4); tarih ve hekim süzgecinden bağımsız, alanlar izne göre `null`. */
+export interface TodayOpenItemsDto {
+    unchargedVisitCount?: number | null;
+    outstandingVisitCount?: number | null;
+    outstandingAmount?: number | null;
+    awaitingLabCount?: number | null;
+    incompleteVisitCount: number;
+}
+
 export interface TodayDto {
     date: string;
     clinicId: string;
     generatedAtUtc: string;
     items: TodayItemDto[];
     activeHospitalizations?: TodayHospitalizationDto[] | null;
+    openItems?: TodayOpenItemsDto | null;
 }
 
 export interface VeterinarianDto {

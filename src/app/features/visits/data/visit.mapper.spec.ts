@@ -94,6 +94,34 @@ describe('visit mapper — okuma', () => {
         expect([zero.chargedAmount, zero.clientOutstandingAmount]).toEqual([0, 0]);
     });
 
+    it('açık iş alanları eşlenir; yoksa null (yetki yok / planlı satır), 0 ile karışmaz', () => {
+        const [full, missing, zero] = mapTodayDtoToVm({
+            date: 'd',
+            clinicId: 'c',
+            generatedAtUtc: 'g',
+            items: [
+                itemDto({ chargeIndicator: 'ChargeMissing', chargeableWorkCount: 2, awaitingLabCount: 1 }),
+                itemDto({}),
+                itemDto({ chargeIndicator: 'Paid', chargeableWorkCount: 0, awaitingLabCount: 0 })
+            ]
+        }).items;
+        expect([full.chargeIndicator, full.chargeableWorkCount, full.awaitingLabCount]).toEqual(['ChargeMissing', 2, 1]);
+        expect([missing.chargeIndicator, missing.chargeableWorkCount, missing.awaitingLabCount]).toEqual([null, null, null]);
+        expect([zero.chargeIndicator, zero.chargeableWorkCount, zero.awaitingLabCount]).toEqual(['Paid', 0, 0]);
+    });
+
+    it('openItems özeti eşlenir; alan alan null korunur, özet yoksa null', () => {
+        const base = { date: 'd', clinicId: 'c', generatedAtUtc: 'g', items: [] };
+        expect(mapTodayDtoToVm(base).openItems).toBeNull();
+        expect(mapTodayDtoToVm({ ...base, openItems: null }).openItems).toBeNull();
+        expect(
+            mapTodayDtoToVm({
+                ...base,
+                openItems: { unchargedVisitCount: 3, outstandingVisitCount: 2, outstandingAmount: 750.5, awaitingLabCount: null, incompleteVisitCount: 1 }
+            }).openItems
+        ).toEqual({ unchargedVisitCount: 3, outstandingVisitCount: 2, outstandingAmount: 750.5, awaitingLabCount: null, incompleteVisitCount: 1 });
+    });
+
     it('aktif yatışlar eşlenir; alan yoksa boş liste, boş ad — olur, planlı taburcu yoksa null', () => {
         const base = { date: 'd', clinicId: 'c', generatedAtUtc: 'g', items: [] };
         expect(mapTodayDtoToVm(base).activeHospitalizations).toEqual([]);
