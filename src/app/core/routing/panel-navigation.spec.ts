@@ -131,6 +131,13 @@ describe('panel-navigation', () => {
         expect(labels(visibleGroups(MENU_GROUPS, only('Imports.Read')))).toEqual(['Ayarlar']);
     });
 
+    it('KVKK form metni kartı Ayarlar altında yalnız Clinics.Update ile görünür; menüye öğe eklenmez', () => {
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Read', 'Clients.Read')))).not.toContain('KVKK form metni');
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Update')))).toContain('KVKK form metni');
+        expect(labels(visibleGroups(MENU_GROUPS, only('Clinics.Update')))).toEqual(['Ayarlar']);
+        expect(listLabelForUrl('/panel/settings/kvkk-form')).toBe('KVKK form metni');
+    });
+
     it('menüde tek Raporlar girişi vardır; ayrı rapor öğeleri yoktur', () => {
         const all = labels(visibleGroups(MENU_GROUPS, (c) => allClaims.has(c)));
         expect(all.filter((l) => l === 'Raporlar')).toHaveSize(1);
