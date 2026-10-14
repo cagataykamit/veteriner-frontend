@@ -10,6 +10,17 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { AdministrationBatchFieldComponent } from '@/app/features/administrations/components/administration-batch-field.component';
+import { administrationSavedNotice } from '@/app/features/administrations/utils/administration-labels';
+import { createAdministrationBatchPicker } from '@/app/features/administrations/utils/administration-batch-picker';
+import {
+    CHARGE_QUANTITY_MAX,
+    CHARGE_QUANTITY_MAX_DECIMALS,
+    chargeNumberValidator
+} from '@/app/features/charges/utils/charge-amount.utils';
+import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
+import { ProductService } from '@/app/features/inventory/services/product.service';
+import { ADMINISTRATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
@@ -47,6 +58,24 @@ import {
     effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
 
+const LAST_VACCINE_PRODUCT_KEY = 'vetinity.vaccine.lastProductId';
+
+function readLastVaccineProductId(): string | null {
+    try {
+        return localStorage.getItem(LAST_VACCINE_PRODUCT_KEY);
+    } catch {
+        return null;
+    }
+}
+
+function writeLastVaccineProductId(productId: string): void {
+    try {
+        localStorage.setItem(LAST_VACCINE_PRODUCT_KEY, productId);
+    } catch {
+        /* tarayıcı depolaması yoksa son kullanılan ürün hatırlanmaz */
+    }
+}
+
 @Component({
     selector: 'app-vaccination-new-page',
     standalone: true,
@@ -56,7 +85,7 @@ import {
         RouterLink,
         ButtonModule,
         SelectModule,
-        AppPageHeaderComponent, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppPageHeaderComponent, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent
     ],
     template: `
         <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
@@ -199,6 +228,60 @@ import {
                             }
                         </div>
                     }
+                    @if (canStock && statusNum() === 1) {
+                        <div class="col-span-12 md:col-span-6" data-testid="vaccine-product">
+                            <label for="productId" class="block text-sm font-medium text-muted-color mb-2">Aşı ürünü (stoktan düşer)</label>
+                            <p-select
+                                inputId="productId"
+                                formControlName="productId"
+                                [options]="productOptions()"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Ürün seçmeden yalnız aşı kaydı"
+                                [filter]="true"
+                                filterPlaceholder="Ara…"
+                                filterBy="label"
+                                [showClear]="true"
+                                [loading]="productsLoading()"
+                                styleClass="w-full"
+                            />
+                            @if (lastProduct(); as last) {
+                                @if (!form.controls.productId.value) {
+                                    <button type="button" class="p-button p-button-text p-button-sm p-0 mt-1" data-testid="last-product" (click)="useLastProduct(last.value)">
+                                        Son kullanılan: {{ last.label }}
+                                    </button>
+                                }
+                            }
+                            @if (productsError()) {
+                                <small class="text-red-500 block">{{ productsError() }}</small>
+                            } @else if (!productsLoading() && productOptions().length === 0) {
+                                <small class="text-muted-color block">Aşı türünde ürün yok; ürün tanımında tür "Aşı" seçilmelidir.</small>
+                            }
+                        </div>
+                        @if (form.controls.productId.value) {
+                            <div class="col-span-12 md:col-span-6">
+                                <label for="vaccineQuantity" class="block text-sm font-medium text-muted-color mb-2">
+                                    Doz / miktar *@if (productUnit()) { <span> ({{ productUnit() }})</span> }
+                                </label>
+                                <input id="vaccineQuantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
+                                @if (form.controls.quantity.invalid && form.controls.quantity.dirty) {
+                                    <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
+                                } @else if (productUnit()) {
+                                    <small class="text-muted-color">Miktar ürünün stok birimindedir: {{ productUnit() }}.</small>
+                                }
+                            </div>
+                            <div class="col-span-12">
+                                <app-administration-batch-field [picker]="batchPicker" [batchControl]="form.controls.batchId" inputId="vaccineBatch" />
+                            </div>
+                            <p class="col-span-12 text-sm text-muted-color m-0" data-testid="stock-deduct-note">
+                                Kayıt, seçilen üründen stoktan düşen bir uygulama olarak da yazılır; tek işlemde ikisi birlikte kaydedilir veya hiçbiri kaydedilmez.
+                            </p>
+                        } @else {
+                            <p class="col-span-12 text-sm text-muted-color m-0" data-testid="no-stock-note">
+                                Ürün seçilmezse yalnız aşı kaydı yazılır; stoktan düşmez.
+                            </p>
+                        }
+                    }
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
@@ -253,6 +336,7 @@ export class VaccinationNewPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
+    private readonly productService = inject(ProductService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     /** Bağlam başarıyla uygulandıysa API’ye iletilir; serbest oluşturmada null kalır. */
@@ -281,6 +365,25 @@ export class VaccinationNewPageComponent implements OnInit {
 
     readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
 
+    /** Stoktan düşen uygulama yazmak `Administrations.Create` ister; yoksa ürün alanı hiç görünmez. */
+    protected readonly canStock = this.auth.hasOperationClaim(ADMINISTRATIONS_CREATE_CLAIM);
+    protected readonly quantityMax = CHARGE_QUANTITY_MAX;
+    protected readonly quantityDecimals = CHARGE_QUANTITY_MAX_DECIMALS;
+
+    readonly productsLoading = signal(false);
+    readonly productsError = signal<string | null>(null);
+    private readonly products = signal<ProductListItemVm[]>([]);
+    readonly productOptions = computed(() =>
+        this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name }))
+    );
+    private readonly lastProductId = signal<string | null>(readLastVaccineProductId());
+    /** Hekim için hızlı yol: son kullanılan aşı ürünü (yalnız bir tıkla seçilir, kendiliğinden stok düşmez). */
+    readonly lastProduct = computed(() => this.productOptions().find((o) => o.value === this.lastProductId()) ?? null);
+    readonly productUnit = computed(() => this.products().find((p) => p.id === this.form.controls.productId.value)?.unit ?? '');
+
+    /** Form başına bir kez üretilir; hata sonrası yeniden denemede aynı kalır (ikinci düşüm oluşmaz). */
+    private readonly requestId = crypto.randomUUID();
+
 
 
 
@@ -292,10 +395,17 @@ export class VaccinationNewPageComponent implements OnInit {
             status: [0 as number | null, Validators.required],
             appliedAtLocal: [''],
             nextDueDate: [''],
-            notes: ['']
+            notes: [''],
+            /** Boş = ürünsüz (yalnız aşı kaydı). */
+            productId: [''],
+            /** Boş = otomatik (sunucu FEFO ile seçer). */
+            batchId: [''],
+            quantity: [null as number | null]
         },
         { validators: [vaccinationNextDueAfterAppliedGroupValidator()] }
     );
+
+    readonly batchPicker = createAdministrationBatchPicker(this.form.controls);
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
@@ -320,6 +430,13 @@ export class VaccinationNewPageComponent implements OnInit {
             }
             this.lastStatusForDateTransition = next;
             this.applyDateValidatorsForStatus(next);
+            if (next !== 1 && this.form.controls.productId.value) {
+                // Stok düşümü yalnız "Uygulandı"da geçerli; gizlenen ürün seçimi gönderilmez.
+                this.form.controls.productId.setValue('');
+            }
+        });
+        this.form.controls.productId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((productId) => {
+            this.applyQuantityRulesForProduct(!!productId);
         });
         this.form.controls.appliedAtLocal.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
             this.form.updateValueAndValidity({ emitEvent: false });
@@ -357,6 +474,45 @@ export class VaccinationNewPageComponent implements OnInit {
         });
         this.loadVaccineDefinitionsForSpecies(null);
         this.tryApplyVaccinationRouteContext();
+        this.loadVaccineProducts();
+    }
+
+    /** Aşı türündeki aktif ürünler; okuma yetkisi yoksa yalnız aşı kaydı yazılabilir. */
+    private loadVaccineProducts(): void {
+        if (!this.canStock) {
+            return;
+        }
+        this.productsLoading.set(true);
+        this.productService.getProducts({ page: 1, pageSize: 200, isActive: true }).subscribe({
+            next: (r) => {
+                this.products.set(r.items.filter((p) => p.kind === 'Vaccine'));
+                this.productsLoading.set(false);
+            },
+            error: (e: unknown) => {
+                this.productsError.set(this.mapLoadError(e, 'Ürün listesi yüklenemedi; yalnız aşı kaydı yazılabilir.'));
+                this.productsLoading.set(false);
+            }
+        });
+    }
+
+    useLastProduct(productId: string): void {
+        this.form.controls.productId.setValue(productId);
+    }
+
+    /** Ürün seçilince miktar zorunlu ve varsayılan 1 doz; kaldırılınca alan temizlenir. */
+    private applyQuantityRulesForProduct(hasProduct: boolean): void {
+        const q = this.form.controls.quantity;
+        if (hasProduct) {
+            q.setValidators([Validators.required, chargeNumberValidator(CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS)]);
+            if (q.value == null) {
+                q.setValue(1, { emitEvent: false });
+            }
+        } else {
+            q.clearValidators();
+            q.setValue(null, { emitEvent: false });
+        }
+        q.updateValueAndValidity({ emitEvent: false });
+        this.form.updateValueAndValidity({ emitEvent: false });
     }
 
     private loadVaccineDefinitionsForSpecies(speciesId: string | null): void {
@@ -440,6 +596,7 @@ export class VaccinationNewPageComponent implements OnInit {
             return;
         }
 
+        const productId = v.productId.trim();
         const payload: CreateVaccinationRequest = {
             clinicId,
             petId: v.petId.trim(),
@@ -448,14 +605,23 @@ export class VaccinationNewPageComponent implements OnInit {
             appliedAtUtc: dates.appliedAtUtc,
             dueAtUtc: dates.dueAtUtc,
             status,
-            notes: v.notes.trim() || null
+            notes: v.notes.trim() || null,
+            ...(productId && status === 1
+                ? { productId, quantity: v.quantity, batchId: v.batchId || null, requestId: this.requestId }
+                : {})
         };
 
         this.submitting.set(true);
         this.vaccinationsService.createVaccination(payload).subscribe({
-            next: ({ id }) => {
+            next: ({ id, stockResult }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/vaccinations', id], { queryParams: { saved: '1' } });
+                if (payload.productId) {
+                    writeLastVaccineProductId(payload.productId);
+                }
+                void this.router.navigate(['/panel/vaccinations', id], {
+                    queryParams: { saved: '1' },
+                    state: stockResult ? { stockNotice: administrationSavedNotice(stockResult, 'Aşı') } : undefined
+                });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);

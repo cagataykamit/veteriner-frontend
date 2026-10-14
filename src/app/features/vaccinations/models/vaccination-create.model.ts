@@ -13,6 +13,14 @@ export interface CreateVaccinationRequest {
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
     notes?: string | null;
+    /** Aşı ürünü; verilirse uygulama + stok düşümü aynı işlemde yazılır (durum `Uygulandı` olmalı). */
+    productId?: string | null;
+    /** Ürünün stok biriminde; boşsa sunucu 1 kabul eder. */
+    quantity?: number | null;
+    /** Boşsa sunucu FEFO ile seçer. */
+    batchId?: string | null;
+    /** Form başına bir kez üretilen anahtar; aynı anahtarla tekrar istek ikinci düşüm üretmez. */
+    requestId?: string | null;
 }
 
 export interface UpdateVaccinationRequest {

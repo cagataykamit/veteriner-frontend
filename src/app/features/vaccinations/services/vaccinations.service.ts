@@ -7,6 +7,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     mapCreateVaccinationToApiBody,
     mapUpdateVaccinationToApiBody,
+    mapVaccinationCreateResponse,
     mapVaccinationDetailDtoToEditVm,
     mapPagedVaccinationsToVm,
     mapVaccinationDetailDtoToVm,
@@ -15,7 +16,12 @@ import {
 import type { VaccinationDetailDto, VaccinationListItemDtoPagedResult } from '@/app/features/vaccinations/models/vaccination-api.model';
 import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
-import type { VaccinationDetailVm, VaccinationEditVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import type {
+    VaccinationCreateResultVm,
+    VaccinationDetailVm,
+    VaccinationEditVm,
+    VaccinationListItemVm
+} from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface VaccinationsPagedVm {
@@ -66,9 +72,9 @@ export class VaccinationsService {
 
     /**
      * POST liste endpoint’i (muayene/randevu ile aynı varsayım).
-     * Yanıt gövdesinde tam `VaccinationDetailDto` ve `id` beklenir; yalnızca `{ id }` dönen sarmalayıcılar için mapper genişletilir.
+     * Ürünsüz kayıtta yanıt çıplak guid, ürünlüde `{ created, id, administration, stock }` (201 yeni / 200 aynı `requestId` tekrarı; ikisi de başarıdır).
      */
-    createVaccination(payload: CreateVaccinationRequest): Observable<{ id: string }> {
+    createVaccination(payload: CreateVaccinationRequest): Observable<VaccinationCreateResultVm> {
         let body: unknown;
         try {
             body = mapCreateVaccinationToApiBody(payload);
@@ -87,7 +93,7 @@ export class VaccinationsService {
                 if (!id) {
                     throw new Error('VACCINATION_CREATE_NO_ID_IN_RESPONSE');
                 }
-                return { id };
+                return mapVaccinationCreateResponse(raw, id);
             }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {

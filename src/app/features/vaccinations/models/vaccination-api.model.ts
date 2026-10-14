@@ -24,6 +24,8 @@ export interface VaccinationListItemDto {
     effectiveReportDateUtc?: string | null;
     status?: number | null;
     notes?: string | null;
+    /** Stoktan düşen bağlı uygulama; bağlı değilse `null` (`ADMINISTRATIONS_API_CONTRACT.md` §9). */
+    administrationId?: string | null;
 }
 
 export interface VaccinationListItemDtoPagedResult {
@@ -56,6 +58,15 @@ export interface VaccinationDetailDto {
     notes?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
+    /** Bağlı uygulama ve düşülen ürün/parti; bağlı değilse hepsi `null`. */
+    administrationId?: string | null;
+    productId?: string | null;
+    productName?: string | null;
+    quantity?: number | null;
+    unit?: string | null;
+    batchId?: string | null;
+    lotNumber?: string | null;
+    expiryDate?: string | null;
 }
 
 /**
@@ -71,6 +82,11 @@ export interface VaccinationCreateRequestDto {
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
     notes?: string | null;
+    /** Verilirse aynı işlemde stoktan düşen uygulama yazılır (yalnız `Applied`). */
+    productId?: string;
+    quantity?: number;
+    batchId?: string;
+    requestId?: string;
 }
 
 export interface VaccinationUpdateRequestDto {

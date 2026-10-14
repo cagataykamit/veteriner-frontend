@@ -11,12 +11,12 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-vaccination-detail-page',
@@ -37,6 +37,9 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
 
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Aşı kaydı kaydedildi.</p>
+        }
+        @if (stockNotice(); as notice) {
+            <p class="mb-4 m-0 text-sm" [class.text-amber-700]="notice.warn" role="status" data-testid="stock-notice">{{ notice.text }}</p>
         }
 
         @if (loading()) {
@@ -88,6 +91,31 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                         </dl>
                     </div>
                 </div>
+                @if (vac()!.linkedAdministration; as adm) {
+                    <div class="col-span-12">
+                        <div class="card" data-testid="linked-administration">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                                <h5 class="mt-0 mb-0">Stoktan düşen uygulama</h5>
+                                @if (canReadAdministrations && vac()!.petId) {
+                                    <a routerLink="/panel/administrations" [queryParams]="{ petId: vac()!.petId }" class="text-primary font-medium no-underline text-sm" data-testid="linked-administration-link">Uygulama kaydına git →</a>
+                                }
+                            </div>
+                            <dl class="m-0 grid grid-cols-12 gap-3">
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Ürün</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.productName }}</dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Miktar</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.quantity ?? '—' }} {{ adm.unit }}</dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Seri no</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.lotNumber ?? '—' }}</dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">SKT</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDay(adm.expiryDate) }}</dd>
+                            </dl>
+                            <p class="text-sm text-muted-color mt-4 mb-0">
+                                Aşıyı iptal etmek için bu uygulamayı iptal edin; aşı kaydı da iptal olur. İptalde ürün stoğa iade edilir veya zarar/imha olarak yazılır (iptal eden seçer).
+                            </p>
+                        </div>
+                    </div>
+                }
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Müşteri / hayvan bilgileri</h5>
@@ -180,6 +208,12 @@ export class VaccinationDetailPageComponent implements OnInit {
 
     readonly emptyMark = '—';
     readonly showSavedBanner = signal(false);
+    /** Kayıt formundan gelen stok bildirimi (kalan stok, minimum altı uyarısı); yenilemede kaybolur. */
+    readonly stockNotice = signal<{ text: string; warn: boolean } | null>(
+        (this.router.getCurrentNavigation()?.extras.state?.['stockNotice'] as { text: string; warn: boolean } | undefined) ?? null
+    );
+    readonly canReadAdministrations = this.auth.hasOperationClaim(ADMINISTRATIONS_READ_CLAIM);
+    readonly formatDay = (v: string | null) => (v ? formatDateDisplay(v) : '—');
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);

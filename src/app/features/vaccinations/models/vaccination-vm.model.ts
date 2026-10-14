@@ -1,3 +1,5 @@
+import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
+
 /**
  * Aşı listesi — UI view model.
  */
@@ -13,6 +15,19 @@ export interface VaccinationListItemVm {
     clientName: string;
     status: number | null;
     notes: string;
+    /** Stoktan düşen bağlı uygulama; `null` = yalnız aşı kaydı. */
+    administrationId: string | null;
+}
+
+/** Aşıya bağlı uygulamanın detayda gösterilen özeti. */
+export interface VaccinationLinkedAdministrationVm {
+    id: string;
+    productName: string;
+    quantity: number | null;
+    unit: string;
+    lotNumber: string | null;
+    /** `yyyy-MM-dd`. */
+    expiryDate: string | null;
 }
 
 /** Detay — liste VM’sine ek olarak audit alanları. */
@@ -30,6 +45,13 @@ export interface VaccinationDetailVm {
     examinationId: string | null;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
+    linkedAdministration: VaccinationLinkedAdministrationVm | null;
+}
+
+/** POST /vaccinations sonucu: ürünlü kayıtta uygulama ve kalan stok da döner (`stockResult`), ürünsüzde `null`. */
+export interface VaccinationCreateResultVm {
+    id: string;
+    stockResult: AdministrationCreateResultVm | null;
 }
 
 export interface VaccinationEditVm {
@@ -51,4 +73,6 @@ export interface VaccinationEditVm {
     dueAtUtc: string | null;
     status: number | null;
     notes: string;
+    /** Bağlıysa yalnız not ve sonraki doz tarihi değişebilir (`Vaccinations.LinkedToAdministration`). */
+    administrationId: string | null;
 }

@@ -65,7 +65,8 @@ export function mapVaccinationListItemDtoToReportRow(dto: VaccinationsReportItem
         status: parseVaccinationStatusRawToEnum(dto.status),
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['notes', 'Notes'])) ?? EM,
         clinicLabel: clinicName ?? EM,
-        effectiveReportDateUtc
+        effectiveReportDateUtc,
+        administrationId: null
     };
 }
 

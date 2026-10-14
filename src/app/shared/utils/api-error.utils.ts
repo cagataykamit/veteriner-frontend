@@ -182,8 +182,19 @@ const VACCINATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'VaccineDefinitions.CoreDefinitionCannotBeModified': 'Sistem tanımlı aşı kayıtları düzenlenemez.',
     VaccineDefinitionsCoreDefinitionCannotBeModified: 'Sistem tanımlı aşı kayıtları düzenlenemez.',
     'VaccineDefinitions.DuplicateCode': 'Bu aşı kodu zaten kullanılıyor.',
-    VaccineDefinitionsDuplicateCode: 'Bu aşı kodu zaten kullanılıyor.'
+    VaccineDefinitionsDuplicateCode: 'Bu aşı kodu zaten kullanılıyor.',
+    'Vaccinations.ProductRequiresAppliedStatus': 'Ürün seçilen aşıda durum "Uygulandı" olmalıdır. Stoktan düşmesini istemiyorsanız ürünü boş bırakın.',
+    'Vaccinations.LinkedToAdministration':
+        'Bu aşı stoktan düşen bir uygulamaya bağlı; yalnız not ve sonraki doz tarihi değişir. Aşıyı iptal etmek için bağlı uygulamayı iptal edin.',
+    'Vaccinations.DuplicateRequestId': 'Bu istek kimliği farklı bir aşı için kullanılmış. Formu yeniden açıp tekrar deneyin.',
+    'Vaccinations.ConcurrencyConflict': 'Aşı aynı anda başka bir işlemle kaydedildi. Tekrar deneyin; aynı kayıt iki kez düşülmez.',
+    'Vaccinations.AdministrationForbidden': 'Stoktan düşen aşı kaydetme yetkiniz yok. Ürünü boş bırakıp yalnız aşı kaydı girin veya yöneticiye başvurun.'
 };
+
+/** Aşı + stok düşümü: aşı kodları ve uygulama (`Administrations.*`) kodları; kod eşleşmezse `null` (backend `detail` kullanılır). */
+export function vaccinationStockProblemUserMessage(err: HttpErrorResponse): string | null {
+    return vaccinationPanelProblemUserMessage(err) ?? administrationPanelProblemUserMessage(err);
+}
 
 function vaccinationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);

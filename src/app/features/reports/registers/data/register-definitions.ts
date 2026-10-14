@@ -295,7 +295,8 @@ export const VACCINE_INFO_REGISTER: RegisterDefinition<VaccineInfoRegisterRowDto
     exportFilePrefix: 'asi-bilgi-raporu',
     stateKey: 'panel:reports:registers:vaccine-info:listState',
     extraFilters: { includeVoidedLabel: 'İptal edilenleri göster', product: true, veterinarian: true },
-    screenHint: 'Fiyat ve toplam, ürünün güncel katalog fiyatıdır; uygulama anında tahsil edilen tutar değildir.',
+    screenHint:
+        'Fiyat ve toplam, ürünün güncel katalog fiyatıdır; uygulama anında tahsil edilen tutar değildir. Ürünle kaydedilen aşı tek satırdır (aşı kaydı ve stoktan düşen uygulama ayrı sayılmaz); ürünsüz girilen takvim/geçmiş aşılar bu raporda yer almaz.',
     columns: [
         { header: '#', cell: (r) => String(r.rowNumber) },
         { header: 'Tarih', cell: (r) => formatDateDisplay(r.administeredAtUtc) },

@@ -82,6 +82,12 @@ import {
                         İşletme salt okunur moddadır; değişiklik kaydedilemez.
                     </p>
                 }
+                @if (linkedAdministrationId()) {
+                    <p class="text-sm mt-0 mb-4" role="note" data-testid="linked-lock-note">
+                        Bu aşı stoktan düşen bir uygulamaya bağlı: yalnız <strong>not</strong> ve <strong>sonraki doz tarihi</strong> değiştirilebilir. Aşıyı iptal etmek için bağlı uygulamayı iptal edin
+                        (<a routerLink="/panel/administrations" [queryParams]="{ petId: form.controls.petId.value }" class="text-primary font-medium no-underline">Uygulamalar</a>).
+                    </p>
+                }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
@@ -384,6 +390,9 @@ export class VaccinationEditPageComponent implements OnInit {
         this.reload();
     }
 
+    /** Dolu ise aşı stoktan düşen uygulamaya bağlıdır; kilitli alanlar pasif. */
+    readonly linkedAdministrationId = signal<string | null>(null);
+
     reload(): void {
         this.loading.set(true);
         this.loadError.set(null);
@@ -412,6 +421,13 @@ export class VaccinationEditPageComponent implements OnInit {
                     this.form.controls.petId.setValue(x.petId);
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
+                }
+                this.linkedAdministrationId.set(x.administrationId);
+                if (x.administrationId) {
+                    // Bağlı kayıtta yalnız not ve sonraki doz tarihi değişir (`Vaccinations.LinkedToAdministration`).
+                    for (const c of [this.form.controls.clientId, this.form.controls.petId, this.form.controls.vaccineDefinitionId, this.form.controls.status, this.form.controls.appliedAtLocal]) {
+                        c.disable({ emitEvent: false });
+                    }
                 }
                 this.loading.set(false);
             },

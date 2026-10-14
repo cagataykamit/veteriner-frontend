@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, vaccinationStockProblemUserMessage } from '@/app/shared/utils/api-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
 
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
@@ -26,6 +26,11 @@ function isGenericValidationTitle(s: string): boolean {
 function resolveVaccinationUpsertNonFieldMessage(err: HttpErrorResponse): string {
     const status = err.status;
     const body = err.error as ProblemBody | string | null | undefined;
+
+    const mapped = vaccinationStockProblemUserMessage(err);
+    if (mapped) {
+        return mapped;
+    }
 
     if (typeof body === 'string') {
         const t = body.trim();

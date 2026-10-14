@@ -165,7 +165,12 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                                 <tr>
                                     <td>{{ formatDate(row.appliedAtUtc) }}</td>
                                     <td>{{ formatDate(row.dueAtUtc) }}</td>
-                                    <td>{{ row.vaccineName }}</td>
+                                    <td>
+                                        {{ row.vaccineName }}
+                                        @if (row.administrationId) {
+                                            <div class="text-xs text-muted-color" data-testid="stock-linked">Stoktan düştü</div>
+                                        }
+                                    </td>
                                     <td>
                                         @if (row.petId) {
                                             <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
@@ -224,7 +229,12 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                                         }
                                     </div>
                                 </div>
-                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-2 min-w-0 break-words">{{ row.vaccineName }}</div>
+                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-2 min-w-0 break-words">
+                                    {{ row.vaccineName }}
+                                    @if (row.administrationId) {
+                                        <span class="text-xs text-muted-color font-normal"> · Stoktan düştü</span>
+                                    }
+                                </div>
                                 <div class="mb-3">
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </div>

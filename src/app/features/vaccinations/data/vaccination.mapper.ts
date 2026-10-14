@@ -1,4 +1,7 @@
 import { HttpParams } from '@angular/common/http';
+import { mapAdministrationCreateResultDtoToVm } from '@/app/features/administrations/data/administration.mapper';
+import type { AdministrationCreateResultDto } from '@/app/features/administrations/models/administration-api.model';
+import { toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.utils';
 import type {
     VaccinationCreateRequestDto,
     VaccinationDetailDto,
@@ -8,7 +11,13 @@ import type {
 } from '@/app/features/vaccinations/models/vaccination-api.model';
 import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
-import type { VaccinationDetailVm, VaccinationEditVm, VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import type {
+    VaccinationCreateResultVm,
+    VaccinationDetailVm,
+    VaccinationEditVm,
+    VaccinationLinkedAdministrationVm,
+    VaccinationListItemVm
+} from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { parseVaccinationStatusRawToEnum } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 
 const EM = '—';
@@ -106,7 +115,36 @@ export function mapVaccinationListItemDtoToVm(dto: VaccinationListItemDto): Vacc
         clientId: canonicalClientId(dto),
         clientName: canonicalClientName(dto),
         status: canonicalStatus(dto),
-        notes: canonicalNotes(dto)
+        notes: canonicalNotes(dto),
+        administrationId: firstTrimmed(dto.administrationId)
+    };
+}
+
+function mapLinkedAdministration(dto: VaccinationDetailDto): VaccinationLinkedAdministrationVm | null {
+    const id = firstTrimmed(dto.administrationId);
+    if (!id) {
+        return null;
+    }
+    return {
+        id,
+        productName: str(dto.productName),
+        quantity: dto.quantity ?? null,
+        unit: dto.unit?.trim() ?? '',
+        lotNumber: firstTrimmed(dto.lotNumber),
+        expiryDate: toYmdOrNull(dto.expiryDate)
+    };
+}
+
+/**
+ * POST /vaccinations yanıtı: ürünsüz kayıtta çıplak guid; ürünlüde `{ created, id, administration, stock }`.
+ * Kimlik okunamazsa `null`.
+ */
+export function mapVaccinationCreateResponse(raw: unknown, id: string): VaccinationCreateResultVm {
+    const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null;
+    const hasStock = o?.['administration'] && typeof o['administration'] === 'object' && o['stock'] && typeof o['stock'] === 'object';
+    return {
+        id,
+        stockResult: hasStock ? mapAdministrationCreateResultDtoToVm(o as unknown as AdministrationCreateResultDto) : null
     };
 }
 
@@ -117,7 +155,8 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
         ...base,
         examinationId: dto.examinationId?.trim() ? dto.examinationId.trim() : null,
         createdAtUtc: canonicalCreatedAt(dto),
-        updatedAtUtc: canonicalUpdatedAt(dto)
+        updatedAtUtc: canonicalUpdatedAt(dto),
+        linkedAdministration: mapLinkedAdministration(dto)
     };
 }
 
@@ -137,7 +176,8 @@ export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): Vacc
         appliedAtUtc: canonicalAppliedAt(dto),
         dueAtUtc: canonicalDueAt(dto),
         status,
-        notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])) ?? ''
+        notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])) ?? '',
+        administrationId: firstTrimmed(dto.administrationId)
     };
 }
 
@@ -155,6 +195,9 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
     const status = toVaccinationStatusEnumOrThrow(req.status);
     const dueAtUtc = req.dueAtUtc?.trim() ? req.dueAtUtc.trim() : null;
     const appliedAtUtc = req.appliedAtUtc?.trim() ? req.appliedAtUtc.trim() : null;
+    const productId = req.productId?.trim();
+    const batchId = req.batchId?.trim();
+    const requestId = req.requestId?.trim();
     return {
         clinicId,
         examinationId,
@@ -163,7 +206,15 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
         status,
         appliedAtUtc,
         dueAtUtc,
-        notes
+        notes,
+        ...(productId
+            ? {
+                  productId,
+                  ...(req.quantity != null ? { quantity: req.quantity } : {}),
+                  ...(batchId ? { batchId } : {}),
+                  ...(requestId ? { requestId } : {})
+              }
+            : {})
     };
 }
 
