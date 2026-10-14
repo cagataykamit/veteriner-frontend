@@ -517,7 +517,7 @@ describe('TodayPageComponent', () => {
             expect(section(f, 'Bekliyor').textContent).toContain('Ödeme bekliyor');
         });
 
-        it('iki kip: Hekim ve Ödeme sütunları dar kipte gizlenir; hekim adı Hasta hücresine, ödeme/yatış rozeti Durum hücresine taşınır; başlıklar ve rozetler tek satır', async () => {
+        it('iki kip: Hekim ve Ödeme sütunları dar kipte gizlenir; hekim adı Hasta hücresine, ödeme/yatış rozeti Durum hücresine taşınır; başlıklar tek satır, Durum rozetleri sütuna sığar', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', isCarriedOver: true, hasActiveHospitalization: true, chargeIndicator: 'PaymentPending', chargedAmount: 1000, allocatedAmount: 0, outstandingAmount: 1000 })] });
             const host = f.nativeElement as HTMLElement;
             const hideCompact = '@max-[76rem]:hidden';
@@ -533,7 +533,7 @@ describe('TodayPageComponent', () => {
             const cells = Array.from(host.querySelectorAll<HTMLTableCellElement>('tbody tr:first-child td'));
             expect(cells[3].className).toContain(hideCompact); // Hekim
             expect(cells[5].className).toContain(hideCompact); // Ödeme / yatış
-            expect(cells[4].className).toContain('whitespace-nowrap'); // Durum: Önceki günden bölünmez
+            expect(cells[4].className).not.toContain('whitespace-nowrap'); // Durum: sabit sütunda uzun rozet ("Önceki günden açık") satır kırar, Ödeme sütununa taşmaz
             // dar kip yedekleri yalnız dar kipte görünür (geniş kipte @min-[76rem]:hidden)
             const compactOnly = Array.from(host.querySelectorAll('tbody *')).filter((e) => e.classList.contains('@min-[76rem]:hidden'));
             expect(compactOnly.some((e) => e.textContent?.includes('Dr. Ayşe'))).toBeTrue();
@@ -579,8 +579,7 @@ describe('TodayPageComponent', () => {
             expect(tagHost.getAttribute('title')).toBe('Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin');
             const tag = tagHost.querySelector('.p-tag')!;
             expect(tag.classList.contains('p-tag-secondary')).toBeTrue();
-            expect(tag.classList.contains('p-tag-contrast')).toBeFalse();
-        });
+            expect(tag.classList.contains('p-tag-contrast')).toBeFalse();        });
 
         it('12 saati aşan açık gelişte sönük "Unutulmuş olabilir" ipucu; kısa sürede ve tamamlananda yok', async () => {
             const old = new Date(Date.now() - 13 * 3_600_000).toISOString();

@@ -284,7 +284,8 @@ type TodayScope = 'mine' | 'all';
                                             <span class="text-muted-color">Atanmadı</span>
                                         }
                                     </td>
-                                    <td class="whitespace-nowrap">
+                                    <!-- Sabit genişlikli sütun: uzun rozet ("Önceki günden açık") yandaki sütuna taşmasın diye satır kırar. -->
+                                    <td>
                                         <ng-container *ngTemplateOutlet="statusTags; context: { $implicit: item, group: group }" />
                                         <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
                                         <div class="flex flex-wrap gap-1 mt-1 @min-[76rem]:hidden">
