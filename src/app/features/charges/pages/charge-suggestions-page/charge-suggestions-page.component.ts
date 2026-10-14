@@ -25,6 +25,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -59,6 +60,7 @@ interface ConvertedRow {
         ReasonConfirmDialogComponent,
         AppContextFilterChipComponent,
         AppListHeaderComponent,
+        FilterFieldComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent
@@ -90,10 +92,9 @@ interface ConvertedRow {
 
         <div class="card">
             <app-list-header class="mb-4" title="Ücret bekleyenler" [count]="totalItems()">
-                <div class="flex-1 min-w-0">
-                    <label for="pendingClientFilter" class="block text-xs font-medium text-muted-color mb-1">Müşteri</label>
-                    <app-client-search inputId="pendingClientFilter" placeholder="Tümü — ad, telefon, hayvan veya mikroçip ile arayın" [ngModel]="clientId()" (ngModelChange)="clientId.set($event || null)" />
-                </div>
+                <app-filter-field label="Müşteri" labelFor="pendingClientFilter" [active]="!!clientId()">
+                    <app-client-search inputId="pendingClientFilter" placeholder="Müşteri ara…" [ngModel]="clientId()" (ngModelChange)="clientId.set($event || null)" />
+                </app-filter-field>
                 <div>
                     <label for="pendingPeriodFilter" class="block text-xs font-medium text-muted-color mb-1">Tarih</label>
                     <select id="pendingPeriodFilter" class="p-inputtext p-component" [ngModel]="period()" (ngModelChange)="period.set($event)">
@@ -127,7 +128,7 @@ interface ConvertedRow {
                 <div class="overflow-x-auto">
                     <p-table [value]="visibleRows()" dataKey="id" [paginator]="visibleRows().length > 20" [rows]="20" [tableStyle]="{ 'min-width': '64rem' }">
                         <ng-template #header>
-                            <tr>
+                            <tr class="whitespace-nowrap">
                                 <th>Tarih</th>
                                 <th>Müşteri</th>
                                 <th>Hayvan</th>
@@ -136,7 +137,7 @@ interface ConvertedRow {
                                 <th class="text-right">Birim fiyat</th>
                                 <th class="text-right">Tutar</th>
                                 @if (canConvert()) {
-                                    <th style="width: 20rem">İşlemler</th>
+                                    <th>İşlemler</th>
                                 }
                             </tr>
                         </ng-template>
@@ -144,14 +145,14 @@ interface ConvertedRow {
                             <tr>
                                 <td class="whitespace-nowrap">{{ formatDate(row.occurredAtUtc) }}</td>
                                 <td>
-                                    <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[14rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
                                 </td>
                                 <td>
-                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                    <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[11rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
                                 </td>
-                                <td class="break-words">
-                                    {{ row.description }}
-                                    <div class="text-sm">
+                                <td>
+                                    <div class="max-w-[16rem] truncate" [title]="row.description">{{ row.description }}</div>
+                                    <div class="text-sm whitespace-nowrap">
                                         @if (row.examinationId) {
                                             <a [routerLink]="['/panel/examinations', row.examinationId]" class="text-primary no-underline">Muayeneyi aç</a>
                                         } @else {
@@ -159,24 +160,24 @@ interface ConvertedRow {
                                         }
                                     </div>
                                 </td>
-                                <td class="text-right">{{ row.quantity }} {{ row.unit }}</td>
-                                <td class="text-right">
+                                <td class="text-right whitespace-nowrap">{{ row.quantity }} {{ row.unit }}</td>
+                                <td class="text-right whitespace-nowrap">
                                     @if (row.suggestedUnitPrice === null) {
                                         <span class="text-amber-700 dark:text-amber-300 font-medium">Fiyat yok</span>
                                     } @else {
                                         {{ money(row.suggestedUnitPrice, row.currency) }}
                                     }
                                 </td>
-                                <td class="text-right font-medium">{{ rowAmount(row) }}</td>
+                                <td class="text-right whitespace-nowrap font-medium">{{ rowAmount(row) }}</td>
                                 @if (canConvert()) {
                                     <td class="whitespace-nowrap">
                                         @if (row.suggestedUnitPrice === null) {
                                             <p-button label="Fiyat gir ve çevir" icon="pi pi-pencil" size="small" class="mr-1" [disabled]="busy(row.id)" (onClick)="openEdit(row)" />
                                         } @else {
                                             <p-button label="Ücrete çevir" icon="pi pi-check" size="small" class="mr-1" [loading]="busy(row.id)" (onClick)="convertQuick(row)" />
-                                            <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" ariaLabel="Düzenleyerek çevir" [disabled]="busy(row.id)" (onClick)="openEdit(row)" />
+                                            <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" ariaLabel="Düzenleyerek çevir" [attr.title]="'Düzenleyerek çevir'" [disabled]="busy(row.id)" (onClick)="openEdit(row)" />
                                         }
-                                        <p-button label="Ücretsiz say" icon="pi pi-ban" size="small" severity="secondary" [text]="true" [disabled]="busy(row.id)" (onClick)="openWaive(row)" />
+                                        <p-button icon="pi pi-ban" size="small" severity="secondary" [text]="true" ariaLabel="Ücretsiz say" [attr.title]="'Ücretsiz say'" [disabled]="busy(row.id)" (onClick)="openWaive(row)" />
                                     </td>
                                 }
                             </tr>

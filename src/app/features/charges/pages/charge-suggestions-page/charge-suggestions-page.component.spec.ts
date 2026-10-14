@@ -91,8 +91,9 @@ describe('ChargeSuggestionsPageComponent', () => {
     };
 
     const text = (h: RouterTestingHarness) => (h.routeNativeElement as HTMLElement).textContent ?? '';
+    /** Düğme ve bağlantıların erişilebilir adı: görünür metin, yalnız simgeli düğmede aria-label. */
     const labels = (h: RouterTestingHarness) =>
-        Array.from((h.routeNativeElement as HTMLElement).querySelectorAll('button, a')).map((b) => b.textContent?.trim() ?? '');
+        Array.from((h.routeNativeElement as HTMLElement).querySelectorAll('button, a')).map((b) => b.textContent?.trim() || b.getAttribute('aria-label') || '');
 
     it('hekim (yalnız Charges.Read) kalemleri görür; Çevir ve Ücretsiz say düğmesi çıkmaz', async () => {
         const { harness } = await open(['Charges.Read'], [suggestion()]);
@@ -108,6 +109,23 @@ describe('ChargeSuggestionsPageComponent', () => {
         const { harness } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
         expect(labels(harness).some((l) => l.includes('Ücrete çevir'))).toBeTrue();
         expect(labels(harness).some((l) => l.includes('Ücretsiz say'))).toBeTrue();
+    });
+
+    it('Ücretsiz say yalnız simgeyle yer tutar; erişilebilir ad ve ipucu korunur', async () => {
+        const { harness } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
+        const button = (harness.routeNativeElement as HTMLElement).querySelector('button[aria-label="Ücretsiz say"]') as HTMLButtonElement;
+        expect(button.textContent!.trim()).toBe('');
+        expect(button.closest('[title]')?.getAttribute('title')).toBe('Ücretsiz say');
+    });
+
+    it('uzun müşteri, hayvan ve kalem adı tek satırda kesilir; tam metin ipucunda kalır', async () => {
+        const long = suggestion({ clientName: 'Ayşe Gülizar Karamanoğlu Yılmaz', petName: 'Prenses Minnoş Pamukçuk', description: 'Serum fizyolojik 500 ml damar yolu' });
+        const { harness } = await open(['Charges.Read'], [long]);
+        for (const value of [long.clientName, long.petName, long.description]) {
+            const el = (harness.routeNativeElement as HTMLElement).querySelector(`[title="${value}"]`) as HTMLElement;
+            expect(el).withContext(value).not.toBeNull();
+            expect(el.classList).toContain('truncate');
+        }
     });
 
     it('tek tık: gövde yalnız requestId taşır, kalem listeden düşer, ücret kaydı ve Ödeme al bağlantısı çıkar', async () => {
