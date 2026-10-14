@@ -148,15 +148,15 @@ import {
                         }
                     }
                 </div>
-                @if (startExamError(); as startError) {
-                    <p class="text-red-500 text-sm m-0 mt-2" role="alert">{{ startError }}</p>
-                }
                 @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
                     <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mt-2" role="status">
                         {{ isNoShow(appt()!.status) ? copy.noShowAppointmentExamCreateBlocked : copy.cancelledAppointmentExamCreateBlocked }}
                     </p>
                 }
             </app-page-header>
+            @if (startExamError(); as startError) {
+                <p class="text-red-500 text-sm mt-0 mb-4" role="alert">{{ startError }}</p>
+            }
             @if (canNoShow) {
                 <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="appt()!.id" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
             }
