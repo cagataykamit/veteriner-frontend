@@ -103,9 +103,11 @@ export interface ReportExtraFilter {
                     <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="activeBadges() && s.isClientFilterActive()" width="grow">
                         <app-client-search [inputId]="idPrefix() + 'Client'" [ngModel]="s.clientIdFilter" (ngModelChange)="s.onClientFilterChange($event)" />
                     </app-filter-field>
-                    <app-filter-field [label]="copy.labelPet" [labelId]="idPrefix() + 'PetLabel'" [active]="activeBadges() && s.isPetFilterActive()" width="grow">
-                        <app-pet-search [inputId]="idPrefix() + 'Pet'" [requireClient]="false" [clientId]="s.clientIdFilter" [ngModel]="s.petIdFilter" (ngModelChange)="s.petIdFilter = $event; s.scheduleApply()" />
-                    </app-filter-field>
+                    @if (petFilter()) {
+                        <app-filter-field [label]="copy.labelPet" [labelId]="idPrefix() + 'PetLabel'" [active]="activeBadges() && s.isPetFilterActive()" width="grow">
+                            <app-pet-search [inputId]="idPrefix() + 'Pet'" [requireClient]="false" [clientId]="s.clientIdFilter" [ngModel]="s.petIdFilter" (ngModelChange)="s.petIdFilter = $event; s.scheduleApply()" />
+                        </app-filter-field>
+                    }
                 }
                 @if (!s.dateRangeOnly) {
                     <app-filter-field [label]="copy.reportsFilterSearch" [labelFor]="idPrefix() + 'Search'" [active]="activeBadges() && s.isSearchActive()" width="grow">
@@ -155,4 +157,6 @@ export class ReportFilterBarComponent {
     readonly extraFilter = input<ReportExtraFilter | null>(null);
     /** Etkin süzgeçlerde "Aktif" rozeti gösterilsin mi (sade ekranlarda kapatılır). */
     readonly activeBadges = input(true);
+    /** Hayvan seçim kutusu; müşteri ve arama alanı hayvanı zaten bulduğu ekranlarda kapatılır (`petId` sorgu alanı durumda korunur). */
+    readonly petFilter = input(true);
 }
