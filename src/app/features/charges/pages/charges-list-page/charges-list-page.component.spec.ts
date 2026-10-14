@@ -118,27 +118,62 @@ describe('ChargesListPageComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('Ücret kaydı yok');
     });
 
+    const actionButton = (label: string) => fixture.nativeElement.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement | null;
+
     it('Charges.Correct yoksa Düzelt/İptal et eylemleri görünmez', async () => {
         await setup();
-        const text = fixture.nativeElement.textContent as string;
-        expect(text).not.toContain('Düzelt');
-        expect(text).not.toContain('İptal et');
+        expect(actionButton('Düzelt')).toBeNull();
+        expect(actionButton('İptal et')).toBeNull();
     });
 
-    it('Charges.Correct varsa Düzelt ve İptal et görünür; salt okunur kiracıda gizlenir', async () => {
+    it('Charges.Correct varsa Düzelt ve İptal et yalnız simge olarak görünür; erişilebilir ad ve ipucu korunur', async () => {
         claims.add('Charges.Correct');
         await setup();
-        expect(fixture.nativeElement.textContent).toContain('Düzelt');
-        expect(fixture.nativeElement.textContent).toContain('İptal et');
+        for (const label of ['Düzelt', 'İptal et']) {
+            const button = actionButton(label);
+            expect(button).not.toBeNull();
+            expect(button!.textContent!.trim()).toBe('');
+            expect(button!.closest('[title]')?.getAttribute('title')).toBe(label);
+        }
+    });
+
+    it('Düzelt ve İptal et ilgili diyaloğu satırla açar', async () => {
+        claims.add('Charges.Correct');
+        await setup();
+        const cmp = fixture.componentInstance;
+        actionButton('Düzelt')!.click();
+        expect(cmp.correctionVisible).toBeTrue();
+        expect(cmp.actionTarget()).toEqual(row);
+        actionButton('İptal et')!.click();
+        expect(cmp.voidVisible).toBeTrue();
     });
 
     it('salt okunur kiracıda eylemler yerine bilgi gösterilir', async () => {
         claims.add('Charges.Correct');
         mutationBlocked = true;
         await setup();
-        const text = fixture.nativeElement.textContent as string;
-        expect(text).not.toContain('Düzelt');
-        expect(text).toContain('Salt okunur');
+        expect(actionButton('Düzelt')).toBeNull();
+        expect(actionButton('İptal et')).toBeNull();
+        expect(fixture.nativeElement.textContent).toContain('Salt okunur');
+    });
+
+    it('uzun müşteri, hayvan ve açıklama tek satırda kesilir; tam metin ipucunda kalır', async () => {
+        const long = { ...row, clientName: 'Ayşe Gülizar Karamanoğlu Yılmaz', petName: 'Prenses Minnoş Pamukçuk', description: 'Kapsamlı genel muayene ve kan tahlili' };
+        charges.getCharges.and.returnValue(of(page([long])));
+        await setup();
+        for (const text of [long.clientName, long.petName, long.description]) {
+            const el = fixture.nativeElement.querySelector(`[title="${text}"]`) as HTMLElement;
+            expect(el).withContext(text).not.toBeNull();
+            expect(el.classList).toContain('truncate');
+            expect(el.textContent!.trim()).toBe(text);
+        }
+    });
+
+    it('müşteri süzgeci kısa yer tutucuyla ortak süzgeç alanında gösterilir', async () => {
+        await setup();
+        const input = fixture.nativeElement.querySelector('#chargeClientFilter') as HTMLInputElement;
+        expect(input.getAttribute('placeholder')).toBe('Müşteri ara…');
+        expect(input.closest('app-filter-field')).not.toBeNull();
     });
 
     it('Payments.Create varsa açık bakiyeli satırda "Ödeme al" müşteri ve ücret bağlamıyla ödeme formuna gider', async () => {

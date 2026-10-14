@@ -18,6 +18,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -34,6 +35,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         ChargeCorrectionDialogComponent,
         ReasonConfirmDialogComponent,
         AppListHeaderComponent,
+        FilterFieldComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
@@ -42,10 +44,9 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     template: `
         <div class="card">
             <app-list-header class="mb-4" title="Ücretler" [count]="totalItems()">
-                <div class="flex-1 min-w-0">
-                    <label for="chargeClientFilter" class="block text-xs font-medium text-muted-color mb-1">Müşteri</label>
-                    <app-client-search inputId="chargeClientFilter" placeholder="Tümü — ad, telefon, hayvan veya mikroçip ile arayın" [ngModel]="clientId" (ngModelChange)="onClientFilterChange($event)" />
-                </div>
+                <app-filter-field label="Müşteri" labelFor="chargeClientFilter" [active]="!!clientId">
+                    <app-client-search inputId="chargeClientFilter" placeholder="Müşteri ara…" [ngModel]="clientId" (ngModelChange)="onClientFilterChange($event)" />
+                </app-filter-field>
                 @if (canCreate && !ro.mutationBlocked()) {
                     <a actions routerLink="/panel/charges/new" [queryParams]="clientId ? { clientId } : null" pButton type="button" label="Yeni Ücret" icon="pi pi-plus" class="p-button-primary"></a>
                 } @else if (canCreate) {
@@ -77,7 +78,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         [tableStyle]="{ 'min-width': '66rem' }"
                     >
                         <ng-template #header>
-                            <tr>
+                            <tr class="whitespace-nowrap">
                                 <th>Tarih</th>
                                 <th>Müşteri</th>
                                 <th>Hayvan</th>
@@ -88,29 +89,29 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 <th class="text-right">Ödenen</th>
                                 <th class="text-right">Kalan</th>
                                 @if (hasRowActions) {
-                                    <th style="width: 18rem">İşlemler</th>
+                                    <th>İşlemler</th>
                                 }
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
                             <tr>
-                                <td>{{ formatDate(row.createdAtUtc) }}</td>
+                                <td class="whitespace-nowrap">{{ formatDate(row.createdAtUtc) }}</td>
                                 <td>
-                                    <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[14rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
                                 </td>
                                 <td>
                                     @if (row.petId) {
-                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                        <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[11rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
                                     } @else {
                                         —
                                     }
                                 </td>
-                                <td class="break-words">{{ row.description }}</td>
+                                <td><div class="max-w-[16rem] truncate" [title]="row.description">{{ row.description }}</div></td>
                                 <td class="text-right">{{ row.quantity }}</td>
-                                <td class="text-right">{{ money(row.unitPrice, row.currency) }}</td>
-                                <td class="text-right font-medium">{{ money(row.amount, row.currency) }}</td>
-                                <td class="text-right">{{ money(row.allocatedAmount, row.currency) }}</td>
-                                <td class="text-right">
+                                <td class="text-right whitespace-nowrap">{{ money(row.unitPrice, row.currency) }}</td>
+                                <td class="text-right whitespace-nowrap font-medium">{{ money(row.amount, row.currency) }}</td>
+                                <td class="text-right whitespace-nowrap">{{ money(row.allocatedAmount, row.currency) }}</td>
+                                <td class="text-right whitespace-nowrap">
                                     @if (row.outstandingAmount === 0) {
                                         <app-status-tag label="Ödendi" severity="success" />
                                     } @else {
@@ -134,8 +135,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                                 ></a>
                                             }
                                             @if (canCorrect) {
-                                                <p-button label="Düzelt" icon="pi pi-pencil" size="small" [text]="true" (onClick)="openCorrection(row)" />
-                                                <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                                <p-button icon="pi pi-pencil" size="small" [text]="true" ariaLabel="Düzelt" [attr.title]="'Düzelt'" (onClick)="openCorrection(row)" />
+                                                <p-button icon="pi pi-ban" size="small" severity="danger" [text]="true" ariaLabel="İptal et" [attr.title]="'İptal et'" (onClick)="openVoid(row)" />
                                             }
                                         }
                                     </td>
