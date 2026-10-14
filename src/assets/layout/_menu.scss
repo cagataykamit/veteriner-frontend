@@ -67,16 +67,16 @@ app-menu {
         }
     }
 
-    // Bölüm başlığı (ADR-023): küçük, soluk, büyük harf; açılıp kapanmaz. Büyük harf dönüşümü `lang="tr"` ile İ/I doğru yazar.
+    // Bölüm başlığı (ADR-023): referans projedeki gibi kalın, koyu, büyük harf; açılıp kapanmaz. Büyük harf dönüşümü `lang="tr"` ile İ/I doğru yazar.
     .layout-menu-heading {
         padding: 0.75rem 1rem 0.25rem;
-        font-size: 0.786rem;
-        font-weight: 500;
+        font-size: 0.857rem;
+        font-weight: 700;
         letter-spacing: 0.06em;
         line-height: 1;
         text-transform: uppercase;
         white-space: nowrap;
-        color: var(--text-color-secondary);
+        color: var(--text-color);
 
         &:first-child {
             padding-top: 0.25rem;
@@ -94,7 +94,7 @@ app-menu {
         cursor: pointer;
         padding: 0.5rem 1rem;
         border-radius: var(--content-border-radius);
-        font-size: 0.86rem; // 12 px (kök 14 px); referans menüyle yan yana ölçüldü (harf başına 7.5 px), ADR-023
+        font-size: 1rem; // 14 px: referans projenin (PetProject-FrontEnd) menüsü kök yazı boyutunu miras alır, ADR-023
         transition:
             box-shadow var(--element-transition-duration);
 
@@ -302,6 +302,7 @@ $menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-roundi
                 }
 
                 .layout-menuitem-text {
+                    margin-left: -14px; // simge sütunu sabit kalır (daraltınca simge oynamaz); simge-metin boşluğu referansla eşit (~7 px), ADR-023
                     overflow: hidden;
                     text-overflow: ellipsis;
                     transition: opacity var(--layout-section-transition-duration);
