@@ -110,27 +110,56 @@ function isBlank(value: string | null | undefined): boolean {
     return v === '' || v === EMPTY_TEXT_MARK;
 }
 
+export type FinalizeCheckKey = 'assessment' | 'plan' | 'procedures' | 'pendingCharges';
+
+/** Kesinleştirme kontrol listesi maddesi: `ok` değilse `warning` metni gösterilir (engel değil). */
+export interface FinalizeCheckItem {
+    key: FinalizeCheckKey;
+    ok: boolean;
+    /** Madde tamamken gösterilen kısa metin. */
+    okLabel: string;
+    warning: string;
+}
+
 /**
  * Kesinleştirme öncesi tamamlanma kontrolü (uyarı, engel değil). Uygulama özet uç yanıtında olmadığından "işlem yok"
- * denetimine girmez; ücret bekleyen kalem sayısı (ADR-018) ayrı uyarıdır.
+ * denetimine girmez; ücret bekleyen kalem sayısı (ADR-018) ayrı maddedir. Özet yüklenmemişse (veya sayı bilinmiyorsa)
+ * ona dayanan madde listede yer almaz.
  */
+export function finalizeChecklist(
+    exam: Pick<ExaminationDetailVm, 'assessment' | 'plan'>,
+    summary: ExaminationRelatedSummaryVm | null
+): FinalizeCheckItem[] {
+    const items: FinalizeCheckItem[] = [
+        { key: 'assessment', ok: !isBlank(exam.assessment), okLabel: 'Değerlendirme / tanı girildi', warning: 'Değerlendirme / tanı girilmemiş.' },
+        { key: 'plan', ok: !isBlank(exam.plan), okLabel: 'Plan / takip girildi', warning: 'Plan / takip bilgisi girilmemiş.' }
+    ];
+    if (summary) {
+        items.push({
+            key: 'procedures',
+            ok: buildProcedureRows(summary).some((r) => !r.cancelled),
+            okLabel: 'Muayeneye bağlı işlem var',
+            warning: 'Muayeneye bağlı tedavi, reçete, aşı, lab istemi veya yatış kaydı yok (uygulama bu denetime dahil değildir).'
+        });
+    }
+    const pending = summary?.pendingChargeCount;
+    if (pending !== null && pending !== undefined) {
+        items.push({
+            key: 'pendingCharges',
+            ok: pending === 0,
+            okLabel: 'Ücret bekleyen işlem yok',
+            warning: `${pending} ücret bekliyor (resepsiyon ücrete çevirmedi veya ücretsiz saymadı).`
+        });
+    }
+    return items;
+}
+
+/** Kesinleştirme onayında gösterilen uyarılar: kontrol listesinin eksik maddeleri. */
 export function finalizeWarnings(
     exam: Pick<ExaminationDetailVm, 'assessment' | 'plan'>,
     summary: ExaminationRelatedSummaryVm | null
 ): string[] {
-    const warnings: string[] = [];
-    if (isBlank(exam.assessment)) {
-        warnings.push('Değerlendirme / tanı girilmemiş.');
-    }
-    if (isBlank(exam.plan)) {
-        warnings.push('Plan / takip bilgisi girilmemiş.');
-    }
-    if (summary && !buildProcedureRows(summary).some((r) => !r.cancelled)) {
-        warnings.push('Muayeneye bağlı tedavi, reçete, aşı, lab istemi veya yatış kaydı yok (uygulama bu denetime dahil değildir).');
-    }
-    const pending = summary?.pendingChargeCount ?? 0;
-    if (pending > 0) {
-        warnings.push(`${pending} ücret bekliyor (resepsiyon ücrete çevirmedi veya ücretsiz saymadı).`);
-    }
-    return warnings;
+    return finalizeChecklist(exam, summary)
+        .filter((i) => !i.ok)
+        .map((i) => i.warning);
 }

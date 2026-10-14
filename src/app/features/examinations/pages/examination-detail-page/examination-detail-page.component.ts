@@ -9,14 +9,15 @@ import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/a
 import type {
     ExaminationDetailVm,
     ExaminationFinalizeResultVm,
-    ExaminationListItemVm,
     ExaminationRelatedSummaryVm
 } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationAddendaSectionComponent } from '@/app/features/examinations/components/examination-addenda-section.component';
 import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
+import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationProceduresSectionComponent } from '@/app/features/examinations/components/examination-procedures-section.component';
-import { finalizeWarnings } from '@/app/features/examinations/utils/examination-procedures.utils';
+import { finalizeChecklist, finalizeWarnings } from '@/app/features/examinations/utils/examination-procedures.utils';
+import { ExaminationFinalizeChecklistComponent } from '@/app/features/examinations/components/examination-finalize-checklist.component';
 import { ExaminationFinalizeDialogComponent } from '@/app/features/examinations/components/examination-finalize-dialog.component';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
@@ -24,7 +25,6 @@ import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -42,6 +42,20 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
+/** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
+const RECORD_TEXT_SECTIONS: readonly {
+    field: 'visitReason' | 'anamnesis' | 'findings' | 'assessment' | 'plan' | 'notes';
+    label: string;
+    afterVitals: boolean;
+}[] = [
+    { field: 'visitReason', label: 'Şikâyet / ziyaret sebebi', afterVitals: false },
+    { field: 'anamnesis', label: 'Anamnez', afterVitals: false },
+    { field: 'findings', label: 'Klinik bulgular', afterVitals: false },
+    { field: 'assessment', label: 'Değerlendirme / tanı', afterVitals: true },
+    { field: 'plan', label: 'Plan / tedavi planı', afterVitals: true },
+    { field: 'notes', label: 'Ek notlar', afterVitals: true }
+];
+
 @Component({
     selector: 'app-examination-detail-page',
     standalone: true,
@@ -51,12 +65,13 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         ButtonModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         ExaminationAddendaSectionComponent,
         AdministrationsSectionComponent,
+        ExaminationFinalizeChecklistComponent,
         ExaminationFinalizeDialogComponent,
+        ExaminationPatientContextComponent,
         ExaminationPatientHeaderComponent,
         ExaminationProceduresSectionComponent,
         ToastModule
@@ -152,15 +167,16 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 
             <app-examination-patient-header [petId]="exam()!.petId" [clientId]="exam()!.clientId" />
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel bilgiler</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(exam()!.examinedAtUtc) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0" data-testid="exam-status">
+            <div class="grid grid-cols-12 gap-4 items-start" data-testid="exam-workspace">
+                <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-4">
+                    <app-examination-patient-context [petId]="exam()!.petId" [excludeExaminationId]="exam()!.id" />
+                </aside>
+
+                <div class="col-span-12 xl:col-span-6 min-w-0">
+                    <div class="card" data-testid="exam-record">
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-4">
+                            <h4 class="m-0 text-xl font-semibold mr-auto">Muayene kaydı</h4>
+                            <span data-testid="exam-status">
                                 <app-status-tag [label]="statusLabel(exam()!.status)" [severity]="statusSeverity(exam()!.status)" />
                                 @if (exam()!.status === 'Finalized') {
                                     <span class="text-muted-color text-sm ml-2" data-testid="finalized-info">
@@ -169,104 +185,47 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                                         }
                                     </span>
                                 }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(exam()!.createdAtUtc) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(exam()!.updatedAtUtc) }}</dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h4 class="mt-0 mb-6 text-xl font-semibold">Muayene özeti</h4>
-                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
-                            <h5 class="mt-0 mb-4">Ziyaret sebebi</h5>
-                            @if (exam()!.visitReason === emptyMark) {
-                                <app-empty-state message="Ziyaret sebebi girilmemiş." />
-                            } @else {
-                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.visitReason }}</p>
-                            }
+                            </span>
                         </div>
-                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
-                            <h5 class="mt-0 mb-4">Anamnez</h5>
-                            @if (exam()!.anamnesis === emptyMark) {
-                                <app-empty-state message="Anamnez girilmemiş." />
+                        @for (s of recordSectionsBeforeVitals(); track s.label) {
+                            <div class="mb-4">
+                                <h5 class="mt-0 mb-1">{{ s.label }}</h5>
+                                <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
+                            </div>
+                        }
+                        <div class="mb-4" data-testid="vital-row">
+                            <h5 class="mt-0 mb-1">Vital</h5>
+                            @if (vitals().length === 0) {
+                                <p class="m-0 text-sm text-muted-color">Ölçülmemiş.</p>
                             } @else {
-                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.anamnesis }}</p>
-                            }
-                        </div>
-                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
-                            <h5 class="mt-0 mb-4">Klinik bulgular</h5>
-                            @if (exam()!.findings === emptyMark) {
-                                <app-empty-state message="Bulgu kaydı yok." />
-                            } @else {
-                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.findings }}</p>
-                            }
-                        </div>
-                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
-                            <h5 class="mt-0 mb-4">Vital değerler</h5>
-                            @if (!hasVitals()) {
-                                <app-empty-state message="Vital değer ölçülmemiş." />
-                            } @else {
-                                <dl class="m-0 grid grid-cols-12 gap-3">
-                                    @if (exam()!.weightKg !== null) {
-                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Kilo</dt>
-                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.weightKg }} kg</dd>
-                                    }
-                                    @if (exam()!.temperatureC !== null) {
-                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Vücut sıcaklığı</dt>
-                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.temperatureC }} °C</dd>
-                                    }
-                                    @if (exam()!.heartRateBpm !== null) {
-                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Kalp atış hızı</dt>
-                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.heartRateBpm }} atım/dk</dd>
-                                    }
-                                    @if (exam()!.respiratoryRatePerMin !== null) {
-                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Solunum sayısı</dt>
-                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ exam()!.respiratoryRatePerMin }} soluk/dk</dd>
+                                <div class="flex flex-wrap gap-x-5 gap-y-1">
+                                    @for (v of vitals(); track v.label) {
+                                        <span data-testid="vital"><span class="text-muted-color text-sm mr-1">{{ v.label }}</span><span class="font-medium">{{ v.value }}</span></span>
                                     }
                                     @if (exam()!.vitalsMeasuredAtUtc) {
-                                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Ölçüm zamanı</dt>
-                                        <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(exam()!.vitalsMeasuredAtUtc) }}</dd>
+                                        <span class="text-muted-color text-sm self-center">Ölçüm: {{ formatDateTime(exam()!.vitalsMeasuredAtUtc) }}</span>
                                     }
-                                </dl>
+                                </div>
                             }
                         </div>
-                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
-                            <h5 class="mt-0 mb-4">Değerlendirme / tanı</h5>
-                            @if (exam()!.assessment === emptyMark) {
-                                <app-empty-state message="Değerlendirme girilmemiş." />
-                            } @else {
-                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.assessment }}</p>
-                            }
-                        </div>
-                        <div class="mb-6 pb-6 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0">
-                            <h5 class="mt-0 mb-4">Plan / tedavi planı</h5>
-                            @if (exam()!.plan === emptyMark) {
-                                <app-empty-state message="Plan girilmemiş." />
-                            } @else {
-                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.plan }}</p>
-                            }
-                        </div>
-                        <div>
-                            <h5 class="mt-0 mb-4">Ek notlar</h5>
-                            @if (exam()!.notes === emptyMark) {
-                                <app-empty-state message="Not yok." />
-                            } @else {
-                                <p class="m-0 whitespace-pre-wrap">{{ exam()!.notes }}</p>
-                            }
-                        </div>
+                        @for (s of recordSectionsAfterVitals(); track s.label) {
+                            <div class="mb-4">
+                                <h5 class="mt-0 mb-1">{{ s.label }}</h5>
+                                <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
+                            </div>
+                        }
+                        @if (emptySectionLabels().length > 0) {
+                            <p class="text-sm text-muted-color m-0" data-testid="record-empty-sections">Girilmemiş: {{ emptySectionLabels().join(', ') }}</p>
+                        }
+                        <p class="text-xs text-muted-color mt-3 mb-0">
+                            Oluşturulma {{ formatDate(exam()!.createdAtUtc) }} · Güncellenme {{ formatDate(exam()!.updatedAtUtc) }}
+                        </p>
                     </div>
-                </div>
 
-                @if (exam()!.status === 'Finalized') {
-                    <div class="col-span-12">
+                    @if (exam()!.status === 'Finalized') {
                         <app-examination-addenda-section [examinationId]="exam()!.id" [canAdd]="canAddAddendum()" />
-                    </div>
-                }
+                    }
 
-                <div class="col-span-12">
                     <app-examination-procedures-section
                         [exam]="exam()!"
                         [summary]="relatedSummary()"
@@ -275,28 +234,23 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         (changed)="onProcedureAdded()"
                         (retry)="retryRelatedSummary()"
                     />
-                </div>
 
-                @if (exam()!.petId?.trim()) {
-                    <div class="col-span-12">
+                    @if (exam()!.petId?.trim()) {
                         <app-administrations-section
                             [petId]="exam()!.petId!"
                             [petName]="exam()!.petName"
                             [examinationId]="exam()!.id"
                             [locked]="exam()!.status === 'Finalized'"
                         />
-                    </div>
-                }
+                    }
+                </div>
 
-                @if ((relatedSummary()?.pendingChargeCount ?? 0) > 0) {
-                    <div class="col-span-12">
-                        <div class="card mb-0 flex flex-wrap items-center gap-3 justify-between" data-testid="pending-charges-link">
-                            <span class="font-medium"><i class="pi pi-receipt mr-2"></i>{{ relatedSummary()!.pendingChargeCount }} ücret bekliyor</span>
-                            <a routerLink="/panel/charges/pending" [queryParams]="{ examinationId: exam()!.id }" class="text-primary font-medium no-underline">Ücretlendir</a>
-                        </div>
-                    </div>
-                }
+                <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-4">
+                    <app-examination-finalize-checklist [exam]="exam()!" [items]="finalizeChecklist()" />
+                </aside>
+            </div>
 
+            <div class="grid grid-cols-12 gap-4 mt-8">
                 <div class="col-span-12">
                     <h4 class="mt-0 mb-4 text-xl font-semibold">İlgili kayıtlar</h4>
                 </div>
@@ -318,7 +272,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                                 <a routerLink="/panel/payments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (relatedPaymentsView().total === 0) {
-                                <app-empty-state [message]="copy.listEmptyMessage" />
+                                <p class="text-muted-color text-sm m-0">{{ copy.listEmptyMessage }}</p>
                             } @else {
                                 <ul class="list-none m-0 p-0">
                                     @for (row of relatedPaymentsView().displayed; track row.id) {
@@ -358,52 +312,17 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                            <h5 class="mt-0 mb-0">Aynı hayvana ait muayeneler</h5>
-                            <a routerLink="/panel/examinations" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
-                        @if (!exam()!.petId) {
-                            <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
-                        } @else if (sibLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (sibError()) {
-                            <p class="text-muted-color m-0">{{ sibError() }}</p>
-                        } @else if (sibItemsView().total === 0) {
-                            <app-empty-state message="Başka muayene kaydı yok." />
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of sibItemsView().displayed; track row.id) {
-                                    <li
-                                        class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
-                                    >
-                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.examinedAtUtc) }}</div>
-                                        <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                            <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.examinedAtUtc) }}</span>
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                        </div>
-                                        <div class="font-medium min-w-0 break-words">{{ row.visitReason }}</div>
-                                        <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
-                </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Randevular (aynı hayvan)</h5>
                             <a routerLink="/panel/appointments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (!exam()!.petId) {
-                            <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
+                            <p class="text-muted-color text-sm m-0">Hayvan bilgisi yok; liste gösterilemiyor.</p>
                         } @else if (apptLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (apptError()) {
                             <p class="text-muted-color m-0">{{ apptError() }}</p>
                         } @else if (apptItemsView().total === 0) {
-                            <app-empty-state message="Kayıt bulunamadı." />
+                            <p class="text-muted-color text-sm m-0">Kayıt bulunamadı.</p>
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of apptItemsView().displayed; track row.id) {
@@ -460,18 +379,48 @@ export class ExaminationDetailPageComponent implements OnInit {
 
     private readonly procedures = viewChild(ExaminationProceduresSectionComponent);
 
-    /** Kesinleştirme öncesi eksik kalem uyarıları (engel değil). */
+    /** Kesinleştirme kontrol listesi (sağ panel) ve onaydaki uyarılar aynı kuraldan türer (engel değil). */
+    readonly finalizeChecklist = computed(() => {
+        const e = this.exam();
+        return e ? finalizeChecklist(e, this.relatedSummary()) : [];
+    });
     readonly finalizeWarnings = computed(() => {
         const e = this.exam();
         return e ? finalizeWarnings(e, this.relatedSummary()) : [];
     });
     readonly relatedPaymentsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.payments));
-    readonly sibItemsView = computed(() => sliceDetailRelatedList(this.sibItems()));
     readonly apptItemsView = computed(() => sliceDetailRelatedList(this.apptItems()));
 
-    readonly sibLoading = signal(false);
-    readonly sibError = signal<string | null>(null);
-    readonly sibItems = signal<ExaminationListItemVm[]>([]);
+    /** Kayıt metin bölümleri: dolu olanlar başlıklı gösterilir, boşlar tek satırda "Girilmemiş" altında toplanır. */
+    private readonly textSections = computed(() => {
+        const e = this.exam();
+        if (!e) {
+            return [];
+        }
+        return RECORD_TEXT_SECTIONS.map((s) => ({ ...s, text: e[s.field] }));
+    });
+    readonly recordSectionsBeforeVitals = computed(() => this.textSections().filter((s) => !s.afterVitals && s.text !== this.emptyMark));
+    readonly recordSectionsAfterVitals = computed(() => this.textSections().filter((s) => s.afterVitals && s.text !== this.emptyMark));
+    readonly emptySectionLabels = computed(() =>
+        this.textSections()
+            .filter((s) => s.text === this.emptyMark)
+            .map((s) => s.label)
+    );
+    /** Vital satırı: yalnız ölçülmüş değerler; hiçbiri yoksa satır "Ölçülmemiş" der. */
+    readonly vitals = computed(() => {
+        const e = this.exam();
+        if (!e) {
+            return [];
+        }
+        return [
+            { label: 'Kilo', value: e.weightKg, unit: 'kg' },
+            { label: 'Sıcaklık', value: e.temperatureC, unit: '°C' },
+            { label: 'Kalp', value: e.heartRateBpm, unit: 'atım/dk' },
+            { label: 'Solunum', value: e.respiratoryRatePerMin, unit: 'soluk/dk' }
+        ]
+            .filter((v) => v.value !== null)
+            .map((v) => ({ label: v.label, value: `${v.value} ${v.unit}` }));
+    });
 
     readonly apptLoading = signal(false);
     readonly apptError = signal<string | null>(null);
@@ -508,11 +457,6 @@ export class ExaminationDetailPageComponent implements OnInit {
             detail: 'Muayene kesinleştirildi.'
         });
         this.examinationsService.getExaminationById(result.id).subscribe({ next: (x) => this.exam.set(x), error: () => undefined });
-    }
-
-    hasVitals(): boolean {
-        const e = this.exam();
-        return !!e && (e.weightKg !== null || e.temperatureC !== null || e.heartRateBpm !== null || e.respiratoryRatePerMin !== null);
     }
 
     ngOnInit(): void {
@@ -621,9 +565,6 @@ export class ExaminationDetailPageComponent implements OnInit {
         this.loadRelatedSummary(x.id);
 
         if (!x.petId?.trim()) {
-            this.sibItems.set([]);
-            this.sibLoading.set(false);
-            this.sibError.set(null);
             this.apptItems.set([]);
             this.apptLoading.set(false);
             this.apptError.set(null);
@@ -631,19 +572,6 @@ export class ExaminationDetailPageComponent implements OnInit {
         }
 
         const petId = x.petId.trim();
-
-        this.sibLoading.set(true);
-        this.sibError.set(null);
-        this.related.loadSiblingExaminationsForPet(petId, x.id).subscribe({
-            next: (items) => {
-                this.sibItems.set(items);
-                this.sibLoading.set(false);
-            },
-            error: (e: Error) => {
-                this.sibError.set(e.message ?? 'Muayene listesi yüklenemedi.');
-                this.sibLoading.set(false);
-            }
-        });
 
         this.apptLoading.set(true);
         this.apptError.set(null);

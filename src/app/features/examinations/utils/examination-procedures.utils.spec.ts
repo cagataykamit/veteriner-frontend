@@ -2,6 +2,7 @@ import type { ExaminationRelatedSummaryVm } from '@/app/features/examinations/mo
 import {
     buildProcedureRows,
     FINALIZED_LOCK_MESSAGE,
+    finalizeChecklist,
     finalizeWarnings,
     procedureAddState,
     READ_ONLY_TENANT_MESSAGE,
@@ -120,5 +121,30 @@ describe('finalizeWarnings', () => {
     it('özet henüz yüklenmediyse işlem uyarısı verilmez', () => {
         const w = finalizeWarnings({ assessment: 'x', plan: 'y' }, null);
         expect(w).toEqual([]);
+    });
+});
+
+describe('finalizeChecklist', () => {
+    it('tamam ve eksik maddeleri birlikte döner; uyarılar eksik maddelerle aynıdır', () => {
+        const items = finalizeChecklist({ assessment: 'Gastrit', plan: '—' }, summary({ pendingChargeCount: 1 }));
+
+        expect(items.map((i) => [i.key, i.ok])).toEqual([
+            ['assessment', true],
+            ['plan', false],
+            ['procedures', false],
+            ['pendingCharges', false]
+        ]);
+        expect(finalizeWarnings({ assessment: 'Gastrit', plan: '—' }, summary({ pendingChargeCount: 1 }))).toEqual(
+            items.filter((i) => !i.ok).map((i) => i.warning)
+        );
+    });
+
+    it('özet yokken yalnız tanı ve plan maddeleri; ücret sayısı bilinmiyorsa ücret maddesi yok', () => {
+        expect(finalizeChecklist({ assessment: 'x', plan: 'y' }, null).map((i) => i.key)).toEqual(['assessment', 'plan']);
+        expect(finalizeChecklist({ assessment: 'x', plan: 'y' }, summary({ pendingChargeCount: null })).map((i) => i.key)).toEqual([
+            'assessment',
+            'plan',
+            'procedures'
+        ]);
     });
 });
