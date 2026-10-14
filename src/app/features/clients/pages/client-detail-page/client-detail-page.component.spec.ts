@@ -25,7 +25,7 @@ const client: ClientDetailVm = {
     updatedAtUtc: null
 };
 
-const pet = (id: string, name: string): PetListItemVm => ({ id, clientId: 'c1', speciesId: 's1', name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status: 'Active' });
+const pet = (id: string, name: string, status: PetListItemVm['status'] = 'Active'): PetListItemVm => ({ id, clientId: 'c1', speciesId: 's1', name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status });
 
 const paymentSummary: ClientPaymentSummaryVm = {
     clientId: 'c1',
@@ -96,7 +96,12 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         pets = { state: 'ok', data: [pet('p1', 'Pamuk'), pet('p2', 'Karabaş')] };
         pendingChargesSpy = jasmine
             .createSpy('clientPendingCharges')
-            .and.returnValue(of({ state: 'ok', data: [{ id: 's1', petId: 'p2', petName: 'Karabaş', description: 'Serum' } as ChargeSuggestionVm] }));
+            .and.returnValue(
+                of({
+                    state: 'ok',
+                    data: { items: [{ id: 's1', petId: 'p2', petName: 'Karabaş', description: 'Serum', quantity: 2, suggestedUnitPrice: 50, currency: 'TRY' } as ChargeSuggestionVm], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 }
+                })
+            );
     });
 
     it('tek sayfada iletişim ve hesap durumu, eylem çubuğu, para Yapılacakları, hayvanlar, ödeme özeti ve son kayıtlar; Düzenle ayrı', () => {
@@ -115,7 +120,9 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(el().textContent).toContain('Ödeme özeti');
         expect(el().textContent).toContain('Son muayeneler');
         expect(el().textContent).not.toContain('Genel bilgiler');
-        expect(pendingChargesSpy).toHaveBeenCalledWith(['p1', 'p2']);
+        expect(pendingChargesSpy).toHaveBeenCalledOnceWith('c1');
+        expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('1 işlem');
+        expect(el().querySelector('[data-testid="pending-amount"]')?.textContent).toContain('100');
     });
 
     it('rol vurgusu hasta kartıyla aynı: muayene açabilen hayvanları ve geçmişi, yalnız ücret/ödeme alan parayı öne alır', () => {
@@ -132,22 +139,39 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(el().querySelector('[data-testid="pets-column"]')?.classList).not.toContain('order-first');
     });
 
-    it('tek hayvanlı müşteride Geldi o hayvanı seçili açar; birden çok hayvanda seçim diyalogda yapılır', () => {
+    it('tek aktif hayvanlı müşteride Geldi o hayvanı seçili açar; birden çok aktif hayvanda seçim diyalogda yapılır', () => {
         create();
         expect(fixture.componentInstance.arrivalPet()).toBeNull();
 
         TestBed.resetTestingModule();
-        pets = { state: 'ok', data: [pet('p1', 'Pamuk')] };
+        pets = { state: 'ok', data: [pet('p1', 'Pamuk'), pet('p2', 'Karabaş', 'Deceased')] };
         create();
         expect(fixture.componentInstance.arrivalPet()).toEqual({ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'c1', clientName: 'Ali Veli' });
     });
 
-    it('hayvan listesi alınamazsa ücret bekleyenler de alınamadı sayılır (eksik liste sessizce boş görünmez)', () => {
+    it('hayvanlar varsayılan aktif; vefat eden "Tümü" ile rozetli görünür', () => {
+        pets = { state: 'ok', data: [pet('p1', 'Pamuk'), pet('p2', 'Karabaş', 'Deceased')] };
+        create();
+        expect(el().querySelectorAll('[data-testid="client-pet-row"]').length).toBe(1);
+        expect(el().querySelector('[data-testid="pet-deceased"]')).toBeNull();
+
+        (el().querySelector('[data-testid="pets-filter-all"]') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        expect(el().querySelectorAll('[data-testid="client-pet-row"]').length).toBe(2);
+        expect(el().querySelector('[data-testid="pet-deceased"]')?.textContent).toContain('Vefat');
+    });
+
+    it('hayvan listesi alınamasa da ücret bekleyenler müşteri süzgeciyle okunur; ücret okunamazsa alınamadı gösterilir', () => {
         pets = { state: 'error' };
         create();
-
-        expect(pendingChargesSpy).not.toHaveBeenCalled();
+        expect(pendingChargesSpy).toHaveBeenCalledOnceWith('c1');
         expect(el().querySelector('[data-testid="pets-failed"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('1 işlem');
+
+        TestBed.resetTestingModule();
+        pendingChargesSpy.and.returnValue(of({ state: 'error' }));
+        create();
         expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('alınamadı');
         expect(el().querySelector('[data-testid="todo-failed"]')?.textContent).toContain('Ücret bekleyen işlem');
     });

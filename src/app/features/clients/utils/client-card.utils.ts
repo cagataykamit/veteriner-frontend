@@ -1,6 +1,7 @@
 import { CHARGES_CREATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import { computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import {
@@ -55,6 +56,12 @@ export function buildClientTodo(sources: ClientTodoSources, ctx: ClientTodoConte
     return todoView(items, ctx.emphasis, sources, SOURCE_LABELS);
 }
 
+/** Müşteri kartında "Geldi"nin önceden seçeceği hayvan: tek aktif hayvan varsa o (vefat eden yeni geliş açamaz). */
+export function soleActivePet(pets: readonly PetListItemVm[]): PetListItemVm | null {
+    const active = pets.filter((p) => p.status !== 'Deceased');
+    return active.length === 1 ? active[0] : null;
+}
+
 /** Hayvanlar listesindeki satır: kimlik ve hayvana düşen para/randevu ipuçları. `null` = o bilgi okunamıyor (yetki/hata). */
 export interface ClientPetRow {
     pet: PetListItemVm;
@@ -85,6 +92,42 @@ export function buildClientPetRows(
             now
         )
     }));
+}
+
+/** Müşteri kartındaki "Ücret bekleyen" özeti. */
+export interface PendingChargesSummary {
+    /** Bekleyen kalem sayısı (sunucunun `totalItems`'ı). */
+    count: number;
+    /** Fiyatlı kalemlerin önerilen tutar toplamı. */
+    amount: number;
+    currency: string;
+    /** Önerilen birim fiyatı olmayan ("fiyat bekliyor") kalem sayısı; tutara katılmaz. */
+    unpricedCount: number;
+    /** Sayfa tüm kalemleri içermiyor: tutar yalnız okunan kalemlerden. */
+    partial: boolean;
+}
+
+/**
+ * Müşteri bazlı ücret önerisi özeti (sözleşme §3, K10): sayı `totalItems`, tutar sayfadaki kalemlerden `quantity × suggestedUnitPrice`
+ * (satır başına ücretle aynı yuvarlama); fiyatsız kalem tutara girmez, ayrı sayılır.
+ */
+export function pendingChargesSummary(page: Pick<ChargeSuggestionsPagedVm, 'items' | 'totalItems'>): PendingChargesSummary {
+    let amount = 0;
+    let unpricedCount = 0;
+    for (const c of page.items) {
+        if (c.suggestedUnitPrice === null) {
+            unpricedCount += 1;
+        } else {
+            amount += computeChargeAmount(c.quantity, c.suggestedUnitPrice) ?? 0;
+        }
+    }
+    return {
+        count: page.totalItems,
+        amount: Math.round(amount * 100) / 100,
+        currency: page.items.find((c) => c.currency?.trim())?.currency ?? 'TRY',
+        unpricedCount,
+        partial: page.totalItems > page.items.length
+    };
 }
 
 function groupByPet(charges: readonly ChargeSuggestionVm[]): Map<string, ChargeSuggestionVm[]> {

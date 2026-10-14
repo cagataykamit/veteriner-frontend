@@ -4,14 +4,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentStatusLabel } from '@/app/features/appointments/utils/appointment-status.utils';
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import { ClientCardHeaderComponent } from '@/app/features/clients/components/client-card-header.component';
 import { ClientPetsPanelComponent } from '@/app/features/clients/components/client-pets-panel.component';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientDetailVm, ClientPaymentSummaryVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { buildClientPetRows, buildClientTodo, type ClientPetRow } from '@/app/features/clients/utils/client-card.utils';
+import { buildClientPetRows, buildClientTodo, type ClientPetRow, soleActivePet } from '@/app/features/clients/utils/client-card.utils';
 import { PetTodoPanelComponent } from '@/app/features/pets/components/pet-todo-panel.component';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
@@ -293,7 +293,12 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
 
     readonly pets = signal<PetCardSection<PetListItemVm[]>>(null);
     readonly balance = signal<PetCardSection<ClientBalanceVm>>(null);
-    readonly pendingCharges = signal<PetCardSection<ChargeSuggestionVm[]>>(null);
+    /** Müşteri süzgeçli tek istek; başlık sayı/tutarı, Yapılacaklar ve hayvan satırları kalemleri kullanır. */
+    readonly pendingCharges = signal<PetCardSection<ChargeSuggestionsPagedVm>>(null);
+    readonly pendingChargeItems = computed<PetCardSection<ChargeSuggestionVm[]>>(() => {
+        const s = this.pendingCharges();
+        return s?.state === 'ok' ? { state: 'ok', data: s.data.items } : s;
+    });
 
     readonly recentSummaryLoading = signal(false);
     readonly recentSummaryError = signal<string | null>(null);
@@ -329,7 +334,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
 
     readonly todo = computed(() =>
         buildClientTodo(
-            { pendingCharges: this.pendingCharges(), balance: this.balance() },
+            { pendingCharges: this.pendingChargeItems(), balance: this.balance() },
             {
                 clientId: this.client()?.id ?? '',
                 hasClaim: (claim) => this.auth.hasOperationClaim(claim),
@@ -344,19 +349,18 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         if (p?.state !== 'ok') {
             return p;
         }
-        return { state: 'ok', data: buildClientPetRows(p.data, okData(this.balance()), okData(this.pendingCharges()), this.apptItems()) };
+        return { state: 'ok', data: buildClientPetRows(p.data, okData(this.balance()), okData(this.pendingChargeItems()), this.apptItems()) };
     });
 
     readonly currency = computed(() => okData(this.balance())?.currency || 'TRY');
 
-    /** Tek hayvanlı müşteride "Geldi" o hayvanı seçili açar; birden çok hayvanda hasta diyalogda aranır. */
+    /** Tek aktif hayvanlı müşteride "Geldi" o hayvanı seçili açar; aksi halde hasta diyalogda aranır. */
     readonly arrivalPet = computed<PetSuggestion | null>(() => {
         const c = this.client();
-        const list = okData(this.pets());
-        if (!c || list?.length !== 1) {
+        const pet = soleActivePet(okData(this.pets()) ?? []);
+        if (!c || !pet) {
             return null;
         }
-        const pet = list[0];
         return { id: pet.id, label: `${pet.name} — ${pet.speciesName} · Sahip: ${c.fullName}`, clientId: c.id, clientName: c.fullName };
     });
 
@@ -443,17 +447,8 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         this.loadRecentSummary(c.id);
         this.loadPaymentSummary(c.id);
         this.cardSubscriptions.add(this.cardData.ownerBalance(c.id).subscribe((s) => this.balance.set(s)));
-        this.cardSubscriptions.add(
-            this.cardData.clientPets(c.id).subscribe((s) => {
-                this.pets.set(s);
-                if (s?.state === 'ok') {
-                    // Ücret önerisi ucunda müşteri süzgeci yok; hayvanlar gelince hayvan başına okunur.
-                    this.cardSubscriptions.add(this.cardData.clientPendingCharges(s.data.map((p) => p.id)).subscribe((pc) => this.pendingCharges.set(pc)));
-                } else if (s?.state === 'error' && this.canReadCharges) {
-                    this.pendingCharges.set({ state: 'error' });
-                }
-            })
-        );
+        this.cardSubscriptions.add(this.cardData.clientPets(c.id).subscribe((s) => this.pets.set(s)));
+        this.cardSubscriptions.add(this.cardData.clientPendingCharges(c.id).subscribe((s) => this.pendingCharges.set(s)));
     }
 
     private resetCard(): void {

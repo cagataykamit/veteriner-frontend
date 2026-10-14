@@ -75,22 +75,25 @@ describe('PetCardDataService', () => {
         expect(collect(service.examination(null))).toEqual([null]);
     });
 
-    it('müşteri kartı: hayvanlar müşteriye süzülür; ücret bekleyenler hayvan başına okunup birleşir, hayvan yoksa istek atılmaz', () => {
+    it('müşteri kartı: hayvanlar (vefat edenler dahil, durum süzgeçsiz) müşteriye süzülür', () => {
         claims.add('Pets.Read');
-        claims.add('Charges.Read');
         pets.getPets.and.returnValue(of({ items: [{ id: 'p1', clientId: 'c1' }, { id: 'p9', clientId: 'c9' }] }) as never);
         const petValues = collect(service.clientPets('c1'));
         expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1' }));
+        expect(pets.getPets.calls.mostRecent().args[0].status).toBeUndefined();
         const lastPets = petValues[1];
         expect(lastPets?.state === 'ok' ? lastPets.data.map((p) => p.id) : null).toEqual(['p1']);
+    });
 
-        chargeSuggestions.getPending.and.callFake((q) => of({ items: [{ id: `s-${q?.petId}`, petId: q?.petId }] }) as never);
-        const values = collect(service.clientPendingCharges(['p1', 'p2']));
-        const last = values[1];
-        expect(last?.state === 'ok' ? last.data.map((c) => c.id) : null).toEqual(['s-p1', 's-p2']);
-
-        chargeSuggestions.getPending.calls.reset();
-        expect(collect(service.clientPendingCharges([]))).toEqual([{ state: 'loading' }, { state: 'ok', data: [] }]);
+    it('müşteri kartı: ücret bekleyenler müşteri süzgeciyle tek istekte okunur; izin yoksa istek atılmaz', () => {
+        expect(collect(service.clientPendingCharges('c1'))).toEqual([null]);
         expect(chargeSuggestions.getPending).not.toHaveBeenCalled();
+
+        claims.add('Charges.Read');
+        const page = { items: [{ id: 's1', petId: 'p1' }], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 };
+        chargeSuggestions.getPending.and.returnValue(of(page) as never);
+        const values = collect(service.clientPendingCharges('c1'));
+        expect(chargeSuggestions.getPending).toHaveBeenCalledOnceWith({ page: 1, pageSize: 200, clientId: 'c1' });
+        expect(values[1]).toEqual({ state: 'ok', data: page } as never);
     });
 });

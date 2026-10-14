@@ -25,10 +25,12 @@ export interface ChargeSuggestionsPagedVm {
     totalPages: number;
 }
 
-/** GET /charge-suggestions sorgusu; yalnız bekleyen kalemler gelir. Müşteri/tarih süzgeci sözleşmede yoktur. */
+/** GET /charge-suggestions sorgusu; yalnız bekleyen kalemler gelir. Tarih süzgeci sözleşmede yoktur; süzgeçler AND. */
 export interface ChargeSuggestionsListQuery {
     page?: number;
     pageSize?: number;
+    /** Müşterinin bugünkü bütün hayvanlarının kalemleri (hayvan sahipliği üzerinden; `PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §3). */
+    clientId?: string;
     petId?: string;
     examinationId?: string;
     visitId?: string;

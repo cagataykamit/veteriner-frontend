@@ -1,13 +1,15 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionsPagedVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
+import { pendingChargesSummary } from '@/app/features/clients/utils/client-card.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatMoney } from '@/app/shared/utils/money.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 /**
@@ -44,10 +46,18 @@ import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/ut
                         <dd class="m-0">
                             @switch (p.state) {
                                 @case ('ok') {
-                                    @if (p.data.length > 0) {
-                                        <span class="font-semibold text-amber-700 dark:text-amber-400">{{ p.data.length }} işlem</span>
-                                    } @else {
-                                        <span class="text-muted-color">Yok</span>
+                                    @if (pendingSummary(); as s) {
+                                        @if (s.count > 0) {
+                                            <span class="font-semibold text-amber-700 dark:text-amber-400">{{ s.count }} işlem</span>
+                                            @if (s.amount > 0) {
+                                                <span class="tabular-nums" data-testid="pending-amount"> · {{ s.partial ? 'en az ' : '' }}{{ money(s.amount, s.currency) }}</span>
+                                            }
+                                            @if (s.unpricedCount > 0) {
+                                                <span class="block text-muted-color text-sm" data-testid="pending-unpriced">{{ s.unpricedCount }} kalem fiyat bekliyor</span>
+                                            }
+                                        } @else {
+                                            <span class="text-muted-color">Yok</span>
+                                        }
                                     }
                                 }
                                 @case ('error') {
@@ -93,7 +103,13 @@ export class ClientCardHeaderComponent {
     readonly client = input.required<ClientDetailVm>();
     /** `null` = ücret okuma yetkisi yok (alan gösterilmez). */
     readonly balance = input<PetCardSection<ClientBalanceVm>>(null);
-    readonly pendingCharges = input<PetCardSection<ChargeSuggestionVm[]>>(null);
+    /** Müşteri süzgeçli öneri sayfası; sayı `totalItems`, tutar sayfadan (`pendingChargesSummary`). */
+    readonly pendingCharges = input<PetCardSection<ChargeSuggestionsPagedVm>>(null);
+    readonly pendingSummary = computed(() => {
+        const p = this.pendingCharges();
+        return p?.state === 'ok' ? pendingChargesSummary(p.data) : null;
+    });
+    readonly money = formatMoney;
     /** Müşteri son özetinden; `ok` + `null` = kayıt yok. */
     readonly lastExamination = input<PetCardSection<ExaminationListItemVm | null>>(null);
     readonly nextAppointment = input<PetCardSection<AppointmentListItemVm | null>>(null);

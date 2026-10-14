@@ -2,7 +2,7 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { buildClientPetRows, buildClientTodo, type ClientTodoContext, type ClientTodoSources } from './client-card.utils';
+import { buildClientPetRows, buildClientTodo, type ClientTodoContext, type ClientTodoSources, pendingChargesSummary, soleActivePet } from './client-card.utils';
 
 const NOW = new Date('2026-10-14T09:00:00Z');
 
@@ -111,5 +111,27 @@ describe('buildClientPetRows', () => {
         const [row] = buildClientPetRows([pet('p1', 'Pamuk')], null, null, [], NOW);
         expect(row.outstandingAmount).toBeNull();
         expect(row.pendingChargeCount).toBeNull();
+    });
+});
+
+describe('pendingChargesSummary (müşteri bazlı ücret bekleyen, sözleşme §3)', () => {
+    const priced = (id: string, quantity: number, suggestedUnitPrice: number | null) => ({ ...charge(id, 'p1', 'Pamuk'), quantity, suggestedUnitPrice, currency: 'TRY' });
+
+    it('sayı totalItems; tutar quantity × önerilen fiyat (satır başına yuvarlama), fiyatsız kalem ayrı sayılır', () => {
+        const s = pendingChargesSummary({ items: [priced('a', 2, 12.5), priced('b', 0.333, 10), priced('c', 1, null)], totalItems: 3 });
+        expect(s).toEqual({ count: 3, amount: 28.33, currency: 'TRY', unpricedCount: 1, partial: false });
+    });
+
+    it('sayfa tüm kalemleri içermiyorsa kısmi işaretlenir', () => {
+        expect(pendingChargesSummary({ items: [priced('a', 1, 10)], totalItems: 250 }).partial).toBeTrue();
+        expect(pendingChargesSummary({ items: [], totalItems: 0 })).toEqual({ count: 0, amount: 0, currency: 'TRY', unpricedCount: 0, partial: false });
+    });
+});
+
+describe('soleActivePet', () => {
+    it('tek aktif hayvan varsa onu döner; vefat edenler sayılmaz', () => {
+        expect(soleActivePet([pet('p1', 'Pamuk'), { ...pet('p2', 'Karabaş'), status: 'Deceased' }])?.id).toBe('p1');
+        expect(soleActivePet([pet('p1', 'Pamuk'), pet('p2', 'Karabaş')])).toBeNull();
+        expect(soleActivePet([{ ...pet('p2', 'Karabaş'), status: 'Deceased' }])).toBeNull();
     });
 });

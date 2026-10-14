@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { catchError, forkJoin, map, type Observable, of, startWith } from 'rxjs';
+import { catchError, map, type Observable, of, startWith } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     CHARGES_READ_CLAIM,
@@ -9,7 +9,7 @@ import {
     TREATMENTS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
@@ -27,6 +27,9 @@ import { VaccinationsService } from '@/app/features/vaccinations/services/vaccin
 
 /** Hasta başına açık kayıt sayısı küçüktür; tek sayfa yeterli (aşan kısım listede "Tümü" ile görülür). */
 const FETCH_SIZE = 50;
+
+/** Müşteri bazlı ücret önerisi sayfası (sözleşme §3 örneği); aşan kalemler tutara girmez, sayı yine `totalItems`'tır. */
+export const CLIENT_PENDING_CHARGES_PAGE_SIZE = 200;
 
 /** `Scheduled` (planlanmış) aşı; liste ucu enum'u sayı olarak alır. */
 const SCHEDULED_VACCINATION_STATUS = '0';
@@ -87,13 +90,12 @@ export class PetCardDataService {
         );
     }
 
-    /** Müşterinin ücret bekleyen işlemleri: öneri ucunda müşteri süzgeci yok, hayvan başına okunur (müşterinin hayvan sayısı küçüktür). */
-    clientPendingCharges(petIds: readonly string[]): Observable<PetCardSection<ChargeSuggestionVm[]>> {
-        return this.section(CHARGES_READ_CLAIM, () =>
-            petIds.length === 0
-                ? of([])
-                : forkJoin(petIds.map((petId) => this.chargeSuggestions.getPending({ page: 1, pageSize: FETCH_SIZE, petId }).pipe(map((r) => r.items)))).pipe(map((lists) => lists.flat()))
-        );
+    /**
+     * Müşterinin ücret bekleyen kalemleri tek istekte (`clientId` süzgeci): sayı `totalItems`, kalemler en fazla bir sayfa.
+     * Tutar ayrı alan olarak gelmez; istemci sayfadan hesaplar (`pendingChargesTotal`).
+     */
+    clientPendingCharges(clientId: string): Observable<PetCardSection<ChargeSuggestionsPagedVm>> {
+        return this.section(CHARGES_READ_CLAIM, () => this.chargeSuggestions.getPending({ page: 1, pageSize: CLIENT_PENDING_CHARGES_PAGE_SIZE, clientId }));
     }
 
     private section<T>(claim: string, load: () => Observable<T>): Observable<PetCardSection<T>> {
