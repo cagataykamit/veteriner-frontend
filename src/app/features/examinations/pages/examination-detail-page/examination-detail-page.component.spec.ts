@@ -199,6 +199,16 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(yetkili.el.querySelector('a[href*="/panel/payments/new"]')).not.toBeNull();
     });
 
+    it('"Tümü →" bağlantıları hayvan bağlamını (petId) taşır', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read']);
+
+        for (const path of ['treatments', 'prescriptions', 'lab-results', 'hospitalizations', 'payments', 'examinations', 'appointments']) {
+            const a = Array.from(el.querySelectorAll(`a[href^="/panel/${path}?"]`));
+            expect(a.length).withContext(path).toBeGreaterThan(0);
+            expect(a[0].getAttribute('href')).withContext(path).toContain('petId=pet-1');
+        }
+    });
+
     it('kesinleşmiş muayenede tedavi/reçete/aşı oluştur gizli ve neden görünür; lab ve yatış açık kalır', async () => {
         const { el } = await setup(finalizedVm, ['Examinations.Update']);
 

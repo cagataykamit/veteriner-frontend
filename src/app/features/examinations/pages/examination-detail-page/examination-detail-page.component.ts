@@ -425,7 +425,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Bağlı tedaviler</h5>
-                                <a routerLink="/panel/treatments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/treatments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (relatedTreatmentsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
@@ -457,7 +457,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Bağlı reçeteler</h5>
-                                <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/prescriptions" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (relatedPrescriptionsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
@@ -489,7 +489,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Bağlı lab sonuçları</h5>
-                                <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/lab-results" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (relatedLabResultsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
@@ -522,7 +522,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Bağlı yatışlar</h5>
-                                <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/hospitalizations" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (relatedHospitalizationsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
@@ -555,7 +555,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Bağlı ödemeler</h5>
-                                <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/payments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (relatedPaymentsView().total === 0) {
                                 <app-empty-state [message]="copy.listEmptyMessage" />
@@ -599,7 +599,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Aynı hayvana ait muayeneler</h5>
-                            <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            <a routerLink="/panel/examinations" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (!exam()!.petId) {
                             <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />
@@ -634,7 +634,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Randevular (aynı hayvan)</h5>
-                            <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            <a routerLink="/panel/appointments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (!exam()!.petId) {
                             <app-empty-state message="Hayvan bilgisi yok; liste gösterilemiyor." />

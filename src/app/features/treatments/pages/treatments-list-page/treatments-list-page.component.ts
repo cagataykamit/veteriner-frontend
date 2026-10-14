@@ -4,7 +4,7 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
@@ -13,6 +13,8 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
+import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -37,7 +39,7 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent, SearchInputComponent
+        AppErrorStateComponent, DateInputComponent, SearchInputComponent, AppContextFilterChipComponent
     ],
     template: `
         <app-page-header title="Tedaviler" description="Tedavi kayıtları.">
@@ -55,6 +57,10 @@ import { TREATMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                 ></button>
             }
         </app-page-header>
+
+        @if (contextPetId()) {
+            <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
+        }
 
         <div class="card">
             @if (loading()) {
@@ -216,6 +222,10 @@ export class TreatmentsListPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     private readonly treatmentsService = inject(TreatmentsService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+
+    readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
 
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
     readonly loading = signal(true);
@@ -278,6 +288,13 @@ export class TreatmentsListPageComponent implements OnInit {
         this.loadFromServer(1, this.pageSize(), '', '', '');
     }
 
+    clearContextFilter(): void {
+        this.contextPetId.set('');
+        void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
+        this.first.set(0);
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+    }
+
     reload(): void {
         this.loadFromServer(
             this.currentPage(),
@@ -334,7 +351,7 @@ export class TreatmentsListPageComponent implements OnInit {
         toDate: string,
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -345,6 +362,7 @@ export class TreatmentsListPageComponent implements OnInit {
             .getTreatments({
                 page,
                 pageSize,
+                petId: this.contextPetId() || undefined,
                 search: search || undefined,
                 fromDate: fromDate || undefined,
                 toDate: toDate || undefined

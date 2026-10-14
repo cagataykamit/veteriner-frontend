@@ -5,7 +5,9 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
+import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
@@ -48,7 +50,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
+        AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
         SearchInputComponent
     ],
     template: `
@@ -67,6 +69,10 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                 ></button>
             }
         </app-page-header>
+
+        @if (contextPetId()) {
+            <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
+        }
 
         <div class="card">
             @if (loading()) {
@@ -225,6 +231,10 @@ export class PrescriptionsListPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     private readonly prescriptionsService = inject(PrescriptionsService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+
+    readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
 
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
     readonly loading = signal(true);
@@ -296,6 +306,14 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.loadFromServer(1, this.pageSize(), '', '', '');
     }
 
+    clearContextFilter(): void {
+        this.contextPetId.set('');
+        void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
+        this.currentPage.set(1);
+        this.first.set(0);
+        this.reload();
+    }
+
     reload(): void {
         this.loadFromServer(
             this.currentPage(),
@@ -356,7 +374,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         toDate: string,
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -365,6 +383,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.error.set(null);
         this.prescriptionsService
             .getPrescriptions({
+                petId: this.contextPetId() || undefined,
                 page,
                 pageSize,
                 search: search || undefined,

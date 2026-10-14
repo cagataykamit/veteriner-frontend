@@ -5,7 +5,9 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
+import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -57,7 +59,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent,
+        AppContextFilterChipComponent, AppErrorStateComponent,
         AppStatusTagComponent, DateInputComponent, FilterFieldComponent,
         SearchInputComponent
     ],
@@ -80,6 +82,10 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                 ></button>
             }
         </app-page-header>
+
+        @if (contextPetId() || contextClientId()) {
+            <app-context-filter-chip [label]="contextFilterLabel()" (clear)="clearContextFilter()" />
+        }
 
         <div class="card">
             @if (loading()) {
@@ -255,6 +261,12 @@ export class AppointmentsListPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     private readonly appointmentsService = inject(AppointmentsService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+
+    readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
+    readonly contextClientId = signal(readContextFilterParam(this.route, 'clientId'));
+    readonly contextFilterLabel = computed(() => (this.contextPetId() ? 'Seçili hayvanın kayıtları gösteriliyor' : 'Seçili müşterinin kayıtları gösteriliyor'));
 
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
     readonly loading = signal(true);
@@ -352,6 +364,15 @@ export class AppointmentsListPageComponent implements OnInit {
         this.loadFromServer(1, this.pageSize(), '', '', '', '');
     }
 
+    clearContextFilter(): void {
+        this.contextPetId.set('');
+        this.contextClientId.set('');
+        void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
+        this.currentPage.set(1);
+        this.first.set(0);
+        this.reload();
+    }
+
     reload(): void {
         this.loadFromServer(
             this.currentPage(),
@@ -414,7 +435,7 @@ export class AppointmentsListPageComponent implements OnInit {
         status: string,
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}|${this.contextPetId()}|${this.contextClientId()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -423,6 +444,8 @@ export class AppointmentsListPageComponent implements OnInit {
         this.error.set(null);
         this.appointmentsService
             .getAppointments({
+                petId: this.contextPetId() || undefined,
+                clientId: this.contextClientId() || undefined,
                 page,
                 pageSize,
                 search: search || undefined,

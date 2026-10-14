@@ -4,7 +4,9 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
+import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
@@ -40,7 +42,7 @@ import { LAB_RESULTS_CREATE_CLAIM, LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/a
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent
+        AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent
     ],
     template: `
         <app-page-header title="Lab sonuçları" description="Laboratuvar sonuç kayıtları.">
@@ -58,6 +60,10 @@ import { LAB_RESULTS_CREATE_CLAIM, LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/a
                 ></button>
             }
         </app-page-header>
+
+        @if (contextPetId()) {
+            <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
+        }
 
         <div class="card">
             @if (loading()) {
@@ -235,6 +241,10 @@ export class LabResultsListPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     private readonly labResultsService = inject(LabResultsService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+
+    readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -307,6 +317,14 @@ export class LabResultsListPageComponent implements OnInit {
         this.loadFromServer(1, this.pageSize(), '', '', '', '');
     }
 
+    clearContextFilter(): void {
+        this.contextPetId.set('');
+        void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
+        this.currentPage.set(1);
+        this.first.set(0);
+        this.reload();
+    }
+
     reload(): void {
         this.loadFromServer(
             this.currentPage(),
@@ -347,7 +365,7 @@ export class LabResultsListPageComponent implements OnInit {
         status: LabResultStatus | '',
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status}|${this.contextPetId()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -356,6 +374,7 @@ export class LabResultsListPageComponent implements OnInit {
         this.error.set(null);
         this.labResultsService
             .getLabResults({
+                petId: this.contextPetId() || undefined,
                 page,
                 pageSize,
                 search: search || undefined,

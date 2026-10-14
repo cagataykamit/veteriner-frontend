@@ -4,7 +4,8 @@ import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -229,6 +230,7 @@ export class PetsListPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     private readonly petsService = inject(PetsService);
+    private readonly route = inject(ActivatedRoute);
     private readonly speciesService = inject(SpeciesService);
 
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
@@ -260,6 +262,13 @@ export class PetsListPageComponent implements OnInit {
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
         if (!restored) {
+            this.currentPage.set(1);
+            this.first.set(0);
+        }
+        const contextClientId = readContextFilterParam(this.route, 'clientId');
+        if (contextClientId) {
+            this.clientIdInput = contextClientId;
+            this.activeClientId.set(contextClientId);
             this.currentPage.set(1);
             this.first.set(0);
         }
