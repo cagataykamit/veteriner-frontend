@@ -23,6 +23,11 @@ export function registerQueryToHttpParams(query: ReportListQueryBase, opts?: { o
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+    for (const key of ['includeVoided', 'productId', 'veterinarianId'] as const) {
+        if (query[key]?.trim()) {
+            p = p.set(key, query[key].trim());
+        }
+    }
     return p;
 }
 

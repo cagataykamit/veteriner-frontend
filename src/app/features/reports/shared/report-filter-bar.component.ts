@@ -98,6 +98,7 @@ export interface ReportExtraFilter {
                         </app-filter-field>
                     }
                 }
+                <ng-content select="[extraFilters]" />
                 @if (!s.snapshot && !s.dateRangeOnly) {
                     <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="activeBadges() && s.isClientFilterActive()" width="grow">
                         <app-client-search [inputId]="idPrefix() + 'Client'" [ngModel]="s.clientIdFilter" (ngModelChange)="s.onClientFilterChange($event)" />

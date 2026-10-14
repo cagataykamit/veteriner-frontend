@@ -55,6 +55,19 @@ describe('RegisterReportSource', () => {
         expect((api.get.calls.mostRecent().args[1] as HttpParams).get('clinicId')).toBe('jwt-clinic');
     });
 
+    it('defter süzgeçleri (includeVoided, productId, veterinarianId) liste ve dışa aktarmada gider; boşlar gitmez', () => {
+        const extra = { ...query, includeVoided: 'true', productId: 'pr1', veterinarianId: '' };
+        source.loadReport(extra).subscribe();
+        const listParams = api.get.calls.mostRecent().args[1] as HttpParams;
+        expect(listParams.get('includeVoided')).toBe('true');
+        expect(listParams.get('productId')).toBe('pr1');
+        expect(listParams.has('veterinarianId')).toBeFalse();
+        source.exportXlsxBlob(extra).subscribe();
+        const xlsxParams = api.getBlob.calls.mostRecent().args[1] as HttpParams;
+        expect(xlsxParams.get('includeVoided')).toBe('true');
+        expect(xlsxParams.get('productId')).toBe('pr1');
+    });
+
     it('reçete defteri kendi ucunu kullanır', () => {
         new RegisterReportSource(api, { getClinicId: () => null } as unknown as AuthService, 'prescriptions').loadReport(query).subscribe();
         expect(api.get.calls.mostRecent().args[0]).toBe('/api/v1/reports/registers/prescriptions');
