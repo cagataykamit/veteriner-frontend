@@ -12,6 +12,8 @@ import { StockBatchService } from '@/app/features/inventory/services/stock-batch
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { ExaminationDetailPageComponent } from './examination-detail-page.component';
 
@@ -85,6 +87,8 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
                 { provide: AdministrationsService, useValue: { getAdministrations: () => of({ items: [], page: 1, pageSize: 50, totalItems: 0, totalPages: 0 }) } },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 { provide: StockBatchService, useValue: { getByProduct: () => EMPTY } },
+                { provide: VaccinationsService, useValue: { getVaccinations: () => EMPTY } },
+                { provide: TreatmentsService, useValue: { getTreatments: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
@@ -117,7 +121,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         rowVersion: 'V2'
     };
 
-    const setup = async (vm: ExaminationDetailVm, claims: string[]) => {
+    const setup = async (vm: ExaminationDetailVm, claims: string[], relatedSummary: object = { examinationId: 'e1' }) => {
         const service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', [
             'getExaminationById',
             'getExaminationRelatedSummary',
@@ -125,7 +129,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
             'finalizeExamination'
         ]);
         service.getExaminationById.and.returnValue(of(vm));
-        service.getExaminationRelatedSummary.and.returnValue(of({ examinationId: 'e1' }) as never);
+        service.getExaminationRelatedSummary.and.returnValue(of(relatedSummary) as never);
         service.getAddenda.and.returnValue(of([{ id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo 12,4', createdAtUtc: '2026-10-11T10:05:00Z', createdByName: 'Dr. Ayşe' }]));
         await TestBed.configureTestingModule({
             imports: [ExaminationDetailPageComponent],
@@ -149,6 +153,8 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
                 { provide: AdministrationsService, useValue: { getAdministrations: () => of({ items: [], page: 1, pageSize: 50, totalItems: 0, totalPages: 0 }) } },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 { provide: StockBatchService, useValue: { getByProduct: () => EMPTY } },
+                { provide: VaccinationsService, useValue: { getVaccinations: () => EMPTY } },
+                { provide: TreatmentsService, useValue: { getTreatments: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
@@ -261,6 +267,58 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(warnings.some((w) => w.includes('tanı'))).toBeTrue();
         expect(warnings.some((w) => w.includes('Plan'))).toBeTrue();
         expect(warnings.some((w) => w.includes('Muayeneye bağlı'))).toBeTrue();
+    });
+
+    it('çalışma alanı: solda hasta bağlamı, ortada kayıt, sağda kesinleştirme kontrol listesi', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read', 'Examinations.Finalize']);
+
+        const workspace = el.querySelector('[data-testid="exam-workspace"]')!;
+        const order = Array.from(workspace.querySelectorAll('[data-testid="patient-context"], [data-testid="exam-record"], [data-testid="finalize-checklist"]')).map((x) =>
+            x.getAttribute('data-testid')
+        );
+        expect(order).toEqual(['patient-context', 'exam-record', 'finalize-checklist']);
+        expect(workspace.querySelector('[data-testid="procedures-section"]')).not.toBeNull();
+    });
+
+    it('boş metin bölümleri tek satırda toplanır; vital yoksa satır "Ölçülmemiş" der', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read']);
+
+        const record = el.querySelector('[data-testid="exam-record"]')!;
+        expect(record.querySelector('[data-testid="record-empty-sections"]')?.textContent).toContain(
+            'Anamnez, Klinik bulgular, Değerlendirme / tanı, Plan / tedavi planı, Ek notlar'
+        );
+        expect(Array.from(record.querySelectorAll('h5')).map((h) => h.textContent?.trim())).toEqual(['Şikâyet / ziyaret sebebi', 'Vital']);
+        expect(record.querySelector('[data-testid="vital-row"]')?.textContent).toContain('Ölçülmemiş');
+        expect(record.querySelector('app-empty-state')).toBeNull();
+    });
+
+    it('vital satırı yalnız ölçülen değerleri birimiyle tek satırda gösterir', async () => {
+        const { el } = await setup({ ...detailVm, weightKg: 4.25, temperatureC: 38.6, findings: 'Mukozalar soluk' }, ['Examinations.Read']);
+
+        const vitals = Array.from(el.querySelectorAll('[data-testid="vital"]')).map((v) => Array.from(v.children).map((c) => c.textContent?.trim()));
+        expect(vitals).toEqual([
+            ['Kilo', '4.25 kg'],
+            ['Sıcaklık', '38.6 °C']
+        ]);
+        expect(el.querySelector('[data-testid="record-empty-sections"]')?.textContent).not.toContain('Klinik bulgular');
+    });
+
+    it('kontrol listesi eksik maddeleri uyarı olarak gösterir; ücret bekleyen madde Ücretlendir bağlantısı taşır', async () => {
+        const { el } = await setup({ ...detailVm, assessment: 'Gastrit' }, ['Examinations.Read'], { examinationId: 'e1', pendingChargeCount: 2 });
+
+        const item = (key: string) => el.querySelector(`[data-testid="check-${key}"]`);
+        expect(item('assessment')?.getAttribute('data-ok')).toBe('true');
+        expect(item('plan')?.getAttribute('data-ok')).toBe('false');
+        expect(item('pendingCharges')?.getAttribute('data-ok')).toBe('false');
+        expect(el.querySelector('[data-testid="pending-charges-link"]')?.getAttribute('href')).toContain('examinationId=e1');
+    });
+
+    it('kesinleşmiş muayenede kontrol listesi yerine kilit nedeni görünür', async () => {
+        const { el } = await setup({ ...detailVm, status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z', finalizedByName: 'Dr. Ayşe' }, ['Examinations.Read']);
+
+        const panel = el.querySelector('[data-testid="finalize-checklist"]')?.textContent ?? '';
+        expect(panel).toContain('yalnız gerekçeli uygulama ve ek not eklenebilir');
+        expect(el.querySelector('[data-testid="check-plan"]')).toBeNull();
     });
 
     it('Addendum izni olmayan kullanıcı ek notları okur ama "Ek not ekle" görmez', async () => {

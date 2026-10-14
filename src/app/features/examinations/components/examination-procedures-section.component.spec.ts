@@ -110,13 +110,14 @@ describe('ExaminationProceduresSectionComponent', () => {
         expect(changed).toBe(1);
     });
 
-    it('özet boşsa nötr boş durum gösterir', () => {
+    it('özet boşsa nötr ve kompakt (tek satır) boş durum gösterir', () => {
         const el = create();
         fixture.componentRef.setInput('summary', { ...summary, treatments: [], vaccinations: [] });
         fixture.detectChanges();
 
         expect(el.querySelector('[data-testid="procedure-list"]')).toBeNull();
-        expect(el.textContent).toContain('Gösterilecek işlem kaydı yok.');
+        expect(el.querySelector('[data-testid="procedure-empty"]')?.textContent).toContain('Gösterilecek işlem kaydı yok.');
+        expect(el.querySelector('app-empty-state')).toBeNull();
     });
 
     it('kesinleşmiş muayenede kilitli türü açmaz ve neden gösterilir', () => {

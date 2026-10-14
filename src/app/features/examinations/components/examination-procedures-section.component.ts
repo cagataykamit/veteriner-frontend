@@ -25,7 +25,6 @@ import { PrescriptionFormComponent } from '@/app/features/prescriptions/componen
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { TreatmentFormComponent } from '@/app/features/treatments/components/treatment-form.component';
 import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/features/vaccinations/components/vaccination-form.component';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -58,7 +57,6 @@ const ADD_ICON: Record<ProcedureKind, string> = {
         RouterLink,
         ButtonModule,
         DrawerModule,
-        AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         TreatmentFormComponent,
@@ -107,7 +105,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                 } @else if (loading() && rows().length === 0) {
                     <p class="text-muted-color text-sm m-0">Yükleniyor…</p>
                 } @else if (rows().length === 0) {
-                    <app-empty-state message="Gösterilecek işlem kaydı yok." />
+                    <p class="text-muted-color text-sm m-0" data-testid="procedure-empty">Gösterilecek işlem kaydı yok.</p>
                 } @else {
                     <ul class="list-none m-0 p-0" data-testid="procedure-list">
                         @for (row of rows(); track row.kind + row.id) {
