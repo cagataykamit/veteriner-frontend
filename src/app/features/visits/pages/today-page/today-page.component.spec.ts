@@ -98,6 +98,19 @@ describe('TodayPageComponent', () => {
         expect(t).not.toMatch(/açık iş/i);
     });
 
+    it('hasta ve sahip adı detay sayfasına bağlantıdır', async () => {
+        const f = await create(['Visits.Read'], {
+            date: '2026-10-10',
+            activeHospitalizations: [],
+            items: [item()]
+        });
+        const el = f.nativeElement as HTMLElement;
+        const hrefs = (id: string) => Array.from(el.querySelectorAll('[data-testid="' + id + '"]')).map((a) => a.getAttribute('href'));
+
+        expect(hrefs('today-pet-link')).toContain('/panel/pets/p1');
+        expect(hrefs('today-client-link')).toContain('/panel/clients/cl1');
+    });
+
     it('ziyaret ücret/ödenen/kalan ve müşteri borcu gösterilir; yatış rozeti bakım durumundan ayrıdır', async () => {
         const f = await create(['Visits.Read'], {
             date: 'd',

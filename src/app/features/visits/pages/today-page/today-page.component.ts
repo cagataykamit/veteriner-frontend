@@ -167,7 +167,7 @@ type TodayScope = 'mine' | 'all';
                                         </div>
                                     </div>
                                     <div class="font-medium flex flex-wrap items-center gap-2 min-w-0">
-                                        <span class="break-words min-w-0">{{ item.petName }}</span>
+                                        <a [routerLink]="['/panel/pets', item.petId]" class="break-words min-w-0 text-primary no-underline" data-testid="today-pet-link">{{ item.petName }}</a>
                                         <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
                                         @if (item.isUrgent) {
                                             <app-status-tag class="shrink-0" label="Acil" severity="danger" />
@@ -177,7 +177,7 @@ type TodayScope = 'mine' | 'all';
                                     <dl class="m-0 mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1 text-sm">
                                         <dt class="text-muted-color">Sahip</dt>
                                         <dd class="m-0 min-w-0 break-words">
-                                            {{ item.clientName }}
+                                            <a [routerLink]="['/panel/clients', item.clientId]" class="text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
                                             @if (item.clientPhone) {
                                                 <span class="text-muted-color whitespace-nowrap"> · {{ phone(item.clientPhone) }}</span>
                                             }
@@ -248,7 +248,7 @@ type TodayScope = 'mine' | 'all';
                                     </td>
                                     <td>
                                         <div class="font-medium flex items-center gap-2 min-w-0">
-                                            <span class="line-clamp-2 break-words min-w-0" [attr.title]="item.petName">{{ item.petName }}</span>
+                                            <a [routerLink]="['/panel/pets', item.petId]" class="line-clamp-2 break-words min-w-0 text-primary no-underline" data-testid="today-pet-link" [attr.title]="item.petName">{{ item.petName }}</a>
                                             <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
                                             @if (item.isUrgent) {
                                                 <app-status-tag class="shrink-0" label="Acil" severity="danger" />
@@ -261,7 +261,9 @@ type TodayScope = 'mine' | 'all';
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="line-clamp-2 break-words" [attr.title]="item.clientName">{{ item.clientName }}</div>
+                                        <div class="line-clamp-2 break-words" [attr.title]="item.clientName">
+                                            <a [routerLink]="['/panel/clients', item.clientId]" class="text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
+                                        </div>
                                         @if (item.clientPhone) {
                                             <div class="text-sm text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</div>
                                         }
