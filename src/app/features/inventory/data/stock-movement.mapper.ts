@@ -260,6 +260,7 @@ export function mapStockMovementUpsertFormValueToCreateRequest(
         occurredAtUtc: value.occurredAtUtc,
         notes: value.notes,
         ...(value.requestId ? { requestId: value.requestId } : {}),
-        ...(value.batch ? { batch: value.batch } : {})
+        ...(value.batch ? { batch: value.batch } : {}),
+        ...(value.batch && value.acknowledgeExpired ? { acknowledgeExpired: true } : {})
     };
 }

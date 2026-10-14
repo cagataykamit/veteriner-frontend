@@ -33,6 +33,8 @@ const STOCK_MOVEMENT_CREATE_MESSAGES: Record<string, string> = {
         'Stok bilgisi başka bir işlemle güncellendi. Lütfen listeyi yenileyip tekrar deneyin.',
     'StockBatches.LotAndExpiryRequired':
         'Aşı ve kontrollü ürünlerde seri/lot no ile son kullanma tarihi (SKT) zorunludur.',
+    'StockBatches.ExpiredAcknowledgementRequired':
+        'Bu partinin son kullanma tarihi geçmiş. Devam etmek için onay kutusunu işaretleyin.',
     'StockBatches.Validation': 'Parti bilgileri geçersiz. Depo çıkış tarihi geliş / teslim tarihinden sonra olamaz.',
     'StockBatches.NotFound': 'Parti bulunamadı.',
     'StockMovements.BatchRequired': 'Düzeltilecek parti seçilmelidir.',

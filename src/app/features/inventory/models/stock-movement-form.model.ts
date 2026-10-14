@@ -15,5 +15,6 @@ export interface StockMovementUpsertFormValue {
     notes: string | null;
     /** Yalnız `In`/`Initial` ve en az bir parti alanı doluyken; aksi halde `null`. */
     batch: StockMovementBatchRequest | null;
+    acknowledgeExpired: boolean;
     requestId: string | null;
 }

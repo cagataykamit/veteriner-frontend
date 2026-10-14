@@ -4,6 +4,7 @@ import { mapStockMovementUpsertFormValueToCreateRequest } from '@/app/features/i
 import {
     applyStockBatchRequirement,
     createStockBatchFormGroup,
+    getAcknowledgeExpiredRequest,
     getStockBatchRequest,
     syncStockBatchGroup
 } from '@/app/features/inventory/forms/stock-batch-form.factory';
@@ -36,6 +37,18 @@ describe('stock batch form', () => {
         applyStockBatchRequirement(g, false);
         g.patchValue({ lotNumber: '', expiryDate: '' });
         expect(g.valid).toBeTrue();
+    });
+
+    it('SKT geçmişse onay kutusu işaretlenmeden geçersiz; onayla geçerli ve istek bayrağı eklenir', () => {
+        const g = createStockBatchFormGroup(fb);
+        g.patchValue({ lotNumber: 'L', expiryDate: '2020-01-01' });
+        expect(g.hasError('expiredNotAcknowledged')).toBeTrue();
+        expect(getAcknowledgeExpiredRequest(g)).toEqual({});
+        g.patchValue({ acknowledgeExpired: true });
+        expect(g.valid).toBeTrue();
+        expect(getAcknowledgeExpiredRequest(g)).toEqual({ acknowledgeExpired: true });
+        g.patchValue({ expiryDate: '2999-01-01' });
+        expect(getAcknowledgeExpiredRequest(g)).toEqual({});
     });
 
     it('depo çıkış tarihi geliş tarihinden sonraysa geçersiz', () => {

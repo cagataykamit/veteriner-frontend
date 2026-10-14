@@ -2,7 +2,7 @@ import { AbstractControl, FormBuilder, ValidationErrors, ValidatorFn, Validators
 import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
-import { createStockBatchFormGroup, getStockBatchRequest } from '@/app/features/inventory/forms/stock-batch-form.factory';
+import { createStockBatchFormGroup, getAcknowledgeExpiredRequest, getStockBatchRequest } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import type {
     StockMovementFormMovementType,
     StockMovementUpsertFormValue
@@ -117,6 +117,7 @@ export function getStockMovementFormValue(form: StockMovementFormGroup, requestI
         occurredAtUtc: iso ?? null,
         notes: notesT === '' ? null : notesT,
         batch: v.movementType === 'In' || v.movementType === 'Initial' ? getStockBatchRequest(form.controls.batch) : null,
+        acknowledgeExpired: getAcknowledgeExpiredRequest(form.controls.batch).acknowledgeExpired === true,
         requestId
     };
 }

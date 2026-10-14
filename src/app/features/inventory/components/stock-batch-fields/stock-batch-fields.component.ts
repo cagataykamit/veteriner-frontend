@@ -6,6 +6,7 @@ import {
     STOCK_BATCH_LOT_MAX,
     STOCK_BATCH_SUPPLIER_MAX,
     STOCK_BATCH_TRANSPORT_MAX,
+    isStockBatchExpiryPast,
     type StockBatchFormGroup
 } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
@@ -43,6 +44,19 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
                         <small class="text-red-500">Son kullanma tarihi zorunludur.</small>
                     }
                 </div>
+                @if (expired()) {
+                    <div class="col-span-12 rounded-border border border-red-300 dark:border-red-500/50 bg-red-50 dark:bg-red-950/30 p-3 flex flex-col gap-2" role="alert" data-testid="batch-expired-warning">
+                        <p class="m-0 text-sm font-medium text-red-700 dark:text-red-300">Bu partinin son kullanma tarihi geçmiş.</p>
+                        <p class="m-0 text-sm">Süresi geçmiş ürün hastaya uygulanamaz; stokta ayrı "süresi geçmiş" olarak görünür. Yine de kaydetmek için onaylayın.</p>
+                        <label class="flex items-start gap-2 text-sm cursor-pointer">
+                            <input type="checkbox" formControlName="acknowledgeExpired" [id]="idPrefix() + 'AckExpired'" data-testid="batch-ack-expired" class="mt-0.5" />
+                            <span>Son kullanma tarihinin geçmiş olduğunu biliyorum, yine de stoğa ekle.</span>
+                        </label>
+                        @if (group().controls.acknowledgeExpired.touched && group().hasError('expiredNotAcknowledged')) {
+                            <small class="text-red-600 dark:text-red-400">Kaydetmek için onay kutusunu işaretleyin.</small>
+                        }
+                    </div>
+                }
                 <div class="col-span-12 flex flex-col gap-1">
                     <label [for]="idPrefix() + 'Supplier'" class="block text-sm font-medium text-muted-color">Satın alınan firma</label>
                     <input [id]="idPrefix() + 'Supplier'" pInputText class="w-full" type="text" formControlName="supplierName" autocomplete="off" [attr.maxlength]="supplierMax" />
@@ -83,6 +97,10 @@ export class StockBatchFieldsComponent {
     readonly required = input(false);
     /** Aynı sayfada benzersiz id'ler için. */
     readonly idPrefix = input('batch');
+
+    protected expired(): boolean {
+        return isStockBatchExpiryPast(this.group().controls.expiryDate.value);
+    }
 
     protected readonly lotMax = STOCK_BATCH_LOT_MAX;
     protected readonly supplierMax = STOCK_BATCH_SUPPLIER_MAX;

@@ -55,4 +55,6 @@ export interface CreateStockMovementRequest {
     requestId?: string;
     /** Yalnız `In`/`Initial`: yeni parti açar; yoksa partisiz bakiyeye eklenir. */
     batch?: StockMovementBatchRequest;
+    /** SKT geçmişse zorunlu onay (`StockBatches.ExpiredAcknowledgementRequired`). */
+    acknowledgeExpired?: boolean;
 }

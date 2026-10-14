@@ -1,5 +1,6 @@
 import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import type { StockMovementBatchRequest } from '@/app/features/inventory/models/stock-batch-api.model';
+import { istanbulTodayYmdNow, stockBatchExpiryStatus, toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.utils';
 
 export const STOCK_BATCH_LOT_MAX = 100;
 export const STOCK_BATCH_SUPPLIER_MAX = 200;
@@ -11,6 +12,17 @@ function dispatchedNotAfterReceivedValidator(group: AbstractControl): Validation
     const received = group.get('receivedDate')?.value as string | undefined;
     const dispatched = group.get('dispatchedDate')?.value as string | undefined;
     return received && dispatched && dispatched > received ? { dispatchedAfterReceived: true } : null;
+}
+
+/** SKT bugünden önceyse (ADR-015 karar 6) girişi kullanıcı açıkça onaylamadan kaydedilemez. */
+function expiredAcknowledgedValidator(group: AbstractControl): ValidationErrors | null {
+    const acknowledged = group.get('acknowledgeExpired')?.value === true;
+    return !acknowledged && isStockBatchExpiryPast(group.get('expiryDate')?.value) ? { expiredNotAcknowledged: true } : null;
+}
+
+/** SKT geçmişte mi (İstanbul günü; SKT günü dahil kullanılabilir). */
+export function isStockBatchExpiryPast(expiryDate: string | null | undefined): boolean {
+    return stockBatchExpiryStatus(toYmdOrNull(expiryDate), istanbulTodayYmdNow()) === 'expired';
 }
 
 /** Stok girişi parti bloğu (`BATCH_STOCK_API_CONTRACT.md` §4); tarihler `yyyy-MM-dd`, boş = `''`. */
@@ -25,9 +37,11 @@ export function createStockBatchFormGroup(fb: FormBuilder) {
             receivedDate: [''],
             dispatchedDate: [''],
             transportMethod: ['', Validators.maxLength(STOCK_BATCH_TRANSPORT_MAX)],
-            coldChainMonitor: ['', Validators.maxLength(STOCK_BATCH_TRANSPORT_MAX)]
+            coldChainMonitor: ['', Validators.maxLength(STOCK_BATCH_TRANSPORT_MAX)],
+            /** İstek gövdesine girmez; yalnız geçmiş SKT onayı (`acknowledgeExpired`). */
+            acknowledgeExpired: [false]
         },
-        { validators: dispatchedNotAfterReceivedValidator }
+        { validators: [dispatchedNotAfterReceivedValidator, expiredAcknowledgedValidator] }
     );
 }
 
@@ -54,6 +68,12 @@ export function syncStockBatchGroup(group: StockBatchFormGroup, state: { active:
         group.disable({ emitEvent: false });
     }
     applyStockBatchRequirement(group, state.active && state.required);
+}
+
+/** Geçmiş SKT'li giriş için istek bayrağı; SKT geçmiş değilse hiç gönderilmez. */
+export function getAcknowledgeExpiredRequest(group: StockBatchFormGroup): { acknowledgeExpired?: true } {
+    const v = group.getRawValue();
+    return v.acknowledgeExpired && isStockBatchExpiryPast(v.expiryDate) ? { acknowledgeExpired: true } : {};
 }
 
 /** Hiç alan dolu değilse `null` (partisiz giriş); aksi halde sözleşme gövdesi. */
