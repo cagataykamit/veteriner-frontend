@@ -3,6 +3,17 @@ import { categoryForUrl, groupForUrl, MENU_GROUPS, REPORT_SECTIONS, SETTINGS_SEC
 const allClaims = new Set<string>([...MENU_GROUPS, ...SETTINGS_SECTIONS].flatMap((g) => g.entries.flatMap((e) => e.claims ?? [])));
 const labels = (groups: { entries: readonly { label: string }[] }[]) => groups.flatMap((g) => g.entries.map((e) => e.label));
 
+describe('panel-navigation — kayıt defteri kartları', () => {
+    const cards = (claims: string[]) => labels(visibleGroups(REPORT_SECTIONS, (c) => claims.includes(c)));
+
+    it('çok izne bağlı kartlar izinlerin hepsi birlikte varsa görünür', () => {
+        expect(cards(['StockMovements.Read'])).toEqual(['Aşı Kayıt Defteri', 'İlaç Kayıt Defteri']);
+        expect(cards(['StockMovements.Read', 'Administrations.Read'])).toContain('Narkotik ve Psikotropik Defteri');
+        expect(cards(['Administrations.Read', 'Vaccinations.Read'])).not.toContain('Aşı Bilgi Raporu');
+        expect(cards(['Administrations.Read', 'Vaccinations.Read', 'Products.Read'])).toContain('Aşı Bilgi Raporu');
+    });
+});
+
 describe('panel-navigation', () => {
     it('en geniş izinle başlıklı gruplar Klinik, Para, Stok olur; Panel ve Ayarlar başlıksızdır', () => {
         const groups = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
@@ -119,7 +130,11 @@ describe('panel-navigation', () => {
             'Ödeme Raporu',
             'Borç Raporu',
             'Muayene Kayıt Defteri',
-            'Reçete Kayıt Defteri'
+            'Reçete Kayıt Defteri',
+            'Aşı Kayıt Defteri',
+            'İlaç Kayıt Defteri',
+            'Narkotik ve Psikotropik Defteri',
+            'Aşı Bilgi Raporu'
         ]);
         const some = visibleGroups(REPORT_SECTIONS, (c) => c === 'Payments.Read' || c === 'Examinations.Read');
         expect(labels(some)).toEqual(['Muayene Raporu', 'Ödeme Raporu', 'Muayene Kayıt Defteri']);

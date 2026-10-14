@@ -4,6 +4,8 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { ProductService } from '@/app/features/inventory/services/product.service';
+import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { RegisterPageComponent } from './register-page.component';
 
 describe('RegisterPageComponent', () => {
@@ -19,11 +21,47 @@ describe('RegisterPageComponent', () => {
 
     beforeEach(() => {
         sessionStorage.clear();
-        claims = new Set(['Examinations.Read', 'Prescriptions.Read']);
+        claims = new Set(['Examinations.Read', 'Prescriptions.Read', 'StockMovements.Read', 'Administrations.Read', 'Vaccinations.Read', 'Products.Read']);
         api = jasmine.createSpyObj<ApiClient>('ApiClient', ['get', 'getBlob']);
         api.get.and.callFake(((path: string) =>
             of(
-                path.endsWith('/prescriptions')
+                path.endsWith('/controlled-substances')
+                    ? {
+                          totalCount: 1,
+                          items: [
+                              {
+                                  rowNumber: 1,
+                                  direction: 'Received',
+                                  productName: 'Ketamin',
+                                  quantity: 5,
+                                  receivedFrom: 'Vet Depo',
+                                  receivedDate: '2026-10-01',
+                                  receivedDocumentNumber: 'F-1'
+                              }
+                          ]
+                      }
+                    : path.endsWith('/vaccine-info')
+                      ? {
+                            totalCount: 1,
+                            items: [
+                                {
+                                    rowNumber: 1,
+                                    administeredAtUtc: '2026-10-05T09:00:00Z',
+                                    ownerName: 'Ayşe',
+                                    petName: 'Pamuk',
+                                    species: 'Kedi',
+                                    productName: 'Karma Aşı',
+                                    unit: 'doz',
+                                    quantity: 1,
+                                    unitPrice: 150,
+                                    totalPrice: 150,
+                                    currency: 'TRY',
+                                    addedAfterFinalization: false,
+                                    isVoided: false
+                                }
+                            ]
+                        }
+                      : path.endsWith('/prescriptions')
                     ? {
                           totalCount: 1,
                           items: [
@@ -60,6 +98,8 @@ describe('RegisterPageComponent', () => {
         TestBed.configureTestingModule({
             providers: [
                 provideRouter([]),
+                { provide: ProductService, useValue: { getProducts: () => of({ items: [{ id: 'pr1', name: 'Karma Aşı', kind: 'Vaccine' }, { id: 'pr2', name: 'Serum', kind: 'Medicine' }] }) } },
+                { provide: VisitsService, useValue: { getVeterinarians: () => of([{ userId: 'u1', name: 'Dr. Veli' }]) } },
                 { provide: ApiClient, useValue: api },
                 {
                     provide: AuthService,
@@ -67,7 +107,7 @@ describe('RegisterPageComponent', () => {
                         hasOperationClaim: (c: string) => claims.has(c),
                         getMyClinics: () => of([{ id: 'c1', name: 'Klinik 1' }]),
                         getJwtClinicId: () => null,
-                        getClinicId: () => null
+                        getClinicId: () => 'c1'
                     }
                 }
             ]
@@ -130,6 +170,41 @@ describe('RegisterPageComponent', () => {
         const print = spyOn(window, 'print');
         fixture.componentInstance.print();
         expect(print).toHaveBeenCalled();
+    });
+
+    it('narkotik defteri: iki gruplu başlık, ek süzgeç yok, çıktı tüm sütunlar ayrı', () => {
+        const el: HTMLElement = create('controlled-substances').nativeElement;
+        expect(el.querySelector('.register-print-title')!.textContent).toContain('Narkotik ve Psikotropik Ürünler Stok ve Sarf Defteri');
+        const top = Array.from(el.querySelectorAll('.register-head-row')[0].querySelectorAll('th')).map((th) => th.textContent!.trim());
+        expect(top).toContain('SATIN/İADE/DEVİR ALINAN ÜRÜNÜN');
+        expect(top).toContain('SATILAN/İADE VEYA DEVREDİLEN ÜRÜNÜN');
+        expect(el.querySelector('#registerRepVoided')).toBeNull();
+        expect(el.querySelector('.register-print-table tbody tr')!.querySelectorAll('td').length).toBe(11);
+        expect(el.querySelector('.register-signature-note')!.textContent).toContain('doğrulanmamıştır');
+    });
+
+    it('aşı bilgi raporu: ürün, veteriner ve iptal süzgeçleri; seçim uca gider; fiyat ipucu görünür', () => {
+        const fixture = create('vaccine-info');
+        const el: HTMLElement = fixture.nativeElement;
+        expect(el.textContent).toContain('katalog fiyatı');
+        expect(el.querySelector('#registerRepVoided')).not.toBeNull();
+        expect(fixture.componentInstance.productOptions()).toEqual([{ label: 'Karma Aşı', value: 'pr1' }]);
+        expect(fixture.componentInstance.veterinarianOptions()).toEqual([{ label: 'Dr. Veli', value: 'u1' }]);
+
+        fixture.componentInstance.setExtra('productId', 'pr1');
+        fixture.componentInstance.setExtra('includeVoided', 'true');
+        fixture.componentInstance.state.applyFilters();
+        const params = api.get.calls.mostRecent().args[1] as HttpParams;
+        expect(params.get('productId')).toBe('pr1');
+        expect(params.get('includeVoided')).toBe('true');
+        expect(params.has('veterinarianId')).toBeFalse();
+    });
+
+    it('aşı kayıt defterinde yalnız iptal edilen girişleri göster süzgeci vardır', () => {
+        const fixture = create('vaccines');
+        expect(fixture.nativeElement.querySelector('#registerRepVoided')).not.toBeNull();
+        expect(fixture.nativeElement.textContent).not.toContain('katalog fiyatı');
+        expect(fixture.componentInstance.productOptions()).toEqual([]);
     });
 
     it('izin yoksa dışa aktarma düğmeleri görünmez', () => {

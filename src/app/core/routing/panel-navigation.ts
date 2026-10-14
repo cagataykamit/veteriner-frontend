@@ -1,4 +1,5 @@
 import {
+    ADMINISTRATIONS_READ_CLAIM,
     APPOINTMENTS_READ_CLAIM,
     BREEDS_CREATE_CLAIM,
     BREEDS_UPDATE_CLAIM,
@@ -32,8 +33,10 @@ import {
 export interface NavigationEntry {
     readonly label: string;
     readonly route: string;
-    /** İzinlerden herhangi biri yeterli; boş veya yoksa herkese açık. */
+    /** İzinlerden herhangi biri yeterli (`requireAllClaims` ise hepsi gerekir); boş veya yoksa herkese açık. */
     readonly claims?: readonly string[];
+    /** `claims` listesindeki izinlerin hepsi birlikte gerekir (ör. çok izne bağlı defterler). */
+    readonly requireAllClaims?: boolean;
 }
 
 /** Menüde öğenin yanında bekleyen iş sayısı gösterilen sayaçlar; değerlerini `MenuBadgeService` sağlar. */
@@ -146,6 +149,36 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 route: `${REPORTS_ROUTE}/registers/prescriptions`,
                 claims: [PRESCRIPTIONS_READ_CLAIM],
                 description: 'Reçete kayıt defteri; yazdırma ve dışa aktarma.'
+            },
+            {
+                label: 'Aşı Kayıt Defteri',
+                icon: 'pi pi-fw pi-book',
+                route: `${REPORTS_ROUTE}/registers/vaccines`,
+                claims: [STOCK_MOVEMENTS_READ_CLAIM],
+                description: 'Aşı stok girişleri: seri no, son kullanma, firma ve fatura; yazdırma ve dışa aktarma.'
+            },
+            {
+                label: 'İlaç Kayıt Defteri',
+                icon: 'pi pi-fw pi-book',
+                route: `${REPORTS_ROUTE}/registers/medications`,
+                claims: [STOCK_MOVEMENTS_READ_CLAIM],
+                description: 'İlaç stok girişleri: firma, fatura ve seri no; yazdırma ve dışa aktarma.'
+            },
+            {
+                label: 'Narkotik ve Psikotropik Defteri',
+                icon: 'pi pi-fw pi-book',
+                route: `${REPORTS_ROUTE}/registers/controlled-substances`,
+                claims: [STOCK_MOVEMENTS_READ_CLAIM, ADMINISTRATIONS_READ_CLAIM],
+                requireAllClaims: true,
+                description: 'Narkotik ve psikotropik ürünlerin stok ve sarf defteri; yazdırma ve dışa aktarma.'
+            },
+            {
+                label: 'Aşı Bilgi Raporu',
+                icon: 'pi pi-fw pi-book',
+                route: `${REPORTS_ROUTE}/registers/vaccine-info`,
+                claims: [ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_READ_CLAIM, PRODUCTS_READ_CLAIM],
+                requireAllClaims: true,
+                description: 'Hayvanlara uygulanan aşılar: hasta, ürün, seri no ve tutar; yazdırma ve dışa aktarma.'
             }
         ]
     }
@@ -304,7 +337,7 @@ export function categoryForUrl(groups: readonly MenuGroup[], url: string): strin
 type HasClaim = (claim: string) => boolean;
 
 export function visibleEntries<T extends NavigationEntry>(entries: readonly T[], hasClaim: HasClaim): T[] {
-    return entries.filter((e) => !e.claims?.length || e.claims.some(hasClaim));
+    return entries.filter((e) => !e.claims?.length || (e.requireAllClaims ? e.claims.every(hasClaim) : e.claims.some(hasClaim)));
 }
 
 /** İzne göre süzer; hiç girişi kalmayan grup/bölüm düşer. */

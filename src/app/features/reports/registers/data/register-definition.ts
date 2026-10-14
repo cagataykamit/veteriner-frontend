@@ -30,13 +30,27 @@ export interface RegisterDefinition<T> {
     readonly book: string;
     readonly title: string;
     readonly description: string;
-    readonly readClaim: string;
+    /** Sayfa ve dışa aktarma için gereken izinlerin hepsi birlikte aranır. */
+    readonly readClaims: readonly string[];
     readonly exportFilePrefix: string;
     readonly stateKey: string;
+    /** Tarih aralığı ve klinik dışındaki süzgeçler; `includeVoided` için onay kutusunun etiketi verilir. */
+    readonly extraFilters?: {
+        readonly includeVoidedLabel?: string;
+        readonly product?: boolean;
+        readonly veterinarian?: boolean;
+    };
+    /** Ekranda süzgeç çubuğunun altında gösterilen kısa ipucu (ör. fiyatın kaynağı). */
+    readonly screenHint?: string;
     /** Çıktı sütunları: yazdırma görünümü ve dışa aktarma ile aynı tam, ayrı sütun listesi. */
     readonly columns: readonly RegisterColumn<T>[];
     /** Ekran sütunları: hangi alanların tek hücrede birleşeceği. */
     readonly screenColumns: readonly RegisterScreenColumn<T>[];
+}
+
+/** Takvim günü (`yyyy-MM-dd`, saat dilimi dönüşümü yok) → `dd.MM.yyyy`; boş değer boş metin. */
+export function dayText(ymd: string | null | undefined): string {
+    return ymd ? ymd.split('-').reverse().join('.') : '';
 }
 
 export interface RegisterHeaderCell {

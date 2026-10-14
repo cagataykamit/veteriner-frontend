@@ -57,6 +57,41 @@ describe('ReportListState', () => {
         expect(state.clinicOptions().map((o) => o.value)).toEqual(['', 'c1']);
     });
 
+    it('extraKeys: ek defter süzgeçleri sorguya girer, oturumda saklanır, Temizle ile kalkar; dizi izni hepsi gerekir', () => {
+        const make = () =>
+            TestBed.runInInjectionContext(
+                () =>
+                    new ReportListState<Query, Result>({
+                        source,
+                        stateKey: KEY,
+                        readClaim: ['Test.Read', 'Other.Read'],
+                        exportFilePrefix: 'defter',
+                        dateRangeOnly: true,
+                        extraKeys: ['includeVoided', 'productId']
+                    })
+            );
+        const state = make();
+        state.init();
+        expect(source.loadReport.calls.mostRecent().args[0].includeVoided).toBeUndefined();
+        expect(state.canExport()).toBeFalse();
+        claims.add('Other.Read');
+        expect(make().canExport()).toBeTrue();
+
+        state.extraInputs = { includeVoided: 'true', productId: 'pr1' };
+        state.applyFilters();
+        const q = source.loadReport.calls.mostRecent().args[0];
+        expect(q.includeVoided).toBe('true');
+        expect(q.productId).toBe('pr1');
+
+        const restored = make();
+        restored.init();
+        expect(restored.extraInputs['productId']).toBe('pr1');
+        expect(source.loadReport.calls.mostRecent().args[0].includeVoided).toBe('true');
+
+        restored.resetFilters();
+        expect(source.loadReport.calls.mostRecent().args[0].includeVoided).toBeUndefined();
+    });
+
     it('dateRangeOnly: from/to takvim günü (yyyy-MM-dd) gider; sayfa boyutu seçenekleri yapılandırılır', () => {
         const state = TestBed.runInInjectionContext(
             () =>

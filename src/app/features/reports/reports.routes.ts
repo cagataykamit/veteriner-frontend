@@ -2,11 +2,14 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router, Routes } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    ADMINISTRATIONS_READ_CLAIM,
     APPOINTMENTS_READ_CLAIM,
     CHARGES_READ_CLAIM,
     EXAMINATIONS_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
     PRESCRIPTIONS_READ_CLAIM,
+    PRODUCTS_READ_CLAIM,
+    STOCK_MOVEMENTS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { REPORT_SECTIONS } from '@/app/core/routing/panel-navigation';
@@ -19,6 +22,17 @@ function requireAnyClaim(claims: readonly string[]): CanActivateFn {
         return claims.some((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree(['/notfound']);
     };
 }
+
+/** İzinlerin hepsi birlikte gerekir (hayvan/sahip verisi taşıyan defterler); yoksa `/notfound`. */
+function requireAllClaims(claims: readonly string[]): CanActivateFn {
+    return () => {
+        const auth = inject(AuthService);
+        const router = inject(Router);
+        return claims.every((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree(['/notfound']);
+    };
+}
+
+const registerPage = () => import('@/app/features/reports/registers/pages/register-page/register-page.component').then((m) => m.RegisterPageComponent);
 
 export default [
     {
@@ -71,6 +85,30 @@ export default [
         canActivate: [requireAnyClaim([PRESCRIPTIONS_READ_CLAIM])],
         data: { register: 'prescriptions' },
         loadComponent: () => import('@/app/features/reports/registers/pages/register-page/register-page.component').then((m) => m.RegisterPageComponent)
+    },
+    {
+        path: 'registers/vaccines',
+        canActivate: [requireAllClaims([STOCK_MOVEMENTS_READ_CLAIM])],
+        data: { register: 'vaccines' },
+        loadComponent: registerPage
+    },
+    {
+        path: 'registers/medications',
+        canActivate: [requireAllClaims([STOCK_MOVEMENTS_READ_CLAIM])],
+        data: { register: 'medications' },
+        loadComponent: registerPage
+    },
+    {
+        path: 'registers/controlled-substances',
+        canActivate: [requireAllClaims([STOCK_MOVEMENTS_READ_CLAIM, ADMINISTRATIONS_READ_CLAIM])],
+        data: { register: 'controlled-substances' },
+        loadComponent: registerPage
+    },
+    {
+        path: 'registers/vaccine-info',
+        canActivate: [requireAllClaims([ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_READ_CLAIM, PRODUCTS_READ_CLAIM])],
+        data: { register: 'vaccine-info' },
+        loadComponent: registerPage
     },
     {
         path: 'outstanding-balances',

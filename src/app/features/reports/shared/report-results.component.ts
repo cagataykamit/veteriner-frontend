@@ -28,7 +28,9 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
                 }
             </div>
         } @else if (s.report(); as r) {
-            @if (showSummary()) {
+            @if (summaryLine()) {
+                <p class="text-sm text-muted-color mt-0 mb-3">{{ r.totalCount }} {{ copy.registerRecordCount }}</p>
+            } @else if (showSummary()) {
             <div class="card mb-4 report-summary">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 sm:col-span-6">
@@ -77,6 +79,9 @@ export class ReportResultsComponent {
 
     /** Toplam kayıt kartı; sayıyı başka yerde gösteren sade ekranlar kapatır. */
     readonly showSummary = input(true);
+
+    /** Toplam kayıt kartı yerine tek satır sayaç (`N kayıt`). */
+    readonly summaryLine = input(false);
 
     @ContentChild('summary') summaryTpl?: TemplateRef<unknown>;
     @ContentChild('rows') rowsTpl?: TemplateRef<unknown>;

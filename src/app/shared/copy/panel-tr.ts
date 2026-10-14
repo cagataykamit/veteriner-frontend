@@ -39,7 +39,7 @@ export const PANEL_COPY = {
     reportsLoadingMessage: 'Rapor yükleniyor…',
     reportsLoadErrorFallback: 'Rapor verileri yüklenemedi.',
     reportsFixFilterHint: 'Filtreleri (ör. tarih aralığını) düzeltip Filtrele düğmesine basın.',
-    /** Kayıt defterleri (muayene, reçete) */
+    /** Kayıt defterleri */
     registerPeriodHint: 'Tarih aralığını seçip Filtrele düğmesine basın. Defterler en çok 366 günlük aralıkla okunur.',
     registerFormatUnverified: 'Resmî defter biçimine uygunluk doğrulanmamıştır; yasal gereklilikler için mevzuatı kontrol edin.',
     registerPrint: 'Yazdır',
@@ -49,6 +49,8 @@ export const PANEL_COPY = {
     registerPrintedAt: 'Yazdırma',
     registerEmptyMessage: 'Bu aralıkta kayıt bulunamadı.',
     registerEmptyHint: 'Tarih aralığını veya kliniği değiştirip tekrar deneyin.',
+    registerFilterProduct: 'Ürün',
+    registerFilterVeterinarian: 'Veteriner',
     reportsApplyFilter: 'Filtrele',
     reportsExportCsv: 'CSV indir',
     reportsExportXlsx: 'Excel indir',
