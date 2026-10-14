@@ -5,26 +5,16 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Subscription } from 'rxjs';
-import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/features/administrations/utils/administration-labels';
+import { PetTimelineItemComponent } from '@/app/features/pets/components/pet-timeline-item.component';
 import type { PetTimelineItemVm, PetTimelineType } from '@/app/features/pets/models/pet-timeline-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import {
-    PET_TIMELINE_TYPES,
-    PET_TIMELINE_VOIDED_LABEL,
-    petTimelineEventLink,
-    petTimelineExaminationLink,
-    petTimelineOmittedTypesLabel,
-    petTimelineStatusLabel,
-    petTimelineTypeIcon,
-    petTimelineTypeLabel
-} from '@/app/features/pets/utils/pet-timeline.utils';
+import { PET_TIMELINE_TYPES, petTimelineOmittedTypesLabel } from '@/app/features/pets/utils/pet-timeline.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 const PAGE_SIZE = 20;
 
@@ -42,6 +32,7 @@ const PAGE_SIZE = 20;
         CheckboxModule,
         DateInputComponent,
         FilterFieldComponent,
+        PetTimelineItemComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -108,47 +99,7 @@ const PAGE_SIZE = 20;
         } @else {
             <ol class="list-none m-0 p-0 card" data-testid="timeline-list">
                 @for (item of items(); track item.key) {
-                    <li class="flex gap-3 py-3 border-b border-surface-200 dark:border-surface-700 last:border-b-0" [class.opacity-60]="item.isVoided">
-                        <i
-                            class="pi {{ icon(item.type) }} text-xl text-primary mt-1"
-                            [attr.title]="typeLabel(item.type)"
-                            [attr.aria-label]="typeLabel(item.type)"
-                            data-testid="type-icon"
-                        ></i>
-                        <div class="min-w-0 flex-1">
-                            <div class="flex flex-wrap items-baseline gap-x-2">
-                                <span class="text-muted-color text-sm">{{ formatDt(item.eventAtUtc) }}</span>
-                                <span class="text-muted-color text-sm">· {{ typeLabel(item.type) }}</span>
-                                @if (statusLabel(item); as status) {
-                                    <span class="text-sm" data-testid="status">· {{ status }}</span>
-                                }
-                                @if (item.addedAfterFinalization) {
-                                    <span class="text-sm font-medium text-amber-700 dark:text-amber-400" data-testid="late-entry">· {{ lateEntryLabel }}</span>
-                                }
-                                @if (item.isVoided) {
-                                    <span class="text-sm font-medium text-red-600 dark:text-red-400" data-testid="voided">· {{ voidedLabel }}</span>
-                                }
-                            </div>
-                            <div class="font-medium break-words">
-                                @if (eventLink(item); as link) {
-                                    <a [routerLink]="link" class="text-primary no-underline" data-testid="event-link">{{ item.title }}</a>
-                                } @else {
-                                    {{ item.title }}
-                                }
-                                @if (item.summary) {
-                                    <span class="text-sm font-normal" [class]="item.type === 'Visit' ? 'text-red-600 dark:text-red-400' : 'text-muted-color'" data-testid="summary"> · {{ item.summary }}</span>
-                                }
-                            </div>
-                            <div class="flex flex-wrap gap-x-3 text-sm text-muted-color">
-                                @if (item.clinicName) {
-                                    <span>{{ item.clinicName }}</span>
-                                }
-                                @if (examinationLink(item); as exam) {
-                                    <a [routerLink]="exam" class="text-primary no-underline" data-testid="examination-link">Bağlı muayene →</a>
-                                }
-                            </div>
-                        </div>
-                    </li>
+                    <li appPetTimelineItem [item]="item"></li>
                 }
             </ol>
 
@@ -180,14 +131,6 @@ export class PetTimelinePageComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
 
     readonly typeOptions = PET_TIMELINE_TYPES;
-    readonly voidedLabel = PET_TIMELINE_VOIDED_LABEL;
-    readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly icon = petTimelineTypeIcon;
-    readonly typeLabel = petTimelineTypeLabel;
-    readonly statusLabel = petTimelineStatusLabel;
-    readonly eventLink = petTimelineEventLink;
-    readonly examinationLink = petTimelineExaminationLink;
 
     readonly petId = signal('');
     readonly petName = signal<string | null>(null);
