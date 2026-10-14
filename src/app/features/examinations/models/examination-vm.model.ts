@@ -91,6 +91,18 @@ export interface ExaminationRelatedHospitalizationItemVm {
     isActive: boolean;
 }
 
+export type ExaminationRelatedVaccinationStatus = 'Scheduled' | 'Applied' | 'Cancelled';
+
+export interface ExaminationRelatedVaccinationItemVm {
+    id: string;
+    vaccineName: string;
+    status: ExaminationRelatedVaccinationStatus;
+    appliedAtUtc: string | null;
+    dueAtUtc: string | null;
+    clinicId: string | null;
+    clinicName: string | null;
+}
+
 export interface ExaminationRelatedPaymentItemVm {
     id: string;
     paidAtUtc: string | null;
@@ -111,6 +123,7 @@ export interface ExaminationRelatedSummaryVm {
     prescriptions: ExaminationRelatedPrescriptionItemVm[];
     labResults: ExaminationRelatedLabResultItemVm[];
     hospitalizations: ExaminationRelatedHospitalizationItemVm[];
+    vaccinations: ExaminationRelatedVaccinationItemVm[];
     payments: ExaminationRelatedPaymentItemVm[];
 }
 

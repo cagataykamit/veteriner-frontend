@@ -7,6 +7,7 @@ import {
     mapExaminationStatus,
     mapExaminationFormToCreateRequest,
     mapExaminationFormToUpdateRequest,
+    mapExaminationRelatedSummaryDtoToVm,
     mapExaminationWriteResultDtoToVm,
     mapUpdateExaminationToApiBody
 } from '@/app/features/examinations/data/examination.mapper';
@@ -306,5 +307,31 @@ describe('examination mapper — durum (kesinleştirme)', () => {
     it('düzenleme VM i durumu taşır', () => {
         expect(mapExaminationDetailDtoToEditVm({ id: 'e1', status: 'Finalized' }).status).toBe('Finalized');
         expect(mapExaminationDetailDtoToEditVm({ id: 'e1' }).status).toBe('Draft');
+    });
+});
+
+describe('mapExaminationRelatedSummaryDtoToVm vaccinations', () => {
+    it('aşı bloğunu eşler; durum string enum, bilinmeyen/eksik alanlar güvenli', () => {
+        const vm = mapExaminationRelatedSummaryDtoToVm({
+            examinationId: 'e1',
+            vaccinations: [
+                { id: 'v1', vaccineName: ' Kuduz ', status: 'Applied', appliedAtUtc: '2026-10-08T09:00:00Z', clinicName: 'Merkez' },
+                { id: 'v2', vaccineName: 'Karma', status: 'Scheduled', dueAtUtc: '2026-11-01T09:00:00Z' },
+                { id: 'v3', status: 'Cancelled' },
+                { id: ' ' }
+            ]
+        });
+
+        expect(vm.vaccinations.map((v) => [v.id, v.vaccineName, v.status])).toEqual([
+            ['v1', 'Kuduz', 'Applied'],
+            ['v2', 'Karma', 'Scheduled'],
+            ['v3', 'Aşı kaydı', 'Cancelled']
+        ]);
+        expect(vm.vaccinations[0].clinicName).toBe('Merkez');
+        expect(vm.vaccinations[1].dueAtUtc).toBe('2026-11-01T09:00:00Z');
+    });
+
+    it('vaccinations yoksa boş dizi döner', () => {
+        expect(mapExaminationRelatedSummaryDtoToVm({ examinationId: 'e1' }).vaccinations).toEqual([]);
     });
 });
