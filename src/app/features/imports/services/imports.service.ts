@@ -7,10 +7,12 @@ import type {
     ImportBatchDto,
     ImportBatchPageDto,
     ImportBatchStatus,
+    ImportCommitProgressDto,
     ImportCommitRequestDto,
     ImportFileFormat,
     ImportMappingRequestDto,
     ImportPreviewDto,
+    ImportReleaseRemindersResultDto,
     ImportRowPageDto,
     ImportRowsQuery,
     ImportTable
@@ -84,13 +86,17 @@ export class ImportsService {
         return this.api.delete<void>(ApiEndpoints.imports.batchById(id));
     }
 
-    /** B4 (taslak): uç yayında değilse 404/405/501 döner; çağıran `isEndpointUnavailable` ile ayırır. */
+    /** B4: 202 yeni iş, 200 aynı `validationId` ile tekrar (yeni iş başlamaz); ikisinde de gövde parti özetidir. Uç dağıtılmamışsa 404/405/501; çağıran `isEndpointUnavailable` ile ayırır. */
     commit(id: string, body: ImportCommitRequestDto): Observable<ImportBatchDto> {
         return this.api.post<ImportBatchDto>(ApiEndpoints.imports.commit(id), body);
     }
 
-    /** B4 (taslak): `confirmEmailCount` önizlemedeki `emailsWithinReminderWindow` ile aynı olmalı. */
-    releaseReminders(id: string, confirmEmailCount: number): Observable<ImportBatchDto> {
-        return this.api.post<ImportBatchDto>(ApiEndpoints.imports.releaseReminders(id), { confirmEmailCount });
+    getProgress(id: string): Observable<ImportCommitProgressDto> {
+        return this.api.get<ImportCommitProgressDto>(ApiEndpoints.imports.progress(id));
+    }
+
+    /** B4: `confirmEmailCount` güncel `emailsWithinReminderWindow` ile aynı olmalı; değilse 409 `Imports.ReminderImpactChanged`. */
+    releaseReminders(id: string, confirmEmailCount: number): Observable<ImportReleaseRemindersResultDto> {
+        return this.api.post<ImportReleaseRemindersResultDto>(ApiEndpoints.imports.releaseReminders(id), { confirmEmailCount });
     }
 }

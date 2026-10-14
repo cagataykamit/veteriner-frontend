@@ -2,9 +2,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import type { ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
 import {
     duplicateBatchId,
+    importCommitBlockers,
     importErrorMessage,
     importIssueLabel,
     isEndpointUnavailable,
+    reminderImpactCurrentCount,
     precheckImportFile
 } from '@/app/features/imports/utils/import-labels.utils';
 import { columnMapsToRequest, initialColumnMaps, mappingConfidence, missingRequired } from '@/app/features/imports/utils/import-schema.utils';
@@ -94,5 +96,20 @@ describe('import-labels.utils', () => {
         expect(precheckImportFile(file('a.xls', 10), '.xlsx')).toContain('.xlsx');
         expect(precheckImportFile(file('a.csv', 0), '.csv')).toBe('Dosya boş.');
         expect(precheckImportFile(file('a.csv', 11 * 1024 * 1024), '.csv')).toContain('10 MB');
+    });
+
+    it('B4 hata kodlarını sade Türkçeye çevirir; düz ve extensions altındaki ek alanları okur', () => {
+        expect(importErrorMessage(problem(409, 'Imports.CommitBlocked'), 'x')).toContain('başlatılamıyor');
+        expect(importErrorMessage(problem(403, 'Imports.AccessDenied'), 'x')).toContain('yetkiniz yok');
+        expect(importCommitBlockers(problem(409, 'Imports.CommitBlocked', { blockers: ['Imports.OwnerLinkUnavailable', 3] }))).toEqual(['Imports.OwnerLinkUnavailable']);
+        expect(importCommitBlockers(problem(409, 'Imports.CommitBlocked', { extensions: { blockers: ['Imports.NoImportableRows'] } }))).toEqual(['Imports.NoImportableRows']);
+        expect(reminderImpactCurrentCount(problem(409, 'Imports.ReminderImpactChanged', { emailsWithinReminderWindow: 12 }))).toBe(12);
+        expect(reminderImpactCurrentCount(problem(409, 'Imports.ReminderImpactChanged'))).toBeNull();
+    });
+
+    it('uygulama satır kodlarının sade metni vardır', () => {
+        for (const code of ['Imports.OwnerUnitFailed', 'Imports.MatchedAtCommit', 'Imports.ApplyFailed']) {
+            expect(importIssueLabel(code)).not.toBe(code);
+        }
     });
 });

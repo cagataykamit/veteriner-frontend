@@ -150,9 +150,11 @@ export const ApiEndpoints = {
         rows: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/rows`,
         /** GET: `format=xlsx|csv` hata raporu dosyası. */
         errors: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/errors`,
-        /** POST (B4, taslak): uygulamayı başlatır. */
+        /** POST (B4): uygulamayı başlatır; 202 yeni iş, 200 tekrar. */
         commit: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/commit`,
-        /** POST (B4, taslak): içe aktarılan aşıların hatırlatmalarını açar. */
+        /** GET (B4): uygulama ilerlemesi (hafif yoklama, no-store). */
+        progress: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/progress`,
+        /** POST (B4): içe aktarılan aşıların hatırlatmalarını açar (geri alınamaz). */
         releaseReminders: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/release-reminders`
     },
     vaccineDefinitions: {

@@ -73,4 +73,14 @@ describe('ImportsService', () => {
         expect(req.request.body).toEqual({ validationId: 'v1', onErrors: 'SkipErrorRows' });
         req.flush({});
     });
+
+    it('ilerlemeyi progress ucundan, hatırlatma açmayı sayı onayıyla ister', () => {
+        service.getProgress('b1').subscribe();
+        http.expectOne({ method: 'GET', url: 'http://api.test/api/v1/imports/batches/b1/progress' }).flush({});
+        service.releaseReminders('b1', 7).subscribe();
+        const req = http.expectOne('http://api.test/api/v1/imports/batches/b1/release-reminders');
+        expect(req.request.method).toBe('POST');
+        expect(req.request.body).toEqual({ confirmEmailCount: 7 });
+        req.flush({});
+    });
 });

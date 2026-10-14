@@ -118,7 +118,10 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.DuplicateVaccination': 'Aynı aşı zaten kayıtlı; atlanır',
     'Imports.OwnerLinkUnavailable': 'Hayvanlar müşterilere bağlanamıyor (müşteri tablosu veya müşteri no eksik)',
     'Imports.PetLinkUnavailable': 'Aşılar hayvanlara bağlanamıyor (hayvan tablosu veya hayvan no eksik)',
-    'Imports.NoImportableRows': 'Aktarılabilecek geçerli satır yok'
+    'Imports.NoImportableRows': 'Aktarılabilecek geçerli satır yok',
+    'Imports.OwnerUnitFailed': 'Aynı müşterinin başka bir satırı aktarılamadığı için bu satır da aktarılmadı',
+    'Imports.MatchedAtCommit': 'Aktarma sırasında sistemde aynı kayıt bulundu; yeni kayıt açılmadı, mevcutla eşleşti',
+    'Imports.ApplyFailed': 'Kayıt yazılırken bir çakışma oluştu; satır aktarılamadı'
 };
 
 export function importIssueLabel(code: string, fallback?: string): string {
@@ -146,7 +149,9 @@ const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {
     'Imports.ClinicContextMismatch': 'Seçilen klinik, çalıştığınız klinikle uyuşmuyor.',
     'Imports.ValidationStale': 'Doğrulama sonucu eskidi. Yeniden doğrulayın.',
     'Imports.HasErrorRows': 'Hatalı satırlar var; bu seçenekle aktarılamaz.',
-    'Imports.ReminderImpactChanged': 'E-posta sayısı değişti. Güncel sayıyı görüp tekrar onaylayın.'
+    'Imports.ReminderImpactChanged': 'E-posta sayısı değişti. Güncel sayıyı görüp tekrar onaylayın.',
+    'Imports.CommitBlocked': 'Aktarma şu an başlatılamıyor. Doğrulama sonucundaki engelleri giderip yeniden doğrulayın.',
+    'Imports.AccessDenied': 'Bu aktarma için gerekli yetkiniz yok (müşteri, hasta veya aşı ekleme yetkisi). Yöneticinizle görüşün.'
 };
 
 /** Sayfada gösterilecek Türkçe hata; içe aktarma kodları önce, sonra genel panel eşlemesi. */
@@ -174,8 +179,34 @@ export function duplicateBatchId(err: unknown): string | null {
     return typeof id === 'string' && id.trim() ? id.trim() : null;
 }
 
+/** Hata gövdesindeki ek alan (`extensions.<key>` ya da düz alan); yoksa undefined. Yalnız kod ve sayı gibi kişisel olmayan alanlar için. */
+export function importErrorExtension(err: unknown, key: string): unknown {
+    if (!(err instanceof HttpErrorResponse)) {
+        return undefined;
+    }
+    const body = err.error as Record<string, unknown> | null;
+    if (!body || typeof body !== 'object') {
+        return undefined;
+    }
+    const ext = body['extensions'];
+    const fromExt = ext && typeof ext === 'object' ? (ext as Record<string, unknown>)[key] : undefined;
+    return fromExt ?? body[key];
+}
+
+/** 409 `Imports.CommitBlocked` yanıtındaki engel kodları (`extensions.blockers`). */
+export function importCommitBlockers(err: unknown): string[] {
+    const v = importErrorExtension(err, 'blockers');
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+}
+
+/** 409 `Imports.ReminderImpactChanged` yanıtındaki güncel e-posta sayısı. */
+export function reminderImpactCurrentCount(err: unknown): number | null {
+    const v = importErrorExtension(err, 'emailsWithinReminderWindow');
+    return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null;
+}
+
 /**
- * Uç henüz yayında değil mi (B4/B5 öncesi): yönlendirme bulunamadı (gövdesiz 404), 405 veya 501.
+ * Uç dağıtılmamış ortamlarda yedek davranış (B4 sonrası yalnız bu durumda): yönlendirme bulunamadı (gövdesiz 404), 405 veya 501.
  * Gerçek "kayıt yok" yanıtı problem koduyla gelir (`Imports.BatchNotFound`) ve bu sayılmaz.
  */
 export function isEndpointUnavailable(err: unknown): boolean {

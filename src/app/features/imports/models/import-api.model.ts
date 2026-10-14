@@ -1,4 +1,4 @@
-/** Veri içe aktarma sözleşmesi (Veteriner `docs/IMPORT_API_CONTRACT.md`, B1–B3; B4 taslak). JSON camelCase. */
+/** Veri içe aktarma sözleşmesi (Veteriner `docs/IMPORT_API_CONTRACT.md`, B1–B4). JSON camelCase. */
 
 export type ImportTable = 'customers' | 'pets' | 'vaccinations';
 
@@ -185,4 +185,25 @@ export interface ImportRowsQuery {
 export interface ImportCommitRequestDto {
     validationId: string;
     onErrors: ImportOnErrors;
+}
+
+/** `GET .../progress` (B4, §7.14): hafif yoklama yanıtı. `phase` yalnız `Committing` iken dolu. */
+export interface ImportCommitProgressDto {
+    id: string;
+    status: ImportBatchStatus;
+    phase: string | null;
+    processed: number;
+    total: number;
+    updatedAtUtc: string | null;
+    committedAtUtc: string | null;
+    /** `Committing` ve false: işçi bekleniyor / devralınacak. */
+    leaseActive: boolean;
+}
+
+/** `POST .../release-reminders` 200 yanıtı (B4, §7.10). `note` yalnız kiracı aşı hatırlatması kapalıysa dolu. */
+export interface ImportReleaseRemindersResultDto {
+    batch: ImportBatchDto;
+    reminderImpact: ImportReminderImpactDto;
+    alreadyReleased: boolean;
+    note: string | null;
 }
