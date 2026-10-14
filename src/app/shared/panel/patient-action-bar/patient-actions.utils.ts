@@ -55,8 +55,8 @@ const ACTIONS: readonly PatientActionDefinition[] = [
     { key: 'payment', label: 'Ödeme al', icon: 'pi pi-wallet', route: '/panel/payments/new', claim: PAYMENTS_CREATE_CLAIM, carriesPet: false }
 ];
 
-/** Ücret ve ödeme müşteri sayfasında da vardır; diğer eylemler hayvana özgüdür. */
-const CLIENT_PAGE_KEYS: ReadonlySet<PatientActionKey> = new Set(['newPet', 'charge', 'payment']);
+/** Müşteri kartında (ADR-020 karar 6) geliş, randevu, hayvan ekleme, ücret ve ödeme; klinik eylemler hayvana özgüdür. */
+const CLIENT_PAGE_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'appointment', 'newPet', 'charge', 'payment']);
 
 /** Yetkisi olmayan eylem listede yer almaz (UX ilkesi 11); her eylem müşteri ve (varsa) hayvan bağlamını sorgu parametresiyle taşır. */
 export function buildPatientActions(ctx: PatientActionContext, hasClaim: (claim: string) => boolean): PatientAction[] {

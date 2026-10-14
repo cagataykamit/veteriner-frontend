@@ -27,10 +27,11 @@ describe('buildPatientActions', () => {
         expect(byKey('payment').queryParams).toEqual({ clientId: 'cl1' });
     });
 
-    it('müşteri sayfasında yalnız Yeni hayvan, Ücret ekle ve Ödeme al gelir', () => {
+    it('müşteri sayfasında Geldi, Randevu al, Yeni hayvan, Ücret ekle ve Ödeme al gelir; hepsi yalnız müşteriyi taşır', () => {
         const actions = buildPatientActions({ clientId: 'cl1', petId: null }, (c) => ALL.has(c));
-        expect(actions.map((a) => a.label)).toEqual(['Yeni hayvan', 'Ücret ekle', 'Ödeme al']);
-        expect(actions[0]).toEqual(jasmine.objectContaining({ route: '/panel/pets/new', queryParams: { clientId: 'cl1' } }));
+        expect(actions.map((a) => a.label)).toEqual(['Geldi', 'Randevu al', 'Yeni hayvan', 'Ücret ekle', 'Ödeme al']);
+        expect(actions.every((a) => a.queryParams['petId'] === undefined)).toBeTrue();
+        expect(actions[2]).toEqual(jasmine.objectContaining({ route: '/panel/pets/new', queryParams: { clientId: 'cl1' } }));
     });
 
     it('yetkisi olmayan eylem gizlenir (Veteriner: ücret/ödeme yok, Sekreter: muayene yok)', () => {

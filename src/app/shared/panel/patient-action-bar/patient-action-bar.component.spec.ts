@@ -63,6 +63,20 @@ describe('PatientActionBarComponent', () => {
         expect(el.textContent).not.toContain('Geldi');
     });
 
+    it('müşteri sayfasında Geldi diyaloğu açılır; tek hayvan verilirse önceden seçilir, Randevu al yalnız müşteriyi taşır', () => {
+        claims.add('Visits.Create');
+        const fixture = create({ clientId: 'cl1' });
+        const el: HTMLElement = fixture.nativeElement;
+        expect(Array.from(el.querySelectorAll('button')).some((b) => b.textContent?.includes('Geldi'))).toBeTrue();
+        const appt = el.querySelector('a[href^="/panel/appointments/new"]') as HTMLAnchorElement;
+        expect(appt.getAttribute('href')).toBe('/panel/appointments/new?clientId=cl1');
+        expect(fixture.componentInstance.petSuggestion()).toBeNull();
+
+        const pet = { id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' };
+        fixture.componentRef.setInput('arrivalPet', pet);
+        expect(fixture.componentInstance.petSuggestion()).toEqual(pet);
+    });
+
     it('hiç yetki yoksa çubuk görünmez; salt okunur kiracıda eylemler yerine bilgi gösterilir', () => {
         claims = new Set();
         let el: HTMLElement = create({ clientId: 'cl1', petId: 'p1' }).nativeElement;

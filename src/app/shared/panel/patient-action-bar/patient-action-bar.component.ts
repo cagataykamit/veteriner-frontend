@@ -52,8 +52,8 @@ import { buildPatientActions } from './patient-actions.utils';
                     }
                 }
             </div>
-            @if (petSuggestion(); as pet) {
-                <app-visit-arrival-dialog [(visible)]="arrivalOpen" [presetPet]="pet" (arrived)="onArrived()" />
+            @if (canArrive()) {
+                <app-visit-arrival-dialog [(visible)]="arrivalOpen" [presetPet]="petSuggestion()" (arrived)="onArrived()" />
             }
         }
     `
@@ -71,6 +71,8 @@ export class PatientActionBarComponent {
     readonly clientName = input<string>('');
     /** Kaydırınca üst çubuğun altında sabit kalır (hasta kartı: eylemler her zaman görünür, ADR-020 karar 2b). */
     readonly sticky = input(false);
+    /** Müşteri sayfasında "Geldi" için önceden seçilecek hasta (müşterinin tek hayvanı varsa); `null` ise hasta diyalogda aranır. */
+    readonly arrivalPet = input<PetSuggestion | null>(null);
 
     readonly arrivalOpen = signal(false);
 
@@ -78,11 +80,13 @@ export class PatientActionBarComponent {
         buildPatientActions({ clientId: this.clientId(), petId: this.petId() }, (claim) => this.auth.hasOperationClaim(claim))
     );
 
+    readonly canArrive = computed(() => this.actions().some((a) => a.key === 'arrive'));
+
     readonly petSuggestion = computed<PetSuggestion | null>(() => {
         const id = this.petId();
-        return id && this.actions().some((a) => a.key === 'arrive')
+        return id
             ? { id, label: `${this.petLabel()} · Sahip: ${this.clientName() || '—'}`, clientId: this.clientId(), clientName: this.clientName() }
-            : null;
+            : this.arrivalPet();
     });
 
     onArrived(): void {

@@ -289,7 +289,14 @@ export class AppointmentNewPageComponent implements OnInit {
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
-        prefillPetFromRoute(this.route.snapshot.queryParamMap, this.form.controls.clientId, this.form.controls.petId);
+        const query = this.route.snapshot.queryParamMap;
+        if (!prefillPetFromRoute(query, this.form.controls.clientId, this.form.controls.petId)) {
+            // Müşteri kartındaki "Randevu al": yalnız müşteri gelir, hayvan formda seçilir.
+            const clientId = query.get('clientId')?.trim();
+            if (clientId) {
+                this.form.controls.clientId.setValue(clientId);
+            }
+        }
 
         this.syncScheduledTimeDisabledState();
     }
