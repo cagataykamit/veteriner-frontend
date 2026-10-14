@@ -19,7 +19,7 @@ import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/feature
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -49,7 +49,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
@@ -57,8 +57,6 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Aşılar" description="Aşı kayıtları ve takip." />
-
         <div class="card">
             @if (activeOverdueOnly()) {
                 <div
@@ -72,29 +70,14 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                     </p>
                 </div>
             }
-            @if (loading()) {
-                <app-loading-state message="Aşı listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
                 <div class="flex flex-col gap-4">
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
-                            <div class="min-w-0">
-                                <h5 class="m-0">Aşılar</h5>
-                                @if (totalItems() > 0) {
-                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                                }
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <app-filter-field label="Arama" labelFor="vacSearch" [active]="isSearchActive()" width="grow">
-                                    <app-search-input inputId="vacSearch" placeholder="Aşı adı, not; müşteri, hayvan, tür veya ırk…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </app-filter-field>
-                                <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                                </div>
-                            </div>
-                        </div>
+                        <app-list-header class="mb-3" title="Aşılar" [count]="totalItems()">
+                            <app-filter-field label="Arama" labelFor="vacSearch" [active]="isSearchActive()" width="grow">
+                                <app-search-input inputId="vacSearch" placeholder="Aşı adı, not; müşteri, hayvan, tür veya ırk…" [(value)]="searchInput" (search)="applyFilters()" />
+                            </app-filter-field>
+                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        </app-list-header>
                         <div class="flex flex-wrap items-end gap-3">
                             <app-filter-field label="Durum" labelId="lblVacStatus" [active]="isStatusActive()" width="select">
                                 <p-select
@@ -116,6 +99,11 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                             </app-filter-field>
                         </div>
                     </div>
+            @if (loading()) {
+                <app-loading-state message="Aşı listesi yükleniyor…" />
+            } @else if (error()) {
+                <app-error-state [detail]="error()!" (retry)="reload()" />
+            } @else {
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
@@ -241,8 +229,8 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                         />
                     </div>
                 }
-                </div>
             }
+                </div>
         </div>
     `
 })

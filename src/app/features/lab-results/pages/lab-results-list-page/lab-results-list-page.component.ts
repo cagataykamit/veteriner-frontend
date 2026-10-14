@@ -22,7 +22,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -39,43 +39,26 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
         Paginator,
         ButtonModule,
         InputTextModule,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent
     ],
     template: `
-        <app-page-header title="Lab sonuçları" description="Laboratuvar sonuç kayıtları." />
-
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
         }
 
         <div class="card">
-            @if (loading()) {
-                <app-loading-state message="Liste yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
                 <div class="flex flex-col gap-4">
                     <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
-                        <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
-                            <div class="min-w-0">
-                                <h5 class="m-0">Lab Sonuçları</h5>
-                                @if (totalItems() > 0) {
-                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                                }
+                        <app-list-header class="mb-3" title="Lab sonuçları" [count]="totalItems()">
+                            <div class="flex-1 min-w-0">
+                                <label for="lrSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                                <app-search-input inputId="lrSearch" placeholder="Test adı, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
                             </div>
-                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <div class="flex-1 min-w-0">
-                                    <label for="lrSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                    <app-search-input inputId="lrSearch" placeholder="Test adı, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </div>
-                                <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                                </div>
-                            </div>
-                        </div>
+                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        </app-list-header>
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-4">
                                 <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
@@ -99,6 +82,11 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                             </div>
                         </div>
                     </div>
+            @if (loading()) {
+                <app-loading-state message="Liste yükleniyor…" />
+            } @else if (error()) {
+                <app-error-state [detail]="error()!" (retry)="reload()" />
+            } @else {
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
@@ -215,8 +203,8 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                         />
                     </div>
                 }
-                </div>
             }
+                </div>
         </div>
     `
 })

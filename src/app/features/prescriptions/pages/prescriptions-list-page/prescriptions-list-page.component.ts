@@ -19,7 +19,7 @@ import { PrescriptionsService } from '@/app/features/prescriptions/services/pres
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -45,43 +45,26 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         Paginator,
         ButtonModule,
         InputTextModule,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Reçeteler" description="Reçete kayıtları." />
-
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
         }
 
         <div class="card">
-            @if (loading()) {
-                <app-loading-state message="Reçete listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
                 <div class="flex flex-col gap-4">
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
-                            <div class="min-w-0">
-                                <h5 class="m-0">Reçeteler</h5>
-                                @if (totalItems() > 0) {
-                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                                }
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <app-filter-field label="Arama" labelFor="rxSearch" [active]="isSearchActive()" width="grow">
-                                    <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </app-filter-field>
-                                <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                                </div>
-                            </div>
-                        </div>
+                        <app-list-header class="mb-3" title="Reçeteler" [count]="totalItems()">
+                            <app-filter-field label="Arama" labelFor="rxSearch" [active]="isSearchActive()" width="grow">
+                                <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hayvan…" [(value)]="searchInput" (search)="applyFilters()" />
+                            </app-filter-field>
+                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        </app-list-header>
                         <div class="flex flex-wrap items-end gap-3">
                             <app-filter-field label="Başlangıç" labelFor="rxFrom" [active]="isFromDateActive()" width="date">
                                 <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
@@ -91,6 +74,11 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                             </app-filter-field>
                         </div>
                     </div>
+            @if (loading()) {
+                <app-loading-state message="Reçete listesi yükleniyor…" />
+            } @else if (error()) {
+                <app-error-state [detail]="error()!" (retry)="reload()" />
+            } @else {
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
@@ -203,8 +191,8 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                         />
                     </div>
                 }
-                </div>
             }
+                </div>
         </div>
     `
 })

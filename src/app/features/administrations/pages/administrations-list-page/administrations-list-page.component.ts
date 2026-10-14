@@ -19,7 +19,7 @@ import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
@@ -37,16 +37,15 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         FilterFieldComponent,
         AdministrationRowMarksComponent,
         AdministrationVoidDialogComponent,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Uygulamalar" subtitle="Klinik" description="Hastalara klinikte uygulanan ürünler. Yeni uygulama muayene veya tedavi kaydından eklenir." />
-
         <div class="card">
+            <app-list-header class="mb-4" title="Uygulamalar" [count]="totalItems()" />
             <div class="flex flex-wrap items-end gap-3 mb-4 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                 <app-filter-field label="Ürün" labelId="lblAdminProduct" [active]="!!productId" width="select">
                     <p-select
