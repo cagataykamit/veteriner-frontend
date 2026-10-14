@@ -50,12 +50,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         QuickBreedDialogComponent, ClientSearchComponent, DateInputComponent
     ],
     template: `
-        <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hayvan listesine dön" title="Yeni Hayvan" description="Hayvan kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" title="Yeni Hasta" description="Hasta kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; hayvan kaydı oluşturulamaz.
+                    İşletme salt okunur moddadır; hasta kaydı oluşturulamaz.
                 </p>
             }
             @if (selectionError()) {
@@ -73,12 +73,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="name" class="block text-sm font-medium text-muted-color mb-2">Hayvan adı *</label>
+                        <label for="name" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
                         <input id="name" pInputText class="w-full" formControlName="name" />
                         @if (apiFieldErrors().name) {
                             <small class="text-red-500">{{ apiFieldErrors().name }}</small>
                         } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                            <small class="text-red-500">Hayvan adı zorunludur.</small>
+                            <small class="text-red-500">Hasta adı zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">

@@ -275,7 +275,7 @@ describe('buildPetTodo', () => {
         const [item] = buildPetTodo(sources, ctx(['Payments.Create'])).items;
         expect(item.kind).toBe('openBalance');
         expect(item.title).toContain('1.250');
-        expect(item.detail).toContain('Bu hayvan');
+        expect(item.detail).toContain('Bu hasta');
         expect(item.action).toEqual({ label: 'Ödeme al', route: ['/panel/payments/new'], queryParams: { clientId: 'c1' } });
 
         expect(buildPetTodo(sources, ctx([])).items[0].action).toEqual({ label: 'Bakiyeyi gör', route: ['/panel/clients', 'c1'] });

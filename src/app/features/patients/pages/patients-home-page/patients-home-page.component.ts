@@ -37,7 +37,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                 <app-search-input
                     inputId="patientSearch"
                     ariaLabel="Hasta veya sahip ara"
-                    placeholder="Hayvan adı, sahip adı soyadı, telefon veya mikroçip"
+                    placeholder="Hasta adı, sahip adı soyadı, telefon veya mikroçip"
                     [(value)]="term"
                     (search)="onSearch()"
                 />
@@ -107,7 +107,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                                         <div class="min-w-0 grow basis-64">
                                             <a [routerLink]="['/panel/clients', o.clientId]" class="font-semibold text-lg text-primary no-underline">{{ o.name }}</a>
                                             <span class="text-muted-color"> · Sahip</span>
-                                            <div class="text-sm text-muted-color">{{ o.phone }} · Kayıtlı hayvan yok</div>
+                                            <div class="text-sm text-muted-color">{{ o.phone }} · Kayıtlı hasta yok</div>
                                         </div>
                                         @if (!ro.mutationBlocked()) {
                                             @for (a of ownerActions(o); track a.key) {
@@ -130,7 +130,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                         <div class="flex flex-wrap items-center gap-3">
                             <p-button
                                 type="button"
-                                label="Yeni kayıt: müşteri ve hayvan"
+                                label="Yeni kayıt: müşteri ve hasta"
                                 icon="pi pi-user-plus"
                                 [severity]="noResults() ? 'primary' : 'secondary'"
                                 [outlined]="!noResults()"
@@ -149,7 +149,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
             <p class="mt-4 mb-0 text-sm text-muted-color">
                 Tümünü listele:
                 @if (canListPets) {
-                    <a routerLink="/panel/pets" class="text-primary font-medium no-underline">Hayvanlar</a>
+                    <a routerLink="/panel/pets" class="text-primary font-medium no-underline">Hastalar</a>
                 }
                 @if (canListPets && canListClients) {
                     ·
@@ -241,7 +241,7 @@ export class PatientsHomePageComponent {
     }
 
     failedMessage(r: PatientSearchResultVm): string {
-        const names = r.failedKinds.map((kind) => (kind === 'clients' ? 'Müşteri' : 'Hayvan'));
+        const names = r.failedKinds.map((kind) => (kind === 'clients' ? 'Müşteri' : 'Hasta'));
         return `${names.join(' ve ')} araması yapılamadı.`;
     }
 }

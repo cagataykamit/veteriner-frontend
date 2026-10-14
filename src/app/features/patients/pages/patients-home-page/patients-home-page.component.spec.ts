@@ -98,13 +98,13 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
         const fixture = create();
         const el = typeAndSearch(fixture, 'zzz');
         expect(el.textContent).toContain('için sonuç bulunamadı');
-        expect(el.textContent).toContain('Yeni kayıt: müşteri ve hayvan');
+        expect(el.textContent).toContain('Yeni kayıt: müşteri ve hasta');
         expect(fixture.componentInstance.noResults()).toBeTrue();
     });
 
     it('sonuç varken de Yeni kayıt aramanın altında ikincil olarak durur; kayıt izni yoksa yoktur', () => {
         let fixture = create();
-        expect(typeAndSearch(fixture, 'pamuk').textContent).toContain('Yeni kayıt: müşteri ve hayvan');
+        expect(typeAndSearch(fixture, 'pamuk').textContent).toContain('Yeni kayıt: müşteri ve hasta');
         expect(fixture.componentInstance.noResults()).toBeFalse();
         TestBed.resetTestingModule();
         claims.delete('Clients.Create');
@@ -117,7 +117,7 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
         const el = typeAndSearch(create(), 'veli');
         const row = el.querySelector('.owner-row') as HTMLElement;
         expect(row.textContent).toContain('Veli Can');
-        const link = Array.from(row.querySelectorAll('a')).find((a) => a.textContent?.includes('Yeni hayvan'))!;
+        const link = Array.from(row.querySelectorAll('a')).find((a) => a.textContent?.includes('Yeni hasta'))!;
         expect(link.getAttribute('href')).toContain('/panel/pets/new');
         expect(link.getAttribute('href')).toContain('clientId=c9');
     });

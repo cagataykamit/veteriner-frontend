@@ -50,7 +50,7 @@ export class PetsService {
         return this.api.get<PetListItemDtoPagedResult>(ApiEndpoints.pets.list(), params).pipe(
             map((res) => mapPagedPetsToVm(res)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Hayvan listesi yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Hasta listesi yüklenemedi.')))
             )
         );
     }
@@ -59,7 +59,7 @@ export class PetsService {
         return this.api.get<PetDetailDto>(ApiEndpoints.pets.byId(id)).pipe(
             map((dto) => mapPetDetailDtoToVm(dto)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Hayvan bulunamadı veya yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Hasta bulunamadı veya yüklenemedi.')))
             )
         );
     }
@@ -94,7 +94,7 @@ export class PetsService {
         return this.api.get<PetDetailDto>(ApiEndpoints.pets.byId(id)).pipe(
             map((dto) => mapPetDetailDtoToEditVm(dto)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Hayvan düzenleme bilgileri yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Hasta düzenleme bilgileri yüklenemedi.')))
             )
         );
     }
@@ -122,12 +122,12 @@ export class PetsService {
                     return throwError(
                         () =>
                             new Error(
-                                'Sunucu yanıtında hayvan kimliği okunamadı. Kayıt oluşmuş olabilir; hayvan listesini kontrol edin.'
+                                'Sunucu yanıtında hasta kimliği okunamadı. Kayıt oluşmuş olabilir; hasta listesini kontrol edin.'
                             )
                     );
                 }
                 return throwError(() =>
-                    err instanceof Error ? err : new Error('Hayvan oluşturulamadı.')
+                    err instanceof Error ? err : new Error('Hasta oluşturulamadı.')
                 );
             })
         );
@@ -150,7 +150,7 @@ export class PetsService {
                     return throwError(() => err);
                 }
                 return throwError(() =>
-                    err instanceof Error ? err : new Error('Hayvan güncellenemedi.')
+                    err instanceof Error ? err : new Error('Hasta güncellenemedi.')
                 );
             })
         );

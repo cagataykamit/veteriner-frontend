@@ -56,18 +56,18 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
     ],
     template: `
         @if (loading()) {
-            <app-loading-state message="Hayvan düzenleme bilgileri yükleniyor…" />
+            <app-loading-state message="Hasta düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
             <div class="card">
                 <app-error-state [detail]="loadError()!" [showRetry]="petLoadRetryEnabled()" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hayvan listesine dön" title="Hayvanı Düzenle" description="Hayvan kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" title="Hastayı Düzenle" description="Hasta kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        İşletme salt okunur moddadır; hayvan kaydı güncellenemez.
+                        İşletme salt okunur moddadır; hasta kaydı güncellenemez.
                     </p>
                 }
                 @if (selectionError()) {
@@ -85,12 +85,12 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="name" class="block text-sm font-medium text-muted-color mb-2">Hayvan adı *</label>
+                            <label for="name" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
                             <input id="name" pInputText class="w-full" formControlName="name" />
                             @if (apiFieldErrors().name) {
                                 <small class="text-red-500">{{ apiFieldErrors().name }}</small>
                             } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                                <small class="text-red-500">Hayvan adı zorunludur.</small>
+                                <small class="text-red-500">Hasta adı zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -369,7 +369,7 @@ export class PetEditPageComponent implements OnInit {
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
         if (!id) {
-            this.loadError.set('Geçersiz hayvan kaydı.');
+            this.loadError.set('Geçersiz hasta kaydı.');
             this.loading.set(false);
             this.petLoadRetryEnabled.set(false);
             return;
@@ -439,7 +439,7 @@ export class PetEditPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: unknown) => {
-                this.loadError.set(panelHttpFailureMessage(e, 'Hayvan bilgileri yüklenemedi.'));
+                this.loadError.set(panelHttpFailureMessage(e, 'Hasta bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
         });

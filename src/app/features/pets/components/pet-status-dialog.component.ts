@@ -57,7 +57,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay, toIstanbulDateInputValue } from '@/
                     }
                 } @else {
                     <p class="mt-0 mb-0">
-                        <span class="font-semibold">{{ p.name }}</span> yeniden aktif olacak: vefat tarihi silinir, hayvan listelere ve otomatik hatırlatmalara geri döner.
+                        <span class="font-semibold">{{ p.name }}</span> yeniden aktif olacak: vefat tarihi silinir, hasta listelere ve otomatik hatırlatmalara geri döner.
                     </p>
                 }
                 @if (!p.rowVersion) {
@@ -148,7 +148,7 @@ export class PetStatusDialogComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
-                this.submitError.set(panelHttpFailureMessage(e, 'Hayvan durumu değiştirilemedi.'));
+                this.submitError.set(panelHttpFailureMessage(e, 'Hasta durumu değiştirilemedi.'));
                 if (e instanceof HttpErrorResponse && problemCodeFromHttpError(e) === 'Pets.ConcurrencyConflict') {
                     this.stale.emit();
                 }

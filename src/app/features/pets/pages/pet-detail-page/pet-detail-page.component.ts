@@ -59,17 +59,17 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     ],
     template: `
         @if (showSavedBanner()) {
-            <p class="mb-4 m-0 text-sm font-medium">Hayvan kaydedildi.</p>
+            <p class="mb-4 m-0 text-sm font-medium">Hasta kaydedildi.</p>
         }
 
         @if (loading()) {
-            <app-loading-state message="Hayvan yükleniyor…" />
+            <app-loading-state message="Hasta yükleniyor…" />
         } @else if (error()) {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (pet(); as p) {
-            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hayvan listesine dön" [title]="p.name" [description]="identity()">
+            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" [title]="p.name" [description]="identity()">
                 @if (canUpdatePet && !ro.mutationBlocked()) {
                     <!-- İki eylem tek kökte: denetim akışı bloğunda birden çok kök [actions] yuvasına yansıtılmaz. -->
                     <ng-container actions>

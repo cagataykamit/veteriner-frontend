@@ -5,7 +5,7 @@ const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 
 /** Anlamlı `detail` yokken veya yalnızca genel çatışma başlığı — backend kurallarına özel iddia yok. */
 const DUPLICATE_PET_USER_MESSAGE =
-    'Bu hayvan kaydı şu an kaydedilemedi; sunucu bir çakışma bildirdi. Bilgileri kontrol edip tekrar deneyin.';
+    'Bu hasta kaydı şu an kaydedilemedi; sunucu bir çakışma bildirdi. Bilgileri kontrol edip tekrar deneyin.';
 
 function isWeak409ConflictText(s: string): boolean {
     const t = s.trim();

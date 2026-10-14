@@ -289,7 +289,7 @@ export function openBalanceTodoItem(balance: ClientBalanceVm | null, opts: { pet
     let detail: string;
     if (opts.petId) {
         const petOutstanding = balance.openCharges.filter((c) => c.petId === opts.petId).reduce((sum, c) => sum + c.outstandingAmount, 0);
-        detail = petOutstanding > 0 ? `Bu hayvan: ${formatMoney(petOutstanding, currency)} · sahibin toplam borcu` : 'Sahibin toplam borcu (diğer hayvanlar veya genel)';
+        detail = petOutstanding > 0 ? `Bu hasta: ${formatMoney(petOutstanding, currency)} · sahibin toplam borcu` : 'Sahibin toplam borcu (diğer hastalar veya genel)';
     } else {
         detail = outstandingByPet(balance)
             .map((p) => `${p.petName?.trim() || 'Genel'} ${formatMoney(p.outstandingAmount, currency)}`)

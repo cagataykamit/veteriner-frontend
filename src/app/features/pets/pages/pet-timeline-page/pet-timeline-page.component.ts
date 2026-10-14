@@ -38,7 +38,7 @@ const PAGE_SIZE = 20;
         AppErrorStateComponent
     ],
     template: `
-        <app-page-header [categoryLink]="['/panel/pets', petId()]" categoryLinkLabel="Hayvan kartına dön" title="Zaman çizelgesi" [description]="petName() ?? ''" />
+        <app-page-header [categoryLink]="['/panel/pets', petId()]" categoryLinkLabel="Hasta kartına dön" title="Zaman çizelgesi" [description]="petName() ?? ''" />
 
         <div class="card mb-4">
             <div class="flex flex-wrap items-center gap-x-6 gap-y-3" role="group" aria-label="Süzgeçler">
@@ -159,7 +159,7 @@ export class PetTimelinePageComponent implements OnInit {
             this.petId.set(id);
             this.petName.set(null);
             if (!id) {
-                this.error.set('Geçersiz hayvan.');
+                this.error.set('Geçersiz hasta.');
                 return;
             }
             this.petsService

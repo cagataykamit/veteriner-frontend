@@ -58,21 +58,21 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
     ],
     template: `
         @if (activeClientId()) {
-            <app-context-filter-chip label="Seçili müşterinin hayvanları gösteriliyor" (clear)="clearClientContext()" />
+            <app-context-filter-chip label="Seçili müşterinin hastaları gösteriliyor" (clear)="clearClientContext()" />
         }
 
         <div class="card">
                 <div class="flex flex-col gap-4">
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <app-list-header class="mb-3" title="Hayvanlar" [count]="totalItems()">
+                        <app-list-header class="mb-3" title="Hastalar" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="petSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="petSearch" placeholder="Hayvan, tür, ırk, mikroçip; sahip adı veya telefonu…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="petSearch" placeholder="Hasta, tür, ırk, mikroçip; sahip adı veya telefonu…" [(value)]="searchInput" (search)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             @if (canCreatePet && !ro.mutationBlocked()) {
-                                <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hayvan" icon="pi pi-plus" class="p-button-primary"></a>
+                                <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hasta" icon="pi pi-plus" class="p-button-primary"></a>
                             } @else if (canCreatePet && ro.mutationBlocked()) {
-                                <button actions pButton type="button" label="Yeni Hayvan (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                                <button actions pButton type="button" label="Yeni Hasta (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                             }
                         </app-list-header>
                         <div class="flex flex-wrap items-end gap-3">
@@ -105,7 +105,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                         </div>
                     </div>
             @if (loading()) {
-                <app-loading-state message="Hayvan listesi yükleniyor…" />
+                <app-loading-state message="Hasta listesi yükleniyor…" />
             } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else {
