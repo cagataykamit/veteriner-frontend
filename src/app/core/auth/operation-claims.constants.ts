@@ -81,7 +81,12 @@ export const CHARGES_CREATE_CLAIM = 'Charges.Create' as const;
 /** Ücret düzeltme ve iptal (yalnız Admin/Owner/ClinicAdmin) — `FINANCE_CORRECTION_API_CONTRACT.md`. */
 export const CHARGES_CORRECT_CLAIM = 'Charges.Correct' as const;
 
-export const TREATMENTS_READ_CLAIM = 'Treatments.Read' as const;
+/** Doğrudan ürün satışı — `DIRECT_SALE_API_CONTRACT.md` §5; iptal yalnız Admin/Owner/ClinicAdmin. */
+export const SALES_READ_CLAIM = 'Sales.Read' as const;
+export const SALES_CREATE_CLAIM = 'Sales.Create' as const;
+export const SALES_CORRECT_CLAIM = 'Sales.Correct' as const;
+
+export const TREATMENTS_READ_CLAIM ='Treatments.Read' as const;
 export const TREATMENTS_CREATE_CLAIM = 'Treatments.Create' as const;
 export const TREATMENTS_UPDATE_CLAIM = 'Treatments.Update' as const;
 

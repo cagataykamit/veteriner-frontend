@@ -136,6 +136,15 @@ export const ApiEndpoints = {
         /** POST `{ reason }`; 204 (`Payments.Correct`). */
         void: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}/void`
     },
+    sales: {
+        /** GET: `page`, `pageSize`, `clientId`, `productId`, `fromUtc`, `toUtc`, `includeVoided`, `clinicId` (`Sales.Read`); POST: satış oluştur (`Sales.Create`). */
+        list: () => `/api/v1/sales`,
+        byId: (id: string) => `/api/v1/sales/${encodeURIComponent(id)}`,
+        /** POST `{ reason, stockOutcome }`; 200 `SaleDto` (`Sales.Correct`). */
+        void: (id: string) => `/api/v1/sales/${encodeURIComponent(id)}/void`,
+        /** POST (`Sales.Create`); Peşin müşteriyi getirir, yoksa oluşturur. */
+        walkInClient: () => `/api/v1/sales/walk-in-client`
+    },
     reports: {
         /** Faz 6C.1 — Payments reporting contract (`from`, `to`, `clinicId`, `method`, `clientId`, `petId`, `search`, `page`, `pageSize`). */
         payments: () => `/api/v1/reports/payments`,

@@ -255,7 +255,36 @@ function chargePanelProblemUserMessage(err: HttpErrorResponse): string | null {
     return code ? (CHARGE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
-/** Muayene kesinleştirme / ek not — `ProblemDetails` + `extensions.code` (`docs/EXAMINATION_FINALIZE_API_CONTRACT.md`). */
+/** Doğrudan satış — `docs/DIRECT_SALE_API_CONTRACT.md` §6; `Sales.Validation` ve `Sales.InsufficientStock` backend `detail` ile gösterilir (kullanılabilir/süresi geçmiş miktarı söyler). */
+const SALE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
+    'Sales.NotFound': 'Satış kaydı bulunamadı.',
+    'Sales.ClinicScopeRequired': 'Satışları görmek için önce bir klinik seçmelisiniz.',
+    'Sales.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
+    'Sales.RequestIdRequired': 'İstek kimliği eksik. Sayfayı yenileyip tekrar deneyin.',
+    'Sales.ProductInactive': 'Pasif ürün satılamaz. Ürünü sepetten çıkarın.',
+    'Sales.VaccineNotSellable': 'Aşı ürünü satılamaz; aşı yalnızca hekim uygulamasıyla kaydedilir.',
+    'Sales.ControlledSubstanceNotSellable': 'Narkotik ve psikotropik ürün satılamaz.',
+    'Sales.BatchExpired': 'Seçilen partinin son kullanma tarihi geçmiş; süresi geçmiş partiden satış yapılamaz.',
+    'Sales.WalkInPaymentRequired': 'Müşteri seçilmediğinde (Peşin müşteri) ödeme zorunludur.',
+    'Sales.WalkInPaymentMustBeFull': 'Peşin müşteri satışında ödeme satış toplamına eşit olmalıdır.',
+    'Sales.PaymentExceedsTotal': 'Ödeme tutarı satış toplamını aşamaz.',
+    'Sales.DuplicateRequestId': 'Bu sepet daha önce gönderilmiş olabilir. Satış listesini kontrol edin; yoksa sepeti yeniden oluşturun.',
+    'Sales.RequestIdVoided': 'Bu satış iptal edilmişti. Sepeti yeniden gönderin.',
+    'Sales.AlreadyVoided': 'Bu satış zaten iptal edilmiş. Sayfayı yenileyin.',
+    'Sales.ConcurrencyConflict': 'Kayıt aynı anda başka bir işlemle değişti. Tekrar deneyin.',
+    'StockBatches.NotFound': 'Seçilen parti bulunamadı. Partiyi yeniden seçin.',
+    'Clients.WalkInReadOnly': 'Peşin müşteri kaydı düzenlenemez.',
+    'Products.NotFound': 'Ürün bulunamadı.',
+    'Clients.NotFound': 'Müşteri kaydı bulunamadı.',
+    'StockMovements.ConcurrencyConflict': 'Stok aynı anda başka bir işlemle değişti. Tekrar deneyin; aynı satış iki kez yazılmaz.'
+};
+
+function salePanelProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = readProblemCodeFromHttp(err);
+    return code ? (SALE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
+}
+
+/** Muayene kesinleştirme / ek not —`ProblemDetails` + `extensions.code` (`docs/EXAMINATION_FINALIZE_API_CONTRACT.md`). */
 const EXAMINATION_FINALIZE_PROBLEM_MESSAGES: Record<string, string> = {
     'Examinations.AlreadyFinalized': 'Bu muayene zaten kesinleştirilmiş. Sayfayı yenileyin.',
     'Examinations.ConcurrencyConflict':
@@ -431,7 +460,11 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     if (administrationPanelMsg) {
         return administrationPanelMsg;
     }
-    const labResultPanelMsg = labResultPanelProblemUserMessage(err);
+    const salePanelMsg = salePanelProblemUserMessage(err);
+    if (salePanelMsg) {
+        return salePanelMsg;
+    }
+    const labResultPanelMsg =labResultPanelProblemUserMessage(err);
     if (labResultPanelMsg) {
         return labResultPanelMsg;
     }
