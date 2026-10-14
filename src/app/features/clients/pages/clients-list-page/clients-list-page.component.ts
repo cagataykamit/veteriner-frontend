@@ -15,7 +15,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -42,54 +42,31 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         Paginator,
         ButtonModule,
         InputTextModule,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent, FilterFieldComponent,
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Müşteriler" description="Kayıtlı müşteri listesi ve detay.">
-            @if (canCreateClient && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/clients/new" pButton type="button" label="Yeni Müşteri" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else if (canCreateClient && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Müşteri (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
-
         <div class="card">
+            <div class="flex flex-col gap-4">
+                <app-list-header class="pb-3 border-b border-surface-200 dark:border-surface-700" title="Müşteriler" [count]="totalItems()">
+                    <app-filter-field label="Arama" labelFor="clientSearch" [active]="isSearchActive()" width="grow">
+                        <app-search-input inputId="clientSearch" placeholder="Ad, e-posta, telefon…" [(value)]="searchInput" (search)="applySearch()" />
+                    </app-filter-field>
+                    <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                    @if (canCreateClient && !ro.mutationBlocked()) {
+                        <a actions routerLink="/panel/clients/new" pButton type="button" label="Yeni Müşteri" icon="pi pi-plus" class="p-button-primary"></a>
+                    } @else if (canCreateClient && ro.mutationBlocked()) {
+                        <button actions pButton type="button" label="Yeni Müşteri (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                    }
+                </app-list-header>
             @if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else if (initialLoad() && loading()) {
                 <app-loading-state message="Müşteri listesi yükleniyor…" />
             } @else {
-                <div class="flex flex-col gap-4">
-                    <div
-                        class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 pb-3 border-b border-surface-200 dark:border-surface-700"
-                    >
-                        <div class="min-w-0">
-                            <h5 class="m-0">Müşteriler</h5>
-                            @if (totalItems() > 0) {
-                                <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                            }
-                        </div>
-                        <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                            <app-filter-field label="Arama" labelFor="clientSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="clientSearch" placeholder="Ad, e-posta, telefon…" [(value)]="searchInput" (search)="applySearch()" />
-                            </app-filter-field>
-                            <div class="flex flex-wrap gap-2 shrink-0">
-                                <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                            </div>
-                        </div>
-                    </div>
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
@@ -172,8 +149,8 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                         />
                     </div>
                 }
-                </div>
             }
+            </div>
         </div>
     `
 })

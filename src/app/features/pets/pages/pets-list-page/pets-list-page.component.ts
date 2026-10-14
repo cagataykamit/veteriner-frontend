@@ -21,7 +21,7 @@ import { SpeciesService } from '@/app/features/species/services/species.service'
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -51,53 +51,27 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent, ClientSearchComponent, FilterFieldComponent,
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Hayvanlar" description="Kayıtlı hayvan listesi ve detay.">
-            @if (canCreatePet && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hayvan" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else if (canCreatePet && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Hayvan (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
-
         <div class="card">
-            @if (loading()) {
-                <app-loading-state message="Hayvan listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
                 <div class="flex flex-col gap-4">
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
-                            <div class="min-w-0">
-                                <h5 class="m-0">Hayvanlar</h5>
-                                @if (totalItems() > 0) {
-                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                                }
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <app-filter-field label="Arama" labelFor="petSearch" [active]="isSearchActive()" width="grow">
-                                    <app-search-input inputId="petSearch" placeholder="Hayvan, tür, ırk, sahip…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </app-filter-field>
-                                <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                                </div>
-                            </div>
-                        </div>
+                        <app-list-header class="mb-3" title="Hayvanlar" [count]="totalItems()">
+                            <app-filter-field label="Arama" labelFor="petSearch" [active]="isSearchActive()" width="grow">
+                                <app-search-input inputId="petSearch" placeholder="Hayvan, tür, ırk, sahip…" [(value)]="searchInput" (search)="applyFilters()" />
+                            </app-filter-field>
+                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                            @if (canCreatePet && !ro.mutationBlocked()) {
+                                <a actions routerLink="/panel/pets/new" pButton type="button" label="Yeni Hayvan" icon="pi pi-plus" class="p-button-primary"></a>
+                            } @else if (canCreatePet && ro.mutationBlocked()) {
+                                <button actions pButton type="button" label="Yeni Hayvan (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            }
+                        </app-list-header>
                         <div class="flex flex-wrap items-end gap-3">
                             <app-filter-field label="Müşteri" labelId="lblPetClient" [active]="isClientActive()" width="grow">
                                 <app-client-search inputId="petClient" [(ngModel)]="clientIdInput" (ngModelChange)="scheduleApply()" />
@@ -130,6 +104,11 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                             </app-filter-field>
                         </div>
                     </div>
+            @if (loading()) {
+                <app-loading-state message="Hayvan listesi yükleniyor…" />
+            } @else if (error()) {
+                <app-error-state [detail]="error()!" (retry)="reload()" />
+            } @else {
                 @if (displayedRows().length === 0) {
                     <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                 } @else {
@@ -242,8 +221,8 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                         />
                     </div>
                 }
-                </div>
             }
+                </div>
         </div>
     `
 })

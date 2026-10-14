@@ -12,7 +12,7 @@ import { VisitArrivalDialogComponent } from '@/app/features/visits/components/vi
 import { VisitQuickRegistrationComponent } from '@/app/features/visits/components/visit-quick-registration.component';
 import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
 import { buildPatientActions, type PatientAction, type PatientActionKey } from '@/app/shared/panel/patient-action-bar/patient-actions.utils';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { SearchInputComponent, SEARCH_MIN_LENGTH } from '@/app/shared/ui/search-input/search-input.component';
 
 type SearchStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -28,11 +28,10 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
 @Component({
     selector: 'app-patients-home-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, SearchInputComponent, VisitArrivalDialogComponent, VisitQuickRegistrationComponent],
+    imports: [CommonModule, RouterLink, ButtonModule, AppListHeaderComponent, SearchInputComponent, VisitArrivalDialogComponent, VisitQuickRegistrationComponent],
     template: `
-        <app-page-header title="Hastalar" description="Hastayı ya da sahibini arayın; geliş, muayene ve randevuya sonuçtan geçin." />
-
         <div class="card">
+            <app-list-header class="mb-4" title="Hastalar" />
             <label for="patientSearch" class="block text-sm font-medium text-muted-color mb-2">Hasta veya sahip ara</label>
             <div class="[&_input]:text-xl [&_input]:py-4">
                 <app-search-input

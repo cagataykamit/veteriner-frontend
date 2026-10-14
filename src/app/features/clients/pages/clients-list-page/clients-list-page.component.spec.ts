@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -76,5 +76,51 @@ describe('ClientsListPageComponent — ortak arama davranışı', () => {
         await wait(0);
         expect(input().value).toBe('');
         expect(searches().pop()).toBe('');
+    });
+});
+
+/** Sekmeli liste sayfası: ayrı sayfa başlığı yok; kart başlığı tek h1, birincil eylem arama ve Temizle'nin yanında. */
+describe('ClientsListPageComponent — tek başlık', () => {
+    function create(response: ReturnType<ClientsService['getClients']> = of({ items: [], page: 1, pageSize: 10, totalItems: 16, totalPages: 2 })): HTMLElement {
+        sessionStorage.clear();
+        const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClients']);
+        clients.getClients.and.returnValue(response);
+        TestBed.configureTestingModule({
+            imports: [ClientsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ClientsService, useValue: clients },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(ClientsListPageComponent);
+        fixture.detectChanges();
+        return fixture.nativeElement as HTMLElement;
+    }
+
+    afterEach(() => sessionStorage.clear());
+
+    it('sayfa başlığı ve kategori satırı yoktur; tek h1 kart başlığıdır ve kayıt sayısı yanında', () => {
+        const el = create();
+        expect(el.querySelector('app-page-header')).toBeNull();
+        const headings = Array.from(el.querySelectorAll('h1, h2, h3, h4, h5'));
+        expect(headings.map((h) => [h.tagName, h.textContent?.trim()])).toEqual([['H1', 'Müşteriler']]);
+        expect(el.querySelector('app-list-header')!.textContent).toContain('16 kayıt');
+    });
+
+    it('"Yeni Müşteri" Temizle ile aynı eylem grubunda, aramanın sağındadır', () => {
+        const el = create();
+        const createLink = el.querySelector('a[href="/panel/clients/new"]')!;
+        const clear = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Temizle')!;
+        expect(createLink.parentElement).toBe(clear.closest('p-button')!.parentElement);
+        expect(el.querySelector('input#clientSearch')!.compareDocumentPosition(createLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('ilk yükleme sürerken de başlık ve birincil eylem görünür', () => {
+        const el = create(new Subject<never>());
+        expect(el.querySelector('app-loading-state')).not.toBeNull();
+        expect(el.querySelector('h1')?.textContent?.trim()).toBe('Müşteriler');
+        expect(el.querySelector('a[href="/panel/clients/new"]')).not.toBeNull();
     });
 });
