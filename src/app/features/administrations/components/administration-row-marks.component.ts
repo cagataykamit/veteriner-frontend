@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type { AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationBatchText, administrationStockOutcomeLabel } from '@/app/features/administrations/utils/administration-labels';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -7,10 +8,16 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 @Component({
     selector: 'app-administration-row-marks',
     standalone: true,
-    imports: [AppStatusTagComponent],
+    imports: [AppStatusTagComponent, RouterLink],
     template: `
         @if (batchText(); as text) {
             <div class="text-xs text-muted-color" data-testid="batch-info">{{ text }}</div>
+        }
+        @if (row().vaccinationId) {
+            <div class="text-xs" data-testid="vaccination-link">
+                <span class="text-muted-color">Aşı kaydına bağlı · </span>
+                <a [routerLink]="['/panel/vaccinations', row().vaccinationId]" class="text-primary no-underline">Aşıyı aç →</a>
+            </div>
         }
         @if (row().addedAfterFinalization) {
             <div data-testid="late-entry">

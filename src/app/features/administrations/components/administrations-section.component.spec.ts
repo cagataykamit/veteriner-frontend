@@ -30,7 +30,8 @@ const row: AdministrationVm = {
     createdAtUtc: '2026-10-13T08:00:00Z',
     batchId: null,
     lotNumber: null,
-    expiryDate: null
+    expiryDate: null,
+    vaccinationId: null
 };
 
 const page = (items: AdministrationVm[]): AdministrationsPagedVm => ({ items, page: 1, pageSize: 50, totalItems: items.length, totalPages: 1 });

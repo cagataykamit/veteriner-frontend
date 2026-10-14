@@ -13,6 +13,7 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import { AdministrationCreateDialogComponent } from '@/app/features/administrations/components/administration-create-dialog.component';
 import { AdministrationRowMarksComponent } from '@/app/features/administrations/components/administration-row-marks.component';
+import { administrationSavedNotice } from '@/app/features/administrations/utils/administration-labels';
 import { AdministrationVoidDialogComponent } from '@/app/features/administrations/components/administration-void-dialog.component';
 import type { AdministrationCreateResultVm, AdministrationStockOutcome, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
@@ -208,19 +209,9 @@ export class AdministrationsSectionComponent {
     }
 
     onSaved(result: AdministrationCreateResultVm): void {
-        const { administration, stock } = result;
-        if (!result.created) {
-            this.notice.set('Bu uygulama zaten kaydedilmişti; stok tekrar düşülmedi.');
-            this.noticeIsWarning.set(false);
-        } else if (stock.isBelowMinimum) {
-            this.notice.set(
-                `Uygulama kaydedildi. Dikkat: ${administration.productName} stoğu minimum düzeyin altına indi (kalan kullanılabilir ${stock.availableQuantity} ${administration.unit}, minimum ${stock.minimumStockLevel}).`
-            );
-            this.noticeIsWarning.set(true);
-        } else {
-            this.notice.set(`Uygulama kaydedildi; kalan kullanılabilir stok ${stock.availableQuantity} ${administration.unit}.`);
-            this.noticeIsWarning.set(false);
-        }
+        const notice = administrationSavedNotice(result, 'Uygulama');
+        this.notice.set(notice.text);
+        this.noticeIsWarning.set(notice.warn);
         this.reload();
     }
 }

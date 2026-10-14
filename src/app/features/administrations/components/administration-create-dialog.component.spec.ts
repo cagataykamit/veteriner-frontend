@@ -67,7 +67,8 @@ const result = (created: boolean): AdministrationCreateResultVm => ({
         createdAtUtc: '2026-10-13T08:00:00Z',
         batchId: null,
         lotNumber: null,
-        expiryDate: null
+        expiryDate: null,
+        vaccinationId: null
     },
     stock: { quantityOnHand: 4.5, availableQuantity: 4.5, minimumStockLevel: 2, isBelowMinimum: false }
 });

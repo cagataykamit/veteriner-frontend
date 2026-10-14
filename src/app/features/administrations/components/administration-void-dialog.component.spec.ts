@@ -26,7 +26,8 @@ const target: AdministrationVm = {
     createdAtUtc: '2026-10-13T08:00:00Z',
     batchId: null,
     lotNumber: null,
-    expiryDate: null
+    expiryDate: null,
+    vaccinationId: null
 };
 
 describe('AdministrationVoidDialogComponent', () => {

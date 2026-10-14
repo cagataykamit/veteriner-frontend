@@ -27,6 +27,8 @@ export interface AdministrationVm {
     lotNumber: string | null;
     /** `yyyy-MM-dd`. */
     expiryDate: string | null;
+    /** Bağlı aşı kaydı; iptali aşı kaydını da iptal eder. */
+    vaccinationId: string | null;
 }
 
 export interface AdministrationStockVm {

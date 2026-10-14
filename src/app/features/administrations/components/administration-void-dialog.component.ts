@@ -54,11 +54,13 @@ export class AdministrationVoidDialogComponent {
         const a = this.target();
         return a ? `${a.productName} · ${a.quantity} ${a.unit}` : null;
     });
-    readonly description = computed(() =>
-        this.outcome() === 'WrittenOff'
-            ? 'Uygulama silinmez, iptal edildi olarak işaretlenir. Ürün stoğa geri verilmez; zarar/imha olarak kayıtta kalır. Gerekçede nedenini yazın.'
-            : 'Uygulama silinmez, iptal edildi olarak işaretlenir ve ürün stoğa geri verilir. Yanlış miktar/ürün için iptal edip yeniden kaydedin.'
-    );
+    readonly description = computed(() => {
+        const base =
+            this.outcome() === 'WrittenOff'
+                ? 'Uygulama silinmez, iptal edildi olarak işaretlenir. Ürün stoğa geri verilmez; zarar/imha olarak kayıtta kalır. Gerekçede nedenini yazın.'
+                : 'Uygulama silinmez, iptal edildi olarak işaretlenir ve ürün stoğa geri verilir. Yanlış miktar/ürün için iptal edip yeniden kaydedin.';
+        return this.target()?.vaccinationId ? `${base} Bu uygulama bir aşı kaydına bağlı; iptalde aşı kaydı da iptal edilir.` : base;
+    });
 
     readonly execute = (reason: string) => this.administrationsService.voidAdministration(this.target()!.id, reason, this.outcome());
 

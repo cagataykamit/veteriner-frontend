@@ -31,6 +31,8 @@ export interface AdministrationDto {
     batchId?: string | null;
     lotNumber?: string | null;
     expiryDate?: string | null;
+    /** Uygulama bir aşı kaydıyla birlikte yazıldıysa o aşı kaydı (`ADMINISTRATIONS_API_CONTRACT.md` §9). */
+    vaccinationId?: string | null;
 }
 
 /** Yalnız oluşturma yanıtında; düşümden sonraki stok. */
