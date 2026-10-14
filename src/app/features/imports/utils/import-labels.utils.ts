@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ImportBatchStatus, ImportIssueSeverity, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchStatus, ImportIssueSeverity, ImportRollbackBlockedItemDto, ImportRollbackEntity, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
@@ -55,6 +55,18 @@ export function isDiscardable(status: string): boolean {
 /** Doğrulaması bitmiş partide önizleme uçları açıktır (sözleşme 7.6). */
 export function isPreviewable(status: string): boolean {
     return ['Validated', 'ValidationFailed', 'Committing', 'Committed', 'CommitFailed', 'RollingBack', 'RolledBack', 'PartiallyRolledBack', 'RollbackFailed'].includes(status);
+}
+
+/** Geri alınabilir durumlar (sözleşme 7.12): yeni geri alma bu durumlardan başlatılır. */
+const ROLLBACKABLE_STATUSES: readonly string[] = ['Committed', 'CommitFailed', 'PartiallyRolledBack', 'RollbackFailed'];
+
+export function isRollbackable(status: string): boolean {
+    return ROLLBACKABLE_STATUSES.includes(status);
+}
+
+/** Geri alma ekranı: geri alınabilir durumlar ve süren geri alma. */
+export function isRollbackScreenAvailable(status: string): boolean {
+    return isRollbackable(status) || status === 'RollingBack';
 }
 
 export const IMPORT_VALUE_KIND_LABELS: Readonly<Record<ImportValueKind, string>> = {
@@ -151,7 +163,8 @@ const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {
     'Imports.HasErrorRows': 'Hatalı satırlar var; bu seçenekle aktarılamaz.',
     'Imports.ReminderImpactChanged': 'E-posta sayısı değişti. Güncel sayıyı görüp tekrar onaylayın.',
     'Imports.CommitBlocked': 'Aktarma şu an başlatılamıyor. Doğrulama sonucundaki engelleri giderip yeniden doğrulayın.',
-    'Imports.AccessDenied': 'Bu aktarma için gerekli yetkiniz yok (müşteri, hasta veya aşı ekleme yetkisi). Yöneticinizle görüşün.'
+    'Imports.AccessDenied': 'Bu işlem için gerekli yetkiniz yok (müşteri, hasta veya aşı ekleme yetkisi). Yöneticinizle görüşün.',
+    'Imports.RollbackBlocked': 'Bağlı kaydı olan kayıtlar var; hiçbir şey silinmedi. Aşağıdaki listeye bakın.'
 };
 
 /** Sayfada gösterilecek Türkçe hata; içe aktarma kodları önce, sonra genel panel eşlemesi. */
@@ -217,6 +230,75 @@ export function isEndpointUnavailable(err: unknown): boolean {
         return true;
     }
     return err.status === 404 && !problemCodeFromHttpError(err);
+}
+
+/** Geri alma engeli (`Kept`) neden kodları için sade Türkçe (sözleşme 9, B5 tablosu). */
+const ROLLBACK_REASON_LABELS: Readonly<Record<string, string>> = {
+    LinkedToExamination: 'Aşı bir muayeneye bağlanmış',
+    HasAdministration: 'Aşıya bağlı uygulama kaydı var',
+    VaccinationModified: 'Aşı sonradan düzenlenmiş',
+    HasAppointments: 'Bağlı randevu var',
+    HasVisits: 'Bağlı geliş (ziyaret) var',
+    HasExaminations: 'Bağlı muayene var',
+    HasTreatments: 'Bağlı tedavi var',
+    HasPrescriptions: 'Bağlı reçete var',
+    HasLabResults: 'Bağlı laboratuvar sonucu var',
+    HasHospitalizations: 'Bağlı yatış var',
+    HasAdministrations: 'Bağlı uygulama kaydı var',
+    HasCharges: 'Bağlı ücret var',
+    HasPayments: 'Bağlı ödeme var',
+    HasSales: 'Bağlı satış var',
+    HasCareInstructions: 'Bağlı bakım talimatı var',
+    HasChargeSuggestions: 'Bağlı ücret önerisi var',
+    HasOtherVaccinations: 'Elle ya da başka aktarmayla eklenmiş aşı var',
+    HasKeptVaccinations: 'Aşılarından bazıları silinemediği için kalıyor',
+    ClientModified: 'Müşteri sonradan düzenlenmiş',
+    HasOtherPets: 'Başka yolla eklenmiş hayvanı var',
+    HasKeptPets: 'Hayvanlarından bazıları silinemediği için kalıyor',
+    OwnerUnitBlocked: 'Aynı müşterinin başka bir kaydı silinemediği için bırakıldı'
+};
+
+export function rollbackReasonLabel(code: string): string {
+    return ROLLBACK_REASON_LABELS[code] ?? code;
+}
+
+export const ROLLBACK_ENTITY_LABELS: Readonly<Record<ImportRollbackEntity, string>> = {
+    Client: 'Müşteri',
+    Pet: 'Hayvan',
+    Vaccination: 'Aşı'
+};
+
+export const IMPORT_TABLE_LABELS: Readonly<Record<ImportTable, string>> = {
+    customers: 'Müşteriler',
+    pets: 'Hayvanlar',
+    vaccinations: 'Aşılar'
+};
+
+/** Geri alma önizlemesi uyarıları (sözleşme 7.11). */
+const ROLLBACK_WARNING_LABELS: Readonly<Record<string, string>> = {
+    'Imports.PetEditsNotTracked': 'Hayvanlarda sonradan yapılan düzenlemeler izlenemiyor; aktarılan hayvanlar, sonradan düzenlenmiş olsalar bile silinir.',
+    'Imports.RemindersAlreadyReleased': 'Aşı hatırlatmaları açılmış; gönderilmiş e-postalar geri alınamaz.'
+};
+
+export function rollbackWarningLabel(code: string): string {
+    return ROLLBACK_WARNING_LABELS[code] ?? code;
+}
+
+/** 409 `Imports.RollbackBlocked` yanıtındaki engelli kayıtlar (`extensions.blockedItems`, en çok 50); yalnız kimlik/satır/neden alanları alınır. */
+export function rollbackBlockedItems(err: unknown): ImportRollbackBlockedItemDto[] {
+    const v = importErrorExtension(err, 'blockedItems');
+    if (!Array.isArray(v)) {
+        return [];
+    }
+    return v
+        .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
+        .map((x) => ({
+            entity: x['entity'] as ImportRollbackEntity,
+            id: String(x['id'] ?? ''),
+            table: x['table'] as ImportTable,
+            rowNumber: Number(x['rowNumber'] ?? 0),
+            reasons: Array.isArray(x['reasons']) ? x['reasons'].filter((r): r is string => typeof r === 'string') : []
+        }));
 }
 
 export const IMPORT_MAX_FILE_BYTES = 10 * 1024 * 1024;

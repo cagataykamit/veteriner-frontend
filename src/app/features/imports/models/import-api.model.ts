@@ -207,3 +207,43 @@ export interface ImportReleaseRemindersResultDto {
     alreadyReleased: boolean;
     note: string | null;
 }
+
+export type ImportBlockedPolicy = 'Fail' | 'DeleteUnblockedOnly';
+export type ImportRollbackEntity = 'Client' | 'Pet' | 'Vaccination';
+
+export interface ImportRollbackCountsDto {
+    clients: number;
+    pets: number;
+    vaccinations: number;
+}
+
+/** Engelli kayıt: kişisel veri içermez; kaydı oluşturan satırın tablosu ve numarası. */
+export interface ImportRollbackBlockedItemDto {
+    entity: ImportRollbackEntity;
+    id: string;
+    table: ImportTable;
+    rowNumber: number;
+    reasons: string[];
+}
+
+/** `GET .../rollback-preview` (B5, §7.11). */
+export interface ImportRollbackPreviewDto {
+    status: ImportBatchStatus;
+    canRollback: boolean;
+    canDeleteUnblockedOnly: boolean;
+    deletable: ImportRollbackCountsDto;
+    blocked: ImportRollbackCountsDto;
+    blockedItems: ImportRollbackBlockedItemDto[];
+    blockedItemsTruncated: boolean;
+    kept: { matchedClients: number; matchedPets: number };
+    rolledBack: ImportRollbackCountsDto;
+    remindersAlreadyReleased: boolean;
+    warnings: string[];
+}
+
+/** `POST .../rollback` gövdesi (B5, §7.12). `reason` 1–500 karakter. */
+export interface ImportRollbackRequestDto {
+    requestId: string;
+    reason: string;
+    blockedPolicy: ImportBlockedPolicy;
+}

@@ -13,6 +13,8 @@ import type {
     ImportMappingRequestDto,
     ImportPreviewDto,
     ImportReleaseRemindersResultDto,
+    ImportRollbackPreviewDto,
+    ImportRollbackRequestDto,
     ImportRowPageDto,
     ImportRowsQuery,
     ImportTable
@@ -98,5 +100,14 @@ export class ImportsService {
     /** B4: `confirmEmailCount` güncel `emailsWithinReminderWindow` ile aynı olmalı; değilse 409 `Imports.ReminderImpactChanged`. */
     releaseReminders(id: string, confirmEmailCount: number): Observable<ImportReleaseRemindersResultDto> {
         return this.api.post<ImportReleaseRemindersResultDto>(ApiEndpoints.imports.releaseReminders(id), { confirmEmailCount });
+    }
+
+    getRollbackPreview(id: string): Observable<ImportRollbackPreviewDto> {
+        return this.api.get<ImportRollbackPreviewDto>(ApiEndpoints.imports.rollbackPreview(id));
+    }
+
+    /** B5: 202 yeni iş, 200 aynı `requestId` ile tekrar (yeni iş başlamaz); ikisinde de gövde parti özetidir. Engel varsa 409 `Imports.RollbackBlocked`. */
+    rollback(id: string, body: ImportRollbackRequestDto): Observable<ImportBatchDto> {
+        return this.api.post<ImportBatchDto>(ApiEndpoints.imports.rollback(id), body);
     }
 }

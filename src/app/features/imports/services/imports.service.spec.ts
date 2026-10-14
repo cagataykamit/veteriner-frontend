@@ -83,4 +83,14 @@ describe('ImportsService', () => {
         expect(req.request.body).toEqual({ confirmEmailCount: 7 });
         req.flush({});
     });
+
+    it('geri alma önizlemesini okur, geri almayı requestId, gerekçe ve politikayla ister', () => {
+        service.getRollbackPreview('b1').subscribe();
+        http.expectOne({ method: 'GET', url: 'http://api.test/api/v1/imports/batches/b1/rollback-preview' }).flush({});
+        service.rollback('b1', { requestId: 'r-1', reason: 'Yanlış dosya', blockedPolicy: 'Fail' }).subscribe();
+        const req = http.expectOne('http://api.test/api/v1/imports/batches/b1/rollback');
+        expect(req.request.method).toBe('POST');
+        expect(req.request.body).toEqual({ requestId: 'r-1', reason: 'Yanlış dosya', blockedPolicy: 'Fail' });
+        req.flush({});
+    });
 });

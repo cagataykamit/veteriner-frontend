@@ -155,7 +155,11 @@ export const ApiEndpoints = {
         /** GET (B4): uygulama ilerlemesi (hafif yoklama, no-store). */
         progress: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/progress`,
         /** POST (B4): içe aktarılan aşıların hatırlatmalarını açar (geri alınamaz). */
-        releaseReminders: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/release-reminders`
+        releaseReminders: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/release-reminders`,
+        /** GET (B5): geri alma önizlemesi (silinebilir/engelli kayıt sayıları, no-store). */
+        rollbackPreview: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/rollback-preview`,
+        /** POST (B5): geri almayı başlatır; 202 yeni iş, 200 tekrar. */
+        rollback: (id: string) => `/api/v1/imports/batches/${encodeURIComponent(id)}/rollback`
     },
     vaccineDefinitions: {
         list: () => `/api/v1/vaccine-definitions`
