@@ -4,13 +4,13 @@ import { AppContextFilterChipComponent } from './app-context-filter-chip.compone
 describe('AppContextFilterChipComponent', () => {
     it('etiketi gösterir ve "Süzgeci kaldır" tıklanınca clear yayar', () => {
         const fixture = TestBed.createComponent(AppContextFilterChipComponent);
-        fixture.componentRef.setInput('label', 'Seçili hayvanın kayıtları gösteriliyor');
+        fixture.componentRef.setInput('label', 'Seçili hastanın kayıtları gösteriliyor');
         let cleared = 0;
         fixture.componentInstance.clear.subscribe(() => cleared++);
         fixture.detectChanges();
 
         const el = fixture.nativeElement as HTMLElement;
-        expect(el.textContent).toContain('Seçili hayvanın kayıtları gösteriliyor');
+        expect(el.textContent).toContain('Seçili hastanın kayıtları gösteriliyor');
         (el.querySelector('[data-testid="context-filter-clear"]') as HTMLButtonElement).click();
         expect(cleared).toBe(1);
     });

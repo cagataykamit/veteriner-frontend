@@ -141,7 +141,7 @@ describe('VisitsService — geri alma ve yanlış işaretlenenler', () => {
     });
 
     for (const [code, text] of [
-        ['Visits.DuplicateActiveVisit', 'Bu hayvanın başka açık geliş kaydı var'],
+        ['Visits.DuplicateActiveVisit', 'Bu hastanın başka açık geliş kaydı var'],
         ['Visits.DuplicateAppointmentVisit', 'Bu randevu için başka geliş kaydı var']
     ]) {
         it(`409 ${code} Türkçe mesaja çevrilir`, (done) => {

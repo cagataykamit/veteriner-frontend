@@ -49,7 +49,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <div class="text-sm text-muted-color">
                         {{ c.phone }}
                         @if (c.petNames.length) {
-                            · Hayvanlar: {{ c.petNames.join(', ') }}
+                            · Hastalar: {{ c.petNames.join(', ') }}
                         }
                     </div>
                 </div>
@@ -84,7 +84,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 })
 export class ClientSearchComponent implements ControlValueAccessor {
     readonly inputId = input('');
-    readonly placeholder = input('Ad, telefon, hayvan adı veya mikroçip ile arayın');
+    readonly placeholder = input('Ad, telefon, hasta adı veya mikroçip ile arayın');
 
     protected readonly minLength = CLIENT_SEARCH_MIN_LENGTH;
 

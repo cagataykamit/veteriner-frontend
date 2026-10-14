@@ -56,12 +56,12 @@ const PAGE_SIZE = 20;
                     @if (searchError()) {
                         <span class="text-red-500" role="alert">{{ searchError() }}</span>
                     } @else {
-                        <span>Hayvan bulunamadı</span>
+                        <span>Hasta bulunamadı</span>
                         @if (canCreate()) {
                             <div>
                                 <p-button
                                     type="button"
-                                    label="Bu müşteri için yeni hayvan ekle"
+                                    label="Bu müşteri için yeni hasta ekle"
                                     icon="pi pi-plus"
                                     [text]="true"
                                     size="small"
@@ -77,7 +77,7 @@ const PAGE_SIZE = 20;
         @if (canCreate() && clientId()) {
             <p-button
                 type="button"
-                [label]="'Bu müşteri için yeni hayvan'"
+                [label]="'Bu müşteri için yeni hasta'"
                 icon="pi pi-plus"
                 [text]="true"
                 size="small"
@@ -94,7 +94,7 @@ export class PetSearchComponent implements ControlValueAccessor {
     /** `false`: sahip seçilmemişken tüm hayvanlar aranır (rapor/liste filtreleri); sahip varsa yine ona daraltılır. */
     readonly requireClient = input(true);
     readonly inputId = input('');
-    readonly placeholder = input('Hayvan seçin veya yazarak arayın');
+    readonly placeholder = input('Hasta seçin veya yazarak arayın');
     /** Yeni bakım kaydı (randevu, muayene) formları: vefat eden hayvan önerilmez (`status=Active`); sunucu da 409 `Pets.Deceased` döner. */
     readonly activeOnly = input(false);
 
@@ -192,7 +192,7 @@ export class PetSearchComponent implements ControlValueAccessor {
                 return (clientId && hasOwner ? filterPetsByClientId(r.items, clientId) : r.items).map((p) => ({ id: p.id, label: petSelectLabel(p) }));
             }),
             catchError((e: unknown) => {
-                this.searchError.set(panelHttpFailureMessage(e, 'Hayvan listesi yüklenemedi.'));
+                this.searchError.set(panelHttpFailureMessage(e, 'Hasta listesi yüklenemedi.'));
                 return of([] as PetSearchResult[]);
             })
         );

@@ -28,7 +28,7 @@ describe('hospitalization-upsert-validation-parse.utils', () => {
 
     it('geliş uyuşmazlığı kodları Türkçe mesaja çevrilir', () => {
         expect(parseHospitalizationUpsertHttpError(problem(400, 'Hospitalizations.ExaminationVisitMismatch')).summaryMessage).toContain('muayenenin gelişiyle');
-        expect(parseHospitalizationUpsertHttpError(problem(400, 'Hospitalizations.VisitPetMismatch')).summaryMessage).toContain('hayvanla');
+        expect(parseHospitalizationUpsertHttpError(problem(400, 'Hospitalizations.VisitPetMismatch')).summaryMessage).toContain('hastayla');
         expect(parseHospitalizationUpsertHttpError(problem(404, 'Visits.NotFound')).summaryMessage).toContain('Geliş kaydı bulunamadı');
     });
 

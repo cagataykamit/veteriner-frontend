@@ -42,13 +42,13 @@ describe('PatientActionBarComponent', () => {
         expect(exam.textContent).toContain('Muayene başlat');
         expect(exam.getAttribute('href')).toContain('clientId=cl1');
         expect(exam.getAttribute('href')).toContain('petId=p1');
-        expect(el.textContent).not.toContain('Yeni hayvan');
+        expect(el.textContent).not.toContain('Yeni hasta');
     });
 
     it('müşteri sayfasında Yeni hayvan müşteri bağlamıyla görünür', () => {
         const el: HTMLElement = create({ clientId: 'cl1' }).nativeElement;
         const link = el.querySelector('a[href^="/panel/pets/new"]') as HTMLAnchorElement;
-        expect(link.textContent).toContain('Yeni hayvan');
+        expect(link.textContent).toContain('Yeni hasta');
         expect(link.getAttribute('href')).toContain('clientId=cl1');
         expect(el.textContent).not.toContain('Muayene başlat');
     });

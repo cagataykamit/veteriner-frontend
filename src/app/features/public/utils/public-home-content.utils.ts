@@ -43,7 +43,7 @@ export const PUBLIC_HOME_FEATURES: readonly PublicHomeFeatureDef[] = [
     },
     {
         title: 'Hasta ve pet kayıtları',
-        description: 'Müşteri, hayvan, tür/ırk ve geçmiş kayıtları tek yerde.',
+        description: 'Müşteri, hasta, tür/ırk ve geçmiş kayıtları tek yerde.',
         icon: 'pi pi-heart'
     },
     {

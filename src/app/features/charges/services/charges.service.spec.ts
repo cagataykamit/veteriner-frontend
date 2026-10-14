@@ -108,7 +108,7 @@ describe('ChargesService', () => {
     it('ekleme 400 tutarlılık hatası Türkçe mesaja çevrilir', (done) => {
         service.createCharge(request).subscribe({
             error: (e: Error) => {
-                expect(e.message).toBe('Geliş kaydındaki hayvan bu müşteriye ait değil.');
+                expect(e.message).toBe('Geliş kaydındaki hasta bu müşteriye ait değil.');
                 done();
             }
         });

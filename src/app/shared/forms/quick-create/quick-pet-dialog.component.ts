@@ -43,7 +43,7 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
     ],
     template: `
         <p-dialog
-            header="Yeni hayvan"
+            header="Yeni hasta"
             [modal]="true"
             [dismissableMask]="true"
             [style]="{ width: 'min(560px, 95vw)' }"
@@ -57,12 +57,12 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-pet-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
-                        <label for="qp-name" class="block text-sm font-medium text-muted-color mb-2">Hayvan adı *</label>
+                        <label for="qp-name" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
                         <input id="qp-name" pInputText class="w-full" formControlName="name" />
                         @if (apiFieldErrors().name) {
                             <small class="text-red-500">{{ apiFieldErrors().name }}</small>
                         } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                            <small class="text-red-500">Hayvan adı zorunludur.</small>
+                            <small class="text-red-500">Hasta adı zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">

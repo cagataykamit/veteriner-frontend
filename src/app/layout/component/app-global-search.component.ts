@@ -42,7 +42,7 @@ const EDITABLE_TARGET = 'input, textarea, select, [contenteditable=""], [content
                 <kbd class="layout-topbar-search-key" aria-hidden="true">Ctrl K</kbd>
             </button>
             <p-dialog
-                header="Müşteri ve hayvan ara"
+                header="Müşteri ve hasta ara"
                 position="top"
                 appendTo="body"
                 [modal]="true"
@@ -60,12 +60,12 @@ const EDITABLE_TARGET = 'input, textarea, select, [contenteditable=""], [content
                     class="w-full"
                     role="combobox"
                     autocomplete="off"
-                    aria-label="Müşteri veya hayvan ara"
+                    aria-label="Müşteri veya hasta ara"
                     aria-autocomplete="list"
                     [attr.aria-expanded]="options().length > 0"
                     [attr.aria-controls]="listboxId"
                     [attr.aria-activedescendant]="activeOptionId()"
-                    placeholder="Ad, telefon, hayvan adı veya mikroçip ile arayın"
+                    placeholder="Ad, telefon, hasta adı veya mikroçip ile arayın"
                     [value]="query()"
                     (input)="onInput($any($event.target).value)"
                     (keydown)="onInputKeydown($event)"
@@ -111,7 +111,7 @@ const EDITABLE_TARGET = 'input, textarea, select, [contenteditable=""], [content
                                                         <span class="text-sm text-muted-color">
                                                             {{ c.phone }}
                                                             @if (c.petNames.length) {
-                                                                · Hayvanlar: {{ c.petNames.join(', ') }}
+                                                                · Hastalar: {{ c.petNames.join(', ') }}
                                                             }
                                                         </span>
                                                     </a>
@@ -120,7 +120,7 @@ const EDITABLE_TARGET = 'input, textarea, select, [contenteditable=""], [content
                                         }
                                         @if (r.pets.length) {
                                             <div role="group" aria-labelledby="global-search-pets">
-                                                <div id="global-search-pets" class="text-xs font-bold uppercase text-muted-color mb-1">Hayvanlar</div>
+                                                <div id="global-search-pets" class="text-xs font-bold uppercase text-muted-color mb-1">Hastalar</div>
                                                 @for (p of r.pets; track p.id; let i = $index) {
                                                     <a
                                                         role="option"
@@ -273,7 +273,7 @@ export class AppGlobalSearch {
     }
 
     protected failedMessage(r: GlobalSearchResultVm): string {
-        const names = r.failedKinds.map((kind) => (kind === 'clients' ? 'Müşteri' : 'Hayvan'));
+        const names = r.failedKinds.map((kind) => (kind === 'clients' ? 'Müşteri' : 'Hasta'));
         return `${names.join(' ve ')} araması yapılamadı.`;
     }
 

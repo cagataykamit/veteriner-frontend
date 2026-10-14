@@ -52,7 +52,7 @@ const ACTIONS: readonly PatientActionDefinition[] = [
     { key: 'vaccination', label: 'Aşı', icon: 'pi pi-shield', route: '/panel/vaccinations/new', claim: VACCINATIONS_CREATE_CLAIM, carriesPet: true },
     { key: 'labResult', label: 'Lab', icon: 'pi pi-chart-bar', route: '/panel/lab-results/new', claim: LAB_RESULTS_CREATE_CLAIM, carriesPet: true },
     { key: 'hospitalization', label: 'Yatış', icon: 'pi pi-building', route: '/panel/hospitalizations/new', claim: HOSPITALIZATIONS_CREATE_CLAIM, carriesPet: true },
-    { key: 'newPet', label: 'Yeni hayvan', icon: 'pi pi-plus', route: '/panel/pets/new', claim: PETS_CREATE_CLAIM, carriesPet: false },
+    { key: 'newPet', label: 'Yeni hasta', icon: 'pi pi-plus', route: '/panel/pets/new', claim: PETS_CREATE_CLAIM, carriesPet: false },
     { key: 'charge', label: 'Ücret ekle', icon: 'pi pi-receipt', route: '/panel/charges/new', claim: CHARGES_CREATE_CLAIM, carriesPet: true },
     { key: 'payment', label: 'Ödeme al', icon: 'pi pi-wallet', route: '/panel/payments/new', claim: PAYMENTS_CREATE_CLAIM, carriesPet: false }
 ];

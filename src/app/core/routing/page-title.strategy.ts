@@ -10,7 +10,7 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['today', 'Bugün'],
     ['patients', 'Hastalar'],
     ['clients', 'Müşteriler'],
-    ['pets', 'Hayvanlar'],
+    ['pets', 'Hastalar'],
     ['appointments/calendar', 'Randevu Takvimi'],
     ['appointments', 'Randevular'],
     ['examinations', 'Muayeneler'],

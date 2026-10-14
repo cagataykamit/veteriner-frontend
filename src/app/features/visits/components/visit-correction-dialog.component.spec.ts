@@ -191,10 +191,10 @@ describe('VisitCorrectionDialogComponent — restore modu', () => {
     });
 
     it('409 mesajı gösterilir, diyalog açık kalır', () => {
-        visits.restoreVisit.and.returnValue(throwError(() => new Error('Bu hayvanın başka açık geliş kaydı var.')));
+        visits.restoreVisit.and.returnValue(throwError(() => new Error('Bu hastanın başka açık geliş kaydı var.')));
         cmp.form.controls.reason.setValue('Yanlışlıkla işaretlendi');
         cmp.onSubmit();
-        expect(cmp.submitError()).toBe('Bu hayvanın başka açık geliş kaydı var.');
+        expect(cmp.submitError()).toBe('Bu hastanın başka açık geliş kaydı var.');
         expect(cmp.visible()).toBeTrue();
     });
 });

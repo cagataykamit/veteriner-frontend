@@ -138,10 +138,10 @@ describe('PetSearchComponent', () => {
     });
 
     it('arama hatasında Türkçe mesaj ve boş liste', async () => {
-        pets.getPets.and.returnValue(throwError(() => new Error('Hayvan listesi yüklenemedi.')));
+        pets.getPets.and.returnValue(throwError(() => new Error('Hasta listesi yüklenemedi.')));
         cmp.onComplete({ query: 'x', originalEvent: new Event('x') });
         await wait(0);
         expect(cmp.suggestions()).toEqual([]);
-        expect(cmp.searchError()).toBe('Hayvan listesi yüklenemedi.');
+        expect(cmp.searchError()).toBe('Hasta listesi yüklenemedi.');
     });
 });

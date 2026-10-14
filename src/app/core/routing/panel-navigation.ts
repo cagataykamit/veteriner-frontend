@@ -168,7 +168,7 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-book',
                 route: `${REPORTS_ROUTE}/registers/examinations`,
                 claims: [EXAMINATIONS_READ_CLAIM],
-                description: 'Hayvan muayene kayıt defteri; yazdırma ve dışa aktarma.'
+                description: 'Hasta muayene kayıt defteri; yazdırma ve dışa aktarma.'
             },
             {
                 label: 'Reçete Kayıt Defteri',
@@ -205,7 +205,7 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 route: `${REPORTS_ROUTE}/registers/vaccine-info`,
                 claims: [ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_READ_CLAIM, PRODUCTS_READ_CLAIM],
                 requireAllClaims: true,
-                description: 'Hayvanlara uygulanan aşılar: hasta, ürün, seri no ve tutar; yazdırma ve dışa aktarma.'
+                description: 'Uygulanan aşılar: hasta, ürün, seri no ve tutar; yazdırma ve dışa aktarma.'
             }
         ]
     }
@@ -229,7 +229,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             tabbedEntry('Hastalar', 'pi pi-fw pi-heart', [
                 { label: 'Ara', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
                 { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
-                { label: 'Hayvanlar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
+                { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
             ]),
             tabbedEntry('Randevular', 'pi pi-fw pi-calendar', [
                 { label: 'Liste', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },

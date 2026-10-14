@@ -90,7 +90,7 @@ describe('AppGlobalSearch', () => {
         expect(search.search).toHaveBeenCalledOnceWith('pamuk');
         const text = document.querySelector('.p-dialog')!.textContent!;
         expect(text).toContain('Müşteriler');
-        expect(text).toContain('Hayvanlar');
+        expect(text).toContain('Hastalar');
         expect(text).toContain('Sahip: Ali Veli');
         expect(text).toContain('Mikroçip: 985112345678901');
         expect(document.querySelectorAll('[role="option"]').length).toBe(2);

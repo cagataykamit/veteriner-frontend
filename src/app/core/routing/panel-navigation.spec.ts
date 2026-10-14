@@ -61,7 +61,7 @@ describe('panel-navigation', () => {
         expect(tabs('Hastalar')).toEqual([
             ['Ara', '/panel/patients'],
             ['Müşteriler', '/panel/clients'],
-            ['Hayvanlar', '/panel/pets']
+            ['Hastalar', '/panel/pets']
         ]);
         expect(tabs('Randevular')).toEqual([
             ['Liste', '/panel/appointments'],
@@ -196,8 +196,8 @@ describe('panel-navigation', () => {
         const tabs = (url: string, hasClaim: (c: string) => boolean = () => true) => tabsForUrl(MENU_GROUPS, url, hasClaim);
 
         it('liste adresinde yetkili sekmeleri ve etkin sekmeyi verir; sorgu süzgeci etkin sekmeyi değiştirmez', () => {
-            expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hayvanlar']);
-            expect(tabs('/panel/pets?clientId=c1')?.active.label).toBe('Hayvanlar');
+            expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hastalar']);
+            expect(tabs('/panel/pets?clientId=c1')?.active.label).toBe('Hastalar');
             expect(tabs('/panel/appointments/calendar')?.active.label).toBe('Takvim');
             expect(tabs('/panel/administrations')?.tabs).toHaveSize(7);
         });
@@ -214,7 +214,7 @@ describe('panel-navigation', () => {
             expect(tabs('/panel/stocks', only('Products.Read'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu']);
             expect(tabs('/panel/stocks', only('Products.Read', 'StockMovements.Create'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu', 'Mal kabul']);
             expect(tabs('/panel/clients', only('Clients.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler']);
-            expect(tabs('/panel/patients', only('Pets.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Hayvanlar']);
+            expect(tabs('/panel/patients', only('Pets.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Hastalar']);
             expect(tabs('/panel/pets', only('Clients.Read'))).toBeUndefined();
         });
 
