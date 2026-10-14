@@ -17,7 +17,8 @@ import type { ProductStockVm } from '@/app/features/inventory/models/product-sto
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
 import { ProductStockService } from '@/app/features/inventory/services/product-stock.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCT_CATEGORIES_READ_CLAIM, PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PRODUCT_CATEGORIES_READ_CLAIM, PRODUCTS_READ_CLAIM, STOCK_MOVEMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { suggestedReceiptQuantity } from '@/app/features/inventory/utils/goods-receipt.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -213,6 +214,15 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                                     >Detay</a
                                                 >
                                             }
+                                            @if (canReceiveGoods && row.isBelowMinimum && row.productId) {
+                                                <a
+                                                    routerLink="/panel/goods-receipts"
+                                                    [queryParams]="receiptQueryParams(row)"
+                                                    class="text-primary font-medium no-underline text-sm ml-3"
+                                                    data-testid="stock-receive"
+                                                    >Giriş</a
+                                                >
+                                            }
                                         </td>
                                     </tr>
                                 </ng-template>
@@ -246,6 +256,15 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                                 class="text-primary font-medium no-underline text-sm"
                                                 >Ürün detayı →</a
                                             >
+                                            @if (canReceiveGoods && row.isBelowMinimum) {
+                                                <a
+                                                    routerLink="/panel/goods-receipts"
+                                                    [queryParams]="receiptQueryParams(row)"
+                                                    class="text-primary font-medium no-underline text-sm ml-4"
+                                                    data-testid="stock-receive"
+                                                    >Giriş →</a
+                                                >
+                                            }
                                         </div>
                                     }
                                 </div>
@@ -280,6 +299,7 @@ export class ProductStocksPageComponent implements OnInit {
 
     readonly canReadCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_READ_CLAIM);
     readonly canExportStocks = computed(() => this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM));
+    readonly canReceiveGoods = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -337,6 +357,11 @@ export class ProductStocksPageComponent implements OnInit {
 
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeLowStock(), this.activeCategoryId(), true);
+    }
+
+    /** Düşük stok kısayolu: mal kabulü bu ürün, klinik ve önerilen miktarla açar. */
+    receiptQueryParams(row: ProductStockVm): Record<string, string> {
+        return { productId: row.productId, clinicId: row.clinicId, quantity: String(suggestedReceiptQuantity(row)) };
     }
 
     activeClinicContextHint(): string {
