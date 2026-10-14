@@ -245,6 +245,14 @@ export const ApiEndpoints = {
         /** GET; PUT = metin düzeltme (`rowVersion` zorunlu). */
         byId: (id: string) => `/api/v1/care-instructions/${encodeURIComponent(id)}`
     },
+    clinicalTerms: {
+        /** GET (Query: `kind`, `search`, `includeInactive`, `page`, `pageSize`) ve POST `{ kind, name }`. */
+        list: () => `/api/v1/clinical-terms`,
+        /** PUT = ad düzeltme (`rowVersion` zorunlu). */
+        byId: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}`,
+        activate: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}/activate`,
+        deactivate: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}/deactivate`
+    },
     productCategories: {
         list: () => `/api/v1/product-categories`,
         byId: (id: string) => `/api/v1/product-categories/${encodeURIComponent(id)}`,
