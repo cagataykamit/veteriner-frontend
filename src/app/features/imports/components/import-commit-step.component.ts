@@ -6,15 +6,24 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { SelectModule } from 'primeng/select';
-import type { ImportBatchDto, ImportOnErrors, ImportPreviewDto } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportCommitProgressDto, ImportFileFormat, ImportOnErrors, ImportPreviewDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
-import { importErrorCode, importErrorMessage, importStatusLabel, isEndpointUnavailable } from '@/app/features/imports/utils/import-labels.utils';
+import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
+import {
+    importCommitBlockers,
+    importErrorCode,
+    importErrorMessage,
+    importIssueLabel,
+    importStatusLabel,
+    isEndpointUnavailable,
+    reminderImpactCurrentCount
+} from '@/app/features/imports/utils/import-labels.utils';
 import { IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 /**
- * Adım 4: onay ve uygulama (B4 uçları). Uç henüz yayında değilse (404 yönlendirme yok / 405 / 501) nazik bir
- * "henüz etkin değil" durumu gösterilir; başarı hiçbir koşulda varsayılmaz, durum yalnız sunucu yanıtından gelir.
+ * Adım 4: onay, ilerleme ve sonuç (B4 uçları). "Henüz etkin değil" yedeği yalnız uç gerçekten dağıtılmamışsa
+ * (gövdesiz 404 / 405 / 501) gösterilir; başarı hiçbir koşulda varsayılmaz, durum yalnız sunucu yanıtından gelir.
  */
 @Component({
     selector: 'app-import-commit-step',
@@ -53,7 +62,16 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     </p-message>
                 }
                 @if (error()) {
-                    <p-message severity="error" styleClass="w-full mb-4" role="alert">{{ error() }}</p-message>
+                    <p-message severity="error" styleClass="w-full mb-4" role="alert">
+                        {{ error() }}
+                        @if (blockers().length) {
+                            <ul class="mt-2 mb-0 pl-4">
+                                @for (b of blockers(); track b) {
+                                    <li>{{ issueLabel(b) }}</li>
+                                }
+                            </ul>
+                        }
+                    </p-message>
                 }
 
                 @if (!canCommitClaim()) {
@@ -69,12 +87,15 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
             @case ('Committing') {
                 <p class="mt-0">Kayıtlar oluşturuluyor. Bu sayfayı kapatabilirsiniz; işlem arka planda sürer.</p>
                 <p-progressbar [mode]="progressPercent() === null ? 'indeterminate' : 'determinate'" [value]="progressPercent() ?? 0" />
-                @if (batch().progress; as pr) {
-                    <small class="text-muted-color">{{ pr.processed }} / {{ pr.total }} işlendi</small>
+                @if (shownProgress(); as pr) {
+                    <small class="text-muted-color">{{ pr.processed }} / {{ pr.total }} satır işlendi</small>
+                }
+                @if (progress()?.leaseActive === false) {
+                    <p class="text-sm text-muted-color mb-0">İşlem sırada; birazdan başlayacak. Sayfayı kapatabilirsiniz, kaldığı yerden sürer.</p>
                 }
             }
             @case ('CommitFailed') {
-                <p-message severity="error" styleClass="w-full mb-4" role="alert">Aktarma tamamlanamadı. Oluşan kayıtlar korunur; ayrıntı için aşağıdaki sayılara bakın.</p-message>
+                <p-message severity="error" styleClass="w-full mb-4" role="alert">Aktarma sırasında beklenmeyen bir sorun oluştu ve işlem durdu. Şimdiye dek oluşan kayıtlar korunur; aşağıdaki sayılar nelerin aktarıldığını gösterir. Lütfen destek ekibiyle iletişime geçin.</p-message>
                 <ng-container *ngTemplateOutlet="result" />
             }
             @case ('Committed') {
@@ -87,12 +108,18 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                             <h6 class="mt-0 mb-2"><i class="pi pi-bell mr-2"></i>Aşı hatırlatmaları</h6>
                             @if (batch().remindersReleasedAtUtc) {
                                 <p class="m-0">Hatırlatmalar {{ date(batch().remindersReleasedAtUtc!) }} tarihinde açıldı. Bu işlem geri alınamaz.</p>
+                                @if (releaseNote()) {
+                                    <p-message severity="info" styleClass="w-full mt-2" role="status">{{ releaseNote() }}</p-message>
+                                }
                             } @else {
                                 <p class="mt-0">
                                     Şu an hatırlatmalar <strong>kapalıdır</strong>; hiçbir e-posta gitmedi. Açarsanız, {{ p.reminderImpact.reminderWindowDays }} gün içinde vadesi gelen
-                                    <strong>{{ p.reminderImpact.emailsWithinReminderWindow }}</strong> aşı için müşterilere e-posta gidebilir; sonraki aşı tarihi yaklaştıkça yenileri de oluşur.
-                                    Gönderilen e-postalar geri alınamaz.
+                                    <strong>{{ releaseCount(p) }}</strong> aşı için müşterilere e-posta gidebilir; sonraki aşı tarihi yaklaştıkça yenileri de oluşur.
+                                    Gönderilen e-postalar geri alınamaz; hatırlatmaları açmak da geri alınamaz.
                                 </p>
+                                @if (!p.reminderImpact.tenantRemindersEnabled) {
+                                    <p-message severity="info" styleClass="w-full mb-2" role="status">Kliniğinizin aşı hatırlatma ayarı kapalı; açsanız da ayar açılana kadar e-posta gitmez.</p-message>
+                                }
                                 @if (releaseUnavailable()) {
                                     <p-message severity="warn" styleClass="w-full" role="status">Hatırlatmaları açma özelliği henüz etkin değil.</p-message>
                                 } @else if (!canCommitClaim()) {
@@ -101,7 +128,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                     <p-button size="small" severity="secondary" icon="pi pi-bell" label="Hatırlatmaları aç…" (onClick)="confirmingRelease.set(true)" />
                                 } @else {
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="text-sm">{{ p.reminderImpact.emailsWithinReminderWindow }} aşı için hatırlatma açılsın mı?</span>
+                                        <span class="text-sm">{{ releaseCount(p) }} aşı için hatırlatma açılsın mı? Bu işlem geri alınamaz.</span>
                                         <p-button size="small" label="Evet, aç" [loading]="releaseBusy()" (onClick)="release(p)" />
                                         <p-button size="small" severity="secondary" label="Vazgeç" (onClick)="confirmingRelease.set(false)" />
                                     </div>
@@ -134,6 +161,25 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     </div>
                 }
             </div>
+
+            @if (applyIssues().length) {
+                <ul class="mt-3 mb-0 pl-4 text-sm">
+                    @for (i of applyIssues(); track i.code) {
+                        <li>{{ issueLabel(i.code) }} · {{ i.rowCount }} satır</li>
+                    }
+                </ul>
+            }
+
+            @if (hasProblemRows()) {
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <span class="text-sm text-muted-color">Aktarılamayan satırların nedenleri hata raporunda:</span>
+                    <p-button size="small" severity="secondary" icon="pi pi-download" label="Hata raporu (Excel)" [loading]="reportBusy() === 'xlsx'" (onClick)="downloadReport('xlsx')" />
+                    <p-button size="small" severity="secondary" icon="pi pi-download" label="CSV" [loading]="reportBusy() === 'csv'" (onClick)="downloadReport('csv')" />
+                </div>
+                @if (reportError()) {
+                    <p-message severity="error" styleClass="w-full mt-2" role="alert">{{ reportError() }}</p-message>
+                }
+            }
         </ng-template>
     `
 })
@@ -143,6 +189,8 @@ export class ImportCommitStepComponent {
     readonly batch = input.required<ImportBatchDto>();
     readonly preview = input<ImportPreviewDto | null>(null);
     readonly canCommitClaim = input(false);
+    /** Sayfanın yoklama yanıtı (`Committing` iken); yoksa partinin kendi `progress` alanı kullanılır. */
+    readonly progress = input<ImportCommitProgressDto | null>(null);
     readonly batchChange = output<ImportBatchDto>();
     /** Onaylanan e-posta sayısı eskidiyse önizlemenin yeniden okunması istenir. */
     readonly previewStale = output<void>();
@@ -161,6 +209,12 @@ export class ImportCommitStepComponent {
     protected readonly releaseBusy = signal(false);
     protected readonly releaseError = signal<string | null>(null);
     protected readonly releaseUnavailable = signal(false);
+    protected readonly releaseNote = signal<string | null>(null);
+    /** 409 sonrası sunucunun verdiği güncel sayı; kullanıcı bunu görüp yeniden onaylar. */
+    private readonly releaseCountOverride = signal<number | null>(null);
+    protected readonly blockers = signal<string[]>([]);
+    protected readonly reportBusy = signal<ImportFileFormat | null>(null);
+    protected readonly reportError = signal<string | null>(null);
 
     protected readonly totals = computed(() => {
         const s = this.batch().summary;
@@ -179,12 +233,23 @@ export class ImportCommitStepComponent {
         IMPORT_TABLES.filter((t) => this.batch().summary[t].total > 0).map((t) => ({ key: t, label: IMPORT_TABLE_LABELS[t], s: this.batch().summary[t] }))
     );
 
+    protected readonly shownProgress = computed(() => this.progress() ?? this.batch().progress ?? null);
+
     protected readonly progressPercent = computed(() => {
-        const pr = this.batch().progress;
+        const pr = this.shownProgress();
         return pr && pr.total > 0 ? Math.min(100, Math.round((pr.processed / pr.total) * 100)) : null;
     });
 
+    /** Uygulama anında doğan satır sorunları (önizleme sayımlarından). */
+    protected readonly applyIssues = computed(() =>
+        (this.preview()?.issueCounts ?? []).filter((i) => ['Imports.OwnerUnitFailed', 'Imports.MatchedAtCommit', 'Imports.ApplyFailed'].includes(i.code))
+    );
+
+    /** Hata raporu: doğrulamada hatalı veya uygulamada başarısız satır varsa anlamlıdır. */
+    protected readonly hasProblemRows = computed(() => IMPORT_TABLES.some((t) => this.batch().summary[t].failed > 0 || this.batch().summary[t].error > 0));
+
     protected statusLabel = importStatusLabel;
+    protected issueLabel = importIssueLabel;
     protected date = formatUtcIsoAsLocalDateTimeDisplay;
 
     protected commit(): void {
@@ -194,6 +259,7 @@ export class ImportCommitStepComponent {
         }
         this.busy.set(true);
         this.error.set(null);
+        this.blockers.set([]);
         this.unavailable.set(false);
         this.imports.commit(this.batch().id, { validationId, onErrors: this.onErrors }).subscribe({
             next: (batch) => {
@@ -206,31 +272,65 @@ export class ImportCommitStepComponent {
                     this.unavailable.set(true);
                 } else {
                     this.error.set(importErrorMessage(e, 'Aktarma başlatılamadı.'));
+                    const code = importErrorCode(e);
+                    if (code === 'Imports.CommitBlocked') {
+                        this.blockers.set(importCommitBlockers(e));
+                        this.previewStale.emit();
+                    } else if (code === 'Imports.ValidationStale') {
+                        this.previewStale.emit();
+                    }
                 }
             }
         });
     }
 
+    protected releaseCount(p: ImportPreviewDto): number {
+        return this.releaseCountOverride() ?? p.reminderImpact.emailsWithinReminderWindow;
+    }
+
     protected release(p: ImportPreviewDto): void {
         this.releaseBusy.set(true);
         this.releaseError.set(null);
-        this.imports.releaseReminders(this.batch().id, p.reminderImpact.emailsWithinReminderWindow).subscribe({
-            next: (batch) => {
+        this.imports.releaseReminders(this.batch().id, this.releaseCount(p)).subscribe({
+            next: (res) => {
                 this.releaseBusy.set(false);
                 this.confirmingRelease.set(false);
-                this.batchChange.emit(batch);
+                this.releaseCountOverride.set(null);
+                this.releaseNote.set(res.note);
+                this.batchChange.emit(res.batch);
             },
             error: (e: unknown) => {
                 this.releaseBusy.set(false);
                 if (isEndpointUnavailable(e)) {
                     this.releaseUnavailable.set(true);
-                } else {
-                    this.releaseError.set(importErrorMessage(e, 'Hatırlatmalar açılamadı.'));
-                    if (importErrorCode(e) === 'Imports.ReminderImpactChanged') {
-                        this.confirmingRelease.set(false);
-                        this.previewStale.emit();
-                    }
+                    return;
                 }
+                this.releaseError.set(importErrorMessage(e, 'Hatırlatmalar açılamadı.'));
+                if (importErrorCode(e) === 'Imports.ReminderImpactChanged') {
+                    // Onay açık kalır; güncel sayı görünür ve kullanıcı yeniden onaylar.
+                    const current = reminderImpactCurrentCount(e);
+                    if (current !== null) {
+                        this.releaseCountOverride.set(current);
+                    } else {
+                        this.confirmingRelease.set(false);
+                    }
+                    this.previewStale.emit();
+                }
+            }
+        });
+    }
+
+    protected downloadReport(format: ImportFileFormat): void {
+        this.reportBusy.set(format);
+        this.reportError.set(null);
+        this.imports.downloadErrorReport(this.batch().id, format).subscribe({
+            next: (res) => {
+                this.reportBusy.set(null);
+                saveDownload(res, `vetinity-iceaktar-hatalar.${format}`);
+            },
+            error: (e: unknown) => {
+                this.reportBusy.set(null);
+                this.reportError.set(importErrorMessage(e, 'Hata raporu indirilemedi.'));
             }
         });
     }

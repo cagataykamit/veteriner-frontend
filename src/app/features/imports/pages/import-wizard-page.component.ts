@@ -9,7 +9,7 @@ import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { ImportCommitStepComponent } from '@/app/features/imports/components/import-commit-step.component';
 import { ImportMappingStepComponent } from '@/app/features/imports/components/import-mapping-step.component';
 import { ImportReviewStepComponent } from '@/app/features/imports/components/import-review-step.component';
-import type { ImportBatchDto, ImportDuplicateClientMode, ImportPreviewDto, ImportWarningDto } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportCommitProgressDto, ImportDuplicateClientMode, ImportPreviewDto, ImportWarningDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import {
     importErrorMessage,
@@ -140,7 +140,7 @@ const STEPS: readonly { n: number; label: string }[] = [
                         }
                         @case (4) {
                             <h5 class="mt-0">Adım 4 · Onay ve aktarma</h5>
-                            <app-import-commit-step [batch]="b" [preview]="preview()" [canCommitClaim]="canCommit" (batchChange)="onBatchChange($event)" (previewStale)="loadPreview()" />
+                            <app-import-commit-step [batch]="b" [preview]="preview()" [canCommitClaim]="canCommit" [progress]="progress()" (batchChange)="onBatchChange($event)" (previewStale)="loadPreview()" />
                             @if (b.status === 'Validated') {
                                 <div class="mt-4">
                                     <p-button severity="secondary" icon="pi pi-arrow-left" label="Doğrulama sonucuna dön" (onClick)="step.set(3)" />
@@ -172,6 +172,7 @@ export class ImportWizardPageComponent implements OnInit {
     readonly error = signal<string | null>(null);
     readonly busy = signal(false);
     readonly warnings = signal<ImportWarningDto[]>([]);
+    readonly progress = signal<ImportCommitProgressDto | null>(null);
 
     /** Eşleme tercihleri sayfa durumunda tutulur; sunucu değer eşleme ve seçenekleri geri vermez. */
     maps = signal<ImportColumnMaps>({});
@@ -300,20 +301,31 @@ export class ImportWizardPageComponent implements OnInit {
         return ['Committing', 'Committed', 'CommitFailed', 'RollingBack', 'RolledBack', 'PartiallyRolledBack', 'RollbackFailed'].includes(status) ? 4 : 2;
     }
 
-    /** B4: uygulama sürerken durumu 2 sn aralıkla yoklar; bitince önizlemeyi (hatırlatma etkisi) yeniler. */
+    /**
+     * B4: uygulama sürerken hafif `progress` ucunu 2 sn aralıkla yoklar (sayfa yenilenince de `load` buradan sürdürür).
+     * Durum `Committing` dışına çıkınca parti ve önizleme (hatırlatma etkisi) yeniden okunur.
+     */
     private startPolling(id: string): void {
         this.pollSub?.unsubscribe();
         this.step.set(4);
-        this.pollSub = timer(2000, 2000)
+        this.pollSub = timer(0, 2000)
             .pipe(
-                switchMap(() => this.imports.getBatch(id).pipe(catchError(() => EMPTY))),
-                takeWhile((b) => b.status === 'Committing', true)
+                switchMap(() => this.imports.getProgress(id).pipe(catchError(() => EMPTY))),
+                takeWhile((p) => p.status === 'Committing', true)
             )
-            .subscribe((b) => {
-                this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables } : b));
-                if (b.status !== 'Committing') {
-                    this.loadPreview();
+            .subscribe((p) => {
+                if (p.status === 'Committing') {
+                    this.progress.set(p);
+                    return;
                 }
+                this.progress.set(null);
+                this.imports.getBatch(id).subscribe({
+                    next: (b) => {
+                        this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables } : b));
+                        this.loadPreview();
+                    },
+                    error: (e: unknown) => this.error.set(importErrorMessage(e, 'Aktarma sonucu yüklenemedi.'))
+                });
             });
     }
 }
