@@ -46,7 +46,13 @@ describe('AppointmentsService — durum geçişleri', () => {
 
     it('iptal ve tamamlama kendi uçlarına gider', () => {
         service.cancelAppointment('a1').subscribe();
-        http.expectOne('http://api.test/api/v1/appointments/a1/cancel').flush(null, { status: 204, statusText: 'No Content' });
+        const cancel = http.expectOne('http://api.test/api/v1/appointments/a1/cancel');
+        expect(cancel.request.body).toEqual({});
+        cancel.flush(null, { status: 204, statusText: 'No Content' });
+        service.cancelAppointment('a1', ' Hasta vefat etti ').subscribe();
+        const withReason = http.expectOne('http://api.test/api/v1/appointments/a1/cancel');
+        expect(withReason.request.body).toEqual({ reason: 'Hasta vefat etti' });
+        withReason.flush(null, { status: 204, statusText: 'No Content' });
         service.completeAppointment('a1').subscribe();
         http.expectOne('http://api.test/api/v1/appointments/a1/complete').flush(null, { status: 204, statusText: 'No Content' });
     });
