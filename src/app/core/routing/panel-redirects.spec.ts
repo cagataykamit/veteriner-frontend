@@ -28,8 +28,12 @@ describe('panel yönlendirmeleri', () => {
         expect(await go('/panel')).toBe('/panel/today');
     });
 
-    it('Visits.Read yoksa /panel Özet sayfasına gider', async () => {
+    it('Visits.Read yoksa /panel menüdeki ilk erişilebilir öğeye gider; Özet yönetici düzeyi içindir', async () => {
         claims.delete('visits.read');
+        expect(await go('/panel')).toBe('/panel/settings');
+        claims.add('clients.read');
+        expect(await go('/panel')).toBe('/panel/clients');
+        claims.add('visits.correct');
         expect(await go('/panel')).toBe('/panel/dashboard');
     });
 

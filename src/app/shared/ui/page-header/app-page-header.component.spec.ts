@@ -22,7 +22,7 @@ describe('AppPageHeaderComponent', () => {
     }
 
     it('kategori etiketini adresin menü grubundan türetir', async () => {
-        expect(await render('/panel/appointments')).toBe('Klinik');
+        expect(await render('/panel/appointments')).toBe('Randevular');
     });
 
     it('menüde karşılığı olmayan adreste etiket göstermez', async () => {
