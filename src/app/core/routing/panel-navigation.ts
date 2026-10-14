@@ -74,6 +74,8 @@ export interface MenuEntry extends NavigationEntry {
 export interface MenuGroup {
     /** Yoksa grup başlıksızdır: öğeleri her zaman görünür, açılıp kapanmaz. */
     readonly label?: string;
+    /** Açılıp kapanmayan küçük bölüm başlığı (ADR-023); simge şeridinde ince ayırıcı olur, sayfa başlığı kategorisine girmez. */
+    readonly heading?: string;
     /** Başlıksız grubun sayfa başlığı üstündeki kategori adı; başlıklı grupta `label` kullanılır. */
     readonly category?: string;
     readonly entries: readonly MenuEntry[];
@@ -221,34 +223,35 @@ function tabbedEntry(label: string, icon: string, tabs: readonly MenuTab[], opti
     return { label, icon, route: tabs[0].route, claims: tabs.flatMap((tab) => tab.claims ?? []), tabs, category: label, ...options };
 }
 
-/** Menü, iş akışına göre 8-9 öğedir (ADR-017); eski liste rotaları sekme olarak aynen çalışır. */
+/**
+ * Menü, iş akışına göre 8-9 öğedir (ADR-017) ve küçük bölüm başlıklarıyla gruplanır (ADR-023); eski liste rotaları sekme olarak aynen çalışır.
+ * Yeni sayfa kendi satırını almaz, ilgili öğenin sekmesi olur; yeni üst düzey satır yalnız kendi günlük iş akışı olan sayfa için açılır.
+ */
 export const MENU_GROUPS: readonly MenuGroup[] = [
     {
+        heading: 'Günlük iş',
         category: 'Panel',
         entries: [
             { label: 'Bugün', icon: 'pi pi-fw pi-sun', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
-            { label: 'Özet', icon: 'pi pi-fw pi-th-large', route: '/panel/dashboard', claims: [MANAGER_LEVEL_CLAIM] },
-            tabbedEntry('Hastalar', 'pi pi-fw pi-heart', [
-                { label: 'Ara', listLabel: 'Hastalar', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
-                { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
-                { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
-            ]),
             tabbedEntry('Randevular', 'pi pi-fw pi-calendar', [
                 { label: 'Liste', listLabel: 'Randevular', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
                 { label: 'Takvim', listLabel: 'Randevu takvimi', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] }
-            ]),
-            tabbedEntry('Para', 'pi pi-fw pi-wallet', [
-                { label: 'Ücretler', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
-                { label: 'Ücret bekleyenler', route: '/panel/charges/pending', claims: [CHARGES_READ_CLAIM] },
-                { label: 'Ödemeler', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
-                { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] }
-            ]),
-            tabbedEntry('Stok', 'pi pi-fw pi-box', [
-                { label: 'Ürünler', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
-                { label: 'Stok durumu', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
-                { label: 'Stok hareketleri', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] },
-                { label: 'Mal kabul', route: '/panel/goods-receipts', claims: [STOCK_MOVEMENTS_CREATE_CLAIM] }
-            ]),
+            ])
+        ]
+    },
+    {
+        heading: 'Müşteri ve hasta',
+        entries: [
+            tabbedEntry('Müşteri ve Hasta', 'pi pi-fw pi-heart', [
+                { label: 'Ara', listLabel: 'Hastalar', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
+                { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
+                { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
+            ])
+        ]
+    },
+    {
+        heading: 'Klinik',
+        entries: [
             tabbedEntry(
                 'Kayıtlar',
                 'pi pi-fw pi-clipboard',
@@ -262,20 +265,42 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                     { label: 'Uygulamalar', route: '/panel/administrations', claims: [ADMINISTRATIONS_READ_CLAIM] }
                 ],
                 { badge: 'requestedLabResults', badgeText: 'sonuç bekleyen lab istemi' }
-            ),
+            )
+        ]
+    },
+    {
+        heading: 'Para ve stok',
+        entries: [
+            tabbedEntry('Para', 'pi pi-fw pi-wallet', [
+                { label: 'Ücretler', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
+                { label: 'Ücret bekleyenler', route: '/panel/charges/pending', claims: [CHARGES_READ_CLAIM] },
+                { label: 'Ödemeler', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
+                { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] }
+            ]),
+            tabbedEntry('Stok', 'pi pi-fw pi-box', [
+                { label: 'Ürünler', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
+                { label: 'Stok durumu', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
+                { label: 'Stok hareketleri', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] },
+                { label: 'Mal kabul', route: '/panel/goods-receipts', claims: [STOCK_MOVEMENTS_CREATE_CLAIM] }
+            ])
+        ]
+    },
+    {
+        // Ayarlar en alttaki sabit bölümde kalır; Ayarlar herkese açık olduğundan bölüm hiçbir kullanıcıda boşalmaz.
+        heading: 'Yönetim',
+        pinned: true,
+        category: 'Ayarlar',
+        entries: [
             {
                 label: 'Raporlar',
                 category: 'Raporlar',
                 icon: 'pi pi-fw pi-chart-line',
                 route: REPORTS_ROUTE,
                 claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
-            }
+            },
+            { label: 'Özet', category: 'Panel', icon: 'pi pi-fw pi-th-large', route: '/panel/dashboard', claims: [MANAGER_LEVEL_CLAIM] },
+            { label: 'Ayarlar', icon: 'pi pi-fw pi-cog', route: SETTINGS_ROUTE }
         ]
-    },
-    {
-        pinned: true,
-        category: 'Ayarlar',
-        entries: [{ label: 'Ayarlar', icon: 'pi pi-fw pi-cog', route: SETTINGS_ROUTE }]
     }
 ];
 
