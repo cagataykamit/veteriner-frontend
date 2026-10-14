@@ -1,18 +1,21 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
-import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils';
-import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';
+import { examinationAssessmentText, examinationVitalsLine, type PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
-const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress', 'Completed']);
+/** Kartta gösterilen takipli tedavi sayısı. */
+const FOLLOW_UP_LIMIT = 3;
 
 /**
- * Hasta özet kartı (`GET /pets/{id}/summary`). Her bölüm kendi durumunu gösterir:
- * "kayıt yok" (Empty), "yetki yok" (Forbidden) ve "veri alınamadı" (Unavailable) birbirinden ayrıdır.
+ * Klinik özet (ADR-020 karar 2d): kilo, vital, son tanı/değerlendirme, aktif yatış ve takipli tedavi, aşı, son muayene.
+ * Özet ucu (`GET /pets/{id}/summary`) bölüm bazlıdır: "kayıt yok" (Empty), "yetki yok" (Forbidden) ve "veri alınamadı" (Unavailable) ayrıdır.
+ * Vital ve değerlendirme son muayenenin detayından, takipli tedavi tedavi listesinden gelir; veri yoksa değer uydurulmaz.
  */
 @Component({
     selector: 'app-pet-summary-card',
@@ -37,14 +40,11 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
             }
         </ng-template>
 
-        <div class="card mb-4" role="region" aria-label="Hasta özeti">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <h5 class="mt-0 mb-0">Hasta özeti</h5>
-                <a [routerLink]="['/panel/pets', petId(), 'timeline']" class="text-primary font-medium no-underline text-sm">Zaman çizelgesi →</a>
-            </div>
+        <section class="card mb-0 h-full" aria-labelledby="pet-clinical-summary-title">
+            <h5 id="pet-clinical-summary-title" class="mt-0 mb-4">Klinik özet</h5>
 
             @if (loading()) {
-                <app-loading-state message="Hasta özeti yükleniyor…" />
+                <app-loading-state message="Klinik özet yükleniyor…" />
             } @else if (error()) {
                 <div class="flex flex-wrap items-center gap-3" data-testid="summary-error">
                     <p class="m-0 text-orange-600 dark:text-orange-400">
@@ -54,31 +54,112 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                 </div>
             } @else if (summary(); as s) {
                 <dl class="m-0 grid grid-cols-12 gap-x-4 gap-y-4">
-                    <div class="col-span-12 md:col-span-6 lg:col-span-4" data-testid="section-hospitalization">
-                        <dt class="text-muted-color text-sm mb-1">Aktif yatış</dt>
+                    <div class="col-span-12 md:col-span-6" data-testid="section-weight">
+                        <dt class="text-muted-color text-sm mb-1">Son kilo (muayeneden)</dt>
                         <dd class="m-0">
-                            @if (s.activeHospitalization.data; as h) {
-                                <a [routerLink]="['/panel/hospitalizations', h.id]" class="text-primary font-medium no-underline">
-                                    {{ h.reason ?? 'Yatış' }}
-                                </a>
-                                <div class="text-muted-color text-sm">
-                                    Yatış: {{ formatDt(h.admittedAtUtc) }}
-                                    @if (h.plannedDischargeAtUtc) {
-                                        · Planlanan çıkış: {{ formatDt(h.plannedDischargeAtUtc) }}
-                                    }
-                                </div>
-                                @if (h.clinicName) {
-                                    <div class="text-muted-color text-sm">{{ h.clinicName }}</div>
+                            @if (s.latestWeight.data; as w) {
+                                <span class="font-medium">{{ w.weightKg }} kg</span>
+                                <span class="text-muted-color text-sm"> · {{ formatDt(w.measuredAtUtc) }}</span>
+                                @if (w.examinationId) {
+                                    <a [routerLink]="['/panel/examinations', w.examinationId]" class="text-primary no-underline text-sm ml-2">Muayene →</a>
                                 }
-                            } @else if (s.activeHospitalization.state === 'Empty') {
-                                <p class="m-0 text-muted-color" data-testid="state-empty">Aktif yatış yok</p>
+                            } @else if (s.latestWeight.state === 'Empty') {
+                                <p class="m-0 text-muted-color" data-testid="state-empty">Muayenede kilo ölçülmemiş</p>
                             } @else {
-                                <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.activeHospitalization.state, label: 'Yatış bilgisi' }" />
+                                <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.latestWeight.state, label: 'Kilo bilgisi' }" />
+                            }
+                            @if (s.profileWeightKg !== null) {
+                                <div class="text-muted-color text-sm" data-testid="profile-weight">Profil kilosu: {{ s.profileWeightKg }} kg (tarihsiz)</div>
                             }
                         </dd>
                     </div>
 
-                    <div class="col-span-12 md:col-span-6 lg:col-span-4" data-testid="section-vaccinations">
+                    <div class="col-span-12 md:col-span-6" data-testid="section-vitals">
+                        <dt class="text-muted-color text-sm mb-1">Vital (son muayene)</dt>
+                        <dd class="m-0">
+                            @if (s.lastExamination.state !== 'Ok') {
+                                <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.lastExamination.state, label: 'Vital bilgisi' }" />
+                            } @else {
+                                @switch (lastExamination()?.state) {
+                                    @case ('ok') {
+                                        @if (vitals(); as v) {
+                                            <span class="font-medium">{{ v }}</span>
+                                        } @else {
+                                            <p class="m-0 text-muted-color" data-testid="state-empty">Son muayenede vital ölçülmemiş</p>
+                                        }
+                                    }
+                                    @case ('error') {
+                                        <ng-container *ngTemplateOutlet="notOk; context: { $implicit: 'Unavailable', label: 'Vital bilgisi' }" />
+                                    }
+                                    @default {
+                                        <span class="text-muted-color text-sm">Yükleniyor…</span>
+                                    }
+                                }
+                            }
+                        </dd>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-6" data-testid="section-assessment">
+                        <dt class="text-muted-color text-sm mb-1">Son tanı / değerlendirme</dt>
+                        <dd class="m-0">
+                            @if (s.lastExamination.state !== 'Ok') {
+                                <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.lastExamination.state, label: 'Değerlendirme' }" />
+                            } @else {
+                                @switch (lastExamination()?.state) {
+                                    @case ('ok') {
+                                        @if (assessment(); as a) {
+                                            <span class="whitespace-pre-wrap line-clamp-3">{{ a }}</span>
+                                        } @else {
+                                            <p class="m-0 text-muted-color" data-testid="state-empty">Son muayenede değerlendirme yazılmamış</p>
+                                        }
+                                    }
+                                    @case ('error') {
+                                        <ng-container *ngTemplateOutlet="notOk; context: { $implicit: 'Unavailable', label: 'Değerlendirme' }" />
+                                    }
+                                    @default {
+                                        <span class="text-muted-color text-sm">Yükleniyor…</span>
+                                    }
+                                }
+                            }
+                        </dd>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-6" data-testid="section-active-care">
+                        <dt class="text-muted-color text-sm mb-1">Aktif yatış ve takipli tedavi</dt>
+                        <dd class="m-0">
+                            @if (s.activeHospitalization.data; as h) {
+                                <div>
+                                    <i class="pi pi-building text-sm mr-1" aria-hidden="true"></i>
+                                    <a [routerLink]="['/panel/hospitalizations', h.id]" class="text-primary font-medium no-underline">{{ h.reason ?? 'Yatış' }}</a>
+                                    <span class="text-muted-color text-sm"> · yatış {{ formatDt(h.admittedAtUtc) }}</span>
+                                </div>
+                            } @else if (s.activeHospitalization.state !== 'Empty') {
+                                <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.activeHospitalization.state, label: 'Yatış bilgisi' }" />
+                            }
+                            @switch (followUps()?.state) {
+                                @case ('ok') {
+                                    @for (t of followUpRows(); track t.id) {
+                                        <div data-testid="follow-up">
+                                            <i class="pi pi-wrench text-sm mr-1" aria-hidden="true"></i>
+                                            <a [routerLink]="['/panel/treatments', t.id]" class="text-primary no-underline">{{ t.title }}</a>
+                                            <span class="text-muted-color text-sm"> · takip {{ formatDate(t.followUpDateUtc) }}</span>
+                                        </div>
+                                    }
+                                }
+                                @case ('error') {
+                                    <ng-container *ngTemplateOutlet="notOk; context: { $implicit: 'Unavailable', label: 'Tedavi bilgisi' }" />
+                                }
+                                @case ('loading') {
+                                    <span class="text-muted-color text-sm">Yükleniyor…</span>
+                                }
+                            }
+                            @if (noActiveCare()) {
+                                <p class="m-0 text-muted-color" data-testid="state-empty">Aktif yatış veya takip tarihi gelmemiş tedavi yok</p>
+                            }
+                        </dd>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-6" data-testid="section-vaccinations">
                         <dt class="text-muted-color text-sm mb-1">Aşılar</dt>
                         <dd class="m-0">
                             @if (s.vaccinations.data; as v) {
@@ -111,46 +192,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                         </dd>
                     </div>
 
-                    <div class="col-span-12 md:col-span-6 lg:col-span-4" data-testid="section-weight">
-                        <dt class="text-muted-color text-sm mb-1">Son kilo (muayeneden)</dt>
-                        <dd class="m-0">
-                            @if (s.latestWeight.data; as w) {
-                                <span class="font-medium">{{ w.weightKg }} kg</span>
-                                <span class="text-muted-color text-sm"> · {{ formatDt(w.measuredAtUtc) }}</span>
-                                @if (w.examinationId) {
-                                    <a [routerLink]="['/panel/examinations', w.examinationId]" class="text-primary no-underline text-sm ml-2">Muayene →</a>
-                                }
-                            } @else if (s.latestWeight.state === 'Empty') {
-                                <p class="m-0 text-muted-color" data-testid="state-empty">Muayenede kilo ölçülmemiş</p>
-                            } @else {
-                                <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.latestWeight.state, label: 'Kilo bilgisi' }" />
-                            }
-                            @if (s.profileWeightKg !== null) {
-                                <div class="text-muted-color text-sm" data-testid="profile-weight">Profil kilosu: {{ s.profileWeightKg }} kg (tarihsiz)</div>
-                            }
-                        </dd>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-6 lg:col-span-4" data-testid="section-visit">
-                        <dt class="text-muted-color text-sm mb-1">Son geliş</dt>
-                        <dd class="m-0">
-                            @if (s.lastVisit.data; as v) {
-                                <span class="font-medium">{{ formatDt(v.arrivedAtUtc) }}</span>
-                                @if (careLabel(v.careStatus); as label) {
-                                    <span class="text-muted-color text-sm"> · {{ label }}</span>
-                                }
-                                @if (v.clinicName) {
-                                    <div class="text-muted-color text-sm">{{ v.clinicName }}</div>
-                                }
-                            } @else if (s.lastVisit.state === 'Empty') {
-                                <p class="m-0 text-muted-color" data-testid="state-empty">Geliş kaydı yok</p>
-                            } @else {
-                                <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.lastVisit.state, label: 'Geliş bilgisi' }" />
-                            }
-                        </dd>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-6 lg:col-span-4" data-testid="section-examination">
+                    <div class="col-span-12 md:col-span-6" data-testid="section-examination">
                         <dt class="text-muted-color text-sm mb-1">Son muayene</dt>
                         <dd class="m-0">
                             @if (s.lastExamination.data; as e) {
@@ -168,22 +210,42 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                     </div>
                 </dl>
             }
-        </div>
+        </section>
     `
 })
 export class PetSummaryCardComponent {
-    readonly petId = input.required<string>();
     readonly summary = input<PetSummaryVm | null>(null);
     readonly loading = input(false);
     /** Özet ucunun tamamı başarısız olduysa mesaj (bölüm bazlı `Unavailable` ayrıdır). */
     readonly error = input<string | null>(null);
+    /** Son muayenenin detayı (vital, değerlendirme); `null` = muayene yok veya okuma yetkisi yok. */
+    readonly lastExamination = input<PetCardSection<ExaminationDetailVm>>(null);
+    /** Takip tarihi gelmemiş tedaviler (sıralı); `null` = tedavi okuma yetkisi yok. */
+    readonly followUps = input<PetCardSection<TreatmentListItemVm[]>>(null);
     readonly retry = output<void>();
 
     readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
 
-    careLabel(status: string | null): string | null {
-        return status && KNOWN_CARE_STATUSES.has(status) ? careStatusLabel(status as VisitCareStatus) : null;
-    }
+    private readonly exam = computed(() => {
+        const e = this.lastExamination();
+        return e?.state === 'ok' ? e.data : null;
+    });
+    readonly vitals = computed(() => {
+        const e = this.exam();
+        return e ? examinationVitalsLine(e) : null;
+    });
+    readonly assessment = computed(() => {
+        const e = this.exam();
+        return e ? examinationAssessmentText(e) : null;
+    });
+    readonly followUpRows = computed(() => {
+        const f = this.followUps();
+        return f?.state === 'ok' ? f.data.slice(0, FOLLOW_UP_LIMIT) : [];
+    });
+    readonly noActiveCare = computed(() => {
+        const f = this.followUps();
+        const hospitalization = this.summary()?.activeHospitalization.state;
+        return hospitalization === 'Empty' && (f === null || (f.state === 'ok' && f.data.length === 0));
+    });
 }
-
