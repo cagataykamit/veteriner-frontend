@@ -52,7 +52,7 @@ const PATIENT = 'Hasta';
 
 export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto> = {
     book: 'examinations',
-    title: 'Hasta Muayene Kayıt Defteri',
+    title: 'Hayvan Muayene Kayıt Defteri',
     description: 'Seçilen tarih aralığındaki muayeneler: hasta, şikâyet, teşhis, tedavi, reçete ve satışa eklenen ilaçlar.',
     readClaims: [EXAMINATIONS_READ_CLAIM],
     exportFilePrefix: 'muayene-defteri',
@@ -129,11 +129,11 @@ export const PRESCRIPTION_REGISTER: RegisterDefinition<PrescriptionRegisterRowDt
         { group: 'REÇETENİN', header: 'Cilt/Sıra No', cell: (r) => r.volumeSequenceNumber ?? '' },
         { group: 'VETERİNER HEKİMİN', header: 'Adı Soyadı', cell: (r) => r.veterinarianName ?? '' },
         { group: 'VETERİNER HEKİMİN', header: 'Adresi', cell: (r) => r.veterinarianAddress ?? '' },
-        { group: 'HASTA SAHİBİNİN', header: 'Adı Soyadı', cell: (r) => r.ownerName },
-        { group: 'HASTA SAHİBİNİN', header: 'Adresi', cell: (r) => r.ownerAddress ?? '' },
-        { group: 'HASTANIN', header: 'Türü', cell: (r) => r.species },
-        { group: 'HASTANIN', header: 'Kulak/İşletme No', cell: (r) => r.earTagNumber ?? '' },
-        { group: 'HASTANIN', header: 'Sayısı', cell: (r) => String(r.animalCount) },
+        { group: 'HAYVAN SAHİBİNİN', header: 'Adı Soyadı', cell: (r) => r.ownerName },
+        { group: 'HAYVAN SAHİBİNİN', header: 'Adresi', cell: (r) => r.ownerAddress ?? '' },
+        { group: 'HAYVANIN', header: 'Türü', cell: (r) => r.species },
+        { group: 'HAYVANIN', header: 'Kulak/İşletme No', cell: (r) => r.earTagNumber ?? '' },
+        { group: 'HAYVANIN', header: 'Sayısı', cell: (r) => String(r.animalCount) },
         { header: 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi', cell: (r) => r.items.map(prescribedItemText).join('; ') }
     ],
     screenColumns: [
