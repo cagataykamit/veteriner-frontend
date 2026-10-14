@@ -36,6 +36,18 @@ describe('ExaminationFinalizeDialogComponent', () => {
         expect(text).toContain('Kesinleştirdikten sonra tedavi, reçete, aşı ve yatış eklenemez');
     });
 
+    it('eksik kalem uyarıları listelenir ve kesinleştirmeyi engellemez', () => {
+        expect(document.body.querySelector('[data-testid="finalize-warnings"]')).toBeNull();
+
+        fixture.componentRef.setInput('warnings', ['Değerlendirme / tanı girilmemiş.']);
+        fixture.detectChanges();
+        service.finalizeExamination.and.returnValue(of(result));
+        cmp.onSubmit();
+
+        expect(document.body.querySelector('[data-testid="finalize-warnings"]')?.textContent).toContain('tanı girilmemiş');
+        expect(service.finalizeExamination).toHaveBeenCalledOnceWith('e1', 'V1');
+    });
+
     it('ekranın açıldığı rowVersion ile kesinleştirir; başarıda kapanır ve sonuç bildirilir', () => {
         service.finalizeExamination.and.returnValue(of(result));
 

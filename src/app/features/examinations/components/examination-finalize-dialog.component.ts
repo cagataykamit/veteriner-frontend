@@ -8,7 +8,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 /**
  * Muayene kesinleştirme onayı (`Examinations.Finalize`). Kesinleşen muayene salt okunur olur, geri dönüş yoktur;
  * düzeltme yalnız ek notla yapılır. Yetki denetimi çağıran bileşende yapılır.
- * Gönderim sürerken tekrar tıklama ikinci istek atmaz (ikinci çağrı sunucuda `AlreadyFinalized` 409 olurdu).
+ * Eksik kalem uyarıları (warnings) engel değildir. Gönderim sürerken tekrar tıklama ikinci istek atmaz (ikinci çağrı sunucuda `AlreadyFinalized` 409 olurdu).
  */
 @Component({
     selector: 'app-examination-finalize-dialog',
@@ -28,6 +28,16 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 Sonradan düzeltme gerekirse yalnızca gerekçeli bir <strong>ek not</strong> eklenebilir.
                 <strong data-testid="finalize-locks-linked">Kesinleştirdikten sonra tedavi, reçete, aşı ve yatış eklenemez.</strong>
             </p>
+            @if (warnings().length > 0) {
+                <div class="mt-3 mb-3 p-3 rounded-border border border-amber-400" role="status" data-testid="finalize-warnings">
+                    <p class="mt-0 mb-2 font-medium">Kesinleştirmeden önce kontrol edin (engel değil):</p>
+                    <ul class="m-0 pl-5">
+                        @for (w of warnings(); track w) {
+                            <li>{{ w }}</li>
+                        }
+                    </ul>
+                </div>
+            }
             <p class="mb-0 text-muted-color">Ekranda gördüğünüz içeriğin son kayıtlı içerik olduğundan emin olun.</p>
             @if (submitError()) {
                 <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="finalize-error">{{ submitError() }}</p>
@@ -52,6 +62,8 @@ export class ExaminationFinalizeDialogComponent {
     readonly examinationId = input.required<string>();
     /** Ekranın açıldığı sürüm (`GET /examinations/{id}`); yoksa kesinleştirilemez. */
     readonly rowVersion = input<string | null>(null);
+    /** Tamamlanma kontrolü uyarıları (eksik kalem); gösterilir ama kesinleştirmeyi engellemez. */
+    readonly warnings = input<readonly string[]>([]);
     readonly finalized = output<ExaminationFinalizeResultVm>();
 
     private readonly examinationsService = inject(ExaminationsService);
