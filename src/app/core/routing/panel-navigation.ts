@@ -18,6 +18,7 @@ import {
     SALES_READ_CLAIM,
     SPECIES_CREATE_CLAIM,
     SPECIES_UPDATE_CLAIM,
+    STOCK_MOVEMENTS_CREATE_CLAIM,
     STOCK_MOVEMENTS_READ_CLAIM,
     SUBSCRIPTIONS_MANAGE_CLAIM,
     SUBSCRIPTIONS_READ_CLAIM,
@@ -233,7 +234,8 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             tabbedEntry('Stok', 'pi pi-fw pi-box', [
                 { label: 'Ürünler', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
                 { label: 'Stok durumu', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
-                { label: 'Stok hareketleri', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] }
+                { label: 'Stok hareketleri', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] },
+                { label: 'Mal kabul', route: '/panel/goods-receipts', claims: [STOCK_MOVEMENTS_CREATE_CLAIM] }
             ]),
             tabbedEntry(
                 'Kayıtlar',

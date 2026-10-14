@@ -22,6 +22,7 @@ export default [
     { path: 'products', loadChildren: () => import('../inventory/routes/inventory.routes') },
     { path: 'stocks', loadChildren: () => import('../inventory/routes/product-stocks.routes') },
     { path: 'stock-movements', loadChildren: () => import('../inventory/routes/stock-movements.routes') },
+    { path: 'goods-receipts', loadChildren: () => import('../inventory/routes/goods-receipts.routes') },
     { path: 'reports', loadChildren: () => import('../reports/reports.routes') },
     {
         path: 'settings',

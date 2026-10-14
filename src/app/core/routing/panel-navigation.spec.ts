@@ -71,7 +71,7 @@ describe('panel-navigation', () => {
             ['Ödemeler', '/panel/payments'],
             ['Satışlar', '/panel/sales']
         ]);
-        expect(tabs('Stok').map(([l]) => l)).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri']);
+        expect(tabs('Stok').map(([l]) => l)).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
         expect(tabs('Kayıtlar').map(([l]) => l)).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Yatışlar', 'Uygulamalar']);
     });
 
@@ -189,6 +189,7 @@ describe('panel-navigation', () => {
 
         it('yetkisiz sekme görünmez; tek sekme kalırsa çubuk çıkmaz', () => {
             expect(tabs('/panel/stocks', only('Products.Read'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu']);
+            expect(tabs('/panel/stocks', only('Products.Read', 'StockMovements.Create'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu', 'Mal kabul']);
             expect(tabs('/panel/clients', only('Clients.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler']);
             expect(tabs('/panel/patients', only('Pets.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Hayvanlar']);
             expect(tabs('/panel/pets', only('Clients.Read'))).toBeUndefined();
