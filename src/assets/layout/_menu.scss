@@ -94,7 +94,7 @@ app-menu {
         cursor: pointer;
         padding: 0.5rem 1rem;
         border-radius: var(--content-border-radius);
-        font-size: 1.1rem; // 15.4 px (kök 14 px); 14 px küçük, 17.5 px büyük bulundu (ADR-023)
+        font-size: 1.05rem; // 14.7 px (kök 14 px); 14 px küçük, 15.4 ve 17.5 px büyük bulundu (ADR-023)
         transition:
             box-shadow var(--element-transition-duration);
 
