@@ -1,5 +1,7 @@
+import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
+
 /**
- * Yeni müşteri — UI / servis isteği.
+ * Yeni müşteri / düzenleme — UI / servis isteği.
  */
 
 export interface CreateClientRequest {
@@ -7,6 +9,9 @@ export interface CreateClientRequest {
     phone?: string;
     email?: string;
     address?: string;
+    /** Verilmezse gövdeye girmez (PUT'ta değer korunur). */
+    preferredContactChannel?: ClientContactChannel;
+    remindersOptedOut?: boolean;
 }
 
 /**

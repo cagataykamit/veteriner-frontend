@@ -1,3 +1,5 @@
+import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
+
 /**
  * Swagger ile uyumlu ham DTO'lar (Backend Veteriner API).
  * İleride API'ye ek alan gelince burada genişletilir.
@@ -30,10 +32,14 @@ export interface ClientDetailDto {
     address?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
+    /** `None` | `Phone` | `Email` | `Sms` | `WhatsApp` (sözleşme §2; her zaman döner, eski yanıtta yok → `None`). */
+    preferredContactChannel?: string | null;
+    /** `true`: otomatik aşı/randevu hatırlatma e-postası gönderilmez. */
+    remindersOptedOut?: boolean | null;
 }
 
 /**
- * POST /clients gövdesi — camelCase (Swagger ile doğrulanmalı).
+ * POST/PUT /clients gövdesi — camelCase (Swagger ile doğrulanmalı).
  * Opsiyonel alanlar backend’de yoksa mapper’dan çıkarılabilir.
  */
 export interface ClientUpsertRequestDto {
@@ -41,6 +47,10 @@ export interface ClientUpsertRequestDto {
     phone?: string | null;
     email?: string | null;
     address?: string | null;
+    /** PUT'ta alan yok = dokunma; temizlemek için `None`. */
+    preferredContactChannel?: ClientContactChannel;
+    /** PUT'ta alan yok = dokunma; kaldırmak için `false`. */
+    remindersOptedOut?: boolean;
 }
 
 /** GET /clients/{id}/recent-summary — panel müşteri detay özeti. */

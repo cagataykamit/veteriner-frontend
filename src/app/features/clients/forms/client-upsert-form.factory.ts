@@ -1,6 +1,7 @@
 import { FormBuilder } from '@angular/forms';
 import type { FormControl, FormGroup } from '@angular/forms';
 import type { ClientUpsertFormValue } from '@/app/features/clients/forms/client-upsert-form.model';
+import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import { clientUpsertFieldValidators } from '@/app/features/clients/utils/client-upsert.validation.utils';
 
 export type ClientUpsertFormGroup = FormGroup<{
@@ -13,7 +14,9 @@ export function createClientUpsertFormGroup(fb: FormBuilder): ClientUpsertFormGr
         fullName: fb.nonNullable.control('', clientUpsertFieldValidators('fullName')),
         phone: fb.nonNullable.control('', clientUpsertFieldValidators('phone')),
         email: fb.nonNullable.control('', clientUpsertFieldValidators('email')),
-        address: fb.nonNullable.control('', clientUpsertFieldValidators('address'))
+        address: fb.nonNullable.control('', clientUpsertFieldValidators('address')),
+        preferredContactChannel: fb.nonNullable.control<ClientContactChannel>('None'),
+        remindersOptedOut: fb.nonNullable.control(false)
     });
 }
 

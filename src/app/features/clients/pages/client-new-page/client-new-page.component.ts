@@ -6,6 +6,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { ClientContactPreferenceFieldsComponent } from '@/app/features/clients/components/client-contact-preference-fields.component';
 import { mapClientUpsertFormValueToCreateRequest } from '@/app/features/clients/data/client.mapper';
 import {
     createClientUpsertFormGroup,
@@ -31,6 +32,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         RouterLink,
         ButtonModule,
         InputTextModule,
+        ClientContactPreferenceFieldsComponent,
         AppPageHeaderComponent
     ],
     template: `
@@ -68,6 +70,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         @if (fieldMessage('address'); as msg) {
                             <small class="text-red-500">{{ msg }}</small>
                         }
+                    </div>
+                    <div class="col-span-12">
+                        <app-client-contact-preference-fields [form]="form" />
                     </div>
                 </div>
 

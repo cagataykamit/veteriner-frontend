@@ -1,5 +1,6 @@
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 
 export interface ClientListItemVm {
     id: string;
@@ -17,6 +18,8 @@ export interface ClientDetailVm {
     address: string;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
+    preferredContactChannel: ClientContactChannel;
+    remindersOptedOut: boolean;
 }
 
 /** `GET .../clients/{id}/recent-summary` eşlemesi. */

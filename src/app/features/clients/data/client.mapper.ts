@@ -27,6 +27,7 @@ import type {
 } from '@/app/features/clients/models/client-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
+import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 
 const EM = '—';
 
@@ -99,11 +100,16 @@ export function mapClientUpsertFormValueToCreateRequest(value: ClientUpsertFormV
         fullName: value.fullName.trim(),
         phone: value.phone.trim() || undefined,
         email: value.email.trim() || undefined,
-        address: value.address.trim() || undefined
+        address: value.address.trim() || undefined,
+        preferredContactChannel: value.preferredContactChannel,
+        remindersOptedOut: value.remindersOptedOut
     };
 }
 
-/** Create form → API body; backend’in istemediği alanlar burada çıkarılır (Swagger ile hizalanır). */
+/**
+ * Create/update form → API body; backend’in istemediği alanlar burada çıkarılır (Swagger ile hizalanır).
+ * İletişim tercihi verilmezse gövdeye girmez: PUT'ta sunucu mevcut değeri korur (sözleşme §2).
+ */
 export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsertRequestDto {
     const email = req.email?.trim() ? req.email.trim() : null;
     const address = req.address?.trim() ? req.address.trim() : null;
@@ -112,7 +118,9 @@ export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsert
         fullName: req.fullName.trim(),
         phone,
         email,
-        address
+        address,
+        ...(req.preferredContactChannel !== undefined ? { preferredContactChannel: req.preferredContactChannel } : {}),
+        ...(req.remindersOptedOut !== undefined ? { remindersOptedOut: req.remindersOptedOut } : {})
     };
 }
 
@@ -238,7 +246,9 @@ export function mapClientDetailDtoToVm(dto: ClientDetailDto): ClientDetailVm {
         email: str(dto.email),
         address: dto.address?.trim() ? dto.address : EM,
         createdAtUtc: dto.createdAtUtc ?? null,
-        updatedAtUtc: dto.updatedAtUtc ?? null
+        updatedAtUtc: dto.updatedAtUtc ?? null,
+        preferredContactChannel: parseClientContactChannel(dto.preferredContactChannel),
+        remindersOptedOut: dto.remindersOptedOut === true
     };
 }
 

@@ -15,7 +15,9 @@ const client: ClientDetailVm = {
     email: 'ali@example.com',
     address: 'Kadıköy, İstanbul',
     createdAtUtc: '2026-01-01T00:00:00Z',
-    updatedAtUtc: null
+    updatedAtUtc: null,
+    preferredContactChannel: 'None',
+    remindersOptedOut: false
 };
 
 const pending = (items: Partial<ChargeSuggestionVm>[], totalItems = items.length): ChargeSuggestionsPagedVm => ({
@@ -64,6 +66,17 @@ describe('ClientCardHeaderComponent', () => {
         expect(el.querySelector('[data-testid="account-last-examination"] a')?.getAttribute('href')).toBe('/panel/examinations/e1');
         expect(el.querySelector('[data-testid="account-last-examination"]')?.textContent).toContain('Pamuk');
         expect(el.querySelector('[data-testid="account-next-appointment"]')?.textContent).toContain('Karabaş');
+    });
+
+    it('iletişim tercihi: kanal varsa gösterilir; hatırlatma istemiyorsa belirgin not; varsayılanda ikisi de yok', () => {
+        let el = render({});
+        expect(el.querySelector('[data-testid="client-preferred-channel"]')).toBeNull();
+        expect(el.querySelector('[data-testid="client-reminders-opted-out"]')).toBeNull();
+
+        TestBed.resetTestingModule();
+        el = render({ client: { ...client, preferredContactChannel: 'WhatsApp', remindersOptedOut: true } });
+        expect(el.querySelector('[data-testid="client-preferred-channel"]')?.textContent).toContain('WhatsApp');
+        expect(el.querySelector('[data-testid="client-reminders-opted-out"]')?.textContent).toContain('hatırlatma istemiyor');
     });
 
     it('sayfa tüm kalemleri içermiyorsa sayı totalItems, tutar "en az" ile gösterilir', () => {

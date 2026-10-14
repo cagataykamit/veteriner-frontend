@@ -6,6 +6,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { ClientContactPreferenceFieldsComponent } from '@/app/features/clients/components/client-contact-preference-fields.component';
 import { mapClientUpsertFormValueToCreateRequest } from '@/app/features/clients/data/client.mapper';
 import {
     createClientUpsertFormGroup,
@@ -35,6 +36,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         RouterLink,
         ButtonModule,
         InputTextModule,
+        ClientContactPreferenceFieldsComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent
@@ -86,6 +88,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             @if (fieldMessage('address'); as msg) {
                                 <small class="text-red-500">{{ msg }}</small>
                             }
+                        </div>
+                        <div class="col-span-12">
+                            <app-client-contact-preference-fields [form]="form" />
                         </div>
                     </div>
 
@@ -182,7 +187,9 @@ export class ClientEditPageComponent implements OnInit {
                     fullName: client.fullName === '—' ? '' : client.fullName,
                     phone: client.phone === '—' ? '' : client.phone,
                     email: client.email === '—' ? '' : client.email,
-                    address: client.address === '—' ? '' : client.address
+                    address: client.address === '—' ? '' : client.address,
+                    preferredContactChannel: client.preferredContactChannel,
+                    remindersOptedOut: client.remindersOptedOut
                 });
                 this.loading.set(false);
             },

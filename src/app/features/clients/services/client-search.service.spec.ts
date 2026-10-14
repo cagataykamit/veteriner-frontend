@@ -52,7 +52,7 @@ describe('ClientSearchService', () => {
 
     it('yalnız hayvan/mikroçip eşleşmesi: sahibi müşteri sonucuna eklenir', (done) => {
         clients.getClients.and.returnValue(paged([]));
-        clients.getClientById.and.returnValue(of({ ...client('c9', 'Veli Can'), address: '', updatedAtUtc: null }));
+        clients.getClientById.and.returnValue(of({ ...client('c9', 'Veli Can'), address: '', updatedAtUtc: null, preferredContactChannel: 'None', remindersOptedOut: false }));
         pets.getPets.and.callFake(((q: { clientId?: string }) => (q.clientId ? paged([pet('p9', 'Pamuk', 'c9')]) : paged([pet('p9', 'Pamuk', 'c9')]))) as never);
         service.search('985121').subscribe((r) => {
             expect(r.map((x) => x.id)).toEqual(['c9']);
@@ -86,7 +86,7 @@ describe('ClientSearchService', () => {
     it('sonuç sayısını 10 ile sınırlar', (done) => {
         clients.getClients.and.returnValue(paged(Array.from({ length: 10 }, (_, i) => client(`c${i}`, `M${i}`))));
         pets.getPets.and.callFake(((q: { clientId?: string }) => (q.clientId ? paged([]) : paged([pet('px', 'X', 'extra')]))) as never);
-        clients.getClientById.and.returnValue(of({ ...client('extra', 'Ekstra'), address: '', updatedAtUtc: null }));
+        clients.getClientById.and.returnValue(of({ ...client('extra', 'Ekstra'), address: '', updatedAtUtc: null, preferredContactChannel: 'None', remindersOptedOut: false }));
         service.search('m').subscribe((r) => {
             expect(r.length).toBe(10);
             expect(r.some((x) => x.id === 'extra')).toBeFalse();
@@ -95,7 +95,7 @@ describe('ClientSearchService', () => {
     });
 
     it('getById seçili müşteri için etiket üretir', (done) => {
-        clients.getClientById.and.returnValue(of({ ...client('c1', 'Ali Veli'), address: '', updatedAtUtc: null }));
+        clients.getClientById.and.returnValue(of({ ...client('c1', 'Ali Veli'), address: '', updatedAtUtc: null, preferredContactChannel: 'None', remindersOptedOut: false }));
         service.getById('c1').subscribe((r) => {
             expect(r.id).toBe('c1');
             expect(r.label).toContain('Ali Veli');

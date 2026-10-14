@@ -22,7 +22,9 @@ const client: ClientDetailVm = {
     email: '—',
     address: '—',
     createdAtUtc: '2026-01-01T00:00:00Z',
-    updatedAtUtc: null
+    updatedAtUtc: null,
+    preferredContactChannel: 'None',
+    remindersOptedOut: false
 };
 
 const pet = (id: string, name: string, status: PetListItemVm['status'] = 'Active'): PetListItemVm => ({ id, clientId: 'c1', speciesId: 's1', name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status });

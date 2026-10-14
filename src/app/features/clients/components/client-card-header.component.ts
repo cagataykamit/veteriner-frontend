@@ -5,6 +5,7 @@ import type { ChargeSuggestionsPagedVm } from '@/app/features/charges/models/cha
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { pendingChargesSummary } from '@/app/features/clients/utils/client-card.utils';
+import { clientContactChannelLabel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
@@ -13,9 +14,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 /**
- * Müşteri kartı başlığı (ADR-020 karar 6): iletişim (aranabilir telefon, e-posta, adres) ve hesap durumu
- * (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu). Ad ve "Düzenle" sayfa başlığındadır.
- * İletişim tercihi alanı sözleşmede yok; eklenince burada gösterilir.
+ * Müşteri kartı başlığı (ADR-020 karar 6): iletişim (aranabilir telefon, e-posta, adres, tercih edilen kanal; hatırlatma istemiyorsa belirgin not)
+ * ve hesap durumu (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu). Ad ve "Düzenle" sayfa başlığındadır.
  */
 @Component({
     selector: 'app-client-card-header',
@@ -37,7 +37,19 @@ import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/ut
                 @if (hasText(client().address)) {
                     <span class="break-words" data-testid="client-address"><i class="pi pi-map-marker text-sm mr-1 text-muted-color" aria-hidden="true"></i>{{ client().address }}</span>
                 }
+                @if (client().preferredContactChannel !== 'None') {
+                    <span class="text-muted-color" data-testid="client-preferred-channel">Tercih: <span class="font-medium text-color">{{ channelLabel() }}</span></span>
+                }
             </p>
+            @if (client().remindersOptedOut) {
+                <p
+                    class="m-0 mt-2 inline-flex items-center gap-2 rounded-border border border-amber-300 dark:border-amber-700 px-2 py-1 text-sm font-medium text-amber-800 dark:text-amber-300"
+                    role="note"
+                    data-testid="client-reminders-opted-out"
+                >
+                    <i class="pi pi-bell-slash" aria-hidden="true"></i>Otomatik hatırlatma istemiyor: aşı ve randevu hatırlatma e-postaları gönderilmez.
+                </p>
+            }
 
             <app-card-account-status [balance]="balance()" [nextAppointment]="nextAppointment()">
                 @if (pendingCharges(); as p) {
@@ -119,4 +131,5 @@ export class ClientCardHeaderComponent {
 
     readonly phone = computed(() => formatClientPhoneForDisplay(this.client().phone));
     readonly phoneHref = computed(() => clientPhoneTelHref(this.client().phone));
+    readonly channelLabel = computed(() => clientContactChannelLabel(this.client().preferredContactChannel));
 }
