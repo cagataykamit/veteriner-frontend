@@ -20,6 +20,10 @@ import type {
 } from '@/app/features/reports/registers/models/register.model';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
+
+/** Telefon ekranda ve yazdırmada müşteri ekranlarıyla aynı okunur biçimdedir (+90 532 111 00 01); boşsa hücre boş kalır. CSV/Excel backend'den gelir. */
+const phoneText = (phone: string | null | undefined) => (phone?.trim() ? formatClientPhoneForDisplay(phone) : '');
 
 const quantityText = (q: number | null | undefined) => (q == null ? '' : q.toLocaleString('tr-TR', { maximumFractionDigits: 3 }));
 
@@ -57,7 +61,7 @@ export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto>
         { header: 'Sıra No', cell: (r) => String(r.rowNumber) },
         { header: 'Muayene Tarihi', cell: (r) => formatDateDisplay(r.examinedAtUtc) },
         { header: 'Hasta Sahibinin Adı Soyadı', cell: (r) => r.ownerName },
-        { header: 'Telefonu', cell: (r) => r.ownerPhone ?? '' },
+        { header: 'Telefonu', cell: (r) => phoneText(r.ownerPhone) },
         { header: 'Adresi', cell: (r) => r.ownerAddress ?? '' },
         { group: PATIENT, header: 'Ad', cell: (r) => r.petName },
         { group: PATIENT, header: 'Tür', cell: (r) => r.species },
@@ -78,7 +82,7 @@ export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto>
     screenColumns: [
         { header: 'Sıra No', minWidth: '4.5rem', nowrap: true, lines: (r) => [plain(String(r.rowNumber))] },
         { header: 'Tarih', minWidth: '6.5rem', nowrap: true, lines: (r) => [plain(formatDateDisplay(r.examinedAtUtc))] },
-        { header: 'Hasta Sahibi', minWidth: '12rem', lines: (r) => [strong(r.ownerName), plain(r.ownerPhone), muted(r.ownerAddress ?? '')] },
+        { header: 'Hasta Sahibi', minWidth: '12rem', lines: (r) => [strong(r.ownerName), plain(phoneText(r.ownerPhone)), muted(r.ownerAddress ?? '')] },
         {
             header: 'Hasta',
             minWidth: '13rem',

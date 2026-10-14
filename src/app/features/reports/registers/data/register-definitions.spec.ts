@@ -68,7 +68,7 @@ describe('kayıt defteri tanımları', () => {
         ]);
         const lines = (header: string, row = exam) => EXAMINATION_REGISTER.screenColumns.find((c) => c.header === header)!.lines(row).map((l) => l.text ?? l.items!.join(' · ')).filter(Boolean);
         expect(lines('Hasta Sahibi')).toEqual(['Ayşe Yılmaz']);
-        expect(lines('Hasta Sahibi', { ...exam, ownerPhone: '0555', ownerAddress: 'Kadıköy' })).toEqual(['Ayşe Yılmaz', '0555', 'Kadıköy']);
+        expect(lines('Hasta Sahibi', { ...exam, ownerPhone: '905321110001', ownerAddress: 'Kadıköy' })).toEqual(['Ayşe Yılmaz', '+90 532 111 00 01', 'Kadıköy']);
         expect(lines('Hasta')).toEqual(['Pamuk', 'Kedi']);
         expect(lines('Hasta', { ...exam, breed: 'Van', age: '2', cardNumber: 'K1', protocolNumber: 'P9' })).toEqual(['Pamuk', 'Kedi · Van · 2', 'Kart: K1 · Protokol: P9']);
         expect(lines('Tedavi Şekli, Reçete Bilgileri, Satışa Eklenen İlaçlar')).toEqual([
@@ -90,6 +90,14 @@ describe('kayıt defteri tanımları', () => {
             ['İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi', 1, 2]
         ]);
         expect(layout.sub).toEqual(['Tarihi', 'Sınıfı', 'Cilt/Sıra No', 'Adı Soyadı', 'Adresi', 'Adı Soyadı', 'Adresi', 'Türü', 'Kulak/İşletme No', 'Sayısı']);
+    });
+
+    it('yazdırma telefon sütunu ekrandakiyle aynı biçimde (+90 532 111 00 01), ham biçimler normalleşir, boşsa boş kalır', () => {
+        const phone = (ownerPhone: string | null) => EXAMINATION_REGISTER.columns.find((c) => c.header === 'Telefonu')!.cell({ ...exam, ownerPhone });
+        expect(phone('905321110001')).toBe('+90 532 111 00 01');
+        expect(phone('0532 111 00 01')).toBe('+90 532 111 00 01');
+        expect(phone('0212 555 00 00')).toBe('0212 555 00 00');
+        expect(phone(null)).toBe('');
     });
 
     it('muayene satırı: eksik alanlar boş hücre, tedavi/reçete/uygulama sözleşme biçiminde', () => {
