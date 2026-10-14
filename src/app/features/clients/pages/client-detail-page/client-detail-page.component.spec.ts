@@ -25,7 +25,7 @@ const client: ClientDetailVm = {
     updatedAtUtc: null
 };
 
-const pet = (id: string, name: string): PetListItemVm => ({ id, clientId: 'c1', speciesId: 's1', name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—' });
+const pet = (id: string, name: string): PetListItemVm => ({ id, clientId: 'c1', speciesId: 's1', name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status: 'Active' });
 
 const paymentSummary: ClientPaymentSummaryVm = {
     clientId: 'c1',

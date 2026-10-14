@@ -1,5 +1,6 @@
 import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
+import type { PetLifeStatus } from '@/app/features/pets/utils/pet-status.utils';
 export interface PetListItemVm {
     id: string;
     /** Liste DTO’sunda varsa; client’a göre filtre için (API ClientId yok sayarsa yedek). */
@@ -11,6 +12,7 @@ export interface PetListItemVm {
     breed: string;
     colorName: string;
     weight: string;
+    status: PetLifeStatus;
 }
 
 export interface PetDetailVm {
@@ -36,6 +38,11 @@ export interface PetDetailVm {
     clientName: string;
     clientPhone: string;
     clientEmail: string;
+    status: PetLifeStatus;
+    /** `yyyy-MM-dd`; yalnız vefat edende ve girildiyse. */
+    deceasedOn: string | null;
+    /** Durum değişikliği için eşzamanlılık belirteci; yanıtta yoksa `null` (durum değiştirilemez). */
+    rowVersion: string | null;
     /**
      * Aşağıdaki üç özet, GET `/pets/{id}` gövdesindeki alanlarla map edilir.
      * Detay sayfası şu an bu blokları göstermez; hasta geçmişi için `PetHistorySummaryVm` / `history-summary` kullanılır (bilinçli ürün kararı; ayrı kart UI eklemeden önce backend anlamlılığını doğrulayın).
@@ -132,6 +139,19 @@ export interface PetHistorySummaryVm {
     recentHospitalizations: PetHistoryHospitalizationItemVm[];
     recentPayments: PetHistoryPaymentItemVm[];
     omittedBlocks: PetHistoryBlockKey[];
+}
+
+/** `PUT /pets/{id}/status`: vefat tarihi yalnız `Deceased` ile ve girildiyse gönderilir. */
+export interface PetStatusUpdateRequest {
+    status: PetLifeStatus;
+    deceasedOn: string | null;
+    rowVersion: string;
+}
+
+export interface PetStatusUpdateResult {
+    status: PetLifeStatus;
+    deceasedOn: string | null;
+    rowVersion: string | null;
 }
 
 /** Edit form için ham değerlere yakın, canonical alanlar. */

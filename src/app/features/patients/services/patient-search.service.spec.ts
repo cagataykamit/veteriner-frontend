@@ -6,7 +6,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { GlobalSearchService, type GlobalSearchResultVm } from '@/app/shared/global-search/global-search.service';
 import { PatientSearchService } from './patient-search.service';
 
-const petItem = (id: string, name: string, clientId: string | null = 'c1'): PetListItemVm => ({ id, clientId, speciesId: null, name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—' });
+const petItem = (id: string, name: string, clientId: string | null = 'c1'): PetListItemVm => ({ id, clientId, speciesId: null, name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status: 'Active' });
 const page = (items: PetListItemVm[]) => ({ items, page: 1, pageSize: 5, totalItems: items.length, totalPages: 1 });
 const ali = { id: 'c1', fullName: 'Ali Veli', phone: '+90 532 123 45 67', petNames: ['Pamuk'], label: 'Ali Veli' };
 

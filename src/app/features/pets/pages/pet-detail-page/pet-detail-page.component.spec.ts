@@ -30,6 +30,9 @@ const pet: PetDetailVm = {
     clientName: 'Ali Veli',
     clientPhone: '05321234567',
     clientEmail: '—',
+    status: 'Active',
+    deceasedOn: null,
+    rowVersion: 'AAAAAAAAB9E=',
     vaccinationsSummary: { totalCount: 0, items: [] },
     examinationsSummary: { totalCount: 0, lastExaminedAtUtc: null },
     appointmentsSummary: { totalCount: 0, upcomingCount: null }

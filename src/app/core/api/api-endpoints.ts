@@ -84,9 +84,11 @@ export const ApiEndpoints = {
         balance: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/balance`
     },
     pets: {
-        /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
+        /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
         list: () => `/api/v1/pets`,
         byId: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}`,
+        /** PUT: aktif/vefat (`rowVersion` zorunlu; `PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §1). */
+        status: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/status`,
         historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`,
         /** Bölüm bazlı durumlu özet kartı (`docs/PET_TIMELINE_API_CONTRACT.md`). */
         summary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/summary`,

@@ -1,23 +1,30 @@
-import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { normalizeLookupKey } from '@/app/shared/utils/normalize-lookup-key.utils';
 
 const EM = '—';
 
-export type PetCanonicalStatus = 'active' | 'inactive';
+/**
+ * Hayvan durumu (`PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §1, K1): yalnız `Active` / `Deceased`.
+ * Vefat eden hayvanın geçmişi okunur ve düzenlenir; yalnız yeni randevu, geliş ve muayene açılmaz (sunucu 409 `Pets.Deceased`).
+ */
+export type PetLifeStatus = 'Active' | 'Deceased';
 
-interface PetStatusDef {
-    readonly canonical: PetCanonicalStatus;
-    readonly label: string;
-    readonly severity: StatusTagSeverity;
-    /** Create/edit + liste filtresi (canonical değerler) */
-    readonly write: boolean;
-    readonly aliases: readonly string[];
+/** API değeri (`"Deceased"` veya enum `2`) → durum; bilinmeyen/eksik değer önceki davranışla uyumlu olarak `Active`. */
+export function parsePetLifeStatus(raw: unknown): PetLifeStatus {
+    if (raw === 2 || raw === '2' || (typeof raw === 'string' && normalizeLookupKey(raw) === 'deceased')) {
+        return 'Deceased';
+    }
+    return 'Active';
 }
 
-interface PetStatusMeta {
-    readonly label: string;
-    readonly severity: StatusTagSeverity;
+export function petLifeStatusLabel(status: PetLifeStatus): string {
+    return status === 'Deceased' ? 'Vefat' : 'Aktif';
 }
+
+/** Hayvan listesi durum süzgeci: değer verilmezse sunucu tümünü döndürür (önceki davranış). */
+export const PET_LIFE_STATUS_FILTER_OPTIONS: ReadonlyArray<{ label: string; value: PetLifeStatus }> = [
+    { label: 'Aktif', value: 'Active' },
+    { label: 'Vefat', value: 'Deceased' }
+];
 
 export type PetCanonicalGender = 'male' | 'female';
 
@@ -32,41 +39,14 @@ interface PetGenderMeta {
     readonly label: string;
 }
 
-export interface PetStatusWriteOption {
-    readonly label: string;
-    readonly value: PetCanonicalStatus;
-}
-
 export interface PetGenderWriteOption {
     readonly label: string;
     readonly value: PetCanonicalGender;
 }
 
-/** Randevu / appointment util’leri ile aynı normalizasyon kuralı. */
-export function normalizePetStatus(value: string | null | undefined): string {
-    return normalizeLookupKey(value);
-}
-
 export function normalizePetGender(value: string | null | undefined): string {
     return normalizeLookupKey(value);
 }
-
-const STATUS_DEFS: readonly PetStatusDef[] = [
-    {
-        canonical: 'active',
-        label: 'Aktif',
-        severity: 'success',
-        write: true,
-        aliases: ['aktif']
-    },
-    {
-        canonical: 'inactive',
-        label: 'Pasif',
-        severity: 'warn',
-        write: true,
-        aliases: ['pasif']
-    }
-];
 
 const GENDER_DEFS: readonly PetGenderDef[] = [
     {
@@ -106,14 +86,6 @@ function buildMetaMap<TMeta>(
     return map;
 }
 
-const STATUS_META_BY_KEY = buildMetaMap(
-    STATUS_DEFS.map((d) => ({
-        canonical: d.canonical,
-        aliases: d.aliases,
-        meta: { label: d.label, severity: d.severity } satisfies PetStatusMeta
-    }))
-);
-
 const GENDER_META_BY_KEY = buildMetaMap(
     GENDER_DEFS.map((d) => ({
         canonical: d.canonical,
@@ -122,30 +94,9 @@ const GENDER_META_BY_KEY = buildMetaMap(
     }))
 );
 
-function resolvePetStatusMeta(status: string | null | undefined): PetStatusMeta | undefined {
-    const nk = normalizeLookupKey(status);
-    return nk === '' ? undefined : STATUS_META_BY_KEY.get(nk);
-}
-
 function resolvePetGenderMeta(gender: string | null | undefined): PetGenderMeta | undefined {
     const nk = normalizeLookupKey(gender);
     return nk === '' ? undefined : GENDER_META_BY_KEY.get(nk);
-}
-
-export function petStatusLabel(status: string | null | undefined): string {
-    const meta = resolvePetStatusMeta(status);
-    if (meta) {
-        return meta.label;
-    }
-    return normalizeLookupKey(status) === '' ? EM : (status ?? '');
-}
-
-export function petStatusSeverity(status: string | null | undefined): StatusTagSeverity {
-    if (status == null || status === '') {
-        return 'secondary';
-    }
-    /** Bilinmeyen backend değerleri önceki davranışla uyumlu: `info`. */
-    return resolvePetStatusMeta(status)?.severity ?? 'info';
 }
 
 export function petGenderLabel(gender: string | null | undefined): string {
@@ -158,12 +109,6 @@ export function petGenderLabel(gender: string | null | undefined): string {
     }
     return gender;
 }
-
-/** Create/edit — tek kaynaktan. */
-export const PET_STATUS_FORM_OPTIONS: ReadonlyArray<PetStatusWriteOption> = STATUS_DEFS.filter((d) => d.write).map((d) => ({
-    label: d.label,
-    value: d.canonical
-}));
 
 export const PET_GENDER_FORM_OPTIONS: ReadonlyArray<PetGenderWriteOption> = GENDER_DEFS.filter((d) => d.write).map((d) => ({
     label: d.label,
@@ -218,11 +163,3 @@ export function resolvePetGenderFormValue(raw: string | number | null | undefine
     }
     return '';
 }
-
-/**
- * Liste filtresi: “Tümü” + canonical durumlar (`STATUS_DEFS` ile uyumlu değerler).
- */
-export const PET_STATUS_FILTER_OPTIONS: ReadonlyArray<{ label: string; value: string }> = [
-    { label: 'Tümü', value: '' },
-    ...PET_STATUS_FORM_OPTIONS.map((o) => ({ label: o.label, value: o.value }))
-];

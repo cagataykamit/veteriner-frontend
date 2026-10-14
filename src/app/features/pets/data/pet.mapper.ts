@@ -8,7 +8,9 @@ import type {
     PetHistoryHospitalizationItemDto,
     PetHistorySummaryDto,
     PetListItemDto,
-    PetListItemDtoPagedResult
+    PetListItemDtoPagedResult,
+    PetStatusUpdateRequestDto,
+    PetStatusUpdateResultDto
 } from '@/app/features/pets/models/pet-api.model';
 import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
@@ -18,11 +20,13 @@ import type {
     PetDetailVm,
     PetEditVm,
     PetHistorySummaryVm,
-    PetListItemVm
+    PetListItemVm,
+    PetStatusUpdateRequest,
+    PetStatusUpdateResult
 } from '@/app/features/pets/models/pet-vm.model';
 import { PET_HISTORY_BLOCK_KEYS } from '@/app/features/pets/models/pet-vm.model';
 import { mapPetAlertsDtoToVm, petAlertsFormToWrite } from '@/app/shared/pet-alerts/pet-alerts.utils';
-import { normalizePetGender, resolvePetGenderFormValue } from '@/app/features/pets/utils/pet-status.utils';
+import { normalizePetGender, parsePetLifeStatus, resolvePetGenderFormValue } from '@/app/features/pets/utils/pet-status.utils';
 
 const EM = '—';
 
@@ -333,7 +337,8 @@ export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
         speciesName: speciesName(dto.speciesName),
         breed: canonicalBreedDisplay(dto),
         colorName: canonicalColorDisplayName(dto),
-        weight: weightStr
+        weight: weightStr,
+        status: parsePetLifeStatus(dto.status)
     };
 }
 
@@ -406,6 +411,7 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
         clientName: canonicalPetDetailOwnerName(dto),
         clientPhone: canonicalPetDetailOwnerPhone(dto),
         clientEmail: canonicalPetDetailClientEmail(dto),
+        ...petStatusFields(dto),
         vaccinationsSummary: {
             totalCount: vac?.totalCount ?? 0,
             items: (vac?.items ?? []).map((x) => ({
@@ -422,6 +428,25 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
             upcomingCount: ap?.upcomingCount ?? null
         }
     };
+}
+
+/** Detay ve `PUT /pets/{id}/status` yanıtı ortak: vefat tarihi yalnız `Deceased` iken anlamlıdır. */
+function petStatusFields(dto: Pick<PetDetailDto, 'status' | 'deceasedOn' | 'rowVersion'>): PetStatusUpdateResult {
+    const status = parsePetLifeStatus(dto.status);
+    return {
+        status,
+        deceasedOn: status === 'Deceased' ? safeTrim(dto.deceasedOn) : null,
+        rowVersion: safeTrim(dto.rowVersion)
+    };
+}
+
+export function mapPetStatusUpdateResultDtoToVm(dto: PetStatusUpdateResultDto): PetStatusUpdateResult {
+    return petStatusFields(dto);
+}
+
+export function mapPetStatusUpdateToApiBody(req: PetStatusUpdateRequest): PetStatusUpdateRequestDto {
+    const deceasedOn = req.status === 'Deceased' ? req.deceasedOn?.trim() : '';
+    return { status: req.status, ...(deceasedOn ? { deceasedOn } : {}), rowVersion: req.rowVersion };
 }
 
 export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
@@ -634,7 +659,7 @@ function safeTrim(v: string | null | undefined): string | null {
 }
 
 /**
- * GET `/api/v1/pets` — canonical query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId` (+ opsiyonel legacy `Species`).
+ * GET `/api/v1/pets` — canonical query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species`).
  * (@see docs/BACKEND-INTEGRATION.md — liste sorguları.)
  */
 export function petsQueryToHttpParams(query: PetsListQuery): HttpParams {
@@ -661,6 +686,9 @@ export function petsQueryToHttpParams(query: PetsListQuery): HttpParams {
     }
     if (query.clientId?.trim()) {
         p = p.set('ClientId', query.clientId.trim());
+    }
+    if (query.status) {
+        p = p.set('Status', query.status);
     }
     return p;
 }

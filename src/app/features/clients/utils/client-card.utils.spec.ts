@@ -30,7 +30,8 @@ const pet = (id: string, name: string): PetListItemVm => ({
     speciesName: 'Kedi',
     breed: 'Tekir',
     colorName: '—',
-    weight: '—'
+    weight: '—',
+    status: 'Active'
 });
 
 const appointment = (id: string, petId: string, scheduledAtUtc: string, status = 0): AppointmentListItemVm =>

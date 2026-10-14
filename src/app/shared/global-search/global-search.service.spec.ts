@@ -8,7 +8,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { GlobalSearchService } from './global-search.service';
 
 const ali: ClientSearchResultVm = { id: 'c1', fullName: 'Ali Veli', phone: '+90 532 123 45 67', petNames: ['Pamuk'], label: 'Ali Veli — +90 532 123 45 67' };
-const listItem = (id: string, name: string): PetListItemVm => ({ id, clientId: 'c1', speciesId: null, name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—' });
+const listItem = (id: string, name: string): PetListItemVm => ({ id, clientId: 'c1', speciesId: null, name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status: 'Active' });
 const detail = (id: string, name: string): PetDetailVm =>
     ({ id, name, ownerId: 'c1', speciesName: 'Kedi', breed: 'Tekir', clientName: 'Ali Veli', clientPhone: '05321234567', microchipNumber: '985112345678901' }) as PetDetailVm;
 

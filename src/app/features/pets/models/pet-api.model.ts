@@ -16,6 +16,8 @@ export interface PetListItemDto {
     /** Eski yanıtlar: düz metin renk (gösterim yedeği). */
     color?: string | null;
     weight?: number | null;
+    /** `Active` | `Deceased` (sayı `1`/`2` de olabilir); eski yanıtta yok → aktif. */
+    status?: string | number | null;
 }
 
 export interface PetListItemDtoPagedResult {
@@ -65,6 +67,26 @@ export interface PetDetailDto {
     appointmentsSummary?: PetAppointmentsSummaryDto | null;
     /** Hayvan uyarıları (sözleşme: hiçbir zaman null; eski yanıtta alan olmayabilir). */
     petAlerts?: PetAlertsDto | null;
+    /** `Active` | `Deceased`; eski yanıtta yok → aktif. */
+    status?: string | number | null;
+    /** Vefat tarihi `yyyy-MM-dd` (İstanbul günü); yalnız `Deceased` iken dolu olabilir. */
+    deceasedOn?: string | null;
+    /** Base64 eşzamanlılık belirteci; `PUT /pets/{id}/status` için zorunlu. */
+    rowVersion?: string | null;
+}
+
+/** `PUT /pets/{id}/status` gövdesi ve yanıtı (`PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §1). */
+export interface PetStatusUpdateRequestDto {
+    status: 'Active' | 'Deceased';
+    deceasedOn?: string;
+    rowVersion: string;
+}
+
+export interface PetStatusUpdateResultDto {
+    id: string;
+    status?: string | number | null;
+    deceasedOn?: string | null;
+    rowVersion?: string | null;
 }
 
 export interface PetVaccinationsSummaryDto {
