@@ -53,7 +53,8 @@ import {
 } from '@/app/features/hospitalizations/utils/hospitalization-date-validation.utils';
 import {
     parseExaminationCreateRouteContext,
-    parseVisitExaminationRouteContext
+    parseVisitExaminationRouteContext,
+    prefillPetFromRoute
 } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
@@ -325,6 +326,7 @@ export class HospitalizationNewPageComponent implements OnInit {
         });
         this.tryApplyExaminationRouteContext();
         this.tryApplyVisitRouteContext();
+        prefillPetFromRoute(this.route.snapshot.queryParamMap, this.form.controls.clientId, this.form.controls.petId);
     }
 
     private syncExaminationSelectState(): void {

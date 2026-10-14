@@ -21,6 +21,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
+import { PatientActionBarComponent } from '@/app/shared/panel/patient-action-bar/patient-action-bar.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -44,6 +45,7 @@ const EM = '—';
         ButtonModule,
         AppPageHeaderComponent,
         PetAlertBadgesComponent,
+        PatientActionBarComponent,
         PetSummaryCardComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -89,6 +91,9 @@ const EM = '—';
                     ></button>
                 }
             </app-page-header>
+            @if (pet()!.ownerId) {
+                <app-patient-action-bar [clientId]="pet()!.ownerId!" [petId]="pet()!.id" [petLabel]="pet()!.name + ' — ' + pet()!.speciesName" [clientName]="pet()!.clientName" />
+            }
             @if (pet()!.petAlerts.flags.length > 0) {
                 <div class="card mb-4" role="region" aria-label="Hasta uyarıları">
                     <app-pet-alert-badges [alerts]="pet()!.petAlerts" />

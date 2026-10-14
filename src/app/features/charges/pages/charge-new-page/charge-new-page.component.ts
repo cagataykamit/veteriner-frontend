@@ -18,6 +18,7 @@ import {
     chargeNumberValidator,
     computeChargeAmount
 } from '@/app/features/charges/utils/charge-amount.utils';
+import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
@@ -260,8 +261,9 @@ export class ChargeNewPageComponent implements OnInit {
             this.loadExaminations(trimClientIdControlValue(this.form.controls.clientId.value), trimClientIdControlValue(petId));
         });
         // Abonelikler kurulduktan sonra: query'den gelen müşteri ön seçimi değişiklik akışını tetiklemeli.
-        const preset = this.route.snapshot.queryParamMap.get('clientId')?.trim();
-        if (preset) {
+        const query = this.route.snapshot.queryParamMap;
+        const preset = query.get('clientId')?.trim();
+        if (!prefillPetFromRoute(query, this.form.controls.clientId, this.form.controls.petId) && preset) {
             this.form.controls.clientId.setValue(preset);
         }
         this.applyVisitPreset();

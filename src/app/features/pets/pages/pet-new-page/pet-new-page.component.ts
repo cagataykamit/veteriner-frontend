@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
@@ -291,6 +291,7 @@ export class PetNewPageComponent implements OnInit {
     private readonly breedsService = inject(BreedsService);
     private readonly speciesService = inject(SpeciesService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
@@ -364,6 +365,10 @@ export class PetNewPageComponent implements OnInit {
             }
             this.loadBreedsForSpecies(sid);
         });
+        const clientId = this.route.snapshot.queryParamMap.get('clientId')?.trim();
+        if (clientId) {
+            this.form.controls.clientId.setValue(clientId);
+        }
     }
 
     goList(): void {

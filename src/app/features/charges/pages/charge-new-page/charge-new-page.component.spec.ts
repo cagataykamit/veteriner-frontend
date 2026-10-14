@@ -44,6 +44,7 @@ describe('ChargeNewPageComponent', () => {
     let mutationBlocked: boolean;
     let queryClientId: string | null;
     let queryVisitId: string | null = null;
+    let queryPetId: string | null = null;
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -81,7 +82,7 @@ describe('ChargeNewPageComponent', () => {
                 },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : null) } } } }
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : k === 'petId' ? queryPetId : null) } } } }
             ]
         }).compileComponents();
         router = TestBed.inject(Router);
@@ -101,6 +102,7 @@ describe('ChargeNewPageComponent', () => {
         claims = new Set(['Visits.Read', 'Examinations.Read']);
         mutationBlocked = false;
         queryVisitId = null;
+        queryPetId = null;
         queryClientId = null;
     });
 
@@ -243,6 +245,14 @@ describe('ChargeNewPageComponent', () => {
         queryVisitId = 'v5';
         await setup();
         expect(cmp.form.controls.visitId.value).toBe('');
+    });
+
+    it('hayvan eylem çubuğundan gelen clientId ve petId ile müşteri ve hayvan önceden seçilir', async () => {
+        queryClientId = 'cl1';
+        queryPetId = 'p2';
+        await setup();
+        expect(cmp.form.controls.clientId.value).toBe('cl1');
+        expect(cmp.form.controls.petId.value).toBe('p2');
     });
 
     it('müşteri değişince hayvan, geliş ve muayene seçimi sıfırlanır', async () => {

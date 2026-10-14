@@ -143,6 +143,8 @@ export class VisitArrivalDialogComponent {
     readonly visible = model(false);
     /** Doluysa randevudan geliş (hasta kilitli); `null` ise randevusuz geliş. */
     readonly appointment = input<TodayItemVm | null>(null);
+    /** Randevusuz geliş için hasta önceden seçili gelir (hasta detayındaki "Geldi" eylemi). */
+    readonly presetPet = input<PetSuggestion | null>(null);
     /** Sunucu yanıtı (yeni ya da mevcut Visit); `created` bayrağı üst bileşenin mesajını belirler. */
     readonly arrived = output<VisitCreateResultVm>();
 
@@ -223,7 +225,7 @@ export class VisitArrivalDialogComponent {
         this.submitError.set(null);
         this.loadError.set(null);
         this.petSuggestions.set([]);
-        this.form.reset({ pet: null, veterinarianId: '', isUrgent: false });
+        this.form.reset({ pet: this.appointment() ? null : this.presetPet(), veterinarianId: '', isUrgent: false });
         this.registration.set(null);
         this.registeredPetId = null;
         this.lastSearchTerm.set('');

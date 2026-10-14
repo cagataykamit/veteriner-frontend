@@ -26,7 +26,7 @@ import {
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
+import { parseExaminationCreateRouteContext, prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
@@ -267,6 +267,7 @@ export class LabResultNewPageComponent implements OnInit {
             this.loadExaminationsForPet(pid);
         });
         this.tryApplyExaminationRouteContext();
+        prefillPetFromRoute(this.route.snapshot.queryParamMap, this.form.controls.clientId, this.form.controls.petId);
     }
 
     private syncExaminationSelectState(): void {
