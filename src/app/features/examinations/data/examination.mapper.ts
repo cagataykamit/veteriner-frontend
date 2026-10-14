@@ -27,6 +27,7 @@ import type {
     ExaminationFinalizeResultVm,
     ExaminationListItemVm,
     ExaminationRelatedSummaryVm,
+    ExaminationRelatedVaccinationStatus,
     ExaminationStatus,
     ExaminationWriteResultVm
 } from '@/app/features/examinations/models/examination-vm.model';
@@ -315,6 +316,11 @@ function relatedHospitalizationIsActive(dto: ExaminationRelatedHospitalizationIt
     return discharged == null;
 }
 
+function relatedVaccinationStatus(v: string | null | undefined): ExaminationRelatedVaccinationStatus {
+    const s = v?.trim().toLowerCase();
+    return s === 'cancelled' ? 'Cancelled' : s === 'scheduled' ? 'Scheduled' : 'Applied';
+}
+
 /** GET /examinations/{id}/related-summary → VM. */
 export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSummaryDto): ExaminationRelatedSummaryVm {
     const examinationId = dto.examinationId?.trim() ?? '';
@@ -389,6 +395,23 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     reason: str(x.reason),
                     dischargedAtUtc,
                     isActive
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
+        vaccinations: (dto.vaccinations ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+                if (!id) {
+                    return null;
+                }
+                return {
+                    id,
+                    vaccineName: x.vaccineName?.trim() ? x.vaccineName.trim() : 'Aşı kaydı',
+                    status: relatedVaccinationStatus(x.status),
+                    appliedAtUtc: relatedSafeTrim(x.appliedAtUtc),
+                    dueAtUtc: relatedSafeTrim(x.dueAtUtc),
+                    clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),

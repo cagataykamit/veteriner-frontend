@@ -59,6 +59,8 @@ export interface ExaminationRelatedSummaryDto {
     prescriptions?: ExaminationRelatedPrescriptionItemDto[] | null;
     labResults?: ExaminationRelatedLabResultItemDto[] | null;
     hospitalizations?: ExaminationRelatedHospitalizationItemDto[] | null;
+    /** Yalnız Vaccinations.Read izni varsa dolu; izinsizde [] (kayıt yok ile ayırt edilemez). */
+    vaccinations?: ExaminationRelatedVaccinationItemDto[] | null;
     payments?: ExaminationRelatedPaymentItemDto[] | null;
 }
 
@@ -88,6 +90,17 @@ export interface ExaminationRelatedLabResultItemDto {
     status?: string | null;
     requestedAtUtc?: string | null;
     awaitingInterpretation?: boolean | null;
+}
+
+export interface ExaminationRelatedVaccinationItemDto {
+    id: string;
+    vaccineName?: string | null;
+    /** Scheduled | Applied | Cancelled (string enum). */
+    status?: string | null;
+    appliedAtUtc?: string | null;
+    dueAtUtc?: string | null;
+    clinicId?: string | null;
+    clinicName?: string | null;
 }
 
 export interface ExaminationRelatedHospitalizationItemDto {

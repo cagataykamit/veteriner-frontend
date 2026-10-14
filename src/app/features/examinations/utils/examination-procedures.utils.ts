@@ -60,10 +60,14 @@ export interface ProcedureRowVm {
     atUtc: string | null;
     title: string;
     detail: string | null;
+    /** Durum etiketi (aşı: Planlı / İptal); yoksa null. */
+    stateLabel?: string | null;
+    /** İptal edilmiş kayıt gizlenmez; silik ve üstü çizili gösterilir. */
+    cancelled?: boolean;
 }
 
-/** İlgili özetten tek işlem listesi; eski kayıt önce, tarihsiz sonda. `extra`: özette olmayan (bu oturumda eklenen aşı gibi) satırlar. */
-export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null, extra: readonly ProcedureRowVm[] = []): ProcedureRowVm[] {
+/** İlgili özetten tek işlem listesi; eski kayıt önce, tarihsiz sonda. */
+export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null): ProcedureRowVm[] {
     const rows: ProcedureRowVm[] = [
         ...(summary?.treatments ?? []).map((r) => ({ kind: 'treatment' as const, id: r.id, atUtc: r.treatmentDateUtc, title: r.title, detail: null })),
         ...(summary?.prescriptions ?? []).map((r) => ({ kind: 'prescription' as const, id: r.id, atUtc: r.prescribedAtUtc, title: r.title, detail: null })),
@@ -81,7 +85,15 @@ export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null, 
             title: r.reason,
             detail: r.dischargedAtUtc ? 'Taburcu' : r.isActive ? 'Aktif yatış' : null
         })),
-        ...extra
+        ...(summary?.vaccinations ?? []).map((r) => ({
+            kind: 'vaccination' as const,
+            id: r.id,
+            atUtc: r.appliedAtUtc ?? r.dueAtUtc,
+            title: r.vaccineName,
+            detail: null,
+            stateLabel: r.status === 'Cancelled' ? 'İptal' : r.status === 'Scheduled' ? 'Planlı' : null,
+            cancelled: r.status === 'Cancelled'
+        }))
     ];
     return rows.sort((a, b) => {
         if (!a.atUtc || !b.atUtc) {
@@ -100,12 +112,11 @@ function isBlank(value: string | null | undefined): boolean {
 
 /**
  * Kesinleştirme öncesi tamamlanma kontrolü (uyarı, engel değil). Ücretlenmemiş kalem kontrolü ücret önerisi modeli
- * (ADR-018) gelince eklenecek; aşı ve uygulama özet uç yanıtında olmadığından "işlem yok" denetimine girmez.
+ * (ADR-018) gelince eklenecek; uygulama özet uç yanıtında olmadığından "işlem yok" denetimine girmez.
  */
 export function finalizeWarnings(
     exam: Pick<ExaminationDetailVm, 'assessment' | 'plan'>,
-    summary: ExaminationRelatedSummaryVm | null,
-    extraProcedureCount = 0
+    summary: ExaminationRelatedSummaryVm | null
 ): string[] {
     const warnings: string[] = [];
     if (isBlank(exam.assessment)) {
@@ -114,8 +125,8 @@ export function finalizeWarnings(
     if (isBlank(exam.plan)) {
         warnings.push('Plan / takip bilgisi girilmemiş.');
     }
-    if (summary && extraProcedureCount === 0 && buildProcedureRows(summary).length === 0) {
-        warnings.push('Muayeneye bağlı tedavi, reçete, lab istemi veya yatış kaydı yok (aşı ve uygulama bu denetime dahil değildir).');
+    if (summary && !buildProcedureRows(summary).some((r) => !r.cancelled)) {
+        warnings.push('Muayeneye bağlı tedavi, reçete, aşı, lab istemi veya yatış kaydı yok (uygulama bu denetime dahil değildir).');
     }
     return warnings;
 }

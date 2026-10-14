@@ -454,7 +454,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     /** Kesinleştirme öncesi eksik kalem uyarıları (engel değil). */
     readonly finalizeWarnings = computed(() => {
         const e = this.exam();
-        return e ? finalizeWarnings(e, this.relatedSummary(), this.procedures()?.addedVaccinationCount() ?? 0) : [];
+        return e ? finalizeWarnings(e, this.relatedSummary()) : [];
     });
     readonly relatedPaymentsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.payments));
     readonly sibItemsView = computed(() => sliceDetailRelatedList(this.sibItems()));

@@ -18,6 +18,7 @@ const summary = (over: Partial<ExaminationRelatedSummaryVm> = {}): ExaminationRe
     prescriptions: [],
     labResults: [],
     hospitalizations: [],
+    vaccinations: [],
     payments: [],
     ...over
 });
@@ -65,9 +66,21 @@ describe('buildProcedureRows', () => {
         expect(rows[2].detail).toBe('Yorum bekliyor');
     });
 
-    it('özette olmayan ek satırları (oturum aşısı) listeye katar', () => {
-        const rows = buildProcedureRows(summary(), [{ kind: 'vaccination', id: 'v1', atUtc: '2026-10-08T09:00:00Z', title: 'Kuduz', detail: null }]);
-        expect(rows.map((r) => r.kind)).toEqual(['vaccination']);
+    it('aşıları özetten okur: uygulanan etiketsiz, planlı Planlı, iptal İptal (gizlenmez)', () => {
+        const rows = buildProcedureRows(
+            summary({
+                vaccinations: [
+                    { id: 'v1', vaccineName: 'Kuduz', status: 'Applied', appliedAtUtc: '2026-10-08T09:00:00Z', dueAtUtc: null, clinicId: null, clinicName: null },
+                    { id: 'v2', vaccineName: 'Karma', status: 'Scheduled', appliedAtUtc: null, dueAtUtc: '2026-11-08T09:00:00Z', clinicId: null, clinicName: null },
+                    { id: 'v3', vaccineName: 'Lösemi', status: 'Cancelled', appliedAtUtc: null, dueAtUtc: '2026-10-09T09:00:00Z', clinicId: null, clinicName: null }
+                ]
+            })
+        );
+        expect(rows.map((r) => [r.id, r.stateLabel ?? null, !!r.cancelled])).toEqual([
+            ['v1', null, false],
+            ['v3', 'İptal', true],
+            ['v2', 'Planlı', false]
+        ]);
     });
 
     it('özet yokken boş liste döner', () => {
@@ -89,9 +102,10 @@ describe('finalizeWarnings', () => {
         expect(w).toEqual([]);
     });
 
-    it('bu oturumda aşı eklendiyse "işlem yok" uyarısı verilmez', () => {
-        const w = finalizeWarnings({ assessment: 'x', plan: 'y' }, summary(), 1);
-        expect(w).toEqual([]);
+    it('özette yalnız aktif aşı varsa "işlem yok" uyarısı verilmez; yalnız iptal aşı varsa verilir', () => {
+        const v = (status: 'Applied' | 'Cancelled') => ({ id: 'v1', vaccineName: 'Kuduz', status, appliedAtUtc: null, dueAtUtc: null, clinicId: null, clinicName: null });
+        expect(finalizeWarnings({ assessment: 'x', plan: 'y' }, summary({ vaccinations: [v('Applied')] }))).toEqual([]);
+        expect(finalizeWarnings({ assessment: 'x', plan: 'y' }, summary({ vaccinations: [v('Cancelled')] })).length).toBe(1);
     });
 
     it('özet henüz yüklenmediyse işlem uyarısı verilmez', () => {
