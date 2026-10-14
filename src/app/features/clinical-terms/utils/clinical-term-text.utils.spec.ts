@@ -1,4 +1,17 @@
-import { appendClinicalTermToText } from './clinical-term-text.utils';
+import { appendClinicalTermToText, clinicalTermNameKey } from './clinical-term-text.utils';
+
+describe('clinicalTermNameKey', () => {
+    it('sunucu mükerrer kuralı gibi harf, Türkçe karakter ve boşluk farkını yok sayar', () => {
+        expect(clinicalTermNameKey('  KANLI   İshal ')).toBe('kanli ishal');
+        expect(clinicalTermNameKey('kanli ishal')).toBe(clinicalTermNameKey('Kanlı İSHAL'));
+        expect(clinicalTermNameKey('Çğöşü âîû')).toBe('cgosu aiu');
+        expect(clinicalTermNameKey('GASTROENTERİT')).toBe(clinicalTermNameKey('Gastroenterit'));
+    });
+
+    it('farklı adları ayırır', () => {
+        expect(clinicalTermNameKey('ishal')).not.toBe(clinicalTermNameKey('Kanlı ishal'));
+    });
+});
 
 describe('appendClinicalTermToText', () => {
     it('boş alana adın kendisini yazar', () => {

@@ -1,5 +1,20 @@
 const SEPARATOR = ', ';
 
+const TURKISH_FOLD: Record<string, string> = { ı: 'i', ç: 'c', ğ: 'g', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i', û: 'u' };
+
+/**
+ * Sunucunun mükerrer ad anahtarının (`TurkishTextKey`) istemci karşılığı: büyük/küçük harf, `I/ı/İ/i`, `ç/ğ/ö/ş/ü`,
+ * `â/î/û` farkı ve fazla boşluk yok sayılır. Yalnız arayüz kararı içindir (ör. pasif eşi varken "sözlüğe ekle"yi gizlemek);
+ * mükerreri reddeden sunucudur.
+ */
+export function clinicalTermNameKey(name: string): string {
+    return name
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLocaleLowerCase('tr')
+        .replace(/[ıçğöşüâîû]/g, (c) => TURKISH_FOLD[c]);
+}
+
 /**
  * Sözlükten seçilen adı serbest metin alanına ekler (muayene şeması değişmez; sözleşme: seçilen `name` alana yazılır).
  * Boş alana adın kendisi yazılır; doluysa sona `", "` ile eklenir. Ad metinde zaten ayrı bir parça olarak varsa
