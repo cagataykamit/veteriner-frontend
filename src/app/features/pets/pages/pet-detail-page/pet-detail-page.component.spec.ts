@@ -67,6 +67,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
     let fixture: ComponentFixture<PetDetailPageComponent>;
     let claims: Set<string>;
     let historyValue: PetHistorySummaryVm;
+    let petValue: PetDetailVm;
 
     const el = () => fixture.nativeElement as HTMLElement;
     const create = () => {
@@ -80,7 +81,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                 {
                     provide: PetsService,
                     useValue: {
-                        getPetById: () => of(pet),
+                        getPetById: () => of(petValue),
                         getPetSummary: () => of(summary),
                         getPetHistorySummary: () => of(historyValue),
                         getPetTimeline: () => of({ items: [], nextCursor: null, omittedTypes: [] })
@@ -107,6 +108,36 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
     beforeEach(() => {
         claims = new Set(['Pets.Update', 'Examinations.Create']);
         historyValue = history();
+        petValue = pet;
+    });
+
+    it('vefat eden hayvanda soluk rozet ve tarih görünür; yeni bakım eylemleri yok, durum eylemi "Aktife al"', () => {
+        petValue = { ...pet, status: 'Deceased', deceasedOn: '2026-10-14' };
+        create();
+
+        expect(el().querySelector('[data-testid="pet-deceased-badge"]')?.textContent).toContain('14.10.2026');
+        expect(el().querySelector('a[href^="/panel/examinations/new"]')).toBeNull();
+        expect(el().querySelector('[data-testid="pet-status-action"]')?.textContent).toContain('Aktife al');
+    });
+
+    it('aktif hayvanda rozet yok, "Vefat olarak işaretle" sunulur; durum yanıtı kartı ve rowVersion\'ı günceller', () => {
+        create();
+        expect(el().querySelector('[data-testid="pet-deceased-badge"]')).toBeNull();
+        expect(el().querySelector('a[href^="/panel/examinations/new"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="pet-status-action"]')?.textContent).toContain('Vefat olarak işaretle');
+
+        fixture.componentInstance.onStatusChanged({ status: 'Deceased', deceasedOn: null, rowVersion: 'new' });
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.pet()?.rowVersion).toBe('new');
+        expect(el().querySelector('[data-testid="pet-deceased-badge"]')).not.toBeNull();
+        expect(el().querySelector('a[href^="/panel/examinations/new"]')).toBeNull();
+    });
+
+    it('Pets.Update yoksa durum eylemi sunulmaz', () => {
+        claims = new Set(['Examinations.Create']);
+        create();
+        expect(el().querySelector('[data-testid="pet-status-action"]')).toBeNull();
     });
 
     it('başlıkta ad ve kimlik satırı (muayene kilosuyla), Düzenle, Yapılacaklar, klinik özet ve zaman çizelgesi tek sayfada', () => {

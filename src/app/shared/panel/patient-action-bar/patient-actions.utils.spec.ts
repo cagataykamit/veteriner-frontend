@@ -34,6 +34,11 @@ describe('buildPatientActions', () => {
         expect(actions[2]).toEqual(jasmine.objectContaining({ route: '/panel/pets/new', queryParams: { clientId: 'cl1' } }));
     });
 
+    it('vefat eden hayvanda Geldi, Muayene başlat ve Randevu al gizlenir; diğer eylemler kalır', () => {
+        const actions = buildPatientActions({ clientId: 'cl1', petId: 'p1', petDeceased: true }, (c) => ALL.has(c));
+        expect(actions.map((a) => a.label)).toEqual(['Aşı', 'Lab', 'Yatış', 'Ücret ekle', 'Ödeme al']);
+    });
+
     it('yetkisi olmayan eylem gizlenir (Veteriner: ücret/ödeme yok, Sekreter: muayene yok)', () => {
         const vet = buildPatientActions({ clientId: 'cl1', petId: 'p1' }, (c) => !['Charges.Create', 'Payments.Create'].includes(c) && ALL.has(c));
         expect(vet.map((a) => a.key)).not.toContain('charge');

@@ -8,13 +8,13 @@ import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress', 'Completed']);
 
 /**
- * Hasta kartı başlığının ikinci yarısı (ADR-020 karar 2a): uyarı rozetleri, sahip ve telefon, hesap durumu (açık borç, son geliş, sonraki randevu).
+ * Hasta kartı başlığının ikinci yarısı (ADR-020 karar 2a): vefat rozeti (soluk, ayrışan), uyarı rozetleri, sahip ve telefon, hesap durumu (açık borç, son geliş, sonraki randevu).
  * Ad, kimlik satırı ve "Düzenle" sayfa başlığındadır (`app-page-header`).
  */
 @Component({
@@ -23,6 +23,19 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
     imports: [RouterLink, PetAlertBadgesComponent, CardAccountStatusComponent],
     template: `
         <section class="card mb-4" aria-label="Sahip, uyarılar ve hesap durumu" data-testid="pet-card-header">
+            @if (pet().status === 'Deceased') {
+                <p
+                    class="m-0 mb-3 inline-flex items-center gap-2 rounded-border border border-surface-300 dark:border-surface-600 bg-surface-100 dark:bg-surface-800 px-3 py-1 text-sm font-medium text-surface-700 dark:text-surface-200"
+                    role="status"
+                    data-testid="pet-deceased-badge"
+                >
+                    <i class="pi pi-minus-circle" aria-hidden="true"></i>Vefat
+                    @if (pet().deceasedOn; as on) {
+                        <span class="font-normal">· {{ formatDate(on) }}</span>
+                    }
+                    <span class="font-normal text-muted-color">· yeni randevu, geliş ve muayene açılmaz</span>
+                </p>
+            }
             @if (pet().petAlerts.flags.length > 0) {
                 <div class="mb-3" role="region" aria-label="Hasta uyarıları">
                     <app-pet-alert-badges [alerts]="pet().petAlerts" />
@@ -77,6 +90,7 @@ export class PetCardHeaderComponent {
     /** `null` = randevu okuma yetkisi yok (alan gösterilmez); `ok` + `null` veri = planlı randevu yok. */
     readonly nextAppointment = input<PetCardSection<PetHistoryAppointmentItemVm | null>>(null);
     readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
+    readonly formatDate = (v: string) => formatDateDisplay(v);
 
     readonly phone = computed(() => formatClientPhoneForDisplay(this.pet().clientPhone));
     readonly phoneHref = computed(() => clientPhoneTelHref(this.pet().clientPhone));

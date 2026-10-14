@@ -14,13 +14,15 @@ import { PetCardTimelineComponent } from '@/app/features/pets/components/pet-car
 import { PetSummaryCardComponent } from '@/app/features/pets/components/pet-summary-card.component';
 import { PetTodoPanelComponent } from '@/app/features/pets/components/pet-todo-panel.component';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
-import type { PetDetailVm, PetHistoryBlockKey, PetHistorySummaryVm } from '@/app/features/pets/models/pet-vm.model';
+import { PetStatusDialogComponent } from '@/app/features/pets/components/pet-status-dialog.component';
+import type { PetDetailVm, PetHistoryBlockKey, PetHistorySummaryVm, PetStatusUpdateResult } from '@/app/features/pets/models/pet-vm.model';
 import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
 import {
     buildPetTodo,
     nextScheduledAppointment,
+    okData,
     type PetCardSection,
     petCardEmphasis,
     petIdentityParts
@@ -51,6 +53,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         PetTodoPanelComponent,
         PetSummaryCardComponent,
         PetCardTimelineComponent,
+        PetStatusDialogComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent
     ],
@@ -70,14 +73,36 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         } @else if (pet(); as p) {
             <app-page-header [title]="p.name" [description]="identity()">
                 @if (canUpdatePet && !ro.mutationBlocked()) {
-                    <a actions [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                    <!-- İki eylem tek kökte: denetim akışı bloğunda birden çok kök [actions] yuvasına yansıtılmaz. -->
+                    <ng-container actions>
+                        <button
+                            pButton
+                            type="button"
+                            [label]="p.status === 'Deceased' ? 'Aktife al' : 'Vefat olarak işaretle'"
+                            [icon]="p.status === 'Deceased' ? 'pi pi-undo' : 'pi pi-minus-circle'"
+                            class="p-button-text p-button-secondary"
+                            data-testid="pet-status-action"
+                            (click)="statusDialogOpen.set(true)"
+                        ></button>
+                        <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                    </ng-container>
                 } @else if (canUpdatePet && ro.mutationBlocked()) {
                     <button actions pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                 }
             </app-page-header>
 
             @if (p.ownerId) {
-                <app-patient-action-bar [sticky]="true" [clientId]="p.ownerId" [petId]="p.id" [petLabel]="p.name + ' — ' + p.speciesName" [clientName]="p.clientName" />
+                <app-patient-action-bar
+                    [sticky]="true"
+                    [clientId]="p.ownerId"
+                    [petId]="p.id"
+                    [petLabel]="p.name + ' — ' + p.speciesName"
+                    [clientName]="p.clientName"
+                    [petDeceased]="p.status === 'Deceased'"
+                />
+            }
+            @if (canUpdatePet && !ro.mutationBlocked()) {
+                <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" [nextAppointment]="nextAppointmentData()" (changed)="onStatusChanged($event)" (stale)="refreshPet()" />
             }
 
             <app-pet-card-header [pet]="p" [summary]="summary()" [balance]="balance()" [nextAppointment]="nextAppointment()" />
@@ -189,6 +214,8 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
 
     readonly payments = computed(() => this.historyBlock('Payments', (h) => h.recentPayments));
     readonly nextAppointment = computed(() => this.historyBlock('Appointments', (h) => nextScheduledAppointment(h.recentAppointments)));
+    readonly nextAppointmentData = computed(() => okData(this.nextAppointment()) ?? null);
+    readonly statusDialogOpen = signal(false);
 
     readonly todo = computed(() =>
         buildPetTodo(
@@ -269,6 +296,22 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
                 this.loading.set(false);
             }
         });
+    }
+
+    /** Durum yanıtı yeni `rowVersion` taşır; kart verileri durumdan bağımsız olduğundan yeniden okunmaz. */
+    onStatusChanged(result: PetStatusUpdateResult): void {
+        const p = this.pet();
+        if (p) {
+            this.pet.set({ ...p, ...result });
+        }
+    }
+
+    /** Yalnız hayvan kaydı (durum, rowVersion) yenilenir; kart bölümleri yerinde kalır (eşzamanlılık çakışması sonrası). */
+    refreshPet(): void {
+        if (!this.lastId) {
+            return;
+        }
+        this.petsService.getPetById(this.lastId).subscribe({ next: (p) => this.pet.set(p), error: () => undefined });
     }
 
     retrySummary(): void {

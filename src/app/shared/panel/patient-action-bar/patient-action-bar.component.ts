@@ -73,11 +73,13 @@ export class PatientActionBarComponent {
     readonly sticky = input(false);
     /** Müşteri sayfasında "Geldi" için önceden seçilecek hasta (müşterinin tek hayvanı varsa); `null` ise hasta diyalogda aranır. */
     readonly arrivalPet = input<PetSuggestion | null>(null);
+    /** Hayvan sayfasında: vefat eden hayvanda Geldi, Muayene başlat ve Randevu al gösterilmez. */
+    readonly petDeceased = input(false);
 
     readonly arrivalOpen = signal(false);
 
     readonly actions = computed(() =>
-        buildPatientActions({ clientId: this.clientId(), petId: this.petId() }, (claim) => this.auth.hasOperationClaim(claim))
+        buildPatientActions({ clientId: this.clientId(), petId: this.petId(), petDeceased: this.petDeceased() }, (claim) => this.auth.hasOperationClaim(claim))
     );
 
     readonly canArrive = computed(() => this.actions().some((a) => a.key === 'arrive'));

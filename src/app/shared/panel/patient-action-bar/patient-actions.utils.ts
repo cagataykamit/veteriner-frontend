@@ -34,6 +34,8 @@ export interface PatientActionContext {
     clientId: string;
     /** Müşteri sayfasında `null`. */
     petId: string | null;
+    /** Vefat eden hayvanda yeni bakım (geliş, muayene, randevu) açılmaz; sunucu da 409 `Pets.Deceased` döner. */
+    petDeceased?: boolean;
 }
 
 interface PatientActionDefinition extends Omit<PatientAction, 'queryParams'> {
@@ -58,9 +60,14 @@ const ACTIONS: readonly PatientActionDefinition[] = [
 /** Müşteri kartında (ADR-020 karar 6) geliş, randevu, hayvan ekleme, ücret ve ödeme; klinik eylemler hayvana özgüdür. */
 const CLIENT_PAGE_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'appointment', 'newPet', 'charge', 'payment']);
 
+/** Yeni bakım kaydı açan eylemler (`Pet.EnsureCanStartCare`): vefat eden hayvanda gösterilmez. Aşı, lab, yatış, ücret ve ödeme açık kalır (K5). */
+const CARE_START_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'examination', 'appointment']);
+
 /** Yetkisi olmayan eylem listede yer almaz (UX ilkesi 11); her eylem müşteri ve (varsa) hayvan bağlamını sorgu parametresiyle taşır. */
 export function buildPatientActions(ctx: PatientActionContext, hasClaim: (claim: string) => boolean): PatientAction[] {
-    return ACTIONS.filter((a) => hasClaim(a.claim) && (ctx.petId ? a.key !== 'newPet' : CLIENT_PAGE_KEYS.has(a.key))).map(({ key, label, icon, route, carriesPet }): PatientAction => ({
+    const visible = (a: PatientActionDefinition) =>
+        hasClaim(a.claim) && (ctx.petId ? a.key !== 'newPet' : CLIENT_PAGE_KEYS.has(a.key)) && !(ctx.petDeceased && CARE_START_KEYS.has(a.key));
+    return ACTIONS.filter(visible).map(({ key, label, icon, route, carriesPet }): PatientAction => ({
         key,
         label,
         icon,
