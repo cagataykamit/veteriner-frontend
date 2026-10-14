@@ -31,10 +31,10 @@ describe('panel yönlendirmeleri', () => {
     it('Visits.Read yoksa /panel menüdeki ilk erişilebilir öğeye gider; Özet yönetici düzeyi içindir', async () => {
         claims.delete('visits.read');
         expect(await go('/panel')).toBe('/panel/settings');
-        claims.add('clients.read');
-        expect(await go('/panel')).toBe('/panel/patients');
         claims.add('visits.correct');
         expect(await go('/panel')).toBe('/panel/dashboard');
+        claims.add('clients.read');
+        expect(await go('/panel')).toBe('/panel/patients');
     });
 
     it('eski Tür adresi alt yolu ve sorgu parametresiyle yeni adrese yönlenir', async () => {

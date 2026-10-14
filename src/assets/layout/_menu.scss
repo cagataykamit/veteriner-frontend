@@ -67,7 +67,23 @@ app-menu {
         }
     }
 
-    // Başlıksız üst öğeler (Bugün, Özet, Ayarlar) doğrudan .layout-menu altındadır; bağlantı stili iç içe ul'a bağlı olmamalı.
+    // Bölüm başlığı (ADR-023): küçük, soluk, büyük harf; açılıp kapanmaz. Büyük harf dönüşümü `lang="tr"` ile İ/I doğru yazar.
+    .layout-menu-heading {
+        padding: 0.75rem 1rem 0.25rem;
+        font-size: 0.786rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        line-height: 1;
+        text-transform: uppercase;
+        white-space: nowrap;
+        color: var(--text-color-secondary);
+
+        &:first-child {
+            padding-top: 0.25rem;
+        }
+    }
+
+    // Üst öğeler doğrudan .layout-menu altındadır; bağlantı stili iç içe ul'a bağlı olmamalı.
     a {
         user-select: none;
         display: flex;
@@ -78,11 +94,13 @@ app-menu {
         cursor: pointer;
         padding: 0.5rem 1rem;
         border-radius: var(--content-border-radius);
+        font-size: 1.25rem; // 17.5 px (kök 14 px); menü yazısı küçük bulundu (ADR-023)
         transition:
             box-shadow var(--element-transition-duration);
 
         .layout-menuitem-icon {
             margin-right: 0.5rem;
+            font-size: 1.57rem; // 22 px
         }
 
         .layout-submenu-toggler {
@@ -215,17 +233,25 @@ app-menu {
 
 // Masaüstü (static kip): tek kenar çubuğu, yüzen kart görünümünde (üstte/altta boşluk) ama sol kenara dayalı. Simge sütunu sabit genişliktedir;
 // açıkken etiketler simgenin sağına doğru açılır, kapalıyken kenar çubuğu yalnız simge sütununa daralır (simge x konumu ve boyutu değişmez).
-// Satır yüksekliği pencereye göre ayarlanır; tüm öğeler kaydırmasız sığar (çok kısa pencerede 22 px alt sınırda kalıp kaydırılır).
+// Satır yüksekliği (--menu-row) pencereye göre ayarlanır; bölüm başlıkları ve aralıkları satırla orantılıdır, tüm menü kaydırmasız sığar
+// (çok kısa pencerede, ~405 px altında, 22 px alt sınırda kalıp kaydırılır). Menüye satır veya bölüm eklenirse $menu-row-units güncellenir.
 $menu-icon-column: 64px;
 $menu-open-width: 17rem;
-$menu-item-count: 19;
-$menu-group-row: 28px; // grup başlığı (açık) ve ayırıcı satırı (kapalı) aynı yükseklik
-$menu-edge-padding: 8px; // şeridin üstünde ve altında (Ayarlar) boşluk
-$menu-fixed-height: calc(6rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-padding}); // üstte 5 rem, altta 1 rem boşluk, grup satırları, Ayarlar üst çizgisi, kenar boşlukları
+$menu-item-count: 9; // en geniş izinle görünen satır sayısı
+$menu-heading-count: 5; // bölüm başlığı (açık) / ayırıcı (kapalı) sayısı
+$menu-heading-gap-count: 3; // üst boşluklu başlık sayısı: kayan listede ilk başlık hariç (sabit bölümün başlığı üst çizginin hemen altındadır)
+$menu-heading-ratio: 0.7; // başlık yüksekliği / satır yüksekliği
+$menu-heading-gap-ratio: 0.25; // başlık üst boşluğu / satır yüksekliği
+$menu-row-units: $menu-item-count + $menu-heading-count * $menu-heading-ratio + $menu-heading-gap-count * $menu-heading-gap-ratio; // 13.25
+$menu-group-row: 28px; // açılır grup başlığı (şu an kullanılmıyor)
+$menu-edge-padding: 8px; // şeridin üstünde ve altında (sabit bölüm) boşluk
+$menu-rounding-slack: 4px; // kesirli piksel yuvarlaması kaydırma çubuğu açmasın
+$menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-rounding-slack}); // üstte 5 rem, altta 1 rem boşluk, sabit bölüm üst çizgisi, kenar boşlukları
 
 @media (min-width: 992px) {
     .layout-wrapper.layout-static {
         .layout-sidebar {
+            --menu-row: clamp(22px, calc((100vh - #{$menu-fixed-height}) / #{$menu-row-units}), 44px);
             top: 5rem;
             left: 0;
             width: $menu-open-width;
@@ -237,8 +263,26 @@ $menu-fixed-height: calc(6rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-
         }
 
         .layout-menu {
+            // Açık hâlde başlık, kapalı hâlde ayırıcı aynı yüksekliktedir; menü daraltılınca simgeler yerinden oynamaz.
+            .layout-menu-heading,
+            .layout-menu-divider {
+                box-sizing: border-box;
+                height: calc(var(--menu-row) * #{$menu-heading-ratio});
+
+                &:not(:first-child) {
+                    margin-top: calc(var(--menu-row) * #{$menu-heading-gap-ratio});
+                }
+            }
+
+            .layout-menu-heading {
+                display: flex;
+                align-items: flex-end;
+                padding: 0 1rem calc(var(--menu-row) * 0.15) calc((#{$menu-icon-column} - 1.57rem) / 2);
+                overflow: hidden;
+            }
+
             a {
-                height: clamp(22px, calc((100vh - #{$menu-fixed-height}) / #{$menu-item-count}), 40px);
+                height: var(--menu-row);
                 margin-left: 0;
                 padding: 0;
                 border-radius: 0;
@@ -248,7 +292,6 @@ $menu-fixed-height: calc(6rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-
                     flex: 0 0 $menu-icon-column;
                     width: $menu-icon-column;
                     margin-right: 0;
-                    font-size: 1.43rem;
                     text-align: center;
                     color: var(--text-color-secondary);
                     -webkit-text-stroke: 0.1px currentColor;
@@ -279,14 +322,19 @@ $menu-fixed-height: calc(6rem + 3 * #{$menu-group-row} + 1px + 2 * #{$menu-edge-
 
             .layout-menu-divider {
                 display: flex;
-                align-items: flex-start;
-                height: $menu-group-row;
+                align-items: center;
+                padding: 0 calc(#{$menu-icon-column} / 4);
 
                 &::before {
                     content: '';
                     flex: 1;
                     height: 1px;
                     background-color: var(--surface-border);
+                }
+
+                // Listenin başındaki ayırıcı yalnız yer tutar (sabit bölümün üst çizgisi zaten var).
+                &:first-child::before {
+                    visibility: hidden;
                 }
             }
         }

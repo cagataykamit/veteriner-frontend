@@ -32,14 +32,26 @@ describe('panel-navigation — kayıt defteri kartları', () => {
 });
 
 describe('panel-navigation', () => {
-    it('en geniş izinle menü iş akışı sırasındadır; Ayarlar en alta sabitlenir', () => {
+    it('en geniş izinle menü ADR-023 bölümlerindedir; Yönetim bölümü (Ayarlar dahil) en alta sabitlenir', () => {
         const groups = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
-        expect(labels(groups)).toEqual(['Bugün', 'Özet', 'Hastalar', 'Randevular', 'Para', 'Stok', 'Kayıtlar', 'Raporlar', 'Ayarlar']);
+        expect(groups.map((g) => [g.heading, labels([g])])).toEqual([
+            ['Günlük iş', ['Bugün', 'Randevular']],
+            ['Müşteri ve hasta', ['Müşteri ve Hasta']],
+            ['Klinik', ['Kayıtlar']],
+            ['Para ve stok', ['Para', 'Stok']],
+            ['Yönetim', ['Raporlar', 'Özet', 'Ayarlar']]
+        ]);
         expect(groups.every((g) => g.label === undefined)).toBeTrue();
         const last = groups[groups.length - 1];
         expect(last.pinned).toBeTrue();
-        expect(labels([last])).toEqual(['Ayarlar']);
         expect(groups.filter((g) => g.pinned)).toHaveSize(1);
+    });
+
+    it('tüm girişleri izinle gizlenen bölüm başlığıyla birlikte düşer', () => {
+        const headings = (hasClaim: (c: string) => boolean) => visibleGroups(MENU_GROUPS, hasClaim).map((g) => g.heading);
+        expect(headings(() => false)).toEqual(['Yönetim']);
+        expect(headings(only('Pets.Read'))).toEqual(['Müşteri ve hasta', 'Yönetim']);
+        expect(headings(only('Appointments.Read', 'Products.Read'))).toEqual(['Günlük iş', 'Para ve stok', 'Yönetim']);
     });
 
     it('her menü öğesinin simgesi ayrıdır (simge şeridinde öğeler ayırt edilebilir)', () => {
@@ -59,7 +71,7 @@ describe('panel-navigation', () => {
 
     it('birleşik öğelerin sekmeleri mevcut liste rotalarıdır', () => {
         const tabs = (label: string) => entry(label).tabs!.map((t) => [t.label, t.route]);
-        expect(tabs('Hastalar')).toEqual([
+        expect(tabs('Müşteri ve Hasta')).toEqual([
             ['Ara', '/panel/patients'],
             ['Müşteriler', '/panel/clients'],
             ['Hastalar', '/panel/pets']
@@ -92,12 +104,12 @@ describe('panel-navigation', () => {
 
     it('Bugün yalnız Visits.Read ile görünür; birleşik öğe en az bir sekmesi yetkiliyse görünür', () => {
         const groups = visibleGroups(MENU_GROUPS, only('Visits.Read', 'Clients.Read'));
-        expect(labels(groups)).toEqual(['Bugün', 'Hastalar', 'Raporlar', 'Ayarlar']);
+        expect(labels(groups)).toEqual(['Bugün', 'Müşteri ve Hasta', 'Raporlar', 'Ayarlar']);
     });
 
     it('menü bağlantısı yetkili ilk sekmeye açılır', () => {
-        expect(menuLinkRoute(entry('Hastalar'), () => true)).toBe('/panel/patients');
-        expect(menuLinkRoute(entry('Hastalar'), only('Pets.Read'))).toBe('/panel/patients');
+        expect(menuLinkRoute(entry('Müşteri ve Hasta'), () => true)).toBe('/panel/patients');
+        expect(menuLinkRoute(entry('Müşteri ve Hasta'), only('Pets.Read'))).toBe('/panel/patients');
         expect(menuLinkRoute(entry('Randevular'), only('Appointments.Read'))).toBe('/panel/appointments');
         expect(menuLinkRoute(entry('Stok'), only('StockMovements.Read'))).toBe('/panel/stock-movements');
         expect(menuLinkRoute(entry('Bugün'), () => true)).toBe('/panel/today');
@@ -152,15 +164,16 @@ describe('panel-navigation', () => {
     it('giriş sonrası açılış ilk erişilebilir öğedir: Bugün izni varsa Bugün', () => {
         expect(firstAccessibleRoute(MENU_GROUPS, () => true)).toBe('/panel/today');
         expect(firstAccessibleRoute(MENU_GROUPS, only('Clients.Read', 'Pets.Read'))).toBe('/panel/patients');
-        expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM, 'Pets.Read'))).toBe('/panel/dashboard');
+        expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM, 'Pets.Read'))).toBe('/panel/patients');
+        expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM))).toBe('/panel/dashboard');
         expect(firstAccessibleRoute(MENU_GROUPS, () => false)).toBe('/panel/settings');
     });
 
     it('entryForUrl sekme adreslerini ve alt yollarını birleşik öğeye bağlar', () => {
         const label = (url: string) => entryForUrl(MENU_GROUPS, url)?.label;
-        expect(label('/panel/pets/abc?tab=1')).toBe('Hastalar');
-        expect(label('/panel/clients?x=1')).toBe('Hastalar');
-        expect(label('/panel/patients')).toBe('Hastalar');
+        expect(label('/panel/pets/abc?tab=1')).toBe('Müşteri ve Hasta');
+        expect(label('/panel/clients?x=1')).toBe('Müşteri ve Hasta');
+        expect(label('/panel/patients')).toBe('Müşteri ve Hasta');
         expect(label('/panel/appointments/calendar')).toBe('Randevular');
         expect(label('/panel/appointments/new')).toBe('Randevular');
         expect(label('/panel/administrations')).toBe('Kayıtlar');
@@ -175,11 +188,12 @@ describe('panel-navigation', () => {
         expect(groupForUrl(MENU_GROUPS, '/panel/petsx')).toBeUndefined();
     });
 
-    it('her menü grubunun sayfa başlığı kategorisi vardır; başlıklı grupta grup adıdır', () => {
+    it('her menü öğesinin sayfa başlığı kategorisi vardır; bölüm başlığı kategori olarak kullanılmaz', () => {
         for (const group of MENU_GROUPS) {
-            expect(group.label ?? group.category).toBeTruthy();
-            if (group.label) {
-                expect(group.category).toBeUndefined();
+            for (const item of group.entries) {
+                const category = categoryForUrl(MENU_GROUPS, item.route);
+                expect(category).withContext(item.label).toBeTruthy();
+                expect(category).not.toBe(group.heading);
             }
         }
     });
@@ -189,7 +203,7 @@ describe('panel-navigation', () => {
         expect(category('/panel/appointments')).toBe('Randevular');
         expect(category('/panel/appointments/calendar')).toBe('Randevular');
         expect(category('/panel/payments')).toBe('Para');
-        expect(category('/panel/pets/abc')).toBe('Hastalar');
+        expect(category('/panel/pets/abc')).toBe('Müşteri ve Hasta');
         expect(category('/panel/examinations')).toBe('Kayıtlar');
         expect(category('/panel/reports/appointments')).toBe('Raporlar');
         expect(category('/panel/reports')).toBe('Raporlar');
