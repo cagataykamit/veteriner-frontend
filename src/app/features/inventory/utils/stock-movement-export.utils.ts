@@ -20,7 +20,7 @@ function exportDisplayCell(value: string): string {
     return t === '—' ? '' : t;
 }
 
-/** CSV için kanonik hareket tipi → kullanıcı etiketi (Initial/In/Out/Adjustment). */
+/** CSV için kanonik hareket tipi → kullanıcı etiketi (Initial/In/Out/Adjustment/Reversal). */
 export function movementTypeLabelForCsvExport(movementType: string): string {
     switch (movementType) {
         case 'Initial':
@@ -31,6 +31,8 @@ export function movementTypeLabelForCsvExport(movementType: string): string {
             return 'Stok çıkışı';
         case 'Adjustment':
             return 'Stok düzeltme';
+        case 'Reversal':
+            return 'Geri alma (iade)';
         default:
             return exportDisplayCell(movementType);
     }

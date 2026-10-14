@@ -22,7 +22,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 
 const EM = '—';
 
-export type MovementKind = 'Initial' | 'In' | 'Out' | 'Adjustment' | 'Unknown';
+export type MovementKind = 'Initial' | 'In' | 'Out' | 'Adjustment' | 'Reversal' | 'Unknown';
 
 function str(v: string | null | undefined): string {
     return v?.trim() ? v.trim() : EM;
@@ -54,6 +54,9 @@ export function normalizeMovementKind(raw: unknown): MovementKind {
         if (raw === 3) {
             return 'Adjustment';
         }
+        if (raw === 4) {
+            return 'Reversal';
+        }
         return 'Unknown';
     }
     const s = String(raw).trim();
@@ -72,6 +75,9 @@ export function normalizeMovementKind(raw: unknown): MovementKind {
     }
     if (lower === 'adjustment' || s === '3') {
         return 'Adjustment';
+    }
+    if (lower === 'reversal' || s === '4') {
+        return 'Reversal';
     }
     return 'Unknown';
 }
@@ -107,6 +113,8 @@ export function movementKindLabel(kind: MovementKind): string {
             return 'Stok çıkışı';
         case 'Adjustment':
             return 'Stok düzeltme';
+        case 'Reversal':
+            return 'Geri alma (iade)';
         default:
             return 'Bilinmiyor';
     }
@@ -122,6 +130,8 @@ export function movementKindSeverity(kind: MovementKind): StatusTagSeverity {
             return 'warn';
         case 'Adjustment':
             return 'secondary';
+        case 'Reversal':
+            return 'info';
         default:
             return 'secondary';
     }

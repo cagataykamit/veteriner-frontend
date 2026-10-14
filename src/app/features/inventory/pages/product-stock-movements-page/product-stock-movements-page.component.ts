@@ -296,7 +296,8 @@ export class ProductStockMovementsPageComponent implements OnInit {
         { label: 'İlk stok', value: 'Initial' },
         { label: 'Stok girişi', value: 'In' },
         { label: 'Stok çıkışı', value: 'Out' },
-        { label: 'Stok düzeltme', value: 'Adjustment' }
+        { label: 'Stok düzeltme', value: 'Adjustment' },
+        { label: 'Geri alma (iade)', value: 'Reversal' }
     ];
 
     readonly displayedRows = computed(() => this.rawItems());
@@ -538,7 +539,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
             }
             this.movementTypeFilter =
                 typeof parsed.movementType === 'string' &&
-                ['', 'Initial', 'In', 'Out', 'Adjustment'].includes(parsed.movementType)
+                ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType)
                     ? parsed.movementType
                     : '';
             this.activeMovementType.set(this.movementTypeFilter);
