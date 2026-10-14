@@ -63,6 +63,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
             } @else {
                 <div class="overflow-x-auto">
                     <p-table
+                        styleClass="p-datatable-sm"
                         [value]="rows()"
                         [lazy]="true"
                         [paginator]="true"
