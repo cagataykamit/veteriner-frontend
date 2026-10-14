@@ -4,6 +4,7 @@ import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-ta
 export interface ProductListItemVm {
     id: string;
     name: string;
+    kind: ProductKindApi;
     sku: string;
     categoryName: string;
     unit: string;

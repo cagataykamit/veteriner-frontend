@@ -53,4 +53,25 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
         expect(route('registers/examinations').data).toEqual({ register: 'examinations' });
         expect(route('registers/prescriptions').data).toEqual({ register: 'prescriptions' });
     });
+
+    it('stok defterleri StockMovements.Read ister; narkotik defteri ve aşı bilgi raporu izinlerin hepsini birlikte ister', () => {
+        const notFound = '/notfound' as unknown as UrlTree;
+        expect(canActivate('registers/vaccines', ['StockMovements.Read'])).toBeTrue();
+        expect(canActivate('registers/medications', ['StockMovements.Read'])).toBeTrue();
+        expect(canActivate('registers/vaccines', ['Administrations.Read'])).toBe(notFound);
+        expect(canActivate('registers/controlled-substances', ['StockMovements.Read', 'Administrations.Read'])).toBeTrue();
+        expect(canActivate('registers/controlled-substances', ['StockMovements.Read'])).toBe(notFound);
+        expect(canActivate('registers/controlled-substances', ['Administrations.Read'])).toBe(notFound);
+        const info = ['Administrations.Read', 'Vaccinations.Read', 'Products.Read'];
+        expect(canActivate('registers/vaccine-info', info)).toBeTrue();
+        for (const missing of info) {
+            expect(canActivate('registers/vaccine-info', info.filter((c) => c !== missing))).toBe(notFound);
+        }
+    });
+
+    it('yeni defter rotaları tanımlı defteri seçer', () => {
+        for (const book of ['vaccines', 'medications', 'controlled-substances', 'vaccine-info']) {
+            expect(route(`registers/${book}`).data).toEqual({ register: book });
+        }
+    });
 });

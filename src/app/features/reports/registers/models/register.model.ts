@@ -71,3 +71,87 @@ export interface PrescriptionRegisterRowDto {
     readonly animalCount: number;
     readonly items: readonly PrescriptionRegisterItemDto[];
 }
+
+/** GET `/api/v1/reports/registers/vaccines` satırı (REGISTERS_API_CONTRACT bölüm 13). Tarihler takvim günüdür (`yyyy-MM-dd`). */
+export interface VaccineRegisterRowDto {
+    readonly rowNumber: number;
+    readonly movementId: string;
+    readonly productId: string;
+    readonly tradeName: string;
+    readonly lotNumber?: string | null;
+    readonly expiryDate?: string | null;
+    readonly totalQuantity: number;
+    readonly supplierName?: string | null;
+    readonly transportMethod?: string | null;
+    readonly coldChainMonitor?: string | null;
+    readonly dispatchedDate?: string | null;
+    readonly deliveredDate: string;
+    readonly invoiceDate?: string | null;
+    readonly invoiceNumber?: string | null;
+    readonly isBatched: boolean;
+    readonly isReversed: boolean;
+}
+
+/** GET `/api/v1/reports/registers/medications` satırı (REGISTERS_API_CONTRACT bölüm 14). */
+export interface MedicationRegisterRowDto {
+    readonly rowNumber: number;
+    readonly movementId: string;
+    readonly productId: string;
+    readonly productName: string;
+    readonly pharmacologicalForm?: string | null;
+    readonly presentationForm?: string | null;
+    readonly quantity: number;
+    readonly unit: string;
+    readonly supplierName?: string | null;
+    readonly receivedDate: string;
+    readonly invoiceDate?: string | null;
+    readonly invoiceNumber?: string | null;
+    readonly lotNumber?: string | null;
+    readonly isBatched: boolean;
+    readonly isReversed: boolean;
+}
+
+export type ControlledSubstanceDirection = 'Received' | 'Issued' | 'Undetermined';
+
+/** GET `/api/v1/reports/registers/controlled-substances` satırı (REGISTERS_API_CONTRACT bölüm 15): hareket başına bir satır, yalnız bir taraf dolu. */
+export interface ControlledSubstanceRegisterRowDto {
+    readonly rowNumber: number;
+    readonly movementId: string;
+    readonly productId: string;
+    readonly movementType: 'Initial' | 'In' | 'Out' | 'Adjustment' | 'Reversal';
+    readonly direction: ControlledSubstanceDirection;
+    readonly productName: string;
+    readonly pharmacologicalForm?: string | null;
+    readonly commercialPresentation?: string | null;
+    readonly quantity: number;
+    readonly lotNumber?: string | null;
+    readonly receivedFrom?: string | null;
+    readonly receivedDate?: string | null;
+    readonly receivedDocumentNumber?: string | null;
+    readonly issuedTo?: string | null;
+    readonly issuedDate?: string | null;
+    readonly issuedDocumentNumber?: string | null;
+    readonly isBatched: boolean;
+}
+
+/** GET `/api/v1/reports/registers/vaccine-info` satırı (REGISTERS_API_CONTRACT bölüm 16). */
+export interface VaccineInfoRegisterRowDto {
+    readonly rowNumber: number;
+    readonly administrationId: string;
+    readonly administeredAtUtc: string;
+    readonly ownerName: string;
+    readonly clientIdentityNumber?: string | null;
+    readonly petName: string;
+    readonly species: string;
+    readonly microchipNumber?: string | null;
+    readonly productName: string;
+    readonly lotNumber?: string | null;
+    readonly expiryDate?: string | null;
+    readonly unit: string;
+    readonly quantity: number;
+    readonly unitPrice: number;
+    readonly totalPrice: number;
+    readonly currency: string;
+    readonly addedAfterFinalization: boolean;
+    readonly isVoided: boolean;
+}

@@ -133,6 +133,7 @@ export function mapProductDtoToListVm(dto: ProductDto): ProductListItemVm {
     return {
         id: dto.id,
         name: str(dto.name),
+        kind: productKindFromApi(dto.kind),
         sku: str(dto.sku),
         categoryName: str(dto.productCategoryName),
         unit: str(dto.unit),
