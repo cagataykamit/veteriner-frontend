@@ -7,7 +7,7 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { IMPORTS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { IMPORTS_COMMIT_CLAIM, IMPORTS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import type { ImportBatchDto, ImportBatchStatus } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
@@ -17,7 +17,8 @@ import {
     importErrorMessage,
     importStatusLabel,
     importStatusSeverity,
-    isDiscardable
+    isDiscardable,
+    isRollbackScreenAvailable
 } from '@/app/features/imports/utils/import-labels.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -107,6 +108,9 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                         <p-button size="small" severity="secondary" label="Vazgeç" (onClick)="discardingId.set(null)" />
                                     } @else {
                                         <p-button size="small" severity="secondary" [label]="isDraft(b) && canManage ? 'Devam et' : 'Aç'" [routerLink]="[b.id]" />
+                                        @if (canCommit && canRollback(b)) {
+                                            <p-button size="small" severity="danger" [outlined]="true" icon="pi pi-undo" [label]="b.status === 'RollingBack' ? 'Geri alma durumu' : 'Geri al'" [routerLink]="[b.id, 'rollback']" />
+                                        }
                                         @if (canManage && isDraft(b)) {
                                             <p-button size="small" severity="secondary" icon="pi pi-trash" ariaLabel="Taslağı sil" (onClick)="discardingId.set(b.id)" />
                                         }
@@ -126,6 +130,7 @@ export class ImportsListPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     readonly canManage = this.auth.hasOperationClaim(IMPORTS_MANAGE_CLAIM);
+    readonly canCommit = this.auth.hasOperationClaim(IMPORTS_COMMIT_CLAIM);
     readonly newRoute = `${IMPORTS_ROUTE}/new`;
     readonly pageSize = 20;
     readonly statusOptions = (Object.keys(IMPORT_STATUS_LABELS) as ImportBatchStatus[]).map((value) => ({ value, label: IMPORT_STATUS_LABELS[value] }));
@@ -205,6 +210,10 @@ export class ImportsListPageComponent implements OnInit {
 
     protected isDraft(b: ImportBatchDto): boolean {
         return isDiscardable(b.status);
+    }
+
+    protected canRollback(b: ImportBatchDto): boolean {
+        return isRollbackScreenAvailable(b.status);
     }
 
     protected statusLabel = importStatusLabel;
