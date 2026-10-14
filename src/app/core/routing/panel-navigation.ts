@@ -127,6 +127,13 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
         label: 'Para',
         entries: [
             {
+                label: 'Gün sonu',
+                icon: 'pi pi-fw pi-moon',
+                route: `${REPORTS_ROUTE}/end-of-day`,
+                claims: [PAYMENTS_READ_CLAIM, VISITS_READ_CLAIM],
+                description: 'Günün ücret, tahsilat ve açık işleri; işlem dökümü ve yazdırma.'
+            },
+            {
                 label: 'Ödeme Raporu',
                 icon: 'pi pi-fw pi-file-export',
                 route: `${REPORTS_ROUTE}/payments`,

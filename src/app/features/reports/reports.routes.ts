@@ -10,7 +10,8 @@ import {
     PRESCRIPTIONS_READ_CLAIM,
     PRODUCTS_READ_CLAIM,
     STOCK_MOVEMENTS_READ_CLAIM,
-    VACCINATIONS_READ_CLAIM
+    VACCINATIONS_READ_CLAIM,
+    VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { REPORT_SECTIONS } from '@/app/core/routing/panel-navigation';
 
@@ -49,6 +50,12 @@ export default [
             import('@/app/features/reports/payments/pages/payments-report-page/payments-report-page.component').then(
                 (m) => m.PaymentsReportPageComponent
             )
+    },
+    {
+        path: 'end-of-day',
+        canActivate: [requireAnyClaim([PAYMENTS_READ_CLAIM, VISITS_READ_CLAIM])],
+        loadComponent: () =>
+            import('@/app/features/reports/end-of-day/pages/end-of-day-page/end-of-day-page.component').then((m) => m.EndOfDayPageComponent)
     },
     {
         path: 'appointments',

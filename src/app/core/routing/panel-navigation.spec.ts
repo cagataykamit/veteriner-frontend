@@ -87,7 +87,7 @@ describe('panel-navigation', () => {
 
     it('Bugün yalnız Visits.Read ile görünür; birleşik öğe en az bir sekmesi yetkiliyse görünür', () => {
         const groups = visibleGroups(MENU_GROUPS, only('Visits.Read', 'Clients.Read'));
-        expect(labels(groups)).toEqual(['Bugün', 'Hastalar', 'Ayarlar']);
+        expect(labels(groups)).toEqual(['Bugün', 'Hastalar', 'Raporlar', 'Ayarlar']);
     });
 
     it('menü bağlantısı yetkili ilk sekmeye açılır', () => {
@@ -207,6 +207,7 @@ describe('panel-navigation', () => {
             'Randevu Raporu',
             'Muayene Raporu',
             'Aşı Raporu',
+            'Gün sonu',
             'Ödeme Raporu',
             'Borç Raporu',
             'Muayene Kayıt Defteri',
@@ -217,7 +218,9 @@ describe('panel-navigation', () => {
             'Aşı Bilgi Raporu'
         ]);
         const some = visibleGroups(REPORT_SECTIONS, (c) => c === 'Payments.Read' || c === 'Examinations.Read');
-        expect(labels(some)).toEqual(['Muayene Raporu', 'Ödeme Raporu', 'Muayene Kayıt Defteri']);
+        expect(labels(some)).toEqual(['Muayene Raporu', 'Gün sonu', 'Ödeme Raporu', 'Muayene Kayıt Defteri']);
+        expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Visits.Read'))).toEqual(['Gün sonu']);
+        expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Charges.Read'))).toEqual(['Borç Raporu']);
         expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Prescriptions.Read'))).toEqual(['Reçete Kayıt Defteri']);
         expect(visibleGroups(REPORT_SECTIONS, () => false)).toEqual([]);
     });
