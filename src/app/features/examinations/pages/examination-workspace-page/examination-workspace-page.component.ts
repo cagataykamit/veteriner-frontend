@@ -14,6 +14,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { isAppointmentCancelledStatus } from '@/app/features/appointments/utils/appointment-status.utils';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClinicalTermPickerComponent } from '@/app/features/clinical-terms/components/clinical-term-picker.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
 import {
@@ -92,7 +93,8 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         AppLoadingStateComponent,
         AppErrorStateComponent,
         ExaminationPatientContextComponent,
-        ExaminationPatientHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        ExaminationPatientHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent,
+        ClinicalTermPickerComponent
     ],
     template: `
         <a routerLink="/panel/examinations" class="text-primary font-medium no-underline inline-block mb-4">← Muayene listesine dön</a>
@@ -237,6 +239,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                 <div class="col-span-12">
                                     <label for="visitReason" class="block text-sm font-medium text-muted-color mb-2">Ziyaret sebebi / şikâyet *</label>
                                     <textarea id="visitReason" rows="3" class="w-full p-inputtext p-component" formControlName="visitReason"></textarea>
+                                    <app-clinical-term-picker kind="Complaint" inputId="visitReasonTerm" [control]="form.controls.visitReason" />
                                     @if (apiFieldErrors().visitReason) {
                                         <small class="text-red-500">{{ apiFieldErrors().visitReason }}</small>
                                     } @else if (form.controls.visitReason.invalid && form.controls.visitReason.touched) {
@@ -309,6 +312,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                             <h5 class="mt-0 mb-4">Değerlendirme / tanı</h5>
                             <label for="assessment" class="block text-sm font-medium text-muted-color mb-2">Değerlendirme / tanı</label>
                             <textarea id="assessment" rows="5" class="w-full p-inputtext p-component" formControlName="assessment"></textarea>
+                            <app-clinical-term-picker kind="Diagnosis" inputId="assessmentTerm" [control]="form.controls.assessment" />
                             @if (apiFieldErrors().assessment) {
                                 <small class="text-red-500">{{ apiFieldErrors().assessment }}</small>
                             }
