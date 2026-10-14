@@ -4,8 +4,8 @@ import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -13,7 +13,7 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PET_LIFE_STATUS_FILTER_OPTIONS, type PetLifeStatus } from '@/app/features/pets/utils/pet-status.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
@@ -30,7 +30,6 @@ import { PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 type PetsListState = {
     search: string;
     speciesId: string;
-    clientId: string;
     /** Boş = tümü (önceki davranış; vefat edenler rozetle ayrışır). */
     status?: string;
     page: number;
@@ -54,16 +53,20 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, FilterFieldComponent,
+        AppErrorStateComponent, AppContextFilterChipComponent, FilterFieldComponent,
         SearchInputComponent
     ],
     template: `
+        @if (activeClientId()) {
+            <app-context-filter-chip label="Seçili müşterinin hayvanları gösteriliyor" (clear)="clearClientContext()" />
+        }
+
         <div class="card">
                 <div class="flex flex-col gap-4">
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Hayvanlar" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="petSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="petSearch" placeholder="Hayvan, tür, ırk, sahip…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="petSearch" placeholder="Hayvan, tür, ırk, mikroçip; sahip adı veya telefonu…" [(value)]="searchInput" (search)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             @if (canCreatePet && !ro.mutationBlocked()) {
@@ -73,9 +76,6 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                             }
                         </app-list-header>
                         <div class="flex flex-wrap items-end gap-3">
-                            <app-filter-field label="Müşteri" labelId="lblPetClient" [active]="isClientActive()" width="grow">
-                                <app-client-search inputId="petClient" [(ngModel)]="clientIdInput" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
                             <app-filter-field label="Tür" labelId="lblPetSpecies" [active]="isSpeciesActive()" width="select">
                                 <p-select
                                     ariaLabelledBy="lblPetSpecies"
@@ -234,6 +234,7 @@ export class PetsListPageComponent implements OnInit {
 
     private readonly petsService = inject(PetsService);
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly speciesService = inject(SpeciesService);
 
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
@@ -250,12 +251,12 @@ export class PetsListPageComponent implements OnInit {
 
     readonly activeSearch = signal('');
     readonly activeSpeciesId = signal('');
+    /** Yalnız müşteri kartındaki "Tümü →" bağlantısından (`?clientId=`) gelir; sahip araması "Arama" kutusundadır. */
     readonly activeClientId = signal('');
     readonly activeStatus = signal<PetLifeStatus | ''>('');
 
     searchInput = '';
     speciesIdInput = '';
-    clientIdInput = '';
     statusInput: PetLifeStatus | '' = '';
     readonly statusOptions = [...PET_LIFE_STATUS_FILTER_OPTIONS];
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
@@ -273,7 +274,6 @@ export class PetsListPageComponent implements OnInit {
         }
         const contextClientId = readContextFilterParam(this.route, 'clientId');
         if (contextClientId) {
-            this.clientIdInput = contextClientId;
             this.activeClientId.set(contextClientId);
             this.currentPage.set(1);
             this.first.set(0);
@@ -286,7 +286,6 @@ export class PetsListPageComponent implements OnInit {
     applyFilters(): void {
         this.activeSearch.set(this.searchInput.trim());
         this.activeSpeciesId.set(this.speciesIdInput.trim());
-        this.activeClientId.set(this.clientIdInput.trim());
         this.activeStatus.set(this.statusInput ?? '');
         this.first.set(0);
         this.currentPage.set(1);
@@ -297,7 +296,6 @@ export class PetsListPageComponent implements OnInit {
     resetFilters(): void {
         this.searchInput = '';
         this.speciesIdInput = '';
-        this.clientIdInput = '';
         this.statusInput = '';
         this.activeSearch.set('');
         this.activeSpeciesId.set('');
@@ -307,6 +305,14 @@ export class PetsListPageComponent implements OnInit {
         this.currentPage.set(1);
         this.clearStateFromSessionStorage();
         this.loadFromServer(1, this.pageSize(), '', '', '');
+    }
+
+    clearClientContext(): void {
+        this.activeClientId.set('');
+        void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
+        this.first.set(0);
+        this.currentPage.set(1);
+        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId(), '');
     }
 
     reload(): void {
@@ -426,10 +432,6 @@ export class PetsListPageComponent implements OnInit {
         return !!this.activeSearch().trim();
     }
 
-    isClientActive(): boolean {
-        return !!this.activeClientId().trim();
-    }
-
     isSpeciesActive(): boolean {
         return !!this.activeSpeciesId().trim();
     }
@@ -453,11 +455,9 @@ export class PetsListPageComponent implements OnInit {
             }
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.speciesIdInput = typeof parsed.speciesId === 'string' ? parsed.speciesId : '';
-            this.clientIdInput = typeof parsed.clientId === 'string' ? parsed.clientId : '';
             this.statusInput = parsed.status === 'Active' || parsed.status === 'Deceased' ? parsed.status : '';
             this.activeSearch.set(this.searchInput.trim());
             this.activeSpeciesId.set(this.speciesIdInput.trim());
-            this.activeClientId.set(this.clientIdInput.trim());
             this.activeStatus.set(this.statusInput);
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
@@ -473,7 +473,6 @@ export class PetsListPageComponent implements OnInit {
         const state: PetsListState = {
             search: this.searchInput.trim(),
             speciesId: this.speciesIdInput.trim(),
-            clientId: this.clientIdInput.trim(),
             status: this.activeStatus(),
             page,
             pageSize
