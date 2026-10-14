@@ -3,7 +3,8 @@ import type { ProductControlledClassApi, ProductKindApi } from '@/app/features/i
 export const PRODUCT_KIND_OPTIONS: readonly { label: string; value: ProductKindApi }[] = [
     { label: 'Diğer', value: 'Other' },
     { label: 'İlaç', value: 'Medicine' },
-    { label: 'Aşı', value: 'Vaccine' }
+    { label: 'Aşı', value: 'Vaccine' },
+    { label: 'Hizmet', value: 'Service' }
 ];
 
 export const PRODUCT_CONTROLLED_CLASS_OPTIONS: readonly { label: string; value: ProductControlledClassApi }[] = [
@@ -13,7 +14,7 @@ export const PRODUCT_CONTROLLED_CLASS_OPTIONS: readonly { label: string; value: 
 ];
 
 export function productKindFromApi(v: string | null | undefined): ProductKindApi {
-    return v === 'Medicine' || v === 'Vaccine' ? v : 'Other';
+    return v === 'Medicine' || v === 'Vaccine' || v === 'Service' ? v : 'Other';
 }
 
 export function productControlledClassFromApi(v: string | null | undefined): ProductControlledClassApi {
@@ -22,6 +23,16 @@ export function productControlledClassFromApi(v: string | null | undefined): Pro
 
 export function productKindLabel(v: ProductKindApi): string {
     return PRODUCT_KIND_OPTIONS.find((o) => o.value === v)?.label ?? 'Diğer';
+}
+
+/** Hizmet stok takipsizdir; stok, uygulama, satış, reçete ve stok hareketi akışlarında kullanılamaz (`Products.NotStockTracked`). */
+export function isStockTrackedKind(kind: ProductKindApi): boolean {
+    return kind !== 'Service';
+}
+
+/** Tür hizmete veya hizmetten çevrilemez (`Products.KindChangeNotAllowed`): düzenlemede seçenekler özgün türün tarafıyla sınırlıdır. */
+export function productKindOptionsFor(originalKind: ProductKindApi | null): readonly { label: string; value: ProductKindApi }[] {
+    return originalKind === null ? PRODUCT_KIND_OPTIONS : PRODUCT_KIND_OPTIONS.filter((o) => (o.value === 'Service') === (originalKind === 'Service'));
 }
 
 export function productControlledClassLabel(v: ProductControlledClassApi): string {

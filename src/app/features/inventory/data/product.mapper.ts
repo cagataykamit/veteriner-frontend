@@ -58,6 +58,7 @@ export function mapProductUpsertFormValueToCreateRequest(value: ProductUpsertFor
         throw new Error('PRODUCT_UPSERT_UNIT_PRICE_REQUIRED');
     }
     const currency = (value.currency?.trim() || 'TRY').trim();
+    const service = value.kind === 'Service';
     return {
         productCategoryId: optionalTrimmedOrNull(value.productCategoryId),
         name: value.name.trim(),
@@ -68,20 +69,21 @@ export function mapProductUpsertFormValueToCreateRequest(value: ProductUpsertFor
         unitPrice,
         currency,
         kind: value.kind,
-        controlledClass: value.controlledClass,
-        pharmacologicalForm: optionalTrimmedOrNull(value.pharmacologicalForm),
-        presentationForm: optionalTrimmedOrNull(value.presentationForm),
-        packaging: optionalTrimmedOrNull(value.packaging)
+        controlledClass: service ? 'None' : value.controlledClass,
+        pharmacologicalForm: service ? null : optionalTrimmedOrNull(value.pharmacologicalForm),
+        presentationForm: service ? null : optionalTrimmedOrNull(value.presentationForm),
+        packaging: service ? null : optionalTrimmedOrNull(value.packaging)
     };
 }
 
 /** Sözleşme §2: PUT'ta `null` dokunmaz; boşaltılan metin alanı `""` ile temizlenir. */
 export function mapProductUpsertFormValueToUpdateRequest(value: ProductUpsertFormValue): UpdateProductRequest {
+    const service = value.kind === 'Service';
     return {
         ...mapProductUpsertFormValueToCreateRequest(value),
-        pharmacologicalForm: value.pharmacologicalForm.trim(),
-        presentationForm: value.presentationForm.trim(),
-        packaging: value.packaging.trim()
+        pharmacologicalForm: service ? '' : value.pharmacologicalForm.trim(),
+        presentationForm: service ? '' : value.presentationForm.trim(),
+        packaging: service ? '' : value.packaging.trim()
     };
 }
 

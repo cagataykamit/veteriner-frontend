@@ -15,4 +15,6 @@ export interface ProductsListQuery {
     productCategoryId?: string;
     /** Tanımlı değil → tümü; true/false → filtre. */
     isActive?: boolean;
+    /** İstemcide uygulanır (sunucuda `kind` süzgeci yok): hizmetler (`Service`) sonuçtan çıkarılır. Stok, uygulama, reçete ve satış seçicileri için. */
+    stockTrackedOnly?: boolean;
 }

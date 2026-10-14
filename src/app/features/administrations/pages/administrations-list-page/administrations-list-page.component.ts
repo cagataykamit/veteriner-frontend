@@ -176,7 +176,7 @@ export class AdministrationsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         this.petId = this.route.snapshot.queryParamMap.get('petId')?.trim() || null;
-        this.productService.getProducts({ page: 1, pageSize: 200 }).subscribe({
+        this.productService.getProducts({ page: 1, pageSize: 200, stockTrackedOnly: true }).subscribe({
             next: (r) => this.productOptions.set(r.items.map((p) => ({ value: p.id, label: p.name }))),
             error: () => this.productOptions.set([])
         });

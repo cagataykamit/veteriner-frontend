@@ -13,6 +13,7 @@ import { ProductStockBatchesComponent } from '@/app/features/inventory/component
 import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
 import { createStockBatchFormGroup, getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import type { ProductDetailVm } from '@/app/features/inventory/models/product-vm.model';
+import { isStockTrackedKind } from '@/app/features/inventory/utils/product-classification.utils';
 import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
@@ -132,7 +133,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                             class="p-button-secondary"
                         ></button>
                     }
-                    @if (canOpenStockOperation()) {
+                    @if (canOpenStockOperation() && isStockTracked(p)) {
                         <button
                             pButton
                             type="button"
@@ -224,6 +225,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                     </div>
                 </div>
 
+                @if (isStockTracked(p)) {
                 <div class="col-span-12">
                     <div class="card">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -371,6 +373,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                             }
                         </div>
                     </div>
+                }
                 }
             </div>
         }
@@ -628,6 +631,8 @@ export class ProductDetailPageComponent implements OnInit {
     readonly canCreateStockMovement = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
 
     readonly emptyMark = '—';
+    /** Hizmetin stoğu, partisi ve stok işlemi yoktur (ADR-018). */
+    readonly isStockTracked = (p: Pick<ProductDetailVm, 'kind'>) => isStockTrackedKind(p.kind);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
