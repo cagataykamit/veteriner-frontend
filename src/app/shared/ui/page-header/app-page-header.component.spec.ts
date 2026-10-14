@@ -86,7 +86,7 @@ describe('AppPageHeaderComponent', () => {
             host.categoryLink = ['/panel/pets', 'p1'];
             host.categoryLinkLabel = 'Hasta kartına dön';
         });
-        expect(categoryLink(detail)!.textContent?.trim()).toBe('Hastalar');
+        expect(categoryLink(detail)!.textContent?.trim()).toBe('Müşteri ve Hasta');
 
         const unknown = await create('/panel/yok', (host) => {
             host.categoryLink = '/panel/yok/1';
