@@ -260,7 +260,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const warnings = fixture.componentInstance.finalizeWarnings();
         expect(warnings.some((w) => w.includes('tanı'))).toBeTrue();
         expect(warnings.some((w) => w.includes('Plan'))).toBeTrue();
-        expect(warnings.some((w) => w.includes('işlem') || w.includes('kayıt yok'))).toBeTrue();
+        expect(warnings.some((w) => w.includes('Muayeneye bağlı'))).toBeTrue();
     });
 
     it('Addendum izni olmayan kullanıcı ek notları okur ama "Ek not ekle" görmez', async () => {
