@@ -37,6 +37,7 @@ import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selectio
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import {
     fromIstanbulDateTimeLocalInputToUtcIso,
@@ -69,6 +70,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         InputTextModule,
         SelectModule,
         AppPageHeaderComponent,
+        PetAlertBannerComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
@@ -88,6 +90,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             </div>
         } @else {
             <app-page-header title="Yatışı düzenle" description="Kaydı güncelleyin." />
+            <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
