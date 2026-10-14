@@ -1,4 +1,4 @@
-/** Veri içe aktarma sözleşmesi (Veteriner `docs/IMPORT_API_CONTRACT.md`, B1–B4). JSON camelCase. */
+/** Veri içe aktarma sözleşmesi (Veteriner `docs/IMPORT_API_CONTRACT.md`, B1–B5, K13). JSON camelCase. */
 
 export type ImportTable = 'customers' | 'pets' | 'vaccinations';
 
@@ -187,16 +187,22 @@ export interface ImportCommitRequestDto {
     onErrors: ImportOnErrors;
 }
 
-/** `GET .../progress` (B4, §7.14): hafif yoklama yanıtı. `phase` yalnız `Committing` iken dolu. */
+/** Arka plan işi süren durumlar (§3): doğrulama (K13), uygulama (B4), geri alma (B5). */
+export type ImportJobStatus = Extract<ImportBatchStatus, 'Validating' | 'Committing' | 'RollingBack'>;
+
+/**
+ * `GET .../progress` (§7.14): hafif yoklama yanıtı. `phase` iş sürerken durumla aynı adla dolu, aksi null.
+ * `Validating` iken `processed` yazılmış doğrulama sonucu sayısıdır; kurallar bellekte çalışırken 0 kalabilir.
+ */
 export interface ImportCommitProgressDto {
     id: string;
     status: ImportBatchStatus;
-    phase: string | null;
+    phase: ImportJobStatus | null;
     processed: number;
     total: number;
     updatedAtUtc: string | null;
     committedAtUtc: string | null;
-    /** `Committing` ve false: işçi bekleniyor / devralınacak. */
+    /** İş sürerken false: işçi bekleniyor / devralınacak; uzun sürerse işçi kapalı olabilir. */
     leaseActive: boolean;
 }
 

@@ -5,7 +5,9 @@ import {
     importCommitBlockers,
     importErrorMessage,
     importIssueLabel,
+    isDiscardable,
     isEndpointUnavailable,
+    isImportJobRunning,
     reminderImpactCurrentCount,
     precheckImportFile
 } from '@/app/features/imports/utils/import-labels.utils';
@@ -70,6 +72,12 @@ describe('import-labels.utils', () => {
     it('bilinen kodlar sade Türkçe, bilinmeyen kod yedek metinle gösterilir', () => {
         expect(importIssueLabel('Imports.SpeciesUnmapped')).toBe('Tür sistemde bulunamadı');
         expect(importIssueLabel('Imports.Bilinmeyen', 'Sunucu mesajı')).toBe('Sunucu mesajı');
+    });
+
+    it('arka plan işi süren durumlar: doğrulama, uygulama, geri alma; Validating taslak olsa da silinemez', () => {
+        expect(['Validating', 'Committing', 'RollingBack'].every(isImportJobRunning)).toBeTrue();
+        expect(['Mapped', 'Validated', 'ValidationFailed', 'Committed'].some(isImportJobRunning)).toBeFalse();
+        expect(isDiscardable('Validating')).toBeFalse();
     });
 
     it('uç yokluğunu (gövdesiz 404, 405, 501) gerçek "kayıt yok"tan ayırır', () => {

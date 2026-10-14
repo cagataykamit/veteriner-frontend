@@ -8,10 +8,11 @@ import { MessageModule } from 'primeng/message';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TextareaModule } from 'primeng/textarea';
-import { EMPTY, Subscription, catchError, switchMap, takeWhile, timer } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMPORTS_COMMIT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { ImportJobProgressComponent } from '@/app/features/imports/components/import-job-progress.component';
 import type {
     ImportBatchDto,
     ImportBlockedPolicy,
@@ -35,6 +36,7 @@ import {
     rollbackReasonLabel,
     rollbackWarningLabel
 } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_POLL_CONNECTION_MESSAGE, pollImportProgress } from '@/app/features/imports/utils/import-progress-poll.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -56,13 +58,13 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
         ButtonModule,
         CheckboxModule,
         MessageModule,
-        ProgressBarModule,
         RadioButtonModule,
         TextareaModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        ImportJobProgressComponent
     ],
     template: `
         <app-page-header [title]="'Geri al · ' + (batch()?.name || 'Veri içe aktarma')" description="Bu içe aktarmanın oluşturduğu kayıtları siler. Sistemde önceden var olan ve eşleşen kayıtlara hiçbir zaman dokunulmaz.">
@@ -110,12 +112,12 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
             <div class="card">
                 @if (b.status === 'RollingBack') {
                     <p class="mt-0">Kayıtlar geri alınıyor. Bu sayfayı kapatabilirsiniz; işlem arka planda sürer.</p>
-                    <p-progressbar [mode]="progressPercent() === null ? 'indeterminate' : 'determinate'" [value]="progressPercent() ?? 0" />
-                    @if (progress(); as pr) {
-                        <small class="text-muted-color">{{ pr.processed }} / {{ pr.total }} satır işlendi</small>
-                        @if (!pr.leaseActive) {
-                            <p class="text-sm text-muted-color mb-0">İşlem sırada; birazdan başlayacak. Sayfayı kapatabilirsiniz, kaldığı yerden sürer.</p>
-                        }
+                    <app-import-job-progress [progress]="progress()" [stalled]="stalled()" />
+                    @if (pollError()) {
+                        <p-message severity="warn" styleClass="w-full mt-2" role="alert">
+                            {{ pollError() }}
+                            <p-button size="small" severity="secondary" icon="pi pi-refresh" label="Yeniden dene" styleClass="ml-2" (onClick)="startPolling(b.id)" />
+                        </p-message>
                     }
                 } @else if (!screenAvailable()) {
                     <p-message severity="info" styleClass="w-full">Bu içe aktarma bu durumda geri alınamaz.</p-message>
@@ -236,6 +238,8 @@ export class ImportRollbackPageComponent implements OnInit {
     readonly batch = signal<ImportBatchDto | null>(null);
     readonly preview = signal<ImportRollbackPreviewDto | null>(null);
     readonly progress = signal<ImportCommitProgressDto | null>(null);
+    readonly stalled = signal(false);
+    readonly pollError = signal<string | null>(null);
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
     readonly error = signal<string | null>(null);
@@ -252,10 +256,6 @@ export class ImportRollbackPageComponent implements OnInit {
     protected readonly isRetry = computed(() => ['PartiallyRolledBack', 'RollbackFailed'].includes(this.batch()?.status ?? ''));
     protected readonly deleteUnblockedAvailable = computed(() => !!this.preview()?.canDeleteUnblockedOnly);
     protected readonly canSubmit = computed(() => this.reason().trim().length > 0 && this.reason().trim().length <= ROLLBACK_REASON_MAX_LENGTH && this.ack() && !this.busy());
-    protected readonly progressPercent = computed(() => {
-        const pr = this.progress();
-        return pr && pr.total > 0 ? Math.min(100, Math.round((pr.processed / pr.total) * 100)) : null;
-    });
 
     protected statusLabel = importStatusLabel;
     protected statusSeverity = importStatusSeverity;
@@ -372,20 +372,17 @@ export class ImportRollbackPageComponent implements OnInit {
         this.loadPreview();
     }
 
-    /** Geri alma sürerken hafif `progress` ucunu 2 sn aralıkla yoklar; sayfa yenilenince `load` buradan sürdürür. */
-    private startPolling(id: string): void {
+    /** Geri alma sürerken `progress` ucunu ortak yoklayıcıyla izler; sayfa yenilenince `load` buradan sürdürür. */
+    protected startPolling(id: string): void {
         this.pollSub?.unsubscribe();
-        this.pollSub = timer(0, 2000)
-            .pipe(
-                switchMap(() => this.imports.getProgress(id).pipe(catchError(() => EMPTY))),
-                takeWhile((p) => p.status === 'RollingBack', true)
-            )
-            .subscribe((p) => {
-                if (p.status === 'RollingBack') {
-                    this.progress.set(p);
+        this.pollError.set(null);
+        this.pollSub = pollImportProgress(() => this.imports.getProgress(id), 'RollingBack').subscribe({
+            next: ({ progress, running, stalled }) => {
+                this.progress.set(running ? progress : null);
+                this.stalled.set(running && stalled);
+                if (running) {
                     return;
                 }
-                this.progress.set(null);
                 this.imports.getBatch(id).subscribe({
                     next: (b) => {
                         this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables } : b));
@@ -393,7 +390,9 @@ export class ImportRollbackPageComponent implements OnInit {
                     },
                     error: (e: unknown) => this.error.set(importErrorMessage(e, 'Geri alma sonucu yüklenemedi.'))
                 });
-            });
+            },
+            error: () => this.pollError.set(IMPORT_POLL_CONNECTION_MESSAGE)
+        });
     }
 }
 

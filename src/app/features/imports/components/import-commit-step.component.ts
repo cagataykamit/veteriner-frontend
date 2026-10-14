@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
-import { ProgressBarModule } from 'primeng/progressbar';
 import { SelectModule } from 'primeng/select';
+import { ImportJobProgressComponent } from '@/app/features/imports/components/import-job-progress.component';
 import type { ImportBatchDto, ImportCommitProgressDto, ImportFileFormat, ImportOnErrors, ImportPreviewDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
@@ -28,7 +28,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 @Component({
     selector: 'app-import-commit-step',
     standalone: true,
-    imports: [NgTemplateOutlet, FormsModule, ButtonModule, CheckboxModule, MessageModule, ProgressBarModule, SelectModule],
+    imports: [NgTemplateOutlet, FormsModule, ButtonModule, CheckboxModule, MessageModule, SelectModule, ImportJobProgressComponent],
     template: `
         @switch (batch().status) {
             @case ('Validated') {
@@ -86,13 +86,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
             }
             @case ('Committing') {
                 <p class="mt-0">Kayıtlar oluşturuluyor. Bu sayfayı kapatabilirsiniz; işlem arka planda sürer.</p>
-                <p-progressbar [mode]="progressPercent() === null ? 'indeterminate' : 'determinate'" [value]="progressPercent() ?? 0" />
-                @if (shownProgress(); as pr) {
-                    <small class="text-muted-color">{{ pr.processed }} / {{ pr.total }} satır işlendi</small>
-                }
-                @if (progress()?.leaseActive === false) {
-                    <p class="text-sm text-muted-color mb-0">İşlem sırada; birazdan başlayacak. Sayfayı kapatabilirsiniz, kaldığı yerden sürer.</p>
-                }
+                <app-import-job-progress [progress]="progress() ?? batch().progress ?? null" [stalled]="stalled()" />
             }
             @case ('CommitFailed') {
                 <p-message severity="error" styleClass="w-full mb-4" role="alert">Aktarma sırasında beklenmeyen bir sorun oluştu ve işlem durdu. Şimdiye dek oluşan kayıtlar korunur; aşağıdaki sayılar nelerin aktarıldığını gösterir. Lütfen destek ekibiyle iletişime geçin.</p-message>
@@ -191,6 +185,8 @@ export class ImportCommitStepComponent {
     readonly canCommitClaim = input(false);
     /** Sayfanın yoklama yanıtı (`Committing` iken); yoksa partinin kendi `progress` alanı kullanılır. */
     readonly progress = input<ImportCommitProgressDto | null>(null);
+    /** Yoklama: iş uzun süredir işçi bekliyor. */
+    readonly stalled = input(false);
     readonly batchChange = output<ImportBatchDto>();
     /** Onaylanan e-posta sayısı eskidiyse önizlemenin yeniden okunması istenir. */
     readonly previewStale = output<void>();
@@ -232,13 +228,6 @@ export class ImportCommitStepComponent {
     protected readonly resultTables = computed(() =>
         IMPORT_TABLES.filter((t) => this.batch().summary[t].total > 0).map((t) => ({ key: t, label: IMPORT_TABLE_LABELS[t], s: this.batch().summary[t] }))
     );
-
-    protected readonly shownProgress = computed(() => this.progress() ?? this.batch().progress ?? null);
-
-    protected readonly progressPercent = computed(() => {
-        const pr = this.shownProgress();
-        return pr && pr.total > 0 ? Math.min(100, Math.round((pr.processed / pr.total) * 100)) : null;
-    });
 
     /** Uygulama anında doğan satır sorunları (önizleme sayımlarından). */
     protected readonly applyIssues = computed(() =>

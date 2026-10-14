@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ImportBatchStatus, ImportIssueSeverity, ImportRollbackBlockedItemDto, ImportRollbackEntity, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchStatus, ImportIssueSeverity, ImportJobStatus, ImportRollbackBlockedItemDto, ImportRollbackEntity, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
@@ -50,6 +50,13 @@ const DRAFT_STATUSES: readonly string[] = ['Uploaded', 'Mapped', 'Validated', 'V
 
 export function isDiscardable(status: string): boolean {
     return DRAFT_STATUSES.includes(status);
+}
+
+/** Arka plan işi süren durumlar (sözleşme 3); iş sürerken eşleme, silme ve uygulama 409 döner. */
+const JOB_STATUSES: readonly string[] = ['Validating', 'Committing', 'RollingBack'];
+
+export function isImportJobRunning(status: string): status is ImportJobStatus {
+    return JOB_STATUSES.includes(status);
 }
 
 /** Doğrulaması bitmiş partide önizleme uçları açıktır (sözleşme 7.6). */
