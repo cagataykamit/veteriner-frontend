@@ -24,7 +24,9 @@ const client: ClientDetailVm = {
     createdAtUtc: '2026-01-01T00:00:00Z',
     updatedAtUtc: null,
     preferredContactChannel: 'None',
-    remindersOptedOut: false
+    remindersOptedOut: false,
+    kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null },
+    rowVersion: 'rv1'
 };
 
 const pet = (id: string, name: string, status: PetListItemVm['status'] = 'Active'): PetListItemVm => ({ id, clientId: 'c1', speciesId: 's1', name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status });
@@ -125,6 +127,23 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(pendingChargesSpy).toHaveBeenCalledOnceWith('c1');
         expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('1 işlem');
         expect(el().querySelector('[data-testid="pending-amount"]')?.textContent).toContain('100');
+    });
+
+    it('KVKK: formu yazdır herkese; rıza işaretleme Clients.Update ile, yanıt (durum + rowVersion) karta birleşir', () => {
+        create();
+        expect(el().querySelector('[data-testid="kvkk-print-action"]')?.getAttribute('href')).toBe('/panel/clients/c1/kvkk-form');
+        expect(el().querySelector('[data-testid="kvkk-mark-action"]')).not.toBeNull();
+
+        fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Declined', recordedOn: '2026-10-01', recordedByName: 'Ayşe' }, rowVersion: 'rv2' });
+        fixture.detectChanges();
+        expect(fixture.componentInstance.client()?.rowVersion).toBe('rv2');
+        expect(el().querySelector('[data-testid="client-kvkk-status"]')?.textContent).toContain('Ret');
+
+        TestBed.resetTestingModule();
+        claims = new Set(['Clients.Read']);
+        create();
+        expect(el().querySelector('[data-testid="kvkk-print-action"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="kvkk-mark-action"]')).toBeNull();
     });
 
     it('rol vurgusu hasta kartıyla aynı: muayene açabilen hayvanları ve geçmişi, yalnız ücret/ödeme alan parayı öne alır', () => {

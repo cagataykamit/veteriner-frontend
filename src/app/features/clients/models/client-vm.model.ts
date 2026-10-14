@@ -1,6 +1,7 @@
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
+import type { KvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 
 export interface ClientListItemVm {
     id: string;
@@ -20,7 +21,28 @@ export interface ClientDetailVm {
     updatedAtUtc: string | null;
     preferredContactChannel: ClientContactChannel;
     remindersOptedOut: boolean;
+    kvkkConsent: ClientKvkkConsentVm;
+    /** Rıza işareti için kayıt sürümü; okunamazsa `null` (işaretleme kapalı). */
+    rowVersion: string | null;
 }
+
+/** İmzalı KVKK formunun sonucu; `None` iken tarih ve işaretleyen boş. */
+export interface ClientKvkkConsentVm {
+    status: KvkkConsentStatus;
+    /** `yyyy-MM-dd` */
+    recordedOn: string | null;
+    recordedByName: string | null;
+}
+
+export interface ClientKvkkConsentUpdateRequest {
+    status: KvkkConsentStatus;
+    /** `yyyy-MM-dd`; boş = sunucuda bugün. `None` iken yok sayılır. */
+    recordedOn: string | null;
+    rowVersion: string;
+}
+
+/** Yanıt müşteri detayına birleştirilir; sonraki yazım yeni `rowVersion` ile yapılır. */
+export type ClientKvkkConsentUpdateResult = Pick<ClientDetailVm, 'kvkkConsent' | 'rowVersion'>;
 
 /** `GET .../clients/{id}/recent-summary` eşlemesi. */
 export interface ClientRecentSummaryVm {

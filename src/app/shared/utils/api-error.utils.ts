@@ -136,7 +136,9 @@ const CLINIC_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     TenantsContextMissing:
         'Kurum bağlamı bulunamadı. Sayfayı yenileyip tekrar deneyin veya oturumu kapatıp yeniden giriş yapın.',
     'Tenants.TenantInactive': 'Bu kurum şu anda aktif değil; klinik eklenemiyor.',
-    TenantsTenantInactive: 'Bu kurum şu anda aktif değil; klinik eklenemiyor.'
+    TenantsTenantInactive: 'Bu kurum şu anda aktif değil; klinik eklenemiyor.',
+    /** `KVKK_CONSENT_API_CONTRACT.md` §2; `Clinics.KvkkFormTemplate.Validation` backend `detail` ile gösterilir. */
+    'Clinics.KvkkFormTemplate.ConcurrencyConflict': 'KVKK form metni siz düzenlerken başka biri tarafından kaydedildi. Güncel metni yükleyip tekrar deneyin.'
 };
 
 function clinicPanelProblemUserMessage(err: HttpErrorResponse): string | null {
@@ -228,7 +230,9 @@ const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
     'Appointments.InvalidStatusTransition': 'Randevu durumu bu işleme uygun değil; durum başka biri tarafından değişmiş olabilir. Sayfayı yenileyip tekrar deneyin.',
     /** Yeni randevu, geliş ve muayene kapısı (`PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §1). */
     'Pets.Deceased': 'Bu hasta vefat etti olarak işaretli; yeni randevu, geliş veya muayene açılamaz. Yanlış işaretlendiyse hasta kartından "Aktife al" ile geri alın.',
-    'Pets.ConcurrencyConflict': 'Hasta kaydı aynı anda başka biri tarafından değiştirildi. Güncel bilgiyi yükleyip tekrar deneyin.'
+    'Pets.ConcurrencyConflict': 'Hasta kaydı aynı anda başka biri tarafından değiştirildi. Güncel bilgiyi yükleyip tekrar deneyin.',
+    /** Rıza işareti ve tam müşteri güncellemesi (`KVKK_CONSENT_API_CONTRACT.md` §1). */
+    'Clients.ConcurrencyConflict': 'Müşteri kaydı aynı anda başka biri tarafından değiştirildi. Güncel bilgiyi yükleyip tekrar deneyin.'
 };
 
 function visitPanelProblemUserMessage(err: HttpErrorResponse): string | null {
