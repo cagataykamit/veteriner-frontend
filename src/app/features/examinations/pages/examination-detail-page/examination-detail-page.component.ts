@@ -1,6 +1,5 @@
-import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -11,11 +10,13 @@ import type {
     ExaminationDetailVm,
     ExaminationFinalizeResultVm,
     ExaminationListItemVm,
-    ExaminationRelatedHospitalizationItemVm,
     ExaminationRelatedSummaryVm
 } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationAddendaSectionComponent } from '@/app/features/examinations/components/examination-addenda-section.component';
 import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
+import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
+import { ExaminationProceduresSectionComponent } from '@/app/features/examinations/components/examination-procedures-section.component';
+import { finalizeWarnings } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { ExaminationFinalizeDialogComponent } from '@/app/features/examinations/components/examination-finalize-dialog.component';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
@@ -46,7 +47,6 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     standalone: true,
     imports: [
         CommonModule,
-        LabResultStatusBadgesComponent,
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
@@ -57,6 +57,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         ExaminationAddendaSectionComponent,
         AdministrationsSectionComponent,
         ExaminationFinalizeDialogComponent,
+        ExaminationPatientHeaderComponent,
+        ExaminationProceduresSectionComponent,
         ToastModule
     ],
     providers: [MessageService],
@@ -66,6 +68,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
             <app-examination-finalize-dialog
                 [examinationId]="e.id"
                 [rowVersion]="e.rowVersion"
+                [warnings]="finalizeWarnings()"
                 [(visible)]="finalizeDialogVisible"
                 (finalized)="onFinalized($event)"
             />
@@ -106,77 +109,6 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                             ></a>
                         }
                         @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
-                            @if (exam()!.status === 'Draft') {
-                                <a
-                                    [routerLink]="['/panel/treatments/new']"
-                                    [queryParams]="{
-                                        clientId: exam()!.clientId,
-                                        petId: exam()!.petId,
-                                        examinationId: exam()!.id
-                                    }"
-                                    pButton
-                                    type="button"
-                                    label="Tedavi Oluştur"
-                                    icon="pi pi-plus"
-                                    class="p-button-secondary"
-                                ></a>
-                                <a
-                                    [routerLink]="['/panel/prescriptions/new']"
-                                    [queryParams]="{
-                                        clientId: exam()!.clientId,
-                                        petId: exam()!.petId,
-                                        examinationId: exam()!.id
-                                    }"
-                                    pButton
-                                    type="button"
-                                    label="Reçete Oluştur"
-                                    icon="pi pi-file-edit"
-                                    class="p-button-secondary"
-                                ></a>
-                                <a
-                                    [routerLink]="['/panel/vaccinations/new']"
-                                    [queryParams]="{
-                                        clientId: exam()!.clientId,
-                                        petId: exam()!.petId,
-                                        examinationId: exam()!.id
-                                    }"
-                                    pButton
-                                    type="button"
-                                    label="Aşı Oluştur"
-                                    icon="pi pi-shield"
-                                    class="p-button-secondary"
-                                ></a>
-                            } @else {
-                                <span class="self-center text-sm text-muted-color" data-testid="finalized-locked-hint">
-                                    Kesinleşmiş muayeneye tedavi, reçete veya aşı eklenemez; uygulama gerekçeyle eklenebilir; ek not ekleyebilirsiniz. Yatış muayeneye bağlanmadan başlatılır.
-                                </span>
-                            }
-                            <a
-                                [routerLink]="['/panel/lab-results/new']"
-                                [queryParams]="{
-                                    clientId: exam()!.clientId,
-                                    petId: exam()!.petId,
-                                    examinationId: exam()!.id
-                                }"
-                                pButton
-                                type="button"
-                                label="Lab İstemi Oluştur"
-                                icon="pi pi-chart-bar"
-                                class="p-button-secondary"
-                            ></a>
-                            <a
-                                [routerLink]="['/panel/hospitalizations/new']"
-                                [queryParams]="{
-                                    clientId: exam()!.clientId,
-                                    petId: exam()!.petId,
-                                    examinationId: exam()!.id
-                                }"
-                                pButton
-                                type="button"
-                                label="Yatış Başlat"
-                                icon="pi pi-building"
-                                class="p-button-secondary"
-                            ></a>
                             @if (canCreatePayment) {
                                 <a
                                     [routerLink]="['/panel/payments/new']"
@@ -208,46 +140,6 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                             <button
                                 pButton
                                 type="button"
-                                label="Tedavi (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
-                            <button
-                                pButton
-                                type="button"
-                                label="Reçete (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
-                            <button
-                                pButton
-                                type="button"
-                                label="Aşı (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
-                            <button
-                                pButton
-                                type="button"
-                                label="Lab (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
-                            <button
-                                pButton
-                                type="button"
-                                label="Yatış (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
-                            <button
-                                pButton
-                                type="button"
                                 label="Ödeme (salt okunur)"
                                 icon="pi pi-lock"
                                 [disabled]="true"
@@ -258,8 +150,10 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 </div>
             </app-page-header>
 
+            <app-examination-patient-header [petId]="exam()!.petId" [clientId]="exam()!.clientId" />
+
             <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
+                <div class="col-span-12">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Genel bilgiler</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
@@ -283,30 +177,6 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         </dl>
                     </div>
                 </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hayvan</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (exam()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', exam()!.clientId]" class="text-primary font-medium no-underline">{{ exam()!.clientName }}</a>
-                                } @else {
-                                    {{ exam()!.clientName }}
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (exam()!.petId) {
-                                    <a [routerLink]="['/panel/pets', exam()!.petId]" class="text-primary font-medium no-underline">{{ exam()!.petName }}</a>
-                                } @else {
-                                    {{ exam()!.petName }}
-                                }
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-
                 <div class="col-span-12">
                     <div class="card">
                         <h4 class="mt-0 mb-6 text-xl font-semibold">Muayene özeti</h4>
@@ -396,6 +266,17 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                     </div>
                 }
 
+                <div class="col-span-12">
+                    <app-examination-procedures-section
+                        [exam]="exam()!"
+                        [summary]="relatedSummary()"
+                        [loading]="relatedSummaryLoading()"
+                        [error]="relatedSummaryError()"
+                        (changed)="onProcedureAdded()"
+                        (retry)="retryRelatedSummary()"
+                    />
+                </div>
+
                 @if (exam()!.petId?.trim()) {
                     <div class="col-span-12">
                         <app-administrations-section
@@ -421,136 +302,6 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         </div>
                     </div>
                 } @else if (relatedSummary()) {
-                    <div class="col-span-12 lg:col-span-6">
-                        <div class="card">
-                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                                <h5 class="mt-0 mb-0">Bağlı tedaviler</h5>
-                                <a routerLink="/panel/treatments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
-                            @if (relatedTreatmentsView().total === 0) {
-                                <app-empty-state [message]="copy.listEmptyMessage" />
-                            } @else {
-                                <ul class="list-none m-0 p-0">
-                                    @for (row of relatedTreatmentsView().displayed; track row.id) {
-                                        <li
-                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
-                                        >
-                                            <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.treatmentDateUtc) }}</div>
-                                            <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.treatmentDateUtc) }}</span>
-                                                <a [routerLink]="['/panel/treatments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                            </div>
-                                            <div class="font-medium min-w-0 break-words">{{ row.title }}</div>
-                                            @if (row.clinicName) {
-                                                <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
-                                            }
-                                            <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/treatments', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
-                                            </div>
-                                        </li>
-                                    }
-                                </ul>
-                            }
-                        </div>
-                    </div>
-                    <div class="col-span-12 lg:col-span-6">
-                        <div class="card">
-                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                                <h5 class="mt-0 mb-0">Bağlı reçeteler</h5>
-                                <a routerLink="/panel/prescriptions" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
-                            @if (relatedPrescriptionsView().total === 0) {
-                                <app-empty-state [message]="copy.listEmptyMessage" />
-                            } @else {
-                                <ul class="list-none m-0 p-0">
-                                    @for (row of relatedPrescriptionsView().displayed; track row.id) {
-                                        <li
-                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
-                                        >
-                                            <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.prescribedAtUtc) }}</div>
-                                            <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.prescribedAtUtc) }}</span>
-                                                <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                            </div>
-                                            <div class="font-medium min-w-0 break-words">{{ row.title }}</div>
-                                            @if (row.clinicName) {
-                                                <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
-                                            }
-                                            <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
-                                            </div>
-                                        </li>
-                                    }
-                                </ul>
-                            }
-                        </div>
-                    </div>
-                    <div class="col-span-12 lg:col-span-6">
-                        <div class="card">
-                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                                <h5 class="mt-0 mb-0">Bağlı lab sonuçları</h5>
-                                <a routerLink="/panel/lab-results" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
-                            @if (relatedLabResultsView().total === 0) {
-                                <app-empty-state [message]="copy.listEmptyMessage" />
-                            } @else {
-                                <ul class="list-none m-0 p-0">
-                                    @for (row of relatedLabResultsView().displayed; track row.id) {
-                                        <li
-                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
-                                        >
-                                            <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.resultDateUtc ?? row.requestedAtUtc) }}</div>
-                                            <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.resultDateUtc ?? row.requestedAtUtc) }}</span>
-                                                <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                            </div>
-                                            <div class="font-medium min-w-0 break-words">{{ row.testName }}</div>
-                                            <app-lab-result-status-badges [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" />
-                                            @if (row.clinicName) {
-                                                <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
-                                            }
-                                            <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
-                                            </div>
-                                        </li>
-                                    }
-                                </ul>
-                            }
-                        </div>
-                    </div>
-                    <div class="col-span-12 lg:col-span-6">
-                        <div class="card">
-                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                                <h5 class="mt-0 mb-0">Bağlı yatışlar</h5>
-                                <a routerLink="/panel/hospitalizations" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
-                            @if (relatedHospitalizationsView().total === 0) {
-                                <app-empty-state [message]="copy.listEmptyMessage" />
-                            } @else {
-                                <ul class="list-none m-0 p-0">
-                                    @for (row of relatedHospitalizationsView().displayed; track row.id) {
-                                        <li
-                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
-                                        >
-                                            <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.admittedAtUtc) }}</div>
-                                            <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                                <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.admittedAtUtc) }}</span>
-                                                <a [routerLink]="['/panel/hospitalizations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                            </div>
-                                            <div class="font-medium min-w-0 break-words">{{ row.reason }}</div>
-                                            <div class="text-muted-color text-sm min-w-0 break-words">{{ hospitalizationStatusLine(row) }}</div>
-                                            @if (row.clinicName) {
-                                                <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
-                                            }
-                                            <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                                <a [routerLink]="['/panel/hospitalizations', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
-                                            </div>
-                                        </li>
-                                    }
-                                </ul>
-                            }
-                        </div>
-                    </div>
                     <div class="col-span-12 lg:col-span-6">
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
@@ -698,10 +449,13 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly statusSeverity = examinationStatusSeverity;
     readonly finalizeDialogVisible = signal(false);
 
-    readonly relatedTreatmentsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.treatments));
-    readonly relatedPrescriptionsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.prescriptions));
-    readonly relatedLabResultsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.labResults));
-    readonly relatedHospitalizationsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.hospitalizations));
+    private readonly procedures = viewChild(ExaminationProceduresSectionComponent);
+
+    /** Kesinleştirme öncesi eksik kalem uyarıları (engel değil). */
+    readonly finalizeWarnings = computed(() => {
+        const e = this.exam();
+        return e ? finalizeWarnings(e, this.relatedSummary(), this.procedures()?.addedVaccinationCount() ?? 0) : [];
+    });
     readonly relatedPaymentsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.payments));
     readonly sibItemsView = computed(() => sliceDetailRelatedList(this.sibItems()));
     readonly apptItemsView = computed(() => sliceDetailRelatedList(this.apptItems()));
@@ -750,16 +504,6 @@ export class ExaminationDetailPageComponent implements OnInit {
     hasVitals(): boolean {
         const e = this.exam();
         return !!e && (e.weightKg !== null || e.temperatureC !== null || e.heartRateBpm !== null || e.respiratoryRatePerMin !== null);
-    }
-
-    hospitalizationStatusLine(row: ExaminationRelatedHospitalizationItemVm): string {
-        if (row.dischargedAtUtc) {
-            return `Çıkış: ${this.formatDt(row.dischargedAtUtc)}`;
-        }
-        if (row.isActive) {
-            return 'Aktif yatış';
-        }
-        return 'Taburcu';
     }
 
     ngOnInit(): void {
@@ -827,6 +571,13 @@ export class ExaminationDetailPageComponent implements OnInit {
                 this.resetRelatedSummary();
             }
         });
+    }
+
+    /** İşlem yan panelinden kayıt eklendi: aynı muayenede kalınır, yalnız ilgili kayıt özeti yenilenir. */
+    onProcedureAdded(): void {
+        if (this.lastId) {
+            this.loadRelatedSummary(this.lastId);
+        }
     }
 
     retryRelatedSummary(): void {

@@ -1,7 +1,10 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, EMPTY } from 'rxjs';
+import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
@@ -58,6 +61,9 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
             imports: [ExaminationDetailPageComponent],
             providers: [
                 provideRouter([]),
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: API_BASE_URL, useValue: 'http://api.test' },
                 {
                     provide: ActivatedRoute,
                     useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'e1' })) }
@@ -125,6 +131,9 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
             imports: [ExaminationDetailPageComponent],
             providers: [
                 provideRouter([]),
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: API_BASE_URL, useValue: 'http://api.test' },
                 {
                     provide: ActivatedRoute,
                     useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'e1' })) }
@@ -177,17 +186,42 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(has(el, 'addendum-open')).toBeTrue();
     });
 
-    it('taslakta tedavi/reçete/aşı/lab/yatış oluşturma bağlantıları muayene bağlamıyla görünür; kilit ipucu yok', async () => {
-        const { el } = await setup(detailVm, ['Examinations.Update']);
+    const ADD_CLAIMS = ['Treatments.Create', 'Prescriptions.Create', 'Vaccinations.Create', 'LabResults.Create', 'Hospitalizations.Create'];
+    const addButton = (el: HTMLElement, kind: string) => el.querySelector(`[data-testid="procedure-add-${kind}"] button`) as HTMLButtonElement | null;
 
-        for (const path of ['treatments', 'prescriptions', 'vaccinations', 'lab-results', 'hospitalizations']) {
-            const a = el.querySelector(`a[href*="/panel/${path}/new"]`);
-            expect(a).withContext(path).not.toBeNull();
-            expect(a?.getAttribute('href')).toContain('examinationId=e1');
-            expect(a?.getAttribute('href')).toContain('clientId=client-1');
-            expect(a?.getAttribute('href')).toContain('petId=pet-1');
+    it('taslakta işlem ekleme düğmeleri tek İşlemler bölümünde etkin görünür; kilit nedeni yok', async () => {
+        const { el } = await setup(detailVm, ADD_CLAIMS);
+
+        expect(has(el, 'procedures-section')).toBeTrue();
+        for (const kind of ['treatment', 'prescription', 'vaccination', 'lab', 'hospitalization']) {
+            expect(addButton(el, kind)).withContext(kind).not.toBeNull();
+            expect(addButton(el, kind)?.disabled).withContext(kind).toBeFalse();
         }
-        expect(has(el, 'finalized-locked-hint')).toBeFalse();
+        expect(has(el, 'procedure-lock-reason')).toBeFalse();
+        expect(el.querySelector('a[href*="/panel/treatments/new"]')).toBeNull();
+    });
+
+    it('işlem ekleme düğmeleri yalnız ilgili Create yetkisiyle görünür', async () => {
+        const { el } = await setup(detailVm, ['Treatments.Create', 'LabResults.Create']);
+
+        expect(addButton(el, 'treatment')).not.toBeNull();
+        expect(addButton(el, 'lab')).not.toBeNull();
+        for (const kind of ['prescription', 'vaccination', 'hospitalization']) {
+            expect(addButton(el, kind)).withContext(kind).toBeNull();
+        }
+    });
+
+    it('yetkisiz kullanıcı İşlemler listesini görür ama ekleme çubuğu çizilmez', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read']);
+
+        expect(has(el, 'procedures-section')).toBeTrue();
+        expect(has(el, 'procedure-add-bar')).toBeFalse();
+    });
+
+    it('hasta bandı ve uyarı rozet alanı muayene sayfasında çizilir', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read']);
+
+        expect(el.querySelector('app-examination-patient-header')).not.toBeNull();
     });
 
     it('Ödeme Oluştur yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
@@ -202,22 +236,31 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
     it('"Tümü →" bağlantıları hayvan bağlamını (petId) taşır', async () => {
         const { el } = await setup(detailVm, ['Examinations.Read']);
 
-        for (const path of ['treatments', 'prescriptions', 'lab-results', 'hospitalizations', 'payments', 'examinations', 'appointments']) {
+        for (const path of ['payments', 'examinations', 'appointments']) {
             const a = Array.from(el.querySelectorAll(`a[href^="/panel/${path}?"]`));
             expect(a.length).withContext(path).toBeGreaterThan(0);
             expect(a[0].getAttribute('href')).withContext(path).toContain('petId=pet-1');
         }
     });
 
-    it('kesinleşmiş muayenede tedavi/reçete/aşı oluştur gizli ve neden görünür; lab ve yatış açık kalır', async () => {
-        const { el } = await setup(finalizedVm, ['Examinations.Update']);
+    it('kesinleşmiş muayenede tedavi/reçete/aşı düğmeleri kilitli ve neden görünür; lab ve yatış açık kalır', async () => {
+        const { el } = await setup(finalizedVm, ADD_CLAIMS);
 
-        for (const path of ['treatments', 'prescriptions', 'vaccinations']) {
-            expect(el.querySelector(`a[href*="/panel/${path}/new"]`)).withContext(path).toBeNull();
+        for (const kind of ['treatment', 'prescription', 'vaccination']) {
+            expect(addButton(el, kind)?.disabled).withContext(kind).toBeTrue();
         }
-        expect(el.querySelector('a[href*="/panel/lab-results/new"]')).not.toBeNull();
-        expect(el.querySelector('a[href*="/panel/hospitalizations/new"]')).not.toBeNull();
-        expect(el.querySelector('[data-testid="finalized-locked-hint"]')?.textContent).toContain('uygulama gerekçeyle eklenebilir; ek not ekleyebilirsiniz');
+        expect(addButton(el, 'lab')?.disabled).toBeFalse();
+        expect(addButton(el, 'hospitalization')?.disabled).toBeFalse();
+        expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('yalnız gerekçeli uygulama ve ek not eklenebilir');
+    });
+
+    it('kesinleştirme onayı eksik tanı ve işlem uyarılarını listeler ama engellemez', async () => {
+        const { fixture } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize']);
+
+        const warnings = fixture.componentInstance.finalizeWarnings();
+        expect(warnings.some((w) => w.includes('tanı'))).toBeTrue();
+        expect(warnings.some((w) => w.includes('Plan'))).toBeTrue();
+        expect(warnings.some((w) => w.includes('işlem') || w.includes('kayıt yok'))).toBeTrue();
     });
 
     it('Addendum izni olmayan kullanıcı ek notları okur ama "Ek not ekle" görmez', async () => {
