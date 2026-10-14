@@ -54,8 +54,6 @@ import {
         AppointmentNoShowDialogComponent
     ],
     template: `
-        <a href="" (click)="goBack($event)" class="text-primary font-medium no-underline inline-block mb-4">← {{ backLabel() }}</a>
-
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Randevu kaydedildi.</p>
         }
@@ -68,6 +66,8 @@ import {
             </div>
         } @else if (appt()) {
             <app-page-header
+                [categoryLink]="backLink()"
+                [categoryLinkLabel]="backLabel()"
                 title="Randevu"
                 [description]="
                     formatDateTime(appt()!.scheduledAtUtc) + ' · ' + statusLabel(appt()!.status) + ' · ' + typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)
@@ -294,6 +294,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly linkedExamsView = computed(() => sliceDetailRelatedList(this.linkedExams()));
     readonly returnUrl = signal<string | null>(null);
     readonly backLabel = signal('Randevu listesine dön');
+    readonly backLink = computed(() => this.router.parseUrl(this.returnUrl() ?? '/panel/appointments'));
 
     private lastId: string | null = null;
 
@@ -423,16 +424,6 @@ export class AppointmentDetailPageComponent implements OnInit {
             return null;
         }
         return { returnUrl: url, returnLabel: this.backLabel() };
-    }
-
-    goBack(event: Event): void {
-        event.preventDefault();
-        const safeUrl = this.returnUrl();
-        if (safeUrl) {
-            void this.router.navigateByUrl(safeUrl);
-            return;
-        }
-        void this.router.navigate(['/panel/appointments']);
     }
 
     private loadLinkedExaminations(x: AppointmentDetailVm): void {

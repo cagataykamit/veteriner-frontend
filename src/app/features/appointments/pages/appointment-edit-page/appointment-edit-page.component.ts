@@ -4,7 +4,7 @@ import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.com
 import { Observable, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -64,8 +64,6 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
-        <a href="" (click)="goBack($event)" class="text-primary font-medium no-underline inline-block mb-4">← {{ backLabel() }}</a>
-
         @if (loading()) {
             <app-loading-state message="Randevu düzenleme bilgileri yükleniyor…" />
         } @else if (loadError()) {
@@ -73,7 +71,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header title="Randevuyu Düzenle" description="Randevu kaydını güncelleyin." />
+            <app-page-header [categoryLink]="backLink()" [categoryLinkLabel]="backLabel()" title="Randevuyu Düzenle" description="Randevu kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
@@ -264,6 +262,7 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly workingHoursLoadError = signal<string | null>(null);
     readonly returnUrl = signal<string | null>(null);
     readonly backLabel = signal('Randevu listesine dön');
+    readonly backLink = computed(() => this.router.parseUrl(this.returnUrl() ?? '/panel/appointments'));
 
 
     private appointmentId = '';
@@ -493,16 +492,6 @@ export class AppointmentEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/appointments', this.appointmentId], {
             queryParams: this.returnContextQueryParams() ?? undefined
         });
-    }
-
-    goBack(event: Event): void {
-        event.preventDefault();
-        const safeUrl = this.returnUrl();
-        if (safeUrl) {
-            void this.router.navigateByUrl(safeUrl);
-            return;
-        }
-        void this.router.navigate(['/panel/appointments']);
     }
 
 
