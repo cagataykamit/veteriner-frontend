@@ -18,7 +18,13 @@ import { buildPatientActions } from './patient-actions.utils';
     imports: [CommonModule, RouterLink, ButtonModule, VisitArrivalDialogComponent],
     template: `
         @if (actions().length > 0) {
-            <div class="card mb-4 flex flex-wrap gap-2 items-center" role="toolbar" aria-label="Hızlı eylemler">
+            <div
+                class="card mb-4 flex flex-wrap gap-2 items-center"
+                [class]="sticky() ? 'sticky top-16 z-10 !py-3 shadow-sm' : ''"
+                role="toolbar"
+                aria-label="Hızlı eylemler"
+                data-testid="patient-action-bar"
+            >
                 @if (ro.mutationBlocked()) {
                     <span class="text-amber-700 dark:text-amber-300 text-sm" role="status">İşletme salt okunur moddadır; eylemler kapalı.</span>
                 } @else {
@@ -63,6 +69,8 @@ export class PatientActionBarComponent {
     /** "Geldi" diyaloğunda önceden seçilecek hasta etiketi ve sahip adı (hayvan sayfasında). */
     readonly petLabel = input<string>('');
     readonly clientName = input<string>('');
+    /** Kaydırınca üst çubuğun altında sabit kalır (hasta kartı: eylemler her zaman görünür, ADR-020 karar 2b). */
+    readonly sticky = input(false);
 
     readonly arrivalOpen = signal(false);
 
