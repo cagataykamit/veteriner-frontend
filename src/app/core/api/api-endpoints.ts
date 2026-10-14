@@ -249,6 +249,10 @@ export const ApiEndpoints = {
         list: () => `/api/v1/stock-movements`,
         create: () => `/api/v1/stock-movements`
     },
+    goodsReceipts: {
+        /** POST — çok satırlı mal kabul, hepsi ya da hiçbiri; 201 yeni, 200 aynı `requestId` tekrarı (`GOODS_RECEIPT_API_CONTRACT.md`). */
+        create: () => `/api/v1/goods-receipts`
+    },
     tenants: {
         /** PUT: kiracı paneli — kurum adı vb. (Faz 5B); gövde backend sözleşmesine uyar. */
         settings: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/settings`,

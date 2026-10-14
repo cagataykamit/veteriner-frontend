@@ -8,7 +8,7 @@ export const STOCK_BATCH_INVOICE_MAX = 100;
 export const STOCK_BATCH_TRANSPORT_MAX = 200;
 
 /** Depo çıkış tarihi, geliş/teslim tarihinden sonra olamaz (`StockBatches.Validation`); ikisi de doluysa denetlenir. */
-function dispatchedNotAfterReceivedValidator(group: AbstractControl): ValidationErrors | null {
+export function dispatchedNotAfterReceivedValidator(group: AbstractControl): ValidationErrors | null {
     const received = group.get('receivedDate')?.value as string | undefined;
     const dispatched = group.get('dispatchedDate')?.value as string | undefined;
     return received && dispatched && dispatched > received ? { dispatchedAfterReceived: true } : null;

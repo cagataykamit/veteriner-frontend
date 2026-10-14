@@ -6,6 +6,9 @@ export interface ProductListItemVm {
     name: string;
     kind: ProductKindApi;
     sku: string;
+    barcode: string;
+    /** Aşı veya kontrollü ürün: stok girişinde seri/lot no ve SKT zorunlu. */
+    requiresLotAndExpiry: boolean;
     categoryName: string;
     unit: string;
     unitPriceText: string;
