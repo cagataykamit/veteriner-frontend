@@ -28,12 +28,15 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     APPOINTMENTS_NOSHOW_CLAIM,
     APPOINTMENTS_RESCHEDULE_CLAIM,
-    EXAMINATIONS_CREATE_CLAIM
+    EXAMINATIONS_CREATE_CLAIM,
+    VISITS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
@@ -117,6 +120,17 @@ import {
                                 [disabled]="true"
                                 class="p-button-secondary"
                             ></button>
+                        } @else if (canOpenVisit) {
+                            <button
+                                pButton
+                                type="button"
+                                label="Muayene Oluştur"
+                                icon="pi pi-plus"
+                                class="p-button-secondary"
+                                [loading]="startingExam()"
+                                [disabled]="startingExam()"
+                                (click)="startExamination()"
+                            ></button>
                         } @else {
                             <a
                                 [routerLink]="['/panel/examinations/new']"
@@ -134,6 +148,9 @@ import {
                         }
                     }
                 </div>
+                @if (startExamError(); as startError) {
+                    <p class="text-red-500 text-sm m-0 mt-2" role="alert">{{ startError }}</p>
+                }
                 @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
                     <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mt-2" role="status">
                         {{ isNoShow(appt()!.status) ? copy.noShowAppointmentExamCreateBlocked : copy.cancelledAppointmentExamCreateBlocked }}
@@ -260,6 +277,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     private readonly appointmentsService = inject(AppointmentsService);
     private readonly related = inject(DetailRelatedSummariesService);
     private readonly auth = inject(AuthService);
+    private readonly visitsService = inject(VisitsService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
@@ -286,6 +304,10 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly typeSeverity = appointmentTypeDisplaySeverity;
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
+    /** Geliş açma yetkisi varsa muayene önce geliş (Visit) üzerinden açılır (ADR-017 K7); yoksa randevu bağlamlı eski yol. */
+    readonly canOpenVisit = this.auth.hasOperationClaim(VISITS_CREATE_CLAIM);
+    readonly startingExam = signal(false);
+    readonly startExamError = signal<string | null>(null);
     readonly isCancelledForExam = isAppointmentCancelledStatus;
     readonly isNoShow = isAppointmentNoShowStatus;
     readonly canMarkNoShow = canMarkAppointmentNoShow;
@@ -336,6 +358,31 @@ export class AppointmentDetailPageComponent implements OnInit {
                 error: (e: Error) => {
                     this.error.set(e.message ?? 'Yükleme hatası');
                     this.loading.set(false);
+                }
+            });
+    }
+
+    /** Randevunun gelişini açar (açık geliş varsa o döner) ve muayeneyi `visitId` ile açar; Bugün'ün "Muayene aç" akışıyla aynı yol. */
+    startExamination(): void {
+        const a = this.appt();
+        if (!a || this.startingExam()) {
+            return;
+        }
+        this.startExamError.set(null);
+        this.startingExam.set(true);
+        this.visitsService
+            .getCurrentVeterinarianUserId()
+            .pipe(switchMap((vetId) => this.visitsService.createVisit({ appointmentId: a.id, responsibleVeterinarianUserId: vetId })))
+            .subscribe({
+                next: ({ visit }) => {
+                    this.startingExam.set(false);
+                    void this.router.navigate(['/panel/examinations/new'], {
+                        queryParams: { visitId: visit.id, clientId: a.clientId, petId: a.petId }
+                    });
+                },
+                error: (e: unknown) => {
+                    this.startingExam.set(false);
+                    this.startExamError.set(panelHttpFailureMessage(e, 'Geliş kaydı açılamadı.'));
                 }
             });
     }
