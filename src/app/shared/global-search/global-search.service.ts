@@ -22,6 +22,8 @@ export interface GlobalSearchPetVm {
     ownerName: string;
     ownerPhone: string;
     microchip: string;
+    /** Vefat eden hayvan (sonuçta rozetle ayrışır, yeni bakım eylemi sunulmaz). */
+    deceased: boolean;
 }
 
 export interface GlobalSearchResultVm {
@@ -108,7 +110,8 @@ function toPetResult(d: PetDetailVm): GlobalSearchPetVm {
         summary: [d.speciesName, d.breed].map(present).filter(Boolean).join(' · '),
         ownerName: present(d.clientName),
         ownerPhone: present(d.clientPhone) ? formatClientPhoneForDisplay(d.clientPhone) : '',
-        microchip: present(d.microchipNumber)
+        microchip: present(d.microchipNumber),
+        deceased: d.status === 'Deceased'
     };
 }
 
@@ -120,6 +123,7 @@ function toPetResultFromListItem(i: PetListItemVm): GlobalSearchPetVm {
         summary: [i.speciesName, i.breed].map(present).filter(Boolean).join(' · '),
         ownerName: '',
         ownerPhone: '',
-        microchip: ''
+        microchip: '',
+        deceased: i.status === 'Deceased'
     };
 }

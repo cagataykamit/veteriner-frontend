@@ -15,6 +15,7 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import { PET_LIFE_STATUS_FILTER_OPTIONS, type PetLifeStatus } from '@/app/features/pets/utils/pet-status.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -30,6 +31,8 @@ type PetsListState = {
     search: string;
     speciesId: string;
     clientId: string;
+    /** Boş = tümü (önceki davranış; vefat edenler rozetle ayrışır). */
+    status?: string;
     page: number;
     pageSize: number;
 };
@@ -112,6 +115,19 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                     [showClear]="true"
                                     [loading]="loadingSpecies()" (ngModelChange)="scheduleApply()" />
                             </app-filter-field>
+                            <app-filter-field label="Durum" labelId="lblPetStatus" [active]="isStatusActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblPetStatus"
+                                    inputId="petStatus"
+                                    [options]="statusOptions"
+                                    [(ngModel)]="statusInput"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    styleClass="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
                         </div>
                     </div>
                 @if (displayedRows().length === 0) {
@@ -143,8 +159,13 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
-                                <tr>
-                                    <td class="font-medium">{{ row.name }}</td>
+                                <tr [class.text-muted-color]="row.status === 'Deceased'">
+                                    <td class="font-medium">
+                                        {{ row.name }}
+                                        @if (row.status === 'Deceased') {
+                                            <span class="ml-2 text-xs font-medium border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-row-deceased">Vefat</span>
+                                        }
+                                    </td>
                                     <td>{{ row.speciesName }}</td>
                                     <td>{{ row.breed }}</td>
                                     <td>{{ row.colorName }}</td>
@@ -164,6 +185,9 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                             >
                                 <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
                                     <a [routerLink]="['/panel/pets', row.id]" class="text-primary no-underline break-words">{{ row.name }}</a>
+                                    @if (row.status === 'Deceased') {
+                                        <span class="ml-2 text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5">Vefat</span>
+                                    }
                                 </div>
                                 <div class="space-y-2 mb-3 min-w-0 text-sm">
                                     @if (row.clientId) {
@@ -248,10 +272,13 @@ export class PetsListPageComponent implements OnInit {
     readonly activeSearch = signal('');
     readonly activeSpeciesId = signal('');
     readonly activeClientId = signal('');
+    readonly activeStatus = signal<PetLifeStatus | ''>('');
 
     searchInput = '';
     speciesIdInput = '';
     clientIdInput = '';
+    statusInput: PetLifeStatus | '' = '';
+    readonly statusOptions = PET_LIFE_STATUS_FILTER_OPTIONS;
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
     readonly canCreatePet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
 
@@ -281,6 +308,7 @@ export class PetsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeSpeciesId.set(this.speciesIdInput.trim());
         this.activeClientId.set(this.clientIdInput.trim());
+        this.activeStatus.set(this.statusInput ?? '');
         this.first.set(0);
         this.currentPage.set(1);
         this.persistStateToSessionStorage(1, this.pageSize());
@@ -291,9 +319,11 @@ export class PetsListPageComponent implements OnInit {
         this.searchInput = '';
         this.speciesIdInput = '';
         this.clientIdInput = '';
+        this.statusInput = '';
         this.activeSearch.set('');
         this.activeSpeciesId.set('');
         this.activeClientId.set('');
+        this.activeStatus.set('');
         this.first.set(0);
         this.currentPage.set(1);
         this.clearStateFromSessionStorage();
@@ -360,7 +390,8 @@ export class PetsListPageComponent implements OnInit {
         clientId: string,
         force = false
       ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${speciesId.trim()}|${clientId.trim()}`;
+        const status = this.activeStatus();
+        const key = `${page}|${pageSize}|${search.trim()}|${speciesId.trim()}|${clientId.trim()}|${status}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -373,7 +404,8 @@ export class PetsListPageComponent implements OnInit {
                 pageSize,
                 search: search || undefined,
                 speciesId: speciesId || undefined,
-                clientId: clientId || undefined
+                clientId: clientId || undefined,
+                status: status || undefined
             })
             .subscribe({
                 next: (r) => {
@@ -423,6 +455,10 @@ export class PetsListPageComponent implements OnInit {
         return !!this.activeSpeciesId().trim();
     }
 
+    isStatusActive(): boolean {
+        return !!this.activeStatus();
+    }
+
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(PETS_LIST_STATE_KEY);
         if (!raw) {
@@ -439,9 +475,11 @@ export class PetsListPageComponent implements OnInit {
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.speciesIdInput = typeof parsed.speciesId === 'string' ? parsed.speciesId : '';
             this.clientIdInput = typeof parsed.clientId === 'string' ? parsed.clientId : '';
+            this.statusInput = parsed.status === 'Active' || parsed.status === 'Deceased' ? parsed.status : '';
             this.activeSearch.set(this.searchInput.trim());
             this.activeSpeciesId.set(this.speciesIdInput.trim());
             this.activeClientId.set(this.clientIdInput.trim());
+            this.activeStatus.set(this.statusInput);
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
@@ -457,6 +495,7 @@ export class PetsListPageComponent implements OnInit {
             search: this.searchInput.trim(),
             speciesId: this.speciesIdInput.trim(),
             clientId: this.clientIdInput.trim(),
+            status: this.activeStatus(),
             page,
             pageSize
         };

@@ -41,7 +41,7 @@ describe('GlobalSearchService', () => {
             expect(pets.getPets).toHaveBeenCalledWith({ page: 1, pageSize: 5, search: 'pamuk' });
             expect(r.clients).toEqual([ali]);
             expect(r.pets).toEqual([
-                { id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', microchip: '985112345678901' }
+                { id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', microchip: '985112345678901', deceased: false }
             ]);
             expect(r.failedKinds).toEqual([]);
             done();
@@ -89,7 +89,7 @@ describe('GlobalSearchService', () => {
     it('hayvan detayı alınamazsa liste satırı adıyla gösterilir', (done) => {
         pets.getPetById.and.returnValue(throwError(() => new Error('x')));
         service.search('pamuk').subscribe((r) => {
-            expect(r.pets).toEqual([{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: '', ownerPhone: '', microchip: '' }]);
+            expect(r.pets).toEqual([{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: '', ownerPhone: '', microchip: '', deceased: false }]);
             expect(r.failedKinds).toEqual([]);
             done();
         });

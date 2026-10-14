@@ -38,14 +38,14 @@ describe('PatientSearchService', () => {
     });
 
     it('hayvan eşleşmesi sahip bilgisiyle tek satır olur', () => {
-        const r = run({ clients: [], pets: [{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', microchip: '985' }], failedKinds: [] });
-        expect(r.patients).toEqual([{ petId: 'p1', petName: 'Pamuk', summary: 'Kedi · Tekir', microchip: '985', clientId: 'c1', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67' }]);
+        const r = run({ clients: [], pets: [{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', microchip: '985', deceased: false }], failedKinds: [] });
+        expect(r.patients).toEqual([{ petId: 'p1', petName: 'Pamuk', summary: 'Kedi · Tekir', microchip: '985', clientId: 'c1', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', deceased: false }]);
         expect(r.owners).toEqual([]);
     });
 
     it('sahip adıyla bulunan müşterinin hayvanları eklenir; doğrudan bulunan hayvan tekrarlanmaz', () => {
         pets.getPets.and.returnValue(of(page([petItem('p1', 'Pamuk'), petItem('p2', 'Boncuk')])));
-        const r = run({ clients: [ali], pets: [{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '', microchip: '' }], failedKinds: [] });
+        const r = run({ clients: [ali], pets: [{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '', microchip: '', deceased: false }], failedKinds: [] });
         expect(pets.getPets).toHaveBeenCalledWith({ page: 1, pageSize: 5, clientId: 'c1' });
         expect(r.patients.map((p) => p.petId)).toEqual(['p1', 'p2']);
         expect(r.patients[1].ownerName).toBe('Ali Veli');

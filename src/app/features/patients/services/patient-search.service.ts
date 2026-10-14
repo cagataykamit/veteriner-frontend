@@ -19,6 +19,7 @@ export interface PatientRowVm {
     clientId: string | null;
     ownerName: string;
     ownerPhone: string;
+    deceased: boolean;
 }
 
 /** Kayıtlı hayvanı olmayan (ya da hayvan okuma izni olmayan) sahip. */
@@ -53,7 +54,7 @@ export class PatientSearchService {
         return this.globalSearch.search(term).pipe(
             switchMap((r) => {
                 const hits = r.pets.map(
-                    (p): PatientRowVm => ({ petId: p.id, petName: p.name, summary: p.summary, microchip: p.microchip, clientId: p.clientId, ownerName: p.ownerName, ownerPhone: p.ownerPhone })
+                    (p): PatientRowVm => ({ petId: p.id, petName: p.name, summary: p.summary, microchip: p.microchip, clientId: p.clientId, ownerName: p.ownerName, ownerPhone: p.ownerPhone, deceased: p.deceased })
                 );
                 // Hayvan okuma yetkisi yoksa sahipler hayvansız gösterilir.
                 const expanded$ = this.auth.hasOperationClaim(PETS_READ_CLAIM) && r.clients.length
@@ -77,7 +78,8 @@ export class PatientSearchService {
                     microchip: '',
                     clientId: client.id,
                     ownerName: client.fullName,
-                    ownerPhone: client.phone
+                    ownerPhone: client.phone,
+                    deceased: p.status === 'Deceased'
                 }))
             }))
         );

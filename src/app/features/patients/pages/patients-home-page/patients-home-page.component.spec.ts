@@ -9,7 +9,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { PatientsHomePageComponent } from './patients-home-page.component';
 
-const PAMUK = { petId: 'p1', petName: 'Pamuk', summary: 'Kedi · Tekir', microchip: '985', clientId: 'c1', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67' };
+const PAMUK = { petId: 'p1', petName: 'Pamuk', summary: 'Kedi · Tekir', microchip: '985', clientId: 'c1', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', deceased: false };
 
 describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => {
     let claims: Set<string>;
@@ -69,6 +69,15 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
         expect(exam.getAttribute('href')).toContain('petId=p1');
         expect(exam.getAttribute('href')).toContain('clientId=c1');
         expect(labels).toContain('Randevu al');
+    });
+
+    it('vefat eden hayvan rozetle ayrışır; satırda Geldi, Muayene başlat ve Randevu al yoktur', () => {
+        search.and.returnValue(of({ patients: [{ ...PAMUK, deceased: true }], owners: [], failedKinds: [] }));
+        const row = typeAndSearch(create(), 'pamuk').querySelector('.patient-row') as HTMLElement;
+        expect(row.querySelector('[data-testid="patient-deceased"]')?.textContent).toContain('Vefat');
+        expect(row.textContent).not.toContain('Geldi');
+        expect(row.textContent).not.toContain('Muayene başlat');
+        expect(row.textContent).not.toContain('Randevu al');
     });
 
     it('yetkisiz eylem satırda görünmez; salt okunur modda eylemler gizlenir', () => {

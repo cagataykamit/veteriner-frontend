@@ -68,6 +68,13 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                                     <li class="patient-row rounded-border border border-surface-200 dark:border-surface-700 p-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                                         <div class="min-w-0 grow basis-64">
                                             <a [routerLink]="['/panel/pets', p.petId]" class="font-semibold text-lg text-primary no-underline">{{ p.petName }}</a>
+                                            @if (p.deceased) {
+                                                <span
+                                                    class="ml-2 text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5 align-middle"
+                                                    data-testid="patient-deceased"
+                                                    >Vefat</span
+                                                >
+                                            }
                                             @if (p.summary) {
                                                 <span class="text-muted-color"> · {{ p.summary }}</span>
                                             }
@@ -213,7 +220,7 @@ export class PatientsHomePageComponent {
     }
 
     rowActions(p: PatientRowVm): PatientAction[] {
-        return buildPatientActions({ clientId: p.clientId!, petId: p.petId }, (c) => this.auth.hasOperationClaim(c)).filter((a) => ROW_ACTION_KEYS.has(a.key));
+        return buildPatientActions({ clientId: p.clientId!, petId: p.petId, petDeceased: p.deceased }, (c) => this.auth.hasOperationClaim(c)).filter((a) => ROW_ACTION_KEYS.has(a.key));
     }
 
     ownerActions(o: OwnerRowVm): PatientAction[] {
