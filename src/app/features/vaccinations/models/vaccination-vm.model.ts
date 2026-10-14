@@ -27,6 +27,7 @@ export interface VaccinationDetailVm {
     clientName: string;
     status: number | null;
     notes: string;
+    examinationId: string | null;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
 }

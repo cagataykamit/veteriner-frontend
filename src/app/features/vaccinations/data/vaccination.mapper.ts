@@ -115,6 +115,7 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
     const base = mapVaccinationListItemDtoToVm(dto);
     return {
         ...base,
+        examinationId: dto.examinationId?.trim() ? dto.examinationId.trim() : null,
         createdAtUtc: canonicalCreatedAt(dto),
         updatedAtUtc: canonicalUpdatedAt(dto)
     };
