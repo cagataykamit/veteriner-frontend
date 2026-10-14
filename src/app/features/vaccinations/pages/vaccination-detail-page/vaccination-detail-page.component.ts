@@ -9,6 +9,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -25,6 +26,7 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
+        PetAlertBannerComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
@@ -70,6 +72,7 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                     ></button>
                 }
             </app-page-header>
+            <app-pet-alert-banner [petId]="vac()!.petId" />
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">

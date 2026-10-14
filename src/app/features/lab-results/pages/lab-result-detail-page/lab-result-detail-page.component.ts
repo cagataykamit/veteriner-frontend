@@ -10,6 +10,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -26,6 +27,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
+        PetAlertBannerComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
         LabResultStatusBadgesComponent,
@@ -78,6 +80,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                     }
                 </div>
             </app-page-header>
+            <app-pet-alert-banner [petId]="row()!.petId" />
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">

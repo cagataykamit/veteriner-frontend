@@ -44,6 +44,7 @@ describe('ChargeNewPageComponent', () => {
     let mutationBlocked: boolean;
     let queryClientId: string | null;
     let queryVisitId: string | null = null;
+    let queryPetId: string | null = null;
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -81,7 +82,7 @@ describe('ChargeNewPageComponent', () => {
                 },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : null) } } } }
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : k === 'petId' ? queryPetId : null) } } } }
             ]
         }).compileComponents();
         router = TestBed.inject(Router);
@@ -101,6 +102,7 @@ describe('ChargeNewPageComponent', () => {
         claims = new Set(['Visits.Read', 'Examinations.Read']);
         mutationBlocked = false;
         queryVisitId = null;
+        queryPetId = null;
         queryClientId = null;
     });
 
@@ -155,6 +157,31 @@ describe('ChargeNewPageComponent', () => {
         expect(req.unitPrice).toBe(750);
         expect(req.requestId).toMatch(/^[0-9a-f-]{36}$/);
         expect(router.navigate).toHaveBeenCalledWith(['/panel/charges'], { queryParams: { clientId: 'cl1' } });
+    });
+
+    it('Payments.Create varsa ücret kaydından sonra ödeme formuna müşteri, ücret ve geliş bağlamıyla geçer', async () => {
+        claims.add('Payments.Create');
+        const withVisit = { ...created, visitId: 'v1', examinationId: 'ex1' };
+        charges.createCharge.and.returnValue(of({ created: true, charge: withVisit } as ChargeCreateResultVm));
+        await setup();
+        fill();
+        cmp.onSubmit(cmp.canCollectPayment);
+        expect(router.navigate).toHaveBeenCalledWith(['/panel/payments/new'], {
+            queryParams: { clientId: 'cl1', chargeId: 'ch1', visitId: 'v1', examinationId: 'ex1' }
+        });
+    });
+
+    it('Payments.Create varsa birincil düğme "Kaydet ve ödemeyi şimdi al", ikincil "Kaydet" listeye döner; yoksa tek "Kaydet"', async () => {
+        claims.add('Payments.Create');
+        await setup();
+        const labels = () => Array.from(fixture.nativeElement.querySelectorAll('form p-button')).map((b) => (b as HTMLElement).textContent?.trim());
+        expect(labels()).toContain('Kaydet ve ödemeyi şimdi al');
+        expect(labels()).toContain('Kaydet');
+        TestBed.resetTestingModule();
+        claims = new Set();
+        await setup();
+        expect(labels()).not.toContain('Kaydet ve ödemeyi şimdi al');
+        expect(labels()).toContain('Kaydet');
     });
 
     it('çift tıklama: istek sürerken ikinci gönderim yapılmaz ve düğme kilitlidir', async () => {
@@ -218,6 +245,14 @@ describe('ChargeNewPageComponent', () => {
         queryVisitId = 'v5';
         await setup();
         expect(cmp.form.controls.visitId.value).toBe('');
+    });
+
+    it('hayvan eylem çubuğundan gelen clientId ve petId ile müşteri ve hayvan önceden seçilir', async () => {
+        queryClientId = 'cl1';
+        queryPetId = 'p2';
+        await setup();
+        expect(cmp.form.controls.clientId.value).toBe('cl1');
+        expect(cmp.form.controls.petId.value).toBe('p2');
     });
 
     it('müşteri değişince hayvan, geliş ve muayene seçimi sıfırlanır', async () => {

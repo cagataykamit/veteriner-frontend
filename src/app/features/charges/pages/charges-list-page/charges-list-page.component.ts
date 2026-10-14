@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CHARGES_CORRECT_CLAIM, CHARGES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CHARGES_CORRECT_CLAIM, CHARGES_CREATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ChargeCorrectionDialogComponent } from '@/app/features/charges/components/charge-correction-dialog.component';
 import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
@@ -105,8 +105,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 <th class="text-right">Tutar</th>
                                 <th class="text-right">Ödenen</th>
                                 <th class="text-right">Kalan</th>
-                                @if (canCorrect) {
-                                    <th style="width: 12rem">İşlemler</th>
+                                @if (hasRowActions) {
+                                    <th style="width: 18rem">İşlemler</th>
                                 }
                             </tr>
                         </ng-template>
@@ -135,13 +135,26 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                         <span class="font-medium">{{ money(row.outstandingAmount, row.currency) }}</span>
                                     }
                                 </td>
-                                @if (canCorrect) {
+                                @if (hasRowActions) {
                                     <td class="whitespace-nowrap">
                                         @if (ro.mutationBlocked()) {
                                             <span class="text-muted-color text-sm">Salt okunur</span>
                                         } @else {
-                                            <p-button label="Düzelt" icon="pi pi-pencil" size="small" [text]="true" (onClick)="openCorrection(row)" />
-                                            <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                            @if (canCollectPayment && row.outstandingAmount !== 0) {
+                                                <a
+                                                    [routerLink]="['/panel/payments/new']"
+                                                    [queryParams]="paymentQueryParams(row)"
+                                                    pButton
+                                                    label="Ödeme al"
+                                                    icon="pi pi-wallet"
+                                                    size="small"
+                                                    class="p-button-sm mr-1"
+                                                ></a>
+                                            }
+                                            @if (canCorrect) {
+                                                <p-button label="Düzelt" icon="pi pi-pencil" size="small" [text]="true" (onClick)="openCorrection(row)" />
+                                                <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                            }
                                         }
                                     </td>
                                 }
@@ -173,6 +186,8 @@ export class ChargesListPageComponent implements OnInit {
 
     readonly canCreate = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
     readonly canCorrect = this.auth.hasOperationClaim(CHARGES_CORRECT_CLAIM);
+    readonly canCollectPayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
+    readonly hasRowActions = this.canCorrect || this.canCollectPayment;
 
     /** Düzeltme veya iptal diyaloğunun açık olduğu satır. */
     readonly actionTarget = signal<ChargeVm | null>(null);
@@ -200,6 +215,11 @@ export class ChargesListPageComponent implements OnInit {
     ngOnInit(): void {
         this.clientId = this.route.snapshot.queryParamMap.get('clientId')?.trim() || null;
         this.load(1, this.pageSize());
+    }
+
+    /** Ödeme formu müşteri ve ücret bağlamıyla açılır; o ücret tam kalan tutarla dolu gelir. */
+    paymentQueryParams(row: ChargeVm): Record<string, string> {
+        return { clientId: row.clientId, chargeId: row.id, ...(row.visitId ? { visitId: row.visitId } : {}) };
     }
 
     openCorrection(row: ChargeVm): void {

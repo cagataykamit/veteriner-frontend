@@ -40,6 +40,7 @@ import { VisitsService } from '@/app/features/visits/services/visits.service';
 import {
     parseAppointmentExaminationRouteContext,
     parseVisitExaminationRouteContext,
+    prefillPetFromRoute,
     type VisitExaminationRouteContext
 } from '@/app/shared/panel/examination-create-route-context.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -687,6 +688,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         this.selectionForm.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((petId) => {
             this.selectedPetId.set(petId?.trim() || null);
         });
+        prefillPetFromRoute(this.route.snapshot.queryParamMap, this.selectionForm.controls.clientId, this.selectionForm.controls.petId);
     }
 
 

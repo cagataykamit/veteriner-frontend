@@ -14,6 +14,7 @@ import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.u
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { PatientActionBarComponent } from '@/app/shared/panel/patient-action-bar/patient-action-bar.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -32,6 +33,7 @@ import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
+        PatientActionBarComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent
@@ -73,6 +75,7 @@ import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '
                     ></button>
                 }
             </app-page-header>
+            <app-patient-action-bar [clientId]="client()!.id" />
 
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">

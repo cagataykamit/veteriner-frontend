@@ -26,6 +26,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
@@ -58,6 +59,7 @@ import {
         ButtonModule,
         SelectModule,
         AppPageHeaderComponent,
+        PetAlertBannerComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
@@ -72,6 +74,7 @@ import {
             </div>
         } @else {
             <app-page-header title="Aşıyı Düzenle" description="Aşı kaydını güncelleyin." />
+            <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

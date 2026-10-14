@@ -231,7 +231,7 @@ export class PaymentNewPageComponent implements OnInit {
     private readonly requestId = crypto.randomUUID();
 
     /** Muayene/geliş bağlamı yalnız bağlamın müşterisi seçiliyken geçerlidir. */
-    private context: { clientId: string; examinationId: string | null; visitId: string | null } | null = null;
+    private context: { clientId: string; examinationId: string | null; visitId: string | null; chargeId: string | null } | null = null;
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -402,7 +402,8 @@ export class PaymentNewPageComponent implements OnInit {
         this.context = {
             clientId,
             examinationId: q.get('examinationId')?.trim() || null,
-            visitId: q.get('visitId')?.trim() || null
+            visitId: q.get('visitId')?.trim() || null,
+            chargeId: q.get('chargeId')?.trim() || null
         };
         this.form.controls.clientId.setValue(clientId);
     }
@@ -441,15 +442,15 @@ export class PaymentNewPageComponent implements OnInit {
         });
     }
 
-    /** Bağlamdaki muayene veya gelişe ait açık ücretler tam tutarla dolu başlar; bağlam yoksa boş. */
+    /** Bağlamdaki ücret, muayene veya gelişe ait açık ücretler tam tutarla dolu başlar; bağlam yoksa boş. */
     private contextAmounts(charges: ClientOpenChargeVm[]): Record<string, number | null> {
         const ctx = this.context;
         const filled: Record<string, number | null> = {};
-        if (!ctx || (!ctx.examinationId && !ctx.visitId)) {
+        if (!ctx || (!ctx.chargeId && !ctx.examinationId && !ctx.visitId)) {
             return filled;
         }
         for (const c of charges) {
-            const matches = ctx.examinationId ? c.examinationId === ctx.examinationId : c.visitId === ctx.visitId;
+            const matches = ctx.chargeId ? c.chargeId === ctx.chargeId : ctx.examinationId ? c.examinationId === ctx.examinationId : c.visitId === ctx.visitId;
             if (matches) {
                 filled[c.chargeId] = c.outstandingAmount;
             }

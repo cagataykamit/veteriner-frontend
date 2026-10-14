@@ -141,6 +141,30 @@ describe('ChargesListPageComponent', () => {
         expect(text).toContain('Salt okunur');
     });
 
+    it('Payments.Create varsa açık bakiyeli satırda "Ödeme al" müşteri ve ücret bağlamıyla ödeme formuna gider', async () => {
+        claims.add('Payments.Create');
+        await setup();
+        const link = fixture.nativeElement.querySelector('a[href^="/panel/payments/new"]') as HTMLAnchorElement;
+        expect(link.textContent).toContain('Ödeme al');
+        expect(link.getAttribute('href')).toContain('clientId=cl1');
+        expect(link.getAttribute('href')).toContain('chargeId=ch1');
+    });
+
+    it('"Ödeme al" kalan 0 olan, yetkisiz veya salt okunur durumda görünmez', async () => {
+        await setup();
+        expect(fixture.nativeElement.textContent).not.toContain('Ödeme al');
+        TestBed.resetTestingModule();
+        claims.add('Payments.Create');
+        charges.getCharges.and.returnValue(of(page([{ ...row, allocatedAmount: 751, outstandingAmount: 0 }])));
+        await setup();
+        expect(fixture.nativeElement.textContent).not.toContain('Ödeme al');
+        TestBed.resetTestingModule();
+        charges.getCharges.and.returnValue(of(page([row])));
+        mutationBlocked = true;
+        await setup();
+        expect(fixture.nativeElement.textContent).not.toContain('Ödeme al');
+    });
+
     it('iptal diyaloğu satırın ücretini iptal eder ve listeyi yeniden okur', async () => {
         claims.add('Charges.Correct');
         charges.voidCharge.and.returnValue(of(void 0));

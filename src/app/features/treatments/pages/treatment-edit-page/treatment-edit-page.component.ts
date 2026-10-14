@@ -35,6 +35,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import {
     dateOnlyInputToIstanbulStartUtcIso,
@@ -65,6 +66,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         InputTextModule,
         SelectModule,
         AppPageHeaderComponent,
+        PetAlertBannerComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
@@ -79,6 +81,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
             </div>
         } @else {
             <app-page-header title="Tedaviyi Düzenle" description="Tedavi kaydını güncelleyin." />
+            <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

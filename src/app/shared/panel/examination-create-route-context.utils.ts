@@ -1,3 +1,4 @@
+import type { AbstractControl } from '@angular/forms';
 import type { ParamMap } from '@angular/router';
 
 /** Muayene detayından tedavi/reçete oluşturma için taşınan minimum bağlam (query). */
@@ -87,4 +88,28 @@ export function parseVaccinationCreateRouteContext(params: ParamMap): Vaccinatio
     }
     const examinationId = params.get('examinationId')?.trim() ?? '';
     return { clientId, petId, examinationId: examinationId || null };
+}
+
+/** Hayvan/müşteri detayındaki eylem çubuğundan açılan formlar: yalnız müşteri ve hayvan (geliş, muayene, randevu, tedavi bağlamı yok). */
+export interface PetRouteContext {
+    clientId: string;
+    petId: string;
+}
+
+export function parsePetRouteContext(params: ParamMap): PetRouteContext | null {
+    const clientId = params.get('clientId')?.trim() ?? '';
+    const petId = params.get('petId')?.trim() ?? '';
+    const hasOtherContext = ['visitId', 'examinationId', 'appointmentId', 'treatmentId'].some((k) => params.get(k)?.trim());
+    return clientId && petId && !hasOtherContext ? { clientId, petId } : null;
+}
+
+/** Hayvan bağlamı varsa müşteri ve hayvan seçimini önceden doldurur (müşteri değişimi hayvanı sıfırladığı için sıra önemli). */
+export function prefillPetFromRoute(params: ParamMap, clientControl: AbstractControl<string>, petControl: AbstractControl<string>): boolean {
+    const ctx = parsePetRouteContext(params);
+    if (!ctx) {
+        return false;
+    }
+    clientControl.setValue(ctx.clientId);
+    petControl.setValue(ctx.petId);
+    return true;
 }

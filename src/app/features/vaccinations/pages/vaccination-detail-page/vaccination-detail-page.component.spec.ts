@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { VaccinationDetailVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
@@ -29,6 +30,7 @@ describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
             imports: [VaccinationDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
                 { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm(examinationId)) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },

@@ -17,6 +17,7 @@ import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/se
 import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { filterPetsByClientId, petOptionsFromList } from '@/app/shared/forms/client-pet-selection.utils';
 import {
     parseVaccinationCreateRouteContext,
@@ -55,12 +56,13 @@ import {
         RouterLink,
         ButtonModule,
         SelectModule,
-        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppPageHeaderComponent, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline inline-block mb-4">← Aşı listesine dön</a>
 
         <app-page-header title="Yeni Aşı" description="Aşı kaydı oluşturun." />
+        <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

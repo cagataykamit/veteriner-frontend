@@ -7,7 +7,7 @@ import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { EXAMINATIONS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EXAMINATIONS_READ_CLAIM, PAYMENTS_CREATE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import {
     CHARGE_DESCRIPTION_MAX_LENGTH,
@@ -18,6 +18,7 @@ import {
     chargeNumberValidator,
     computeChargeAmount
 } from '@/app/features/charges/utils/charge-amount.utils';
+import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
@@ -50,7 +51,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
             @if (loadError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ loadError() }}</p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="chargeClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
@@ -141,11 +142,21 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                 <div class="flex flex-wrap gap-2 mt-4">
                     <p-button
                         type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
+                        [label]="canCollectPayment ? 'Kaydet ve ödemeyi şimdi al' : copy.buttonSave"
+                        [icon]="canCollectPayment ? 'pi pi-wallet' : 'pi pi-check'"
                         [loading]="submitting()"
                         [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"
                     />
+                    @if (canCollectPayment) {
+                        <p-button
+                            type="button"
+                            [label]="copy.buttonSave"
+                            icon="pi pi-check"
+                            severity="secondary"
+                            (onClick)="onSubmit(false)"
+                            [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"
+                        />
+                    }
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
             </form>
@@ -170,7 +181,9 @@ export class ChargeNewPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly canLinkVisit = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
+    /** Ücret kaydından sonra ödeme formuna geçilebilir (B-03); yoksa kayıt liste ekranına döner. */
+    readonly canCollectPayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
+    readonly canLinkVisit =this.auth.hasOperationClaim(VISITS_READ_CLAIM);
     readonly canLinkExamination = this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM);
 
     /** Form başına bir kez üretilir; hata sonrası yeniden denemede de aynı kalır (ikinci ücret oluşmaz). */
@@ -248,8 +261,9 @@ export class ChargeNewPageComponent implements OnInit {
             this.loadExaminations(trimClientIdControlValue(this.form.controls.clientId.value), trimClientIdControlValue(petId));
         });
         // Abonelikler kurulduktan sonra: query'den gelen müşteri ön seçimi değişiklik akışını tetiklemeli.
-        const preset = this.route.snapshot.queryParamMap.get('clientId')?.trim();
-        if (preset) {
+        const query = this.route.snapshot.queryParamMap;
+        const preset = query.get('clientId')?.trim();
+        if (!prefillPetFromRoute(query, this.form.controls.clientId, this.form.controls.petId) && preset) {
             this.form.controls.clientId.setValue(preset);
         }
         this.applyVisitPreset();
@@ -276,7 +290,7 @@ export class ChargeNewPageComponent implements OnInit {
         void this.router.navigate(['/panel/charges'], { queryParams: clientId ? { clientId } : {} });
     }
 
-    onSubmit(): void {
+    onSubmit(thenCollectPayment = false): void {
         if (this.submitting() || this.ro.mutationBlocked()) {
             return;
         }
@@ -304,7 +318,14 @@ export class ChargeNewPageComponent implements OnInit {
             .subscribe({
                 next: (r) => {
                     // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar kayıt zaten oluşmaz.
-                    void this.router.navigate(['/panel/charges'], { queryParams: { clientId: r.charge.clientId } });
+                    const { id: chargeId, clientId, visitId, examinationId } = r.charge;
+                    if (thenCollectPayment) {
+                        void this.router.navigate(['/panel/payments/new'], {
+                            queryParams: { clientId, chargeId, ...(visitId ? { visitId } : {}), ...(examinationId ? { examinationId } : {}) }
+                        });
+                        return;
+                    }
+                    void this.router.navigate(['/panel/charges'], { queryParams: { clientId } });
                 },
                 error: (e: Error) => {
                     this.submitting.set(false);

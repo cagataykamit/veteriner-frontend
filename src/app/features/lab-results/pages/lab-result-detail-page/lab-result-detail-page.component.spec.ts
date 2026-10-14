@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { LabResultDetailVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
@@ -36,6 +37,7 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
             imports: [LabResultDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap({}) } } },
                 { provide: LabResultsService, useValue: { getLabResultById: () => of(vm(status)) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => canUpdate } },
@@ -75,6 +77,7 @@ describe('LabResultDetailPageComponent — kayıt sonrası onay', () => {
             imports: [LabResultDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap(saved ? { saved } : {}) } } },
                 { provide: LabResultsService, useValue: { getLabResultById: () => of(vm('Requested')) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },

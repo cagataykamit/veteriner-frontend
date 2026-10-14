@@ -6,7 +6,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -202,6 +203,7 @@ export class AppointmentNewPageComponent implements OnInit {
     private readonly petsService = inject(PetsService);
     private readonly clinicsApi = inject(ClinicsService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
@@ -286,6 +288,8 @@ export class AppointmentNewPageComponent implements OnInit {
             }
             this.form.controls.petId.enable({ emitEvent: false });
         });
+
+        prefillPetFromRoute(this.route.snapshot.queryParamMap, this.form.controls.clientId, this.form.controls.petId);
 
         this.syncScheduledTimeDisabledState();
     }

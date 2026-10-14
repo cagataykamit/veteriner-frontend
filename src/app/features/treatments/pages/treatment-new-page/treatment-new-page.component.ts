@@ -31,6 +31,7 @@ import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import {
     DATE_INPUT_MIN,
@@ -55,12 +56,13 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppPageHeaderComponent, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
     ],
     template: `
         <a routerLink="/panel/treatments" class="text-primary font-medium no-underline inline-block mb-4">← Tedavi listesine dön</a>
 
         <app-page-header title="Yeni Tedavi" description="Tedavi kaydı oluşturun." />
+        <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
