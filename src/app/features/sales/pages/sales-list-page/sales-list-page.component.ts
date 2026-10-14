@@ -15,7 +15,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay, istanbulDateRangeToUtcIso } from '@/app/shared/utils/date.utils';
@@ -33,22 +33,21 @@ import { formatUtcIsoAsLocalDateTimeDisplay, istanbulDateRangeToUtcIso } from '@
         TableModule,
         DateInputComponent,
         FilterFieldComponent,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Satışlar" description="Muayenesiz ürün satışları.">
-            @if (canCreate && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/sales/new" pButton type="button" label="Hızlı satış" icon="pi pi-shopping-cart"></a>
-            } @else if (canCreate) {
-                <button actions pButton type="button" label="Hızlı satış (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
-            }
-        </app-page-header>
-
         <div class="card">
+            <app-list-header class="mb-4" title="Satışlar" [count]="totalItems()">
+                @if (canCreate && !ro.mutationBlocked()) {
+                    <a actions routerLink="/panel/sales/new" pButton type="button" label="Hızlı satış" icon="pi pi-shopping-cart"></a>
+                } @else if (canCreate) {
+                    <button actions pButton type="button" label="Hızlı satış (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                }
+            </app-list-header>
             <div class="flex flex-wrap items-end gap-3 mb-4">
                 <app-filter-field label="Başlangıç" labelFor="saleFrom" [active]="!!fromDate" width="date">
                     <app-date-input inputId="saleFrom" type="date" min="1900-01-01" [(ngModel)]="fromDate" (ngModelChange)="applyFilters()" />

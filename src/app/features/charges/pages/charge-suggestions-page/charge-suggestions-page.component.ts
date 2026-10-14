@@ -24,7 +24,7 @@ import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-ch
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -58,14 +58,12 @@ interface ConvertedRow {
         ChargeSuggestionConvertDialogComponent,
         ReasonConfirmDialogComponent,
         AppContextFilterChipComponent,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent
     ],
     template: `
-        <app-page-header title="Ücret bekleyenler" description="Hekimin kaydettiği işlemlerden doğan, henüz ücrete çevrilmemiş kalemler." />
-
         @if (hasCreateClaim && ro.mutationBlocked()) {
             <p class="text-sm text-muted-color mt-0 mb-4" role="note">Abonelik salt okunur olduğu için kalemler yalnız görüntülenir.</p>
         } @else if (!hasCreateClaim) {
@@ -91,11 +89,8 @@ interface ConvertedRow {
         }
 
         <div class="card">
-            @if (contextLabel(); as label) {
-                <app-context-filter-chip [label]="label" (clear)="clearContext()" />
-            }
-            <div class="flex flex-wrap gap-4 mb-4 items-end">
-                <div class="w-full max-w-md">
+            <app-list-header class="mb-4" title="Ücret bekleyenler" [count]="totalItems()">
+                <div class="flex-1 min-w-0">
                     <label for="pendingClientFilter" class="block text-xs font-medium text-muted-color mb-1">Müşteri</label>
                     <app-client-search inputId="pendingClientFilter" placeholder="Tümü — ad, telefon, hayvan veya mikroçip ile arayın" [ngModel]="clientId()" (ngModelChange)="clientId.set($event || null)" />
                 </div>
@@ -107,7 +102,10 @@ interface ConvertedRow {
                         }
                     </select>
                 </div>
-            </div>
+            </app-list-header>
+            @if (contextLabel(); as label) {
+                <app-context-filter-chip [label]="label" (clear)="clearContext()" />
+            }
 
             @if (actionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert" data-testid="action-error">{{ actionError() }}</p>

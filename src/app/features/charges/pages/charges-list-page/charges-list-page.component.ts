@@ -17,7 +17,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -33,43 +33,25 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         ClientSearchComponent,
         ChargeCorrectionDialogComponent,
         ReasonConfirmDialogComponent,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Ücretler" description="Müşterilere yazılan ücret satırları.">
-            @if (canCreate && !ro.mutationBlocked()) {
-                <a
-                    actions
-                    routerLink="/panel/charges/new"
-                    [queryParams]="clientId ? { clientId } : null"
-                    pButton
-                    type="button"
-                    label="Yeni Ücret"
-                    icon="pi pi-plus"
-                    class="p-button-primary"
-                ></a>
-            } @else if (canCreate) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Ücret (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
-
         <div class="card">
-            <div class="mb-4 max-w-md">
-                <label for="chargeClientFilter" class="block text-xs font-medium text-muted-color mb-1">Müşteri</label>
-                <app-client-search inputId="chargeClientFilter" placeholder="Tümü — ad, telefon, hayvan veya mikroçip ile arayın" [ngModel]="clientId" (ngModelChange)="onClientFilterChange($event)" />
-            </div>
+            <app-list-header class="mb-4" title="Ücretler" [count]="totalItems()">
+                <div class="flex-1 min-w-0">
+                    <label for="chargeClientFilter" class="block text-xs font-medium text-muted-color mb-1">Müşteri</label>
+                    <app-client-search inputId="chargeClientFilter" placeholder="Tümü — ad, telefon, hayvan veya mikroçip ile arayın" [ngModel]="clientId" (ngModelChange)="onClientFilterChange($event)" />
+                </div>
+                @if (canCreate && !ro.mutationBlocked()) {
+                    <a actions routerLink="/panel/charges/new" [queryParams]="clientId ? { clientId } : null" pButton type="button" label="Yeni Ücret" icon="pi pi-plus" class="p-button-primary"></a>
+                } @else if (canCreate) {
+                    <button actions pButton type="button" label="Yeni Ücret (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                }
+            </app-list-header>
 
             @if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
