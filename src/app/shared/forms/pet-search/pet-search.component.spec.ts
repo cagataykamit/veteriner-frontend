@@ -9,17 +9,18 @@ import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { PetSearchComponent } from './pet-search.component';
 
-const pet = (id: string, name: string, clientId: string | null = 'c1') => ({ id, name, clientId, speciesName: 'Kedi' });
+const pet = (id: string, name: string, clientId: string | null = 'c1', status = 'Active') => ({ id, name, clientId, speciesName: 'Kedi', status });
 const paged = (items: unknown[]) => of({ items, page: 1, pageSize: 20, totalItems: items.length, totalPages: 1 });
 
 @Component({
     standalone: true,
     imports: [ReactiveFormsModule, PetSearchComponent],
-    template: `<app-pet-search [formControl]="control" [clientId]="clientId()" />`
+    template: `<app-pet-search [formControl]="control" [clientId]="clientId()" [activeOnly]="activeOnly()" />`
 })
 class HostComponent {
     control = new FormControl<string>('', { nonNullable: true });
     clientId = signal('c1');
+    activeOnly = signal(false);
 }
 
 describe('PetSearchComponent', () => {
@@ -58,6 +59,22 @@ describe('PetSearchComponent', () => {
         expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1', search: undefined }));
         expect(cmp.suggestions().map((s) => s.id)).toEqual(['p1', 'p2']);
         expect(cmp.suggestions()[0].label).toBe('Pamuk — Kedi');
+    });
+
+    it('varsayılan: durum süzgeci gönderilmez, vefat eden hayvan etiketle ayrışır', async () => {
+        pets.getPets.and.returnValue(paged([pet('p1', 'Pamuk', 'c1', 'Deceased')]) as never);
+        cmp.onComplete({ query: '', originalEvent: new Event('x') });
+        await wait(0);
+        expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ status: undefined }));
+        expect(cmp.suggestions()[0].label).toBe('Pamuk — Kedi (vefat)');
+    });
+
+    it('activeOnly (yeni randevu/muayene): yalnız aktif hayvanlar istenir', async () => {
+        host.activeOnly.set(true);
+        fixture.detectChanges();
+        cmp.onComplete({ query: '', originalEvent: new Event('x') });
+        await wait(0);
+        expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1', status: 'Active' }));
     });
 
     it('yazılan metin sunucu aramasına search olarak gider', async () => {

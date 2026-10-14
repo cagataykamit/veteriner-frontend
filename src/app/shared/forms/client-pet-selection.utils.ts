@@ -25,10 +25,15 @@ export function clientOptionsFromList(items: ClientListItemVm[]): SelectOption[]
     }));
 }
 
+/** Hayvan seçici etiketi: ad + tür; vefat eden hayvan ayrışır (geçmiş kayıt formlarında seçilebilir kalır). */
+export function petSelectLabel(p: Pick<PetListItemVm, 'name' | 'speciesName' | 'status'>): string {
+    return `${p.name} — ${p.speciesName}${p.status === 'Deceased' ? ' (vefat)' : ''}`;
+}
+
 /** Pet dropdown: ad + tür. */
 export function petOptionsFromList(items: PetListItemVm[]): SelectOption[] {
     return items.map((p) => ({
-        label: `${p.name} — ${p.speciesName}`,
+        label: petSelectLabel(p),
         value: p.id
     }));
 }

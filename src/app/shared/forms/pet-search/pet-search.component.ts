@@ -9,7 +9,7 @@ import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
-import { filterPetsByClientId } from '@/app/shared/forms/client-pet-selection.utils';
+import { filterPetsByClientId, petSelectLabel } from '@/app/shared/forms/client-pet-selection.utils';
 import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
 import { canShowQuickPetCreateButton } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -95,6 +95,8 @@ export class PetSearchComponent implements ControlValueAccessor {
     readonly requireClient = input(true);
     readonly inputId = input('');
     readonly placeholder = input('Hayvan seçin veya yazarak arayın');
+    /** Yeni bakım kaydı (randevu, muayene) formları: vefat eden hayvan önerilmez (`status=Active`); sunucu da 409 `Pets.Deceased` döner. */
+    readonly activeOnly = input(false);
 
     private readonly pets = inject(PetsService);
     private readonly auth = inject(AuthService);
@@ -183,10 +185,11 @@ export class PetSearchComponent implements ControlValueAccessor {
             return of([] as PetSearchResult[]);
         }
         const search = term.trim();
-        return this.pets.getPets({ page: 1, pageSize: PAGE_SIZE, clientId: clientId || undefined, search: search || undefined }).pipe(
+        const status = this.activeOnly() ? 'Active' : undefined;
+        return this.pets.getPets({ page: 1, pageSize: PAGE_SIZE, clientId: clientId || undefined, search: search || undefined, status }).pipe(
             map((r) => {
                 const hasOwner = r.items.some((p) => (p.clientId ?? '').trim());
-                return (clientId && hasOwner ? filterPetsByClientId(r.items, clientId) : r.items).map((p) => ({ id: p.id, label: `${p.name} — ${p.speciesName}` }));
+                return (clientId && hasOwner ? filterPetsByClientId(r.items, clientId) : r.items).map((p) => ({ id: p.id, label: petSelectLabel(p) }));
             }),
             catchError((e: unknown) => {
                 this.searchError.set(panelHttpFailureMessage(e, 'Hayvan listesi yüklenemedi.'));
@@ -197,7 +200,7 @@ export class PetSearchComponent implements ControlValueAccessor {
 
     private resolve(id: string, done: (p: PetSearchResult) => void): void {
         this.pets.getPetById(id).subscribe({
-            next: (p) => done({ id: p.id, label: `${p.name} — ${p.speciesName}` }),
+            next: (p) => done({ id: p.id, label: petSelectLabel(p) }),
             error: () => this.model.set(null)
         });
     }

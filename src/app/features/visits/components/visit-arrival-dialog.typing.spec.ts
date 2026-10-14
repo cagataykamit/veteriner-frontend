@@ -50,7 +50,7 @@ describe('VisitArrivalDialogComponent (hasta arama alanına yazma)', () => {
         fixture.detectChanges();
 
         expect(input.value).toBe('pam');
-        expect(getPets).toHaveBeenCalledOnceWith({ page: 1, pageSize: 10, search: 'pam' });
+        expect(getPets).toHaveBeenCalledOnceWith({ page: 1, pageSize: 10, search: 'pam', status: 'Active' });
         expect(cmp.petSuggestions().length).toBe(1);
         expect(cmp.form.controls.pet.valid).withContext('yalnızca yazılmış metin geçersiz').toBeFalse();
 

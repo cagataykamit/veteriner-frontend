@@ -192,7 +192,7 @@ export class VisitArrivalDialogComponent {
         this.petSearch$
             .pipe(
                 switchMap((term) =>
-                    this.petsService.getPets({ page: 1, pageSize: PET_SEARCH_PAGE_SIZE, search: term }).pipe(
+                    this.petsService.getPets({ page: 1, pageSize: PET_SEARCH_PAGE_SIZE, search: term, status: 'Active' }).pipe(
                         switchMap((r) => this.withOwnerLabels(r.items)),
                         catchError((e: unknown) => {
                             this.loadError.set(panelHttpFailureMessage(e, 'Hasta araması yapılamadı.'));

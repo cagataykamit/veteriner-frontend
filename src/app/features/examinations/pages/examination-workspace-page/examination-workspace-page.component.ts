@@ -176,7 +176,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                 </div>
                                 <div class="col-span-12 md:col-span-6">
                                     <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hayvan *</label>
-                                    <app-pet-search inputId="petId" formControlName="petId" [clientId]="selectionForm.controls.clientId.value" />
+                                    <app-pet-search inputId="petId" formControlName="petId" [clientId]="selectionForm.controls.clientId.value" [activeOnly]="true" />
                                     @if (selectionForm.controls.petId.invalid && selectionForm.controls.petId.touched) {
                                         <small class="text-red-500">Zorunlu alan.</small>
                                     } @else if (apiFieldErrors().petId) {

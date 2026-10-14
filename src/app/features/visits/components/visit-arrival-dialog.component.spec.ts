@@ -170,10 +170,10 @@ describe('VisitArrivalDialogComponent', () => {
             expect(cmp.form.controls.pet.touched).toBeTrue();
         });
 
-        it('arama terimi sunucuya search olarak gider; sonuçlar sahip adıyla etiketlenir', () => {
+        it('arama terimi sunucuya search olarak gider (yalnız aktif hayvanlar); sonuçlar sahip adıyla etiketlenir', () => {
             cmp.onPetSearch({ query: ' 985 1210 ', originalEvent: new Event('x') });
 
-            expect(getPets).toHaveBeenCalledOnceWith({ page: 1, pageSize: 10, search: '985 1210' });
+            expect(getPets).toHaveBeenCalledOnceWith({ page: 1, pageSize: 10, search: '985 1210', status: 'Active' });
             expect(cmp.petSuggestions()).toEqual([{ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' }]);
         });
 
