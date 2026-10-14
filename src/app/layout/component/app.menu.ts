@@ -14,6 +14,8 @@ import { entryForUrl, groupForUrl, MENU_GROUPS, menuLinkRoute, visibleGroups } f
 interface MenuSection {
     /** Yoksa başlıksız: öğeler her zaman görünür. */
     readonly label?: string;
+    /** Açılıp kapanmayan küçük bölüm başlığı; simge şeridinde ince ayırıcı olur. */
+    readonly heading?: string;
     readonly items: MenuItem[];
     readonly open: boolean;
     readonly pinned: boolean;
@@ -52,21 +54,28 @@ interface MenuSection {
                         }
                     </li>
                 } @else {
-                    @for (item of section.items; track item.label) {
-                        <li app-menuitem [item]="item" [root]="false"></li>
-                    }
+                    <ng-container *ngTemplateOutlet="flatSection; context: { $implicit: section }" />
                 }
             }
         </ul>
         @if (pinnedSections().length) {
             <ul class="layout-menu layout-menu-pinned">
                 @for (section of pinnedSections(); track $index) {
-                    @for (item of section.items; track item.label) {
-                        <li app-menuitem [item]="item" [root]="false"></li>
-                    }
+                    <ng-container *ngTemplateOutlet="flatSection; context: { $implicit: section }" />
                 }
             </ul>
         }
+
+        <ng-template #flatSection let-section>
+            @if (section.heading && rail()) {
+                <li class="layout-menu-divider" role="separator"></li>
+            } @else if (section.heading) {
+                <li class="layout-menu-heading" role="presentation">{{ section.heading }}</li>
+            }
+            @for (item of section.items; track item.label) {
+                <li app-menuitem [item]="item" [root]="false"></li>
+            }
+        </ng-template>
     `
 })
 export class AppMenu {
@@ -88,6 +97,7 @@ export class AppMenu {
         const hasClaim = (claim: string) => this.auth.hasOperationClaim(claim);
         return visibleGroups(MENU_GROUPS, hasClaim).map((group) => ({
             label: group.label,
+            heading: group.heading,
             pinned: group.pinned ?? false,
             open: !group.label || (preferences[group.label] ?? group.defaultOpen ?? false),
             items: group.entries.map((entry) => ({
