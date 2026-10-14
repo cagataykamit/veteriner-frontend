@@ -57,6 +57,15 @@ export const ApiEndpoints = {
         /** POST `{ reason }`; 204. */
         void: (id: string) => `/api/v1/charges/${encodeURIComponent(id)}/void`
     },
+    /** Ücret bekleyen kalemler (ADR-018). */
+    chargeSuggestions: {
+        /** GET (`Charges.Read`; query: `page`, `pageSize`, `clinicId`, `petId`, `examinationId`, `visitId`; yalnız `Pending`). */
+        list: () => `/api/v1/charge-suggestions`,
+        /** POST (`Charges.Create`); gövde opsiyonel `{ description, quantity, unitPrice, requestId }`; 201 yeni ücret, 200 aynı `requestId`. */
+        convert: (id: string) => `/api/v1/charge-suggestions/${encodeURIComponent(id)}/convert`,
+        /** POST (`Charges.Create`) `{ reason }` (5–500); 200 kalem. */
+        waive: (id: string) => `/api/v1/charge-suggestions/${encodeURIComponent(id)}/waive`
+    },
     dashboard: {
         summary: () => `/api/v1/dashboard/summary`,
         financeSummary: () => `/api/v1/dashboard/finance-summary`,
