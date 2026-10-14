@@ -25,7 +25,7 @@ import {
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ConfirmationService } from 'primeng/api';
@@ -52,7 +52,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         ConfirmDialogModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
@@ -62,49 +62,23 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
     ],
     providers: [ConfirmationService],
     template: `
-        <app-page-header title="Ürünler" description="Ürün kataloğu.">
-            @if (canCreateProduct && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/products/new" pButton type="button" label="Yeni ürün" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else if (canCreateProduct && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni ürün (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
-
         <div class="card">
-            @if (loading()) {
-                <app-loading-state message="Ürün listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
                 <div class="flex flex-col gap-4">
                     @if (listActionError()) {
                         <p class="text-red-500 text-sm m-0" role="alert">{{ listActionError() }}</p>
                     }
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
-                            <div class="min-w-0">
-                                <h5 class="m-0">Ürünler</h5>
-                                @if (totalItems() > 0) {
-                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                                }
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <app-filter-field label="Arama" labelFor="productSearch" [active]="isSearchActive()" width="grow">
-                                    <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </app-filter-field>
-                                <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                                </div>
-                            </div>
-                        </div>
+                        <app-list-header class="mb-3" title="Ürünler" [count]="totalItems()">
+                            <app-filter-field label="Arama" labelFor="productSearch" [active]="isSearchActive()" width="grow">
+                                <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (search)="applyFilters()" />
+                            </app-filter-field>
+                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                            @if (canCreateProduct && !ro.mutationBlocked()) {
+                                <a actions routerLink="/panel/products/new" pButton type="button" label="Yeni ürün" icon="pi pi-plus" class="p-button-primary"></a>
+                            } @else if (canCreateProduct && ro.mutationBlocked()) {
+                                <button actions pButton type="button" label="Yeni ürün (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            }
+                        </app-list-header>
                         <div class="flex flex-wrap items-end gap-3">
                             <app-filter-field label="Durum filtresi" labelId="lblProductActive" [active]="isActiveFilterApplied()" width="select">
                                 <p-select
@@ -120,6 +94,11 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                             </app-filter-field>
                         </div>
                     </div>
+            @if (loading()) {
+                <app-loading-state message="Ürün listesi yükleniyor…" />
+            } @else if (error()) {
+                <app-error-state [detail]="error()!" (retry)="reload()" />
+            } @else {
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                     } @else {
@@ -261,8 +240,8 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                             />
                         </div>
                     }
-                </div>
             }
+                </div>
         </div>
 
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />

@@ -20,7 +20,7 @@ import { ProductService } from '@/app/features/inventory/services/product.servic
 import { goodsReceiptTotalCost } from '@/app/features/inventory/utils/goods-receipt.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 
 type SelectOption = { label: string; value: string };
 
@@ -33,11 +33,10 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
 @Component({
     selector: 'app-goods-receipt-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, DateInputComponent, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, DateInputComponent, AppListHeaderComponent],
     template: `
-        <app-page-header title="Mal kabul" description="Tek faturadan gelen ürünleri tek seferde stoğa alın; hata varsa hiçbir satır kaydedilmez." />
-
         <div class="card">
+            <app-list-header class="mb-4" title="Mal kabul" />
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; mal kabul kaydedilemez.</p>
             }

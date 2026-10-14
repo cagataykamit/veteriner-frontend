@@ -22,7 +22,7 @@ import { suggestedReceiptQuantity } from '@/app/features/inventory/utils/goods-r
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -69,7 +69,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
         ButtonModule,
         InputTextModule,
         SelectModule,
-        AppPageHeaderComponent,
+        AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
@@ -77,11 +77,6 @@ const PRODUCT_STOCK_CSV_HEADERS = [
         SearchInputComponent
     ],
     template: `
-        <app-page-header
-            title="Stok durumu"
-            description="Aktif klinik bağlamındaki ürün stokları."
-        />
-
         <div class="card">
             @if (exportError()) {
                 <div class="mb-4 border border-red-200 dark:border-red-800 rounded-border p-3">
@@ -89,46 +84,31 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                 </div>
             }
 
-            @if (loading()) {
-                <app-loading-state message="Stok listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
                 <div class="flex flex-col gap-4">
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
-                            <div class="min-w-0">
-                                <h5 class="m-0">Stoklar</h5>
-                                <p class="text-muted-color text-sm m-0 mt-1">{{ activeClinicContextHint() }}</p>
-                                @if (totalItems() > 0) {
-                                    <span class="text-sm text-muted-color whitespace-nowrap">{{ totalItems() }} kayıt</span>
-                                }
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
-                                <app-filter-field label="Arama" labelFor="stockSearch" [active]="isSearchActive()" width="grow">
-                                    <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (search)="applyFilters()" />
-                                </app-filter-field>
-                                <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button
-                                        [label]="copy.buttonClear"
-                                        icon="pi pi-times"
-                                        severity="secondary"
-                                        (onClick)="resetFilters()"
-                                        [disabled]="loading()"
-                                    />
-                                    @if (canExportStocks()) {
-                                        <p-button
-                                            label="Dışa aktar"
-                                            icon="pi pi-download"
-                                            severity="help"
-                                            (onClick)="exportCsv()"
-                                            [loading]="exporting()"
-                                            [disabled]="loading() || exporting()"
-                                        />
-                                    }
-                                </div>
-                            </div>
-                        </div>
+                        <app-list-header class="mb-3" title="Stok durumu" [count]="totalItems()">
+                            <p hint class="text-muted-color text-sm m-0 mt-1">{{ activeClinicContextHint() }}</p>
+                            <app-filter-field label="Arama" labelFor="stockSearch" [active]="isSearchActive()" width="grow">
+                                <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (search)="applyFilters()" />
+                            </app-filter-field>
+                            <p-button actions
+                                [label]="copy.buttonClear"
+                                icon="pi pi-times"
+                                severity="secondary"
+                                (onClick)="resetFilters()"
+                                [disabled]="loading()"
+                            />
+                            @if (canExportStocks()) {
+                                <p-button actions
+                                    label="Dışa aktar"
+                                    icon="pi pi-download"
+                                    severity="help"
+                                    (onClick)="exportCsv()"
+                                    [loading]="exporting()"
+                                    [disabled]="loading() || exporting()"
+                                />
+                            }
+                        </app-list-header>
                         <div class="flex flex-wrap items-end gap-3">
                             @if (canReadCategories && categoryOptions().length > 0) {
                                 <app-filter-field label="Kategori" labelId="lblStockCat" [active]="isCategoryFilterApplied()" width="select">
@@ -160,6 +140,11 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                             </app-filter-field>
                         </div>
                     </div>
+            @if (loading()) {
+                <app-loading-state message="Stok listesi yükleniyor…" />
+            } @else if (error()) {
+                <app-error-state [detail]="error()!" (retry)="reload()" />
+            } @else {
 
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="emptyListMessage()" [hint]="emptyListHint()" />
@@ -283,8 +268,8 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                             />
                         </div>
                     }
-                </div>
             }
+                </div>
         </div>
     `
 })
