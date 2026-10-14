@@ -81,7 +81,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                             <tr class="whitespace-nowrap">
                                 <th>Tarih</th>
                                 <th>Müşteri</th>
-                                <th>Hayvan</th>
+                                <th>Hasta</th>
                                 <th>Açıklama</th>
                                 <th class="text-right">Miktar</th>
                                 <th class="text-right">Birim fiyat</th>

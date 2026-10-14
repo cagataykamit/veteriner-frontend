@@ -70,7 +70,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Ödemeler" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="paySearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="paySearch" placeholder="Not, para birimi; müşteri, hayvan, tür veya ırk, e-posta, telefon…" [(value)]="searchInput" (search)="applySearch()" />
+                                <app-search-input inputId="paySearch" placeholder="Not, para birimi; müşteri, hasta, tür veya ırk, e-posta, telefon…" [(value)]="searchInput" (search)="applySearch()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             @if (canCreatePayment && !ro.mutationBlocked()) {
@@ -126,7 +126,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                             <ng-template #header>
                                 <tr class="whitespace-nowrap">
                                     <th>Müşteri</th>
-                                    <th>Hayvan</th>
+                                    <th>Hasta</th>
                                     <th class="text-right">Tutar</th>
                                     <th>Para birimi</th>
                                     <th>Yöntem</th>
@@ -187,7 +187,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                         }
                                     </div>
                                     <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Hayvan: </span>
+                                        <span class="text-muted-color font-medium">Hasta: </span>
                                         @if (row.petId) {
                                             <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
                                                 row.petName
@@ -254,7 +254,7 @@ export class PaymentsListPageComponent implements OnInit {
 
     readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
     readonly contextClientId = signal(readContextFilterParam(this.route, 'clientId'));
-    readonly contextFilterLabel = computed(() => (this.contextPetId() ? 'Seçili hayvanın kayıtları gösteriliyor' : 'Seçili müşterinin kayıtları gösteriliyor'));
+    readonly contextFilterLabel = computed(() => (this.contextPetId() ? 'Seçili hastanın kayıtları gösteriliyor' : 'Seçili müşterinin kayıtları gösteriliyor'));
 
     /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
     readonly loading = signal(true);

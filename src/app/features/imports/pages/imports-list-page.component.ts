@@ -45,7 +45,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         AppStatusTagComponent
     ],
     template: `
-        <app-page-header title="Veri içe aktarma" description="Eski sistemdeki müşteri, hayvan ve aşı geçmişini Excel veya CSV dosyasıyla aktarın. Her adım onayınızla ilerler; aktarmadan önce sonucu görürsünüz.">
+        <app-page-header title="Veri içe aktarma" description="Eski sistemdeki müşteri, hasta ve aşı geçmişini Excel veya CSV dosyasıyla aktarın. Her adım onayınızla ilerler; aktarmadan önce sonucu görürsünüz.">
             <div actions class="flex flex-wrap gap-2">
                 <p-button size="small" severity="secondary" icon="pi pi-download" label="Excel şablonu" [loading]="templateBusy()" (onClick)="downloadTemplate()" />
                 @if (canManage) {
@@ -227,7 +227,7 @@ export class ImportsListPageComponent implements OnInit {
         const s = b.summary;
         const parts = [
             s.customers.total ? `${s.customers.total} müşteri` : '',
-            s.pets.total ? `${s.pets.total} hayvan` : '',
+            s.pets.total ? `${s.pets.total} hasta` : '',
             s.vaccinations.total ? `${s.vaccinations.total} aşı` : ''
         ].filter(Boolean);
         return parts.length ? parts.join(' · ') : 'Satır bilgisi yok';

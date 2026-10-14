@@ -128,7 +128,7 @@ function canonicalPaidAtList(dto: PaymentListItemDto): string | null {
 }
 
 /** Birden fazla hayvana yayılan ödemede tek hayvan adı yerine gösterilir (petCount > 1). */
-export const MULTIPLE_PETS_LABEL = 'Birden fazla hayvan';
+export const MULTIPLE_PETS_LABEL = 'Birden fazla hasta';
 
 function hasMultiplePets(petCount: number | null | undefined): boolean {
     return petCount != null && petCount > 1;

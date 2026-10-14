@@ -84,8 +84,8 @@ describe('ImportRollbackPageComponent', () => {
     it('sayıları, engelli kayıtları sade nedenle ve uyarıyı gösterir; kişisel veri alanı yoktur', () => {
         const el = create('Committed');
         const t = text(el);
-        expect(t).toContain('10 müşteri · 12 hayvan · 30 aşı');
-        expect(t).toContain('Hayvan · Hayvanlar, 12. satır');
+        expect(t).toContain('10 müşteri · 12 hasta · 30 aşı');
+        expect(t).toContain('Hasta · Hastalar, 12. satır');
         expect(t).toContain('Bağlı geliş (ziyaret) var');
         expect(t).toContain('Bağlı ücret var');
         expect(t).toContain('düzenlemeler izlenemiyor');
@@ -150,7 +150,7 @@ describe('ImportRollbackPageComponent', () => {
         const el = create('PartiallyRolledBack', { preview: preview({ status: 'PartiallyRolledBack', rolledBack: { clients: 5, pets: 5, vaccinations: 9 } }) });
         const t = text(el);
         expect(t).toContain('kısmen tamamlandı');
-        expect(t).toContain('5 müşteri · 5 hayvan · 9 aşı');
+        expect(t).toContain('5 müşteri · 5 hasta · 9 aşı');
         expect(t).toContain('Bağlı geliş (ziyaret) var');
         expect(t).toContain('Geri almayı yeniden dene');
     });

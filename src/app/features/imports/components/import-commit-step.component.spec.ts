@@ -109,7 +109,7 @@ describe('ImportCommitStepComponent', () => {
         fixture.detectChanges();
         const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
         expect(text).toContain('başlatılamıyor');
-        expect(text).toContain('Hayvanlar müşterilere bağlanamıyor');
+        expect(text).toContain('Hastalar müşterilere bağlanamıyor');
         expect(text).not.toContain('Uygulama henüz etkin değil');
         expect(stale).toBe(1);
     });

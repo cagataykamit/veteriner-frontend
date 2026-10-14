@@ -85,8 +85,8 @@ describe('kayıt defteri tanımları', () => {
             ['Sıra No', 1, 2],
             ['REÇETENİN', 3, 1],
             ['VETERİNER HEKİMİN', 2, 1],
-            ['HAYVAN SAHİBİNİN', 2, 1],
-            ['HAYVANIN', 3, 1],
+            ['HASTA SAHİBİNİN', 2, 1],
+            ['HASTANIN', 3, 1],
             ['İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi', 1, 2]
         ]);
         expect(layout.sub).toEqual(['Tarihi', 'Sınıfı', 'Cilt/Sıra No', 'Adı Soyadı', 'Adresi', 'Adı Soyadı', 'Adresi', 'Türü', 'Kulak/İşletme No', 'Sayısı']);

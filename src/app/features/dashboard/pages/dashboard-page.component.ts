@@ -104,7 +104,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                 <a routerLink="/panel/clients" pButton type="button" label="Müşteriler" icon="pi pi-users" severity="secondary" class="p-button-sm"></a>
                             }
                             @if (canOpenPets()) {
-                                <a routerLink="/panel/pets" pButton type="button" label="Hayvanlar" icon="pi pi-heart" severity="secondary" class="p-button-sm"></a>
+                                <a routerLink="/panel/pets" pButton type="button" label="Hastalar" icon="pi pi-heart" severity="secondary" class="p-button-sm"></a>
                             }
                             @if (canShowPaymentsQuickAction()) {
                                 <a routerLink="/panel/payments" pButton type="button" label="Ödemeler" icon="pi pi-credit-card" severity="secondary" class="p-button-sm"></a>
@@ -439,7 +439,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                     <div class="col-span-12">
                         <p class="text-muted-color text-sm m-0">
                             Toplam <span class="font-medium">{{ d.summary.data.totalClientsCount }}</span> müşteri ·
-                            <span class="font-medium">{{ d.summary.data.totalPetsCount }}</span> hayvan kaydı.
+                            <span class="font-medium">{{ d.summary.data.totalPetsCount }}</span> hasta kaydı.
                         </p>
                     </div>
                 }
@@ -535,7 +535,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                         <tr>
                                             <th>Saat</th>
                                             <th>Müşteri</th>
-                                            <th>Hayvan</th>
+                                            <th>Hasta</th>
                                             <th>Durum</th>
                                             <th></th>
                                         </tr>
@@ -616,7 +616,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                         <tr>
                                             <th>Sonraki tarih</th>
                                             <th>Aşı</th>
-                                            <th>Hayvan</th>
+                                            <th>Hasta</th>
                                         </tr>
                                     </ng-template>
                                     <ng-template #body let-row>
@@ -674,7 +674,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                     <ng-template #header>
                                         <tr>
                                             <th>Tarih</th>
-                                            <th>Hayvan</th>
+                                            <th>Hasta</th>
                                             <th>Müşteri</th>
                                             <th></th>
                                         </tr>
@@ -755,7 +755,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                             <tr>
                                                 <th>Tarih</th>
                                                 <th>Müşteri</th>
-                                                <th>Hayvan</th>
+                                                <th>Hasta</th>
                                                 <th>Tutar</th>
                                                 <th>Yöntem</th>
                                                 <th></th>
@@ -796,7 +796,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                 <div class="col-span-12">
                     @if (d.summary.error || !d.summary.data) {
                         <div class="card">
-                            <h5 class="mt-0 mb-4">Son müşteri / hayvan</h5>
+                            <h5 class="mt-0 mb-4">Son müşteri / hasta</h5>
                             <app-empty-state message="Özet yüklenemediği için son kayıtlar gösterilemiyor." />
                         </div>
                     } @else {
@@ -827,7 +827,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                                 }
                             </div>
                             <div class="card mb-0 h-full">
-                                <h5 class="mt-0 mb-4">Son hayvanlar</h5>
+                                <h5 class="mt-0 mb-4">Son hastalar</h5>
                                 @if (d.summary.data.recentPets.length === 0) {
                                     <app-empty-state message="Kayıt yok." />
                                 } @else {

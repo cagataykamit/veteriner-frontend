@@ -105,7 +105,7 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.MicrochipInvalid': 'Mikroçip numarası geçersiz',
     'Imports.MicrochipScientificNotation': 'Mikroçip bilimsel gösterimde (hücreyi metin yapın)',
     'Imports.MicrochipLength': 'Mikroçip 15 haneli değil',
-    'Imports.MicrochipConflict': 'Aynı mikroçip başka bir hayvanda var',
+    'Imports.MicrochipConflict': 'Aynı mikroçip başka bir hastada var',
     'Imports.SpeciesUnmapped': 'Tür sistemde bulunamadı',
     'Imports.VaccineUnmapped': 'Aşı adı sistemde bulunamadı',
     'Imports.ValueSkipped': 'Değer bilinçli olarak atlandı',
@@ -117,19 +117,19 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.GenderUnrecognized': 'Cinsiyet tanınmadı',
     'Imports.NeuteredUnrecognized': 'Kısır değeri tanınmadı',
     'Imports.WeightInvalid': 'Ağırlık geçersiz; boş aktarılır',
-    'Imports.DuplicateReference': 'Müşteri veya hayvan numarası dosyada tekrar ediyor',
+    'Imports.DuplicateReference': 'Müşteri veya hasta numarası dosyada tekrar ediyor',
     'Imports.DuplicateInFile': 'Dosyada aynı kayıt daha önce geçiyor',
     'Imports.DuplicateClient': 'Aynı müşteri sistemde zaten var',
     'Imports.MatchedExisting': 'Sistemdeki kayıtla eşleşti',
     'Imports.SharedPhone': 'Telefon başka bir müşteriyle ortak',
     'Imports.PossibleDuplicate': 'Aynı adlı müşteri zaten var; ayrı kayıt oluşur',
-    'Imports.OwnerNotFound': 'Hayvanın sahibi bulunamadı',
+    'Imports.OwnerNotFound': 'Hastanın sahibi bulunamadı',
     'Imports.OwnerRowInvalid': 'Sahip satırı hatalı olduğu için aktarılamaz',
-    'Imports.PetNotFound': 'Aşının hayvanı bulunamadı',
-    'Imports.PetRowInvalid': 'Hayvan satırı hatalı olduğu için aktarılamaz',
+    'Imports.PetNotFound': 'Aşının hastası bulunamadı',
+    'Imports.PetRowInvalid': 'Hasta satırı hatalı olduğu için aktarılamaz',
     'Imports.DuplicateVaccination': 'Aynı aşı zaten kayıtlı; atlanır',
-    'Imports.OwnerLinkUnavailable': 'Hayvanlar müşterilere bağlanamıyor (müşteri tablosu veya müşteri no eksik)',
-    'Imports.PetLinkUnavailable': 'Aşılar hayvanlara bağlanamıyor (hayvan tablosu veya hayvan no eksik)',
+    'Imports.OwnerLinkUnavailable': 'Hastalar müşterilere bağlanamıyor (müşteri tablosu veya müşteri no eksik)',
+    'Imports.PetLinkUnavailable': 'Aşılar hastalara bağlanamıyor (hasta tablosu veya hasta no eksik)',
     'Imports.NoImportableRows': 'Aktarılabilecek geçerli satır yok',
     'Imports.OwnerUnitFailed': 'Aynı müşterinin başka bir satırı aktarılamadığı için bu satır da aktarılmadı',
     'Imports.MatchedAtCommit': 'Aktarma sırasında sistemde aynı kayıt bulundu; yeni kayıt açılmadı, mevcutla eşleşti',
@@ -253,8 +253,8 @@ const ROLLBACK_REASON_LABELS: Readonly<Record<string, string>> = {
     HasOtherVaccinations: 'Elle ya da başka aktarmayla eklenmiş aşı var',
     HasKeptVaccinations: 'Aşılarından bazıları silinemediği için kalıyor',
     ClientModified: 'Müşteri sonradan düzenlenmiş',
-    HasOtherPets: 'Başka yolla eklenmiş hayvanı var',
-    HasKeptPets: 'Hayvanlarından bazıları silinemediği için kalıyor',
+    HasOtherPets: 'Başka yolla eklenmiş hastası var',
+    HasKeptPets: 'Hastalarından bazıları silinemediği için kalıyor',
     OwnerUnitBlocked: 'Aynı müşterinin başka bir kaydı silinemediği için bırakıldı'
 };
 
@@ -264,19 +264,19 @@ export function rollbackReasonLabel(code: string): string {
 
 export const ROLLBACK_ENTITY_LABELS: Readonly<Record<ImportRollbackEntity, string>> = {
     Client: 'Müşteri',
-    Pet: 'Hayvan',
+    Pet: 'Hasta',
     Vaccination: 'Aşı'
 };
 
 export const IMPORT_TABLE_LABELS: Readonly<Record<ImportTable, string>> = {
     customers: 'Müşteriler',
-    pets: 'Hayvanlar',
+    pets: 'Hastalar',
     vaccinations: 'Aşılar'
 };
 
 /** Geri alma önizlemesi uyarıları (sözleşme 7.11). */
 const ROLLBACK_WARNING_LABELS: Readonly<Record<string, string>> = {
-    'Imports.PetEditsNotTracked': 'Hayvanlarda sonradan yapılan düzenlemeler izlenemiyor; aktarılan hayvanlar, sonradan düzenlenmiş olsalar bile silinir.',
+    'Imports.PetEditsNotTracked': 'Hastalarda sonradan yapılan düzenlemeler izlenemiyor; aktarılan hastalar, sonradan düzenlenmiş olsalar bile silinir.',
     'Imports.RemindersAlreadyReleased': 'Aşı hatırlatmaları açılmış; gönderilmiş e-postalar geri alınamaz.'
 };
 

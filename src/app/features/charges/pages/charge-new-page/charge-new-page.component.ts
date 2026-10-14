@@ -59,7 +59,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="chargePet" class="block text-sm font-medium text-muted-color mb-2">Hayvan</label>
+                        <label for="chargePet" class="block text-sm font-medium text-muted-color mb-2">Hasta</label>
                         <app-pet-search inputId="chargePet" formControlName="petId" [clientId]="form.controls.clientId.value" />
                     </div>
                     @if (canLinkVisit) {

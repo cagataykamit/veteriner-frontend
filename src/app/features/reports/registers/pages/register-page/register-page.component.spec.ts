@@ -120,7 +120,7 @@ describe('RegisterPageComponent', () => {
         const el: HTMLElement = create('prescriptions').nativeElement;
         expect(el.querySelector('.register-print-title')!.textContent).toContain('Reçete Kayıt Defteri');
         const groups = Array.from(el.querySelectorAll('.register-head-row')[0].querySelectorAll('th')).map((th) => th.textContent!.trim());
-        expect(groups).toEqual(['Sıra No', 'REÇETENİN', 'VETERİNER HEKİMİN', 'HAYVAN SAHİBİNİN', 'HAYVANIN', 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi']);
+        expect(groups).toEqual(['Sıra No', 'REÇETENİN', 'VETERİNER HEKİMİN', 'HASTA SAHİBİNİN', 'HASTANIN', 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi']);
         const cells = Array.from(el.querySelectorAll('tbody tr td')).map((td) => td.textContent!.trim());
         expect(cells[0]).toBe('1');
         expect(cells[cells.length - 1]).toBe('Dectomax ×1');

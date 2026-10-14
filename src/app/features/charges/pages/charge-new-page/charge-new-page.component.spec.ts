@@ -198,13 +198,13 @@ describe('ChargeNewPageComponent', () => {
     });
 
     it('hata sonrası mesaj gösterilir, düğme açılır ve yeniden denemede aynı requestId kullanılır', async () => {
-        charges.createCharge.and.returnValue(throwError(() => new Error('Geliş kaydındaki hayvan bu müşteriye ait değil.')));
+        charges.createCharge.and.returnValue(throwError(() => new Error('Geliş kaydındaki hasta bu müşteriye ait değil.')));
         await setup();
         fill();
         cmp.onSubmit();
         fixture.detectChanges();
         expect(cmp.submitting()).toBeFalse();
-        expect(cmp.submitError()).toBe('Geliş kaydındaki hayvan bu müşteriye ait değil.');
+        expect(cmp.submitError()).toBe('Geliş kaydındaki hasta bu müşteriye ait değil.');
         expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('bu müşteriye ait değil');
         cmp.onSubmit();
         const [first, second] = charges.createCharge.calls.allArgs().map((a) => a[0].requestId);
@@ -278,15 +278,15 @@ describe('ChargeNewPageComponent', () => {
     it('müşteri seçilince ve Pets.Create varken "yeni hayvan ekle" görünür; müşteri yokken veya yetkisiz görünmez', async () => {
         claims.add('Pets.Create');
         await setup();
-        expect(fixture.nativeElement.textContent).not.toContain('yeni hayvan');
+        expect(fixture.nativeElement.textContent).not.toContain('yeni hasta');
         fill();
-        expect(fixture.nativeElement.textContent).toContain('Bu müşteri için yeni hayvan');
+        expect(fixture.nativeElement.textContent).toContain('Bu müşteri için yeni hasta');
     });
 
     it('Pets.Create yoksa "yeni hayvan ekle" görünmez', async () => {
         await setup();
         fill();
-        expect(fixture.nativeElement.textContent).not.toContain('yeni hayvan');
+        expect(fixture.nativeElement.textContent).not.toContain('yeni hasta');
     });
 
 

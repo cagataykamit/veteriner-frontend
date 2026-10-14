@@ -45,7 +45,7 @@ type UploadMode = 'xlsx' | 'csv';
             <section class="flex flex-col gap-2">
                 <h6 class="m-0">1. Şablonu indirin</h6>
                 <p class="text-muted-color m-0">
-                    Şablon müşteri, hayvan ve aşı sayfalarını içerir. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.
+                    Şablon müşteri, hasta ve aşı sayfalarını içerir. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.
                 </p>
                 <div class="flex flex-wrap gap-2">
                     <p-button size="small" severity="secondary" icon="pi pi-file-excel" label="Excel şablonu" [loading]="templateBusy() === 'xlsx'" (onClick)="template('xlsx')" />
@@ -64,10 +64,10 @@ type UploadMode = 'xlsx' | 'csv';
                 } @else {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <app-import-drop-zone label="Müşteriler (.csv)" extension=".csv" [file]="csvFiles().customers" (fileChange)="setCsv('customers', $event)" />
-                        <app-import-drop-zone label="Hayvanlar (.csv)" extension=".csv" [file]="csvFiles().pets" (fileChange)="setCsv('pets', $event)" />
+                        <app-import-drop-zone label="Hastalar (.csv)" extension=".csv" [file]="csvFiles().pets" (fileChange)="setCsv('pets', $event)" />
                         <app-import-drop-zone label="Aşılar (.csv)" extension=".csv" [file]="csvFiles().vaccinations" (fileChange)="setCsv('vaccinations', $event)" />
                     </div>
-                    <p class="text-sm text-muted-color m-0">En az bir dosya seçin. Hayvanlar müşterilere, aşılar hayvanlara dosyalar arasında bağlanır.</p>
+                    <p class="text-sm text-muted-color m-0">En az bir dosya seçin. Hastalar müşterilere, aşılar hastalara dosyalar arasında bağlanır.</p>
                 }
             </section>
 

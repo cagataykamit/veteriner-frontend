@@ -52,7 +52,7 @@ const PATIENT = 'Hasta';
 
 export const EXAMINATION_REGISTER: RegisterDefinition<ExaminationRegisterRowDto> = {
     book: 'examinations',
-    title: 'Hayvan Muayene Kayıt Defteri',
+    title: 'Hasta Muayene Kayıt Defteri',
     description: 'Seçilen tarih aralığındaki muayeneler: hasta, şikâyet, teşhis, tedavi, reçete ve satışa eklenen ilaçlar.',
     readClaims: [EXAMINATIONS_READ_CLAIM],
     exportFilePrefix: 'muayene-defteri',
@@ -129,11 +129,11 @@ export const PRESCRIPTION_REGISTER: RegisterDefinition<PrescriptionRegisterRowDt
         { group: 'REÇETENİN', header: 'Cilt/Sıra No', cell: (r) => r.volumeSequenceNumber ?? '' },
         { group: 'VETERİNER HEKİMİN', header: 'Adı Soyadı', cell: (r) => r.veterinarianName ?? '' },
         { group: 'VETERİNER HEKİMİN', header: 'Adresi', cell: (r) => r.veterinarianAddress ?? '' },
-        { group: 'HAYVAN SAHİBİNİN', header: 'Adı Soyadı', cell: (r) => r.ownerName },
-        { group: 'HAYVAN SAHİBİNİN', header: 'Adresi', cell: (r) => r.ownerAddress ?? '' },
-        { group: 'HAYVANIN', header: 'Türü', cell: (r) => r.species },
-        { group: 'HAYVANIN', header: 'Kulak/İşletme No', cell: (r) => r.earTagNumber ?? '' },
-        { group: 'HAYVANIN', header: 'Sayısı', cell: (r) => String(r.animalCount) },
+        { group: 'HASTA SAHİBİNİN', header: 'Adı Soyadı', cell: (r) => r.ownerName },
+        { group: 'HASTA SAHİBİNİN', header: 'Adresi', cell: (r) => r.ownerAddress ?? '' },
+        { group: 'HASTANIN', header: 'Türü', cell: (r) => r.species },
+        { group: 'HASTANIN', header: 'Kulak/İşletme No', cell: (r) => r.earTagNumber ?? '' },
+        { group: 'HASTANIN', header: 'Sayısı', cell: (r) => String(r.animalCount) },
         { header: 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi', cell: (r) => r.items.map(prescribedItemText).join('; ') }
     ],
     screenColumns: [
@@ -144,9 +144,9 @@ export const PRESCRIPTION_REGISTER: RegisterDefinition<PrescriptionRegisterRowDt
             lines: (r) => [strong(formatDateDisplay(r.prescribedAtUtc)), items([r.prescriptionClass && `Sınıf: ${r.prescriptionClass}`, r.volumeSequenceNumber && `Cilt/Sıra: ${r.volumeSequenceNumber}`], 'muted')]
         },
         { header: 'Veteriner Hekim', minWidth: '12rem', lines: (r) => [strong(r.veterinarianName ?? ''), muted(r.veterinarianAddress ?? '')] },
-        { header: 'Hayvan Sahibi', minWidth: '12rem', lines: (r) => [strong(r.ownerName), muted(r.ownerAddress ?? '')] },
+        { header: 'Hasta Sahibi', minWidth: '12rem', lines: (r) => [strong(r.ownerName), muted(r.ownerAddress ?? '')] },
         {
-            header: 'Hayvan',
+            header: 'Hasta',
             minWidth: '9rem',
             lines: (r) => [strong(r.species), items([r.earTagNumber && `Kulak/İşletme No: ${r.earTagNumber}`, `Sayı: ${r.animalCount}`], 'muted')]
         },
@@ -290,7 +290,7 @@ const vaccineInfoProductText = (r: VaccineInfoRegisterRowDto) => r.productName +
 export const VACCINE_INFO_REGISTER: RegisterDefinition<VaccineInfoRegisterRowDto> = {
     book: 'vaccine-info',
     title: 'Aşı Bilgi Raporu',
-    description: 'Seçilen tarih aralığında hayvanlara uygulanan aşılar: hasta, ürün, seri no ve tutar.',
+    description: 'Seçilen tarih aralığında uygulanan aşılar: hasta, ürün, seri no ve tutar.',
     readClaims: [ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_READ_CLAIM, PRODUCTS_READ_CLAIM],
     exportFilePrefix: 'asi-bilgi-raporu',
     stateKey: 'panel:reports:registers:vaccine-info:listState',

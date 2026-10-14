@@ -131,7 +131,7 @@ interface ConvertedRow {
                             <tr class="whitespace-nowrap">
                                 <th>Tarih</th>
                                 <th>Müşteri</th>
-                                <th>Hayvan</th>
+                                <th>Hasta</th>
                                 <th>Kalem</th>
                                 <th class="text-right">Miktar</th>
                                 <th class="text-right">Birim fiyat</th>
@@ -241,7 +241,7 @@ export class ChargeSuggestionsPageComponent implements OnInit {
         if (s.examinationId) {
             return 'Seçili muayenenin kalemleri';
         }
-        return s.petId ? 'Seçili hayvanın kalemleri' : null;
+        return s.petId ? 'Seçili hastanın kalemleri' : null;
     });
     readonly waiveSummary = computed(() => {
         const t = this.target();

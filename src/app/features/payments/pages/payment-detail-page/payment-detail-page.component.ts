@@ -78,7 +78,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hayvan</h5>
+                        <h5 class="mt-0 mb-4">Müşteri / hasta</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">
@@ -90,7 +90,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                                     {{ payment()!.clientName }}
                                 }
                             </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan</dt>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">
                                 @if (payment()!.petId) {
                                     <a [routerLink]="['/panel/pets', payment()!.petId]" class="text-primary font-medium no-underline">{{ payment()!.petName }}</a>
@@ -164,11 +164,11 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                            <h5 class="mt-0 mb-0">Son randevular (hayvan)</h5>
+                            <h5 class="mt-0 mb-0">Son randevular (hasta)</h5>
                             <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (!payment()!.petId) {
-                            <app-empty-state [message]="payment()!.hasMultiplePets ? 'Ödeme birden fazla hayvana ait; randevu özeti gösterilemiyor.' : 'Hayvan bilgisi yok; randevu özeti gösterilemiyor.'" />
+                            <app-empty-state [message]="payment()!.hasMultiplePets ? 'Ödeme birden fazla hastaya ait; randevu özeti gösterilemiyor.' : 'Hasta bilgisi yok; randevu özeti gösterilemiyor.'" />
                         } @else if (apptLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (apptError()) {

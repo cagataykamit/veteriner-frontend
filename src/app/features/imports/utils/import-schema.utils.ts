@@ -9,7 +9,7 @@ export interface ImportFieldDef {
 
 export const IMPORT_TABLE_LABELS: Readonly<Record<ImportTable, string>> = {
     customers: 'Müşteriler',
-    pets: 'Hayvanlar',
+    pets: 'Hastalar',
     vaccinations: 'Aşılar'
 };
 
@@ -17,7 +17,7 @@ export const IMPORT_TABLES: readonly ImportTable[] = ['customers', 'pets', 'vacc
 
 export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef[]>> = {
     customers: [
-        { key: 'MusteriNo', label: 'Müşteri no', hint: 'Eski sistemdeki müşteri numarası; hayvanları müşteriye bağlamak için kullanılır.' },
+        { key: 'MusteriNo', label: 'Müşteri no', hint: 'Eski sistemdeki müşteri numarası; hastaları müşteriye bağlamak için kullanılır.' },
         { key: 'AdSoyad', label: 'Ad soyad' },
         { key: 'Telefon', label: 'Telefon' },
         { key: 'Eposta', label: 'E-posta' },
@@ -27,8 +27,8 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'MusteriNo', label: 'Müşteri no', hint: 'Sahibe bağlantı için tercih edilen alan.' },
         { key: 'SahipAdSoyad', label: 'Sahip ad soyad', hint: 'Müşteri no yoksa sahibi bulmak için sahip telefonuyla birlikte kullanılır.' },
         { key: 'SahipTelefon', label: 'Sahip telefon' },
-        { key: 'HayvanNo', label: 'Hayvan no', hint: 'Aşıları hayvana bağlamak için tercih edilen alan.' },
-        { key: 'HayvanAdi', label: 'Hayvan adı' },
+        { key: 'HayvanNo', label: 'Hasta no', hint: 'Aşıları hastaya bağlamak için tercih edilen alan.' },
+        { key: 'HayvanAdi', label: 'Hasta adı' },
         { key: 'Tur', label: 'Tür' },
         { key: 'Irk', label: 'Irk' },
         { key: 'Cinsiyet', label: 'Cinsiyet' },
@@ -41,10 +41,10 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Not', label: 'Not' }
     ],
     vaccinations: [
-        { key: 'HayvanNo', label: 'Hayvan no', hint: 'Hayvana bağlantı için tercih edilen alan.' },
-        { key: 'SahipAdSoyad', label: 'Sahip ad soyad', hint: 'Hayvan no yoksa sahip, hayvan adı ve tür birlikte kullanılır.' },
+        { key: 'HayvanNo', label: 'Hasta no', hint: 'Hastaya bağlantı için tercih edilen alan.' },
+        { key: 'SahipAdSoyad', label: 'Sahip ad soyad', hint: 'Hasta no yoksa sahip, hasta adı ve tür birlikte kullanılır.' },
         { key: 'SahipTelefon', label: 'Sahip telefon' },
-        { key: 'HayvanAdi', label: 'Hayvan adı' },
+        { key: 'HayvanAdi', label: 'Hasta adı' },
         { key: 'Tur', label: 'Tür' },
         { key: 'AsiAdi', label: 'Aşı adı' },
         { key: 'UygulamaTarihi', label: 'Uygulama tarihi' },
@@ -102,7 +102,7 @@ export function missingRequired(table: ImportTable, map: ImportColumnMap): strin
         missing.push('Müşteri no (veya sahip ad soyad + telefon)');
     }
     if (table === 'vaccinations' && !has('HayvanNo') && !PET_IDENTITY.every(has)) {
-        missing.push('Hayvan no (veya sahip ad soyad + telefon + hayvan adı + tür)');
+        missing.push('Hasta no (veya sahip ad soyad + telefon + hasta adı + tür)');
     }
     return missing;
 }

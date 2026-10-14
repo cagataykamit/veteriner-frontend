@@ -247,7 +247,7 @@ interface OpenItemRow {
                                         <th>{{ multiDay() ? 'Tarih ve saat' : 'Saat' }}</th>
                                         <th>Tür</th>
                                         <th>Müşteri</th>
-                                        <th>Hayvan</th>
+                                        <th>Hasta</th>
                                         <th class="text-right">Tutar</th>
                                         <th>Ödeme türü</th>
                                         <th>İşlemi yapan</th>

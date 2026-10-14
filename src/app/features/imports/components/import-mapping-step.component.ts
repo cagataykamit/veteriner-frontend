@@ -94,7 +94,7 @@ interface SourceOption {
                 styleClass="w-full md:w-96"
                 ariaLabel="Aynı müşteri davranışı"
             />
-            <small class="block text-muted-color mt-2">Mevcut müşteri bilgileri hiçbir durumda güncellenmez; yalnızca hayvanlar bağlanır.</small>
+            <small class="block text-muted-color mt-2">Mevcut müşteri bilgileri hiçbir durumda güncellenmez; yalnızca hastalar bağlanır.</small>
         </section>
 
         @if (!readOnly()) {
@@ -119,7 +119,7 @@ export class ImportMappingStepComponent {
     protected readonly fields = IMPORT_FIELDS;
     protected readonly duplicateOptions: { label: string; value: ImportDuplicateClientMode }[] = [
         { label: 'Mevcut müşteriyle eşleştir (önerilen)', value: 'Match' },
-        { label: 'O müşterinin satırını ve hayvanlarını atla', value: 'Skip' },
+        { label: 'O müşterinin satırını ve hastalarını atla', value: 'Skip' },
         { label: 'Hata olarak işaretle', value: 'Error' }
     ];
 

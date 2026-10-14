@@ -96,7 +96,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
         <ng-template #counts let-title="title" let-c="c">
             <div class="rounded-border border border-surface-200 dark:border-surface-700 p-3 flex-1 basis-56">
                 <div class="text-sm text-muted-color">{{ title }}</div>
-                <div class="mt-1">{{ c.clients }} müşteri · {{ c.pets }} hayvan · {{ c.vaccinations }} aşı</div>
+                <div class="mt-1">{{ c.clients }} müşteri · {{ c.pets }} hasta · {{ c.vaccinations }} aşı</div>
             </div>
         </ng-template>
 
@@ -146,7 +146,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     </div>
                     @if (p.kept.matchedClients || p.kept.matchedPets) {
                         <p class="text-sm text-muted-color mt-0">
-                            Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri ve {{ p.kept.matchedPets }} hayvana dokunulmaz.
+                            Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri ve {{ p.kept.matchedPets }} hastaya dokunulmaz.
                         </p>
                     }
                     @for (w of p.warnings; track w) {
@@ -165,7 +165,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                 @if (blockedError()) {
                     <h6 class="mb-2">Geri alma durduruldu: şu kayıtlar silinemiyor</h6>
                     @if (blockedError()!.counts) {
-                        <p class="mt-0 text-sm">{{ blockedError()!.counts!.clients }} müşteri · {{ blockedError()!.counts!.pets }} hayvan · {{ blockedError()!.counts!.vaccinations }} aşı engelli.</p>
+                        <p class="mt-0 text-sm">{{ blockedError()!.counts!.clients }} müşteri · {{ blockedError()!.counts!.pets }} hasta · {{ blockedError()!.counts!.vaccinations }} aşı engelli.</p>
                     }
                     <ng-container *ngTemplateOutlet="items; context: { $implicit: blockedError()!.items, truncated: blockedError()!.items.length >= 50 }" />
                 }
