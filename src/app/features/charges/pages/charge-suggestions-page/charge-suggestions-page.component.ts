@@ -145,13 +145,13 @@ interface ConvertedRow {
                             <tr>
                                 <td class="whitespace-nowrap">{{ formatDate(row.occurredAtUtc) }}</td>
                                 <td>
-                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[14rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
+                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
                                 </td>
                                 <td>
-                                    <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[11rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
+                                    <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[7rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
                                 </td>
                                 <td>
-                                    <div class="max-w-[16rem] truncate" [title]="row.description">{{ row.description }}</div>
+                                    <div class="max-w-[10rem] truncate" [title]="row.description">{{ row.description }}</div>
                                     <div class="text-sm whitespace-nowrap">
                                         @if (row.examinationId) {
                                             <a [routerLink]="['/panel/examinations', row.examinationId]" class="text-primary no-underline">Muayeneyi aç</a>

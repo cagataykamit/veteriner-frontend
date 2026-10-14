@@ -63,6 +63,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
             } @else {
                 <div class="overflow-x-auto">
                     <p-table
+                        styleClass="p-datatable-sm"
                         [value]="rows()"
                         [lazy]="true"
                         [paginator]="true"
@@ -97,16 +98,16 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                             <tr>
                                 <td class="whitespace-nowrap">{{ formatDate(row.createdAtUtc) }}</td>
                                 <td>
-                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[14rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
+                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
                                 </td>
                                 <td>
                                     @if (row.petId) {
-                                        <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[11rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
+                                        <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[7rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
                                     } @else {
                                         —
                                     }
                                 </td>
-                                <td><div class="max-w-[16rem] truncate" [title]="row.description">{{ row.description }}</div></td>
+                                <td><div class="max-w-[10rem] truncate" [title]="row.description">{{ row.description }}</div></td>
                                 <td class="text-right">{{ row.quantity }}</td>
                                 <td class="text-right whitespace-nowrap">{{ money(row.unitPrice, row.currency) }}</td>
                                 <td class="text-right whitespace-nowrap font-medium">{{ money(row.amount, row.currency) }}</td>

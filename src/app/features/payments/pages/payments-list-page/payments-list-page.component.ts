@@ -138,18 +138,18 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 <tr>
                                     <td>
                                         @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[14rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{
+                                            <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{
                                                 row.clientName
                                             }}</a>
                                         } @else {
-                                            <div class="max-w-[14rem] truncate" [title]="row.clientName">{{ row.clientName }}</div>
+                                            <div class="max-w-[9rem] truncate" [title]="row.clientName">{{ row.clientName }}</div>
                                         }
                                     </td>
                                     <td>
                                         @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[11rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
+                                            <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[7rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
                                         } @else {
-                                            <div class="max-w-[11rem] truncate" [title]="row.petName">{{ row.petName }}</div>
+                                            <div class="max-w-[7rem] truncate" [title]="row.petName">{{ row.petName }}</div>
                                         }
                                     </td>
                                     <td class="text-right whitespace-nowrap font-medium">{{ money(row.amount, row.currency) }}</td>
