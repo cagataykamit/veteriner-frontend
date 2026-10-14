@@ -31,10 +31,14 @@ export interface ReportListQueryBase {
     includeVoided?: string;
     productId?: string;
     veterinarianId?: string;
+    /** Gün sonu dökümüne özgü süzgeçler (`extraKeys`). */
+    kind?: string;
+    paymentMethod?: string;
+    performedByUserId?: string;
 }
 
-/** `ReportListConfig.extraKeys` ile yönetilen kayıt defteri süzgeçlerinin adları. */
-export type ReportExtraKey = 'includeVoided' | 'productId' | 'veterinarianId';
+/** `ReportListConfig.extraKeys` ile yönetilen rapora özgü ek süzgeçlerin adları (kayıt defterleri, gün sonu dökümü). */
+export type ReportExtraKey = 'includeVoided' | 'productId' | 'veterinarianId' | 'kind' | 'paymentMethod' | 'performedByUserId';
 
 export interface ReportListResultBase {
     readonly page: number;
@@ -63,8 +67,10 @@ export interface ReportListConfig<Q, R> {
     snapshot?: boolean;
     /** Kayıt defterleri: yalnız tarih aralığı + klinik süzgeci; `from`/`to` takvim günü (`yyyy-MM-dd`) olarak gider, arama/müşteri/hayvan yoktur. */
     dateRangeOnly?: boolean;
-    /** Kayıt defterlerine özgü ek süzgeçler (birden çok olabilir); `extraInputs` / `activeExtras` ile yönetilir. */
+    /** Rapora özgü ek süzgeçler (birden çok olabilir); `extraInputs` / `activeExtras` ile yönetilir. */
     extraKeys?: readonly ReportExtraKey[];
+    /** Varsayılan dönem yalnız bugündür (gün sonu); yoksa ayın başından bugüne. */
+    todayOnlyByDefault?: boolean;
     /** Sayfa boyutu seçenekleri (varsayılan 10-50). */
     rowsPerPageOptions?: number[];
 }
@@ -331,8 +337,8 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         if (this.snapshot) {
             return;
         }
-        this.fromDateInput = defaultReportFromYyyyMmDd();
         this.toDateInput = localDateYyyyMmDd();
+        this.fromDateInput = this.config.todayOnlyByDefault ? this.toDateInput : defaultReportFromYyyyMmDd();
     }
 
     private bootstrapReportAfterMyClinics(): void {

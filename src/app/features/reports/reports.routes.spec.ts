@@ -75,3 +75,27 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
         }
     });
 });
+
+describe('reports.routes — gün sonu yetkisi', () => {
+    const route = (routes as Route[]).find((r) => r.path === 'end-of-day')!;
+
+    function canActivate(claims: string[]): boolean | UrlTree {
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: Router, useValue: { createUrlTree: (cmds: string[]) => cmds.join('/') as unknown as UrlTree } }
+            ]
+        });
+        return TestBed.runInInjectionContext(() => (route.canActivate![0] as () => boolean | UrlTree)());
+    }
+
+    it('Payments.Read veya Visits.Read ile açılır', () => {
+        expect(canActivate(['Payments.Read'])).toBeTrue();
+        expect(canActivate(['Visits.Read'])).toBeTrue();
+    });
+
+    it('Charges.Read tek başına yetmez; /notfound yönlenir', () => {
+        expect(canActivate(['Charges.Read'])).toBe('/notfound' as unknown as UrlTree);
+    });
+});
