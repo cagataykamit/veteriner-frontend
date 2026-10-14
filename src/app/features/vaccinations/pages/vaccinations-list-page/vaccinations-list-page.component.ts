@@ -23,9 +23,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type VaccinationsListState = {
     search: string;
@@ -59,21 +57,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Aşılar" description="Aşı kayıtları ve takip.">
-            @if (canCreateVaccination && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/vaccinations/new" pButton type="button" label="Yeni Aşı" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else if (canCreateVaccination && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Aşı (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
+        <app-page-header title="Aşılar" description="Aşı kayıtları ve takip." />
 
         <div class="card">
             @if (activeOverdueOnly()) {
@@ -265,7 +249,6 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
 export class VaccinationsListPageComponent implements OnInit {
     protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
-    readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
@@ -301,7 +284,6 @@ export class VaccinationsListPageComponent implements OnInit {
         { label: 'Uygulandı', value: '1' },
         { label: 'İptal', value: '2' }
     ];
-    readonly canCreateVaccination = this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM);
 
     readonly displayedRows = computed(() => this.rawItems());
 

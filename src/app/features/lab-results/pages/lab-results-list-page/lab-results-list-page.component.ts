@@ -26,7 +26,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { LAB_RESULTS_CREATE_CLAIM, LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 @Component({
     selector: 'app-lab-results-list-page',
@@ -45,21 +45,7 @@ import { LAB_RESULTS_CREATE_CLAIM, LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/a
         AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent
     ],
     template: `
-        <app-page-header title="Lab sonuçları" description="Laboratuvar sonuç kayıtları.">
-            @if (canCreateLabResult && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/lab-results/new" pButton type="button" label="Yeni kayıt" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else if (canCreateLabResult && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni kayıt (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
+        <app-page-header title="Lab sonuçları" description="Laboratuvar sonuç kayıtları." />
 
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
@@ -267,7 +253,6 @@ export class LabResultsListPageComponent implements OnInit {
     statusInput: LabResultStatus | '' = '';
     readonly statusOptions = LAB_RESULT_STATUS_FILTER_OPTIONS;
     readonly displayedRows = computed(() => this.rawItems());
-    readonly canCreateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_CREATE_CLAIM);
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
     readonly editLabel = labResultEditLabel;
 

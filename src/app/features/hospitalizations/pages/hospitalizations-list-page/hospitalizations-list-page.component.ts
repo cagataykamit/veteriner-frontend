@@ -23,9 +23,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { HOSPITALIZATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type ActiveFilterUi = 'all' | 'active' | 'discharged';
 type HospitalizationsListState = {
@@ -58,21 +56,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Yatışlar" description="Yatış ve gözlem kayıtları.">
-            @if (canCreateHospitalization && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/hospitalizations/new" pButton type="button" label="Yeni yatış" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else if (canCreateHospitalization && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni yatış (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
+        <app-page-header title="Yatışlar" description="Yatış ve gözlem kayıtları." />
 
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
@@ -256,7 +240,6 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
 export class HospitalizationsListPageComponent implements OnInit {
     protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
-    readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
 
     private readonly hospitalizationsService = inject(HospitalizationsService);
@@ -272,7 +255,6 @@ export class HospitalizationsListPageComponent implements OnInit {
     ];
 
     activeFilterInput: ActiveFilterUi = 'all';
-    readonly canCreateHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_CREATE_CLAIM);
 
     readonly loading = signal(false);
     readonly error = signal<string | null>(null);

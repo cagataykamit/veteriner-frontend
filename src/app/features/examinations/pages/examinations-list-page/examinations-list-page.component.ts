@@ -24,9 +24,7 @@ import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/dat
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { EXAMINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type ExaminationsListState = {
     search: string;
@@ -59,21 +57,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Muayeneler" description="Muayene kayıtları ve takip.">
-            @if (canCreateExamination && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/examinations/new" pButton type="button" label="Yeni Muayene" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else if (canCreateExamination && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Muayene (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
+        <app-page-header title="Muayeneler" description="Muayene kayıtları ve takip." />
 
         @if (contextPetId() || contextClientId()) {
             <app-context-filter-chip [label]="contextFilterLabel()" (clear)="clearContextFilter()" />
@@ -236,7 +220,6 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
 export class ExaminationsListPageComponent implements OnInit {
     protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
-    readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
 
     private readonly examinationsService = inject(ExaminationsService);
@@ -266,7 +249,6 @@ export class ExaminationsListPageComponent implements OnInit {
     fromDateInput = '';
     toDateInput = '';
     readonly displayedRows = computed(() => this.rawItems());
-    readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     readonly statusLabel = examinationStatusLabel;

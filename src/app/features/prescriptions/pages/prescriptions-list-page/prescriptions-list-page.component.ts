@@ -22,9 +22,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRESCRIPTIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 type PrescriptionsListState = {
     search: string;
@@ -54,21 +52,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         SearchInputComponent
     ],
     template: `
-        <app-page-header title="Reçeteler" description="Reçete kayıtları.">
-            @if (canCreatePrescription && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/prescriptions/new" pButton type="button" label="Yeni Reçete" icon="pi pi-plus" class="p-button-primary"></a>
-            } @else if (canCreatePrescription && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Reçete (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
-            }
-        </app-page-header>
+        <app-page-header title="Reçeteler" description="Reçete kayıtları." />
 
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
@@ -227,7 +211,6 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
 export class PrescriptionsListPageComponent implements OnInit {
     protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
-    readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
 
     private readonly prescriptionsService = inject(PrescriptionsService);
@@ -255,7 +238,6 @@ export class PrescriptionsListPageComponent implements OnInit {
     fromDateInput = '';
     toDateInput = '';
     readonly displayedRows = computed(() => this.rawItems());
-    readonly canCreatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_CREATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
