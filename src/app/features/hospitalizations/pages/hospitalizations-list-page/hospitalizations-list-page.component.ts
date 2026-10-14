@@ -5,7 +5,9 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
+import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -52,7 +54,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
+        AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
         SearchInputComponent
     ],
     template: `
@@ -71,6 +73,10 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                 ></button>
             }
         </app-page-header>
+
+        @if (contextPetId()) {
+            <app-context-filter-chip label="Seçili hayvanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
+        }
 
         <div class="card">
             @if (loading()) {
@@ -254,6 +260,10 @@ export class HospitalizationsListPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
 
     private readonly hospitalizationsService = inject(HospitalizationsService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+
+    readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
 
     readonly activeFilterOptions: { label: string; value: ActiveFilterUi }[] = [
         { label: 'Tümü', value: 'all' },
@@ -352,6 +362,14 @@ export class HospitalizationsListPageComponent implements OnInit {
         this.loadFromServer(1, this.pageSize(), '', '', '', 'all');
     }
 
+    clearContextFilter(): void {
+        this.contextPetId.set('');
+        void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
+        this.currentPage.set(1);
+        this.first.set(0);
+        this.reload();
+    }
+
     reload(): void {
         this.loadFromServer(
             this.currentPage(),
@@ -395,7 +413,7 @@ export class HospitalizationsListPageComponent implements OnInit {
         force = false
     ): void {
         const ao = this.activeOnlyFromFilter(filter);
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${filter}|${ao ?? 'all'}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${filter}|${ao ?? 'all'}|${this.contextPetId()}`;
         if (!force && key === this.lastLoadKey) {
             return;
         }
@@ -404,6 +422,7 @@ export class HospitalizationsListPageComponent implements OnInit {
         this.error.set(null);
         this.hospitalizationsService
             .getHospitalizations({
+                petId: this.contextPetId() || undefined,
                 page,
                 pageSize,
                 search: search || undefined,

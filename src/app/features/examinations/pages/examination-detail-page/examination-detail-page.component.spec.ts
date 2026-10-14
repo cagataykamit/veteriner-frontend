@@ -190,6 +190,25 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(has(el, 'finalized-locked-hint')).toBeFalse();
     });
 
+    it('Ödeme Oluştur yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
+        const hekim = await setup(detailVm, ['Examinations.Update']);
+        expect(hekim.el.querySelector('a[href*="/panel/payments/new"]')).toBeNull();
+        TestBed.resetTestingModule();
+
+        const yetkili = await setup(detailVm, ['Examinations.Update', 'Payments.Create']);
+        expect(yetkili.el.querySelector('a[href*="/panel/payments/new"]')).not.toBeNull();
+    });
+
+    it('"Tümü →" bağlantıları hayvan bağlamını (petId) taşır', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read']);
+
+        for (const path of ['treatments', 'prescriptions', 'lab-results', 'hospitalizations', 'payments', 'examinations', 'appointments']) {
+            const a = Array.from(el.querySelectorAll(`a[href^="/panel/${path}?"]`));
+            expect(a.length).withContext(path).toBeGreaterThan(0);
+            expect(a[0].getAttribute('href')).withContext(path).toContain('petId=pet-1');
+        }
+    });
+
     it('kesinleşmiş muayenede tedavi/reçete/aşı oluştur gizli ve neden görünür; lab ve yatış açık kalır', async () => {
         const { el } = await setup(finalizedVm, ['Examinations.Update']);
 

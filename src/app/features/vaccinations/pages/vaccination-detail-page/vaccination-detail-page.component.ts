@@ -140,6 +140,17 @@ import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.cons
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.createdAtUtc) }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.updatedAtUtc) }}</dd>
+                            @if (vac()!.examinationId) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">
+                                    <a
+                                        data-testid="linked-examination"
+                                        [routerLink]="['/panel/examinations', vac()!.examinationId]"
+                                        class="text-primary font-medium no-underline"
+                                        >Muayene kaydına git →</a
+                                    >
+                                </dd>
+                            }
                         </dl>
                     </div>
                 </div>

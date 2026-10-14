@@ -30,6 +30,12 @@ describe('ExaminationFinalizeDialogComponent', () => {
         fixture.detectChanges();
     });
 
+    it('onay metni kesinleştirdikten sonra tedavi, reçete, aşı ve yatış eklenemeyeceğini söyler', () => {
+        const text = document.body.querySelector('[data-testid="finalize-locks-linked"]')?.textContent;
+
+        expect(text).toContain('Kesinleştirdikten sonra tedavi, reçete, aşı ve yatış eklenemez');
+    });
+
     it('ekranın açıldığı rowVersion ile kesinleştirir; başarıda kapanır ve sonuç bildirilir', () => {
         service.finalizeExamination.and.returnValue(of(result));
 

@@ -179,7 +179,7 @@ const EM = '—';
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son randevular</h5>
-                                <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/appointments" [queryParams]="{ petId: pet()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (isBlockOmitted('Appointments')) {
                                 <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
@@ -216,7 +216,7 @@ const EM = '—';
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son muayeneler</h5>
-                                <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/examinations" [queryParams]="{ petId: pet()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (isBlockOmitted('Examinations')) {
                                 <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
@@ -250,7 +250,7 @@ const EM = '—';
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son tedaviler</h5>
-                                <a routerLink="/panel/treatments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/treatments" [queryParams]="{ petId: pet()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (isBlockOmitted('Treatments')) {
                                 <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
@@ -284,7 +284,7 @@ const EM = '—';
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son reçeteler</h5>
-                                <a routerLink="/panel/prescriptions" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/prescriptions" [queryParams]="{ petId: pet()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (isBlockOmitted('Prescriptions')) {
                                 <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
@@ -318,7 +318,7 @@ const EM = '—';
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son lab sonuçları</h5>
-                                <a routerLink="/panel/lab-results" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/lab-results" [queryParams]="{ petId: pet()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (isBlockOmitted('LabResults')) {
                                 <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
@@ -353,7 +353,7 @@ const EM = '—';
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son yatışlar</h5>
-                                <a routerLink="/panel/hospitalizations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/hospitalizations" [queryParams]="{ petId: pet()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (isBlockOmitted('Hospitalizations')) {
                                 <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
@@ -388,7 +388,7 @@ const EM = '—';
                         <div class="card">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                                 <h5 class="mt-0 mb-0">Son ödemeler</h5>
-                                <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                                <a routerLink="/panel/payments" [queryParams]="{ petId: pet()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (isBlockOmitted('Payments')) {
                                 <p class="m-0 text-muted-color" data-testid="block-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>

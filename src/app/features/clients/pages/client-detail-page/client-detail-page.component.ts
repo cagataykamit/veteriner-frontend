@@ -103,7 +103,7 @@ import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Bağlı hayvanlar</h5>
-                            <a routerLink="/panel/pets" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            <a routerLink="/panel/pets" [queryParams]="{ clientId: client()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (petsLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
@@ -134,7 +134,7 @@ import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Son randevular</h5>
-                            <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            <a routerLink="/panel/appointments" [queryParams]="{ clientId: client()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (recentSummaryLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
@@ -173,7 +173,7 @@ import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Son muayeneler</h5>
-                            <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            <a routerLink="/panel/examinations" [queryParams]="{ clientId: client()!.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
                         @if (recentSummaryLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
@@ -210,7 +210,7 @@ import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '
                         >
                             <h5 class="mt-0 mb-0 min-w-0 text-base">Ödeme özeti</h5>
                             <a
-                                routerLink="/panel/payments"
+                                routerLink="/panel/payments" [queryParams]="{ clientId: client()!.id }"
                                 class="text-primary font-medium no-underline text-sm shrink-0 whitespace-nowrap"
                                 >Tümü →</a
                             >
