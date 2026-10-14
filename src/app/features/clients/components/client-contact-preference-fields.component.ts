@@ -37,5 +37,5 @@ import { CLIENT_CONTACT_CHANNEL_OPTIONS } from '@/app/features/clients/utils/cli
 })
 export class ClientContactPreferenceFieldsComponent {
     readonly form = input.required<ClientUpsertFormGroup>();
-    protected readonly channelOptions = CLIENT_CONTACT_CHANNEL_OPTIONS;
+    protected readonly channelOptions = [...CLIENT_CONTACT_CHANNEL_OPTIONS];
 }

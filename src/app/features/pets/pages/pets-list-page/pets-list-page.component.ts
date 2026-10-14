@@ -278,7 +278,7 @@ export class PetsListPageComponent implements OnInit {
     speciesIdInput = '';
     clientIdInput = '';
     statusInput: PetLifeStatus | '' = '';
-    readonly statusOptions = PET_LIFE_STATUS_FILTER_OPTIONS;
+    readonly statusOptions = [...PET_LIFE_STATUS_FILTER_OPTIONS];
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
     readonly canCreatePet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
 
