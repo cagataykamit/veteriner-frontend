@@ -66,6 +66,7 @@ describe('panel-navigation', () => {
         ]);
         expect(tabs('Para')).toEqual([
             ['Ücretler', '/panel/charges'],
+            ['Ücret bekleyenler', '/panel/charges/pending'],
             ['Ödemeler', '/panel/payments'],
             ['Satışlar', '/panel/sales']
         ]);
@@ -191,7 +192,8 @@ describe('panel-navigation', () => {
 
         it('Satışlar sekmesi yalnız Sales.Read ile görünür; satış detay ve hızlı satış adreslerinde çubuk çıkmaz', () => {
             expect(tabs('/panel/payments', only('Payments.Read', 'Sales.Read'))?.tabs.map((t) => t.label)).toEqual(['Ödemeler', 'Satışlar']);
-            expect(tabs('/panel/payments', only('Charges.Read', 'Payments.Read'))?.tabs.map((t) => t.label)).toEqual(['Ücretler', 'Ödemeler']);
+            expect(tabs('/panel/payments', only('Charges.Read', 'Payments.Read'))?.tabs.map((t) => t.label)).toEqual(['Ücretler', 'Ücret bekleyenler', 'Ödemeler']);
+            expect(tabs('/panel/charges/pending', only('Charges.Read', 'Payments.Read'))?.active.label).toBe('Ücret bekleyenler');
             expect(tabs('/panel/sales', only('Sales.Read'))).toBeUndefined();
             expect(tabs('/panel/sales/new')).toBeUndefined();
             expect(tabs('/panel/sales/abc')).toBeUndefined();
