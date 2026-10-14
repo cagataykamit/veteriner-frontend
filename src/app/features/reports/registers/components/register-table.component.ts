@@ -18,7 +18,7 @@ import type { AnyRegisterDefinition } from '@/app/features/reports/registers/dat
                 <thead>
                     <tr>
                         @for (col of definition().screenColumns; track $index) {
-                            <th>{{ col.header }}</th>
+                            <th [class.register-nowrap]="col.nowrap">{{ col.header }}</th>
                         }
                     </tr>
                 </thead>
@@ -26,9 +26,9 @@ import type { AnyRegisterDefinition } from '@/app/features/reports/registers/dat
                     @for (row of rows(); track row.rowNumber) {
                         <tr>
                             @for (col of definition().screenColumns; track $index) {
-                                <td [style.min-width]="col.minWidth">
+                                <td [style.min-width]="col.minWidth" [class.register-nowrap]="col.nowrap" [class.register-clip]="col.clip">
                                     @for (line of filled(col.lines(row)); track $index) {
-                                        <div [class]="'register-line register-line-' + (line.tone ?? 'plain')">
+                                        <div [class]="'register-line register-line-' + (line.tone ?? 'plain')" [attr.title]="col.clip ? line.text : null">
                                             @if (line.items) {
                                                 @for (item of line.items; track $index) {
                                                     <span class="register-item">{{ item }}</span>

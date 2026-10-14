@@ -17,6 +17,10 @@ export interface RegisterScreenColumn<T> {
     readonly header: string;
     /** Kelime ortasında kırılmaması için sütunun en küçük genişliği. */
     readonly minWidth: string;
+    /** Tek satır: başlık ve hücre sarmaz (tarih, sıra no gibi kısa alanlar). */
+    readonly nowrap?: boolean;
+    /** Uzun metin (ör. e-posta) kesilir: üç nokta ve ipucu (title) gösterilir. */
+    readonly clip?: boolean;
     readonly lines: (row: T) => readonly RegisterCellLine[];
 }
 

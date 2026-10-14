@@ -32,6 +32,17 @@
         margin-top: 0.15rem;
     }
 
+    .register-nowrap {
+        white-space: nowrap;
+    }
+
+    .register-clip .register-line {
+        max-width: 11rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     .register-item {
         display: inline-block;
         margin-right: 0.35rem;
