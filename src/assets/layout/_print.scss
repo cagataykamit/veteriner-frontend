@@ -9,6 +9,29 @@
     }
 }
 
+/* Satış fişi yazdırma: yalnız `.sale-receipt` görünür; sayfa boyutunu yazdırma anında `printSaleReceipt` ayarlar. */
+@media print {
+    body.receipt-print-active {
+        background: #fff;
+
+        * {
+            visibility: hidden;
+        }
+
+        .sale-receipt,
+        .sale-receipt * {
+            visibility: visible;
+        }
+
+        .sale-receipt {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+    }
+}
+
 @media print {
     body.register-page-active {
         background: #fff;

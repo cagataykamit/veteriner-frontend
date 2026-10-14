@@ -64,7 +64,11 @@ describe('panel-navigation', () => {
             ['Liste', '/panel/appointments'],
             ['Takvim', '/panel/appointments/calendar']
         ]);
-        expect(tabs('Para').map(([l]) => l)).toEqual(['Ücretler', 'Ödemeler']);
+        expect(tabs('Para')).toEqual([
+            ['Ücretler', '/panel/charges'],
+            ['Ödemeler', '/panel/payments'],
+            ['Satışlar', '/panel/sales']
+        ]);
         expect(tabs('Stok').map(([l]) => l)).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri']);
         expect(tabs('Kayıtlar').map(([l]) => l)).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Yatışlar', 'Uygulamalar']);
     });
@@ -183,6 +187,16 @@ describe('panel-navigation', () => {
             expect(tabs('/panel/stocks', only('Products.Read'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu']);
             expect(tabs('/panel/clients', only('Clients.Read'))).toBeUndefined();
             expect(tabs('/panel/pets', only('Clients.Read'))).toBeUndefined();
+        });
+
+        it('Satışlar sekmesi yalnız Sales.Read ile görünür; satış detay ve hızlı satış adreslerinde çubuk çıkmaz', () => {
+            expect(tabs('/panel/payments', only('Payments.Read', 'Sales.Read'))?.tabs.map((t) => t.label)).toEqual(['Ödemeler', 'Satışlar']);
+            expect(tabs('/panel/payments', only('Charges.Read', 'Payments.Read'))?.tabs.map((t) => t.label)).toEqual(['Ücretler', 'Ödemeler']);
+            expect(tabs('/panel/sales', only('Sales.Read'))).toBeUndefined();
+            expect(tabs('/panel/sales/new')).toBeUndefined();
+            expect(tabs('/panel/sales/abc')).toBeUndefined();
+            expect(labels(visibleGroups(MENU_GROUPS, only('Sales.Read')))).toEqual(['Para', 'Ayarlar']);
+            expect(labels(visibleGroups(MENU_GROUPS, only('Sales.Create')))).toEqual(['Ayarlar']);
         });
     });
 
