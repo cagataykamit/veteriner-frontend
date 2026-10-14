@@ -35,6 +35,8 @@ describe('PetTodoPanelComponent', () => {
         const action = row.querySelector('[data-testid="todo-action"]') as HTMLAnchorElement;
         expect(action.textContent).toContain('Ücretlendir');
         expect(action.getAttribute('href')).toBe('/panel/charges/pending?petId=p1');
+        expect(action.classList).withContext('eylem çubuğuyla aynı boyut').not.toContain('p-button-sm');
+        expect(row.classList).withContext('dar ekranda eylem alta iner').toContain('flex-wrap');
         expect(el.querySelector('[data-testid="todo-count"]')?.textContent).toContain('1');
     });
 

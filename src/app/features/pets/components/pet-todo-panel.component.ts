@@ -26,18 +26,20 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
             @if (view().items.length > 0) {
                 <ul class="list-none m-0 p-0">
                     @for (item of view().items; track item.key) {
-                        <li class="flex items-center gap-3 py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0" [attr.data-testid]="'todo-' + item.kind">
-                            <i class="{{ item.icon }} text-lg {{ toneClass(item) }}" aria-hidden="true"></i>
-                            <div class="min-w-0 flex-1">
-                                <div class="font-medium break-words" [class]="item.tone === 'danger' ? toneClass(item) : ''">{{ item.title }}</div>
-                                <div class="text-muted-color text-sm break-words">{{ item.detail }}</div>
+                        <!-- Eylem, eylem çubuğuyla aynı boyutta; dar ekranda metnin altına iner. -->
+                        <li class="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0" [attr.data-testid]="'todo-' + item.kind">
+                            <div class="flex items-center gap-3 grow basis-56 min-w-0">
+                                <i class="{{ item.icon }} text-lg shrink-0 {{ toneClass(item) }}" aria-hidden="true"></i>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium break-words" [class]="item.tone === 'danger' ? toneClass(item) : ''">{{ item.title }}</div>
+                                    <div class="text-muted-color text-sm break-words">{{ item.detail }}</div>
+                                </div>
                             </div>
                             <a
                                 pButton
-                                size="small"
                                 severity="secondary"
                                 [outlined]="true"
-                                class="shrink-0"
+                                class="shrink-0 ml-auto"
                                 [label]="item.action.label"
                                 [routerLink]="item.action.route"
                                 [queryParams]="item.action.queryParams"
