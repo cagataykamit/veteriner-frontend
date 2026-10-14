@@ -193,7 +193,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
 
                 <div class="grid grid-cols-12 gap-4 items-start">
                     @if (contextPetId(); as pid) {
-                        <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-4">
+                        <aside class="col-span-12 xl:col-span-3">
                             <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
                         </aside>
                     }

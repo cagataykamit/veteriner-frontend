@@ -18,6 +18,7 @@ const EM = '—';
 @Component({
     selector: 'app-examination-patient-header',
     standalone: true,
+    host: { class: 'block' },
     imports: [RouterLink, PetAlertBadgesComponent],
     template: `
         <section class="card mb-4" aria-label="Hasta bilgileri">

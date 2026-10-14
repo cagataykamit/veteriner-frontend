@@ -198,7 +198,7 @@ const RECORD_TEXT_SECTIONS: readonly {
             <app-examination-patient-header [petId]="exam()!.petId" [clientId]="exam()!.clientId" />
 
             <div class="grid grid-cols-12 gap-4 items-start" data-testid="exam-workspace">
-                <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-4">
+                <aside class="col-span-12 xl:col-span-3">
                     <app-examination-patient-context [petId]="exam()!.petId" [excludeExaminationId]="exam()!.id" />
                 </aside>
 
@@ -275,7 +275,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                     }
                 </div>
 
-                <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-4">
+                <aside class="col-span-12 xl:col-span-3">
                     <app-examination-finalize-checklist [exam]="exam()!" [items]="finalizeChecklist()" />
                 </aside>
             </div>
