@@ -63,13 +63,13 @@ describe('AppMenu', () => {
     });
 
     it('izinsiz sekme görünmez: bağlantı yetkili ilk sekmeye gider, hiç yetkili sekme yoksa öğe çıkmaz', () => {
-        const fixture = create((claim) => claim === 'Pets.Read');
-        expect(labels(fixture)).toEqual(['Hastalar', 'Ayarlar']);
-        expect(link(fixture, 'Hastalar').getAttribute('href')).toBe('/panel/pets');
+        const fixture = create((claim) => claim === 'StockMovements.Read');
+        expect(labels(fixture)).toEqual(['Stok', 'Raporlar', 'Ayarlar']);
+        expect(link(fixture, 'Stok').getAttribute('href')).toBe('/panel/stock-movements');
     });
 
     it('tüm sekmeler yetkiliyse bağlantı ilk sekmeye gider', () => {
-        expect(link(create(), 'Hastalar').getAttribute('href')).toBe('/panel/clients');
+        expect(link(create(), 'Hastalar').getAttribute('href')).toBe('/panel/patients');
     });
 
     it('öğe, sekmelerinden herhangi birindeki sayfada vurgulanır', async () => {

@@ -209,6 +209,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             { label: 'Bugün', icon: 'pi pi-fw pi-sun', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
             { label: 'Özet', icon: 'pi pi-fw pi-th-large', route: '/panel/dashboard', claims: [MANAGER_LEVEL_CLAIM] },
             tabbedEntry('Hastalar', 'pi pi-fw pi-heart', [
+                { label: 'Ara', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
                 { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
                 { label: 'Hayvanlar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
             ]),

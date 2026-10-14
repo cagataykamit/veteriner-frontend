@@ -40,8 +40,8 @@ describe('AppSectionTabsComponent', () => {
     it('detay sayfasında ve tek sekme yetkiliyken çubuk çıkmaz', async () => {
         expect(tabs(await create('/panel/pets/abc'))).toEqual([]);
         TestBed.resetTestingModule();
-        claims = (claim) => claim === 'Clients.Read';
-        expect(tabs(await create('/panel/clients'))).toEqual([]);
+        claims = (claim) => claim === 'StockMovements.Read';
+        expect(tabs(await create('/panel/stock-movements'))).toEqual([]);
     });
 
     it('Lab sekmesi bekleyen sayıyı gösterir', async () => {

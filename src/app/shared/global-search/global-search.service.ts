@@ -15,6 +15,8 @@ const NO_VALUE = '—';
 export interface GlobalSearchPetVm {
     id: string;
     name: string;
+    /** Sahip kimliği (eylem bağlamı için); bilinmiyorsa `null`. */
+    clientId: string | null;
     /** Tür ve ırk; boş olabilir. */
     summary: string;
     ownerName: string;
@@ -102,6 +104,7 @@ function toPetResult(d: PetDetailVm): GlobalSearchPetVm {
     return {
         id: d.id,
         name: d.name,
+        clientId: d.ownerId?.trim() || null,
         summary: [d.speciesName, d.breed].map(present).filter(Boolean).join(' · '),
         ownerName: present(d.clientName),
         ownerPhone: present(d.clientPhone) ? formatClientPhoneForDisplay(d.clientPhone) : '',
@@ -113,6 +116,7 @@ function toPetResultFromListItem(i: PetListItemVm): GlobalSearchPetVm {
     return {
         id: i.id,
         name: i.name,
+        clientId: i.clientId?.trim() || null,
         summary: [i.speciesName, i.breed].map(present).filter(Boolean).join(' · '),
         ownerName: '',
         ownerPhone: '',

@@ -32,7 +32,7 @@ describe('panel yönlendirmeleri', () => {
         claims.delete('visits.read');
         expect(await go('/panel')).toBe('/panel/settings');
         claims.add('clients.read');
-        expect(await go('/panel')).toBe('/panel/clients');
+        expect(await go('/panel')).toBe('/panel/patients');
         claims.add('visits.correct');
         expect(await go('/panel')).toBe('/panel/dashboard');
     });

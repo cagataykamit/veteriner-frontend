@@ -10,7 +10,7 @@ import { GlobalSearchService } from './global-search.service';
 const ali: ClientSearchResultVm = { id: 'c1', fullName: 'Ali Veli', phone: '+90 532 123 45 67', petNames: ['Pamuk'], label: 'Ali Veli — +90 532 123 45 67' };
 const listItem = (id: string, name: string): PetListItemVm => ({ id, clientId: 'c1', speciesId: null, name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—' });
 const detail = (id: string, name: string): PetDetailVm =>
-    ({ id, name, speciesName: 'Kedi', breed: 'Tekir', clientName: 'Ali Veli', clientPhone: '05321234567', microchipNumber: '985112345678901' }) as PetDetailVm;
+    ({ id, name, ownerId: 'c1', speciesName: 'Kedi', breed: 'Tekir', clientName: 'Ali Veli', clientPhone: '05321234567', microchipNumber: '985112345678901' }) as PetDetailVm;
 
 describe('GlobalSearchService', () => {
     let claims: Set<string>;
@@ -41,7 +41,7 @@ describe('GlobalSearchService', () => {
             expect(pets.getPets).toHaveBeenCalledWith({ page: 1, pageSize: 5, search: 'pamuk' });
             expect(r.clients).toEqual([ali]);
             expect(r.pets).toEqual([
-                { id: 'p1', name: 'Pamuk', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', microchip: '985112345678901' }
+                { id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', microchip: '985112345678901' }
             ]);
             expect(r.failedKinds).toEqual([]);
             done();
@@ -89,7 +89,7 @@ describe('GlobalSearchService', () => {
     it('hayvan detayı alınamazsa liste satırı adıyla gösterilir', (done) => {
         pets.getPetById.and.returnValue(throwError(() => new Error('x')));
         service.search('pamuk').subscribe((r) => {
-            expect(r.pets).toEqual([{ id: 'p1', name: 'Pamuk', summary: 'Kedi · Tekir', ownerName: '', ownerPhone: '', microchip: '' }]);
+            expect(r.pets).toEqual([{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: '', ownerPhone: '', microchip: '' }]);
             expect(r.failedKinds).toEqual([]);
             done();
         });

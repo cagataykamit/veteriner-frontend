@@ -57,6 +57,7 @@ describe('panel-navigation', () => {
     it('birleşik öğelerin sekmeleri mevcut liste rotalarıdır', () => {
         const tabs = (label: string) => entry(label).tabs!.map((t) => [t.label, t.route]);
         expect(tabs('Hastalar')).toEqual([
+            ['Ara', '/panel/patients'],
             ['Müşteriler', '/panel/clients'],
             ['Hayvanlar', '/panel/pets']
         ]);
@@ -92,8 +93,9 @@ describe('panel-navigation', () => {
     });
 
     it('menü bağlantısı yetkili ilk sekmeye açılır', () => {
-        expect(menuLinkRoute(entry('Hastalar'), () => true)).toBe('/panel/clients');
-        expect(menuLinkRoute(entry('Hastalar'), only('Pets.Read'))).toBe('/panel/pets');
+        expect(menuLinkRoute(entry('Hastalar'), () => true)).toBe('/panel/patients');
+        expect(menuLinkRoute(entry('Hastalar'), only('Pets.Read'))).toBe('/panel/patients');
+        expect(menuLinkRoute(entry('Randevular'), only('Appointments.Read'))).toBe('/panel/appointments');
         expect(menuLinkRoute(entry('Stok'), only('StockMovements.Read'))).toBe('/panel/stock-movements');
         expect(menuLinkRoute(entry('Bugün'), () => true)).toBe('/panel/today');
     });
@@ -118,7 +120,7 @@ describe('panel-navigation', () => {
 
     it('giriş sonrası açılış ilk erişilebilir öğedir: Bugün izni varsa Bugün', () => {
         expect(firstAccessibleRoute(MENU_GROUPS, () => true)).toBe('/panel/today');
-        expect(firstAccessibleRoute(MENU_GROUPS, only('Clients.Read', 'Pets.Read'))).toBe('/panel/clients');
+        expect(firstAccessibleRoute(MENU_GROUPS, only('Clients.Read', 'Pets.Read'))).toBe('/panel/patients');
         expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM, 'Pets.Read'))).toBe('/panel/dashboard');
         expect(firstAccessibleRoute(MENU_GROUPS, () => false)).toBe('/panel/settings');
     });
@@ -127,6 +129,7 @@ describe('panel-navigation', () => {
         const label = (url: string) => entryForUrl(MENU_GROUPS, url)?.label;
         expect(label('/panel/pets/abc?tab=1')).toBe('Hastalar');
         expect(label('/panel/clients?x=1')).toBe('Hastalar');
+        expect(label('/panel/patients')).toBe('Hastalar');
         expect(label('/panel/appointments/calendar')).toBe('Randevular');
         expect(label('/panel/appointments/new')).toBe('Randevular');
         expect(label('/panel/administrations')).toBe('Kayıtlar');
@@ -170,7 +173,7 @@ describe('panel-navigation', () => {
         const tabs = (url: string, hasClaim: (c: string) => boolean = () => true) => tabsForUrl(MENU_GROUPS, url, hasClaim);
 
         it('liste adresinde yetkili sekmeleri ve etkin sekmeyi verir; sorgu süzgeci etkin sekmeyi değiştirmez', () => {
-            expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Müşteriler', 'Hayvanlar']);
+            expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hayvanlar']);
             expect(tabs('/panel/pets?clientId=c1')?.active.label).toBe('Hayvanlar');
             expect(tabs('/panel/appointments/calendar')?.active.label).toBe('Takvim');
             expect(tabs('/panel/administrations')?.tabs).toHaveSize(7);
@@ -186,7 +189,8 @@ describe('panel-navigation', () => {
 
         it('yetkisiz sekme görünmez; tek sekme kalırsa çubuk çıkmaz', () => {
             expect(tabs('/panel/stocks', only('Products.Read'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu']);
-            expect(tabs('/panel/clients', only('Clients.Read'))).toBeUndefined();
+            expect(tabs('/panel/clients', only('Clients.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler']);
+            expect(tabs('/panel/patients', only('Pets.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Hayvanlar']);
             expect(tabs('/panel/pets', only('Clients.Read'))).toBeUndefined();
         });
 
