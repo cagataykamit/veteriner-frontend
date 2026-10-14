@@ -7,12 +7,13 @@ import { AppTopbar } from './app.topbar';
 import { AppSidebar } from './app.sidebar';
 import { AppFooter } from './app.footer';
 import { AppReadOnlyBannerComponent } from './app-read-only-banner.component';
+import { AppSectionTabsComponent } from './app-section-tabs.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent],
+    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent],
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <div #primePanelOverlayHost class="layout-prime-panel-overlay-host"></div>
         <app-topbar></app-topbar>
@@ -20,6 +21,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
         <div class="layout-main-container">
             <div class="layout-main">
                 <app-read-only-banner />
+                <app-section-tabs />
                 <router-outlet></router-outlet>
             </div>
             <app-footer></app-footer>
