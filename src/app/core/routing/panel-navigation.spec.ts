@@ -1,5 +1,6 @@
 import {
     categoryForUrl,
+    DEFINITION_ENTRIES,
     entryForUrl,
     firstAccessibleRoute,
     groupForUrl,
@@ -9,6 +10,7 @@ import {
     REPORT_SECTIONS,
     SETTINGS_SECTIONS,
     tabsForUrl,
+    visibleEntries,
     visibleGroups
 } from './panel-navigation';
 
@@ -105,6 +107,13 @@ describe('panel-navigation', () => {
         expect(none).toEqual(['Hesabım']);
         const withCategory = labels(visibleGroups(SETTINGS_SECTIONS, (c) => c === 'ProductCategories.Read'));
         expect(withCategory).toEqual(['Hesabım', 'Tanımlar']);
+    });
+
+    it('sözlük kartı Tanımlar altında yönetim izniyle görünür; yalnız okuma izni kart açmaz', () => {
+        expect(visibleEntries(DEFINITION_ENTRIES, only('ClinicalTerms.Read'))).toEqual([]);
+        expect(visibleEntries(DEFINITION_ENTRIES, only('ClinicalTerms.Create')).map((e) => e.route)).toEqual(['/panel/settings/definitions/clinical-terms']);
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('ClinicalTerms.Deactivate')))).toContain('Tanımlar');
+        expect(labels(visibleGroups(MENU_GROUPS, only('ClinicalTerms.Create')))).toEqual(['Ayarlar']);
     });
 
     it('Veri içe aktarma kartı Ayarlar altında yalnız Imports.Read ile görünür; menüye öğe eklenmez', () => {
