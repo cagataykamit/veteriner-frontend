@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {Component} from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {MessageService, ToastMessageOptions} from 'primeng/api';
 import {ButtonModule} from 'primeng/button';
@@ -61,7 +61,7 @@ export class MessagesDemo {
 
     email: string | undefined;
 
-    constructor(private service: MessageService) {}
+    private service = inject(MessageService);
 
     pt: any = {
         contentWrapper: 'flex items-center'

@@ -1,10 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-
-interface InventoryStatus {
-    label: string;
-    value: string;
-}
+import { Injectable, inject } from '@angular/core';
 
 export interface Product {
     id?: string;
@@ -1255,7 +1250,7 @@ export class ProductService {
         'Yoga Set'
     ];
 
-    constructor(private http: HttpClient) {}
+    private http = inject(HttpClient);
 
     getProductsMini() {
         return Promise.resolve(this.getProductsData().slice(0, 5));
@@ -1293,7 +1288,7 @@ export class ProductService {
         let text = '';
         let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-        for (var i = 0; i < 5; i++) {
+        for (let i = 0; i < 5; i++) {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
 

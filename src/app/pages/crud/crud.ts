@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, inject } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Table, TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
@@ -229,11 +229,9 @@ export class Crud implements OnInit {
 
     cols!: Column[];
 
-    constructor(
-        private productService: ProductService,
-        private messageService: MessageService,
-        private confirmationService: ConfirmationService
-    ) {}
+    private productService = inject(ProductService);
+    private messageService = inject(MessageService);
+    private confirmationService = inject(ConfirmationService);
 
     exportCSV() {
         this.dt.exportCSV();
@@ -335,8 +333,8 @@ export class Crud implements OnInit {
 
     createId(): string {
         let id = '';
-        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (var i = 0; i < 5; i++) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        for (let i = 0; i < 5; i++) {
             id += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         return id;

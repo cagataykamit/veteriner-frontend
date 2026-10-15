@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {ConfirmationService, MessageService} from 'primeng/api';
 import {ButtonModule} from 'primeng/button';
 import {DialogModule} from 'primeng/dialog';
@@ -162,11 +162,9 @@ export class OverlayDemo implements OnInit {
 
     selectedProduct!: Product;
 
-    constructor(
-        private productService: ProductService,
-        private confirmationService: ConfirmationService,
-        private messageService: MessageService
-    ) {}
+    private productService = inject(ProductService);
+    private confirmationService = inject(ConfirmationService);
+    private messageService = inject(MessageService);
 
     ngOnInit() {
         this.productService.getProductsSmall().then((products) => (this.products = products));

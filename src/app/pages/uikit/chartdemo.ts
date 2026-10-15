@@ -72,7 +72,7 @@ export class ChartDemo {
     radarOptions = signal<any>(null);
 
     chartEffect = effect(() => {
-        this.layoutService.layoutConfig().darkTheme;
+        this.layoutService.layoutConfig();
         setTimeout(() => this.initCharts(), 150);
     })
 

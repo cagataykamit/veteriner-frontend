@@ -26,7 +26,7 @@ export class RevenueStreamWidget {
         });
 
         effect(() => {
-            this.layoutService.layoutConfig().darkTheme;
+            this.layoutService.layoutConfig();
             setTimeout(() => {
                 this.initChart();
             }, 150);

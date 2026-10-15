@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { StyleClassModule } from 'primeng/styleclass';
 import { Router, RouterModule } from '@angular/router';
 import { RippleModule } from 'primeng/ripple';
@@ -64,5 +64,5 @@ import {AppFloatingConfigurator} from "@/app/layout/component/app.floatingconfig
         </div> `
 })
 export class TopbarWidget {
-    constructor(public router: Router) {}
+    public router = inject(Router);
 }

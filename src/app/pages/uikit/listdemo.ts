@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DataViewModule } from 'primeng/dataview';
@@ -171,7 +171,7 @@ export class ListDemo {
 
     orderCities: any[] = [];
 
-    constructor(private productService: ProductService) {}
+    private productService = inject(ProductService);
 
     ngOnInit() {
         this.productService.getProductsSmall().then((data) => (this.products = data.slice(0, 6)));
