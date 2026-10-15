@@ -96,6 +96,8 @@ export const ApiEndpoints = {
         historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`,
         /** Bölüm bazlı durumlu özet kartı (`docs/PET_TIMELINE_API_CONTRACT.md`). */
         summary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/summary`,
+        /** Hasta kartı "Yapılacaklar" (`docs/PET_OPEN_ITEMS_API_CONTRACT.md`); bölüm bazlı durumlu. */
+        openItems: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/open-items`,
         /** Query: `types` (tekrarlı), `fromUtc`, `toUtc`, `clinicId`, `includeVoided`, `limit` (≤50), `cursor` (opak). */
         timeline: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/timeline`
     },

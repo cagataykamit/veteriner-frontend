@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
-import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetNextAppointmentVm } from '@/app/features/pets/models/pet-open-items-vm.model';
+import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { PetCardHeaderComponent } from './pet-card-header.component';
 
@@ -15,7 +15,7 @@ const pet = {
 } as unknown as PetDetailVm;
 
 describe('PetCardHeaderComponent', () => {
-    const render = (inputs: { balance?: PetCardSection<ClientBalanceVm>; nextAppointment?: PetCardSection<PetHistoryAppointmentItemVm | null>; pet?: PetDetailVm }) => {
+    const render = (inputs: { balance?: PetCardSection<{ outstandingAmount: number; currency: string }>; nextAppointment?: PetCardSection<PetNextAppointmentVm | null>; pet?: PetDetailVm }) => {
         TestBed.configureTestingModule({ imports: [PetCardHeaderComponent], providers: [provideRouter([])] });
         const fixture = TestBed.createComponent(PetCardHeaderComponent);
         fixture.componentRef.setInput('pet', inputs.pet ?? pet);
@@ -26,7 +26,7 @@ describe('PetCardHeaderComponent', () => {
     };
 
     it('sahip bağlantısı, aranabilir telefon, uyarı notu ve açık borç gösterilir', () => {
-        const el = render({ balance: { state: 'ok', data: { outstandingAmount: 1250, currency: 'TRY' } as ClientBalanceVm } });
+        const el = render({ balance: { state: 'ok', data: { outstandingAmount: 1250, currency: 'TRY' } } });
 
         expect(el.querySelector('a[href="/panel/clients/c1"]')?.textContent).toContain('Ali Veli');
         expect(el.querySelector('[data-testid="owner-phone"]')?.getAttribute('href')).toBe('tel:05321234567');
@@ -42,7 +42,7 @@ describe('PetCardHeaderComponent', () => {
         expect(el.querySelector('[data-testid="account-last-visit"]')).not.toBeNull();
         TestBed.resetTestingModule();
 
-        el = render({ balance: { state: 'ok', data: { outstandingAmount: 0, currency: 'TRY' } as ClientBalanceVm }, nextAppointment: { state: 'ok', data: null } });
+        el = render({ balance: { state: 'ok', data: { outstandingAmount: 0, currency: 'TRY' } }, nextAppointment: { state: 'ok', data: null } });
         expect(el.querySelector('[data-testid="account-balance"]')?.textContent).toContain('Yok');
         expect(el.querySelector('[data-testid="account-next-appointment"]')?.textContent).toContain('Yok');
     });

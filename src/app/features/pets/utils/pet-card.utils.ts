@@ -8,11 +8,11 @@ import {
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
-import type { LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
-import type { PetDetailVm, PetHistoryAppointmentItemVm, PetHistoryLabResultItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetOpenItemsVm, PetOpenVaccinationVm } from '@/app/features/pets/models/pet-open-items-vm.model';
+import type { PetSummarySectionVm } from '@/app/features/pets/models/pet-summary-vm.model';
+import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
 import { formatUtcIsoAsLocalDateDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -78,7 +78,7 @@ export function upcomingScheduledAppointments<T extends Pick<PetHistoryAppointme
     return rows.filter((r) => parseAppointmentStatusRawToEnum(r.status) === 0 && at(r) >= now.getTime()).sort((a, b) => at(a) - at(b));
 }
 
-/** Özet uçlarındaki (en yeni 10) randevulardan ileri tarihli en yakın `Planlandı` randevu (hasta geçmişi ve müşteri son özeti). */
+/** Müşteri son özetindeki (en yeni 10) randevulardan ileri tarihli en yakın `Planlandı` randevu (hasta kartı sonraki randevuyu açık işler ucundan okur). */
 export function nextScheduledAppointment<T extends Pick<PetHistoryAppointmentItemVm, 'scheduledAtUtc' | 'status'>>(rows: readonly T[], now: Date = new Date()): T | null {
     return upcomingScheduledAppointments(rows, now)[0] ?? null;
 }
@@ -106,9 +106,6 @@ export function examinationAssessmentText(e: Pick<ExaminationDetailVm, 'assessme
     return t && t !== '—' ? t : null;
 }
 
-/** Yaklaşan aşı penceresi (gün): vadesi bu süre içinde olan planlı aşı "yaklaşan" sayılır. */
-export const PET_TODO_UPCOMING_VACCINE_DAYS = 30;
-
 export type PetTodoKind = 'overdueVaccine' | 'labInterpretation' | 'pendingLab' | 'upcomingVaccine' | 'pendingCharge' | 'openBalance';
 
 export interface PetTodoAction {
@@ -127,16 +124,6 @@ export interface PetTodoItem {
     action: PetTodoAction;
 }
 
-/** Yapılacaklar kaynakları; her biri kendi izni ve yükleme durumuyla. */
-export interface PetTodoSources {
-    scheduledVaccinations: PetCardSection<VaccinationListItemVm[]>;
-    requestedLabs: PetCardSection<LabResultListItemVm[]>;
-    /** Geçmiş özetinden: "yorum bekliyor" (sonuçlu lab) yalnız en yeni 10 lab içinden. */
-    recentLabs: PetCardSection<PetHistoryLabResultItemVm[]>;
-    pendingCharges: PetCardSection<ChargeSuggestionVm[]>;
-    balance: PetCardSection<ClientBalanceVm>;
-}
-
 export interface PetTodoContext {
     petId: string;
     clientId: string | null;
@@ -152,12 +139,14 @@ const KIND_ORDER: Record<PetCardEmphasis, readonly PetTodoKind[]> = {
     frontDesk: ['openBalance', 'pendingCharge', 'overdueVaccine', 'upcomingVaccine', 'pendingLab', 'labInterpretation']
 };
 
-const SOURCE_LABELS: Record<keyof PetTodoSources, string> = {
-    scheduledVaccinations: 'Aşı',
-    requestedLabs: 'Lab',
-    recentLabs: 'Lab yorumu',
+/** Yapılacaklar'ı besleyen açık işler bölümleri (sonraki randevu başlıkta gösterilir). */
+type PetTodoSectionKey = 'vaccinations' | 'labResults' | 'pendingCharges' | 'outstanding';
+
+const SOURCE_LABELS: Record<PetTodoSectionKey, string> = {
+    vaccinations: 'Aşı',
+    labResults: 'Lab',
     pendingCharges: 'Ücret bekleyen işlem',
-    balance: 'Bakiye'
+    outstanding: 'Bakiye'
 };
 
 export interface PetTodoView {
@@ -174,27 +163,51 @@ export function okData<T>(s: PetCardSection<T>): T | null {
 }
 
 /**
- * Hasta bazlı "Yapılacaklar" (ADR-020 karar 2c): gecikmiş/yaklaşan aşı, bekleyen lab ve yorum, ücret bekleyen işlem, açık borç.
- * Hasta bazlı tek okuma ucu olmadığından mevcut uçların sonuçları burada birleşir (kural tek yer).
+ * Açık işler ucunun bir bölümü kart bölümüne (`PET_OPEN_ITEMS_API_CONTRACT.md` bölüm zarfı). İstek yükleniyor/alınamadıysa bölüm de öyledir.
+ * `Forbidden` → `null` (gösterilmez; "yok" denmez), `Unavailable` → `error`, `Empty` → `ok` + `null` (açık iş yok).
+ */
+export function openItemsSection<T>(openItems: PetCardSection<PetOpenItemsVm>, pick: (o: PetOpenItemsVm) => PetSummarySectionVm<T>): PetCardSection<T | null> {
+    if (openItems?.state !== 'ok') {
+        return openItems;
+    }
+    const section = pick(openItems.data);
+    switch (section.state) {
+        case 'Forbidden':
+            return null;
+        case 'Unavailable':
+            return { state: 'error' };
+        default:
+            return { state: 'ok', data: section.data };
+    }
+}
+
+/** Başlıktaki "Açık borç": sahibin toplam borcu (bakiye ucuyla aynı değer); `Empty` = borç yok. */
+export function ownerOutstandingSection(openItems: PetCardSection<PetOpenItemsVm>): PetCardSection<Pick<ClientBalanceVm, 'outstandingAmount' | 'currency'>> {
+    const s = openItemsSection(openItems, (o) => o.outstanding);
+    return s?.state === 'ok' ? { state: 'ok', data: { outstandingAmount: s.data?.clientOutstandingAmount ?? 0, currency: s.data?.currency ?? 'TRY' } } : s;
+}
+
+/**
+ * Hasta bazlı "Yapılacaklar" (ADR-020 karar 2c): `GET /pets/{id}/open-items` yanıtını satırlara çevirir.
+ * Hangi kaydın açık iş olduğu (aşı penceresi, yorum bekleme, tutar, vefat eden hastada aşı yok) sunucu kuralıdır; burada yeniden hesaplanmaz.
  * Her satırda tek eylem: yazma izni varsa işi yapan form, yoksa kaydın detayı.
  */
-export function buildPetTodo(sources: PetTodoSources, ctx: PetTodoContext): PetTodoView {
+export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: PetTodoContext): PetTodoView {
     const now = (ctx.now ?? new Date()).getTime();
     const canWrite = (claim: string) => !ctx.mutationBlocked && ctx.hasClaim(claim);
+    const sources = {
+        vaccinations: openItemsSection(openItems, (o) => o.vaccinations),
+        labResults: openItemsSection(openItems, (o) => o.labResults),
+        pendingCharges: openItemsSection(openItems, (o) => o.pendingCharges),
+        outstanding: openItemsSection(openItems, (o) => o.outstanding)
+    } satisfies Record<PetTodoSectionKey, PetCardSection<unknown>>;
     const items: PetTodoItem[] = [];
 
     const canApplyVaccine = canWrite(VACCINATIONS_UPDATE_CLAIM);
-    for (const v of okData(sources.scheduledVaccinations) ?? []) {
+    const vaccineItem = (v: PetOpenVaccinationVm, overdue: boolean): PetTodoItem => {
         const due = parseUtcApiInstantIsoString(v.dueAtUtc)?.getTime();
-        if (due === undefined) {
-            continue;
-        }
-        const overdue = due < now;
-        if (!overdue && due > now + PET_TODO_UPCOMING_VACCINE_DAYS * DAY_MS) {
-            continue;
-        }
-        const lateDays = Math.floor((now - due) / DAY_MS);
-        items.push({
+        const lateDays = due === undefined ? 0 : Math.floor((now - due) / DAY_MS);
+        return {
             key: `vaccine-${v.id}`,
             kind: overdue ? 'overdueVaccine' : 'upcomingVaccine',
             tone: overdue ? 'danger' : 'info',
@@ -202,11 +215,20 @@ export function buildPetTodo(sources: PetTodoSources, ctx: PetTodoContext): PetT
             title: `${overdue ? 'Gecikmiş aşı' : 'Yaklaşan aşı'}: ${v.vaccineName}`,
             detail: `Vade ${formatUtcIsoAsLocalDateDisplay(v.dueAtUtc)}${overdue && lateDays > 0 ? ` · ${lateDays} gün geçti` : ''}`,
             action: canApplyVaccine ? { label: 'Uygula', route: ['/panel/vaccinations', v.id, 'edit'] } : { label: 'Aç', route: ['/panel/vaccinations', v.id] }
-        });
+        };
+    };
+    const vaccinations = okData(sources.vaccinations);
+    for (const v of vaccinations?.overdue ?? []) {
+        items.push(vaccineItem(v, true));
+    }
+    for (const v of vaccinations?.upcoming ?? []) {
+        items.push(vaccineItem(v, false));
     }
 
     const canEditLab = canWrite(LAB_RESULTS_UPDATE_CLAIM);
-    for (const l of okData(sources.requestedLabs) ?? []) {
+    const labAction = (id: string, label: string): PetTodoAction => (canEditLab ? { label, route: ['/panel/lab-results', id, 'edit'] } : { label: 'Aç', route: ['/panel/lab-results', id] });
+    const labs = okData(sources.labResults);
+    for (const l of labs?.awaitingResult ?? []) {
         items.push({
             key: `lab-${l.id}`,
             kind: 'pendingLab',
@@ -214,10 +236,10 @@ export function buildPetTodo(sources: PetTodoSources, ctx: PetTodoContext): PetT
             icon: 'pi pi-chart-bar',
             title: `Lab sonucu bekleniyor: ${l.testName}`,
             detail: `İstendi ${formatUtcIsoAsLocalDateDisplay(l.requestedAtUtc)}`,
-            action: canEditLab ? { label: 'Sonuç gir', route: ['/panel/lab-results', l.id, 'edit'] } : { label: 'Aç', route: ['/panel/lab-results', l.id] }
+            action: labAction(l.id, 'Sonuç gir')
         });
     }
-    for (const l of (okData(sources.recentLabs) ?? []).filter((x) => x.awaitingInterpretation && x.status === 'Resulted')) {
+    for (const l of labs?.awaitingInterpretation ?? []) {
         items.push({
             key: `lab-${l.id}`,
             kind: 'labInterpretation',
@@ -225,18 +247,34 @@ export function buildPetTodo(sources: PetTodoSources, ctx: PetTodoContext): PetT
             icon: 'pi pi-comment',
             title: `Lab yorumu bekliyor: ${l.testName}`,
             detail: `Sonuç ${formatUtcIsoAsLocalDateDisplay(l.resultDateUtc)}`,
-            action: canEditLab ? { label: 'Yorum yaz', route: ['/panel/lab-results', l.id, 'edit'] } : { label: 'Aç', route: ['/panel/lab-results', l.id] }
+            action: labAction(l.id, 'Yorum yaz')
         });
     }
 
-    const charges = pendingChargesTodoItem(okData(sources.pendingCharges) ?? [], ctx.petId, canWrite(CHARGES_CREATE_CLAIM));
-    if (charges) {
-        items.push(charges);
+    const charges = okData(sources.pendingCharges);
+    if (charges && charges.count > 0) {
+        const priced = charges.count - charges.unpricedCount;
+        items.push({
+            key: `pending-charges-${ctx.petId}`,
+            kind: 'pendingCharge',
+            tone: 'warn',
+            icon: 'pi pi-receipt',
+            title: `${charges.count} işlem ücret bekliyor`,
+            detail: [priced > 0 ? `Toplam ${formatMoney(charges.totalAmount, charges.currency)}` : null, charges.unpricedCount > 0 ? `${charges.unpricedCount} kalem fiyat bekliyor` : null]
+                .filter((p): p is string => p !== null)
+                .join(' · '),
+            action: pendingChargesAction(ctx.petId, canWrite(CHARGES_CREATE_CLAIM))
+        });
     }
 
-    const balance = openBalanceTodoItem(okData(sources.balance), { petId: ctx.petId, clientId: ctx.clientId, canTakePayment: canWrite(PAYMENTS_CREATE_CLAIM) });
-    if (balance) {
-        items.push(balance);
+    const outstanding = okData(sources.outstanding);
+    if (outstanding && outstanding.clientOutstandingAmount > 0 && ctx.clientId) {
+        const detail =
+            outstanding.petOutstandingAmount > 0
+                ? `Bu hasta: ${formatMoney(outstanding.petOutstandingAmount, outstanding.currency)} · sahibin toplam borcu`
+                : 'Sahibin toplam borcu (diğer hastalar veya genel)';
+        const action = canWrite(PAYMENTS_CREATE_CLAIM) ? takePaymentAction(ctx.clientId) : { label: 'Bakiyeyi gör', route: ['/panel/clients', ctx.clientId] };
+        items.push(openBalanceItem(outstanding.clientOutstandingAmount, outstanding.currency, detail, action));
     }
 
     return todoView(items, ctx.emphasis, sources, SOURCE_LABELS);
@@ -258,9 +296,14 @@ export function todoView<K extends string>(
     };
 }
 
+/** Ücret bekleyen satırın eylemi: hayvana süzülmüş Ücretlendir sayfası (öneri ucu hayvan bazlı süzer); hasta ve müşteri kartı ortak. */
+function pendingChargesAction(petId: string, canCharge: boolean): PetTodoAction {
+    return { label: canCharge ? 'Ücretlendir' : 'Gör', route: ['/panel/charges/pending'], queryParams: { petId } };
+}
+
 /**
- * Bir hayvanın ücret bekleyen işlemleri tek satırda; eylem hayvana süzülmüş Ücretlendir sayfası (öneri ucu hayvan bazlı süzer).
- * `petName` verilirse (müşteri kartı) başlık hayvan adıyla başlar.
+ * Müşteri kartı: bir hayvanın ücret bekleyen işlemleri tek satırda (kalem adlarıyla).
+ * `petName` verilirse başlık hayvan adıyla başlar.
  */
 export function pendingChargesTodoItem(charges: readonly ChargeSuggestionVm[], petId: string, canCharge: boolean, petName?: string): PetTodoItem | null {
     if (charges.length === 0) {
@@ -274,40 +317,41 @@ export function pendingChargesTodoItem(charges: readonly ChargeSuggestionVm[], p
         icon: 'pi pi-receipt',
         title: `${petName ? `${petName}: ` : ''}${charges.length} işlem ücret bekliyor`,
         detail: names.join(', ') + (charges.length > names.length ? ` ve ${charges.length - names.length} işlem daha` : ''),
-        action: { label: canCharge ? 'Ücretlendir' : 'Gör', route: ['/panel/charges/pending'], queryParams: { petId } }
+        action: pendingChargesAction(petId, canCharge)
     };
 }
 
-/**
- * Açık borç satırı; borç müşterinindir (ADR-012). Hasta kartında (`petId` dolu) bu hayvanın payı, müşteri kartında hayvan kırılımı yazılır.
- * Ödeme alma izni yoksa hasta kartı müşteri bakiyesine, müşteri kartı müşterinin ücret listesine gider.
- */
-export function openBalanceTodoItem(balance: ClientBalanceVm | null, opts: { petId: string | null; clientId: string | null; canTakePayment: boolean }): PetTodoItem | null {
-    if (!balance || balance.outstandingAmount <= 0) {
-        return null;
-    }
-    const currency = balance.currency || 'TRY';
-    let detail: string;
-    if (opts.petId) {
-        const petOutstanding = balance.openCharges.filter((c) => c.petId === opts.petId).reduce((sum, c) => sum + c.outstandingAmount, 0);
-        detail = petOutstanding > 0 ? `Bu hasta: ${formatMoney(petOutstanding, currency)} · sahibin toplam borcu` : 'Sahibin toplam borcu (diğer hastalar veya genel)';
-    } else {
-        detail = outstandingByPet(balance)
-            .map((p) => `${p.petName?.trim() || 'Genel'} ${formatMoney(p.outstandingAmount, currency)}`)
-            .join(' · ');
-    }
-    const fallback: PetTodoAction = opts.petId
-        ? { label: 'Bakiyeyi gör', route: ['/panel/clients', balance.clientId] }
-        : { label: 'Ücretleri gör', route: ['/panel/charges'], queryParams: { clientId: balance.clientId } };
+function takePaymentAction(clientId: string): PetTodoAction {
+    return { label: 'Ödeme al', route: ['/panel/payments/new'], queryParams: { clientId } };
+}
+
+/** Açık borç satırı; borç müşterinindir (ADR-012), başlık sahibin toplamıdır. Hasta ve müşteri kartı ortak. */
+function openBalanceItem(outstandingAmount: number, currency: string, detail: string, action: PetTodoAction): PetTodoItem {
     return {
         key: 'open-balance',
         kind: 'openBalance',
         tone: 'danger',
         icon: 'pi pi-wallet',
-        title: `Açık borç: ${formatMoney(balance.outstandingAmount, currency)}`,
+        title: `Açık borç: ${formatMoney(outstandingAmount, currency)}`,
         detail,
-        action: opts.canTakePayment && opts.clientId ? { label: 'Ödeme al', route: ['/panel/payments/new'], queryParams: { clientId: opts.clientId } } : fallback
+        action
     };
+}
+
+/** Müşteri kartı açık borç satırı: hayvan kırılımıyla; ödeme alma izni yoksa müşterinin ücret listesine gider. */
+export function openBalanceTodoItem(balance: ClientBalanceVm | null, opts: { clientId: string | null; canTakePayment: boolean }): PetTodoItem | null {
+    if (!balance || balance.outstandingAmount <= 0) {
+        return null;
+    }
+    const currency = balance.currency || 'TRY';
+    const detail = outstandingByPet(balance)
+        .map((p) => `${p.petName?.trim() || 'Genel'} ${formatMoney(p.outstandingAmount, currency)}`)
+        .join(' · ');
+    const action =
+        opts.canTakePayment && opts.clientId
+            ? takePaymentAction(opts.clientId)
+            : { label: 'Ücretleri gör', route: ['/panel/charges'], queryParams: { clientId: balance.clientId } };
+    return openBalanceItem(balance.outstandingAmount, currency, detail, action);
 }
 
 /** Açık ücretlerin hayvan bazında kalan toplamı, büyükten küçüğe; hayvansız (genel) ücretler `petId: null` altında toplanır. */
