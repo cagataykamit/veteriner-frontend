@@ -27,7 +27,7 @@ import {
     importIssueLabel,
     importSeverityTag
 } from '@/app/features/imports/utils/import-labels.utils';
-import { IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
+import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, type ImportValueChoices, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
@@ -199,7 +199,7 @@ const ROW_PAGE_SIZE = 25;
                                     @if (r.issues.length) {
                                         <ul class="m-0 mt-2 pl-5 text-sm">
                                             @for (i of r.issues; track i.code + i.field) {
-                                                <li><span class="font-medium">{{ issueLabel(i.code, i.message) }}</span>@if (i.field) {<span class="text-muted-color"> ({{ i.field }})</span>}</li>
+                                                <li><span class="font-medium">{{ issueLabel(i.code, i.message) }}</span>@if (i.field) {<span class="text-muted-color"> ({{ fieldLabel(r.table, i.field) }})</span>}</li>
                                             }
                                         </ul>
                                     }
@@ -277,6 +277,8 @@ export class ImportReviewStepComponent {
     }
 
     protected issueLabel = importIssueLabel;
+    /** Sorun alanı API anahtarıdır (`HayvanAdi`); kullanıcıya eşleme ekranındaki etiket gösterilir (ADR-022). */
+    protected fieldLabel = fieldLabel;
 
     protected summaryTables(p: ImportPreviewDto) {
         return IMPORT_TABLES.filter((t) => p.summary[t].total > 0).map((t) => ({ key: t, label: IMPORT_TABLE_LABELS[t], s: p.summary[t] }));
