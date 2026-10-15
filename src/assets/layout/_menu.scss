@@ -372,3 +372,97 @@ $menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-roundi
         }
     }
 }
+
+// Alt sayfa paneli (flyout): sekmeli satırın sağında, sekme adları listesi. Panel body'ye taşınır ve `position: fixed` ile
+// satıra hizalanır (konum `AppMenuFlyout` içinde); kenar çubuğunun `overflow-x: hidden` kırpmasına takılmaz. Yukarıdaki menü
+// ölçülerine dokunmaz: satırda yalnız soluk bir ok eklenir, aktif sekme satırla aynı biçimde (renk + ince kontur) vurgulanır.
+.layout-menu a .layout-menuitem-flyout-toggler {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding-left: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    -webkit-text-stroke: 0;
+}
+
+.layout-menu a .layout-menuitem-badge + .layout-menuitem-flyout-toggler {
+    margin-left: 0;
+}
+
+.layout-menu-flyout {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001; // kenar çubuğu (999) ve üst çubuğun (1000) üstünde
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-width: 11rem;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    padding: 0.25rem 0;
+    background-color: var(--surface-overlay);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--content-border-radius);
+    box-shadow: var(--p-overlay-popover-shadow);
+    font-size: 1rem; // 14 px
+    user-select: none;
+}
+
+// Daraltılmış menüde satır adı görünmediğinden panelin başlığı olur.
+.layout-menu-flyout-heading {
+    flex: 0 0 auto;
+    margin-bottom: 0.25rem;
+    padding: 0.375rem 1rem 0.5rem;
+    border-bottom: 1px solid var(--surface-border);
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text-color);
+}
+
+.layout-menu-flyout-item {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.75rem;
+    height: 32px;
+    padding: 0 1rem;
+    color: var(--text-color);
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    outline: 0 none;
+
+    &:hover {
+        background-color: var(--surface-hover);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: -2px;
+    }
+
+    // Menü satırıyla aynı: kalınlık yazı genişliğini değiştirmesin diye ince kontur.
+    &.active-route {
+        -webkit-text-stroke: 0.4px currentColor;
+        color: var(--primary-color);
+    }
+
+    .layout-menuitem-badge {
+        -webkit-text-stroke: 0;
+    }
+}
+
+@media (min-width: 992px) {
+    .layout-wrapper.layout-static {
+        .layout-menu a .layout-menuitem-flyout-toggler {
+            margin-right: 0.75rem;
+        }
+
+        // Daraltılmış menüde ok gizlenir; panel simgenin üzerine gelince açılır.
+        &.layout-static-inactive .layout-menu a .layout-menuitem-flyout-toggler {
+            display: none;
+        }
+    }
+}
