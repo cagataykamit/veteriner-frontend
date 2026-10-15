@@ -224,7 +224,7 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`
     },
     prescriptions: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/prescriptions`,
         byId: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}`
     },
