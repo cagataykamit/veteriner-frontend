@@ -116,4 +116,10 @@ describe('vaccination.mapper — liste parametreleri', () => {
         expect(p.get('Order')).toBe('asc');
         expect(p.get('dateFromUtc')).toBe('2026-10-14T21:00:00.000Z');
     });
+
+    it('onlyReceivingCare yalnız true iken gider (varsayılan liste vefat edenleri de içerir)', () => {
+        expect(vaccinationsQueryToHttpParams({ onlyReceivingCare: true }).get('onlyReceivingCare')).toBe('true');
+        expect(vaccinationsQueryToHttpParams({}).has('onlyReceivingCare')).toBeFalse();
+        expect(vaccinationsQueryToHttpParams({ onlyReceivingCare: false }).has('onlyReceivingCare')).toBeFalse();
+    });
 });

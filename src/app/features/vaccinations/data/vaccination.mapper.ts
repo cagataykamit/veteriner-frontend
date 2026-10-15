@@ -341,6 +341,10 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
         p = p.set('OnlyOverdue', 'true');
     }
 
+    if (query.onlyReceivingCare === true) {
+        p = p.set('onlyReceivingCare', 'true');
+    }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }

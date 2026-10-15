@@ -36,12 +36,12 @@ describe('DashboardService — liste fazı istekleri', () => {
 
     afterEach(() => jasmine.clock().uninstall());
 
-    it('yaklaşan aşılar: planlı, vadesi bugünün İstanbul gününden itibaren, vadeye göre artan (kanonik sort adı)', () => {
+    it('yaklaşan aşılar: planlı, vefat edenler hariç, vadesi bugünün İstanbul gününden itibaren, vadeye göre artan (kanonik sort adı)', () => {
         // 2026-10-14 22:30Z = İstanbul 15 Ekim 01:30 — gün İstanbul'a göre alınır.
         jasmine.clock().mockDate(new Date('2026-10-14T22:30:00Z'));
         service.loadDashboardListsPhase().subscribe();
         expect(vaccinations.getVaccinations).toHaveBeenCalledWith(
-            jasmine.objectContaining({ status: '0', fromDate: '2026-10-15', sort: 'dueAtUtc', order: 'asc', pageSize: 8 })
+            jasmine.objectContaining({ status: '0', onlyReceivingCare: true, fromDate: '2026-10-15', sort: 'dueAtUtc', order: 'asc', pageSize: 8 })
         );
         const q = vaccinations.getVaccinations.calls.mostRecent().args[0];
 

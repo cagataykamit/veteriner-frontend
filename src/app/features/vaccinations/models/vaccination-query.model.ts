@@ -1,7 +1,7 @@
 /**
  * Aşı listesi — GET `/api/v1/vaccinations`.
  * HttpParams: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order`
- * (+ isteğe bağlı `OnlyOverdue`, + ilişkili filtreler: `clinicId`, `PetId`, `ClientId`).
+ * (+ isteğe bağlı `OnlyOverdue`, `onlyReceivingCare`, + ilişkili filtreler: `clinicId`, `PetId`, `ClientId`).
  * `Search`: VaccineName, Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
  */
 
@@ -23,6 +23,8 @@ export interface VaccinationsListQuery {
      * Backend desteklemiyorsa yok sayılabilir; entegrasyon notlarına bakın.
      */
     onlyOverdue?: boolean;
+    /** Yalnız bakımdaki (vefat etmemiş) hastaların aşıları (pano yaklaşan aşılar); verilmezse tümü. */
+    onlyReceivingCare?: boolean;
     /** Backend beyaz listesi: `dueAtUtc` | `appliedAtUtc`; başka değer 400. */
     sort?: string;
     /** `asc` | `desc` */

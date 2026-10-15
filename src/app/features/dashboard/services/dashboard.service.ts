@@ -235,6 +235,8 @@ export class DashboardService {
                         pageSize: DASHBOARD_UPCOMING_VACCINATIONS_MAX,
                         status: VACCINATION_STATUS_SCHEDULED,
                         fromDate: istanbulToday,
+                        // Vefat eden hastanın planlı aşısı yaklaşan iş değildir (uyarı sayımıyla aynı kural, backend Pet.ReceivesCare).
+                        onlyReceivingCare: true,
                         sort: 'dueAtUtc',
                         order: 'asc'
                     })
