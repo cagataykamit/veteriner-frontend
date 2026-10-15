@@ -61,6 +61,7 @@ describe('ImportReviewStepComponent', () => {
         fixture.detectChanges();
 
         const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
         expect(text).toContain('(Hasta adı)');
         expect(text).toContain('(Hasta no)');
         expect(text).not.toContain('HayvanAdi');
