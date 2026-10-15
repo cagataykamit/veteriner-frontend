@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { MenuBadgeService } from '@/app/layout/service/menu-badge.service';
+import { MENU_FLYOUT_CLOSE_DELAY_MS } from '@/app/layout/service/menu-flyout.service';
 import { AppMenu } from './app.menu';
 
 describe('AppMenu', () => {
@@ -136,5 +137,207 @@ describe('AppMenu', () => {
         const hidden = TestBed.createComponent(AppMenu);
         hidden.detectChanges();
         expect(badges(hidden)).toEqual([]);
+    });
+
+    describe('alt sayfa paneli (flyout)', () => {
+        const row = (fixture: ComponentFixture<AppMenu>, label: string) => link(fixture, label).closest('li') as HTMLElement;
+        const pointer = (el: Element, type: 'pointerenter' | 'pointerleave', pointerType = 'mouse') => el.dispatchEvent(new PointerEvent(type, { pointerType }));
+        const hover = (fixture: ComponentFixture<AppMenu>, label: string, pointerType = 'mouse') => {
+            pointer(row(fixture, label), 'pointerenter', pointerType);
+            fixture.detectChanges();
+        };
+        const panels = () => Array.from(document.querySelectorAll<HTMLElement>('.layout-menu-flyout'));
+        const panel = () => panels()[0];
+        const items = () => Array.from(panel()?.querySelectorAll<HTMLAnchorElement>('[role="menuitem"]') ?? []);
+        const itemLabels = () => items().map((a) => a.querySelector('.layout-menu-flyout-text')?.textContent?.trim());
+        const key = (el: Element, k: string) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+        const tabbed = ['Randevular', 'Müşteri ve Hasta', 'Kayıtlar', 'Para', 'Stok'];
+
+        afterEach(() => {
+            jasmine.clock().uninstall();
+            panels().forEach((p) => p.remove());
+        });
+
+        it('açık menüde ok ve açılır işaret yalnız sekmeli satırlardadır; sekmesiz satırda panel açılmaz', () => {
+            const fixture = create();
+            for (const label of ['Bugün', ...tabbed, 'Raporlar', 'Özet', 'Ayarlar']) {
+                const hasFlyout = tabbed.includes(label);
+                expect(link(fixture, label).querySelector('.layout-menuitem-flyout-toggler') !== null).withContext(label).toBe(hasFlyout);
+                expect(link(fixture, label).getAttribute('aria-haspopup')).withContext(label).toBe(hasFlyout ? 'menu' : null);
+                expect(link(fixture, label).getAttribute('aria-expanded')).withContext(label).toBe(hasFlyout ? 'false' : null);
+            }
+            hover(fixture, 'Bugün');
+            hover(fixture, 'Ayarlar');
+            expect(panels()).toEqual([]);
+        });
+
+        it('fareyle üzerine gelince sekmeler body altındaki panelde açılır (kenar çubuğu kırpmaz); panele geçerken kapanmaz, çıkınca kapanır', () => {
+            jasmine.clock().install();
+            const fixture = create();
+            hover(fixture, 'Kayıtlar');
+            expect(panels().length).toBe(1);
+            expect(panel().parentElement).toBe(document.body);
+            expect(panel().getAttribute('role')).toBe('menu');
+            expect(panel().getAttribute('aria-label')).toBe('Kayıtlar alt sayfaları');
+            expect(link(fixture, 'Kayıtlar').getAttribute('aria-expanded')).toBe('true');
+            expect(link(fixture, 'Kayıtlar').getAttribute('aria-controls')).toBe(panel().id);
+            expect(itemLabels()).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Yatışlar', 'Uygulamalar']);
+            expect(panel().querySelector('.layout-menu-flyout-heading')).toBeNull();
+
+            pointer(row(fixture, 'Kayıtlar'), 'pointerleave');
+            jasmine.clock().tick(100);
+            pointer(panel(), 'pointerenter');
+            jasmine.clock().tick(500);
+            fixture.detectChanges();
+            expect(panels().length).toBe(1);
+
+            pointer(panel(), 'pointerleave');
+            jasmine.clock().tick(MENU_FLYOUT_CLOSE_DELAY_MS);
+            fixture.detectChanges();
+            expect(panels()).toEqual([]);
+            expect(link(fixture, 'Kayıtlar').getAttribute('aria-expanded')).toBe('false');
+        });
+
+        it('aynı anda tek panel açıktır', () => {
+            const fixture = create();
+            hover(fixture, 'Para');
+            hover(fixture, 'Stok');
+            expect(panels().length).toBe(1);
+            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
+        });
+
+        it('dokunmatikte panel açılmaz; dokunuş satırın mevcut gezinmesini yapar', () => {
+            const fixture = create();
+            hover(fixture, 'Para', 'touch');
+            expect(panels()).toEqual([]);
+            expect(link(fixture, 'Para').getAttribute('href')).toBe('/panel/charges');
+        });
+
+        it('yalnız yetkili sekmeler görünür; tek sekme kalırsa ok ve panel yoktur', () => {
+            const fixture = create((claim) => claim === 'Products.Read');
+            hover(fixture, 'Stok');
+            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu']);
+
+            TestBed.resetTestingModule();
+            panels().forEach((p) => p.remove());
+            const single = create((claim) => claim === 'StockMovements.Read');
+            expect(link(single, 'Stok').querySelector('.layout-menuitem-flyout-toggler')).toBeNull();
+            expect(link(single, 'Stok').getAttribute('aria-haspopup')).toBeNull();
+            hover(single, 'Stok');
+            expect(panels()).toEqual([]);
+        });
+
+        it('etkin sekme vurgulanır (aria-current); sayaçlı sekme panelde de sayacı gösterir', async () => {
+            counts = { requestedLabResults: 4 };
+            const fixture = create();
+            await TestBed.inject(Router).navigateByUrl('/panel/charges/pending');
+            fixture.detectChanges();
+            hover(fixture, 'Para');
+            const active = items().filter((a) => a.classList.contains('active-route'));
+            expect(active.map((a) => a.textContent?.trim())).toEqual(['Ücret bekleyenler']);
+            expect(active[0].getAttribute('aria-current')).toBe('page');
+
+            hover(fixture, 'Kayıtlar');
+            expect(items().filter((a) => a.classList.contains('active-route'))).toEqual([]);
+            const lab = items().find((a) => a.textContent?.includes('Lab sonuçları'))!;
+            expect(lab.querySelector('.layout-menuitem-badge')?.firstChild?.textContent).toBe('4');
+            expect(items().filter((a) => a.querySelector('.layout-menuitem-badge'))).toHaveSize(1);
+        });
+
+        it('sekmeye tıklamak o sayfaya gider ve paneli kapatır', async () => {
+            const fixture = create();
+            hover(fixture, 'Randevular');
+            const calendar = items().find((a) => a.textContent?.trim() === 'Takvim')!;
+            expect(calendar.getAttribute('href')).toBe('/panel/appointments/calendar');
+            calendar.click();
+            await fixture.whenStable();
+            fixture.detectChanges();
+            expect(TestBed.inject(Router).url).toBe('/panel/appointments/calendar');
+            expect(panels()).toEqual([]);
+        });
+
+        it('klavye: Sağ ok açıp ilk sekmeye odaklanır, Aşağı/Yukarı gezinir, Escape kapatıp odağı satıra verir', () => {
+            const fixture = create();
+            const para = link(fixture, 'Para');
+            para.focus();
+            key(para, 'ArrowRight');
+            fixture.detectChanges();
+            expect(itemLabels()).toEqual(['Ücretler', 'Ücret bekleyenler', 'Ödemeler', 'Satışlar']);
+            expect(document.activeElement).toBe(items()[0]);
+
+            key(items()[0], 'ArrowDown');
+            expect(document.activeElement).toBe(items()[1]);
+            key(items()[1], 'ArrowUp');
+            key(items()[0], 'ArrowUp');
+            expect(document.activeElement).toBe(items()[3]);
+
+            key(items()[3], 'Escape');
+            fixture.detectChanges();
+            expect(panels()).toEqual([]);
+            expect(document.activeElement).toBe(para);
+            expect(para.getAttribute('aria-expanded')).toBe('false');
+        });
+
+        it('klavye: Tab ile odaklanan satır paneli odağı taşımadan açar; odak başka satıra geçince kapanır', () => {
+            const fixture = create();
+            link(fixture, 'Stok').focus();
+            fixture.detectChanges();
+            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
+            expect(document.activeElement).toBe(link(fixture, 'Stok'));
+
+            link(fixture, 'Raporlar').focus();
+            fixture.detectChanges();
+            expect(panels()).toEqual([]);
+        });
+
+        it('klavye: Tab panelden çıkarken paneli kapatır ve odağı satıra verir (tarayıcı oradan devam eder)', () => {
+            const fixture = create();
+            const para = link(fixture, 'Para');
+            para.focus();
+            key(para, 'ArrowRight');
+            fixture.detectChanges();
+            const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+            items()[0].dispatchEvent(tab);
+            fixture.detectChanges();
+            expect(tab.defaultPrevented).toBeFalse();
+            expect(document.activeElement).toBe(para);
+            expect(panels()).toEqual([]);
+        });
+
+        it('klavye: Enter satırın kendi gezinmesini yapar (panel açmaz); fareyle açık panel satırda Escape ile kapanır', () => {
+            const fixture = create();
+            const para = link(fixture, 'Para');
+            const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+            para.dispatchEvent(enter);
+            fixture.detectChanges();
+            expect(enter.defaultPrevented).toBeFalse();
+            expect(panels()).toEqual([]);
+
+            hover(fixture, 'Para');
+            key(para, 'Escape');
+            fixture.detectChanges();
+            expect(panels()).toEqual([]);
+        });
+
+        it('daraltılmış menüde ad ipucu yerine başlıklı panel açılır; sekmesiz satırda panel yoktur', () => {
+            rail.set(true);
+            const fixture = create();
+            hover(fixture, 'Özet');
+            expect(panels()).toEqual([]);
+            expect(link(fixture, 'Özet').getAttribute('aria-haspopup')).toBeNull();
+
+            hover(fixture, 'Müşteri ve Hasta');
+            expect(panel().querySelector('.layout-menu-flyout-heading')?.textContent?.trim()).toBe('Müşteri ve Hasta');
+            expect(itemLabels()).toEqual(['Ara', 'Müşteriler', 'Hastalar']);
+            expect(link(fixture, 'Müşteri ve Hasta').getAttribute('aria-haspopup')).toBe('menu');
+        });
+
+        it('sayfa değişince açık panel kapanır', async () => {
+            const fixture = create();
+            hover(fixture, 'Stok');
+            await TestBed.inject(Router).navigateByUrl('/panel/today');
+            fixture.detectChanges();
+            expect(panels()).toEqual([]);
+        });
     });
 });

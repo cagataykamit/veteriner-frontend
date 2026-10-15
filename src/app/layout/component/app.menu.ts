@@ -9,7 +9,9 @@ import { readMenuGroupPreferences, writeMenuGroupPreferences } from './menu-grou
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badge.service';
-import { entryForUrl, groupForUrl, MENU_GROUPS, menuLinkRoute, visibleGroups } from '@/app/core/routing/panel-navigation';
+import { MenuFlyoutService } from '@/app/layout/service/menu-flyout.service';
+import { entryForUrl, flyoutTabsFor, groupForUrl, MENU_GROUPS, menuLinkRoute, visibleGroups, type MenuBadgeKey, type MenuEntry } from '@/app/core/routing/panel-navigation';
+import type { MenuFlyoutTab } from './app-menu-flyout.component';
 
 interface MenuSection {
     /** Yoksa başlıksız: öğeler her zaman görünür. */
@@ -25,6 +27,7 @@ interface MenuSection {
     selector: 'app-menu',
     standalone: true,
     imports: [CommonModule, AppMenuitem, RouterModule],
+    providers: [MenuFlyoutService],
     template: `
         <ul class="layout-menu">
             @for (section of scrollingSections(); track $index) {
@@ -82,6 +85,7 @@ export class AppMenu {
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly badges = inject(MenuBadgeService);
+    private readonly flyout = inject(MenuFlyoutService);
 
     /** Simge şeridinde tüm öğeler görünür; grup başlıkları ince ayırıcıya dönüşür. */
     protected readonly rail = inject(LayoutService).isMenuRail;
@@ -93,7 +97,8 @@ export class AppMenu {
 
     private readonly sections = computed<MenuSection[]>(() => {
         const preferences = this.preferences();
-        const current = entryForUrl(MENU_GROUPS, this.currentUrl());
+        const url = this.currentUrl();
+        const current = entryForUrl(MENU_GROUPS, url);
         const hasClaim = (claim: string) => this.auth.hasOperationClaim(claim);
         return visibleGroups(MENU_GROUPS, hasClaim).map((group) => ({
             label: group.label,
@@ -104,9 +109,10 @@ export class AppMenu {
                 label: entry.label,
                 icon: entry.icon,
                 routerLink: [menuLinkRoute(entry, hasClaim)],
-                badge: (entry.badge && menuBadgeLabel(this.badges.count(entry.badge))) || undefined,
+                badge: this.badgeLabel(entry.badge) || undefined,
                 badgeText: entry.badgeText,
-                active: entry === current
+                active: entry === current,
+                flyoutTabs: this.flyoutTabs(entry, url, hasClaim)
             }))
         }));
     });
@@ -123,9 +129,20 @@ export class AppMenu {
                 takeUntilDestroyed(inject(DestroyRef))
             )
             .subscribe((event) => {
+                this.flyout.close();
                 this.currentUrl.set(event.urlAfterRedirects);
                 this.openGroupOf(event.urlAfterRedirects);
             });
+    }
+
+    /** Alt sayfa paneli sekmeleri: menü verisindeki yetkili sekmeler (sekme çubuğuyla aynı kural), etkin sekme ve sayaçları. */
+    private flyoutTabs(entry: MenuEntry, url: string, hasClaim: (claim: string) => boolean): MenuFlyoutTab[] | undefined {
+        const flyout = flyoutTabsFor(entry, url, hasClaim);
+        return flyout?.tabs.map((tab) => ({ label: tab.label, route: tab.route, badge: this.badgeLabel(tab.badge), active: tab === flyout.active }));
+    }
+
+    private badgeLabel(key: MenuBadgeKey | undefined): string | null {
+        return key ? menuBadgeLabel(this.badges.count(key)) : null;
     }
 
     protected groupId(label: string): string {

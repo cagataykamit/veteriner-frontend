@@ -3,6 +3,7 @@ import {
     DEFINITION_ENTRIES,
     entryForUrl,
     firstAccessibleRoute,
+    flyoutTabsFor,
     groupForUrl,
     listLabelForUrl,
     MANAGER_LEVEL_CLAIM,
@@ -261,6 +262,35 @@ describe('panel-navigation', () => {
             expect(tabs('/panel/sales/abc')).toBeUndefined();
             expect(labels(visibleGroups(MENU_GROUPS, only('Sales.Read')))).toEqual(['Para', 'Ayarlar']);
             expect(labels(visibleGroups(MENU_GROUPS, only('Sales.Create')))).toEqual(['Ayarlar']);
+        });
+    });
+
+    describe('alt sayfa paneli (flyout)', () => {
+        const flyout = (label: string, url: string, hasClaim: (c: string) => boolean = () => true) => flyoutTabsFor(entry(label), url, hasClaim);
+
+        it('sekmeli öğede yetkili sekmeleri verir; sekmesiz öğede ve tek sekme yetkiliyken panel yoktur', () => {
+            expect(flyout('Kayıtlar', '/panel/today')?.tabs.map((t) => t.label)).toEqual([
+                'Muayeneler',
+                'Tedaviler',
+                'Reçeteler',
+                'Aşılar',
+                'Lab sonuçları',
+                'Yatışlar',
+                'Uygulamalar'
+            ]);
+            expect(flyout('Stok', '/panel/today', only('Products.Read'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu']);
+            expect(flyout('Stok', '/panel/today', only('StockMovements.Read'))).toBeUndefined();
+            expect(flyout('Bugün', '/panel/today')).toBeUndefined();
+            expect(flyout('Ayarlar', '/panel/settings')).toBeUndefined();
+        });
+
+        it('etkin sekme adresi kapsayan en uzun sekme yoludur; detay sayfasında listesinin sekmesi, başka öğenin adresinde yok', () => {
+            expect(flyout('Para', '/panel/charges/pending?x=1')?.active?.label).toBe('Ücret bekleyenler');
+            expect(flyout('Para', '/panel/charges')?.active?.label).toBe('Ücretler');
+            expect(flyout('Randevular', '/panel/appointments/calendar')?.active?.label).toBe('Takvim');
+            expect(flyout('Randevular', '/panel/appointments/abc')?.active?.label).toBe('Liste');
+            expect(flyout('Müşteri ve Hasta', '/panel/pets/abc')?.active?.label).toBe('Hastalar');
+            expect(flyout('Müşteri ve Hasta', '/panel/today')?.active).toBeUndefined();
         });
     });
 

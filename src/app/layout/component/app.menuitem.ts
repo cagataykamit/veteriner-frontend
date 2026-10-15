@@ -1,14 +1,16 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RippleModule } from 'primeng/ripple';
 import { TooltipModule } from 'primeng/tooltip';
 import { LayoutService } from '@/app/layout/service/layout.service';
+import { MenuFlyoutService } from '@/app/layout/service/menu-flyout.service';
+import { AppMenuFlyout } from './app-menu-flyout.component';
 import { filter } from 'rxjs/operators';
 
 @Component({
     selector: '[app-menuitem]',
-    imports: [CommonModule, RouterModule, RippleModule, TooltipModule],
+    imports: [CommonModule, RouterModule, RippleModule, TooltipModule, AppMenuFlyout],
     template: `
         @if (root() && isVisible()) {
             <div class="layout-menuitem-root-text">{{ item().label }}</div>
@@ -38,23 +40,44 @@ import { filter } from 'rxjs/operators';
                 [queryParams]="item().queryParams"
                 [attr.target]="item().target"
                 [attr.aria-label]="layoutService.isMenuRail() ? railTooltip() : null"
+                [attr.aria-haspopup]="hasFlyout() ? 'menu' : null"
+                [attr.aria-expanded]="hasFlyout() ? flyoutOpen() : null"
+                [attr.aria-controls]="flyoutOpen() ? flyoutId() : null"
+                (focus)="onLinkFocus($event)"
+                (focusout)="onLinkFocusOut($event)"
+                (keydown)="onLinkKeydown($event)"
                 tabindex="0"
                 pRipple
                 [pTooltip]="railTooltip()"
-                [tooltipDisabled]="!layoutService.isMenuRail()"
+                [tooltipDisabled]="!layoutService.isMenuRail() || hasFlyout()"
                 tooltipPosition="right"
                 tooltipEvent="both"
                 appendTo="body"
+                #link
             >
                 <i [ngClass]="item().icon" class="layout-menuitem-icon"></i>
                 <span class="layout-menuitem-text">{{ item().label }}</span>
                 @if (item().badge) {
                     <span class="layout-menuitem-badge">{{ item().badge }}<span class="sr-only"> {{ item().badgeText || 'bekleyen' }}</span></span>
                 }
+                @if (hasFlyout()) {
+                    <i class="fa-solid fa-angle-right layout-menuitem-flyout-toggler" aria-hidden="true"></i>
+                }
                 @if (hasChildren()) {
                     <i class="pi pi-fw pi-angle-down layout-submenu-toggler"></i>
                 }
             </a>
+            @if (flyoutOpen()) {
+                <app-menu-flyout
+                    [anchor]="link"
+                    [tabs]="item().flyoutTabs"
+                    [label]="item().label"
+                    [heading]="layoutService.isMenuRail()"
+                    [panelId]="flyoutId()"
+                    [focusFirst]="flyoutFocusFirst()"
+                    (selected)="onFlyoutSelected()"
+                />
+            }
         }
         @if (hasChildren() && isVisible() && (root() || isActive())) {
             <ul [animate.enter]="initialized() ? 'p-submenu-enter' : null" [animate.leave]="'p-submenu-leave'" [class.layout-root-submenulist]="root()">
@@ -66,7 +89,9 @@ import { filter } from 'rxjs/operators';
     `,
     host: {
         '[class.active-menuitem]': 'isActive()',
-        '[class.layout-root-menuitem]': 'root()'
+        '[class.layout-root-menuitem]': 'root()',
+        '(pointerenter)': 'onPointer($event, true)',
+        '(pointerleave)': 'onPointer($event, false)'
     },
     styles: [
         `
@@ -124,6 +149,78 @@ export class AppMenuitem {
     });
 
     hasRouterLink = computed(() => !!this.item()?.routerLink);
+
+    private readonly flyout = inject(MenuFlyoutService);
+
+    private readonly flyoutPanel = viewChild(AppMenuFlyout);
+
+    /** Satırın alt sayfa paneli (flyout) var mı: yalnız en az iki yetkili sekmesi olan öğe (`flyoutTabs`, `AppMenu` doldurur). */
+    hasFlyout = computed(() => !!this.item()?.flyoutTabs?.length && !this.hasChildren());
+
+    flyoutOpen = computed(() => this.hasFlyout() && this.flyout.openKey() === this.item().label);
+
+    flyoutId = computed(() => `layout-menu-flyout-${String(this.item()?.label ?? '').toLocaleLowerCase('tr').replace(/\s+/g, '-')}`);
+
+    /** Klavyeyle açılan panelde odak ilk sekmeye geçer; fareyle ya da odakla açılanda satırda kalır. */
+    flyoutFocusFirst = signal(false);
+
+    /** Fareyle üzerine gelince açılır. Dokunmatikte (hover yok) panel açılmaz; dokunuş mevcut gezinmeyi (ilk sekme) yapar. */
+    onPointer(event: PointerEvent, entered: boolean) {
+        if (!this.hasFlyout() || event.pointerType !== 'mouse') {
+            return;
+        }
+        if (entered) {
+            this.openFlyout(false);
+        } else {
+            this.flyout.scheduleClose();
+        }
+    }
+
+    /** Klavye odağı paneli odağı taşımadan açar (daraltılmış menüde eski ad ipucunun yerine); fare tıklamasıyla gelen odak açmaz. */
+    onLinkFocus(event: FocusEvent) {
+        const link = event.target as HTMLElement;
+        if (this.hasFlyout() && link.matches(':focus-visible')) {
+            this.openFlyout(false);
+        }
+    }
+
+    onLinkFocusOut(event: FocusEvent) {
+        // Panel body'dedir; odak satırdan panele geçiyorsa açık kalır.
+        const next = event.relatedTarget;
+        const intoPanel = next instanceof Node && !!document.getElementById(this.flyoutId())?.contains(next);
+        if (this.flyoutOpen() && !intoPanel) {
+            this.flyout.close();
+        }
+    }
+
+    /** Sağ ok ve Boşluk paneli açıp ilk sekmeye odaklanır; Enter satırın kendi gezinmesini (ilk sekme) yapar; Escape kapatır. */
+    onLinkKeydown(event: KeyboardEvent) {
+        if (!this.hasFlyout()) {
+            return;
+        }
+        if (event.key === 'ArrowRight' || event.key === ' ') {
+            event.preventDefault();
+            const panel = this.flyoutPanel();
+            if (panel) {
+                panel.focusItem(0);
+            } else {
+                this.openFlyout(true);
+            }
+        } else if (event.key === 'Escape' && this.flyoutOpen()) {
+            event.preventDefault();
+            this.flyout.close();
+        }
+    }
+
+    onFlyoutSelected() {
+        this.flyout.close();
+        this.closeOverlayMenus();
+    }
+
+    private openFlyout(focusFirst: boolean) {
+        this.flyoutFocusFirst.set(focusFirst);
+        this.flyout.open(this.item().label);
+    }
 
     fullPath = computed(() => {
         const itemPath = this.item()?.path;
@@ -213,13 +310,19 @@ export class AppMenuitem {
                 }));
             }
         } else {
-            this.layoutService.layoutState.update((val) => ({
-                ...val,
-                overlayMenuActive: false,
-                staticMenuMobileActive: false,
-                mobileMenuActive: false,
-                menuHoverActive: false
-            }));
+            this.flyout.close();
+            this.closeOverlayMenus();
         }
+    }
+
+    /** Gezinmeden sonra çekmece/overlay menü kapanır. */
+    private closeOverlayMenus() {
+        this.layoutService.layoutState.update((val) => ({
+            ...val,
+            overlayMenuActive: false,
+            staticMenuMobileActive: false,
+            mobileMenuActive: false,
+            menuHoverActive: false
+        }));
     }
 }
