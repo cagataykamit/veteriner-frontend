@@ -55,6 +55,9 @@ export class LayoutService {
 
     isDarkTheme = computed(() => this.layoutConfig().darkTheme);
 
+    /** Tema düğmesinin erişilebilir adı: düğmenin yapacağı geçişi söyler. */
+    themeToggleLabel = computed(() => (this.isDarkTheme() ? 'Açık temaya geç' : 'Koyu temaya geç'));
+
     getPrimary = computed(() => this.layoutConfig().primary);
 
     getSurface = computed(() => this.layoutConfig().surface);

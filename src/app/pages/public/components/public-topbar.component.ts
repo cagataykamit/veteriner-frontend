@@ -38,7 +38,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                         [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
                         severity="secondary"
                         class="public-topbar-theme-toggle public-topbar-theme-toggle-mobile ml-auto mr-3 shrink-0 md:!hidden"
-                        [attr.aria-label]="themeToggleLabel()"
+                        [ariaLabel]="themeToggleLabel()"
                     />
                 </div>
 
@@ -78,7 +78,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                         [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
                         severity="secondary"
                         class="public-topbar-theme-toggle !hidden shrink-0 md:!inline-flex md:ml-3"
-                        [attr.aria-label]="themeToggleLabel()"
+                        [ariaLabel]="themeToggleLabel()"
                     />
                 </div>
             </div>
@@ -92,9 +92,7 @@ export class PublicTopbarComponent {
 
     readonly isDarkTheme = computed(() => this.layoutService.layoutConfig().darkTheme);
 
-    readonly themeToggleLabel = computed(() =>
-        this.isDarkTheme() ? 'Açık temaya geç' : 'Koyu temaya geç'
-    );
+    readonly themeToggleLabel = this.layoutService.themeToggleLabel;
 
     readonly navLinks = [
         { label: 'Özellikler', routerLink: ['/'], fragment: 'features' },

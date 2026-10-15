@@ -15,6 +15,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                 [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
                 severity="secondary"
                 [class]="toggleClass()"
+                [ariaLabel]="themeToggleLabel()"
             />
         </div>
     `
@@ -28,6 +29,8 @@ export class AppFloatingConfigurator {
     toggleClass = input<string>('');
 
     isDarkTheme = computed(() => this.layoutService.layoutConfig().darkTheme);
+
+    themeToggleLabel = this.layoutService.themeToggleLabel;
 
     toggleDarkMode(): void {
         this.layoutService.toggleDarkMode();
