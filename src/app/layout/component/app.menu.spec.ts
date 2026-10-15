@@ -46,7 +46,7 @@ describe('AppMenu', () => {
 
     /** Başlık ve öğe sırası: başlık "# Ad", öğe adı düz; simge şeridinde ayırıcı "—". */
     const outline = (fixture: ComponentFixture<AppMenu>) =>
-        Array.from(root(fixture).querySelectorAll('.layout-menu-heading, .layout-menu-divider, li[app-menuitem]')).map((el) =>
+        Array.from(root(fixture).querySelectorAll('.layout-menu-heading, .layout-menu-divider, li[appMenuitem]')).map((el) =>
             el.classList.contains('layout-menu-heading')
                 ? `# ${el.textContent?.trim()}`
                 : el.classList.contains('layout-menu-divider')
@@ -98,7 +98,7 @@ describe('AppMenu', () => {
         const fixture = create();
 
         expect(labels(fixture)).toContain('Kayıtlar');
-        const items = Array.from(root(fixture).querySelectorAll('li[app-menuitem]'));
+        const items = Array.from(root(fixture).querySelectorAll('li[appMenuitem]'));
 
         expect(items.length).toBe(9);
 

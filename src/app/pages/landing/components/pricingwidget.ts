@@ -4,7 +4,7 @@ import { DividerModule } from 'primeng/divider';
 import { RippleModule } from 'primeng/ripple';
 
 @Component({
-    selector: 'pricing-widget',
+    selector: 'app-pricing-widget',
     imports: [DividerModule, ButtonModule, RippleModule],
     template: `
         <div id="pricing" class="py-6 px-6 lg:px-20 my-2 md:my-6">

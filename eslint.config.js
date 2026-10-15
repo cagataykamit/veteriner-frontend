@@ -25,8 +25,15 @@ export default tseslint.config(
                 { blankLine: 'always', prev: '*', next: 'block-like' },
                 { blankLine: 'always', prev: ['import'], next: ['const', 'let', 'var'] }
             ],
-            '@angular-eslint/component-selector': ['warn', { type: 'element', prefix: 'p', style: 'kebab-case' }],
-            '@angular-eslint/directive-selector': ['warn', { type: 'attribute', prefix: 'p', style: 'camelCase' }],
+            // Önek angular.json'daki proje önekiyle (`app`) aynı; `p` şablondan (PrimeNG) kalmıştı. `<li>` gibi yerel öğeye takılan bileşenler öznitelik seçicisi kullanır.
+            '@angular-eslint/component-selector': [
+                'warn',
+                [
+                    { type: 'element', prefix: 'app', style: 'kebab-case' },
+                    { type: 'attribute', prefix: 'app', style: 'camelCase' }
+                ]
+            ],
+            '@angular-eslint/directive-selector': ['warn', { type: 'attribute', prefix: 'app', style: 'camelCase' }],
             '@angular-eslint/component-class-suffix': ['error', { suffixes: [''] }],
             '@angular-eslint/no-host-metadata-property': 'off',
             '@angular-eslint/no-output-on-prefix': 'off',

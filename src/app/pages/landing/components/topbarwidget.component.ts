@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import {AppFloatingConfigurator} from "@/app/layout/component/app.floatingconfigurator";
 
 @Component({
-    selector: 'topbar-widget',
+    selector: 'app-topbar-widget',
     imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule, AppFloatingConfigurator],
     template: `<a class="flex items-center" href="#">
             <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-12 mr-2">

@@ -34,7 +34,7 @@ interface MenuSection {
                 @if (section.label && rail()) {
                     <li class="layout-menu-divider" role="separator"></li>
                     @for (item of section.items; track item.label) {
-                        <li app-menuitem [item]="item" [root]="false"></li>
+                        <li appMenuitem [item]="item" [root]="false"></li>
                     }
                 } @else if (section.label) {
                     <li class="layout-menu-group">
@@ -51,7 +51,7 @@ interface MenuSection {
                         @if (section.open) {
                             <ul [id]="groupId(section.label)">
                                 @for (item of section.items; track item.label) {
-                                    <li app-menuitem [item]="item" [root]="false"></li>
+                                    <li appMenuitem [item]="item" [root]="false"></li>
                                 }
                             </ul>
                         }
@@ -76,7 +76,7 @@ interface MenuSection {
                 <li class="layout-menu-heading" role="presentation">{{ section.heading }}</li>
             }
             @for (item of section.items; track item.label) {
-                <li app-menuitem [item]="item" [root]="false"></li>
+                <li appMenuitem [item]="item" [root]="false"></li>
             }
         </ng-template>
     `

@@ -9,7 +9,7 @@ import { AppMenuFlyout } from './app-menu-flyout.component';
 import { filter } from 'rxjs/operators';
 
 @Component({
-    selector: '[app-menuitem]',
+    selector: '[appMenuitem]',
     imports: [CommonModule, RouterModule, RippleModule, TooltipModule, AppMenuFlyout],
     template: `
         @if (root() && isVisible()) {
@@ -82,7 +82,7 @@ import { filter } from 'rxjs/operators';
         @if (hasChildren() && isVisible() && (root() || isActive())) {
             <ul [animate.enter]="initialized() ? 'p-submenu-enter' : null" [animate.leave]="'p-submenu-leave'" [class.layout-root-submenulist]="root()">
                 @for (child of item().items; track child?.label) {
-                    <li app-menuitem [item]="child" [parentPath]="fullPath()" [root]="false" [class]="child['badgeClass']"></li>
+                    <li appMenuitem [item]="child" [parentPath]="fullPath()" [root]="false" [class]="child['badgeClass']"></li>
                 }
             </ul>
         }

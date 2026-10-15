@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 
 @Component({
-    selector: 'footer-widget',
+    selector: 'app-footer-widget',
     imports: [RouterModule],
     template: `
         <div class="py-12 px-12 mx-0 mt-20 lg:mx-20">
