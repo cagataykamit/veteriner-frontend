@@ -13,6 +13,7 @@ import {
     paymentMethodCanonicalToApiEnum,
     resolvePaymentMethodFormValue
 } from '@/app/features/payments/utils/payment-method.utils';
+import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -215,7 +216,10 @@ export function mapPagedPaymentsToVm(result: PaymentListItemDtoPagedResult): {
     };
 }
 
-/** GET `/api/v1/payments` — canonical query: `Page`, `PageSize`, `Search`, `ClientId`, `PetId`, `Method`, `FromDate`, `ToDate` (+ `clinicId`). */
+/**
+ * GET `/api/v1/payments` — canonical query: `Page`, `PageSize`, `Search`, `ClientId`, `PetId`, `Method`, `paidFromUtc`, `paidToUtc` (+ `clinicId`).
+ * Backend `paidAtUtc >= paidFromUtc` ve `<= paidToUtc` (iki uç dahil); İstanbul günü başı ve günü sonu (23:59:59.999) gönderilir.
+ */
 export function paymentsQueryToHttpParams(query: PaymentsListQuery, opts?: { omitPaging?: boolean }): HttpParams {
     let p = new HttpParams();
     if (!opts?.omitPaging) {
@@ -244,11 +248,13 @@ export function paymentsQueryToHttpParams(query: PaymentsListQuery, opts?: { omi
             /* bilinmeyen yöntem — parametre gönderme */
         }
     }
-    if (query.paidFromDate?.trim()) {
-        p = p.set('FromDate', query.paidFromDate.trim());
+    const paidFromUtc = query.paidFromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.paidFromDate.trim()) : '';
+    if (paidFromUtc) {
+        p = p.set('paidFromUtc', paidFromUtc);
     }
-    if (query.paidToDate?.trim()) {
-        p = p.set('ToDate', query.paidToDate.trim());
+    const paidToUtc = query.paidToDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.paidToDate.trim()) : '';
+    if (paidToUtc) {
+        p = p.set('paidToUtc', paidToUtc);
     }
     return p;
 }

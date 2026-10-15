@@ -173,7 +173,7 @@ export const ApiEndpoints = {
         list: () => `/api/v1/vaccine-definitions`
     },
     payments: {
-        /** Query: `Page`, `PageSize`, `Search`, `Method`, `FromDate`, `ToDate` (+ `ClientId`, `PetId`, `clinicId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `Method`, `paidFromUtc`, `paidToUtc` (iki uç dahil) (+ `ClientId`, `PetId`, `clinicId`). */
         list: () => `/api/v1/payments`,
         byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`,
         /** POST `{ reason }`; 204 (`Payments.Correct`). */
