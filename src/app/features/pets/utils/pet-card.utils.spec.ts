@@ -266,11 +266,35 @@ describe('buildPetTodo', () => {
         expect(view.items.map((i) => i.kind)).toEqual(['overdueVaccine']);
         expect(view.loading).toBeFalse();
         expect(view.failed).toEqual(['Lab']);
+        expect(view.forbidden).toBeFalse();
+    });
+
+    it('bütün bölümler Forbidden ise (veya uç yetkisizse) liste bilinmiyordur: forbidden işaretlenir', () => {
+        const forbidden = { state: 'Forbidden', data: null };
+        const all = openItems({ vaccinations: forbidden, labResults: forbidden, pendingCharges: forbidden, outstanding: forbidden });
+        expect(buildPetTodo(all, ctx([]))).toEqual({ items: [], loading: false, failed: [], forbidden: true });
+        expect(buildPetTodo(openItems({ outstanding: forbidden }), ctx([])).forbidden).toBeFalse();
+    });
+
+    it('vefat eden hastanın açık randevusu bilgi satırıdır: en yakın tarih, randevu listesine (hasta süzgeçli) tek eylem; sayı verilmez', () => {
+        const nextAppointment = { state: 'Ok', data: { id: 'a1', scheduledAtUtc: '2026-10-20T09:00:00Z', durationMinutes: 30 } };
+        const view = buildPetTodo(openItems({ status: 'Deceased', nextAppointment, outstanding: outstanding(100, 0) }), ctx(['Payments.Create'], { emphasis: 'frontDesk' }));
+
+        expect(view.items.map((i) => i.kind)).toEqual(['deceasedAppointment', 'openBalance']);
+        const [item] = view.items;
+        expect(item.tone).toBe('info');
+        expect(item.title).toBe('Vefat eden hastanın açık randevusu var');
+        expect(item.detail).toContain('En yakını: 20.10.2026');
+        expect(item.action).toEqual({ label: 'Randevuları gör', route: ['/panel/appointments'], queryParams: { petId: 'p1' } });
+
+        expect(buildPetTodo(openItems({ nextAppointment }), ctx([])).items).withContext('aktif hastada randevu başlıktadır').toEqual([]);
+        expect(buildPetTodo(openItems({ status: 'Deceased' }), ctx([])).items).withContext('açık randevu yok').toEqual([]);
+        expect(buildPetTodo(openItems({ status: 'Deceased', nextAppointment: { state: 'Forbidden', data: null } }), ctx([])).items).toEqual([]);
     });
 
     it('istek sürerken yükleniyor; tümden başarısızsa bütün bölümler alınamadı sayılır', () => {
         expect(buildPetTodo({ state: 'loading' }, ctx([])).loading).toBeTrue();
         expect(buildPetTodo({ state: 'error' }, ctx([])).failed).toEqual(['Aşı', 'Lab', 'Ücret bekleyen işlem', 'Bakiye']);
-        expect(buildPetTodo(null, ctx([]))).toEqual({ items: [], loading: false, failed: [] });
+        expect(buildPetTodo(null, ctx([]))).toEqual({ items: [], loading: false, failed: [], forbidden: true });
     });
 });

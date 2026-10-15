@@ -84,10 +84,11 @@ describe('buildClientTodo', () => {
         expect(buildClientTodo(s, ctx([], { emphasis: 'frontDesk' })).items.map((i) => i.kind)).toEqual(['openBalance', 'pendingCharge']);
     });
 
-    it('yükleniyor ve alınamadı ayrı raporlanır; yetkisiz (null) kaynak ikisine de girmez', () => {
+    it('yükleniyor ve alınamadı ayrı raporlanır; yetkisiz (null) kaynak ikisine de girmez, hepsi yetkisizse forbidden', () => {
         const view = buildClientTodo({ pendingCharges: { state: 'loading' }, balance: { state: 'error' } }, ctx([]));
-        expect(view).toEqual({ items: [], loading: true, failed: ['Bakiye'] });
-        expect(buildClientTodo({ pendingCharges: null, balance: null }, ctx([]))).toEqual({ items: [], loading: false, failed: [] });
+        expect(view).toEqual({ items: [], loading: true, failed: ['Bakiye'], forbidden: false });
+        expect(buildClientTodo({ pendingCharges: null, balance: null }, ctx([]))).toEqual({ items: [], loading: false, failed: [], forbidden: true });
+        expect(buildClientTodo({ pendingCharges: null, balance: { state: 'loading' } }, ctx([])).forbidden).toBeFalse();
     });
 });
 

@@ -14,7 +14,7 @@ import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pe
 import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
-import { formatUtcIsoAsLocalDateDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /**
@@ -106,7 +106,7 @@ export function examinationAssessmentText(e: Pick<ExaminationDetailVm, 'assessme
     return t && t !== '—' ? t : null;
 }
 
-export type PetTodoKind = 'overdueVaccine' | 'labInterpretation' | 'pendingLab' | 'upcomingVaccine' | 'pendingCharge' | 'openBalance';
+export type PetTodoKind = 'deceasedAppointment' | 'overdueVaccine' | 'labInterpretation' | 'pendingLab' | 'upcomingVaccine' | 'pendingCharge' | 'openBalance';
 
 export interface PetTodoAction {
     label: string;
@@ -135,11 +135,11 @@ export interface PetTodoContext {
 }
 
 const KIND_ORDER: Record<PetCardEmphasis, readonly PetTodoKind[]> = {
-    clinical: ['overdueVaccine', 'labInterpretation', 'pendingLab', 'upcomingVaccine', 'pendingCharge', 'openBalance'],
-    frontDesk: ['openBalance', 'pendingCharge', 'overdueVaccine', 'upcomingVaccine', 'pendingLab', 'labInterpretation']
+    clinical: ['deceasedAppointment', 'overdueVaccine', 'labInterpretation', 'pendingLab', 'upcomingVaccine', 'pendingCharge', 'openBalance'],
+    frontDesk: ['deceasedAppointment', 'openBalance', 'pendingCharge', 'overdueVaccine', 'upcomingVaccine', 'pendingLab', 'labInterpretation']
 };
 
-/** Yapılacaklar'ı besleyen açık işler bölümleri (sonraki randevu başlıkta gösterilir). */
+/** Yapılacaklar'ı besleyen açık işler bölümleri (sonraki randevu başlıkta gösterilir; Yapılacaklar'da yalnız vefat eden hastada bilgi satırıdır). */
 type PetTodoSectionKey = 'vaccinations' | 'labResults' | 'pendingCharges' | 'outstanding';
 
 const SOURCE_LABELS: Record<PetTodoSectionKey, string> = {
@@ -154,6 +154,8 @@ export interface PetTodoView {
     loading: boolean;
     /** Yüklenemeyen kaynakların okunur adları. */
     failed: string[];
+    /** Hiçbir kaynağı okuma izni yok: liste "bilinmiyor"dur, "iş yok" denmez. */
+    forbidden: boolean;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -202,6 +204,20 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
         outstanding: openItemsSection(openItems, (o) => o.outstanding)
     } satisfies Record<PetTodoSectionKey, PetCardSection<unknown>>;
     const items: PetTodoItem[] = [];
+
+    // Vefat eden hastanın randevusu otomatik iptal edilmez (K4); iptal kullanıcıya bırakılır, satır yalnız listeye götürür. Uç tek (en yakın) randevu döner, sayı verilmez.
+    const nextAppointment = openItems?.state === 'ok' && openItems.data.status === 'Deceased' ? okData(openItemsSection(openItems, (o) => o.nextAppointment)) : null;
+    if (nextAppointment) {
+        items.push({
+            key: `deceased-appointment-${nextAppointment.id}`,
+            kind: 'deceasedAppointment',
+            tone: 'info',
+            icon: 'pi pi-calendar',
+            title: 'Vefat eden hastanın açık randevusu var',
+            detail: `En yakını: ${formatUtcIsoAsLocalDateTimeDisplay(nextAppointment.scheduledAtUtc)}`,
+            action: { label: 'Randevuları gör', route: ['/panel/appointments'], queryParams: { petId: ctx.petId } }
+        });
+    }
 
     const canApplyVaccine = canWrite(VACCINATIONS_UPDATE_CLAIM);
     const vaccineItem = (v: PetOpenVaccinationVm, overdue: boolean): PetTodoItem => {
@@ -292,7 +308,8 @@ export function todoView<K extends string>(
     return {
         items: [...items].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind)),
         loading: entries.some(([, s]) => s?.state === 'loading'),
-        failed: entries.filter(([, s]) => s?.state === 'error').map(([k]) => labels[k])
+        failed: entries.filter(([, s]) => s?.state === 'error').map(([k]) => labels[k]),
+        forbidden: entries.every(([, s]) => s === null)
     };
 }
 
