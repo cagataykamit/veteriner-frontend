@@ -8,7 +8,11 @@ import type {
 import type { CreateTreatmentRequest } from '@/app/features/treatments/models/treatment-create.model';
 import type { TreatmentsListQuery } from '@/app/features/treatments/models/treatment-query.model';
 import type { TreatmentDetailVm, TreatmentEditVm, TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
+import {
+    dateOnlyInputToIstanbulEndUtcIso,
+    dateOnlyInputToIstanbulStartUtcIso,
+    toIstanbulDateInputValue
+} from '@/app/shared/utils/date.utils';
 const EM = '—';
 
 function str(v: string | null | undefined): string {
@@ -161,7 +165,10 @@ export function mapPagedTreatmentsToVm(result: TreatmentListItemDtoPagedResult):
     };
 }
 
-/** GET `/api/v1/treatments` — canonical query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
+/**
+ * GET `/api/v1/treatments` — canonical query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`).
+ * Backend `treatmentDateUtc >= dateFromUtc` ve `<= dateToUtc` (iki uç dahil); İstanbul günü başı ve günü sonu (23:59:59.999) gönderilir.
+ */
 export function treatmentsQueryToHttpParams(query: TreatmentsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
@@ -177,11 +184,13 @@ export function treatmentsQueryToHttpParams(query: TreatmentsListQuery): HttpPar
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
-    if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+    const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+    if (fromUtc) {
+        p = p.set('dateFromUtc', fromUtc);
     }
-    if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+    const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+    if (toUtc) {
+        p = p.set('dateToUtc', toUtc);
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

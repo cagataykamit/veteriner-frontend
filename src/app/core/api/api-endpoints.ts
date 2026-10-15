@@ -219,7 +219,7 @@ export const ApiEndpoints = {
         endOfDayOpenItems: () => `/api/v1/reports/end-of-day/open-items`
     },
     treatments: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/treatments`,
         byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`
     },
