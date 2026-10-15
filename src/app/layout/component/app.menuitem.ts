@@ -43,15 +43,14 @@ import { filter } from 'rxjs/operators';
                 [attr.aria-haspopup]="hasFlyout() ? 'menu' : null"
                 [attr.aria-expanded]="hasFlyout() ? flyoutOpen() : null"
                 [attr.aria-controls]="flyoutOpen() ? flyoutId() : null"
-                (focus)="onLinkFocus($event)"
                 (focusout)="onLinkFocusOut($event)"
                 (keydown)="onLinkKeydown($event)"
                 tabindex="0"
                 pRipple
                 [pTooltip]="railTooltip()"
-                [tooltipDisabled]="!layoutService.isMenuRail() || hasFlyout()"
+                [tooltipDisabled]="!layoutService.isMenuRail() || flyoutOpen()"
                 tooltipPosition="right"
-                tooltipEvent="both"
+                [tooltipEvent]="hasFlyout() ? 'focus' : 'both'"
                 appendTo="body"
                 #link
             >
@@ -178,15 +177,6 @@ export class AppMenuitem implements OnInit, AfterViewInit {
         }
     }
 
-    /** Klavye odağı paneli odağı taşımadan açar (daraltılmış menüde eski ad ipucunun yerine); fare tıklamasıyla gelen odak açmaz. */
-    onLinkFocus(event: FocusEvent) {
-        const link = event.target as HTMLElement;
-
-        if (this.hasFlyout() && link.matches(':focus-visible')) {
-            this.openFlyout(false);
-        }
-    }
-
     onLinkFocusOut(event: FocusEvent) {
         // Panel body'dedir; odak satırdan panele geçiyorsa açık kalır.
         const next = event.relatedTarget;
@@ -197,13 +187,26 @@ export class AppMenuitem implements OnInit, AfterViewInit {
         }
     }
 
-    /** Sağ ok ve Boşluk paneli açıp ilk sekmeye odaklanır; Enter satırın kendi gezinmesini (ilk sekme) yapar; Escape kapatır. */
+    /**
+     * Sekmeli satırda (WAI-ARIA menü düğmesi): Enter ve Boşluk paneli açıp kapatır (odak satırda kalır), Aşağı/Sağ ok açıp ilk sekmeye
+     * odaklanır, Escape kapatır. Değiştirici tuşlu Enter (yeni sekmede aç) ve fare tıklaması satırın kendi gezinmesini (ilk sekme) yapar.
+     */
     onLinkKeydown(event: KeyboardEvent) {
         if (!this.hasFlyout()) {
             return;
         }
 
-        if (event.key === 'ArrowRight' || event.key === ' ') {
+        const modified = event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
+
+        if ((event.key === 'Enter' && !modified) || event.key === ' ') {
+            event.preventDefault();
+
+            if (this.flyoutOpen()) {
+                this.flyout.close();
+            } else {
+                this.openFlyout(false);
+            }
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
             event.preventDefault();
             const panel = this.flyoutPanel();
 

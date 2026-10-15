@@ -307,17 +307,99 @@ describe('AppMenu', () => {
             expect(para.getAttribute('aria-expanded')).toBe('false');
         });
 
-        it('klavye: Tab ile odaklanan satır paneli odağı taşımadan açar; odak başka satıra geçince kapanır', () => {
+        it('klavye: odaklanmak paneli açmaz; Enter açıp kapatır, odak satırda kalır; odak başka satıra geçince açık panel kapanır', () => {
             const fixture = create();
+            const stok = link(fixture, 'Stok');
 
-            link(fixture, 'Stok').focus();
+            stok.focus();
             fixture.detectChanges();
-            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
-            expect(document.activeElement).toBe(link(fixture, 'Stok'));
+            expect(panels()).toEqual([]);
 
+            const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+
+            stok.dispatchEvent(enter);
+            fixture.detectChanges();
+            expect(enter.defaultPrevented).withContext('satırın gezinmesi yapılmaz').toBeTrue();
+            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
+            expect(stok.getAttribute('aria-expanded')).toBe('true');
+            expect(stok.getAttribute('aria-controls')).toBe(panel().id);
+            expect(document.activeElement).toBe(stok);
+
+            key(stok, 'Enter');
+            fixture.detectChanges();
+            expect(panels()).toEqual([]);
+            expect(stok.getAttribute('aria-expanded')).toBe('false');
+
+            key(stok, 'Enter');
+            fixture.detectChanges();
             link(fixture, 'Raporlar').focus();
             fixture.detectChanges();
             expect(panels()).toEqual([]);
+        });
+
+        it('klavye: Boşluk açıp kapatır; Aşağı ok açıp ilk sekmeye odaklanır, açık panelde de ilk sekmeye geçer', () => {
+            const fixture = create();
+            const para = link(fixture, 'Para');
+
+            para.focus();
+            const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+
+            para.dispatchEvent(space);
+            fixture.detectChanges();
+            expect(space.defaultPrevented).toBeTrue();
+            expect(panels().length).toBe(1);
+            expect(document.activeElement).toBe(para);
+            key(para, ' ');
+            fixture.detectChanges();
+            expect(panels()).toEqual([]);
+
+            key(para, 'ArrowDown');
+            fixture.detectChanges();
+            expect(document.activeElement).toBe(items()[0]);
+
+            key(items()[0], 'Escape');
+            fixture.detectChanges();
+            key(para, 'Enter');
+            fixture.detectChanges();
+            key(para, 'ArrowDown');
+            expect(document.activeElement).toBe(items()[0]);
+        });
+
+        it('klavye: sekmede Enter o sayfaya gider ve paneli kapatır', async () => {
+            const fixture = create();
+            const randevular = link(fixture, 'Randevular');
+
+            randevular.focus();
+            key(randevular, 'ArrowDown');
+            fixture.detectChanges();
+            const calendar = items().find((a) => a.textContent?.trim() === 'Takvim')!;
+
+            calendar.focus();
+            // Bağlantıda Enter'in varsayılan eylemi tıklamadır; olay sentetik olduğundan tıklama elle tetiklenir.
+            const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+
+            calendar.dispatchEvent(enter);
+            expect(enter.defaultPrevented).withContext('panel Enter tuşunu engellemez').toBeFalse();
+            calendar.click();
+            await fixture.whenStable();
+            fixture.detectChanges();
+            expect(TestBed.inject(Router).url).toBe('/panel/appointments/calendar');
+            expect(panels()).toEqual([]);
+        });
+
+        it('klavye: değiştirici tuşlu Enter satırın kendi gezinmesine bırakılır; sekmesiz satırda Enter engellenmez', () => {
+            const fixture = create();
+            const ctrlEnter = new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true });
+
+            link(fixture, 'Para').dispatchEvent(ctrlEnter);
+            fixture.detectChanges();
+            expect(ctrlEnter.defaultPrevented).toBeFalse();
+            expect(panels()).toEqual([]);
+
+            const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+
+            link(fixture, 'Bugün').dispatchEvent(enter);
+            expect(enter.defaultPrevented).toBeFalse();
         });
 
         it('klavye: Tab panelden çıkarken paneli kapatır ve odağı satıra verir (tarayıcı oradan devam eder)', () => {
@@ -336,20 +418,20 @@ describe('AppMenu', () => {
             expect(panels()).toEqual([]);
         });
 
-        it('klavye: Enter satırın kendi gezinmesini yapar (panel açmaz); fareyle açık panel satırda Escape ile kapanır', () => {
+        it('klavye: fareyle açık panel satırda Escape ile kapanır, odak satırda kalır; fare tıklaması satırın gezinmesini yapar', async () => {
             const fixture = create();
             const para = link(fixture, 'Para');
-            const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
 
-            para.dispatchEvent(enter);
-            fixture.detectChanges();
-            expect(enter.defaultPrevented).toBeFalse();
-            expect(panels()).toEqual([]);
-
+            para.focus();
             hover(fixture, 'Para');
             key(para, 'Escape');
             fixture.detectChanges();
             expect(panels()).toEqual([]);
+            expect(document.activeElement).toBe(para);
+
+            para.click();
+            await fixture.whenStable();
+            expect(TestBed.inject(Router).url).toBe('/panel/charges');
         });
 
         it('daraltılmış menüde ad ipucu yerine başlıklı panel açılır; sekmesiz satırda panel yoktur', () => {
