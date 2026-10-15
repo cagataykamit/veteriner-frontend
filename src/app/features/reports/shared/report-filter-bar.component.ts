@@ -111,7 +111,7 @@ export interface ReportExtraFilter {
                 }
                 @if (!s.dateRangeOnly) {
                     <app-filter-field [label]="copy.reportsFilterSearch" [labelFor]="idPrefix() + 'Search'" [active]="activeBadges() && s.isSearchActive()" width="grow">
-                        <app-search-input [inputId]="idPrefix() + 'Search'" [placeholder]="searchPlaceholder()" [(value)]="s.searchInput" (search)="s.applyFilters()" />
+                        <app-search-input [inputId]="idPrefix() + 'Search'" [placeholder]="searchPlaceholder()" [(value)]="s.searchInput" (searchRequested)="s.applyFilters()" />
                     </app-filter-field>
                 }
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">

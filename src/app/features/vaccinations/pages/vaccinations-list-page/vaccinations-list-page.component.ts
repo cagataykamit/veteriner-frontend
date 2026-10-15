@@ -74,7 +74,7 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Aşılar" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="vacSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="vacSearch" placeholder="Aşı adı, not; müşteri, hasta, tür veya ırk…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="vacSearch" placeholder="Aşı adı, not; müşteri, hasta, tür veya ırk…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         </app-list-header>

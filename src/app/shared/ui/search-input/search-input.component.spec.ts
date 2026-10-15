@@ -6,7 +6,7 @@ import { SearchInputComponent } from './search-input.component';
 @Component({
     standalone: true,
     imports: [SearchInputComponent],
-    template: `<app-search-input inputId="q" [(value)]="text" (search)="searches.push(text())" />`
+    template: `<app-search-input inputId="q" [(value)]="text" (searchRequested)="searches.push(text())" />`
 })
 class HostComponent {
     text = signal('');

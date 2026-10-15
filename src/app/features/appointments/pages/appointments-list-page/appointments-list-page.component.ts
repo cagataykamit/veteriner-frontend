@@ -70,7 +70,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Randevular" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="apptSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="apptSearch" placeholder="Not; müşteri, hasta, tür veya ırk metni…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="apptSearch" placeholder="Not; müşteri, hasta, tür veya ırk metni…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             @if (canCreateAppointment && !ro.mutationBlocked()) {

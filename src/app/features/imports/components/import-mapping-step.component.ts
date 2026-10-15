@@ -99,7 +99,7 @@ interface SourceOption {
 
         @if (!readOnly()) {
             <div class="flex flex-wrap gap-2">
-                <p-button icon="pi pi-check" label="Kaydet ve doğrula" [disabled]="!complete()" [loading]="busy()" (onClick)="submit.emit()" />
+                <p-button icon="pi pi-check" label="Kaydet ve doğrula" [disabled]="!complete()" [loading]="busy()" (onClick)="saveRequested.emit()" />
             </div>
             @if (!complete()) {
                 <small class="block text-muted-color mt-2">Devam etmek için zorunlu alanları eşleyin.</small>
@@ -113,7 +113,7 @@ export class ImportMappingStepComponent {
     readonly busy = input(false);
     readonly maps = model.required<ImportColumnMaps>();
     readonly duplicateMode = model<ImportDuplicateClientMode>('Match');
-    readonly submit = output<void>();
+    readonly saveRequested = output<void>();
 
     protected readonly tableLabels = IMPORT_TABLE_LABELS;
     protected readonly fields = IMPORT_FIELDS;

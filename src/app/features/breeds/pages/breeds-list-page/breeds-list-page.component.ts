@@ -70,7 +70,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
                                 <div class="flex-1 min-w-0">
                                     <label for="breedListSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                    <app-search-input inputId="breedListSearch" placeholder="Irk veya tür adı…" [(value)]="searchDraft" (search)="applySearch()" />
+                                    <app-search-input inputId="breedListSearch" placeholder="Irk veya tür adı…" [(value)]="searchDraft" (searchRequested)="applySearch()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
                                     <p-button

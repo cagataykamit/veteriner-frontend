@@ -39,7 +39,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                     ariaLabel="Hasta veya sahip ara"
                     placeholder="Hasta adı, sahip adı soyadı, telefon veya mikroçip"
                     [(value)]="term"
-                    (search)="onSearch()"
+                    (searchRequested)="onSearch()"
                 />
             </div>
 

@@ -74,7 +74,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
                             <div class="flex-1 min-w-0">
                                 <label for="tmSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                <app-search-input inputId="tmSearch" placeholder="E-posta…" [(value)]="searchInput" (search)="applySearch()" />
+                                <app-search-input inputId="tmSearch" placeholder="E-posta…" [(value)]="searchInput" (searchRequested)="applySearch()" />
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
                                 <p-button

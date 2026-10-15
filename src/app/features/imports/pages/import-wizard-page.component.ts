@@ -131,7 +131,7 @@ const STEPS: readonly { n: number; label: string }[] = [
                                 [busy]="busy()"
                                 [(maps)]="maps"
                                 [(duplicateMode)]="duplicateMode"
-                                (submit)="saveAndValidate()"
+                                (saveRequested)="saveAndValidate()"
                             />
                         }
                         @case (3) {

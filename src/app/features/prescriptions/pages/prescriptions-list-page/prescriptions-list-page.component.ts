@@ -61,7 +61,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Reçeteler" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="rxSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hasta…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         </app-list-header>

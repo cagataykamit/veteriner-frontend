@@ -108,7 +108,7 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
                 </div>
             } @else {
                 <div class="mb-3">
-                    <app-search-input inputId="templateSearch" placeholder="Şablon adı…" ariaLabel="Şablon ara" [(value)]="searchInput" (search)="load()" />
+                    <app-search-input inputId="templateSearch" placeholder="Şablon adı…" ariaLabel="Şablon ara" [(value)]="searchInput" (searchRequested)="load()" />
                 </div>
                 @if (listError()) {
                     <p class="text-red-500 text-sm m-0" role="alert">{{ listError() }}</p>

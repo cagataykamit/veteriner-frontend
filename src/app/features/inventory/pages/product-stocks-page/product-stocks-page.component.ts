@@ -89,7 +89,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                         <app-list-header class="mb-3" title="Stok durumu" [count]="totalItems()">
                             <p hint class="text-muted-color text-sm m-0 mt-1">{{ activeClinicContextHint() }}</p>
                             <app-filter-field label="Arama" labelFor="stockSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions
                                 [label]="copy.buttonClear"

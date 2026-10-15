@@ -68,7 +68,7 @@ const PAGE_SIZE = 50;
 
         <div class="card">
             <div class="w-full md:max-w-sm mb-4">
-                <app-search-input inputId="templateSearch" placeholder="Şablon adı…" ariaLabel="Şablon ara" [(value)]="searchInput" (search)="applySearch()" />
+                <app-search-input inputId="templateSearch" placeholder="Şablon adı…" ariaLabel="Şablon ara" [(value)]="searchInput" (searchRequested)="applySearch()" />
             </div>
 
             @if (listActionError()) {

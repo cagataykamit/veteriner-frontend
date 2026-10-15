@@ -87,7 +87,7 @@ const PAGE_SIZE = 50;
                     ariaLabel="Sözlük türü"
                 />
                 <div class="w-full md:max-w-sm">
-                    <app-search-input inputId="termSearch" placeholder="Terim adı…" ariaLabel="Terim ara" [(value)]="searchInput" (search)="applySearch()" />
+                    <app-search-input inputId="termSearch" placeholder="Terim adı…" ariaLabel="Terim ara" [(value)]="searchInput" (searchRequested)="applySearch()" />
                 </div>
             </div>
 

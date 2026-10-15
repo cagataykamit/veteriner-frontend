@@ -127,7 +127,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
                                 <app-filter-field label="Arama" labelFor="catSearch" [active]="isSearchActive()" width="grow">
-                                    <app-search-input inputId="catSearch" placeholder="Kategori adı…" [(value)]="searchInput" (search)="applyFilters()" />
+                                    <app-search-input inputId="catSearch" placeholder="Kategori adı…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                                 </app-filter-field>
                                 <div class="flex flex-wrap gap-2 shrink-0">
                                     <p-button

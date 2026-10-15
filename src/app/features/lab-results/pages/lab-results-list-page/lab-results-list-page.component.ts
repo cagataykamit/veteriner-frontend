@@ -55,7 +55,7 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                         <app-list-header class="mb-3" title="Lab sonuçları" [count]="totalItems()">
                             <div class="flex-1 min-w-0">
                                 <label for="lrSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                <app-search-input inputId="lrSearch" placeholder="Test adı, müşteri veya hasta…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="lrSearch" placeholder="Test adı, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                             </div>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         </app-list-header>

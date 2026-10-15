@@ -50,7 +50,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
                         <app-list-header class="mb-3" title="Tedaviler" [count]="totalItems()">
                             <div class="flex-1 min-w-0">
                                 <label for="trSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                <app-search-input inputId="trSearch" placeholder="Başlık, müşteri veya hasta…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="trSearch" placeholder="Başlık, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                             </div>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         </app-list-header>

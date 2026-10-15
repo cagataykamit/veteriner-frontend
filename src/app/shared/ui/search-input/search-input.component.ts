@@ -9,7 +9,7 @@ export const SEARCH_DEBOUNCE_MS = 350;
 
 /**
  * Tüm liste ekranlarının ortak arama kutusu (ürün kararı): yazdıkça arar (en az 2 karakter, 350 ms bekleme), Enter anında
- * arar, × temizler ve listeyi geri getirir; "Ara" düğmesi yoktur. Arama sunucu tarafındadır: sayfa `search` olayında listeyi
+ * arar, × temizler ve listeyi geri getirir; "Ara" düğmesi yoktur. Arama sunucu tarafındadır: sayfa `searchRequested` olayında listeyi
  * yeniden yükler. Tek karakterde (min. uzunluğun altında) otomatik arama yapılmaz; kutu boşalınca liste geri gelir.
  */
 @Component({
@@ -51,7 +51,7 @@ export class SearchInputComponent {
     readonly ariaLabel = input('');
     readonly minLength = input(SEARCH_MIN_LENGTH);
     /** Sayfa listeyi yenilemelidir (otomatik, Enter veya temizleme). */
-    readonly search = output<void>();
+    readonly searchRequested = output<void>();
 
     private readonly field = viewChild.required<ElementRef<HTMLInputElement>>('field');
     private readonly typed$ = new Subject<void>();
@@ -59,7 +59,7 @@ export class SearchInputComponent {
     constructor() {
         this.typed$
             .pipe(debounceTime(SEARCH_DEBOUNCE_MS), takeUntilDestroyed(inject(DestroyRef)))
-            .subscribe(() => this.search.emit());
+            .subscribe(() => this.searchRequested.emit());
     }
 
     onType(text: string): void {
@@ -73,12 +73,12 @@ export class SearchInputComponent {
 
     onEnter(event: Event): void {
         event.preventDefault();
-        this.search.emit();
+        this.searchRequested.emit();
     }
 
     clear(): void {
         this.value.set('');
-        this.search.emit();
+        this.searchRequested.emit();
         this.field().nativeElement.focus(); // temizledikten sonra yeniden yazılabilsin
     }
 }

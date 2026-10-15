@@ -88,7 +88,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Stok hareketleri" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="smSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="smSearch" placeholder="Ürün, SKU, kategori, klinik…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="smSearch" placeholder="Ürün, SKU, kategori, klinik…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             @if (canExportStockMovements()) {

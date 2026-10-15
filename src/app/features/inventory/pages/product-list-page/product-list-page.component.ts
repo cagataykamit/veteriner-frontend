@@ -70,7 +70,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <app-list-header class="mb-3" title="Ürünler" [count]="totalItems()">
                             <app-filter-field label="Arama" labelFor="productSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (search)="applyFilters()" />
+                                <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                             </app-filter-field>
                             <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             @if (canCreateProduct && !ro.mutationBlocked()) {
