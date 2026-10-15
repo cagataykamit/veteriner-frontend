@@ -1,12 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { type Observable, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { mapPetOpenItemsDtoToVm } from '@/app/features/pets/data/pet-open-items.mapper';
 import { mapPetSummaryDtoToVm } from '@/app/features/pets/data/pet-summary.mapper';
+import type { PetOpenItemsDto } from '@/app/features/pets/models/pet-open-items-api.model';
+import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
 import type { PetDetailVm, PetHistorySummaryVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { PetDetailPageComponent } from './pet-detail-page.component';
@@ -64,11 +68,27 @@ const summary = mapPetSummaryDtoToVm({
     lastExamination: { state: 'Empty', data: null }
 });
 
+const openItems = (over: Partial<PetOpenItemsDto> = {}): PetOpenItemsVm =>
+    mapPetOpenItemsDtoToVm({
+        petId: 'p1',
+        clientId: 'c1',
+        status: 'Active',
+        asOfUtc: '2026-10-14T09:00:00Z',
+        vaccinations: { state: 'Ok', data: { overdue: [{ id: 'v1', vaccineName: 'Karma', dueAtUtc: '2020-01-01T00:00:00Z' }], upcoming: [] } },
+        labResults: { state: 'Empty', data: null },
+        pendingCharges: { state: 'Empty', data: null },
+        nextAppointment: { state: 'Ok', data: { id: 'a1', scheduledAtUtc: '2030-01-01T09:00:00Z', durationMinutes: 30 } },
+        outstanding: { state: 'Ok', data: { petOutstandingAmount: 400, petOpenChargeCount: 1, clientOutstandingAmount: 1250, currency: 'TRY' } },
+        ...over
+    });
+
 describe('PetDetailPageComponent (hasta kartı)', () => {
     let fixture: ComponentFixture<PetDetailPageComponent>;
     let claims: Set<string>;
     let historyValue: PetHistorySummaryVm;
     let petValue: PetDetailVm;
+    let openItemsSource: () => Observable<PetCardSection<PetOpenItemsVm>>;
+    let openItemsCalls: number;
 
     const el = () => fixture.nativeElement as HTMLElement;
     const create = () => {
@@ -92,11 +112,10 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                 {
                     provide: PetCardDataService,
                     useValue: {
-                        scheduledVaccinations: () =>
-                            of({ state: 'ok', data: [{ id: 'v1', vaccineName: 'Karma', dueAtUtc: '2020-01-01T00:00:00Z', petId: 'p1' }] }),
-                        requestedLabs: () => of(null),
-                        pendingCharges: () => of(null),
-                        ownerBalance: () => of(null),
+                        openItems: () => {
+                            openItemsCalls++;
+                            return openItemsSource();
+                        },
                         examination: () => of(null),
                         followUpTreatments: () => of(null)
                     }
@@ -111,6 +130,8 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         claims = new Set(['Pets.Update', 'Examinations.Create']);
         historyValue = history();
         petValue = pet;
+        openItemsSource = () => of({ state: 'ok', data: openItems() });
+        openItemsCalls = 0;
     });
 
     it('vefat eden hayvanda soluk rozet ve tarih görünür; yeni bakım eylemleri yok, durum eylemi "Aktife al"', () => {
@@ -167,13 +188,57 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         expect(el().querySelector('[data-testid="clinical-column"]')?.classList).not.toContain('order-first');
     });
 
-    it('geçmiş özetinde ödeme ve randevu bloğu yetkisizse zaman çizelgesi ve başlık bunu yetki olarak gösterir', () => {
-        historyValue = history(['Payments', 'Appointments']);
+    it('geçmiş özetinde ödeme bloğu yetkisizse zaman çizelgesi bunu yetki olarak gösterir', () => {
+        historyValue = history(['Payments']);
         create();
 
         expect(fixture.componentInstance.payments()).toBeNull();
-        expect(fixture.componentInstance.nextAppointment()).toBeNull();
-        expect(el().querySelector('[data-testid="account-next-appointment"]')).toBeNull();
         expect(el().querySelector('[data-testid="omitted-note"]')?.textContent).toContain('Ödeme');
+    });
+
+    it('Yapılacaklar, başlıktaki açık borç (sahip toplamı) ve sonraki randevu tek açık işler isteğinden gelir', () => {
+        create();
+
+        expect(openItemsCalls).toBe(1);
+        expect(el().querySelector('[data-testid="todo-openBalance"]')?.textContent).toContain('Bu hasta');
+        expect(el().querySelector('[data-testid="account-balance"]')?.textContent).toContain('1.250');
+        expect(el().querySelector('[data-testid="account-next-appointment"] a')?.getAttribute('href')).toBe('/panel/appointments/a1');
+    });
+
+    it('yetkisiz (Forbidden) bölüm satır ve başlık alanı göstermez, "yok" da demez', () => {
+        openItemsSource = () =>
+            of({ state: 'ok', data: openItems({ outstanding: { state: 'Forbidden', data: null }, nextAppointment: { state: 'Forbidden', data: null } }) });
+        create();
+
+        expect(el().querySelector('[data-testid="todo-openBalance"]')).toBeNull();
+        expect(el().querySelector('[data-testid="account-balance"]')).toBeNull();
+        expect(el().querySelector('[data-testid="account-next-appointment"]')).toBeNull();
+        expect(el().querySelector('[data-testid="todo-failed"]')).toBeNull();
+    });
+
+    it('yüklenemeyen (Unavailable) bölüm "alınamadı" notu verir; diğer satırlar ve kart yerinde kalır', () => {
+        openItemsSource = () => of({ state: 'ok', data: openItems({ labResults: { state: 'Unavailable', data: null } }) });
+        create();
+
+        expect(el().querySelector('[data-testid="todo-failed"]')?.textContent).toContain('Lab');
+        expect(el().querySelector('[data-testid="todo-overdueVaccine"]')).not.toBeNull();
+        expect(el().textContent).toContain('Klinik özet');
+    });
+
+    it('açık işler isteği tümden başarısızsa Yapılacaklar ve başlık "alınamadı" der; kart çökmez', () => {
+        openItemsSource = () => of({ state: 'error' });
+        create();
+
+        expect(el().querySelector('[data-testid="todo-failed"]')?.textContent).toContain('Aşı');
+        expect(el().querySelector('[data-testid="todo-empty"]')).toBeNull();
+        expect(el().querySelector('[data-testid="account-balance"]')?.textContent).toContain('alınamadı');
+        expect(el().textContent).toContain('Zaman çizelgesi');
+    });
+
+    it('durum değişince ve randevu iptalinden sonra açık işler yeniden okunur', () => {
+        create();
+        fixture.componentInstance.onStatusChanged({ status: 'Deceased', deceasedOn: null, rowVersion: 'new' });
+        fixture.componentInstance.reloadOpenItems();
+        expect(openItemsCalls).toBe(3);
     });
 });

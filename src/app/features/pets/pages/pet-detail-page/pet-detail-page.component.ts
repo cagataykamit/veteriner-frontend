@@ -5,14 +5,12 @@ import { ButtonModule } from 'primeng/button';
 import { EMPTY, type Observable, Subscription, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
-import type { LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { PetCardHeaderComponent } from '@/app/features/pets/components/pet-card-header.component';
 import { PetCardTimelineComponent } from '@/app/features/pets/components/pet-card-timeline.component';
 import { PetSummaryCardComponent } from '@/app/features/pets/components/pet-summary-card.component';
 import { PetTodoPanelComponent } from '@/app/features/pets/components/pet-todo-panel.component';
+import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import { PetStatusDialogComponent } from '@/app/features/pets/components/pet-status-dialog.component';
 import type { PetDetailVm, PetHistoryBlockKey, PetHistorySummaryVm, PetStatusUpdateResult } from '@/app/features/pets/models/pet-vm.model';
@@ -21,14 +19,14 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
 import {
     buildPetTodo,
-    nextScheduledAppointment,
+    openItemsSection,
+    ownerOutstandingSection,
     type PetCardSection,
     petCardEmphasis,
     petIdentityParts
 } from '@/app/features/pets/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { PatientActionBarComponent } from '@/app/shared/panel/patient-action-bar/patient-action-bar.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -99,10 +97,10 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 />
             }
             @if (canUpdatePet && !ro.mutationBlocked()) {
-                <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" (changed)="onStatusChanged($event)" (stale)="refreshPet()" (appointmentsCancelled)="retryHistory()" />
+                <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" (changed)="onStatusChanged($event)" (stale)="refreshPet()" (appointmentsCancelled)="reloadOpenItems()" />
             }
 
-            <app-pet-card-header [pet]="p" [summary]="summary()" [balance]="balance()" [nextAppointment]="nextAppointment()" />
+            <app-pet-card-header [pet]="p" [summary]="summary()" [balance]="ownerOutstanding()" [nextAppointment]="nextAppointment()" />
 
             <div class="grid grid-cols-12 gap-4 mb-4">
                 <div class="col-span-12 lg:col-span-5" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
@@ -194,10 +192,8 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     readonly summaryError = signal<string | null>(null);
     readonly summary = signal<PetSummaryVm | null>(null);
 
-    readonly scheduledVaccinations = signal<PetCardSection<VaccinationListItemVm[]>>(null);
-    readonly requestedLabs = signal<PetCardSection<LabResultListItemVm[]>>(null);
-    readonly pendingCharges = signal<PetCardSection<ChargeSuggestionVm[]>>(null);
-    readonly balance = signal<PetCardSection<ClientBalanceVm>>(null);
+    /** Yapılacaklar ve başlıktaki açık borç/sonraki randevu tek uçtan (`GET /pets/{id}/open-items`). */
+    readonly openItems = signal<PetCardSection<PetOpenItemsVm>>(null);
     readonly lastExamination = signal<PetCardSection<ExaminationDetailVm>>(null);
     readonly followUps = signal<PetCardSection<TreatmentListItemVm[]>>(null);
 
@@ -210,31 +206,24 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     });
 
     readonly payments = computed(() => this.historyBlock('Payments', (h) => h.recentPayments));
-    readonly nextAppointment = computed(() => this.historyBlock('Appointments', (h) => nextScheduledAppointment(h.recentAppointments)));
+    readonly ownerOutstanding = computed(() => ownerOutstandingSection(this.openItems()));
+    readonly nextAppointment = computed(() => openItemsSection(this.openItems(), (o) => o.nextAppointment));
     readonly statusDialogOpen = signal(false);
 
     readonly todo = computed(() =>
-        buildPetTodo(
-            {
-                scheduledVaccinations: this.scheduledVaccinations(),
-                requestedLabs: this.requestedLabs(),
-                recentLabs: this.historyBlock('LabResults', (h) => h.recentLabResults),
-                pendingCharges: this.pendingCharges(),
-                balance: this.balance()
-            },
-            {
-                petId: this.pet()?.id ?? '',
-                clientId: this.pet()?.ownerId ?? null,
-                hasClaim: (claim) => this.auth.hasOperationClaim(claim),
-                mutationBlocked: this.ro.mutationBlocked(),
-                emphasis: this.emphasis
-            }
-        )
+        buildPetTodo(this.openItems(), {
+            petId: this.pet()?.id ?? '',
+            clientId: this.pet()?.ownerId ?? null,
+            hasClaim: (claim) => this.auth.hasOperationClaim(claim),
+            mutationBlocked: this.ro.mutationBlocked(),
+            emphasis: this.emphasis
+        })
     );
 
     private lastId: string | null = null;
     private cardSubscriptions = new Subscription();
     private examinationSubscription: Subscription | null = null;
+    private openItemsSubscription: Subscription | null = null;
 
     readonly hasText = (v: string | null | undefined) => !!v && !!v.trim() && v.trim() !== '—';
 
@@ -294,11 +283,12 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         });
     }
 
-    /** Durum yanıtı yeni `rowVersion` taşır; kart verileri durumdan bağımsız olduğundan yeniden okunmaz. */
+    /** Durum yanıtı yeni `rowVersion` taşır; açık işler yeniden okunur (vefat eden hastada aşı bölümü boş gelir). */
     onStatusChanged(result: PetStatusUpdateResult): void {
         const p = this.pet();
         if (p) {
             this.pet.set({ ...p, ...result });
+            this.loadOpenItems(p.id);
         }
     }
 
@@ -322,6 +312,13 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         }
     }
 
+    /** Randevu iptali sonrası: sonraki randevu açık işlerdedir. */
+    reloadOpenItems(): void {
+        if (this.lastId) {
+            this.loadOpenItems(this.lastId);
+        }
+    }
+
     /** Geçmiş özeti bloğu kart bölümüne: blok `omittedBlocks`'ta ise `null` (yetki yok). */
     private historyBlock<T>(key: PetHistoryBlockKey, pick: (h: PetHistorySummaryVm) => T): PetCardSection<T> {
         if (this.historyError()) {
@@ -339,10 +336,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         this.loadHistory(p.id);
         this.loadSummary(p.id);
-        this.bind(this.cardData.scheduledVaccinations(p.id), this.scheduledVaccinations);
-        this.bind(this.cardData.requestedLabs(p.id), this.requestedLabs);
-        this.bind(this.cardData.pendingCharges(p.id), this.pendingCharges);
-        this.bind(this.cardData.ownerBalance(p.ownerId), this.balance);
+        this.loadOpenItems(p.id);
         this.bind(this.cardData.followUpTreatments(p.id), this.followUps);
     }
 
@@ -355,7 +349,9 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         this.cardSubscriptions = new Subscription();
         this.examinationSubscription?.unsubscribe();
         this.examinationSubscription = null;
-        for (const s of [this.scheduledVaccinations, this.requestedLabs, this.pendingCharges, this.balance, this.lastExamination, this.followUps]) {
+        this.openItemsSubscription?.unsubscribe();
+        this.openItemsSubscription = null;
+        for (const s of [this.openItems, this.lastExamination, this.followUps]) {
             s.set(null);
         }
         this.summary.set(null);
@@ -384,6 +380,11 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     private loadLastExamination(examinationId: string | null): void {
         this.examinationSubscription?.unsubscribe();
         this.examinationSubscription = this.cardData.examination(examinationId).subscribe((section) => this.lastExamination.set(section));
+    }
+
+    private loadOpenItems(petId: string): void {
+        this.openItemsSubscription?.unsubscribe();
+        this.openItemsSubscription = this.cardData.openItems(petId).subscribe((section) => this.openItems.set(section));
     }
 
     private loadHistory(petId: string): void {

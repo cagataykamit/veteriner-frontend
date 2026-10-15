@@ -1,9 +1,8 @@
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
-import type { LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
-import type { PetDetailVm, PetHistoryAppointmentItemVm, PetHistoryLabResultItemVm } from '@/app/features/pets/models/pet-vm.model';
+import { mapPetOpenItemsDtoToVm } from '@/app/features/pets/data/pet-open-items.mapper';
+import type { PetOpenItemsDto } from '@/app/features/pets/models/pet-open-items-api.model';
+import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
+import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import {
     activeFollowUpTreatments,
@@ -11,106 +10,56 @@ import {
     examinationAssessmentText,
     examinationVitalsLine,
     nextScheduledAppointment,
+    openItemsSection,
+    ownerOutstandingSection,
     petAgeLabel,
     petCardEmphasis,
     petIdentityParts,
-    type PetTodoContext,
-    type PetTodoSources
+    type PetCardSection,
+    type PetTodoContext
 } from './pet-card.utils';
 
 const NOW = new Date('2026-10-14T09:00:00Z');
 
-const vaccine = (id: string, dueAtUtc: string | null, name = 'Karma'): VaccinationListItemVm => ({
-    id,
-    appliedAtUtc: null,
-    dueAtUtc,
-    vaccineName: name,
-    petId: 'p1',
-    petName: 'Pamuk',
-    clientId: 'c1',
-    clientName: 'Ali',
-    status: 0,
-    notes: '',
-    administrationId: null
+const EMPTY = { state: 'Empty', data: null };
+
+/** Sunucu yanıtı (açık iş yok); testler yalnız ilgili bölümü doldurur. */
+const openItems = (over: Partial<PetOpenItemsDto> = {}): PetCardSection<PetOpenItemsVm> => ({
+    state: 'ok',
+    data: mapPetOpenItemsDtoToVm({
+        petId: 'p1',
+        clientId: 'c1',
+        status: 'Active',
+        asOfUtc: NOW.toISOString(),
+        vaccinations: EMPTY,
+        labResults: EMPTY,
+        pendingCharges: EMPTY,
+        nextAppointment: EMPTY,
+        outstanding: EMPTY,
+        ...over
+    })
 });
 
-const lab = (id: string): LabResultListItemVm => ({
-    id,
-    clinicId: 'k1',
-    petId: 'p1',
-    petName: 'Pamuk',
-    clientId: 'c1',
-    clientName: 'Ali',
-    resultDateUtc: null,
-    requestedAtUtc: '2026-10-12T08:00:00Z',
-    status: 'Requested',
-    awaitingInterpretation: false,
-    testName: 'Hemogram',
-    examinationId: null
+type DueVaccine = { id: string; dueAtUtc: string; vaccineName?: string };
+
+const vaccinations = (overdue: DueVaccine[], upcoming: DueVaccine[] = []) => ({
+    state: 'Ok',
+    data: { overdue: overdue.map((v) => ({ vaccineName: 'Karma', ...v })), upcoming: upcoming.map((v) => ({ vaccineName: 'Kuduz', ...v })) }
 });
 
-const historyLab = (id: string, awaitingInterpretation: boolean): PetHistoryLabResultItemVm => ({
-    id,
-    resultDateUtc: '2026-10-13T08:00:00Z',
-    testName: 'Biyokimya',
-    status: 'Resulted',
-    requestedAtUtc: '2026-10-12T08:00:00Z',
-    awaitingInterpretation,
-    clinicName: null
+const labs = (awaitingResult: string[], awaitingInterpretation: string[] = []) => ({
+    state: 'Ok',
+    data: {
+        awaitingResult: awaitingResult.map((id) => ({ id, testName: 'Hemogram', requestedAtUtc: '2026-10-12T08:00:00Z', resultDateUtc: null })),
+        awaitingInterpretation: awaitingInterpretation.map((id) => ({ id, testName: 'Biyokimya', requestedAtUtc: '2026-10-12T08:00:00Z', resultDateUtc: '2026-10-13T08:00:00Z' }))
+    }
 });
 
-const charge = (id: string, description: string): ChargeSuggestionVm => ({
-    id,
-    sourceType: 'Administration',
-    sourceId: 's' + id,
-    clientId: 'c1',
-    clientName: 'Ali',
-    petId: 'p1',
-    petName: 'Pamuk',
-    examinationId: 'e1',
-    visitId: null,
-    description,
-    quantity: 1,
-    unit: 'adet',
-    suggestedUnitPrice: 100,
-    currency: 'TRY',
-    occurredAtUtc: '2026-10-13T08:00:00Z'
-});
+const pendingCharges = (count: number, totalAmount: number, unpricedCount: number) => ({ state: 'Ok', data: { count, totalAmount, unpricedCount, currency: 'TRY' } });
 
-const balance = (outstanding: number, petPart: number): ClientBalanceVm => ({
-    clientId: 'c1',
-    clientName: 'Ali',
-    currency: 'TRY',
-    chargedAmount: outstanding,
-    allocatedAmount: 0,
-    outstandingAmount: outstanding,
-    openCharges:
-        petPart > 0
-            ? [
-                  {
-                      chargeId: 'ch1',
-                      clinicId: 'k1',
-                      petId: 'p1',
-                      petName: 'Pamuk',
-                      visitId: null,
-                      visitArrivedAtUtc: null,
-                      examinationId: null,
-                      description: 'Muayene',
-                      amount: petPart,
-                      allocatedAmount: 0,
-                      outstandingAmount: petPart,
-                      createdAtUtc: '2026-10-13T08:00:00Z'
-                  }
-              ]
-            : []
-});
-
-const emptySources = (): PetTodoSources => ({
-    scheduledVaccinations: { state: 'ok', data: [] },
-    requestedLabs: { state: 'ok', data: [] },
-    recentLabs: { state: 'ok', data: [] },
-    pendingCharges: { state: 'ok', data: [] },
-    balance: { state: 'ok', data: balance(0, 0) }
+const outstanding = (client: number, pet: number) => ({
+    state: 'Ok',
+    data: { petOutstandingAmount: pet, petOpenChargeCount: pet > 0 ? 1 : 0, clientOutstandingAmount: client, currency: 'TRY' }
 });
 
 const ctx = (claims: string[], over: Partial<PetTodoContext> = {}): PetTodoContext => ({
@@ -213,15 +162,30 @@ describe('petCardEmphasis', () => {
     });
 });
 
-describe('buildPetTodo', () => {
-    it('gecikmiş aşı (gün sayısıyla) ve 30 gün içindeki yaklaşan aşı listelenir; daha ileri vadeli ve vadesiz atlanır', () => {
-        const sources = emptySources();
-        sources.scheduledVaccinations = {
-            state: 'ok',
-            data: [vaccine('v1', '2026-10-04T09:00:00Z'), vaccine('v2', '2026-11-01T09:00:00Z', 'Kuduz'), vaccine('v3', '2027-01-01T09:00:00Z'), vaccine('v4', null)]
-        };
+describe('openItemsSection / ownerOutstandingSection', () => {
+    it('Forbidden gösterilmez (null), Unavailable alınamadı, Empty ok + veri yok; istek durumu bölüme geçer', () => {
+        const items = openItems({ labResults: { state: 'Forbidden', data: null }, pendingCharges: { state: 'Unavailable', data: null } });
+        expect(openItemsSection(items, (o) => o.labResults)).toBeNull();
+        expect(openItemsSection(items, (o) => o.pendingCharges)).toEqual({ state: 'error' });
+        expect(openItemsSection(items, (o) => o.vaccinations)).toEqual({ state: 'ok', data: null });
+        expect(openItemsSection({ state: 'loading' }, (o) => o.labResults)).toEqual({ state: 'loading' });
+        expect(openItemsSection({ state: 'error' }, (o) => o.labResults)).toEqual({ state: 'error' });
+        expect(openItemsSection(null, (o) => o.labResults)).toBeNull();
+    });
 
-        const view = buildPetTodo(sources, ctx(['Vaccinations.Update']));
+    it('başlık borcu sahibin toplamıdır; Empty borç yok (0) demektir', () => {
+        expect(ownerOutstandingSection(openItems({ outstanding: outstanding(650, 600) }))).toEqual({ state: 'ok', data: { outstandingAmount: 650, currency: 'TRY' } });
+        expect(ownerOutstandingSection(openItems())).toEqual({ state: 'ok', data: { outstandingAmount: 0, currency: 'TRY' } });
+        expect(ownerOutstandingSection(openItems({ outstanding: { state: 'Forbidden', data: null } }))).toBeNull();
+    });
+});
+
+describe('buildPetTodo', () => {
+    it('gecikmiş (gün sayısıyla) ve yaklaşan aşılar sunucunun ayırdığı gibi listelenir; istemci pencere süzgeci uygulamaz', () => {
+        const view = buildPetTodo(
+            openItems({ vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z' }], [{ id: 'v2', dueAtUtc: '2027-03-01T09:00:00Z' }]) }),
+            ctx(['Vaccinations.Update'])
+        );
 
         expect(view.items.map((i) => i.kind)).toEqual(['overdueVaccine', 'upcomingVaccine']);
         expect(view.items[0].detail).toContain('10 gün geçti');
@@ -230,74 +194,83 @@ describe('buildPetTodo', () => {
     });
 
     it('yazma izni yoksa veya kiracı salt okunursa eylem kaydın detayını açar', () => {
-        const sources = emptySources();
-        sources.scheduledVaccinations = { state: 'ok', data: [vaccine('v1', '2026-10-04T09:00:00Z')] };
-        sources.requestedLabs = { state: 'ok', data: [lab('l1')] };
+        const items = openItems({ vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z' }]), labResults: labs(['l1']) });
 
-        expect(buildPetTodo(sources, ctx([])).items.map((i) => i.action)).toEqual([
+        expect(buildPetTodo(items, ctx([])).items.map((i) => i.action)).toEqual([
             { label: 'Aç', route: ['/panel/vaccinations', 'v1'] },
             { label: 'Aç', route: ['/panel/lab-results', 'l1'] }
         ]);
-        const blocked = buildPetTodo(sources, ctx(['Vaccinations.Update', 'LabResults.Update'], { mutationBlocked: true }));
+        const blocked = buildPetTodo(items, ctx(['Vaccinations.Update', 'LabResults.Update'], { mutationBlocked: true }));
         expect(blocked.items.every((i) => i.action.label === 'Aç')).toBeTrue();
     });
 
-    it('bekleyen lab "Sonuç gir", yorumu bekleyen sonuçlu lab "Yorum yaz" ile gelir', () => {
-        const sources = emptySources();
-        sources.requestedLabs = { state: 'ok', data: [lab('l1')] };
-        sources.recentLabs = { state: 'ok', data: [historyLab('l2', true), historyLab('l3', false)] };
-
-        const view = buildPetTodo(sources, ctx(['LabResults.Update']));
+    it('sonucu bekleyen lab "Sonuç gir", yorumu bekleyen lab "Yorum yaz" ile gelir (sunucu listesi, sınır yok)', () => {
+        const view = buildPetTodo(openItems({ labResults: labs(['l1'], ['l2', 'l3']) }), ctx(['LabResults.Update']));
 
         expect(view.items.map((i) => [i.kind, i.action.label])).toEqual([
             ['labInterpretation', 'Yorum yaz'],
+            ['labInterpretation', 'Yorum yaz'],
             ['pendingLab', 'Sonuç gir']
         ]);
-        expect(view.items[1].action.route).toEqual(['/panel/lab-results', 'l1', 'edit']);
+        expect(view.items[2].action.route).toEqual(['/panel/lab-results', 'l1', 'edit']);
     });
 
-    it('ücret bekleyen işlemler tek satırda toplanır ve hayvana süzülmüş Ücretlendir sayfasını açar', () => {
-        const sources = emptySources();
-        sources.pendingCharges = { state: 'ok', data: [charge('1', 'Kuduz aşısı'), charge('2', 'Serum'), charge('3', 'Enjeksiyon'), charge('4', 'Pansuman')] };
+    it('ücret bekleyenler tek satır: sayı, sunucu toplamı ve fiyat bekleyen kalem; hayvana süzülmüş Ücretlendir sayfası', () => {
+        const items = openItems({ pendingCharges: pendingCharges(3, 360, 1) });
+        const [item] = buildPetTodo(items, ctx(['Charges.Create'])).items;
 
-        const [item] = buildPetTodo(sources, ctx(['Charges.Create'])).items;
-
-        expect(item.title).toBe('4 işlem ücret bekliyor');
-        expect(item.detail).toBe('Kuduz aşısı, Serum, Enjeksiyon ve 1 işlem daha');
+        expect(item.title).toBe('3 işlem ücret bekliyor');
+        expect(item.detail).toContain('360');
+        expect(item.detail).toContain('1 kalem fiyat bekliyor');
         expect(item.action).toEqual({ label: 'Ücretlendir', route: ['/panel/charges/pending'], queryParams: { petId: 'p1' } });
-        expect(buildPetTodo(sources, ctx([])).items[0].action.label).toBe('Gör');
+        expect(buildPetTodo(items, ctx([])).items[0].action.label).toBe('Gör');
+
+        expect(buildPetTodo(openItems({ pendingCharges: pendingCharges(2, 0, 2) }), ctx([])).items[0].detail).toBe('2 kalem fiyat bekliyor');
     });
 
     it('açık borç sahibin toplamıdır; bu hayvanın payı ayrıca yazılır; ödeme alma izni yoksa müşteri bakiyesine gider', () => {
-        const sources = emptySources();
-        sources.balance = { state: 'ok', data: balance(1250, 400) };
+        const items = openItems({ outstanding: outstanding(1250, 400) });
 
-        const [item] = buildPetTodo(sources, ctx(['Payments.Create'])).items;
+        const [item] = buildPetTodo(items, ctx(['Payments.Create'])).items;
         expect(item.kind).toBe('openBalance');
         expect(item.title).toContain('1.250');
         expect(item.detail).toContain('Bu hasta');
+        expect(item.detail).toContain('400');
         expect(item.action).toEqual({ label: 'Ödeme al', route: ['/panel/payments/new'], queryParams: { clientId: 'c1' } });
 
-        expect(buildPetTodo(sources, ctx([])).items[0].action).toEqual({ label: 'Bakiyeyi gör', route: ['/panel/clients', 'c1'] });
-        expect(buildPetTodo(emptySources(), ctx([])).items).toEqual([]);
+        expect(buildPetTodo(items, ctx([])).items[0].action).toEqual({ label: 'Bakiyeyi gör', route: ['/panel/clients', 'c1'] });
+        expect(buildPetTodo(openItems({ outstanding: outstanding(100, 0) }), ctx([])).items[0].detail).toContain('Sahibin toplam borcu');
+        expect(buildPetTodo(openItems(), ctx([])).items).toEqual([]);
     });
 
     it('rol vurgusu sıralamayı değiştirir: klinik önce aşı/lab, resepsiyon önce borç/ücret', () => {
-        const sources = emptySources();
-        sources.scheduledVaccinations = { state: 'ok', data: [vaccine('v1', '2026-10-04T09:00:00Z')] };
-        sources.pendingCharges = { state: 'ok', data: [charge('1', 'Serum')] };
-        sources.balance = { state: 'ok', data: balance(100, 0) };
+        const items = openItems({
+            vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z' }]),
+            pendingCharges: pendingCharges(1, 100, 0),
+            outstanding: outstanding(100, 0)
+        });
 
-        expect(buildPetTodo(sources, ctx([])).items.map((i) => i.kind)).toEqual(['overdueVaccine', 'pendingCharge', 'openBalance']);
-        expect(buildPetTodo(sources, ctx([], { emphasis: 'frontDesk' })).items.map((i) => i.kind)).toEqual(['openBalance', 'pendingCharge', 'overdueVaccine']);
+        expect(buildPetTodo(items, ctx([])).items.map((i) => i.kind)).toEqual(['overdueVaccine', 'pendingCharge', 'openBalance']);
+        expect(buildPetTodo(items, ctx([], { emphasis: 'frontDesk' })).items.map((i) => i.kind)).toEqual(['openBalance', 'pendingCharge', 'overdueVaccine']);
     });
 
-    it('yükleniyor ve alınamadı durumları ayrı raporlanır; yetkisiz (null) kaynak ikisine de girmez', () => {
+    it('Unavailable bölüm adıyla "alınamadı" raporlanır; Forbidden bölüm satır da hata da üretmez', () => {
         const view = buildPetTodo(
-            { ...emptySources(), scheduledVaccinations: { state: 'loading' }, requestedLabs: { state: 'error' }, pendingCharges: null, balance: null },
+            openItems({
+                vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z' }]),
+                labResults: { state: 'Unavailable', data: null },
+                outstanding: { state: 'Forbidden', data: null }
+            }),
             ctx([])
         );
-        expect(view.loading).toBeTrue();
+        expect(view.items.map((i) => i.kind)).toEqual(['overdueVaccine']);
+        expect(view.loading).toBeFalse();
         expect(view.failed).toEqual(['Lab']);
+    });
+
+    it('istek sürerken yükleniyor; tümden başarısızsa bütün bölümler alınamadı sayılır', () => {
+        expect(buildPetTodo({ state: 'loading' }, ctx([])).loading).toBeTrue();
+        expect(buildPetTodo({ state: 'error' }, ctx([])).failed).toEqual(['Aşı', 'Lab', 'Ücret bekleyen işlem', 'Bakiye']);
+        expect(buildPetTodo(null, ctx([]))).toEqual({ items: [], loading: false, failed: [] });
     });
 });

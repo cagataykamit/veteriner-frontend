@@ -68,7 +68,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 })
 export class CardAccountStatusComponent {
     /** Müşterinin bakiyesi; `null` = ücret okuma yetkisi yok (alan gösterilmez). */
-    readonly balance = input<PetCardSection<ClientBalanceVm>>(null);
+    readonly balance = input<PetCardSection<Pick<ClientBalanceVm, 'outstandingAmount' | 'currency'>>>(null);
     /** `null` = randevu okuma yetkisi yok (alan gösterilmez); `ok` + `null` veri = planlı randevu yok. Hayvan adı müşteri kartında verilir. */
     readonly nextAppointment = input<PetCardSection<{ id: string; scheduledAtUtc: string | null; petName?: string } | null>>(null);
     readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);

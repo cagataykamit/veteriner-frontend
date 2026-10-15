@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
-import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetNextAppointmentVm } from '@/app/features/pets/models/pet-open-items-vm.model';
+import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';
@@ -85,10 +86,10 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
 export class PetCardHeaderComponent {
     readonly pet = input.required<PetDetailVm>();
     readonly summary = input<PetSummaryVm | null>(null);
-    /** Sahibin bakiyesi; `null` = ücret okuma yetkisi yok (alan gösterilmez). */
-    readonly balance = input<PetCardSection<ClientBalanceVm>>(null);
+    /** Sahibin toplam açık borcu; `null` = ücret okuma yetkisi yok (alan gösterilmez). */
+    readonly balance = input<PetCardSection<Pick<ClientBalanceVm, 'outstandingAmount' | 'currency'>>>(null);
     /** `null` = randevu okuma yetkisi yok (alan gösterilmez); `ok` + `null` veri = planlı randevu yok. */
-    readonly nextAppointment = input<PetCardSection<PetHistoryAppointmentItemVm | null>>(null);
+    readonly nextAppointment = input<PetCardSection<PetNextAppointmentVm | null>>(null);
     readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly formatDate = (v: string) => formatDateDisplay(v);
 
