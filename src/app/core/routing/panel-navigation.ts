@@ -414,6 +414,11 @@ function entryRoutes(entry: MenuEntry): readonly string[] {
     return entry.tabs?.map((tab) => tab.route) ?? [entry.route];
 }
 
+/** Yol, menü yolunun kendisi ya da alt yolu (detay, form) mu. */
+function coversPath(path: string, route: string): boolean {
+    return path === route || path.startsWith(`${route}/`);
+}
+
 /** Adresi (sorgu ve parça hariç) kapsayan en uzun menü yolunun grubu ve girişi; eşleşme yoksa `undefined`. */
 function matchForUrl(groups: readonly MenuGroup[], url: string): { group: MenuGroup; entry: MenuEntry } | undefined {
     const path = url.split(/[?#]/)[0];
@@ -422,7 +427,7 @@ function matchForUrl(groups: readonly MenuGroup[], url: string): { group: MenuGr
     for (const group of groups) {
         for (const entry of group.entries) {
             for (const route of entryRoutes(entry)) {
-                if ((path === route || path.startsWith(`${route}/`)) && route.length > bestLength) {
+                if (coversPath(path, route) && route.length > bestLength) {
                     best = { group, entry };
                     bestLength = route.length;
                 }
@@ -492,7 +497,27 @@ export function firstAccessibleRoute(groups: readonly MenuGroup[], hasClaim: Has
 export function tabsForUrl(groups: readonly MenuGroup[], url: string, hasClaim: HasClaim): { tabs: MenuTab[]; active: MenuTab } | undefined {
     const path = url.split(/[?#]/)[0];
     const entry = groups.flatMap((g) => g.entries).find((e) => e.tabs?.some((tab) => tab.route === path));
-    const tabs = entry?.tabs ? visibleEntries(entry.tabs, hasClaim) : [];
+    const tabs = entry ? switchableTabs(entry, hasClaim) : [];
     const active = tabs.find((tab) => tab.route === path);
-    return active && tabs.length > 1 ? { tabs, active } : undefined;
+    return active ? { tabs, active } : undefined;
+}
+
+/** Öğenin aralarında geçiş yapılabilen sekmeleri: yetkili sekmeler, en az iki tane ise; değilse boş (sekme çubuğu ve alt sayfa paneli çıkmaz). */
+function switchableTabs(entry: MenuEntry, hasClaim: HasClaim): MenuTab[] {
+    const tabs = entry.tabs ? visibleEntries(entry.tabs, hasClaim) : [];
+    return tabs.length > 1 ? tabs : [];
+}
+
+/**
+ * Menü satırının alt sayfa paneli (flyout): sekme çubuğuyla aynı yetkili sekmeler ve adresi kapsayan etkin sekme
+ * (liste sayfasında sekmenin kendisi, detay ve formda listesinin sekmesi). Sekmesiz öğede ya da tek sekme yetkiliyken `undefined`.
+ */
+export function flyoutTabsFor(entry: MenuEntry, url: string, hasClaim: HasClaim): { tabs: MenuTab[]; active?: MenuTab } | undefined {
+    const tabs = switchableTabs(entry, hasClaim);
+    if (!tabs.length) {
+        return undefined;
+    }
+    const path = url.split(/[?#]/)[0];
+    const active = tabs.filter((tab) => coversPath(path, tab.route)).sort((a, b) => b.route.length - a.route.length)[0];
+    return { tabs, active };
 }
