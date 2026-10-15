@@ -54,6 +54,17 @@ export default [
         component: ClientKvkkFormPageComponent
     },
     {
+        path: ':id/kvkk-disclosure',
+        canActivate: [() => {
+            const auth = inject(AuthService);
+            const router = inject(Router);
+
+            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+        }],
+        data: { kvkkKind: 'disclosure' },
+        component: ClientKvkkFormPageComponent
+    },
+    {
         path: ':id',
         canActivate: [() => {
             const auth = inject(AuthService);

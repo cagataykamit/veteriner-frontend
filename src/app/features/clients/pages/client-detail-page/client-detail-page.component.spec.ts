@@ -133,6 +133,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
     it('KVKK: formu yazdır herkese; rıza işaretleme Clients.Update ile, yanıt (durum + rowVersion) karta birleşir', () => {
         create();
         expect(el().querySelector('[data-testid="kvkk-print-action"]')?.getAttribute('href')).toBe('/panel/clients/c1/kvkk-form');
+        expect(el().querySelector('[data-testid="kvkk-disclosure-print-action"]')?.getAttribute('href')).toBe('/panel/clients/c1/kvkk-disclosure');
         expect(el().querySelector('[data-testid="kvkk-mark-action"]')).not.toBeNull();
 
         fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Declined', recordedOn: '2026-10-01', recordedByName: 'Ayşe' }, rowVersion: 'rv2' });
@@ -144,6 +145,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         claims = new Set(['Clients.Read']);
         create();
         expect(el().querySelector('[data-testid="kvkk-print-action"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="kvkk-disclosure-print-action"]')).not.toBeNull();
         expect(el().querySelector('[data-testid="kvkk-mark-action"]')).toBeNull();
     });
 
