@@ -19,8 +19,6 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
                     [attr.aria-label]="categoryLinkAriaLabel()"
                     data-testid="page-header-category-link"
                 >{{ categoryText() }}</a>
-            } @else if (categoryText()) {
-                <span class="block text-muted-color font-medium mb-2">{{ categoryText() }}</span>
             }
             <div class="flex flex-wrap gap-4 items-center justify-between">
                 <div>
@@ -38,12 +36,11 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
 })
 export class AppPageHeaderComponent {
     readonly title = input.required<string>();
-    /** Menüde karşılığı olmayan sayfalar için kategori adı; yoksa menü grubundan türetilir. Bağlantının liste adı önce gelir. */
-    readonly subtitle = input<string>();
     readonly description = input<string>();
     /**
-     * Verilirse kategori satırı bu listeye götüren bağlantı olur ve yazısı hedef listenin menü/sekme adıdır
-     * (`listLabelForUrl`); `categoryLinkLabel` ipucu ve erişilebilir ad olur.
+     * Başlık üstündeki kategori satırı yalnız bu bağlantı verilince çizilir; bağlantısız düz kategori menüdeki adı
+     * tekrarladığından gösterilmez. Yazısı hedef listenin menü/sekme adıdır (`listLabelForUrl`), o yoksa menü grubu;
+     * `categoryLinkLabel` ipucu ve erişilebilir ad olur.
      */
     readonly categoryLink = input<string | readonly unknown[] | UrlTree>();
     readonly categoryLinkLabel = input<string>();
@@ -58,7 +55,7 @@ export class AppPageHeaderComponent {
         const url = typeof link === 'string' ? link : this.router.serializeUrl(link instanceof UrlTree ? link : this.router.createUrlTree([...link]));
         return listLabelForUrl(url);
     });
-    private readonly category = computed(() => this.linkListLabel() ?? this.subtitle() ?? this.menuCategory);
+    private readonly category = computed(() => this.linkListLabel() ?? this.menuCategory);
     /** Bağlantı varken kategori adı bulunamazsa geri dönüş yolu kaybolmasın diye bağlantı etiketi yazılır. */
     protected readonly categoryText = computed(() => this.category() || (this.categoryLink() ? this.categoryLinkLabel() : undefined));
     /** Erişilebilir ad görünen metni içerir (WCAG 2.5.3); hedef açıklaması ardından gelir. */

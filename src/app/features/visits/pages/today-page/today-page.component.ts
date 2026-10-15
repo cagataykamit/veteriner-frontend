@@ -100,7 +100,7 @@ type TodayScope = 'mine' | 'all';
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header title="Bugün" description="Bugünün randevuları ve gelen hastalar.">
+        <app-page-header title="Bugün">
             <div actions class="flex flex-wrap gap-2">
                 <p-button
                     type="button"
@@ -607,7 +607,7 @@ export class TodayPageComponent implements OnInit {
     });
 
     readonly viewOptions: Array<{ label: string; value: TodayView }> = [
-        { label: 'Bugün', value: 'today' },
+        { label: 'Günlük liste', value: 'today' },
         { label: 'Yanlış işaretlenenler', value: 'voided' }
     ];
     readonly view = signal<TodayView>('today');

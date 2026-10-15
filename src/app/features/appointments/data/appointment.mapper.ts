@@ -14,7 +14,11 @@ import {
     resolveAppointmentWriteTypeFormValue
 } from '@/app/features/appointments/utils/appointment-type.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
-import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import {
+    dateOnlyInputToIstanbulEndUtcIso,
+    dateOnlyInputToIstanbulStartUtcIso,
+    parseUtcApiInstantIsoString
+} from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 const DEFAULT_APPOINTMENT_DURATION_MINUTES = 30;
@@ -428,7 +432,8 @@ export function mapPagedAppointmentsToVm(result: AppointmentListItemDtoPagedResu
 
 /**
  * GET `/api/v1/appointments` — canonical query:
- * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order`.
+ * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `Status`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order`.
+ * Backend `scheduledAtUtc >= dateFromUtc` ve `<= dateToUtc` (iki uç dahil); İstanbul günü başı ve günü sonu (23:59:59.999) gönderilir.
  */
 export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): HttpParams {
     let p = new HttpParams();
@@ -451,11 +456,13 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
     if (query.status?.trim()) {
         p = p.set('Status', query.status.trim());
     }
-    if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+    const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+    if (fromUtc) {
+        p = p.set('dateFromUtc', fromUtc);
     }
-    if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+    const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+    if (toUtc) {
+        p = p.set('dateToUtc', toUtc);
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
