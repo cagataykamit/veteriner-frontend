@@ -1,8 +1,8 @@
 /**
  * GET `/api/v1/lab-results` — liste sorgusu.
  *
- * HttpParams (canonical): `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order`.
- * `fromDate` / `toDate` istekte sırasıyla `FromDate` / `ToDate` olarak gider; değer **yyyy-MM-dd** (date-only).
+ * HttpParams (canonical): `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `Status`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order`.
+ * `fromDate` / `toDate` (**yyyy-MM-dd**) istekte İstanbul günü başı / sonu UTC olarak `dateFromUtc` / `dateToUtc` gider (istem zamanı).
  */
 import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 
@@ -13,9 +13,9 @@ export interface LabResultsListQuery {
     search?: string;
     clinicId?: string;
     petId?: string;
-    /** yyyy-MM-dd; istekte `FromDate`. */
+    /** yyyy-MM-dd; istekte İstanbul günü başı UTC `dateFromUtc`. */
     fromDate?: string;
-    /** yyyy-MM-dd; istekte `ToDate`. */
+    /** yyyy-MM-dd; istekte İstanbul günü sonu UTC `dateToUtc`. */
     toDate?: string;
     sort?: string;
     order?: string;

@@ -9,6 +9,7 @@ import type { CreateLabResultRequest } from '@/app/features/lab-results/models/l
 import type { LabResultsListQuery } from '@/app/features/lab-results/models/lab-result-query.model';
 import { parseLabResultStatus } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
+import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -169,8 +170,8 @@ export function mapPagedLabResultsToVm(result: LabResultListItemDtoPagedResult):
 
 /**
  * GET `/api/v1/lab-results` — canonical query:
- * `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`).
- * Tarih alanları `type="date"` çıktısı gibi **yyyy-MM-dd** string olarak gider (examinations / treatments ile aynı semantik).
+ * `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`).
+ * Backend `requestedAtUtc >= dateFromUtc` ve `<= dateToUtc` (iki uç dahil); İstanbul günü başı ve günü sonu (23:59:59.999) gönderilir.
  */
 export function labResultsQueryToHttpParams(query: LabResultsListQuery): HttpParams {
     let p = new HttpParams();
@@ -190,11 +191,13 @@ export function labResultsQueryToHttpParams(query: LabResultsListQuery): HttpPar
     if (query.status) {
         p = p.set('Status', query.status);
     }
-    if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+    const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+    if (fromUtc) {
+        p = p.set('dateFromUtc', fromUtc);
     }
-    if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+    const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+    if (toUtc) {
+        p = p.set('dateToUtc', toUtc);
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

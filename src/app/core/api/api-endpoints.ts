@@ -96,6 +96,8 @@ export const ApiEndpoints = {
         historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`,
         /** Bölüm bazlı durumlu özet kartı (`docs/PET_TIMELINE_API_CONTRACT.md`). */
         summary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/summary`,
+        /** Hasta kartı "Yapılacaklar" (`docs/PET_OPEN_ITEMS_API_CONTRACT.md`); bölüm bazlı durumlu. */
+        openItems: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/open-items`,
         /** Query: `types` (tekrarlı), `fromUtc`, `toUtc`, `clinicId`, `includeVoided`, `limit` (≤50), `cursor` (opak). */
         timeline: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/timeline`
     },
@@ -173,7 +175,7 @@ export const ApiEndpoints = {
         list: () => `/api/v1/vaccine-definitions`
     },
     payments: {
-        /** Query: `Page`, `PageSize`, `Search`, `Method`, `FromDate`, `ToDate` (+ `ClientId`, `PetId`, `clinicId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `Method`, `paidFromUtc`, `paidToUtc` (iki uç dahil) (+ `ClientId`, `PetId`, `clinicId`). */
         list: () => `/api/v1/payments`,
         byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`,
         /** POST `{ reason }`; 204 (`Payments.Correct`). */
@@ -219,12 +221,12 @@ export const ApiEndpoints = {
         endOfDayOpenItems: () => `/api/v1/reports/end-of-day/open-items`
     },
     treatments: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/treatments`,
         byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`
     },
     prescriptions: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/prescriptions`,
         byId: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}`
     },
@@ -236,13 +238,13 @@ export const ApiEndpoints = {
         void: (id: string) => `/api/v1/administrations/${encodeURIComponent(id)}/void`
     },
     labResults: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil, istem zamanı), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/lab-results`,
         byId: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}`,
         cancel: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}/cancel`
     },
     hospitalizations: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`). */
+        /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil, yatış zamanı), `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`). */
         list: () => `/api/v1/hospitalizations`,
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`

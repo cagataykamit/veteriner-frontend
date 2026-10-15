@@ -1,6 +1,6 @@
 /**
  * Ödeme listesi — GET `/api/v1/payments`.
- * HttpParams: `Page`, `PageSize`, `Search`, `Method`, `FromDate`, `ToDate`
+ * HttpParams: `Page`, `PageSize`, `Search`, `Method`, `paidFromUtc`, `paidToUtc`
  * (+ ilişkili filtreler: `ClientId`, `PetId`, `clinicId`).
  * `Search`: Notes, Currency veya müşteri/hayvan metin eşleşmesiyle Client/Pet (tutar aranmaz; boşsa gönderilmez).
  */
@@ -16,8 +16,8 @@ export interface PaymentsListQuery {
      * Form canonical değeri (cash / card / transfer) — HTTP’de `method` sayısal enum olarak gönderilir.
      */
     method?: string;
-    /** `type="date"` (yyyy-MM-dd); istekte `FromDate` olarak gider. */
+    /** `type="date"` (yyyy-MM-dd); istekte İstanbul günü başı UTC `paidFromUtc` olarak gider. */
     paidFromDate?: string;
-    /** `type="date"` (yyyy-MM-dd); istekte `ToDate` olarak gider. */
+    /** `type="date"` (yyyy-MM-dd); istekte İstanbul günü sonu UTC `paidToUtc` olarak gider. */
     paidToDate?: string;
 }

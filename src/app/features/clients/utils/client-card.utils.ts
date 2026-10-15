@@ -48,7 +48,7 @@ export function buildClientTodo(sources: ClientTodoSources, ctx: ClientTodoConte
         }
     }
 
-    const balance = openBalanceTodoItem(okData(sources.balance), { petId: null, clientId: ctx.clientId, canTakePayment: canWrite(PAYMENTS_CREATE_CLAIM) });
+    const balance = openBalanceTodoItem(okData(sources.balance), { clientId: ctx.clientId, canTakePayment: canWrite(PAYMENTS_CREATE_CLAIM) });
     if (balance) {
         items.push(balance);
     }

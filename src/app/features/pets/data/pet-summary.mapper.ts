@@ -23,22 +23,22 @@ import type {
 } from '@/app/features/pets/models/pet-summary-vm.model';
 import { mapPetAlertsDtoToVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 
-function trimOrNull(v: string | null | undefined): string | null {
+export function trimOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
     return t ? t : null;
 }
 
-function finiteOrNull(v: number | null | undefined): number | null {
+export function finiteOrNull(v: number | null | undefined): number | null {
     return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
 const NON_OK_STATES: ReadonlySet<string> = new Set<PetSummarySectionState>(['Empty', 'Forbidden', 'Unavailable']);
 
 /**
- * Bölüm zarfı → VM. Bilinmeyen/eksik `state` ve okunamayan `Ok` verisi `Unavailable` sayılır:
+ * Bölüm zarfı → VM (hasta özeti ve açık işler ortak). Bilinmeyen/eksik `state` ve okunamayan `Ok` verisi `Unavailable` sayılır:
  * eksik veri asla "kayıt yok" gibi gösterilmez.
  */
-function mapSection<TDto, TVm>(
+export function mapSection<TDto, TVm>(
     section: PetSummarySectionDto<TDto> | null | undefined,
     mapData: (dto: TDto) => TVm | null
 ): PetSummarySectionVm<TVm> {

@@ -18,6 +18,7 @@ import type {
     HospitalizationEditVm,
     HospitalizationListItemVm
 } from '@/app/features/hospitalizations/models/hospitalization-vm.model';
+import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -224,8 +225,8 @@ export function mapPagedHospitalizationsToVm(result: HospitalizationListItemDtoP
 
 /**
  * GET `/api/v1/hospitalizations` — canonical query:
- * `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`).
- * Tarihler `type="date"` çıktısı gibi **yyyy-MM-dd** (examinations / treatments / lab-results ile aynı semantik).
+ * `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`).
+ * Backend `admittedAtUtc >= dateFromUtc` ve `<= dateToUtc` (iki uç dahil); İstanbul günü başı ve günü sonu (23:59:59.999) gönderilir.
  * Filtre: `ActiveOnly` = `true` | `false` (yalnızca ilgili durum seçildiğinde gönderilir).
  */
 export function hospitalizationsQueryToHttpParams(query: HospitalizationsListQuery): HttpParams {
@@ -248,11 +249,13 @@ export function hospitalizationsQueryToHttpParams(query: HospitalizationsListQue
     } else if (query.activeOnly === false) {
         p = p.set('ActiveOnly', 'false');
     }
-    if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+    const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+    if (fromUtc) {
+        p = p.set('dateFromUtc', fromUtc);
     }
-    if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+    const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+    if (toUtc) {
+        p = p.set('dateToUtc', toUtc);
     }
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());

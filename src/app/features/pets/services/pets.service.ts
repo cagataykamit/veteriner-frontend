@@ -14,11 +14,14 @@ import {
     mapPetStatusUpdateToApiBody,
     petsQueryToHttpParams
 } from '@/app/features/pets/data/pet.mapper';
+import { mapPetOpenItemsDtoToVm } from '@/app/features/pets/data/pet-open-items.mapper';
 import { mapPetSummaryDtoToVm } from '@/app/features/pets/data/pet-summary.mapper';
 import type { PetDetailDto, PetHistorySummaryDto, PetListItemDtoPagedResult, PetStatusUpdateResultDto } from '@/app/features/pets/models/pet-api.model';
 import { mapPetTimelinePageDtoToVm, petTimelineQueryToHttpParams } from '@/app/features/pets/data/pet-timeline.mapper';
 import type { PetTimelinePageDto } from '@/app/features/pets/models/pet-timeline-api.model';
 import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/features/pets/models/pet-timeline-vm.model';
+import type { PetOpenItemsDto } from '@/app/features/pets/models/pet-open-items-api.model';
+import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
 import type { PetSummaryDto } from '@/app/features/pets/models/pet-summary-api.model';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
@@ -79,6 +82,14 @@ export class PetsService {
         return this.api.get<PetSummaryDto>(ApiEndpoints.pets.summary(petId)).pipe(
             map((dto) => mapPetSummaryDtoToVm(dto)),
             toUserError('Hasta özeti yüklenemedi.')
+        );
+    }
+
+    /** Hasta kartı "Yapılacaklar": açık aşı ve lab, ücret bekleyen, sonraki randevu, açık borç; bölüm bazlı durum. */
+    getPetOpenItems(petId: string): Observable<PetOpenItemsVm> {
+        return this.api.get<PetOpenItemsDto>(ApiEndpoints.pets.openItems(petId)).pipe(
+            map((dto) => mapPetOpenItemsDtoToVm(dto)),
+            toUserError('Yapılacaklar yüklenemedi.')
         );
     }
 
