@@ -235,6 +235,43 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         expect(el().textContent).toContain('Zaman çizelgesi');
     });
 
+    it('bütün Yapılacaklar bölümleri yetkisizse "Bekleyen iş yok" değil "yetkiniz yok" yazar', () => {
+        const forbidden = { state: 'Forbidden', data: null };
+        openItemsSource = () => of({ state: 'ok', data: openItems({ vaccinations: forbidden, labResults: forbidden, pendingCharges: forbidden, outstanding: forbidden }) });
+        create();
+
+        expect(el().querySelector('[data-testid="todo-empty"]')).toBeNull();
+        expect(el().querySelector('[data-testid="todo-forbidden"]')?.textContent).toContain('Yapılacakları görüntülemek için yetkiniz yok.');
+    });
+
+    it('"Yeniden dene" açık işleri yeniden okur: başarıda not kalkar, hata sürerse not kalır', () => {
+        openItemsSource = () => of({ state: 'error' });
+        create();
+        const retry = () => {
+            (el().querySelector('[data-testid="todo-retry"]') as HTMLButtonElement).click();
+            fixture.detectChanges();
+        };
+
+        retry();
+        expect(openItemsCalls).toBe(2);
+        expect(el().querySelector('[data-testid="todo-failed"]')).withContext('hata sürüyor').not.toBeNull();
+
+        openItemsSource = () => of({ state: 'ok', data: openItems() });
+        retry();
+        expect(openItemsCalls).toBe(3);
+        expect(el().querySelector('[data-testid="todo-failed"]')).toBeNull();
+        expect(el().querySelector('[data-testid="todo-retry"]')).toBeNull();
+        expect(el().querySelector('[data-testid="todo-overdueVaccine"]')).not.toBeNull();
+    });
+
+    it('salt okunur kiracıda da "Yeniden dene" sunulur (okuma)', () => {
+        openItemsSource = () => of({ state: 'ok', data: openItems({ labResults: { state: 'Unavailable', data: null } }) });
+        TestBed.overrideProvider(TenantReadOnlyContextService, { useValue: { mutationBlocked: () => true } });
+        create();
+
+        expect(el().querySelector('[data-testid="todo-retry"]')).not.toBeNull();
+    });
+
     it('durum değişince ve randevu iptalinden sonra açık işler yeniden okunur', () => {
         create();
         fixture.componentInstance.onStatusChanged({ status: 'Deceased', deceasedOn: null, rowVersion: 'new' });

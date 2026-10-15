@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { PetTodoItem, PetTodoView } from '@/app/features/pets/utils/pet-card.utils';
@@ -50,20 +50,30 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
                 </ul>
             } @else if (view().loading) {
                 <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>
+            } @else if (view().forbidden) {
+                <p class="m-0 text-muted-color" data-testid="todo-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Yapılacakları görüntülemek için yetkiniz yok.</p>
             } @else if (view().failed.length === 0) {
                 <p class="m-0 text-muted-color" data-testid="todo-empty"><i class="pi pi-check-circle mr-1" aria-hidden="true"></i>Bekleyen iş yok.</p>
             }
 
             @if (view().failed.length > 0) {
-                <p class="m-0 mt-2 text-orange-600 dark:text-orange-400 text-sm" data-testid="todo-failed">
-                    <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Alınamadı: {{ view().failed.join(', ') }}. Liste eksik olabilir.
-                </p>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mt-2">
+                    <p class="m-0 grow basis-56 text-orange-600 dark:text-orange-400 text-sm" data-testid="todo-failed">
+                        <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Alınamadı: {{ view().failed.join(', ') }}. Liste eksik olabilir.
+                    </p>
+                    @if (retryable()) {
+                        <button pButton type="button" severity="secondary" [text]="true" size="small" icon="pi pi-refresh" label="Yeniden dene" class="shrink-0 ml-auto" data-testid="todo-retry" (click)="retry.emit()"></button>
+                    }
+                </div>
             }
         </section>
     `
 })
 export class PetTodoPanelComponent {
     readonly view = input.required<PetTodoView>();
+    /** Alınamayan kaynak için "Yeniden dene" sunulur; kaynağı yeniden okumak sayfanındır (`retry`). */
+    readonly retryable = input(false);
+    readonly retry = output<void>();
 
     toneClass(item: PetTodoItem): string {
         return TONE_CLASS[item.tone];

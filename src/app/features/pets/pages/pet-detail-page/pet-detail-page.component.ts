@@ -104,7 +104,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 
             <div class="grid grid-cols-12 gap-4 mb-4">
                 <div class="col-span-12 lg:col-span-5" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
-                    <app-pet-todo-panel [view]="todo()" />
+                    <app-pet-todo-panel [view]="todo()" [retryable]="true" (retry)="reloadOpenItems()" />
                 </div>
                 <div class="col-span-12 lg:col-span-7" [class.order-first]="emphasis === 'clinical'" data-testid="clinical-column">
                     <app-pet-summary-card
@@ -312,7 +312,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         }
     }
 
-    /** Randevu iptali sonrası: sonraki randevu açık işlerdedir. */
+    /** Randevu iptali sonrası (sonraki randevu açık işlerdedir) ve Yapılacaklar'da "Yeniden dene"; okumadır, salt okunur kiracıda da çalışır. */
     reloadOpenItems(): void {
         if (this.lastId) {
             this.loadOpenItems(this.lastId);
