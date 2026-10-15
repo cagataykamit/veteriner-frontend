@@ -103,6 +103,17 @@ describe('TodayPageComponent', () => {
         expect(t).not.toContain('Lab bekliyor');
     });
 
+    it('başlık tekrarlanmaz: alt yazı yok, ilk görünüm sekmesi "Günlük liste"', async () => {
+        const f = await create(['Visits.Read'], { date: '2026-10-10', activeHospitalizations: [], items: [] });
+        const el = f.nativeElement as HTMLElement;
+        expect(el.querySelector('app-page-header p')).toBeNull();
+        expect(text(f)).not.toContain('Bugünün randevuları ve gelen hastalar.');
+        const views = el.querySelector('p-selectbutton')!.textContent ?? '';
+        expect(views).toContain('Günlük liste');
+        expect(views).toContain('Yanlış işaretlenenler');
+        expect(views).not.toContain('Bugün');
+    });
+
     it('hasta ve sahip adı detay sayfasına bağlantıdır', async () => {
         const f = await create(['Visits.Read'], {
             date: '2026-10-10',

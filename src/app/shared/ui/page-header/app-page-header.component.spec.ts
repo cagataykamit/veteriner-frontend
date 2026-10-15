@@ -5,10 +5,9 @@ import { AppPageHeaderComponent } from './app-page-header.component';
 
 @Component({
     imports: [AppPageHeaderComponent],
-    template: `<app-page-header title="Başlık" [subtitle]="subtitle" [categoryLink]="categoryLink" [categoryLinkLabel]="categoryLinkLabel" />`
+    template: `<app-page-header title="Başlık" [categoryLink]="categoryLink" [categoryLinkLabel]="categoryLinkLabel" />`
 })
 class HostComponent {
-    subtitle?: string;
     categoryLink?: string | readonly unknown[] | UrlTree;
     categoryLinkLabel?: string;
 }
@@ -24,29 +23,17 @@ describe('AppPageHeaderComponent', () => {
         return fixture.nativeElement as HTMLElement;
     }
 
-    async function render(url: string, subtitle?: string): Promise<string | null> {
-        const el = await create(url, (host) => (host.subtitle = subtitle));
-        return el.querySelector('span')?.textContent?.trim() ?? null;
-    }
-
     const categoryLink = (el: HTMLElement) => el.querySelector<HTMLAnchorElement>('[data-testid="page-header-category-link"]');
+    /** Başlık bloğunun ilk satırı başlık değilse kategori satırıdır. */
+    const firstLine = (el: HTMLElement) => el.querySelector('app-page-header > div')!.firstElementChild!.textContent?.trim();
 
-    it('kategori etiketini adresin menü grubundan türetir', async () => {
-        expect(await render('/panel/appointments')).toBe('Randevular');
-    });
-
-    it('menüde karşılığı olmayan adreste etiket göstermez', async () => {
-        expect(await render('/panel/yok')).toBeNull();
-    });
-
-    it('verilen subtitle türetilmiş etiketin yerine geçer', async () => {
-        expect(await render('/panel/appointments', 'Özel')).toBe('Özel');
-    });
-
-    it('categoryLink yoksa kategori düz yazı kalır', async () => {
-        const el = await create('/panel/appointments');
-        expect(categoryLink(el)).toBeNull();
-        expect(el.querySelector('span')?.textContent?.trim()).toBe('Randevular');
+    it('categoryLink yoksa menüdeki kategori (Panel, Ayarlar) düz yazı olarak çizilmez; ilk satır başlıktır', async () => {
+        for (const url of ['/panel/today', '/panel/dashboard', '/panel/settings/clinics', '/panel/appointments', '/panel/yok']) {
+            const el = await create(url);
+            expect(categoryLink(el)).withContext(url).toBeNull();
+            expect(el.querySelector('span')).withContext(url).toBeNull();
+            expect(firstLine(el)).withContext(url).toBe('Başlık');
+        }
     });
 
     it('categoryLink verilirse kategori aynı satırda listeye giden bağlantı olur', async () => {
@@ -73,10 +60,9 @@ describe('AppPageHeaderComponent', () => {
         expect(await text('/panel/reports/payments', '/panel/reports')).toBe('Raporlar');
     });
 
-    it('UrlTree bağlantısında sorgu yok sayılır; liste adı subtitle değerinin önüne geçer', async () => {
+    it('UrlTree bağlantısında sorgu yok sayılır', async () => {
         const el = await create('/panel/appointments/a1', (host) => {
             host.categoryLink = TestBed.inject(Router).parseUrl('/panel/today?visit=v1');
-            host.subtitle = 'Özel';
         });
         expect(categoryLink(el)!.textContent?.trim()).toBe('Bugün');
     });
