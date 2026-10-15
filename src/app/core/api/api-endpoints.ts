@@ -140,7 +140,7 @@ export const ApiEndpoints = {
         applyTemplate: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/apply-template`
     },
     vaccinations: {
-        /** Query: `Page`, `PageSize`, `Search`, `Status`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `OnlyOverdue`, `Sort` (`dueAtUtc` | `appliedAtUtc`), `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/vaccinations`,
         byId: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}`
     },

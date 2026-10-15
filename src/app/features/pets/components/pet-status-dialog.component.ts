@@ -250,7 +250,7 @@ export class PetStatusDialogComponent {
             return;
         }
         this.appointmentsLoad = this.appointmentsService
-            .getAppointments({ page: 1, pageSize: 200, petId: p.id, status: '0', sort: 'ScheduledAtUtc', order: 'asc' })
+            .getAppointments({ page: 1, pageSize: 200, petId: p.id, status: '0', sort: 'scheduledAtUtc', order: 'asc' })
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
                 next: (r) => this.openAppointments.set(upcomingScheduledAppointments(r.items)),

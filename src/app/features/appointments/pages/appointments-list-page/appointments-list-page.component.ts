@@ -424,7 +424,7 @@ export class AppointmentsListPageComponent implements OnInit {
                 fromDate: fromDate || undefined,
                 toDate: toDate || undefined,
                 status: status || undefined,
-                sort: 'ScheduledAtUtc',
+                sort: 'scheduledAtUtc',
                 order: 'desc'
             })
             .subscribe({

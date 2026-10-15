@@ -31,7 +31,7 @@ import { AppointmentsService } from '@/app/features/appointments/services/appoin
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
+import { localDateYyyyMmDd, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
@@ -48,6 +48,12 @@ export interface DashboardSummariesPhaseResult {
     readonly canViewOperationalAlerts: boolean;
     readonly finance: DashboardSection<DashboardFinanceSummaryVm | null>;
 }
+
+/** "Yaklaşan aşılar" kartındaki en fazla satır. */
+const DASHBOARD_UPCOMING_VACCINATIONS_MAX = 8;
+
+/** Planlı aşı durumu (`VaccinationStatus.Scheduled`); liste süzgecinde backend'e giden değer. */
+const VACCINATION_STATUS_SCHEDULED = '0';
 
 interface DashboardListsPhaseResult {
     readonly todayAppointments: DashboardSection<AppointmentListItemVm[]>;
@@ -82,7 +88,7 @@ export function mergeDashboardListPhaseIntoVm(
             error: lists.todayAppointments.error
         },
         upcomingVaccinations: {
-            data: pickUpcomingVaccinations(lists.vaccinationItems.data, 8),
+            data: pickUpcomingVaccinations(lists.vaccinationItems.data, DASHBOARD_UPCOMING_VACCINATIONS_MAX),
             error: lists.vaccinationItems.error
         },
         recentExaminations: {
@@ -197,10 +203,13 @@ export class DashboardService {
     }
 
     /**
-     * Faz 2 — en fazla 3 paralel: bugünkü randevular, aşı listesi (sonra süzülür), son muayeneler.
+     * Faz 2 — en fazla 3 paralel: bugünkü randevular, yaklaşan aşılar, son muayeneler.
+     * Yaklaşan aşılar: planlı ve vadesi bugünün (İstanbul) başından itibaren olanlar, vadeye göre artan
+     * (gecikenler ayrı "Geciken aşı takipleri" uyarısında gösterilir).
      */
     loadDashboardListsPhase(): Observable<DashboardListsPhaseResult> {
         const today = localDateYyyyMmDd();
+        const istanbulToday = toIstanbulDateInputValue(new Date().toISOString());
 
         const section = <T,>(source: Observable<T>, fallback: T, errMsg: string): Observable<DashboardSection<T>> =>
             source.pipe(
@@ -220,8 +229,10 @@ export class DashboardService {
                 this.vaccinations
                     .getVaccinations({
                         page: 1,
-                        pageSize: 60,
-                        sort: 'NextDueAtUtc',
+                        pageSize: DASHBOARD_UPCOMING_VACCINATIONS_MAX,
+                        status: VACCINATION_STATUS_SCHEDULED,
+                        fromDate: istanbulToday,
+                        sort: 'dueAtUtc',
                         order: 'asc'
                     })
                     .pipe(map((r) => r.items)),
@@ -233,7 +244,7 @@ export class DashboardService {
                     .getExaminations({
                         page: 1,
                         pageSize: 8,
-                        sort: 'ExaminationDateUtc',
+                        sort: 'examinedAtUtc',
                         order: 'desc'
                     })
                     .pipe(map((r) => r.items)),

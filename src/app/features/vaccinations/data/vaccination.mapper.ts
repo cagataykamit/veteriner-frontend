@@ -19,6 +19,7 @@ import type {
     VaccinationListItemVm
 } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { parseVaccinationStatusRawToEnum } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -268,7 +269,8 @@ export function mapPagedVaccinationsToVm(result: VaccinationListItemDtoPagedResu
 
 /**
  * GET `/api/v1/vaccinations` — canonical query:
- * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `Status`, `FromDate`, `ToDate`, `OnlyOverdue`, `Sort`, `Order`.
+ * `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ClientId`, `Status`, `dateFromUtc`, `dateToUtc`, `OnlyOverdue`, `Sort`, `Order`.
+ * Birleşik tarih: Uygulandı ise `appliedAtUtc`, değilse `dueAtUtc`; iki uç dahil. İstanbul günü başı ve günü sonu (23:59:59.999) gönderilir.
  */
 export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): HttpParams {
     let p = new HttpParams();
@@ -293,11 +295,13 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
         const status = query.status.trim();
         p = p.set('Status', status);
     }
-    if (query.fromDate?.trim()) {
-        p = p.set('FromDate', query.fromDate.trim());
+    const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+    if (fromUtc) {
+        p = p.set('dateFromUtc', fromUtc);
     }
-    if (query.toDate?.trim()) {
-        p = p.set('ToDate', query.toDate.trim());
+    const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+    if (toUtc) {
+        p = p.set('dateToUtc', toUtc);
     }
     if (query.onlyOverdue === true) {
         p = p.set('OnlyOverdue', 'true');
