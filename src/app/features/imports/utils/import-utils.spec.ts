@@ -11,7 +11,7 @@ import {
     reminderImpactCurrentCount,
     precheckImportFile
 } from '@/app/features/imports/utils/import-labels.utils';
-import { columnMapsToRequest, initialColumnMaps, mappingConfidence, missingRequired } from '@/app/features/imports/utils/import-schema.utils';
+import { columnMapsToRequest, fieldLabel, initialColumnMaps, mappingConfidence, missingRequired } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 
 const customers: ImportTableInfoDto = {
@@ -46,6 +46,16 @@ describe('import-schema.utils', () => {
         expect(missingRequired('pets', { HayvanAdi: 'a', Tur: 'b', SahipAdSoyad: 'c', SahipTelefon: 'd' })).toEqual([]);
         expect(missingRequired('vaccinations', { AsiAdi: 'a', UygulamaTarihi: 'b' })).toHaveSize(1);
         expect(missingRequired('vaccinations', { AsiAdi: 'a', UygulamaTarihi: 'b', HayvanNo: 'c' })).toEqual([]);
+    });
+
+    it('hasta no/adı API anahtarı (HayvanNo/HayvanAdi) değişmeden "hasta" etiketiyle gösterilir; bilinmeyen anahtar olduğu gibi kalır', () => {
+        expect(fieldLabel('pets', 'HayvanNo')).toBe('Hasta no');
+        expect(fieldLabel('pets', 'HayvanAdi')).toBe('Hasta adı');
+        expect(fieldLabel('vaccinations', 'HayvanNo')).toBe('Hasta no');
+        expect(fieldLabel('vaccinations', 'HayvanAdi')).toBe('Hasta adı');
+        expect(fieldLabel('pets', 'Tur')).toBe('Tür');
+        expect(fieldLabel('pets', 'Bilinmeyen')).toBe('Bilinmeyen');
+        expect(missingRequired('pets', { MusteriNo: 'c' })).toEqual(['Hasta adı', 'Tür']);
     });
 
     it('isteğe boş eşlemeleri koymaz', () => {
