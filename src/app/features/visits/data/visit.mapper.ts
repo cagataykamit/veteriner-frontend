@@ -30,6 +30,7 @@ const EM = '—';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
+
     return t ? t : null;
 }
 
@@ -55,6 +56,7 @@ export function mapVisitCreateResultDtoToVm(dto: VisitCreateResultDto): VisitCre
 export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
     const visitId = trimmedOrNull(dto.visitId);
     const appointmentId = trimmedOrNull(dto.appointmentId);
+
     return {
         key: visitId ?? appointmentId ?? dto.petId,
         visitId,
@@ -124,12 +126,15 @@ export function mapVeterinarianDtoToVm(dto: VeterinarianDto): VeterinarianVm {
 /** Klinik bağlamı (JWT) yoksa `clinicId` zorunludur; varsa da açıkça gönderilir. */
 export function todayQueryToHttpParams(clinicId: string | null, query: TodayQuery = {}): HttpParams {
     let params = new HttpParams();
+
     if (clinicId) {
         params = params.set('clinicId', clinicId);
     }
+
     if (query.voided) {
         params = params.set('voided', true);
     }
+
     return query.responsibleVeterinarianUserId ? params.set('responsibleVeterinarianUserId', query.responsibleVeterinarianUserId) : params;
 }
 
@@ -140,21 +145,27 @@ export function mapCreateVisitToApiBody(req: CreateVisitRequest): CreateVisitReq
     const petId = trimmedOrNull(req.petId);
     const clinicId = trimmedOrNull(req.clinicId);
     const vet = trimmedOrNull(req.responsibleVeterinarianUserId);
+
     if (appointmentId) {
         body.appointmentId = appointmentId;
     }
+
     if (petId) {
         body.petId = petId;
     }
+
     if (clinicId) {
         body.clinicId = clinicId;
     }
+
     if (vet) {
         body.responsibleVeterinarianUserId = vet;
     }
+
     if (req.isUrgent) {
         body.isUrgent = true;
     }
+
     return body;
 }
 
@@ -178,5 +189,6 @@ export function mapUrgencyToApiBody(isUrgent: boolean): UpdateVisitUrgencyReques
 /** Giriş yapan kullanıcı hekim listesindeyse listedeki kimliği, değilse `null` (hekim tespitinin tek kuralı; kimlik büyük/küçük harf duyarsız). */
 export function findVeterinarianUserId(vets: readonly VeterinarianVm[], userId: string | null | undefined): string | null {
     const wanted = userId?.trim().toLowerCase();
+
     return wanted ? (vets.find((v) => v.userId.toLowerCase() === wanted)?.userId ?? null) : null;
 }

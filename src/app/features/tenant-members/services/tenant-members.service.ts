@@ -40,10 +40,13 @@ export class TenantMembersService {
      */
     getMembers(query: TenantMembersListQuery): Observable<TenantMembersPagedVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const params = tenantMembersQueryToHttpParams(query);
+
         return this.api.get<TenantMemberListItemDtoPagedResult | unknown>(ApiEndpoints.tenants.members(tenantId), params).pipe(
             map((raw) => mapPagedTenantMembersToVm(raw)),
             catchError((err: HttpErrorResponse) =>
@@ -60,9 +63,11 @@ export class TenantMembersService {
      */
     getAssignableRolePermissionMatrix(): Observable<TenantRolePermissionMatrixRowVm[]> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.tenants.assignableRolePermissionMatrix(tenantId)).pipe(
             map((raw) => mapAssignableRolePermissionMatrixRaw(raw)),
             catchError((err: HttpErrorResponse) =>
@@ -73,19 +78,25 @@ export class TenantMembersService {
 
     getMemberById(memberId: string): Observable<TenantMemberDetailVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const id = memberId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz üye kimliği.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.tenants.memberById(tenantId, id)).pipe(
             map((raw) => {
                 const vm = mapTenantMemberDetailRaw(raw);
+
                 if (!vm) {
                     throw new Error('Üye yanıtı okunamadı.');
                 }
+
                 return vm;
             }),
             catchError((err: HttpErrorResponse) =>
@@ -99,13 +110,17 @@ export class TenantMembersService {
      */
     removeMember(memberId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const mid = memberId.trim();
+
         if (!mid) {
             return throwError(() => new Error('Geçersiz üye kimliği.'));
         }
+
         return this.api.delete<unknown>(ApiEndpoints.tenants.memberRemove(tenantId, mid)).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -118,9 +133,11 @@ export class TenantMembersService {
      */
     listTenantClinics(): Observable<ClinicSummary[]> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.clinics.list()).pipe(
             map((raw) => mapTenantClinicsListRaw(raw)),
             catchError((err: HttpErrorResponse) =>
@@ -134,14 +151,18 @@ export class TenantMembersService {
      */
     assignMemberClaim(memberId: string, operationClaimId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const mid = memberId.trim();
         const cid = operationClaimId.trim();
+
         if (!mid || !cid) {
             return throwError(() => new Error('Geçersiz istek.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.tenants.memberAssignClaim(tenantId, mid, cid), {}).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -153,14 +174,18 @@ export class TenantMembersService {
      */
     removeMemberClaim(memberId: string, operationClaimId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const mid = memberId.trim();
         const cid = operationClaimId.trim();
+
         if (!mid || !cid) {
             return throwError(() => new Error('Geçersiz istek.'));
         }
+
         return this.api.delete<unknown>(ApiEndpoints.tenants.memberRemoveClaim(tenantId, mid, cid)).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -172,14 +197,18 @@ export class TenantMembersService {
      */
     assignMemberClinic(memberId: string, clinicId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const mid = memberId.trim();
         const cid = clinicId.trim();
+
         if (!mid || !cid) {
             return throwError(() => new Error('Geçersiz istek.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.tenants.memberAssignClinic(tenantId, mid, cid), {}).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -191,14 +220,18 @@ export class TenantMembersService {
      */
     removeMemberClinic(memberId: string, clinicId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const mid = memberId.trim();
         const cid = clinicId.trim();
+
         if (!mid || !cid) {
             return throwError(() => new Error('Geçersiz istek.'));
         }
+
         return this.api.delete<unknown>(ApiEndpoints.tenants.memberRemoveClinic(tenantId, mid, cid)).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) => throwError(() => err))

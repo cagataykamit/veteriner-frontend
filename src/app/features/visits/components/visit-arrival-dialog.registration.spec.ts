@@ -57,7 +57,23 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
         create(['Clients.Create', 'Pets.Create']);
         expect(links()).toContain('Yeni müşteri ve hasta ekle');
     });
-it('yetkili için arama yapılmadan da "Hasta kayıtlı değil mi?" ile görünür; resepsiyon ipucu çıkmaz', () => {        create(['Clients.Create', 'Pets.Create']);        const text = document.body.textContent ?? '';        expect(text).toContain('Hasta kayıtlı değil mi?');        expect(text).not.toContain('kaydı resepsiyon oluşturur');    });    it('yetkisiz için resepsiyon ipucu görünür, kayıt bağlantısı görünmez', () => {        create([]);        const text = document.body.textContent ?? '';        expect(text).toContain('Hasta kayıtlı değilse kaydı resepsiyon oluşturur.');        expect(text).not.toContain('Hasta kayıtlı değil mi?');        expect(links()).not.toContain('Yeni müşteri ve hasta ekle');    });
+
+    it('yetkili için arama yapılmadan da "Hasta kayıtlı değil mi?" ile görünür; resepsiyon ipucu çıkmaz', () => {
+        create(['Clients.Create', 'Pets.Create']);
+        const text = document.body.textContent ?? '';
+
+        expect(text).toContain('Hasta kayıtlı değil mi?');
+        expect(text).not.toContain('kaydı resepsiyon oluşturur');
+    });
+
+    it('yetkisiz için resepsiyon ipucu görünür, kayıt bağlantısı görünmez', () => {
+        create([]);
+        const text = document.body.textContent ?? '';
+
+        expect(text).toContain('Hasta kayıtlı değilse kaydı resepsiyon oluşturur.');
+        expect(text).not.toContain('Hasta kayıtlı değil mi?');
+        expect(links()).not.toContain('Yeni müşteri ve hasta ekle');
+    });
 
     it('yetkisizde (ya da yalnızca birinde) bağlantı görünmez', () => {
         create(['Clients.Create']);
@@ -84,6 +100,7 @@ it('yetkili için arama yapılmadan da "Hasta kayıtlı değil mi?" ile görün�
         create(['Clients.Create', 'Pets.Create']);
         visits.createVisit.and.returnValue(of(visitResult));
         const arrived: unknown[] = [];
+
         cmp.arrived.subscribe((r) => arrived.push(r));
 
         cmp.openRegistration(null);

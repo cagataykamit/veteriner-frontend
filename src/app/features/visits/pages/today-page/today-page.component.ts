@@ -603,6 +603,7 @@ export class TodayPageComponent implements OnInit {
     readonly noShowMode = signal<'mark' | 'revert'>('mark');
     readonly noShowSubject = computed(() => {
         const i = this.noShowItem();
+
         return i ? `${i.petName} · ${i.clientName} · Randevu ${this.time(i.scheduledAtUtc)}` : '';
     });
 
@@ -678,6 +679,7 @@ export class TodayPageComponent implements OnInit {
     private watchCompactViewport(): void {
         const query = window.matchMedia(COMPACT_MEDIA_QUERY);
         const update = () => this.compact.set(query.matches);
+
         update();
         query.addEventListener('change', update);
         this.destroyRef.onDestroy(() => query.removeEventListener('change', update));
@@ -687,6 +689,7 @@ export class TodayPageComponent implements OnInit {
         if (mode === 'initial') {
             this.loading.set(true);
         }
+
         this.refresh$.next(mode);
     }
 
@@ -761,8 +764,10 @@ export class TodayPageComponent implements OnInit {
     private startWithScope(): void {
         if (!this.canCreateVisit) {
             this.refresh('initial');
+
             return;
         }
+
         this.visitsService
             .getCurrentVeterinarianUserId()
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -775,6 +780,7 @@ export class TodayPageComponent implements OnInit {
 
     private todayQuery(): TodayQuery {
         const mine = this.scope() === 'mine' ? this.myUserId() : null;
+
         return { voided: this.view() === 'voided', ...(mine ? { responsibleVeterinarianUserId: mine } : {}) };
     }
 
@@ -805,6 +811,7 @@ export class TodayPageComponent implements OnInit {
             collectPayment: () => this.paymentAfterMenu.set(item)
         };
         const blocked = this.ro.mutationBlocked() || this.isBusy(item);
+
         this.rowMenuItems.set(actions.map((a) => ({ label: a.label, icon: a.icon, disabled: blocked, command: handlers[a.key] })));
         this.rowMenu()?.toggle(event);
     }
@@ -846,9 +853,11 @@ export class TodayPageComponent implements OnInit {
     /** Sıralamayı sunucu belirler: istemci yeniden sıralamaz, yalnızca yeniler. Hatada da yenilenir. */
     toggleUrgency(item: TodayItemVm): void {
         const visitId = item.visitId;
+
         if (!visitId || this.isBusy(item)) {
             return;
         }
+
         this.setBusy(item.key, true);
         this.visitsService.setUrgency(visitId, !item.isUrgent).subscribe({
             next: () => {
@@ -878,7 +887,9 @@ export class TodayPageComponent implements OnInit {
     /** Müşteri ve (varsa) geliş bağlamı ödeme formuna taşınır; o gelişin açık ücretleri dolu gelir. */
     openPendingPayment(): void {
         const item = this.paymentAfterMenu();
+
         this.paymentAfterMenu.set(null);
+
         if (item) {
             this.openPayment(item);
         }
@@ -896,11 +907,14 @@ export class TodayPageComponent implements OnInit {
     /** Satır kilitliyken ikinci istek gitmez; hatada da liste yenilenir (durum başkası tarafından değişmiş olabilir). */
     transition(item: TodayItemVm, kind: 'start' | 'complete'): void {
         const visitId = item.visitId;
+
         if (!visitId || this.isBusy(item)) {
             return;
         }
+
         this.setBusy(item.key, true);
         const call$ = kind === 'start' ? this.visitsService.startVisit(visitId) : this.visitsService.completeVisit(visitId);
+
         call$.subscribe({
             next: () => {
                 this.setBusy(item.key, false);
@@ -936,6 +950,7 @@ export class TodayPageComponent implements OnInit {
             this.loadError.set(null);
             this.refreshError.set(null);
         }
+
         this.now.set(new Date());
         this.loading.set(false);
     }
@@ -943,11 +958,13 @@ export class TodayPageComponent implements OnInit {
     private setBusy(key: string, busy: boolean): void {
         this.busyKeys.update((keys) => {
             const next = new Set(keys);
+
             if (busy) {
                 next.add(key);
             } else {
                 next.delete(key);
             }
+
             return next;
         });
     }

@@ -69,6 +69,7 @@ export class SaleVoidDialogComponent {
 
     protected summary(): string {
         const s = this.sale();
+
         return `${s.clientName} · ${s.totalText}`;
     }
 
@@ -79,6 +80,7 @@ export class SaleVoidDialogComponent {
         if (this.result) {
             this.voided.emit(this.result);
         }
+
         this.stockOutcome.set('StockReturned');
     }
 }

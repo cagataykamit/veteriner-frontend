@@ -15,16 +15,21 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 /** Üç gün sonu ucunun ortak süzgeçleri; gün sonu `from`/`to` takvim günüdür (`yyyy-MM-dd`). */
 export function endOfDayQueryToHttpParams(query: ReportListQueryBase, opts?: { omitPaging?: boolean; listFilters?: boolean }): HttpParams {
     let p = new HttpParams();
+
     if (!opts?.omitPaging) {
         p = p.set('page', String(query.page ?? 1)).set('pageSize', String(query.pageSize ?? 50));
     }
+
     const keys = opts?.listFilters ? (['from', 'to', 'clinicId', 'kind', 'paymentMethod', 'performedByUserId'] as const) : (['from', 'to', 'clinicId'] as const);
+
     for (const key of keys) {
         const value = query[key]?.trim();
+
         if (value) {
             p = p.set(key, value);
         }
     }
+
     return p;
 }
 
@@ -46,9 +51,11 @@ export class DailyTransactionsSource implements ReportListSource<ReportListQuery
         const merged = withActiveClinic(this.auth, query);
         const page = merged.page ?? 1;
         const pageSize = merged.pageSize ?? 50;
+
         if (!this.allowed()) {
             return of({ currency: 'TRY', from: '', to: '', totals: ZERO_TOTALS, totalCount: 0, items: [], page, pageSize });
         }
+
         return this.api
             .get<DailyTransactionsDto>(ApiEndpoints.reports.dailyTransactions(), endOfDayQueryToHttpParams(merged, { listFilters: true }))
             .pipe(map((raw) => ({ ...raw, page, pageSize })));
@@ -64,6 +71,7 @@ export class DailyTransactionsSource implements ReportListSource<ReportListQuery
 
     private exportBlob(path: string, query: ReportListQueryBase) {
         const params = endOfDayQueryToHttpParams(withActiveClinic(this.auth, query), { omitPaging: true, listFilters: true });
+
         return this.api.getBlob(path, params).pipe(
             catchError((err) => throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback))))
         );
@@ -104,9 +112,11 @@ export class EndOfDayService {
      */
     loadOpenItems(query: ReportListQueryBase): Observable<TodayOpenItemsVm | null> {
         const merged = withActiveClinic(this.auth, query);
+
         if (!merged.clinicId) {
             return of(null);
         }
+
         return this.api
             .get<EndOfDayOpenItemsDto>(ApiEndpoints.reports.endOfDayOpenItems(), endOfDayQueryToHttpParams(merged, { omitPaging: true }))
             .pipe(map((res) => mapTodayOpenItemsDtoToVm(res.openItems)));

@@ -12,6 +12,7 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
     describe('mapCreateVaccinationToApiBody', () => {
         it('ürün yoksa ürün/miktar/parti/requestId gönderilmez (mevcut davranış)', () => {
             const body = mapCreateVaccinationToApiBody({ ...base, productId: null, quantity: 1, batchId: 'b1', requestId: 'r1' });
+
             expect(body.productId).toBeUndefined();
             expect(body.quantity).toBeUndefined();
             expect(body.batchId).toBeUndefined();
@@ -20,9 +21,11 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
 
         it('ürün varsa miktar, requestId ve seçilmişse parti gönderilir; otomatikte parti yok', () => {
             const auto = mapCreateVaccinationToApiBody({ ...base, productId: 'pr1', quantity: 1, batchId: '', requestId: 'r1' });
+
             expect(auto).toEqual(jasmine.objectContaining({ productId: 'pr1', quantity: 1, requestId: 'r1' }));
             expect(auto.batchId).toBeUndefined();
             const manual = mapCreateVaccinationToApiBody({ ...base, productId: 'pr1', quantity: 0.5, batchId: 'b2', requestId: 'r1' });
+
             expect(manual.batchId).toBe('b2');
         });
     });
@@ -42,6 +45,7 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
                 },
                 'v1'
             );
+
             expect(r.stockResult?.created).toBeTrue();
             expect(r.stockResult?.administration.vaccinationId).toBe('v1');
             expect(r.stockResult?.stock.availableQuantity).toBe(8);
@@ -57,6 +61,7 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
 
         it('bağlıysa ürün, miktar, seri no ve SKT taşınır', () => {
             const vm = mapVaccinationDetailDtoToVm({ ...dto, administrationId: 'a1', productName: 'Nobivac', quantity: 1, unit: 'doz', lotNumber: 'L1', expiryDate: '2027-03-31T00:00:00' });
+
             expect(vm.linkedAdministration).toEqual({ id: 'a1', productName: 'Nobivac', quantity: 1, unit: 'doz', lotNumber: 'L1', expiryDate: '2027-03-31' });
         });
     });
@@ -65,12 +70,14 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
 describe('vaccination.mapper — liste parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [dateFromUtc, dateToUtc] olarak gönderir', () => {
         const p = vaccinationsQueryToHttpParams({ fromDate: '2026-10-08', toDate: '2026-10-08' });
+
         expect(p.get('dateFromUtc')).toBe('2026-10-07T21:00:00.000Z');
         expect(p.get('dateToUtc')).toBe('2026-10-08T20:59:59.999Z');
     });
 
     it('çoklu gün aralığında bitiş, bitiş gününün sonudur; ertesi gün 00:00 dışarıda kalır', () => {
         const p = vaccinationsQueryToHttpParams({ fromDate: '2026-10-01', toDate: '2026-10-31' });
+
         expect(p.get('dateFromUtc')).toBe('2026-09-30T21:00:00.000Z');
         expect(p.get('dateToUtc')).toBe('2026-10-31T20:59:59.999Z');
         expect(Date.parse('2026-10-31T21:00:00Z')).toBeGreaterThan(Date.parse(p.get('dateToUtc')!));
@@ -78,25 +85,31 @@ describe('vaccination.mapper — liste parametreleri', () => {
 
     it('eski FromDate/ToDate ve due*/applied* gönderilmez; tarih yoksa tarih parametresi yok', () => {
         const withDates = vaccinationsQueryToHttpParams({ fromDate: '2026-10-08', toDate: '2026-10-09' });
+
         for (const k of ['FromDate', 'ToDate', 'fromDate', 'toDate', 'dueFromUtc', 'dueToUtc', 'appliedFromUtc', 'appliedToUtc']) {
             expect(withDates.has(k)).toBeFalse();
         }
+
         const none = vaccinationsQueryToHttpParams({});
+
         expect(none.has('dateFromUtc')).toBeFalse();
         expect(none.has('dateToUtc')).toBeFalse();
     });
 
     it('yalnızca bitiş verilirse yalnızca dateToUtc gider; geçersiz tarih atlanır', () => {
         const onlyTo = vaccinationsQueryToHttpParams({ toDate: '2026-10-08' });
+
         expect(onlyTo.has('dateFromUtc')).toBeFalse();
         expect(onlyTo.get('dateToUtc')).toBe('2026-10-08T20:59:59.999Z');
         const invalid = vaccinationsQueryToHttpParams({ fromDate: 'abc', toDate: '  ' });
+
         expect(invalid.has('dateFromUtc')).toBeFalse();
         expect(invalid.has('dateToUtc')).toBeFalse();
     });
 
     it('müşteri, durum, sıralama ve yön diğer süzgeçlerle birlikte gider', () => {
         const p = vaccinationsQueryToHttpParams({ clientId: ' cl1 ', status: '0', sort: 'dueAtUtc', order: 'asc', fromDate: '2026-10-15' });
+
         expect(p.get('ClientId')).toBe('cl1');
         expect(p.get('Status')).toBe('0');
         expect(p.get('Sort')).toBe('dueAtUtc');

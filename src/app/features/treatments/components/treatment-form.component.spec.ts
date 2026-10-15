@@ -26,6 +26,7 @@ const exam = {
 describe('TreatmentFormComponent — muayene bağlamı', () => {
     const setup = (queryParams: Record<string, string>, examination: ExaminationDetailVm = exam) => {
         const examinations = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getExaminationById', 'getExaminations']);
+
         examinations.getExaminationById.and.returnValue(of(examination));
         TestBed.configureTestingModule({
             imports: [TreatmentFormComponent],
@@ -43,8 +44,10 @@ describe('TreatmentFormComponent — muayene bağlamı', () => {
             ]
         });
         const fixture = TestBed.createComponent(TreatmentFormComponent);
+
         fixture.componentRef.setInput('contextParams', convertToParamMap(queryParams));
         fixture.detectChanges();
+
         return { fixture, examinations };
     };
 
@@ -61,9 +64,11 @@ describe('TreatmentFormComponent — muayene bağlamı', () => {
 
     it('kesinleşmiş muayene bağlamıyla açılınca kilit uyarısı formun üstünde, Kaydet öncesinde görünür', () => {
         const { fixture } = setup({ clientId: 'client-1', petId: 'pet-1', examinationId: 'e1' }, { ...exam, status: 'Finalized' } as ExaminationDetailVm);
+
         fixture.detectChanges();
 
         const alert = (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]');
+
         expect(alert?.textContent).toContain('kesinleştirilmiş');
     });
 

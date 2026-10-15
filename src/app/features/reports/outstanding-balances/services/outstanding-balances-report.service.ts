@@ -24,6 +24,7 @@ export class OutstandingBalancesReportService {
         const params = outstandingBalancesReportQueryToHttpParams(merged);
         const page = merged.page ?? 1;
         const pageSize = merged.pageSize ?? 25;
+
         return this.api
             .get<OutstandingBalancesReportDto>(ApiEndpoints.reports.outstandingBalances(), params)
             .pipe(map((raw) => mapOutstandingBalancesReportDtoToVm(raw, { page, pageSize })));
@@ -32,6 +33,7 @@ export class OutstandingBalancesReportService {
     /** GET `/api/v1/reports/outstanding-balances/export` — aynı filtreler, sayfalama yok. */
     exportCsvBlob(query: OutstandingBalancesReportQuery) {
         const params = outstandingBalancesReportQueryToHttpParams(this.mergeClinicContext(query), { omitPaging: true });
+
         return this.api.getBlob(ApiEndpoints.reports.outstandingBalancesExport(), params).pipe(
             catchError((err) => throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback))))
         );
@@ -40,6 +42,7 @@ export class OutstandingBalancesReportService {
     /** GET `/api/v1/reports/outstanding-balances/export-xlsx` — aynı filtreler, sayfalama yok. */
     exportXlsxBlob(query: OutstandingBalancesReportQuery) {
         const params = outstandingBalancesReportQueryToHttpParams(this.mergeClinicContext(query), { omitPaging: true });
+
         return this.api.getBlob(ApiEndpoints.reports.outstandingBalancesExportXlsx(), params).pipe(
             catchError((err) => throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback))))
         );
@@ -47,6 +50,7 @@ export class OutstandingBalancesReportService {
 
     private mergeClinicContext(query: OutstandingBalancesReportQuery): OutstandingBalancesReportQuery {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+
         return { ...query, clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined };
     }
 }

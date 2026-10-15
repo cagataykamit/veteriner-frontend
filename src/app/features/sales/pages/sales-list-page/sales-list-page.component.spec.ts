@@ -61,6 +61,7 @@ describe('SalesListPageComponent', () => {
     it('satırı müşteri, ürün özeti ve toplamla listeler; iptaller varsayılan olarak istenmez', async () => {
         await setup();
         const row = el().querySelector('tbody tr')!.textContent!;
+
         expect(row).toContain('Peşin müşteri');
         expect(row).toContain('Mama');
         expect(row).toContain('Geçerli');

@@ -64,9 +64,11 @@ export function filterTenantFacingMatrixPermissions(
 ): TenantRoleMatrixPermissionVm[] {
     return permissions.filter((p) => {
         const raw = p.group?.trim() ?? '';
+
         if (!raw) {
             return false;
         }
+
         return TENANT_FACING_PERMISSION_GROUP_KEYS.has(normGroupKey(raw));
     });
 }
@@ -77,10 +79,13 @@ export function filterTenantFacingMatrixPermissions(
  */
 export function translatePermissionGroup(raw: string, otherLabel: string): string {
     const t = raw.trim();
+
     if (!t || t === otherLabel) {
         return otherLabel;
     }
+
     const k = normGroupKey(t);
+
     return PERMISSION_GROUP_TR[k] ?? t;
 }
 
@@ -161,18 +166,23 @@ const PERMISSION_CODE_EXACT_TR: Readonly<Record<string, string>> = {
  */
 export function permissionDisplayLabel(p: TenantRoleMatrixPermissionVm): string {
     const code = (p.code?.trim() || p.id?.trim() || '').trim();
+
     if (code) {
         const mapped = PERMISSION_CODE_EXACT_TR[normCodeKey(code)];
+
         if (mapped) {
             return mapped;
         }
     }
+
     if (p.description?.trim()) {
         return p.description.trim();
     }
+
     if (code) {
         return code;
     }
+
     return p.name?.trim() || '—';
 }
 
@@ -181,13 +191,17 @@ export function permissionTooltipText(p: TenantRoleMatrixPermissionVm): string {
     const label = permissionDisplayLabel(p);
     const parts: string[] = [label];
     const desc = p.description?.trim();
+
     if (desc && desc !== label) {
         parts.push(desc);
     }
+
     const c = p.code?.trim();
+
     if (c && c !== label) {
         parts.push(`Teknik kod: ${c}`);
     }
+
     return parts.join('\n\n');
 }
 
@@ -203,23 +217,29 @@ export function buildPermissionGroupPanels(
     otherGroupLabel: string
 ): PermissionGroupPanelVm[] {
     const by = new Map<string, TenantRoleMatrixPermissionVm[]>();
+
     for (const p of permissions) {
         const rawKey = p.group?.trim() || otherGroupLabel;
         const list = by.get(rawKey) ?? [];
+
         list.push(p);
         by.set(rawKey, list);
     }
+
     const displayTitle = (rawKey: string): string =>
         rawKey === otherGroupLabel ? otherGroupLabel : translatePermissionGroup(rawKey, otherGroupLabel);
     const keys = [...by.keys()].sort((a, b) => {
         if (a === otherGroupLabel) {
             return 1;
         }
+
         if (b === otherGroupLabel) {
             return -1;
         }
+
         return displayTitle(a).localeCompare(displayTitle(b), 'tr', { sensitivity: 'base' });
     });
+
     return keys.map((rawKey) => ({
         rawKey,
         title: displayTitle(rawKey),

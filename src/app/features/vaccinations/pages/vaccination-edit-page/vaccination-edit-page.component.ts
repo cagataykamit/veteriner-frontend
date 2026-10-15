@@ -312,12 +312,16 @@ export class VaccinationEditPageComponent implements OnInit {
             'nextDueDate',
             'notes'
         ];
+
         for (const f of fields) {
             const control = this.form.controls[f] as AbstractControl;
+
             control.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[f]) {
                     const next = { ...cur };
+
                     delete next[f];
                     this.apiFieldErrors.set(next);
                 }
@@ -328,19 +332,24 @@ export class VaccinationEditPageComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.loadError.set('Geçersiz aşı kaydı.');
             this.loading.set(false);
+
             return;
         }
+
         this.vaccinationId = id;
 
         const bootStatus = this.normalizeStatusNum(this.form.controls.status.value);
+
         this.lastStatusForDateTransition = bootStatus;
         this.applyDateValidatorsForStatus(bootStatus);
         this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((status) => {
             const next = this.normalizeStatusNum(status);
             const prev = this.lastStatusForDateTransition;
+
             if (prev !== null && prev !== next) {
                 const raw = this.form.getRawValue();
                 const patch = vaccinationStatusDateFieldsAfterTransition(
@@ -349,11 +358,13 @@ export class VaccinationEditPageComponent implements OnInit {
                     (raw.appliedAtLocal ?? '').trim(),
                     (raw.nextDueDate ?? '').trim()
                 );
+
                 this.form.patchValue(
                     { appliedAtLocal: patch.appliedAtLocal, nextDueDate: patch.nextDueDate },
                     { emitEvent: false }
                 );
             }
+
             this.lastStatusForDateTransition = next;
             this.applyDateValidatorsForStatus(next);
         });
@@ -366,18 +377,23 @@ export class VaccinationEditPageComponent implements OnInit {
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             const cid = (clientId ?? '').trim();
+
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (!cid) {
                 this.form.controls.petId.disable({ emitEvent: false });
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((petId) => {
             const pid = trimClientIdControlValue(petId);
+
             if (pid) {
                 this.applyPetSpecies(pid);
             }
@@ -398,6 +414,7 @@ export class VaccinationEditPageComponent implements OnInit {
                 this.legacyMissingVaccineDefinition.set(!(x.vaccineDefinitionId ?? '').trim());
                 const st = this.normalizeStatusNum(x.status ?? 0);
                 const appliedForm = st === 1 ? toIstanbulDateTimeLocalInputValue(x.appliedAtUtc) : '';
+
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
@@ -412,19 +429,23 @@ export class VaccinationEditPageComponent implements OnInit {
                 );
                 this.lastStatusForDateTransition = st;
                 this.applyDateValidatorsForStatus(st);
+
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
                     this.form.controls.petId.setValue(x.petId);
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
+
                 this.linkedAdministrationId.set(x.administrationId);
+
                 if (x.administrationId) {
                     // Bağlı kayıtta yalnız not ve sonraki doz tarihi değişir (`Vaccinations.LinkedToAdministration`).
                     for (const c of [this.form.controls.clientId, this.form.controls.petId, this.form.controls.vaccineDefinitionId, this.form.controls.status, this.form.controls.appliedAtLocal]) {
                         c.disable({ emitEvent: false });
                     }
                 }
+
                 this.loading.set(false);
             },
             error: (e: unknown) => {
@@ -437,25 +458,35 @@ export class VaccinationEditPageComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
         const status = Number(v.status);
+
         if (!Number.isFinite(status) || ![0, 1, 2].includes(status)) {
             this.submitError.set('Geçerli bir durum seçin.');
+
             return;
         }
+
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
         const dates = buildVaccinationAppliedDueForSubmit(status as 0 | 1 | 2, (v.appliedAtLocal ?? '').trim(), (v.nextDueDate ?? '').trim());
+
         if (dates.errorMessage) {
             this.submitError.set(dates.errorMessage);
+
             return;
         }
 
@@ -479,12 +510,16 @@ export class VaccinationEditPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseVaccinationUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
@@ -526,6 +561,7 @@ export class VaccinationEditPageComponent implements OnInit {
     private sanitizeVaccineDefinitionSelection(items: VaccineDefinitionListItemVm[]): void {
         const allowed = new Set(items.map((i) => i.id));
         const cur = this.form.controls.vaccineDefinitionId.value?.trim() ?? '';
+
         if (cur && !allowed.has(cur)) {
             this.form.controls.vaccineDefinitionId.setValue('');
         }
@@ -549,6 +585,7 @@ export class VaccinationEditPageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 
@@ -575,11 +612,13 @@ export class VaccinationEditPageComponent implements OnInit {
 
     private normalizeStatusNum(status: unknown): number {
         const n = Number(status);
+
         return Number.isFinite(n) && [0, 1, 2].includes(n) ? n : 0;
     }
 
     protected statusNum(): number {
         const n = Number(this.form.controls.status.value);
+
         return Number.isFinite(n) ? n : -1;
     }
 

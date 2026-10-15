@@ -80,11 +80,13 @@ describe('VisitCorrectionDialogComponent', () => {
 
     it('etiket "Yapılacak düzeltme *"', () => {
         const label = document.querySelector('label[for="vc-action"]');
+
         expect(label?.textContent?.trim()).toBe('Yapılacak düzeltme *');
     });
 
     it('"Yanlış geliş olarak işaretle" seçilince açıklama gösterilir; diğer seçeneklerde gösterilmez', () => {
         const note = 'Kaydı Bugün listesinden kaldırır; Yanlış işaretlenenler sekmesinden geri alınabilir.';
+
         expect(dialogText()).not.toContain(note);
         cmp.form.controls.action.setValue('Mistaken');
         fixture.detectChanges();
@@ -135,6 +137,7 @@ describe('VisitCorrectionDialogComponent', () => {
 
     it('çift tıklama ikinci istek üretmez', () => {
         const pending = new Subject<VisitVm>();
+
         visits.correctVisit.and.returnValue(pending);
         cmp.form.controls.action.setValue('Mistaken');
         cmp.form.controls.reason.setValue('Başka hasta kaydedildi');

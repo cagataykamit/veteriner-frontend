@@ -30,13 +30,17 @@ function norm(s: string): string {
 /** Ham `status` alanından 0 | 1 | 2; aksi halde `null` (string / bilinmeyen). */
 export function parseTenantInviteStatusCode(raw: string | null | undefined): number | null {
     const t = (raw ?? '').trim();
+
     if (!/^\d+$/.test(t)) {
         return null;
     }
+
     const n = Number(t);
+
     if (n === 0 || n === 1 || n === 2) {
         return n;
     }
+
     return null;
 }
 
@@ -47,12 +51,15 @@ export function tenantInviteBackendLifecycleFromStatusCode(code: number | null):
     if (code === 0) {
         return 'pending';
     }
+
     if (code === 1) {
         return 'accepted';
     }
+
     if (code === 2) {
         return 'revoked';
     }
+
     return 'unknown';
 }
 
@@ -64,15 +71,19 @@ export function tenantInviteDisplayLifecycle(statusCode: number | null, isExpire
     if (statusCode === 0 && isExpiredFromApi) {
         return 'expired_pending';
     }
+
     if (statusCode === 0) {
         return 'pending';
     }
+
     if (statusCode === 1) {
         return 'accepted';
     }
+
     if (statusCode === 2) {
         return 'revoked';
     }
+
     return 'unknown';
 }
 
@@ -82,45 +93,60 @@ export function tenantInviteResolveDisplayLifecycle(
     isExpiredFromApi: boolean
 ): TenantInviteLifecycle {
     const code = parseTenantInviteStatusCode(statusRaw);
+
     if (code !== null) {
         return tenantInviteDisplayLifecycle(code, isExpiredFromApi);
     }
+
     const h = tenantInviteLifecycleFromRaw(statusRaw);
+
     if (h === 'pending' && isExpiredFromApi) {
         return 'expired_pending';
     }
+
     return h;
 }
 
 /** Ham API durum metninden sınıflandırma — önce sayısal enum; yoksa Türkçe/İngilizce string (eski API). */
 export function tenantInviteLifecycleFromRaw(raw: string | null | undefined): TenantInviteLifecycle {
     const trimmed = (raw ?? '').trim();
+
     if (!trimmed) {
         return 'unknown';
     }
+
     const code = parseTenantInviteStatusCode(trimmed);
+
     if (code !== null) {
         return tenantInviteBackendLifecycleFromStatusCode(code);
     }
+
     const s = norm(trimmed);
+
     if (s.includes('accept') || s.includes('tamam') || s.includes('complete') || s.includes('kullan')) {
         return 'accepted';
     }
+
     if (s.includes('cancel') || s.includes('iptal') || s.includes('revoke') || s.includes('geri')) {
         return 'cancelled';
     }
+
     if (s.includes('decline') || s.includes('red')) {
         return 'declined';
     }
+
     if (s.includes('expire') || s.includes('süresi') || s.includes('sure')) {
         return 'expired';
     }
+
     if (s.includes('pend') || s.includes('bekle') || s.includes('waiting') || s.includes('open') || s.includes('created')) {
         return 'pending';
     }
+
     if (s.includes('sent') || s.includes('gönder') || s.includes('gonder') || s.includes('mail')) {
         return 'sent';
     }
+
     return 'unknown';
 }
 
@@ -135,6 +161,7 @@ export function tenantInviteDisplayStatusLabel(
     if (lifecycle === 'accepted' && isCurrentMember === false) {
         return PANEL_COPY.tenantInviteStatusAcceptedMembershipRemoved;
     }
+
     return tenantInviteStatusLabel(lifecycle);
 }
 
@@ -197,9 +224,11 @@ export function tenantInviteDisplayStatusSeverity(
     if (lifecycle === 'accepted') {
         return isCurrentMember === false ? 'warn' : 'success';
     }
+
     if (lifecycle === 'pending') {
         return 'info';
     }
+
     return tenantInviteStatusTagSeverity(lifecycle);
 }
 
@@ -207,16 +236,20 @@ function parseIsoMs(iso: string | null | undefined): number | null {
     if (!iso?.trim()) {
         return null;
     }
+
     const t = Date.parse(iso.trim());
+
     return Number.isNaN(t) ? null : t;
 }
 
 /** Son geçerlilik UTC ISO; geçmişteyse true (iptal için “süresi dolmuş bekleyen” senaryosu). */
 export function isInvitePastExpiryUtc(expiresAtUtc: string | null | undefined): boolean {
     const t = parseIsoMs(expiresAtUtc ?? null);
+
     if (t == null) {
         return false;
     }
+
     return t < Date.now();
 }
 
@@ -255,5 +288,6 @@ export function resolveInviteActions(
 
     const canCancel = explicit.canCancel === null ? derivedCancel : explicit.canCancel;
     const canResend = explicit.canResend === null ? derivedResend : explicit.canResend;
+
     return { canCancel, canResend };
 }

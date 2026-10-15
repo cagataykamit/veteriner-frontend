@@ -54,6 +54,7 @@ const MODE_OPTIONS: { label: string; value: SalePaymentMode }[] = [
 
 function numberFromInput(event: Event): number | null {
     const v = (event.target as HTMLInputElement).valueAsNumber;
+
     return Number.isFinite(v) ? v : null;
 }
 
@@ -332,6 +333,7 @@ export class SaleNewPageComponent {
             const state = this.batchStates()[line.product.id];
             const info = state?.status === 'ready' ? state.info : null;
             const guide = info ? saleBatchGuide(info, line.batchId, line.quantity) : null;
+
             return {
                 line,
                 amount: cartLineAmount(line),
@@ -349,10 +351,13 @@ export class SaleNewPageComponent {
 
     protected readonly lowStockNames = computed(() => {
         const result = this.done();
+
         if (!result) {
             return [];
         }
+
         const names = new Map(result.sale.lines.map((l) => [l.productId, l.productName]));
+
         return result.stocks.filter((s) => s.isBelowMinimum).map((s) => names.get(s.productId) ?? '').filter(Boolean);
     });
 
@@ -365,10 +370,13 @@ export class SaleNewPageComponent {
                     if (!term.trim()) {
                         return of([] as SaleProductVm[]);
                     }
+
                     this.searching.set(true);
+
                     return this.productSearch.search(term).pipe(
                         catchError((e: Error) => {
                             this.searchError.set(e.message || 'Ürünler aranamadı.');
+
                             return of([] as SaleProductVm[]);
                         })
                     );
@@ -384,11 +392,13 @@ export class SaleNewPageComponent {
 
     protected onTermInput(event: Event): void {
         const value = (event.target as HTMLInputElement).value;
+
         this.term.set(value);
         this.arrowNavigated = false;
         this.searchError.set(null);
         this.cartNotice.set(null);
         this.term$.next(value);
+
         if (!value.trim()) {
             this.results.set([]);
         }
@@ -396,9 +406,11 @@ export class SaleNewPageComponent {
 
     protected moveActive(delta: number, event: Event): void {
         const count = this.results().length;
+
         if (count === 0) {
             return;
         }
+
         event.preventDefault();
         this.arrowNavigated = true;
         this.activeIndex.update((i) => (i + delta + count) % count);
@@ -409,19 +421,25 @@ export class SaleNewPageComponent {
         event.preventDefault();
         event.stopPropagation();
         const term = this.term().trim();
+
         if (!term) {
             return;
         }
+
         const highlighted = this.results()[this.activeIndex()];
+
         if (this.arrowNavigated && highlighted) {
             this.addProduct(highlighted);
+
             return;
         }
+
         this.searching.set(true);
         this.productSearch.search(term).subscribe({
             next: (r) => {
                 this.searching.set(false);
                 const picked = pickScannedProduct(term, r);
+
                 if (picked) {
                     this.addProduct(picked);
                 } else {
@@ -440,9 +458,11 @@ export class SaleNewPageComponent {
         this.term.set('');
         // Girdi çizilmeden önce temizlenirse bağlama değişmemiş görünür; kutuyu doğrudan boşaltırız.
         const input = this.searchInput()?.nativeElement;
+
         if (input) {
             input.value = '';
         }
+
         this.results.set([]);
         this.arrowNavigated = false;
         // Bekleyen debounce aramasının eski yanıtı kutu boşaldıktan sonra listeyi geri getirmesin.
@@ -456,10 +476,13 @@ export class SaleNewPageComponent {
     protected addProduct(product: SaleProductVm): void {
         const current = this.lines();
         const same = current.find((l) => l.product.id === product.id && !l.batchId);
+
         if (!same && current.length >= SALE_MAX_LINES) {
             this.cartNotice.set(`Sepette en çok ${SALE_MAX_LINES} satır olabilir.`);
+
             return;
         }
+
         this.cartNotice.set(null);
         this.lines.set(
             same
@@ -489,6 +512,7 @@ export class SaleNewPageComponent {
 
     protected onClientChange(id: string): void {
         this.clientId.set(id ?? '');
+
         if (!id) {
             this.mode.set('full');
         }
@@ -498,6 +522,7 @@ export class SaleNewPageComponent {
         if (!this.canSubmit()) {
             return;
         }
+
         this.submitError.set(null);
         this.submitting.set(true);
         const request = toCreateSaleRequest({
@@ -508,6 +533,7 @@ export class SaleNewPageComponent {
             requestId: this.requestId,
             payment: this.paymentInput()
         });
+
         this.salesService.createSale(request).subscribe({
             next: (result) => {
                 this.submitting.set(false);
@@ -547,9 +573,11 @@ export class SaleNewPageComponent {
     /** Ürünün aktif kliniktaki parti bakiyesi; okunamazsa (ör. stok okuma yetkisi yok) otomatik FEFO'ya düşülür. */
     private loadBatches(productId: string): void {
         const clinicId = this.auth.getClinicId()?.trim();
+
         if (!clinicId || this.batchStates()[productId]) {
             return;
         }
+
         this.batchStates.update((s) => ({ ...s, [productId]: { status: 'loading' } }));
         this.stockBatches.getByProduct(productId, clinicId).subscribe({
             next: (info) => this.batchStates.update((s) => ({ ...s, [productId]: { status: 'ready', info } })),

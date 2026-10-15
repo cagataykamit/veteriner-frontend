@@ -14,6 +14,7 @@ describe('outstanding balances report mapper', () => {
             },
             { page: 1, pageSize: 25 }
         );
+
         expect(vm.totalCount).toBe(2);
         expect(vm.totalOutstandingAmount).toBe(690);
         expect(vm.items.map((i) => i.clientId)).toEqual(['a', 'b']);
@@ -25,6 +26,7 @@ describe('outstanding balances report mapper', () => {
 
     it('eksik alanlarda güvenli varsayılanlar', () => {
         const vm = mapOutstandingBalancesReportDtoToVm({ totalCount: 0, totalOutstandingAmount: 0 }, { page: 1, pageSize: 25 });
+
         expect(vm.items).toEqual([]);
         expect(vm.currency).toBe('TRY');
     });

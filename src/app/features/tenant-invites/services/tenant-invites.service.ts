@@ -42,9 +42,11 @@ export class TenantInvitesService {
      */
     listOperationClaims(): Observable<OperationClaimOptionVm[]> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         return this.api
             .get<unknown>(ApiEndpoints.tenants.assignableOperationClaims(tenantId))
             .pipe(map(mapOperationClaimsListResponse));
@@ -55,10 +57,13 @@ export class TenantInvitesService {
      */
     getInvitesList(query: TenantInvitesListQuery): Observable<TenantInvitesPagedVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const params = tenantInvitesListQueryToHttpParams(query);
+
         return this.api.get<TenantInviteListItemDtoPagedResult | unknown>(ApiEndpoints.tenants.invites(tenantId), params).pipe(
             map((raw) => mapPagedTenantInvitesToVm(raw)),
             catchError((err: HttpErrorResponse) =>
@@ -72,19 +77,25 @@ export class TenantInvitesService {
      */
     getInviteById(inviteId: string): Observable<TenantInviteDetailVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const id = inviteId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz davet kimliği.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.tenants.inviteById(tenantId, id)).pipe(
             map((raw) => {
                 const vm = mapTenantInviteDetailRaw(raw);
+
                 if (!vm) {
                     throw new Error('Davet yanıtı okunamadı.');
                 }
+
                 return vm;
             }),
             catchError((err: HttpErrorResponse) =>
@@ -98,13 +109,17 @@ export class TenantInvitesService {
      */
     cancelInvite(inviteId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const id = inviteId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz davet kimliği.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.tenants.inviteCancel(tenantId, id), {}).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) =>
@@ -118,13 +133,17 @@ export class TenantInvitesService {
      */
     resendInvite(inviteId: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const id = inviteId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz davet kimliği.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.tenants.inviteResend(tenantId, id), {}).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) =>
@@ -135,15 +154,19 @@ export class TenantInvitesService {
 
     createInvite(body: TenantInviteCreateRequestDto): Observable<TenantInviteCreatedVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.tenants.invites(tenantId), body).pipe(
             map((raw) => {
                 const vm = mapTenantInviteCreatedDto(raw);
+
                 if (!vm) {
                     throw new Error('Davet yanıtı okunamadı (token veya inviteId eksik).');
                 }
+
                 return vm;
             })
         );

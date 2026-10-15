@@ -14,6 +14,7 @@ export default [
                 const router = inject(Router);
                 const ok =
                     auth.hasOperationClaim(SPECIES_CREATE_CLAIM) || auth.hasOperationClaim(SPECIES_UPDATE_CLAIM);
+
                 return ok ? true : router.createUrlTree(['/notfound']);
             }
         ],
@@ -25,6 +26,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(SPECIES_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],
@@ -36,6 +38,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(SPECIES_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],

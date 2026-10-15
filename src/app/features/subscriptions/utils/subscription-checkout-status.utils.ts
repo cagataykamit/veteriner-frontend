@@ -57,6 +57,7 @@ const byKey = new Map<SubscriptionCheckoutStatusKey, SubscriptionCheckoutStatusD
 for (const def of STATUS_DEFS) {
     byKey.set(def.key, def);
     byAlias.set(normalize(def.key), def);
+
     for (const alias of def.aliases) {
         byAlias.set(normalize(alias), def);
     }
@@ -65,19 +66,26 @@ for (const def of STATUS_DEFS) {
 export function parseSubscriptionCheckoutStatus(raw: unknown): SubscriptionCheckoutStatusKey {
     if (typeof raw === 'number' && Number.isFinite(raw)) {
         const i = Math.trunc(raw);
+
         return CHECKOUT_STATUS_BY_NUM[i] ?? 'unknown';
     }
+
     if (typeof raw === 'string') {
         const t = raw.trim();
+
         if (/^-?\d+$/.test(t)) {
             return parseSubscriptionCheckoutStatus(Number.parseInt(t, 10));
         }
+
         const n = normalize(raw);
+
         if (!n) {
             return 'unknown';
         }
+
         return byAlias.get(n)?.key ?? 'unknown';
     }
+
     return 'unknown';
 }
 
@@ -93,6 +101,7 @@ export function subscriptionCheckoutStatusLabel(
     if (options?.renewalCheckout && status === 'redirect_ready') {
         return 'Ödeme bekliyor';
     }
+
     return byKey.get(status)?.label ?? 'Bilinmiyor';
 }
 

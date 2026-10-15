@@ -44,6 +44,7 @@ export interface TodayOpenChip {
 export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'chargeableWorkCount' | 'awaitingLabCount' | 'pendingChargeCount'>): TodayOpenChip[] {
     const chips: TodayOpenChip[] = [];
     const pendingCharges = item.pendingChargeCount ?? 0;
+
     if (pendingCharges > 0) {
         // Bekleyen kalem varken "Ücret yok" yanıltıcıdır: ücret henüz yazılmadı ama karar bekleyen kalem var (ADR-018).
         chips.push({
@@ -57,6 +58,7 @@ export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'char
         });
     } else if (item.chargeIndicator === 'ChargeMissing') {
         const n = item.chargeableWorkCount;
+
         chips.push({
             key: 'chargeMissing',
             label: 'Ücret yok',
@@ -67,6 +69,7 @@ export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'char
             reviewable: false
         });
     }
+
     if ((item.awaitingLabCount ?? 0) > 0) {
         chips.push({
             key: 'awaitingLab',
@@ -78,11 +81,13 @@ export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'char
             reviewable: false
         });
     }
+
     if (item.chargeIndicator === 'PaymentPending') {
         chips.push({ key: 'paymentPending', label: 'Ödeme bekliyor', severity: 'warn', icon: 'pi pi-wallet', title: 'Ücret açık, ödeme alınmadı', payable: true, reviewable: false });
     } else if (item.chargeIndicator === 'PartiallyPaid') {
         chips.push({ key: 'partiallyPaid', label: 'Kısmi ödeme', severity: 'info', icon: 'pi pi-wallet', title: 'Ücretin bir kısmı ödendi, kalan açık', payable: true, reviewable: false });
     }
+
     return chips;
 }
 
@@ -91,6 +96,7 @@ export function correctionActionOptions(current: VisitCareStatus): Array<{ label
     const statuses = (Object.keys(CARE_STATUS_LABEL) as VisitCareStatus[])
         .filter((s) => s !== current)
         .map((s) => ({ label: `Durumu “${CARE_STATUS_LABEL[s]}” yap`, value: s as VisitCorrectionAction }));
+
     return [...statuses, { label: 'Yanlış geliş olarak işaretle', value: 'Mistaken' }];
 }
 
@@ -117,9 +123,11 @@ function groupKeyOf(item: TodayItemVm): TodayGroupKey {
     if (item.isVoided) {
         return 'voided';
     }
+
     if (!item.visitId && item.appointmentStatus === 'NoShow') {
         return 'noShow';
     }
+
     switch (item.careStatus) {
         case 'Waiting':
             return 'waiting';
@@ -157,10 +165,13 @@ export interface TodayItemActions {
 
 export function todayItemActions(item: TodayItemVm, now: Date = new Date()): TodayItemActions {
     const noShowRow = !item.visitId && !!item.appointmentId;
+
     if (item.isVoided) {
         return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId, canToggleUrgency: false, canMarkNoShow: false, canRevertNoShow: false };
     }
+
     const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
+
     return {
         canMarkArrived: noShowRow && (item.appointmentStatus === 'Scheduled' || item.appointmentStatus === 'NoShow'),
         canStartCare: item.careStatus === 'Waiting',
@@ -177,27 +188,36 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
 /** Geliş anından bu yana geçen süre: "Az önce", "12 dk", "1 sa 5 dk". Geliş yoksa/geçersizse `null`. */
 export function formatElapsedSince(arrivedAtUtc: string | null, now: Date): string | null {
     const arrived = parseUtcApiInstantIsoString(arrivedAtUtc);
+
     if (!arrived) {
         return null;
     }
+
     const minutes = Math.floor((now.getTime() - arrived.getTime()) / 60_000);
+
     if (minutes < 1) {
         return 'Az önce';
     }
+
     if (minutes < 60) {
         return `${minutes} dk`;
     }
+
     const rest = minutes % 60;
+
     return rest ? `${Math.floor(minutes / 60)} sa ${rest} dk` : `${Math.floor(minutes / 60)} sa`;
 }
 
 /** Yatış süresi: bir günden kısaysa saat/dakika, değilse tam gün sayısı. */
 export function formatHospitalizationStay(admittedAtUtc: string | null, now: Date): string | null {
     const admitted = parseUtcApiInstantIsoString(admittedAtUtc);
+
     if (!admitted) {
         return null;
     }
+
     const days = Math.floor((now.getTime() - admitted.getTime()) / 86_400_000);
+
     return days >= 1 ? `${days} gün` : formatElapsedSince(admittedAtUtc, now);
 }
 
@@ -208,6 +228,7 @@ export const FORGOTTEN_VISIT_HOURS = 12;
 export function isPossiblyForgottenVisit(item: TodayItemVm, now: Date): boolean {
     const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
     const arrived = open ? parseUtcApiInstantIsoString(item.arrivedAtUtc) : null;
+
     return !!arrived && now.getTime() - arrived.getTime() >= FORGOTTEN_VISIT_HOURS * 3_600_000;
 }
 
@@ -220,13 +241,17 @@ export type WaitAlertLevel = 'none' | 'warning' | 'critical';
 /** Yalnızca "Bekliyor" satırı için; "Devam ediyor" ve diğerleri her zaman `none`. Geliş yoksa/geçersizse `none`. */
 export function waitAlertLevel(item: TodayItemVm, now: Date): WaitAlertLevel {
     const arrived = item.careStatus === 'Waiting' ? parseUtcApiInstantIsoString(item.arrivedAtUtc) : null;
+
     if (!arrived) {
         return 'none';
     }
+
     const minutes = Math.floor((now.getTime() - arrived.getTime()) / 60_000);
+
     if (minutes >= WAIT_CRITICAL_MINUTES) {
         return 'critical';
     }
+
     return minutes >= WAIT_WARNING_MINUTES ? 'warning' : 'none';
 }
 
@@ -261,21 +286,27 @@ export interface TodayRowPermissions {
  */
 export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActions, perms: TodayRowPermissions): TodaySecondaryAction[] {
     const out: TodaySecondaryAction[] = [];
+
     if (perms.canCollectPayment && !item.isVoided) {
         out.push({ key: 'collectPayment', label: 'Ödeme al', icon: 'pi pi-wallet' });
     }
+
     if (perms.canNoShow && actions.canMarkNoShow) {
         out.push({ key: 'markNoShow', label: 'Gelmedi olarak işaretle', icon: 'pi pi-user-minus' });
     }
+
     if (perms.canNoShow && actions.canRevertNoShow) {
         out.push({ key: 'revertNoShow', label: 'Gelmedi işaretini geri al', icon: 'pi pi-undo' });
     }
+
     if (perms.canCorrect && actions.canRestore) {
         out.push({ key: 'restore', label: 'Geri al', icon: 'pi pi-undo' });
     }
+
     if (perms.canCorrect && actions.canCorrect) {
         out.push({ key: 'correct', label: 'Düzelt', icon: 'pi pi-pencil' });
     }
+
     return out;
 }
 
@@ -291,5 +322,6 @@ export function todayUrgencyToggle(item: TodayItemVm, actions: TodayItemActions,
     if (!perms.canUpdateVisit || !actions.canToggleUrgency) {
         return null;
     }
+
     return { label: item.isUrgent ? 'Acili kaldır' : 'Acil işaretle', pressed: item.isUrgent };
 }

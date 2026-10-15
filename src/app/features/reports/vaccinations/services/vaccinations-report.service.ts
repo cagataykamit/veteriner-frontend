@@ -25,6 +25,7 @@ export class VaccinationsReportService {
         const params = vaccinationsReportQueryToHttpParams(merged);
         const page = merged.page ?? 1;
         const pageSize = merged.pageSize ?? 25;
+
         return this.api.get<VaccinationsReportDto>(ApiEndpoints.reports.vaccinations(), params).pipe(
             map((raw) => mapVaccinationsReportDtoToVm(raw, { page, pageSize })),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -35,6 +36,7 @@ export class VaccinationsReportService {
     exportCsvBlob(query: VaccinationsReportQuery) {
         const merged = this.mergeClinicContext(query);
         const params = vaccinationsReportQueryToHttpParams(merged, { omitPaging: true });
+
         return this.api.getBlob(ApiEndpoints.reports.vaccinationsExport(), params).pipe(
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
@@ -46,6 +48,7 @@ export class VaccinationsReportService {
     exportXlsxBlob(query: VaccinationsReportQuery) {
         const merged = this.mergeClinicContext(query);
         const params = vaccinationsReportQueryToHttpParams(merged, { omitPaging: true });
+
         return this.api.getBlob(ApiEndpoints.reports.vaccinationsExportXlsx(), params).pipe(
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
@@ -55,6 +58,7 @@ export class VaccinationsReportService {
 
     private mergeClinicContext(query: VaccinationsReportQuery): VaccinationsReportQuery {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+
         return {
             ...query,
             clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined

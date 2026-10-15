@@ -23,12 +23,15 @@ const statusByKey = new Map<SubscriptionStatusKey, SubscriptionStatusDef>();
 
 for (const def of STATUS_DEFS) {
     statusByKey.set(def.key, def);
+
     if (typeof def.numeric === 'number') {
         statusByNumeric.set(def.numeric, def);
     }
+
     for (const alias of def.aliases) {
         statusByAlias.set(normalize(alias), def);
     }
+
     statusByAlias.set(normalize(def.key), def);
 }
 
@@ -36,17 +39,23 @@ export function parseSubscriptionStatus(raw: unknown): SubscriptionStatusKey {
     if (typeof raw === 'number' && Number.isFinite(raw)) {
         return statusByNumeric.get(Math.trunc(raw))?.key ?? 'unknown';
     }
+
     if (typeof raw === 'string') {
         const text = normalize(raw);
+
         if (!text) {
             return 'unknown';
         }
+
         if (/^-?\d+$/.test(text)) {
             const parsed = Number.parseInt(text, 10);
+
             return statusByNumeric.get(parsed)?.key ?? 'unknown';
         }
+
         return statusByAlias.get(text)?.key ?? 'unknown';
     }
+
     return 'unknown';
 }
 

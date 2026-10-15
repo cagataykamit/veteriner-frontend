@@ -39,6 +39,7 @@ export function dailyTransactionSign(kind: DailyTransactionKind): '-' | '' {
 export function fillEmptyDays(from: string, to: string, byDay: readonly CashSummaryDayDto[]): CashSummaryDayDto[] {
     const known = new Map(byDay.map((d) => [d.date, d]));
     const days: CashSummaryDayDto[] = [];
+
     for (let day: string | null = from; day && day <= to && days.length < 366; day = addGregorianDaysToYmd(day, 1)) {
         days.push(
             known.get(day) ?? {
@@ -55,5 +56,6 @@ export function fillEmptyDays(from: string, to: string, byDay: readonly CashSumm
             }
         );
     }
+
     return days;
 }

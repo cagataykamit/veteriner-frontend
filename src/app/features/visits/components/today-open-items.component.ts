@@ -51,6 +51,7 @@ export class TodayOpenItemsComponent {
     readonly entries = computed<OpenItemEntry[]>(() => {
         const s = this.summary();
         const out: OpenItemEntry[] = [];
+
         if ((s.unchargedVisitCount ?? 0) > 0) {
             out.push({
                 key: 'uncharged',
@@ -61,6 +62,7 @@ export class TodayOpenItemsComponent {
                 tone: TONE_DANGER
             });
         }
+
         if ((s.awaitingLabCount ?? 0) > 0) {
             out.push({
                 key: 'lab',
@@ -71,8 +73,10 @@ export class TodayOpenItemsComponent {
                 tone: TONE_DANGER
             });
         }
+
         if ((s.outstandingVisitCount ?? 0) > 0) {
             const amount = s.outstandingAmount != null ? ` · ${formatMoney(s.outstandingAmount, 'TRY')}` : '';
+
             out.push({
                 key: 'outstanding',
                 icon: 'pi pi-wallet',
@@ -82,6 +86,7 @@ export class TodayOpenItemsComponent {
                 tone: TONE_WARN
             });
         }
+
         if (s.incompleteVisitCount > 0) {
             out.push({
                 key: 'incomplete',
@@ -92,6 +97,7 @@ export class TodayOpenItemsComponent {
                 tone: TONE_MUTED
             });
         }
+
         return out;
     });
 }

@@ -146,12 +146,15 @@ export class TenantInviteDetailPageComponent implements OnInit {
     ngOnInit(): void {
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pm) => {
             const id = pm.get('inviteId')?.trim() ?? '';
+
             if (!id) {
                 this.loading.set(false);
                 this.error.set('Geçersiz davet.');
                 this.item.set(null);
+
                 return;
             }
+
             this.load(id);
         });
     }
@@ -160,9 +163,11 @@ export class TenantInviteDetailPageComponent implements OnInit {
         if (d.clinicName?.trim()) {
             return d.clinicName;
         }
+
         if (d.clinicId?.trim()) {
             return d.clinicId;
         }
+
         return '—';
     }
 
@@ -170,14 +175,17 @@ export class TenantInviteDetailPageComponent implements OnInit {
         if (d.operationClaimName?.trim()) {
             return d.operationClaimName;
         }
+
         if (d.operationClaimId?.trim()) {
             return d.operationClaimId;
         }
+
         return '—';
     }
 
     reload(): void {
         const id = this.item()?.id ?? this.route.snapshot.paramMap.get('inviteId')?.trim();
+
         if (id) {
             this.load(id);
         }
@@ -187,6 +195,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
         if (!this.canManageTenantAccess()) {
             return;
         }
+
         this.actionError.set(null);
         this.cancelBusy.set(true);
         this.tenantInvites.cancelInvite(id).subscribe({
@@ -210,6 +219,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
         if (!this.canManageTenantAccess()) {
             return;
         }
+
         this.actionError.set(null);
         this.resendBusy.set(true);
         this.tenantInvites.resendInvite(id).subscribe({
@@ -238,6 +248,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
             next: (vm) => {
                 this.item.set(vm);
                 const t = vm.token?.trim();
+
                 this.joinUrl.set(t ? buildPublicJoinInviteUrl(t) : '');
                 this.loading.set(false);
             },

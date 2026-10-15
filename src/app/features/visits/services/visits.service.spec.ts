@@ -32,6 +32,7 @@ describe('VisitsService', () => {
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today');
+
         expect(req.request.params.get('clinicId')).toBe('c1');
         req.flush({ date: '2026-10-10', clinicId: 'c1', generatedAtUtc: 'g', items: [{ petId: 'p1', clientId: 'cl1', isCarriedOver: false, appointmentId: 'a1' }] });
     });
@@ -42,6 +43,7 @@ describe('VisitsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/visits');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ appointmentId: 'a1' });
         req.flush({ created: true, visit }, { status: 201, statusText: 'Created' });
@@ -78,6 +80,7 @@ describe('VisitsService', () => {
     it('başlat / tamamla gövdesiz POST', () => {
         service.startVisit('v1').subscribe();
         const start = http.expectOne('http://api.test/api/v1/visits/v1/start');
+
         expect(start.request.method).toBe('POST');
         start.flush({ ...visit, careStatus: 'InProgress' });
 
@@ -88,6 +91,7 @@ describe('VisitsService', () => {
     it('düzeltme gerekçeyle birlikte corrections ucuna gider', () => {
         service.correctVisit('v1', { action: 'Mistaken', reason: 'Yanlış hasta' }).subscribe();
         const req = http.expectOne('http://api.test/api/v1/visits/v1/corrections');
+
         expect(req.request.body).toEqual({ reason: 'Yanlış hasta', targetCareStatus: null, markAsMistaken: true });
         req.flush({ ...visit, isVoided: true });
     });
@@ -123,11 +127,13 @@ describe('VisitsService — geri alma ve yanlış işaretlenenler', () => {
     it('voided=true sorgusu gönderilir; varsayılanda gönderilmez', () => {
         service.getToday({ voided: true }).subscribe();
         const voidedReq = http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today');
+
         expect(voidedReq.request.params.get('voided')).toBe('true');
         voidedReq.flush({ date: 'd', clinicId: 'c1', generatedAtUtc: 'g', items: [{ petId: 'p1', clientId: 'cl1', isCarriedOver: false, visitId: 'v1', isVoided: true, voidReason: ' Yanlış ' }] });
 
         service.getToday().subscribe();
         const normal = http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today');
+
         expect(normal.request.params.has('voided')).toBeFalse();
         normal.flush({ date: 'd', clinicId: 'c1', generatedAtUtc: 'g', items: [] });
     });
@@ -135,6 +141,7 @@ describe('VisitsService — geri alma ve yanlış işaretlenenler', () => {
     it('geri alma gerekçeyle restore ucuna gider', () => {
         service.restoreVisit('v1', '  Yanlışlıkla işaretlendi ').subscribe();
         const req = http.expectOne('http://api.test/api/v1/visits/v1/restore');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ reason: 'Yanlışlıkla işaretlendi' });
         req.flush({ ...visit });
@@ -191,6 +198,7 @@ describe('VisitsService — acil işareti', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/visits/v1/urgency');
+
         expect(req.request.method).toBe('PUT');
         expect(req.request.body).toEqual({ isUrgent: true });
         req.flush({ ...visit, isUrgent: true });
@@ -209,6 +217,7 @@ describe('VisitsService — acil işareti', () => {
     it('acil geliş isteği yalnızca true iken gövdeye girer; Bugün satırı isUrgent taşır', () => {
         service.createVisit({ petId: 'p1', clinicId: 'c1', isUrgent: true }).subscribe();
         const req = http.expectOne('http://api.test/api/v1/visits');
+
         expect(req.request.body).toEqual({ petId: 'p1', clinicId: 'c1', isUrgent: true });
         req.flush({ created: true, visit: { ...visit, isUrgent: true } }, { status: 201, statusText: 'Created' });
 
@@ -219,6 +228,7 @@ describe('VisitsService — acil işareti', () => {
 
 describe('VisitsService — hekim tespiti ve Benim hastalarım', () => {
     let http: HttpTestingController;
+
     const setup = (userId: string | null): VisitsService => {
         TestBed.configureTestingModule({
             providers: [
@@ -229,6 +239,7 @@ describe('VisitsService — hekim tespiti ve Benim hastalarım', () => {
             ]
         });
         http = TestBed.inject(HttpTestingController);
+
         return TestBed.inject(VisitsService);
     };
 
@@ -268,6 +279,7 @@ describe('VisitsService — hekim tespiti ve Benim hastalarım', () => {
     it('responsibleVeterinarianUserId sorgu parametresi gider (voided ile birlikte olabilir)', () => {
         setup('u1').getToday({ voided: true, responsibleVeterinarianUserId: 'u1' }).subscribe();
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today');
+
         expect(req.request.params.get('responsibleVeterinarianUserId')).toBe('u1');
         expect(req.request.params.get('voided')).toBe('true');
         req.flush({ date: 'd', clinicId: 'c1', generatedAtUtc: 'g', items: [] });

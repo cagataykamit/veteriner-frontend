@@ -274,6 +274,7 @@ export class ReminderLogsPageComponent implements OnInit {
     ngOnInit(): void {
         this.suppressNextLazy = true;
         const restored = this.restoreStateFromSessionStorage();
+
         this.loadClinicOptions(() => {
             this.loadFromServer(
                 restored?.page ?? 1,
@@ -295,13 +296,16 @@ export class ReminderLogsPageComponent implements OnInit {
                     { label: 'Tüm klinikler', value: '' },
                     ...list.map((c) => ({ label: c.name, value: c.id }))
                 ];
+
                 this.clinicOptions.set(opts);
                 const activeClinicId = this.activeClinicId().trim();
+
                 if (activeClinicId && !list.some((c) => c.id === activeClinicId)) {
                     this.clinicFilter = '';
                     this.activeClinicId.set('');
                     this.persistStateToSessionStorage(this.currentPage(), this.pageSize());
                 }
+
                 this.clinicsLoading.set(false);
                 onLoaded();
             },
@@ -316,8 +320,10 @@ export class ReminderLogsPageComponent implements OnInit {
     applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
@@ -380,11 +386,14 @@ export class ReminderLogsPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? 20;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(
             page,
@@ -401,6 +410,7 @@ export class ReminderLogsPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const first = state.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.suppressNextLazy = true;
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(
@@ -424,15 +434,20 @@ export class ReminderLogsPageComponent implements OnInit {
 
     private resolveClinicDisplay(row: ReminderLogItemVm): string {
         const fromApi = row.clinicDisplay?.trim();
+
         if (fromApi) {
             return fromApi;
         }
+
         const id = row.clinicId?.trim();
+
         if (!id) {
             return '—';
         }
+
         const hit = this.clinicOptions().find((o) => o.value === id);
         const label = hit?.label?.trim();
+
         return label && label !== 'Tüm klinikler' ? label : '—';
     }
 
@@ -448,9 +463,11 @@ export class ReminderLogsPageComponent implements OnInit {
     ): void {
         const cid = clinicId.trim();
         const key = `${page}|${pageSize}|${reminderType}|${status}|${cid}|${fromUtc ?? ''}|${toUtc ?? ''}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -483,15 +500,19 @@ export class ReminderLogsPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): { page: number; pageSize: number } | null {
         const raw = sessionStorage.getItem(REMINDER_LOGS_LIST_STATE_KEY);
+
         if (!raw) {
             return null;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<ReminderLogsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(REMINDER_LOGS_LIST_STATE_KEY);
+
                 return null;
             }
 
@@ -510,9 +531,11 @@ export class ReminderLogsPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return { page, pageSize };
         } catch {
             sessionStorage.removeItem(REMINDER_LOGS_LIST_STATE_KEY);
+
             return null;
         }
     }
@@ -529,6 +552,7 @@ export class ReminderLogsPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(REMINDER_LOGS_LIST_STATE_KEY, JSON.stringify(state));
     }
 

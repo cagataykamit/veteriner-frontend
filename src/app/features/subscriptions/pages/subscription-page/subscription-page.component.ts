@@ -529,24 +529,30 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     /** Hosted checkout / plan aksiyonu kromu — yalnızca yönetim yetkisi olan kullanıcıya gösterilir. */
     readonly showManageFlowChrome = computed(() => {
         const s = this.summary();
+
         return !!s && this.canManageSubscriptionOperations(s);
     });
 
     /** Checkout kartı: dönem sonu düşürme beklerken boş “oturum yok” göstermemek için gizlenir (ödeme yok). Salt okunur/yenileme gerekli durumda her zaman gösterilir. */
     readonly showSubscriptionCheckoutCard = computed(() => {
         const s = this.summary();
+
         if (!s || !this.canManageSubscriptionOperations(s)) {
             return false;
         }
+
         if (isExpiredReadOnlySubscription(s)) {
             return true;
         }
+
         if (this.checkoutLoading() || this.checkoutError() != null || this.checkoutSession() != null) {
             return true;
         }
+
         if (s.pendingPlanChange?.changeType === 'downgrade') {
             return false;
         }
+
         return true;
     });
 
@@ -562,16 +568,21 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (this.postCheckoutSyncing()) {
             return 'processing';
         }
+
         const b = this.returnBanner();
+
         if (!b) {
             return 'idle';
         }
+
         if (b.severity === 'success') {
             return 'success';
         }
+
         if (b.severity === 'error') {
             return 'error';
         }
+
         return 'warning';
     });
 
@@ -626,12 +637,14 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         this.loading.set(true);
         this.error.set(null);
         const bust = !!options?.bustSummaryCache;
+
         forkJoin([
             this.subscriptions.getSubscriptionSummary({ bustCache: bust }),
             this.pendingPlanChangeObservable({ bustCache: bust })
         ]).subscribe({
             next: ([data, pending]) => {
                 const merged = { ...data, pendingPlanChange: pending };
+
                 this.summary.set(merged);
                 this.tenantReadOnlyContext.applySummary(merged);
                 this.finalizeError.set(null);
@@ -671,6 +684,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             ]).subscribe({
                 next: ([data, pending, session]) => {
                     const merged = this.mergeSummaryWithPending(data, pending);
+
                     this.summary.set(merged);
                     this.tenantReadOnlyContext.applySummary(merged);
                     this.checkoutSession.set(session);
@@ -685,6 +699,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             ]).subscribe({
                 next: ([data, pending]) => {
                     const merged = this.mergeSummaryWithPending(data, pending);
+
                     this.summary.set(merged);
                     this.tenantReadOnlyContext.applySummary(merged);
                     this.subscriptionRefreshLoading.set(false);
@@ -713,14 +728,17 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     isCurrentPlan(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): boolean {
         const current = summary.planCode?.trim().toLowerCase();
         const candidate = plan.code.trim().toLowerCase();
+
         return !!current && current === candidate;
     }
 
     hasOpenSessionForPlan(plan: SubscriptionPlanVm): boolean {
         const session = this.checkoutSession();
+
         if (!session?.targetPlanCode || !session.canContinue) {
             return false;
         }
+
         return session.targetPlanCode.trim().toLowerCase() === plan.code.trim().toLowerCase();
     }
 
@@ -729,15 +747,20 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             if (isExpiredReadOnlySubscription(summary)) {
                 return this.isCurrentPlan(plan, summary) ? 'Aboneliği yenile' : 'Bu paketle devam et';
             }
+
             if (this.isDowngradePlan(plan, summary)) {
                 return this.isTrialingSubscription(summary) ? 'Deneme bitiminde bu pakete geç' : 'Dönem sonunda bu pakete geç';
             }
+
             if (this.isUpgradePlan(plan, summary)) {
                 return 'Hemen yükselt';
             }
+
             return 'Bu paketi aktifleştir';
         }
+
         const url = this.checkoutSession()?.checkoutUrl?.trim();
+
         return url ? 'Ödemeye devam et' : 'Durumu yenile';
     }
 
@@ -745,36 +768,50 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (isExpiredReadOnlySubscription(summary)) {
             return true;
         }
+
         return !this.isCurrentPlan(plan, summary);
     }
 
     onPlanAction(plan: SubscriptionPlanVm): void {
         const summary = this.summary();
+
         if (!summary) {
             return;
         }
+
         if (!this.canManageSubscriptionOperations(summary)) {
             return;
         }
+
         this.planActionError.set(null);
         this.planActionInfo.set(null);
+
         if (this.hasOpenSessionForPlan(plan)) {
             const url = this.checkoutSession()?.checkoutUrl?.trim();
+
             if (url) {
                 this.goToHostedCheckout(url);
+
                 return;
             }
+
             this.refreshCheckout();
+
             return;
         }
+
         if (isExpiredReadOnlySubscription(summary)) {
             this.startCheckout(plan.code);
+
             return;
         }
+
         if (this.isDowngradePlan(plan, summary)) {
             this.scheduleDowngrade(plan.code);
+
             return;
         }
+
         this.startCheckout(plan.code);
     }
 
@@ -784,10 +821,12 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     goToHostedCheckout(checkoutUrl: string): void {
         const id = this.checkoutSession()?.checkoutSessionId?.trim();
+
         if (id) {
             writeStoredCheckoutSessionId(id);
             markExpectingHostedCheckoutReturn();
         }
+
         window.location.assign(checkoutUrl.trim());
     }
 
@@ -799,9 +838,11 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     refreshCheckout(): void {
         const sessionId = this.checkoutSession()?.checkoutSessionId;
+
         if (!sessionId) {
             return;
         }
+
         this.checkoutLoading.set(true);
         this.checkoutError.set(null);
         this.subscriptions.getCheckout(sessionId).subscribe({
@@ -818,13 +859,17 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     finalizeCheckout(): void {
         const sessionId = this.checkoutSession()?.checkoutSessionId;
+
         if (!sessionId) {
             return;
         }
+
         const s = this.summary();
+
         if (!s || !this.canManageSubscriptionOperations(s)) {
             return;
         }
+
         this.finalizing.set(true);
         this.finalizeError.set(null);
         this.subscriptions.finalizeCheckout(sessionId).subscribe({
@@ -853,18 +898,23 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     checkoutTargetPlanLabel(session: SubscriptionCheckoutSessionVm, summary: SubscriptionSummaryVm): string {
         const code = session.targetPlanCode?.trim();
+
         if (!code) {
             return '—';
         }
+
         const plan = summary.availablePlans.find((x) => x.code.trim().toLowerCase() === code.toLowerCase());
+
         return subscriptionPlanLabel(code, plan?.name ?? null);
     }
 
     private startCheckout(targetPlanCode: string): void {
         const sum = this.summary();
+
         if (!sum || !this.canManageSubscriptionOperations(sum)) {
             return;
         }
+
         this.planActionLoadingCode.set(targetPlanCode);
         this.checkoutLoading.set(true);
         this.checkoutError.set(null);
@@ -874,9 +924,11 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         this.subscriptions.startCheckout(targetPlanCode).subscribe({
             next: (session) => {
                 this.checkoutSession.set(session);
+
                 if (session.checkoutUrl?.trim()) {
                     writeStoredCheckoutSessionId(session.checkoutSessionId);
                 }
+
                 this.planActionLoadingCode.set(null);
                 this.checkoutLoading.set(false);
             },
@@ -884,6 +936,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 this.planActionLoadingCode.set(null);
                 this.checkoutLoading.set(false);
                 const message = e instanceof Error ? e.message : 'Ödeme işlemi başlatılamadı.';
+
                 this.checkoutError.set(message);
                 this.planActionError.set(message);
             }
@@ -893,9 +946,11 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     startPaymentForCurrentPlan(): void {
         const summary = this.summary();
         const planCode = summary?.planCode?.trim();
+
         if (!summary || !planCode || !this.canManageSubscriptionOperations(summary)) {
             return;
         }
+
         this.startCheckout(planCode);
     }
 
@@ -903,9 +958,11 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (days === null) {
             return '—';
         }
+
         if (summary && isExpiredReadOnlySubscription(summary) && days === 0) {
             return 'Süre doldu';
         }
+
         return `${days} gün`;
     }
 
@@ -913,6 +970,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (isExpiredReadOnlySubscription(summary)) {
             return 'Süre doldu';
         }
+
         return this.formatDate(summary.nextBillingAtUtc || summary.currentPeriodEndUtc);
     }
 
@@ -929,6 +987,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (isExpiredReadOnlySubscription(s)) {
             return 'Süre bitişi';
         }
+
         return this.isTrialingSubscription(s) ? 'Deneme bitişi' : 'Dönem sonu';
     }
 
@@ -948,6 +1007,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (this.isTrialingSubscription(s)) {
             return pending.effectiveAtUtc || s.trialEndsAtUtc || s.currentPeriodEndUtc;
         }
+
         return pending.effectiveAtUtc || s.currentPeriodEndUtc || s.nextBillingAtUtc;
     }
 
@@ -961,9 +1021,11 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     subscriptionManageFlowHint(): string {
         const summary = this.summary();
+
         if (summary && isExpiredReadOnlySubscription(summary)) {
             return 'Aboneliğinizi yenilemek için mevcut paketinizde veya istediğiniz pakette ödeme adımını başlatın.';
         }
+
         return 'Paket yükseltmeleri güvenli ödeme adımıyla tamamlanır. Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır.';
     }
 
@@ -985,9 +1047,11 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (type === 'downgrade') {
             return this.isTrialingSubscription(summary) ? 'Deneme bitiminde plan değişikliği' : 'Dönem sonunda paket düşürme';
         }
+
         if (type === 'upgrade') {
             return 'Yükseltme';
         }
+
         return 'Bilinmiyor';
     }
 
@@ -995,15 +1059,19 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (status === 'pending') {
             return 'Beklemede';
         }
+
         if (status === 'scheduled') {
             return 'Planlandı';
         }
+
         if (status === 'cancelled') {
             return 'İptal edildi';
         }
+
         if (status === 'applied') {
             return 'Uygulandı';
         }
+
         return 'Bilinmiyor';
     }
 
@@ -1011,8 +1079,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (minor === null) {
             return '—';
         }
+
         const amount = minor / 100;
         const ccy = currencyCode?.trim() || 'TRY';
+
         try {
             return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: ccy, maximumFractionDigits: 2 }).format(amount);
         } catch {
@@ -1024,15 +1094,19 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         if (ratio === null) {
             return '—';
         }
+
         const pct = ratio <= 1 ? ratio * 100 : ratio;
+
         return `${Math.max(0, pct).toFixed(0)}%`;
     }
 
     cancelPendingPlanChange(): void {
         const s = this.summary();
+
         if (!s || !this.canManageSubscriptionOperations(s)) {
             return;
         }
+
         this.pendingCancelLoading.set(true);
         this.pendingCancelError.set(null);
         this.planActionInfo.set(null);
@@ -1051,26 +1125,32 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     private isUpgradePlan(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): boolean {
         const currentIdx = subscriptionPlanRank(summary.planCode);
         const nextIdx = subscriptionPlanRank(plan.code);
+
         if (currentIdx === null || nextIdx === null) {
             return false;
         }
+
         return nextIdx > currentIdx;
     }
 
     private isDowngradePlan(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): boolean {
         const currentIdx = subscriptionPlanRank(summary.planCode);
         const nextIdx = subscriptionPlanRank(plan.code);
+
         if (currentIdx === null || nextIdx === null) {
             return false;
         }
+
         return nextIdx < currentIdx;
     }
 
     private scheduleDowngrade(targetPlanCode: string): void {
         const sum = this.summary();
+
         if (!sum || !this.canManageSubscriptionOperations(sum)) {
             return;
         }
+
         this.schedulingDowngradeCode.set(targetPlanCode);
         this.planActionError.set(null);
         this.planActionInfo.set(null);
@@ -1097,14 +1177,17 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 detail: 'Aynı ödeme işlemine devam edebilir veya plan değişikliğini yeniden başlatabilirsiniz.'
             });
             const sessionId = parsed.sessionId ?? readStoredCheckoutSessionId();
+
             if (sessionId) {
                 this.hydrateCheckoutSession(sessionId);
             }
+
             return;
         }
 
         if (parsed.outcome === 'success') {
             const sessionId = parsed.sessionId ?? readStoredCheckoutSessionId();
+
             if (!sessionId) {
                 this.returnBanner.set({
                     severity: 'warn',
@@ -1112,8 +1195,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                     detail: 'Plan değişikliğini bu sayfadan yeniden başlatabilirsiniz.',
                     showRefreshCta: true
                 });
+
                 return;
             }
+
             this.returnBanner.set(null);
             this.postCheckoutSyncing.set(true);
             this.runPostCheckoutSyncRound(sessionId, 0);
@@ -1148,6 +1233,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
         if (attempt >= maxAttempts) {
             this.finishPostCheckoutPollingTimeout(sessionId);
+
             return;
         }
 
@@ -1158,6 +1244,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         ]).subscribe({
             next: ([session, data, pending]) => {
                 const summary = this.mergeSummaryWithPending(data, pending);
+
                 this.checkoutSession.set(session);
                 this.summary.set(summary);
                 this.tenantReadOnlyContext.applySummary(summary);
@@ -1169,6 +1256,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
                 if (terminalFailed) {
                     this.postCheckoutSyncing.set(false);
+
                     if (session.status === 'cancelled') {
                         this.returnBanner.set({
                             severity: 'secondary',
@@ -1183,12 +1271,14 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                             showRefreshCta: true
                         });
                     }
+
                     return;
                 }
 
                 /** Başarı yalnızca subscription-summary ile: hedef plan kodu eşleşti ve erişim salt okunur değil. Checkout finalized tek başına yetmez. */
                 if (planMatchesTarget && !summary.isReadOnly) {
                     this.completePostCheckoutUpgrade(sessionId);
+
                     return;
                 }
 
@@ -1209,10 +1299,12 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         ]).subscribe({
             next: ([session, data, pending]) => {
                 const summary = this.mergeSummaryWithPending(data, pending);
+
                 this.summary.set(summary);
                 this.tenantReadOnlyContext.applySummary(summary);
 
                 const planMatchesTarget = this.planCodeMatchesTarget(summary.planCode, session.targetPlanCode);
+
                 this.postCheckoutSyncing.set(false);
 
                 if (planMatchesTarget && !summary.isReadOnly) {
@@ -1224,6 +1316,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                         detail: 'Abonelik özetiniz güncellenmiş görünüyor; emin değilseniz durumu yenileyin.',
                         showRefreshCta: true
                     });
+
                     return;
                 }
 
@@ -1236,6 +1329,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                         detail: '“Durumu yenile” ile kontrol edin veya kısa süre sonra tekrar deneyin.',
                         showRefreshCta: true
                     });
+
                     return;
                 }
 
@@ -1275,9 +1369,11 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     private planCodeMatchesTarget(planCode: string | null, targetPlanCode: string | null): boolean {
         const t = targetPlanCode?.trim().toLowerCase() ?? '';
         const c = planCode?.trim().toLowerCase() ?? '';
+
         if (!t || !c) {
             return false;
         }
+
         return c === t;
     }
 
@@ -1291,6 +1387,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             title: 'Üyeliğiniz başarıyla güncellendi.',
             detail: 'Yeni paketiniz artık aktif.'
         });
+
         if (!hasUpgradeSuccessAck(checkoutSessionId)) {
             markUpgradeSuccessAck(checkoutSessionId);
             addTracedToast(this.messageService, 'SubscriptionPage', this.router.url, {

@@ -17,6 +17,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(TREATMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: TreatmentsListPageComponent
@@ -26,6 +27,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(TREATMENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: TreatmentNewPageComponent
@@ -35,6 +37,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: TreatmentEditPageComponent
@@ -44,6 +47,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(TREATMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: TreatmentDetailPageComponent

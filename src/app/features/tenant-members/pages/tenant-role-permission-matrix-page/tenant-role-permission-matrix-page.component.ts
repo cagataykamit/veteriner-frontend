@@ -99,6 +99,7 @@ export class TenantRolePermissionMatrixPageComponent implements OnInit {
     readonly displayRows = computed(() => buildFixedRoleMatrixRows(this.rows()));
     readonly displayRowsWithGroups = computed((): MatrixRowView[] => {
         const other = this.copy.tenantRoleMatrixGroupOther;
+
         return this.displayRows().map((row) => ({
             ...row,
             groups: row.permissions.length ? buildPermissionGroupPanels(row.permissions, other) : []

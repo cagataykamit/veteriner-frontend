@@ -12,6 +12,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(REMINDERS_READ_CLAIM)
                     ? true
                     : router.createUrlTree(['/notfound']);
@@ -25,6 +26,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(REMINDERS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],

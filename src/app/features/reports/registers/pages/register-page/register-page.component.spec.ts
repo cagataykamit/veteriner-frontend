@@ -15,7 +15,9 @@ describe('RegisterPageComponent', () => {
     function create(register: string): ComponentFixture<RegisterPageComponent> {
         TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { register } } } });
         const fixture = TestBed.createComponent(RegisterPageComponent);
+
         fixture.detectChanges();
+
         return fixture;
     }
 
@@ -118,10 +120,13 @@ describe('RegisterPageComponent', () => {
 
     it('reçete defteri: defter başlığı, gruplu üst başlıklar, sıra no ve tek hücrede ilaçlar', () => {
         const el: HTMLElement = create('prescriptions').nativeElement;
+
         expect(el.querySelector('.register-print-title')!.textContent).toContain('Reçete Kayıt Defteri');
         const groups = Array.from(el.querySelectorAll('.register-head-row')[0].querySelectorAll('th')).map((th) => th.textContent!.trim());
+
         expect(groups).toEqual(['Sıra No', 'REÇETENİN', 'VETERİNER HEKİMİN', 'HAYVAN SAHİBİNİN', 'HAYVANIN', 'İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi']);
         const cells = Array.from(el.querySelectorAll('tbody tr td')).map((td) => td.textContent!.trim());
+
         expect(cells[0]).toBe('1');
         expect(cells[cells.length - 1]).toBe('Dectomax ×1');
     });
@@ -129,6 +134,7 @@ describe('RegisterPageComponent', () => {
     it('tek süzgeç tarih aralığı + klinik: arama, müşteri ve hayvan yok; Filtrele var', () => {
         const el: HTMLElement = create('prescriptions').nativeElement;
         const text = el.textContent!;
+
         expect(text).toContain('Başlangıç tarihi');
         expect(text).toContain('Bitiş tarihi');
         expect(text).toContain('Filtrele');
@@ -138,21 +144,26 @@ describe('RegisterPageComponent', () => {
     it('liste ve dışa aktarma aynı süzgeçle çağrılır (from/to yyyy-MM-dd)', () => {
         const fixture = create('prescriptions');
         const listParams = api.get.calls.mostRecent().args[1] as HttpParams;
+
         expect(listParams.get('from')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         fixture.componentInstance.state.exportCsv();
         fixture.componentInstance.state.exportXlsx();
+
         for (const call of api.getBlob.calls.all()) {
             const p = call.args[1] as HttpParams;
+
             expect(p.get('from')).toBe(listParams.get('from'));
             expect(p.get('to')).toBe(listParams.get('to'));
             expect(p.has('page')).toBeFalse();
         }
+
         expect(api.getBlob.calls.count()).toBe(2);
     });
 
     it('yazdırma görünümü: sade başlık, tekrar eden thead, imza alanı ve ekran-dışı sınıflar; gövde sınıfı sayfayla yaşar', () => {
         const fixture = create('examinations');
         const el: HTMLElement = fixture.nativeElement;
+
         expect(document.body.classList).toContain('register-page-active');
         expect(el.querySelector('.register-print-title')).not.toBeNull();
         expect(el.querySelector('.register-meta')!.textContent).toContain('Tarih aralığı');
@@ -168,14 +179,17 @@ describe('RegisterPageComponent', () => {
     it('Yazdır düğmesi tarayıcı yazdırmasını açar', () => {
         const fixture = create('examinations');
         const print = spyOn(window, 'print');
+
         fixture.componentInstance.print();
         expect(print).toHaveBeenCalled();
     });
 
     it('narkotik defteri: iki gruplu başlık, ek süzgeç yok, çıktı tüm sütunlar ayrı', () => {
         const el: HTMLElement = create('controlled-substances').nativeElement;
+
         expect(el.querySelector('.register-print-title')!.textContent).toContain('Narkotik ve Psikotropik Ürünler Stok ve Sarf Defteri');
         const top = Array.from(el.querySelectorAll('.register-head-row')[0].querySelectorAll('th')).map((th) => th.textContent!.trim());
+
         expect(top).toContain('SATIN/İADE/DEVİR ALINAN ÜRÜNÜN');
         expect(top).toContain('SATILAN/İADE VEYA DEVREDİLEN ÜRÜNÜN');
         expect(el.querySelector('#registerRepVoided')).toBeNull();
@@ -186,6 +200,7 @@ describe('RegisterPageComponent', () => {
     it('aşı bilgi raporu: ürün, veteriner ve iptal süzgeçleri; seçim uca gider; fiyat ipucu görünür', () => {
         const fixture = create('vaccine-info');
         const el: HTMLElement = fixture.nativeElement;
+
         expect(el.textContent).toContain('katalog fiyatı');
         expect(el.querySelector('#registerRepVoided')).not.toBeNull();
         expect(fixture.componentInstance.productOptions()).toEqual([{ label: 'Karma Aşı', value: 'pr1' }]);
@@ -195,6 +210,7 @@ describe('RegisterPageComponent', () => {
         fixture.componentInstance.setExtra('includeVoided', 'true');
         fixture.componentInstance.state.applyFilters();
         const params = api.get.calls.mostRecent().args[1] as HttpParams;
+
         expect(params.get('productId')).toBe('pr1');
         expect(params.get('includeVoided')).toBe('true');
         expect(params.has('veterinarianId')).toBeFalse();
@@ -202,6 +218,7 @@ describe('RegisterPageComponent', () => {
 
     it('aşı kayıt defterinde yalnız iptal edilen girişleri göster süzgeci vardır', () => {
         const fixture = create('vaccines');
+
         expect(fixture.nativeElement.querySelector('#registerRepVoided')).not.toBeNull();
         expect(fixture.nativeElement.textContent).not.toContain('katalog fiyatı');
         expect(fixture.componentInstance.productOptions()).toEqual([]);
@@ -210,6 +227,7 @@ describe('RegisterPageComponent', () => {
     it('izin yoksa dışa aktarma düğmeleri görünmez', () => {
         claims.delete('Examinations.Read');
         const text = (create('examinations').nativeElement as HTMLElement).textContent!;
+
         expect(text).not.toContain('CSV indir');
         expect(text).not.toContain('Excel indir');
     });

@@ -294,6 +294,7 @@ export class TenantInviteListPageComponent implements OnInit {
 
     isRowBusy(rowId: string, kind: 'cancel' | 'resend'): boolean {
         const b = this.actionBusy();
+
         return b?.id === rowId && b?.kind === kind;
     }
 
@@ -305,6 +306,7 @@ export class TenantInviteListPageComponent implements OnInit {
         if (!this.canManageTenantAccess()) {
             return;
         }
+
         this.actionError.set(null);
         this.actionBusy.set({ id, kind: 'cancel' });
         this.tenantInvites.cancelInvite(id).subscribe({
@@ -323,6 +325,7 @@ export class TenantInviteListPageComponent implements OnInit {
         if (!this.canManageTenantAccess()) {
             return;
         }
+
         this.actionError.set(null);
         this.actionBusy.set({ id, kind: 'resend' });
         this.tenantInvites.resendInvite(id).subscribe({
@@ -344,11 +347,14 @@ export class TenantInviteListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.loadFromServer(page, rows, this.activeSearch());
     }
 
@@ -356,15 +362,18 @@ export class TenantInviteListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const first = state.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.suppressNextLazy = true;
         this.loadFromServer(page, rows, this.activeSearch());
     }
 
     private loadFromServer(page: number, pageSize: number, search: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);

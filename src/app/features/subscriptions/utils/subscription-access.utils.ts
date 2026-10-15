@@ -20,6 +20,7 @@ export function isTrialExpiredReadOnly(summary: SubscriptionSummaryVm): boolean 
     if (!summary.isReadOnly || summary.status === 'trialing') {
         return false;
     }
+
     return !!summary.trialEndsAtUtc?.trim() && summary.status !== 'active';
 }
 
@@ -32,12 +33,15 @@ export function expiredReadOnlyBannerMessage(summary: SubscriptionSummaryVm): st
     if (isTrialExpiredReadOnly(summary)) {
         return 'Deneme süreniz sona erdi. Devam etmek için paket seçip ödeme yapın.';
     }
+
     if (isPaidExpiredReadOnly(summary)) {
         return 'Abonelik süreniz sona erdi. Yazma işlemlerini açmak için paket seçip ödeme yapın.';
     }
+
     if (isExpiredReadOnlySubscription(summary)) {
         return 'Aboneliğiniz salt okunur modda. Yazma işlemlerini açmak için ödeme yapın.';
     }
+
     return '';
 }
 
@@ -49,13 +53,17 @@ export function subscriptionPeriodEndUtc(summary: SubscriptionSummaryVm): string
 
 export function isSubscriptionPeriodEndPast(summary: SubscriptionSummaryVm): boolean {
     const endRaw = subscriptionPeriodEndUtc(summary);
+
     if (!endRaw?.trim()) {
         return summary.daysRemaining === 0;
     }
+
     const end = new Date(endRaw);
+
     if (Number.isNaN(end.getTime())) {
         return summary.daysRemaining === 0;
     }
+
     return end.getTime() < Date.now();
 }
 
@@ -63,6 +71,7 @@ export function shouldShowMisleadingNextRenewal(summary: SubscriptionSummaryVm):
     if (isActiveTrialingSubscription(summary)) {
         return false;
     }
+
     return !isExpiredReadOnlySubscription(summary) && !isSubscriptionPeriodEndPast(summary);
 }
 

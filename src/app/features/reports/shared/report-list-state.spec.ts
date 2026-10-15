@@ -46,8 +46,10 @@ describe('ReportListState', () => {
 
     it('ilk açılışta bu ayın başından bugüne varsayılan tarihle yükler ve sonucu yayar', () => {
         const state = create();
+
         state.init();
         const q = source.loadReport.calls.mostRecent().args[0];
+
         expect(q.page).toBe(1);
         expect(q.pageSize).toBe(25);
         expect(q.from).toBeTruthy();
@@ -71,6 +73,7 @@ describe('ReportListState', () => {
                     })
             );
         const state = make();
+
         state.init();
         expect(source.loadReport.calls.mostRecent().args[0].includeVoided).toBeUndefined();
         expect(state.canExport()).toBeFalse();
@@ -80,10 +83,12 @@ describe('ReportListState', () => {
         state.extraInputs = { includeVoided: 'true', productId: 'pr1' };
         state.applyFilters();
         const q = source.loadReport.calls.mostRecent().args[0];
+
         expect(q.includeVoided).toBe('true');
         expect(q.productId).toBe('pr1');
 
         const restored = make();
+
         restored.init();
         expect(restored.extraInputs['productId']).toBe('pr1');
         expect(source.loadReport.calls.mostRecent().args[0].includeVoided).toBe('true');
@@ -104,8 +109,10 @@ describe('ReportListState', () => {
                     rowsPerPageOptions: [25, 200]
                 })
         );
+
         state.init();
         const q = source.loadReport.calls.mostRecent().args[0];
+
         expect(q.from).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         expect(q.to).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         expect(state.dateRangeOnly).toBeTrue();
@@ -115,6 +122,7 @@ describe('ReportListState', () => {
 
     it('rapora özgü süzgeç yalnız yapılandırılmışsa sorguya girer', () => {
         const withExtra = create('status');
+
         withExtra.init();
         withExtra.extraFilter = '1';
         withExtra.applyFilters();
@@ -122,6 +130,7 @@ describe('ReportListState', () => {
 
         source.loadReport.calls.reset();
         const without = create();
+
         without.init();
         without.extraFilter = '1';
         without.applyFilters();
@@ -130,6 +139,7 @@ describe('ReportListState', () => {
 
     it('tek taraflı tarih seçimi istek atmaz ve uyarı gösterir', () => {
         const state = create();
+
         state.init();
         source.loadReport.calls.reset();
         state.toDateInput = '';
@@ -140,6 +150,7 @@ describe('ReportListState', () => {
 
     it('ters girilen tarih aralığını yer değiştirir', () => {
         const state = create();
+
         state.init();
         state.fromDateInput = '2026-03-10';
         state.toDateInput = '2026-03-01';
@@ -150,6 +161,7 @@ describe('ReportListState', () => {
 
     it('aynı sorguyu tekrar yüklemez; reload zorla yükler', () => {
         const state = create();
+
         state.init();
         source.loadReport.calls.reset();
         state.applyFilters();
@@ -160,6 +172,7 @@ describe('ReportListState', () => {
 
     it('süzgeç ve sayfa konumunu oturumda saklar, yeniden açılışta geri yükler', () => {
         const first = create('status');
+
         first.init();
         first.extraFilter = '2';
         first.searchInput = 'pamuk';
@@ -168,6 +181,7 @@ describe('ReportListState', () => {
         first.onTableLazyLoad({ first: 25, rows: 25 });
 
         const second = create('status');
+
         second.init();
         expect(second.extraFilter).toBe('2');
         expect(second.searchInput).toBe('pamuk');
@@ -176,17 +190,20 @@ describe('ReportListState', () => {
 
     it('sayfa boyutu değişince ilk sayfaya döner; mobil sayfalayıcı sonraki tablo olayını yutar', () => {
         const state = create();
+
         state.init();
         state.onTableLazyLoad({ first: 0, rows: 25 }); // init sonrası ilk olay yutulur
         source.loadReport.calls.reset();
         state.onTableLazyLoad({ first: 50, rows: 10 });
         const q = source.loadReport.calls.mostRecent().args[0];
+
         expect(q.page).toBe(1);
         expect(q.pageSize).toBe(10);
     });
 
     it('resetFilters süzgeçleri ve saklanan durumu temizler', () => {
         const state = create();
+
         state.init();
         state.searchInput = 'x';
         state.applyFilters();
@@ -200,6 +217,7 @@ describe('ReportListState', () => {
     it('JWT klinikle uyuşmayan klinik süzgeci sorgudan çıkarılır', () => {
         jwtClinic = 'c1';
         const state = create();
+
         state.init();
         state.clinicIdFilter = 'other';
         state.applyFilters();
@@ -208,6 +226,7 @@ describe('ReportListState', () => {
 
     it('liste ve dışa aktarma aynı süzgeçleri kullanır; dosya adı başlık yoksa önek+tarih+uzantı', () => {
         const state = create('status');
+
         state.init();
         state.extraFilter = '1';
         state.searchInput = 'a';
@@ -215,11 +234,14 @@ describe('ReportListState', () => {
         const listQ = source.loadReport.calls.mostRecent().args[0];
 
         const blob = new Blob(['x']);
+
         source.exportCsvBlob.and.returnValue(of(new HttpResponse({ body: blob, headers: new HttpHeaders() })));
         const click = spyOn(HTMLAnchorElement.prototype, 'click');
+
         state.exportCsv();
         expect(click).toHaveBeenCalled();
         const exportQ = source.exportCsvBlob.calls.mostRecent().args[0];
+
         expect(exportQ).toEqual({ ...listQ, page: 1 });
         expect(state.exportKind()).toBeNull();
     });
@@ -227,6 +249,7 @@ describe('ReportListState', () => {
     it('okuma izni yoksa dışa aktarma çalışmaz', () => {
         claims.clear();
         const state = create();
+
         state.init();
         state.exportXlsx();
         expect(source.exportXlsxBlob).not.toHaveBeenCalled();
@@ -234,6 +257,7 @@ describe('ReportListState', () => {
 
     it('dışa aktarma hatasında mesajı gösterir', () => {
         const state = create();
+
         state.init();
         source.exportCsvBlob.and.returnValue(throwError(() => new Error('Sunucu hatası')));
         state.exportCsv();
@@ -244,6 +268,7 @@ describe('ReportListState', () => {
     it('yükleme hatasında hata mesajı gösterir', () => {
         source.loadReport.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
         const state = create();
+
         state.init();
         expect(state.error()).toBeTruthy();
         expect(state.loading()).toBeFalse();
@@ -251,8 +276,10 @@ describe('ReportListState', () => {
 
     it('anlık görüntü raporu tarih göndermez; tutar süzgeci liste ve dışa aktarmada aynıdır', () => {
         const state = create('minAmount', true);
+
         state.init();
         const first = source.loadReport.calls.mostRecent().args[0];
+
         expect(first.from).toBeUndefined();
         expect(first.to).toBeUndefined();
         expect(state.fromDateInput).toBe('');
@@ -261,6 +288,7 @@ describe('ReportListState', () => {
         state.searchInput = 'ayse';
         state.applyFilters();
         const listQ = source.loadReport.calls.mostRecent().args[0];
+
         expect(listQ.minAmount).toBe('250');
         expect(listQ.search).toBe('ayse');
         expect(state.dateFilterError()).toBeNull();
@@ -272,6 +300,7 @@ describe('ReportListState', () => {
 
         state.resetFilters();
         const reset = source.loadReport.calls.mostRecent().args[0];
+
         expect(reset.minAmount).toBeUndefined();
         expect(reset.from).toBeUndefined();
     });

@@ -48,12 +48,15 @@ describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
             ]
         });
         const fixture = TestBed.createComponent(VaccinationDetailPageComponent);
+
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     };
 
     it('muayeneye bağlı aşıda muayene detayına bağlantı görünür', () => {
         const a = render('e1').querySelector('[data-testid="linked-examination"]');
+
         expect(a?.getAttribute('href')).toContain('/panel/examinations/e1');
     });
 
@@ -64,6 +67,7 @@ describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
     it('stoktan düşen uygulama varsa ürün, seri no ve SKT ile bağlantı gösterilir', () => {
         const el = render(null, linked);
         const card = el.querySelector('[data-testid="linked-administration"]');
+
         expect(card?.textContent).toContain('Nobivac DHPPi');
         expect(card?.textContent).toContain('LOT-77');
         expect(card?.textContent).toContain('2027');

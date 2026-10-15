@@ -13,6 +13,7 @@ describe('reports.routes — borç raporu yetkisi', () => {
                 { provide: Router, useValue: { createUrlTree: (cmds: string[]) => cmds.join('/') as unknown as UrlTree } }
             ]
         });
+
         return TestBed.runInInjectionContext(() => (debtRoute.canActivate![0] as () => boolean | UrlTree)());
     }
 
@@ -36,6 +37,7 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
                 { provide: Router, useValue: { createUrlTree: (cmds: string[]) => cmds.join('/') as unknown as UrlTree } }
             ]
         });
+
         return TestBed.runInInjectionContext(() => (route(path).canActivate![0] as () => boolean | UrlTree)());
     }
 
@@ -56,6 +58,7 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
 
     it('stok defterleri StockMovements.Read ister; narkotik defteri ve aşı bilgi raporu izinlerin hepsini birlikte ister', () => {
         const notFound = '/notfound' as unknown as UrlTree;
+
         expect(canActivate('registers/vaccines', ['StockMovements.Read'])).toBeTrue();
         expect(canActivate('registers/medications', ['StockMovements.Read'])).toBeTrue();
         expect(canActivate('registers/vaccines', ['Administrations.Read'])).toBe(notFound);
@@ -63,7 +66,9 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
         expect(canActivate('registers/controlled-substances', ['StockMovements.Read'])).toBe(notFound);
         expect(canActivate('registers/controlled-substances', ['Administrations.Read'])).toBe(notFound);
         const info = ['Administrations.Read', 'Vaccinations.Read', 'Products.Read'];
+
         expect(canActivate('registers/vaccine-info', info)).toBeTrue();
+
         for (const missing of info) {
             expect(canActivate('registers/vaccine-info', info.filter((c) => c !== missing))).toBe(notFound);
         }
@@ -87,6 +92,7 @@ describe('reports.routes — gün sonu yetkisi', () => {
                 { provide: Router, useValue: { createUrlTree: (cmds: string[]) => cmds.join('/') as unknown as UrlTree } }
             ]
         });
+
         return TestBed.runInInjectionContext(() => (route.canActivate![0] as () => boolean | UrlTree)());
     }
 

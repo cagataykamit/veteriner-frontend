@@ -334,6 +334,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
     readonly filtersActive = computed(() => Object.values(this.state.activeExtras()).some((v) => !!v));
     readonly days = computed(() => {
         const c = this.cash();
+
         return c ? fillEmptyDays(this.state.activeFromDate(), this.state.activeToDate(), c.byDay) : [];
     });
 
@@ -345,9 +346,11 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
     /** Açık işler: izni olmayan alan (`null`) satırı hiç oluşturmaz. */
     readonly openItemRows = computed<OpenItemRow[]>(() => {
         const o = this.openItems();
+
         if (!o) {
             return [];
         }
+
         const rows: (OpenItemRow | null)[] = [
             o.unchargedVisitCount === null ? null : { label: 'Ücretlenmemiş ziyaret', value: String(o.unchargedVisitCount), warn: o.unchargedVisitCount > 0 },
             o.awaitingLabCount === null
@@ -368,6 +371,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
                   },
             { label: 'Tamamlanmamış geliş', value: String(o.incompleteVisitCount), warn: o.incompleteVisitCount > 0, link: { route: '/panel/today', text: 'Bugün' } }
         ];
+
         return rows.filter((r): r is OpenItemRow => r !== null);
     });
 
@@ -376,6 +380,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
         const clinic = this.state.clinicOptions().find((o) => o.value === this.state.activeClinicId())?.label ?? PANEL_COPY.reportsClinicPanelDefault;
         const pages = Math.ceil((this.state.report()?.totalCount ?? 0) / this.state.pageSize());
         const pageNote = pages > 1 ? ` · Döküm sayfa ${this.state.currentPage()} / ${pages}` : '';
+
         return `${range} · ${PANEL_COPY.reportsFilterClinic}: ${clinic}${pageNote} · ${PANEL_COPY.registerPrintedAt}: ${formatDateTimeDisplay(new Date())}`;
     });
 
@@ -387,6 +392,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
                 to: this.state.activeToDate(),
                 clinicId: this.state.activeClinicId()
             };
+
             if (query.from && query.to) {
                 untracked(() => this.loadSummaries(query));
             }
@@ -422,6 +428,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
 
     private loadSummaries(query: ReportListQueryBase): void {
         const seq = ++this.summarySeq;
+
         if (this.canCash) {
             this.cash.set(null);
             this.cashError.set(null);
@@ -430,6 +437,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
                 error: (err: unknown) => seq === this.summarySeq && this.cashError.set(panelHttpFailureMessage(err, 'Tahsilat özeti yüklenemedi.'))
             });
         }
+
         if (this.canOpen) {
             this.openItems.set(null);
             this.openError.set(null);

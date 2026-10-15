@@ -48,6 +48,7 @@ export class TenantReadOnlyContextService {
         if (!this.accessStateSignal()?.isReadOnly) {
             return false;
         }
+
         return (
             this.auth.hasOperationClaim(SUBSCRIPTIONS_READ_CLAIM) ||
             this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM)
@@ -62,13 +63,16 @@ export class TenantReadOnlyContextService {
             this.accessStateSignal.set(null);
             this.panelTenantAccess$ = null;
             this.panelAccessStreamContextKey = null;
+
             return of(null);
         }
 
         const contextKey = this.currentPanelAccessContextKey();
+
         if (this.panelTenantAccess$ && this.panelAccessStreamContextKey !== contextKey) {
             this.panelTenantAccess$ = null;
         }
+
         this.panelAccessStreamContextKey = contextKey;
 
         if (!this.panelTenantAccess$) {
@@ -79,11 +83,13 @@ export class TenantReadOnlyContextService {
                 }),
                 catchError((): Observable<null> => {
                     this.accessStateSignal.set(null);
+
                     return of(null);
                 }),
                 shareReplay({ bufferSize: 1, refCount: false })
             );
         }
+
         return this.panelTenantAccess$;
     }
 
@@ -99,13 +105,16 @@ export class TenantReadOnlyContextService {
         if (!this.auth.isAuthenticated() || !this.auth.hasSelectedClinic()) {
             return false;
         }
+
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         return !!tenantId?.trim();
     }
 
     private currentPanelAccessContextKey(): string {
         const tid = resolveTenantIdFromJwt(this.auth.getAccessToken())?.trim() ?? '';
         const cid = this.auth.getClinicId()?.trim() ?? '';
+
         return `${tid}::${cid}`;
     }
 

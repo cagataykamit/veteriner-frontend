@@ -9,6 +9,7 @@ import { TreatmentsListPageComponent } from './treatments-list-page.component';
 describe('TreatmentsListPageComponent — detaydan gelen hayvan süzgeci', () => {
     const setup = (query: Record<string, string>) => {
         const getTreatments = jasmine.createSpy('getTreatments').and.returnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
+
         TestBed.configureTestingModule({
             imports: [TreatmentsListPageComponent],
             providers: [
@@ -20,7 +21,9 @@ describe('TreatmentsListPageComponent — detaydan gelen hayvan süzgeci', () =>
             ]
         });
         const fixture = TestBed.createComponent(TreatmentsListPageComponent);
+
         fixture.detectChanges();
+
         return { fixture, getTreatments, el: fixture.nativeElement as HTMLElement };
     };
 

@@ -46,6 +46,7 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
             ]
         });
         const cmp = TestBed.createComponent(VaccinationFormComponent).componentInstance;
+
         cmp.saved.subscribe((e) => saved.push(e));
         cmp.ngOnInit();
         cmp.form.patchValue({ clientId: 'cl1', vaccineDefinitionId: 'd1' }, { emitEvent: false });
@@ -53,6 +54,7 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
         cmp.form.controls.petId.setValue('p1', { emitEvent: false });
         cmp.form.controls.status.setValue(1);
         cmp.form.controls.appliedAtLocal.setValue('2026-10-10T10:00');
+
         return cmp;
     };
 
@@ -66,19 +68,23 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
 
     it('yalnız aşı türündeki ürünler seçenek olur', () => {
         const cmp = create();
+
         expect(cmp.productOptions().map((o) => o.value)).toEqual(['pr1']);
     });
 
     it('stok düşme yetkisi yoksa ürün listesi yüklenmez', () => {
         canStock = false;
         const cmp = create();
+
         expect(cmp.productOptions()).toEqual([]);
     });
 
     it('ürün seçilmezse ürün/miktar/requestId gönderilmez ve form geçerlidir', () => {
         const cmp = create();
+
         cmp.onSubmit();
         const payload = service.createVaccination.calls.mostRecent().args[0];
+
         expect(payload.productId).toBeUndefined();
         expect(payload.requestId).toBeUndefined();
         expect(saved).toEqual([{ id: 'v1', stockNotice: undefined }]);
@@ -86,6 +92,7 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
 
     it('ürün seçilince miktar varsayılan 1 olur, zorunlu hale gelir; ürün kalkınca temizlenir', () => {
         const cmp = create();
+
         cmp.form.controls.productId.setValue('pr1');
         expect(cmp.form.controls.quantity.value).toBe(1);
         cmp.form.controls.quantity.setValue(0);
@@ -98,11 +105,13 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
     it('ürünle gönderimde ürün, miktar, parti ve requestId gider; başarıda stok bildirimi detaya taşınır', () => {
         service.createVaccination.and.returnValue(of({ id: 'v1', stockResult: stockResult() }));
         const cmp = create();
+
         cmp.form.controls.productId.setValue('pr1');
         cmp.form.controls.quantity.setValue(2);
         cmp.form.controls.batchId.setValue('b9');
         cmp.onSubmit();
         const payload = service.createVaccination.calls.mostRecent().args[0];
+
         expect(payload).toEqual(jasmine.objectContaining({ productId: 'pr1', quantity: 2, batchId: 'b9' }));
         expect(payload.requestId).toBeTruthy();
         expect(saved[0].stockNotice?.text).toContain('kalan kullanılabilir stok 8 doz');
@@ -111,6 +120,7 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
 
     it('hata sonrası yeniden denemede aynı requestId kullanılır (çift düşüm yok)', () => {
         const cmp = create();
+
         service.createVaccination.and.returnValues(
             throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Vaccinations.ConcurrencyConflict' } } })),
             of({ id: 'v1', stockResult: null })
@@ -120,11 +130,13 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
         expect(cmp.submitError()).toContain('iki kez düşülmez');
         cmp.onSubmit();
         const ids = service.createVaccination.calls.all().map((c) => c.args[0].requestId);
+
         expect(ids[0]).toBe(ids[1]);
     });
 
     it('durum "Uygulandı" dışına çıkınca seçili ürün temizlenir ve gönderilmez', () => {
         const cmp = create();
+
         cmp.form.controls.productId.setValue('pr1');
         cmp.form.controls.status.setValue(0);
         expect(cmp.form.controls.productId.value).toBe('');
@@ -133,6 +145,7 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
     it('son kullanılan ürün hatırlanır ve tek tıkla seçilir', () => {
         localStorage.setItem('vetinity.vaccine.lastProductId', 'pr1');
         const cmp = create();
+
         expect(cmp.lastProduct()?.label).toBe('Nobivac');
         cmp.useLastProduct('pr1');
         expect(cmp.form.controls.productId.value).toBe('pr1');

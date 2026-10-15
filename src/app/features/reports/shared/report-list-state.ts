@@ -156,6 +156,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 
     init(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.bootstrapDefaultDates();
             this.activeFromDate.set(this.fromDateInput.trim());
@@ -163,6 +164,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.bootstrapReportAfterMyClinics();
     }
@@ -182,20 +184,25 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         // Backend sözleşmesi: from/to zorunlu. UI'de iki tarih birlikte seçilir.
         if ((from && !to) || (!from && to)) {
             this.dateFilterError.set(PANEL_COPY.reportsDateRangeBothRequired);
+
             return;
         }
+
         if (!from && !to) {
             this.bootstrapDefaultDates();
             from = safeTrim(this.fromDateInput);
             to = safeTrim(this.toDateInput);
         }
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
             this.toDateInput = to;
         }
+
         this.activeSearch.set(safeTrim(this.searchInput));
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
@@ -241,8 +248,10 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         this.changePage(event.first ?? 0, event.rows ?? this.pageSize());
     }
 
@@ -297,9 +306,12 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows);
+
             return;
         }
+
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows);
     }
@@ -308,22 +320,29 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         if (!this.canExport()) {
             return;
         }
+
         const { source, exportFilePrefix } = this.config;
+
         this.exportError.set(null);
         this.exportKind.set(kind);
         this.sanitizeExportClinicFilterIfStale();
         const q = this.buildQuery(1, this.pageSize());
         const req$ = kind === 'xlsx' ? source.exportXlsxBlob(q) : source.exportCsvBlob(q);
+
         req$.subscribe({
             next: (res) => {
                 this.exportKind.set(null);
                 this.exportError.set(null);
                 const blob = res.body;
+
                 if (!blob) {
                     this.exportError.set(PANEL_COPY.reportsExportResponseEmpty);
+
                     return;
                 }
+
                 const fromCd = fileNameFromContentDisposition(res.headers.get('Content-Disposition'));
+
                 triggerBlobDownload(blob, fromCd ?? `${exportFilePrefix}-${localDateYyyyMmDd()}.${kind}`);
             },
             error: (e: Error) => {
@@ -337,6 +356,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         if (this.snapshot) {
             return;
         }
+
         this.toDateInput = localDateYyyyMmDd();
         this.fromDateInput = this.config.todayOnlyByDefault ? this.toDateInput : defaultReportFromYyyyMmDd();
     }
@@ -347,6 +367,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
                 this.clinicSummariesLoadedOk = true;
                 this.clinicOptions.set(mapMyClinicsToSelectOptions(list, PANEL_COPY.reportsClinicPanelDefault));
                 const stale = this.clearStaleRestoredClinicIfNeeded(list);
+
                 if (stale) {
                     this.suppressNextLazy = true;
                     this.loadFromServer(1, this.pageSize(), true);
@@ -364,14 +385,19 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 
     private clearStaleRestoredClinicIfNeeded(summaries: ClinicSummary[]): boolean {
         const id = this.activeClinicId().trim();
+
         if (!id) {
             return false;
         }
+
         const jwtClinic = this.auth.getJwtClinicId();
+
         if (isReportUiClinicIdUnknownToMyClinics(id, summaries) || isReportUiClinicIdMisalignedWithJwt(id, jwtClinic)) {
             this.clearStaleUiClinicFilterSilently();
+
             return true;
         }
+
         return false;
     }
 
@@ -384,9 +410,11 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 
     private stripJwtMisalignedReportClinicIfNeeded(): void {
         const id = this.activeClinicId().trim();
+
         if (!id) {
             return;
         }
+
         if (isReportUiClinicIdMisalignedWithJwt(id, this.auth.getJwtClinicId())) {
             this.clearJwtMisalignedUiClinicOnly();
         }
@@ -404,14 +432,19 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         if (!this.clinicSummariesLoadedOk) {
             return;
         }
+
         const id = this.activeClinicId().trim();
+
         if (!id) {
             return;
         }
+
         if (!this.clinicOptions().some((o) => o.value === id)) {
             this.clearStaleUiClinicFilterSilently();
+
             return;
         }
+
         if (isReportUiClinicIdMisalignedWithJwt(id, this.auth.getJwtClinicId())) {
             this.clearJwtMisalignedUiClinicOnly();
         }
@@ -422,6 +455,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         const toYmd = this.activeToDate().trim();
         const extraKey = this.config.extraFilterKey;
         const dayOnly = this.config.dateRangeOnly;
+
         return {
             page,
             pageSize,
@@ -441,11 +475,14 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         const q = this.buildQuery(page, pageSize);
         const explicitQueryClinicId = !!q.clinicId;
         const requestKey = JSON.stringify(q);
+
         if (!force && requestKey === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = requestKey;
         const seq = ++this.latestReportLoadSeq;
+
         this.loading.set(true);
         this.error.set(null);
         this.errorIsInvalidInput.set(false);
@@ -454,6 +491,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
                 if (seq !== this.latestReportLoadSeq) {
                     return;
                 }
+
                 this.report.set(r);
                 this.pageSize.set(r.pageSize);
                 this.currentPage.set(r.page);
@@ -465,13 +503,16 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
                 if (seq !== this.latestReportLoadSeq) {
                     return;
                 }
+
                 if (err instanceof HttpErrorResponse && explicitQueryClinicId && isReportRecoverableClinicConstraint403(err)) {
                     this.lastLoadKey = '';
                     this.clearStaleUiClinicFilterSilently();
                     this.suppressNextLazy = true;
                     this.loadFromServer(1, this.pageSize(), true);
+
                     return;
                 }
+
                 this.error.set(panelHttpFailureMessage(err, PANEL_COPY.reportsLoadErrorFallback));
                 this.errorIsInvalidInput.set(err instanceof HttpErrorResponse && (err.status === 400 || err.status === 422));
                 this.loading.set(false);
@@ -482,17 +523,22 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     private restoreStateFromSessionStorage(): boolean {
         const { stateKey, extraFilterKey } = this.config;
         const raw = sessionStorage.getItem(stateKey);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Record<string, unknown>;
             const page = Number(parsed['page']);
             const pageSize = Number(parsed['pageSize']);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(stateKey);
+
                 return false;
             }
+
             this.searchInput = safeTrim(parsed['search']);
             this.fromDateInput = safeTrim(parsed['fromDate']);
             this.toDateInput = safeTrim(parsed['toDate']);
@@ -505,6 +551,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             // Tarihler restore'da tek taraflı geldiyse varsayılan döneme dön.
             const from = safeTrim(this.fromDateInput);
             const to = safeTrim(this.toDateInput);
+
             if ((from && !to) || (!from && to)) {
                 this.bootstrapDefaultDates();
             }
@@ -520,15 +567,18 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(stateKey);
+
             return false;
         }
     }
 
     private persistStateToSessionStorage(page: number, pageSize: number): void {
         const { stateKey, extraFilterKey } = this.config;
+
         sessionStorage.setItem(
             stateKey,
             JSON.stringify({
@@ -554,5 +604,6 @@ function defaultReportFromYyyyMmDd(): string {
     const d = new Date();
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
+
     return `${y}-${m}-01`;
 }

@@ -8,22 +8,27 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: VaccineDefinitionDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
 export function mapVaccineDefinitionDtoToVm(dto: VaccineDefinitionDto): VaccineDefinitionListItemVm {
     const id = firstTrimmed(dto.id, readDtoString(dto, ['Id'])) ?? '';
+
     return {
         id,
         tenantId: firstTrimmed(dto.tenantId ?? undefined, readDtoString(dto, ['TenantId'])),
@@ -48,6 +53,7 @@ export function mapPagedVaccineDefinitionsToVm(result: VaccineDefinitionDtoPaged
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapVaccineDefinitionDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -69,14 +75,18 @@ export function vaccineDefinitionsQueryToHttpParams(query: VaccineDefinitionsLis
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 200;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
     p = p.set('includeInactive', String(query.includeInactive ?? false));
+
     if (query.search?.trim()) {
         p = p.set('search', query.search.trim());
     }
+
     if (query.speciesId?.trim()) {
         p = p.set('speciesId', query.speciesId.trim());
     }
+
     return p;
 }

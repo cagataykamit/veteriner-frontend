@@ -18,7 +18,9 @@ describe('EndOfDayPageComponent', () => {
 
     function create(): ComponentFixture<EndOfDayPageComponent> {
         const fixture = TestBed.createComponent(EndOfDayPageComponent);
+
         fixture.detectChanges();
+
         return fixture;
     }
 
@@ -57,6 +59,7 @@ describe('EndOfDayPageComponent', () => {
                     ]
                 });
             }
+
             if (path.endsWith('/cash-summary')) {
                 return of({
                     currency: 'TRY',
@@ -72,6 +75,7 @@ describe('EndOfDayPageComponent', () => {
                     byUser: [{ userId: 'u1', userName: 'Sema', ...zeroAmounts }]
                 });
             }
+
             return of({ from: '2026-10-14', to: '2026-10-14', clinicId: 'k1', openItems });
         }) as never);
         api.getBlob.and.returnValue(of(new HttpResponse({ body: new Blob(['x']), headers: new HttpHeaders() })));
@@ -98,6 +102,7 @@ describe('EndOfDayPageComponent', () => {
         create();
         const today = localDateYyyyMmDd();
         const params = calls('/daily-transactions')[0][1] as HttpParams;
+
         expect(params.get('from')).toBe(today);
         expect(params.get('to')).toBe(today);
         expect(params.get('clinicId')).toBe('k1');
@@ -107,9 +112,11 @@ describe('EndOfDayPageComponent', () => {
 
     it('özet kartları, açık işler ve dökümdeki iptal/düzeltme işaretleri görünür', () => {
         const text = create().nativeElement.textContent as string;
+
         for (const label of ['Brüt ücret', 'İptal edilen ücret', 'Net ücret', 'İptal edilen tahsilat', 'Net tahsilat', 'Doğrudan satış tahsilatı', 'Ücretlenmemiş ziyaret', 'Bekleyen lab', 'Borçlu çıkan', 'Tamamlanmamış geliş']) {
             expect(text).toContain(label);
         }
+
         expect(text).toContain('1 ziyaret');
         expect(text).toContain('Tahsilat iptali');
         expect(text).toContain('Gerekçe: Hatalı giriş');
@@ -120,12 +127,14 @@ describe('EndOfDayPageComponent', () => {
     it('geçmiş gün seçilince açık işlerde şu anki durum notu görünür', () => {
         sessionStorage.setItem(STATE_KEY, JSON.stringify({ fromDate: '2026-01-05', toDate: '2026-01-05', clinicId: '', page: 1, pageSize: 50 }));
         const text = create().nativeElement.textContent as string;
+
         expect(text).toContain('Açık işler şu anki durumu gösterir');
     });
 
     it('alanı null olan açık iş (yetki yok) gizlenir', () => {
         openItems = { unchargedVisitCount: null, outstandingVisitCount: null, outstandingAmount: null, awaitingLabCount: 0, incompleteVisitCount: 1 };
         const text = create().nativeElement.textContent as string;
+
         expect(text).not.toContain('Ücretlenmemiş ziyaret');
         expect(text).not.toContain('Borçlu çıkan');
         expect(text).toContain('Bekleyen lab');
@@ -135,6 +144,7 @@ describe('EndOfDayPageComponent', () => {
     it('yalnız Visits.Read: ücret, tahsilat ve döküm bölümleri gizli, bu uçlara istek atılmaz', () => {
         claims = new Set(['Visits.Read']);
         const text = create().nativeElement.textContent as string;
+
         expect(text).toContain('Açık işler');
         expect(text).not.toContain('Brüt ücret');
         expect(text).not.toContain('Net tahsilat');
@@ -145,6 +155,7 @@ describe('EndOfDayPageComponent', () => {
     it('Payments.Read tek başına: tahsilat var, ücret toplamı ve döküm yok (döküm Charges.Read ister)', () => {
         claims = new Set(['Payments.Read']);
         const text = create().nativeElement.textContent as string;
+
         expect(text).toContain('Net tahsilat');
         expect(text).not.toContain('Brüt ücret');
         expect(text).not.toContain('Açık işler');
@@ -154,9 +165,11 @@ describe('EndOfDayPageComponent', () => {
 
     it('Excel/CSV indirme aynı süzgeçlerle döküm uçlarını çağırır, sayfalama göndermez', () => {
         const fixture = create();
+
         fixture.componentInstance.state.exportCsv();
         fixture.componentInstance.state.exportXlsx();
         const [csvPath, csvParams] = api.getBlob.calls.argsFor(0) as [string, HttpParams];
+
         expect(csvPath).toBe('/api/v1/reports/daily-transactions/export');
         expect(api.getBlob.calls.argsFor(1)[0]).toBe('/api/v1/reports/daily-transactions/export-xlsx');
         expect(csvParams.has('page')).toBeFalse();
@@ -165,6 +178,7 @@ describe('EndOfDayPageComponent', () => {
 
     it('yazdırma sınıfını ekler ve sayfadan çıkınca kaldırır', () => {
         const fixture = create();
+
         expect(document.body.classList).toContain('register-page-active');
         fixture.destroy();
         expect(document.body.classList).not.toContain('register-page-active');

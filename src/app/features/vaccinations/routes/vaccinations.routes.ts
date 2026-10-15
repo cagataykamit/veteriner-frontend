@@ -18,6 +18,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: VaccinationsListPageComponent
@@ -27,6 +28,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && auth.hasOperationClaim(VACCINE_DEFINITIONS_READ_CLAIM)
                 ? true
                 : router.createUrlTree(['/notfound']);
@@ -38,6 +40,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM) && auth.hasOperationClaim(VACCINE_DEFINITIONS_READ_CLAIM)
                 ? true
                 : router.createUrlTree(['/notfound']);
@@ -49,6 +52,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: VaccinationDetailPageComponent

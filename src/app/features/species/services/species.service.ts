@@ -31,6 +31,7 @@ export class SpeciesService {
                 ? { page: 1, pageSize: SPECIES_PANEL_LIST_PAGE_SIZE }
                 : { activeOnly: options?.activeOnly }
         );
+
         return this.api.get<unknown>(ApiEndpoints.species.list(), params).pipe(
             map((raw) => mapSpeciesListResponseToVm(raw)),
             catchError((err: HttpErrorResponse) =>
@@ -52,15 +53,18 @@ export class SpeciesService {
         return this.api.post<unknown>(ApiEndpoints.species.list(), mapSpeciesUpsertToApiBody(payload)).pipe(
             map((raw) => {
                 const id = extractCreatedSpeciesIdFromPostResponse(raw);
+
                 if (!id) {
                     throw new Error('SPECIES_CREATE_NO_ID_IN_RESPONSE');
                 }
+
                 return { id };
             }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 if (err instanceof Error && err.message === 'SPECIES_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(
                         () =>
@@ -69,6 +73,7 @@ export class SpeciesService {
                             )
                     );
                 }
+
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Tür kaydı oluşturulamadı.')
                 );
@@ -83,6 +88,7 @@ export class SpeciesService {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Tür kaydı güncellenemedi.')
                 );

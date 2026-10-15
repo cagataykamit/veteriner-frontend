@@ -53,6 +53,7 @@ describe('groupTodayItems', () => {
             item({ key: 'w1', careStatus: 'Waiting' }),
             item({ key: 'w2', careStatus: 'Waiting' })
         ]);
+
         expect(groups.map((g) => g.key)).toEqual(['waiting', 'planned', 'completed']);
         expect(groups[0].items.map((i) => i.key)).toEqual(['w1', 'w2']);
     });
@@ -64,6 +65,7 @@ describe('groupTodayItems', () => {
             item({ key: 'p', visitId: null, careStatus: null }),
             item({ key: 'c', careStatus: 'Completed' })
         ]);
+
         expect(groups.map((g) => g.elapsedLabel)).toEqual(['Bekleme', 'Süre', null, null]);
     });
 
@@ -75,6 +77,7 @@ describe('groupTodayItems', () => {
 describe('todayItemActions', () => {
     it('Scheduled randevu ve Visit yok: Geldi', () => {
         const a = todayItemActions(item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Scheduled' }));
+
         expect(a.canMarkArrived).toBeTrue();
         expect(a.canCorrect).toBeFalse();
         expect(a.canOpenExamination).toBeFalse();
@@ -82,15 +85,19 @@ describe('todayItemActions', () => {
 
     it('muayeneyle tamamlanmış (Visit siz) randevuya Geldi yok', () => {
         const a = todayItemActions(item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Completed' }));
+
         expect(a.canMarkArrived).toBeFalse();
     });
 
     it('Bekliyor: başlat + muayene; Devam ediyor: tamamla + muayene; Tamamlandı: yalnızca düzeltme', () => {
         const waiting = todayItemActions(item({ careStatus: 'Waiting' }));
+
         expect([waiting.canStartCare, waiting.canOpenExamination, waiting.canCompleteCare]).toEqual([true, true, false]);
         const inProgress = todayItemActions(item({ careStatus: 'InProgress' }));
+
         expect([inProgress.canStartCare, inProgress.canOpenExamination, inProgress.canCompleteCare]).toEqual([false, true, true]);
         const done = todayItemActions(item({ careStatus: 'Completed' }));
+
         expect([done.canStartCare, done.canOpenExamination, done.canCompleteCare, done.canCorrect]).toEqual([false, false, false, true]);
     });
 });
@@ -134,6 +141,7 @@ describe('formatHospitalizationStay', () => {
 describe('correctionActionOptions', () => {
     it('mevcut durum dışındaki iki durum + yanlış geliş', () => {
         const opts = correctionActionOptions('InProgress');
+
         expect(opts.map((o) => o.value)).toEqual(['Waiting', 'Completed', 'Mistaken']);
     });
 });
@@ -177,6 +185,7 @@ describe('yanlış işaretlenen satır', () => {
     it('voided grubuna düşer; yalnızca geri alma mümkündür', () => {
         expect(groupTodayItems([voided]).map((g) => g.key)).toEqual(['voided']);
         const a = todayItemActions(voided);
+
         expect(a.canRestore).toBeTrue();
         expect(a.canCorrect || a.canStartCare || a.canOpenExamination || a.canCompleteCare).toBeFalse();
     });
@@ -203,6 +212,7 @@ describe('Gelmedi (NoShow) satırı', () => {
 
     it('Visit siz NoShow randevu en sonda Gelmedi grubuna düşer', () => {
         const groups = groupTodayItems([planned({ key: 'ns', appointmentStatus: 'NoShow' }), item({ key: 'c', careStatus: 'Completed' }), planned({ key: 'p' })]);
+
         expect(groups.map((g) => g.key)).toEqual(['planned', 'completed', 'noShow']);
     });
 
@@ -213,10 +223,12 @@ describe('Gelmedi (NoShow) satırı', () => {
 
     it('Gelmedi satırında geri alma ve geç gelen için Geldi var; Visit li satırda gelmedi yok', () => {
         const ns = todayItemActions(planned({ appointmentStatus: 'NoShow' }), now);
+
         expect(ns.canRevertNoShow).toBeTrue();
         expect(ns.canMarkArrived).toBeTrue();
         expect(ns.canMarkNoShow).toBeFalse();
         const withVisit = todayItemActions(item({ appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z' }), now);
+
         expect(withVisit.canMarkNoShow || withVisit.canRevertNoShow).toBeFalse();
     });
 });
@@ -253,6 +265,7 @@ describe('satır eylem düzeni (görünür / menü)', () => {
 
     it('Ödeme al: yetki varsa menünün başında; yanlış işaretli satırda ve yetkisizde yok', () => {
         const pay = { ...all, canCollectPayment: true };
+
         expect(secondary(item(), pay)).toEqual(['collectPayment', 'correct']);
         expect(secondary(item(), all)).toEqual(['correct']);
         expect(secondary(item({ isVoided: true }), pay)).toEqual(['restore']);
@@ -297,6 +310,7 @@ describe('todayOpenChips', () => {
 
     it('Ücret yok: danger, işlem sayısı ipucunda', () => {
         const [c] = chips({ chargeIndicator: 'ChargeMissing', chargeableWorkCount: 3 });
+
         expect(c.label).toBe('Ücret yok');
         expect(c.severity).toBe('danger');
         expect(c.title).toContain('3 işlem');
@@ -310,6 +324,7 @@ describe('todayOpenChips', () => {
 
     it('bekleyen kalem varsa Ücret bekliyor çıkar, Ücret yok çıkmaz (kural tek yerde)', () => {
         const [c, ...rest] = chips({ chargeIndicator: 'ChargeMissing', chargeableWorkCount: 2, pendingChargeCount: 3 });
+
         expect(c.key).toBe('chargePending');
         expect(c.label).toBe('Ücret bekliyor (3)');
         expect(c.reviewable).toBeTrue();
@@ -337,6 +352,7 @@ describe('todayOpenChips', () => {
 
     it('her çipin simgesi var (yalnız renkle ayrım yok)', () => {
         const all = chips({ chargeIndicator: 'ChargeMissing', awaitingLabCount: 1 }).concat(chips({ chargeIndicator: 'PaymentPending' }));
+
         expect(all.every((c) => c.icon.startsWith('pi '))).toBeTrue();
     });
 });

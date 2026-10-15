@@ -33,17 +33,21 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: VaccinationListItemDto | VaccinationDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
@@ -58,6 +62,7 @@ function canonicalDueAt(dto: VaccinationListItemDto | VaccinationDetailDto): str
     const o = dto as unknown as Record<string, unknown>;
     const nextRaw = o['nextDueAtUtc'] ?? o['NextDueAtUtc'];
     const nextDue = typeof nextRaw === 'string' && nextRaw.trim() ? nextRaw.trim() : null;
+
     return firstTrimmed(dto.dueAtUtc, readDtoString(dto, ['DueAtUtc']), nextDue);
 }
 
@@ -90,6 +95,7 @@ function canonicalClientName(dto: VaccinationListItemDto | VaccinationDetailDto)
 
 function canonicalStatus(dto: VaccinationListItemDto | VaccinationDetailDto): number | null {
     const raw = dto.status ?? readDtoString(dto, ['Status']);
+
     return parseVaccinationStatusRawToEnum(raw);
 }
 
@@ -123,9 +129,11 @@ export function mapVaccinationListItemDtoToVm(dto: VaccinationListItemDto): Vacc
 
 function mapLinkedAdministration(dto: VaccinationDetailDto): VaccinationLinkedAdministrationVm | null {
     const id = firstTrimmed(dto.administrationId);
+
     if (!id) {
         return null;
     }
+
     return {
         id,
         productName: str(dto.productName),
@@ -143,6 +151,7 @@ function mapLinkedAdministration(dto: VaccinationDetailDto): VaccinationLinkedAd
 export function mapVaccinationCreateResponse(raw: unknown, id: string): VaccinationCreateResultVm {
     const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null;
     const hasStock = o?.['administration'] && typeof o['administration'] === 'object' && o['stock'] && typeof o['stock'] === 'object';
+
     return {
         id,
         stockResult: hasStock ? mapAdministrationCreateResultDtoToVm(o as unknown as AdministrationCreateResultDto) : null
@@ -152,6 +161,7 @@ export function mapVaccinationCreateResponse(raw: unknown, id: string): Vaccinat
 /** GET /vaccinations/{id} — liste öğesi ile aynı çekirdek eşleme + audit. */
 export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): VaccinationDetailVm {
     const base = mapVaccinationListItemDtoToVm(dto);
+
     return {
         ...base,
         examinationId: dto.examinationId?.trim() ? dto.examinationId.trim() : null,
@@ -164,6 +174,7 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
 /** Detay → edit: `clientId` / `petId` canonical; backend camelCase veya OwnerId/PetId vb. */
 export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): VaccinationEditVm {
     const status = canonicalStatus(dto);
+
     return {
         id: dto.id,
         clinicId: dto.clinicId?.trim() ?? '',
@@ -188,9 +199,11 @@ export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): Vacc
  */
 export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): VaccinationCreateRequestDto {
     const clinicId = req.clinicId.trim();
+
     if (!clinicId) {
         throw new Error('VACCINATION_WRITE_CLINIC_REQUIRED');
     }
+
     const examinationId = req.examinationId?.trim() ? req.examinationId.trim() : null;
     const notes = req.notes?.trim() ? req.notes.trim() : null;
     const status = toVaccinationStatusEnumOrThrow(req.status);
@@ -199,6 +212,7 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
     const productId = req.productId?.trim();
     const batchId = req.batchId?.trim();
     const requestId = req.requestId?.trim();
+
     return {
         clinicId,
         examinationId,
@@ -221,14 +235,18 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
 
 export function mapUpdateVaccinationToApiBody(routeId: string, req: UpdateVaccinationRequest): VaccinationUpdateRequestDto {
     const clinicId = req.clinicId.trim();
+
     if (!clinicId) {
         throw new Error('VACCINATION_WRITE_CLINIC_REQUIRED');
     }
+
     const status = toVaccinationStatusEnumOrThrow(req.status);
     const bodyId = req.id?.trim();
+
     if (bodyId && bodyId !== routeId.trim()) {
         throw new Error('VACCINATION_WRITE_ID_MISMATCH');
     }
+
     return {
         ...(bodyId ? { id: bodyId } : {}),
         clinicId,
@@ -244,9 +262,11 @@ export function mapUpdateVaccinationToApiBody(routeId: string, req: UpdateVaccin
 
 function toVaccinationStatusEnumOrThrow(status: number): number {
     const parsed = parseVaccinationStatusRawToEnum(status);
+
     if (parsed !== null) {
         return parsed;
     }
+
     throw new Error('VACCINATION_WRITE_STATUS_UNSUPPORTED');
 }
 
@@ -258,6 +278,7 @@ export function mapPagedVaccinationsToVm(result: VaccinationListItemDtoPagedResu
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapVaccinationListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -276,42 +297,58 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+
     if (query.clientId?.trim()) {
         const clientId = query.clientId.trim();
+
         p = p.set('ClientId', clientId);
     }
+
     if (query.status?.trim()) {
         const status = query.status.trim();
+
         p = p.set('Status', status);
     }
+
     const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+
     if (fromUtc) {
         p = p.set('dateFromUtc', fromUtc);
     }
+
     const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+
     if (toUtc) {
         p = p.set('dateToUtc', toUtc);
     }
+
     if (query.onlyOverdue === true) {
         p = p.set('OnlyOverdue', 'true');
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     return p;
 }
 

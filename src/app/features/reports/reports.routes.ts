@@ -20,6 +20,7 @@ function requireAnyClaim(claims: readonly string[]): CanActivateFn {
     return () => {
         const auth = inject(AuthService);
         const router = inject(Router);
+
         return claims.some((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree(['/notfound']);
     };
 }
@@ -29,6 +30,7 @@ function requireAllClaims(claims: readonly string[]): CanActivateFn {
     return () => {
         const auth = inject(AuthService);
         const router = inject(Router);
+
         return claims.every((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree(['/notfound']);
     };
 }

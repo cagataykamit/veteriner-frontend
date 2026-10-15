@@ -13,7 +13,9 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
 
     function create() {
         const fixture = TestBed.createComponent(VaccinationsReportPageComponent);
+
         fixture.detectChanges();
+
         return fixture;
     }
 
@@ -49,6 +51,7 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
 
     it('Hayvan seçim kutusu yok; Müşteri ve Arama alanları var', () => {
         const el: HTMLElement = create().nativeElement;
+
         expect(el.querySelector('app-pet-search')).toBeNull();
         expect(el.querySelector('app-client-search')).not.toBeNull();
         expect(el.querySelector('app-search-input')).not.toBeNull();
@@ -56,6 +59,7 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
 
     it('"Aktif" rozeti çıkmaz', () => {
         const fixture = create();
+
         fixture.componentInstance.state.fromDateInput = '2026-10-01';
         fixture.componentInstance.state.applyFilters();
         fixture.detectChanges();
@@ -64,12 +68,14 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
 
     it('toplam kayıt büyük kart yerine tek satır sayaçtır', () => {
         const el: HTMLElement = create().nativeElement;
+
         expect(el.querySelector('.report-summary')).toBeNull();
         expect(el.textContent).toContain('7 kayıt');
     });
 
     it('petId sorgu alanı desteklenmeye devam eder (süzgeç durumundan sorguya gider)', () => {
         const fixture = create();
+
         fixture.componentInstance.state.petIdFilter = 'pet-1';
         fixture.componentInstance.state.applyFilters();
         expect(source.loadReport.calls.mostRecent().args[0].petId).toBe('pet-1');

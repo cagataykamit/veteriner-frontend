@@ -261,11 +261,14 @@ export class TreatmentEditPageComponent implements OnInit {
             'description',
             'notes'
         ];
+
         for (const f of fields) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[f]) {
                     const next = { ...cur };
+
                     delete next[f];
                     this.apiFieldErrors.set(next);
                 }
@@ -276,45 +279,59 @@ export class TreatmentEditPageComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.loadError.set('Geçersiz tedavi.');
             this.loading.set(false);
+
             return;
         }
+
         this.treatmentId = id;
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const cid = trimClientIdControlValue(this.form.controls.clientId.value);
+
             if (!cid) {
                 this.form.controls.petId.disable({ emitEvent: false });
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
+
             if (!pid) {
                 this.relationLoadSeq += 1;
                 this.form.patchValue({ examinationId: '' }, { emitEvent: false });
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
+
                 return;
             }
+
             if (this.initialRelationHydratePending) {
                 this.initialRelationHydratePending = false;
                 const vm = this.editVmCache;
+
                 if (vm) {
                     void this.loadExaminationsForPetHydrate(pid, vm);
                 }
+
                 return;
             }
+
             this.form.patchValue({ examinationId: '' }, { emitEvent: false });
             this.loadExaminationsForPetFresh(pid);
         });
@@ -344,6 +361,7 @@ export class TreatmentEditPageComponent implements OnInit {
                     },
                     { emitEvent: false }
                 );
+
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
                     this.initialRelationHydratePending = true;
@@ -351,6 +369,7 @@ export class TreatmentEditPageComponent implements OnInit {
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
+
                 this.loading.set(false);
             },
             error: (e: unknown) => {
@@ -367,31 +386,44 @@ export class TreatmentEditPageComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
         const treatmentDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.treatmentDateLocal);
+
         if (!treatmentDateUtc) {
             this.apiFieldErrors.set({ treatmentDateLocal: 'Geçerli bir tedavi tarihi ve saati seçin.' });
             this.form.controls.treatmentDateLocal.markAsTouched();
+
             return;
         }
+
         const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(v.followUpDate.trim()) : null;
+
         if (v.followUpDate?.trim() && !followUpDateUtc) {
             this.submitError.set('Takip tarihi geçersiz.');
+
             return;
         }
+
         const orderMsg = followUpBeforeTreatmentMessage(treatmentDateUtc, followUpDateUtc);
+
         if (orderMsg) {
             this.submitError.set(orderMsg);
+
             return;
         }
 
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
@@ -414,12 +446,16 @@ export class TreatmentEditPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseTreatmentUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
@@ -436,6 +472,7 @@ export class TreatmentEditPageComponent implements OnInit {
     private loadExaminationsForPetFresh(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
+
         this.loadingExaminations.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }).subscribe({
@@ -443,6 +480,7 @@ export class TreatmentEditPageComponent implements OnInit {
                 if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                     return;
                 }
+
                 this.examinationOptions.set(ex.items.map(prescriptionExaminationSelectOption));
                 this.loadingExaminations.set(false);
             },
@@ -450,6 +488,7 @@ export class TreatmentEditPageComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 this.selectionError.set(this.mapLoadError(e, 'Muayene listesi yüklenemedi.'));
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
@@ -460,34 +499,43 @@ export class TreatmentEditPageComponent implements OnInit {
     private async loadExaminationsForPetHydrate(petId: string, vm: TreatmentEditVm): Promise<void> {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
+
         this.loadingExaminations.set(true);
         this.selectionError.set(null);
+
         try {
             const ex = await firstValueFrom(
                 this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid })
             );
+
             if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                 return;
             }
+
             let items = [...ex.items];
             const exW = vm.examinationId?.trim() ?? '';
+
             if (exW && !items.some((e) => e.id === exW)) {
                 try {
                     const d = await firstValueFrom(this.examinationsService.getExaminationById(exW));
+
                     items = [examinationListItemFromDetail(d), ...items];
                 } catch {
                     /* liste dışı muayene yüklenemezse atlanır */
                 }
             }
+
             if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                 return;
             }
+
             this.examinationOptions.set(items.map(prescriptionExaminationSelectOption));
             this.form.controls.examinationId.setValue(exW, { emitEvent: false });
         } catch (e: unknown) {
             if (seq !== this.relationLoadSeq) {
                 return;
             }
+
             this.selectionError.set(this.mapLoadError(e, 'Muayene listesi yüklenemedi.'));
             this.examinationOptions.set([]);
         } finally {
@@ -504,6 +552,7 @@ export class TreatmentEditPageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

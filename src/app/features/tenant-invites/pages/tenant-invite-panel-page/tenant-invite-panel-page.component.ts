@@ -230,6 +230,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
 
     readonly joinUrl = computed(() => {
         const t = this.lastCreated()?.token?.trim();
+
         return t ? buildPublicJoinInviteUrl(t) : '';
     });
 
@@ -258,6 +259,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
                     },
                     error: (e: unknown) => {
                         const msg = tenantInvitePanelFailureMessage(e, 'Rol listesi yüklenemedi.');
+
                         this.claimsLoadError.set(msg);
                         this.operationClaims.set([]);
                         this.pageLoading.set(false);
@@ -271,6 +273,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
                         : e instanceof Error && e.message
                           ? e.message
                           : 'Klinik listesi yüklenemedi.';
+
                 this.pageError.set(msg);
                 this.pageLoading.set(false);
             }
@@ -285,29 +288,39 @@ export class TenantInvitePanelPageComponent implements OnInit {
         if (!this.canManageTenantAccess()) {
             return;
         }
+
         this.submitError.set(null);
         this.copyFeedback.set(null);
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
         const expiresRaw = v.expiresAtLocal?.trim() ?? '';
         let expiresAtUtc: string | null = null;
+
         if (expiresRaw) {
             const iso = dateTimeLocalInputToIsoUtc(expiresRaw);
+
             if (!iso) {
                 this.submitError.set('Son geçerlilik tarihi geçersiz.');
+
                 return;
             }
+
             expiresAtUtc = iso;
         }
+
         const dto = mapCreateInviteFormToApiDto({
             email: v.email,
             clinicId: v.clinicId,
             operationClaimId: v.operationClaimId,
             expiresAtUtc
         });
+
         this.submitting.set(true);
         this.tenantInvites.createInvite(dto).subscribe({
             next: (vm) => {
@@ -324,10 +337,13 @@ export class TenantInvitePanelPageComponent implements OnInit {
 
     async copyJoinLink(): Promise<void> {
         const url = this.joinUrl();
+
         if (!url || typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
             this.copyFeedback.set('fail');
+
             return;
         }
+
         try {
             await navigator.clipboard.writeText(url);
             this.copyFeedback.set('ok');

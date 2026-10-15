@@ -28,6 +28,7 @@ export class SalesService {
 
     getSales(query: SalesListQuery): Observable<SalesPagedVm> {
         const merged: SalesListQuery = { ...query, clinicId: query.clinicId?.trim() || this.auth.getClinicId()?.trim() || undefined };
+
         return this.api
             .get<SaleDtoPagedResult>(ApiEndpoints.sales.list(), salesQueryToHttpParams(merged))
             .pipe(map(mapPagedSalesToVm), toUserError('Satış listesi yüklenemedi.'));
@@ -45,6 +46,7 @@ export class SalesService {
     /** `Sales.Correct`; yalnız tam iptal. Hata mesajları (ör. `Charges.VoidBlockedByAllocation`) `messageFromHttpError` ile eşlenir. */
     voidSale(id: string, request: VoidSaleRequest): Observable<SaleDetailVm> {
         const body: VoidSaleRequest = { reason: request.reason.trim(), stockOutcome: request.stockOutcome };
+
         return this.api.post<SaleDto>(ApiEndpoints.sales.void(id), body).pipe(map(mapSaleDtoToDetailVm), toUserError('Satış iptal edilemedi.'));
     }
 }

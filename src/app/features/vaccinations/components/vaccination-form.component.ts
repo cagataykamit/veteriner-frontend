@@ -413,11 +413,13 @@ export class VaccinationFormComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const initStatus = this.normalizeStatusNum(this.form.controls.status.value);
+
         this.lastStatusForDateTransition = initStatus;
         this.applyDateValidatorsForStatus(initStatus);
         this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((status) => {
             const next = this.normalizeStatusNum(status);
             const prev = this.lastStatusForDateTransition;
+
             if (prev !== null && prev !== next) {
                 const raw = this.form.getRawValue();
                 const patch = vaccinationStatusDateFieldsAfterTransition(
@@ -426,13 +428,16 @@ export class VaccinationFormComponent implements OnInit {
                     (raw.appliedAtLocal ?? '').trim(),
                     (raw.nextDueDate ?? '').trim()
                 );
+
                 this.form.patchValue(
                     { appliedAtLocal: patch.appliedAtLocal, nextDueDate: patch.nextDueDate },
                     { emitEvent: false }
                 );
             }
+
             this.lastStatusForDateTransition = next;
             this.applyDateValidatorsForStatus(next);
+
             if (next !== 1 && this.form.controls.productId.value) {
                 // Stok düşümü yalnız "Uygulandı"da geçerli; gizlenen ürün seçimi gönderilmez.
                 this.form.controls.productId.setValue('');
@@ -451,24 +456,30 @@ export class VaccinationFormComponent implements OnInit {
             if (this.contextFromRoute()) {
                 return;
             }
+
             this.form.controls.petId.setValue('');
             this.form.controls.vaccineDefinitionId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
             this.apiFieldErrors.set({});
             const id = typeof clientId === 'string' ? clientId.trim() : '';
+
             if (!id) {
                 this.form.controls.petId.disable({ emitEvent: false });
                 this.loadVaccineDefinitionsForSpecies(null);
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((petId) => {
             if (this.contextFromRoute()) {
                 return;
             }
+
             const pid = typeof petId === 'string' ? petId.trim() : '';
+
             if (pid) {
                 this.applyPetSpecies(pid);
             } else {
@@ -485,6 +496,7 @@ export class VaccinationFormComponent implements OnInit {
         if (!this.canStock) {
             return;
         }
+
         this.productsLoading.set(true);
         this.productService.getProducts({ page: 1, pageSize: 200, isActive: true }).subscribe({
             next: (r) => {
@@ -505,8 +517,10 @@ export class VaccinationFormComponent implements OnInit {
     /** Ürün seçilince miktar zorunlu ve varsayılan 1 doz; kaldırılınca alan temizlenir. */
     private applyQuantityRulesForProduct(hasProduct: boolean): void {
         const q = this.form.controls.quantity;
+
         if (hasProduct) {
             q.setValidators([Validators.required, chargeNumberValidator(CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS)]);
+
             if (q.value == null) {
                 q.setValue(1, { emitEvent: false });
             }
@@ -514,6 +528,7 @@ export class VaccinationFormComponent implements OnInit {
             q.clearValidators();
             q.setValue(null, { emitEvent: false });
         }
+
         q.updateValueAndValidity({ emitEvent: false });
         this.form.updateValueAndValidity({ emitEvent: false });
     }
@@ -548,6 +563,7 @@ export class VaccinationFormComponent implements OnInit {
     private sanitizeVaccineDefinitionSelection(items: VaccineDefinitionListItemVm[]): void {
         const allowed = new Set(items.map((i) => i.id));
         const cur = this.form.controls.vaccineDefinitionId.value?.trim() ?? '';
+
         if (cur && !allowed.has(cur)) {
             this.form.controls.vaccineDefinitionId.setValue('');
         }
@@ -576,26 +592,35 @@ export class VaccinationFormComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
         const v = this.form.getRawValue();
         const status = Number(v.status);
+
         if (!Number.isFinite(status) || ![0, 1, 2].includes(status)) {
             this.submitError.set('Geçerli bir durum seçin.');
+
             return;
         }
+
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
         const dates = buildVaccinationAppliedDueForSubmit(status as 0 | 1 | 2, (v.appliedAtLocal ?? '').trim(), (v.nextDueDate ?? '').trim());
+
         if (dates.errorMessage) {
             this.submitError.set(dates.errorMessage);
+
             return;
         }
 
@@ -618,19 +643,25 @@ export class VaccinationFormComponent implements OnInit {
         this.vaccinationsService.createVaccination(payload).subscribe({
             next: ({ id, stockResult }) => {
                 this.submitting.set(false);
+
                 if (payload.productId) {
                     writeLastVaccineProductId(payload.productId);
                 }
+
                 this.saved.emit({ id, stockNotice: stockResult ? administrationSavedNotice(stockResult, 'Aşı') : undefined });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseVaccinationUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(this.mapSubmitError(e));
             }
         });
@@ -641,9 +672,11 @@ export class VaccinationFormComponent implements OnInit {
     /** Rota bağlamı (muayeneden aşı): müşteri ve hayvan doğrulanır, sonra kilitlenir. */
     private tryApplyVaccinationRouteContext(): void {
         const ctx = parseVaccinationCreateRouteContext(this.contextParams());
+
         if (!ctx) {
             return;
         }
+
         this.applyingRouteContext.set(true);
         this.selectionError.set(null);
         this.clientsService.getClientById(ctx.clientId).subscribe({
@@ -661,8 +694,10 @@ export class VaccinationFormComponent implements OnInit {
                 if ((pet.ownerId ?? '').trim() !== ctx.clientId.trim()) {
                     this.selectionError.set('Hasta bu müşteri için geçerli değil.');
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 this.routeExaminationId = ctx.examinationId;
                 this.form.patchValue({ clientId: ctx.clientId, petId: ctx.petId }, { emitEvent: false });
                 this.form.controls.clientId.disable({ emitEvent: false });
@@ -682,6 +717,7 @@ export class VaccinationFormComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 
@@ -689,6 +725,7 @@ export class VaccinationFormComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, 'Kayıt oluşturulamadı.');
         }
+
         return e instanceof Error ? e.message : 'Kayıt oluşturulamadı.';
     }
 
@@ -715,12 +752,14 @@ export class VaccinationFormComponent implements OnInit {
 
     private normalizeStatusNum(status: unknown): number {
         const n = Number(status);
+
         return Number.isFinite(n) && [0, 1, 2].includes(n) ? n : 0;
     }
 
     /** Şablon: seçilen durum kodu. */
     protected statusNum(): number {
         const n = Number(this.form.controls.status.value);
+
         return Number.isFinite(n) ? n : -1;
     }
 

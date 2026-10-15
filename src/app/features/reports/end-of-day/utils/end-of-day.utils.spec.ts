@@ -17,6 +17,7 @@ describe('end-of-day.utils', () => {
 
     it('byDay yalnız hareketli günleri içerir; boş günler sıfır satırla dolar', () => {
         const days = fillEmptyDays('2026-10-01', '2026-10-04', [day('2026-10-02', 100), day('2026-10-04', 50)]);
+
         expect(days.map((d) => d.date)).toEqual(['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04']);
         expect(days.map((d) => d.netAmount)).toEqual([0, 100, 0, 50]);
     });

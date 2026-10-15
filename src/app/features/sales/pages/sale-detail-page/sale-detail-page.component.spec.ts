@@ -78,6 +78,7 @@ describe('SaleDetailPageComponent', () => {
         await setup(dto({ status: 'Voided', voidReason: 'Yanlış ürün', voidStockOutcome: 'WrittenOff', paidAmount: 0, outstandingAmount: 0 }));
         expect(buttonLabels().some((l) => l.includes('İptal et'))).toBeFalse();
         const info = el().querySelector('[data-testid="sale-void-info"]')!.textContent!;
+
         expect(info).toContain('Yanlış ürün');
         expect(info).toContain('Zarar yazıldı');
         expect(text()).toContain('İptal edildi');
@@ -86,15 +87,18 @@ describe('SaleDetailPageComponent', () => {
     it('iptal diyaloğu stoğa dön / zarar yaz seçimi sunar ve seçimle iptal eder', async () => {
         await setup();
         const component = fixture.componentInstance;
+
         component.voidVisible.set(true);
         fixture.detectChanges();
         await fixture.whenStable();
         const body = document.body.textContent ?? '';
+
         expect(body).toContain('Stoğa dön');
         expect(body).toContain('Zarar yaz');
         expect(body).toContain('Kısmi iade yoktur');
 
         const dialog = fixture.debugElement.query((d) => d.name === 'app-sale-void-dialog').componentInstance as { execute: (r: string) => import('rxjs').Observable<unknown>; stockOutcome: { set: (v: string) => void } };
+
         dialog.stockOutcome.set('WrittenOff');
         dialog.execute('Yanlış ürün satıldı').subscribe();
         expect(voidSale).toHaveBeenCalledWith('s1', { reason: 'Yanlış ürün satıldı', stockOutcome: 'WrittenOff' });

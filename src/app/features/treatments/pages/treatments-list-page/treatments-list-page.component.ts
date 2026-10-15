@@ -232,8 +232,10 @@ export class TreatmentsListPageComponent implements OnInit {
     applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
@@ -279,8 +281,10 @@ export class TreatmentsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -289,10 +293,12 @@ export class TreatmentsListPageComponent implements OnInit {
             this.first.set(0);
             this.currentPage.set(1);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
@@ -300,16 +306,19 @@ export class TreatmentsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
             this.first.set(0);
             this.currentPage.set(1);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
@@ -322,9 +331,11 @@ export class TreatmentsListPageComponent implements OnInit {
         force = false
     ): void {
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);

@@ -64,6 +64,7 @@ describe('sale-cart.utils', () => {
 
     it('kısmi ödeme 0 ile toplam arasında olmalıdır; diğer modlarda hata yok', () => {
         const partial = (amount: number | null) => paymentError(100, false, { mode: 'partial', method: 'Cash', amount });
+
         expect(partial(40)).toBeNull();
         expect(partial(null)).toContain('0\'dan büyük');
         expect(partial(100)).toContain('toplamdan az');
@@ -75,6 +76,7 @@ describe('sale-cart.utils', () => {
     it('sepet isteği hatası: boş sepet, çok satır, geçersiz satır, ödeme', () => {
         expect(cartRequestError([], 0, true, full)).toBe('Sepet boş.');
         const many = Array.from({ length: SALE_MAX_LINES + 1 }, (_, i) => line({ key: `k${i}` }));
+
         expect(cartRequestError(many, 1, true, full)).toContain(String(SALE_MAX_LINES));
         expect(cartRequestError([line({ quantity: null })], 0, true, full)).toContain('Satırlardaki');
         expect(cartRequestError([line()], 45.5, false, { mode: 'partial', method: 'Cash', amount: 100 })).toContain('toplamdan az');
@@ -107,6 +109,7 @@ describe('sale-cart.utils', () => {
 
         it('peşin müşteri: clientId yok, tam ödeme gönderilir, boş not atılır', () => {
             const req = toCreateSaleRequest({ ...base, clientId: '', lines: [line({ quantity: 2, unitPrice: 10 })], payment: { mode: 'credit', method: 'Card', amount: null } });
+
             expect(req).toEqual({
                 clinicId: 'c1',
                 clientId: undefined,
@@ -119,6 +122,7 @@ describe('sale-cart.utils', () => {
 
         it('müşterili veresiye: ödeme gönderilmez; parti seçiliyse batchId gider', () => {
             const req = toCreateSaleRequest({ ...base, clientId: 'cl1', lines: [line({ batchId: 'b9' })], payment: { mode: 'credit', method: 'Cash', amount: null } });
+
             expect(req.clientId).toBe('cl1');
             expect(req.payment).toBeUndefined();
             expect(req.lines[0].batchId).toBe('b9');
@@ -126,6 +130,7 @@ describe('sale-cart.utils', () => {
 
         it('müşterili kısmi ödeme: girilen tutar gider', () => {
             const req = toCreateSaleRequest({ ...base, clientId: 'cl1', lines: [line({ quantity: 2, unitPrice: 10 })], payment: { mode: 'partial', method: 'Transfer', amount: 5 } });
+
             expect(req.payment).toEqual({ method: 'Transfer', amount: 5 });
         });
     });

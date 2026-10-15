@@ -48,6 +48,7 @@ describe('SalesService', () => {
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/sales');
+
         expect(req.request.method).toBe('GET');
         expect(req.request.params.get('clinicId')).toBe('c1');
         expect(req.request.params.has('includeVoided')).toBeFalse();
@@ -61,6 +62,7 @@ describe('SalesService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/sales');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body.requestId).toBe('rid-1');
         req.flush({ created: true, sale: saleDto, stocks: [] }, { status: 201, statusText: 'Created' });
@@ -97,6 +99,7 @@ describe('SalesService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/sales/s1/void');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ reason: 'Yanlış ürün', stockOutcome: 'WrittenOff' });
         req.flush({ ...saleDto, status: 'Voided' });
@@ -150,6 +153,7 @@ describe('SaleProductSearchService', () => {
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/products');
+
         expect(req.request.params.get('Search')).toBe('8690');
         expect(req.request.params.get('IsActive')).toBe('true');
         req.flush({

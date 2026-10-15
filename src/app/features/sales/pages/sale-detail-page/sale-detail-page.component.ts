@@ -116,6 +116,7 @@ export class SaleDetailPageComponent implements OnInit {
 
     load(): void {
         const id = this.route.snapshot.paramMap.get('id') ?? '';
+
         this.loading.set(true);
         this.error.set(null);
         this.salesService.getSaleById(id).subscribe({

@@ -214,9 +214,11 @@ export class TenantMembersListPageComponent implements OnInit {
         if (v === true) {
             return 'Evet';
         }
+
         if (v === false) {
             return 'Hayır';
         }
+
         return '—';
     }
 
@@ -248,11 +250,14 @@ export class TenantMembersListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.loadFromServer(page, rows, this.activeSearch());
     }
 
@@ -260,15 +265,18 @@ export class TenantMembersListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const first = state.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.suppressNextLazy = true;
         this.loadFromServer(page, rows, this.activeSearch());
     }
 
     private loadFromServer(page: number, pageSize: number, search: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);

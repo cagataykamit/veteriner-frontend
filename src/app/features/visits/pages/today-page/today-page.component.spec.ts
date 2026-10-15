@@ -79,8 +79,10 @@ describe('TodayPageComponent', () => {
         }).compileComponents();
 
         const fixture = TestBed.createComponent(TodayPageComponent);
+
         toasts = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
         fixture.detectChanges();
+
         return fixture;
     };
 
@@ -95,6 +97,7 @@ describe('TodayPageComponent', () => {
             items: [item({ key: 'w' }), item({ key: 'c', careStatus: 'Completed' })]
         });
         const t = text(f);
+
         expect(t).toContain('Bekliyor');
         expect(t).toContain('Tamamlandı');
         expect(t).toContain('Dr. Ayşe');
@@ -106,9 +109,11 @@ describe('TodayPageComponent', () => {
     it('başlık tekrarlanmaz: alt yazı yok, ilk görünüm sekmesi "Günlük liste"', async () => {
         const f = await create(['Visits.Read'], { date: '2026-10-10', activeHospitalizations: [], items: [] });
         const el = f.nativeElement as HTMLElement;
+
         expect(el.querySelector('app-page-header p')).toBeNull();
         expect(text(f)).not.toContain('Bugünün randevuları ve gelen hastalar.');
         const views = el.querySelector('p-selectbutton')!.textContent ?? '';
+
         expect(views).toContain('Günlük liste');
         expect(views).toContain('Yanlış işaretlenenler');
         expect(views).not.toContain('Bugün');
@@ -137,6 +142,7 @@ describe('TodayPageComponent', () => {
             ]
         });
         const t = text(f);
+
         expect(t).toContain('Kısmi ödeme');
         expect(t).toContain('Ücret ₺1.000,00');
         expect(t).toContain('Ödenen ₺400,00');
@@ -163,6 +169,7 @@ describe('TodayPageComponent', () => {
         it('hayvan, sahip, giriş ve kaç gündür yatışta olduğu gösterilir; Hospitalizations.Read varsa detay bağlantısı verir', async () => {
             const f = await create(['Visits.Read', 'Hospitalizations.Read'], { date: 'd', items: [], activeHospitalizations: [hosp({ plannedDischargeAtUtc: '2026-10-20T09:00:00Z' })] });
             const s = section(f);
+
             expect(s?.textContent).toContain('Pamuk');
             expect(s?.textContent).toContain('Ali Veli');
             expect(s?.textContent).toContain('3 gün');
@@ -172,12 +179,14 @@ describe('TodayPageComponent', () => {
 
         it('Hospitalizations.Read yoksa bağlantı gösterilmez', async () => {
             const f = await create(['Visits.Read'], { date: 'd', items: [], activeHospitalizations: [hosp()] });
+
             expect(section(f)).not.toBeNull();
             expect(section(f)?.querySelector('a')).toBeNull();
         });
 
         it('aktif yatış yoksa bölüm görünmez', async () => {
             const f = await create(['Visits.Read', 'Hospitalizations.Read'], { date: 'd', items: [item({})], activeHospitalizations: [] });
+
             expect(section(f)).toBeNull();
         });
     });
@@ -185,6 +194,7 @@ describe('TodayPageComponent', () => {
     it('tutarlar null ise (Charges.Read yok) hiçbir tutar veya ödeme rozeti gösterilmez', async () => {
         const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({})] });
         const t = text(f);
+
         expect(t).not.toContain('Ödeme bekliyor');
         expect(t).not.toContain('Ücret yok');
         expect(t).not.toContain('Müşteri borcu');
@@ -201,6 +211,7 @@ describe('TodayPageComponent', () => {
             ]
         });
         const t = text(f);
+
         expect(t).toContain('Ücret yok');
         expect(t).not.toContain('Ödendi');
         expect(t).not.toContain('Müşteri borcu');
@@ -220,6 +231,7 @@ describe('TodayPageComponent', () => {
                 ]
             });
             const t = text(f);
+
             expect(t).toContain('Lab bekliyor (2)');
             expect(t).toContain('Ödeme bekliyor');
             expect(t).toContain('Kısmi ödeme');
@@ -233,6 +245,7 @@ describe('TodayPageComponent', () => {
                 items: [item({ chargeIndicator: 'ChargeMissing', awaitingLabCount: 1 })]
             });
             const texts = chipTexts(f);
+
             expect(texts.indexOf('Ücret yok')).toBeGreaterThanOrEqual(0);
             expect(texts.indexOf('Ücret yok')).toBeLessThan(texts.indexOf('Lab bekliyor (1)'));
         });
@@ -243,6 +256,7 @@ describe('TodayPageComponent', () => {
                 activeHospitalizations: [],
                 items: [item({ key: 'p', visitId: null, appointmentId: 'a1', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: new Date().toISOString() })]
             });
+
             expect(text(f)).not.toMatch(/Ücret yok|Lab bekliyor|Ödeme bekliyor|Kısmi ödeme/);
         });
 
@@ -254,6 +268,7 @@ describe('TodayPageComponent', () => {
             });
             const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
             const btn = Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).find((b) => b.textContent?.includes('Ödeme bekliyor')) as HTMLButtonElement;
+
             expect(btn).toBeDefined();
             btn.click();
             expect(navigate).toHaveBeenCalledWith(['/panel/payments/new'], { queryParams: { clientId: 'cl7', visitId: 'v9' } });
@@ -261,12 +276,14 @@ describe('TodayPageComponent', () => {
 
         it('Payments.Create yoksa Ödeme bekliyor çipi düğme değildir', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ chargeIndicator: 'PaymentPending' })] });
+
             expect(buttons(f).some((b) => b.includes('Ödeme bekliyor'))).toBeFalse();
             expect(text(f)).toContain('Ödeme bekliyor');
         });
 
         it('openItems null ise şerit yok', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item()], openItems: null });
+
             expect((f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')).toBeNull();
         });
 
@@ -278,12 +295,14 @@ describe('TodayPageComponent', () => {
                 openItems: { unchargedVisitCount: 3, outstandingVisitCount: 2, outstandingAmount: 750, awaitingLabCount: null, incompleteVisitCount: 1 }
             });
             const strip = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')!.textContent ?? '';
+
             expect(strip).toContain('Ücret yok: 3 ziyaret');
             expect(strip).toContain('Ödeme bekliyor: 2 ziyaret');
             expect(strip).toContain('Önceki günden açık geliş: 1');
             expect(strip).not.toContain('Lab bekliyor');
 
             const links = Array.from((f.nativeElement as HTMLElement).querySelectorAll('[data-testid="open-items-strip"] a')).map((a) => a.getAttribute('href'));
+
             expect(links).toEqual(['/panel/reports/outstanding-balances']);
         });
 
@@ -294,6 +313,7 @@ describe('TodayPageComponent', () => {
                 items: [item()],
                 openItems: { unchargedVisitCount: 0, outstandingVisitCount: 0, outstandingAmount: 0, awaitingLabCount: 0, incompleteVisitCount: 0 }
             });
+
             expect(text(f)).toContain('Açık iş yok');
         });
 
@@ -305,6 +325,7 @@ describe('TodayPageComponent', () => {
                 openItems: { unchargedVisitCount: null, outstandingVisitCount: null, outstandingAmount: null, awaitingLabCount: 4, incompleteVisitCount: 0 }
             });
             const a = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"] a');
+
             expect(a?.textContent).toContain('Lab bekliyor: 4');
             expect(a?.getAttribute('href')).toBe('/panel/lab-results');
         });
@@ -313,6 +334,7 @@ describe('TodayPageComponent', () => {
     it('telefon okunabilir biçimde, hekim yoksa Atanmadı gösterilir', async () => {
         const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ clientPhone: '905439580091', responsibleVeterinarianName: null })] });
         const t = text(f);
+
         expect(t).toContain('+90 543 958 00 91');
         expect(t).not.toContain('905439580091');
         expect(t).toContain('Atanmadı');
@@ -327,11 +349,13 @@ describe('TodayPageComponent', () => {
         const root = f.nativeElement as HTMLElement;
         const pet = root.querySelector<HTMLElement>('[title="Karabaş Uzun Adlı Köpek"]');
         const client = root.querySelector<HTMLElement>('[title="TEST Mehmet Yıldızoğlu Uzunadlı"]');
+
         for (const el of [pet, client]) {
             expect(el).not.toBeNull();
             expect(el!.classList).toContain('line-clamp-2');
             expect(el!.classList).not.toContain('truncate');
         }
+
         expect(Array.from(root.querySelectorAll('div')).find((d) => d.textContent?.trim() === '+90 543 958 00 91')?.classList).toContain('whitespace-nowrap');
     });
 
@@ -344,6 +368,7 @@ describe('TodayPageComponent', () => {
         const headers = Array.from((f.nativeElement as HTMLElement).querySelectorAll('section')).map((s) =>
             Array.from(s.querySelectorAll('th')).map((th) => th.textContent?.trim())
         );
+
         expect(headers[0]).toContain('Bekleme');
         expect(headers[1]).toContain('Süre');
         expect(headers[1]).not.toContain('Bekleme');
@@ -353,6 +378,7 @@ describe('TodayPageComponent', () => {
 
     it('boş liste boş durumu gösterir', async () => {
         const f = await create(['Visits.Read'], { date: '2026-10-10', activeHospitalizations: [], items: [] });
+
         expect(text(f)).toContain('Bugün için randevu veya gelen hasta yok.');
     });
 
@@ -373,6 +399,7 @@ describe('TodayPageComponent', () => {
             ]
         }).compileComponents();
         const f = TestBed.createComponent(TodayPageComponent);
+
         f.detectChanges();
         expect(text(f)).toContain('Bugün listesi yüklenemedi.');
     });
@@ -381,11 +408,13 @@ describe('TodayPageComponent', () => {
         const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item()] };
         const without = await create(['Visits.Read', 'Visits.Update'], today);
         const keys = (f: ComponentFixture<TodayPageComponent>) => f.componentInstance.secondaryActionsOf(today.items[0], f.componentInstance.actionsOf(today.items[0])).map((a) => a.key);
+
         expect(keys(without)).not.toContain('correct');
         expect(buttons(without)).toContain('Başlat');
         TestBed.resetTestingModule();
 
         const withCorrect = await create(['Visits.Read', 'Visits.Update', 'Visits.Correct'], today);
+
         expect(keys(withCorrect)).toContain('correct');
     });
 
@@ -393,12 +422,15 @@ describe('TodayPageComponent', () => {
         const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item({ visitId: 'v9', clientId: 'cl7' })] };
         const keys = (f: ComponentFixture<TodayPageComponent>) => f.componentInstance.secondaryActionsOf(today.items[0], f.componentInstance.actionsOf(today.items[0])).map((a) => a.key);
         const without = await create(['Visits.Read', 'Visits.Update'], today);
+
         expect(keys(without)).not.toContain('collectPayment');
         TestBed.resetTestingModule();
 
         const f = await create(['Visits.Read', 'Payments.Create'], today);
+
         expect(keys(f)).toContain('collectPayment');
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
         f.componentInstance.openPayment(today.items[0]);
         expect(navigate).toHaveBeenCalledWith(['/panel/payments/new'], { queryParams: { clientId: 'cl7', visitId: 'v9' } });
     });
@@ -408,6 +440,7 @@ describe('TodayPageComponent', () => {
         const f = await create(['Visits.Read', 'Payments.Create'], today);
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
         const c = f.componentInstance;
+
         c.openRowMenu(new Event('click'), today.items[0], [{ key: 'collectPayment', label: 'Ödeme al', icon: 'pi pi-wallet' } as never]);
         c.rowMenuItems()[0].command?.({});
         expect(navigate).not.toHaveBeenCalled();
@@ -421,12 +454,14 @@ describe('TodayPageComponent', () => {
         const planned = item({ key: 'a1', visitId: null, appointmentId: 'a1', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T07:00:00Z' });
         const waiting = item({ key: 'w' });
         const readOnly = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [planned, waiting] });
+
         expect(buttons(readOnly)).not.toContain('Geldi');
         expect(buttons(readOnly)).not.toContain('Randevusuz geliş');
         expect(buttons(readOnly)).not.toContain('Muayene aç');
         TestBed.resetTestingModule();
 
         const full = await create(['Visits.Read', 'Visits.Create', 'Examinations.Create'], { date: 'd', activeHospitalizations: [], items: [planned, waiting] });
+
         expect(buttons(full)).toContain('Geldi');
         expect(buttons(full)).toContain('Randevusuz geliş');
         expect(buttons(full)).toContain('Muayene aç');
@@ -435,17 +470,20 @@ describe('TodayPageComponent', () => {
     it('Hızlı satış kısayolu yalnız Sales.Create ile görünür ve satış ekranına gider', async () => {
         const data = { date: 'd', activeHospitalizations: [], items: [] };
         const without = await create(['Visits.Read'], data);
+
         expect((without.nativeElement as HTMLElement).querySelector('a[href="/panel/sales/new"]')).toBeNull();
         TestBed.resetTestingModule();
 
         const withClaim = await create(['Visits.Read', 'Sales.Create'], data);
         const link = (withClaim.nativeElement as HTMLElement).querySelector('a[href="/panel/sales/new"]');
+
         expect(link?.textContent).toContain('Hızlı satış');
     });
 
     it('muayeneye geçiş: visitId ile hasta bağlamı query olarak taşınır', async () => {
         const f = await create(['Visits.Read', 'Examinations.Create'], { date: 'd', activeHospitalizations: [], items: [item()] });
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
         f.componentInstance.openExamination(item());
 
         expect(navigate).toHaveBeenCalledOnceWith(['/panel/examinations/new'], {
@@ -456,6 +494,7 @@ describe('TodayPageComponent', () => {
     it('başlat: yanıt gelmeden ikinci tıklama ikinci istek üretmez; sonra liste yenilenir', async () => {
         const f = await create(['Visits.Read', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [item()] });
         const pending = new Subject<VisitVm>();
+
         visits.startVisit.and.returnValue(pending);
         const row = item();
 
@@ -465,6 +504,7 @@ describe('TodayPageComponent', () => {
         expect(f.componentInstance.isBusy(row)).toBeTrue();
 
         const callsBefore = visits.getToday.calls.count();
+
         pending.next(visitVm);
         pending.complete();
         expect(f.componentInstance.isBusy(row)).toBeFalse();
@@ -473,6 +513,7 @@ describe('TodayPageComponent', () => {
 
     it('başlatma hatasında hata toast ı gösterilir ve liste yenilenir', async () => {
         const f = await create(['Visits.Read', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [item()] });
+
         visits.startVisit.and.returnValue(throwError(() => new Error('Bu geçiş yapılamaz.')));
         const callsBefore = visits.getToday.calls.count();
 
@@ -484,6 +525,7 @@ describe('TodayPageComponent', () => {
 
     it('created:false yanıtı hata değil bilgi mesajıdır', async () => {
         const f = await create(['Visits.Read', 'Visits.Create'], { date: 'd', activeHospitalizations: [], items: [] });
+
         f.componentInstance.onArrived({ created: false, visit: { ...visitVm } });
 
         expect(toasts.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ severity: 'info', summary: 'Açık geliş kaydı zaten var.' }));
@@ -491,6 +533,7 @@ describe('TodayPageComponent', () => {
 
     it('otomatik yenileme hatasında eski liste kalır ve uyarı gösterilir', async () => {
         const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item()] });
+
         visits.getToday.and.returnValue(throwError(() => new Error('x')));
         f.componentInstance.refresh('silent');
         f.detectChanges();
@@ -507,10 +550,13 @@ describe('TodayPageComponent', () => {
         it('tüm gruplar aynı sütun genişliklerini ve sabit tablo düzenini kullanır; başlık sayısı eşit', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' }), item({ key: 'p', careStatus: 'InProgress' }), item({ key: 'c', careStatus: 'Completed' }), noShowItem()] });
             const tables = Array.from((f.nativeElement as HTMLElement).querySelectorAll('section table'));
+
             expect(tables.length).toBe(4);
             const widths = tables.map((t) => Array.from(t.querySelectorAll('colgroup col')).map((c) => (c as HTMLElement).className).join('|'));
+
             expect(new Set(widths).size).toBe(1);
             expect(widths[0].split('|').length).toBe(8);
+
             for (const t of tables) {
                 expect(getComputedStyle(t).tableLayout).toBe('fixed');
                 expect(t.querySelectorAll('thead th').length).toBe(8);
@@ -521,6 +567,7 @@ describe('TodayPageComponent', () => {
             const money = { chargeIndicator: 'PaymentPending' as const, chargedAmount: 1000, allocatedAmount: 0, outstandingAmount: 1000, clientOutstandingAmount: 1000 };
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [noShowItem(money), item({ key: 'w', ...money })] });
             const body = section(f, 'Gelmedi').querySelector('tbody')!.textContent ?? '';
+
             expect(body).not.toContain('Ödeme bekliyor');
             expect(body).not.toContain('Müşteri borcu');
             expect(body).not.toContain('Gelmedi');
@@ -533,20 +580,24 @@ describe('TodayPageComponent', () => {
             const host = f.nativeElement as HTMLElement;
             const hideCompact = '@max-[76rem]:hidden';
             const ths = Array.from(host.querySelectorAll('thead th'));
+
             expect(ths.map((th) => th.classList.contains('whitespace-nowrap'))).toEqual([true, true, true, true, true, true, true, false]);
             expect(ths[3].textContent?.trim()).toBe('Hekim');
             expect(ths[3].className).toContain(hideCompact);
             expect(ths[5].textContent?.trim()).toBe('Ödeme / yatış');
             expect(ths[5].className).toContain(hideCompact);
             const cols = Array.from(host.querySelectorAll('colgroup col')).map((c) => c.className);
+
             expect(cols[3]).toContain(hideCompact);
             expect(cols[5]).toContain(hideCompact);
             const cells = Array.from(host.querySelectorAll<HTMLTableCellElement>('tbody tr:first-child td'));
+
             expect(cells[3].className).toContain(hideCompact); // Hekim
             expect(cells[5].className).toContain(hideCompact); // Ödeme / yatış
             expect(cells[4].className).not.toContain('whitespace-nowrap'); // Durum: sabit sütunda uzun rozet ("Önceki günden açık") satır kırar, Ödeme sütununa taşmaz
             // dar kip yedekleri yalnız dar kipte görünür (geniş kipte @min-[76rem]:hidden)
             const compactOnly = Array.from(host.querySelectorAll('tbody *')).filter((e) => e.classList.contains('@min-[76rem]:hidden'));
+
             expect(compactOnly.some((e) => e.textContent?.includes('Dr. Ayşe'))).toBeTrue();
             expect(compactOnly.some((e) => e.textContent?.includes('Ödeme bekliyor'))).toBeTrue();
             expect(compactOnly.some((e) => e.textContent?.includes('Yatışta'))).toBeTrue();
@@ -556,6 +607,7 @@ describe('TodayPageComponent', () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', clientName: 'Çok Uzun İsimli Müşteri Soyadıgeçen', petName: 'Çok uzun hasta adı', responsibleVeterinarianName: 'Dr. Çok Uzun Hekim Adı' })] });
             const host = f.nativeElement as HTMLElement;
             const titled = Array.from(host.querySelectorAll('tbody [title]')).map((e) => e.getAttribute('title'));
+
             expect(titled).toContain('Çok Uzun İsimli Müşteri Soyadıgeçen');
             expect(titled).toContain('Çok uzun hasta adı');
             expect(titled).toContain('Dr. Çok Uzun Hekim Adı');
@@ -567,28 +619,34 @@ describe('TodayPageComponent', () => {
             const f = await create(claims, { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' }), item({ key: 'i', careStatus: 'InProgress' }), planned] });
             const host = f.nativeElement as HTMLElement;
             const slotOf = (label: string) => Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.textContent?.trim() === label).map((p) => Array.from(p.classList).find((c) => c.startsWith('col-start-')));
+
             expect(slotOf('Muayene aç')).toEqual(['col-start-1', 'col-start-1']);
             expect(slotOf('Geldi')).toEqual(['col-start-1']);
             expect(slotOf('Başlat')).toEqual(['col-start-2']);
             expect(slotOf('Tamamla')).toEqual(['col-start-2']);
             const grid = host.querySelector('tbody td:last-child > div') as HTMLElement;
+
             expect(grid.className).toContain('grid-cols-[7.5rem_6rem_1.85rem_1.85rem]');
             expect(grid.className).toContain('@max-[50rem]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem]'); // dar kip: yalnız ikon
             const icons = Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.classList.contains('col-start-3') || p.classList.contains('col-start-4'));
+
             expect(icons.length).toBeGreaterThan(1);
         });
 
         it('Gelmedi grubunda yatış rozeti yine görünür', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [noShowItem({ hasActiveHospitalization: true })] });
+
             expect(section(f, 'Gelmedi').textContent).toContain('Yatışta');
         });
 
         it('Önceki günden açık rozeti sönük (secondary) ve ipucu metni var', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ isCarriedOver: true })] });
             const tagHost = Array.from((f.nativeElement as HTMLElement).querySelectorAll('span[title]')).find((e) => e.textContent?.includes('Önceki günden')) as HTMLElement;
+
             expect(tagHost).toBeDefined();
             expect(tagHost.getAttribute('title')).toBe('Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin');
             const tag = tagHost.querySelector('.p-tag')!;
+
             expect(tag.classList.contains('p-tag-secondary')).toBeTrue();
             expect(tag.classList.contains('p-tag-contrast')).toBeFalse();        });
 
@@ -596,6 +654,7 @@ describe('TodayPageComponent', () => {
             const old = new Date(Date.now() - 13 * 3_600_000).toISOString();
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'old', arrivedAtUtc: old }), item({ key: 'new' }), item({ key: 'done', careStatus: 'Completed', arrivedAtUtc: old })] });
             const hints = ((f.nativeElement as HTMLElement).textContent ?? '').match(/Unutulmuş olabilir/g) ?? [];
+
             expect(hints.length).toBe(1);
         });
     });
@@ -614,12 +673,15 @@ describe('TodayPageComponent', () => {
             const f = await create(['Visits.Read', 'Visits.Update', 'Examinations.Create'], today);
             const root = f.nativeElement as HTMLElement;
             const cards = Array.from(root.querySelectorAll('[data-testid="today-card"]'));
+
             expect(cards.length).toBe(2);
             expect(root.querySelector('table')).toBeNull();
             const t = cards[0].textContent ?? '';
+
             for (const part of ['Geliş', 'Pamuk', 'Kedi', 'Ali Veli', 'Dr. Ayşe', 'Bekliyor', 'Kısmi ödeme', 'Başlat', 'Muayene aç']) {
                 expect(t).toContain(part);
             }
+
             expect(t).toMatch(/12 dk/);
         });
 
@@ -627,6 +689,7 @@ describe('TodayPageComponent', () => {
             narrow(false);
             const f = await create(['Visits.Read'], today);
             const root = f.nativeElement as HTMLElement;
+
             expect(root.querySelector('[data-testid="today-card"]')).toBeNull();
             expect(root.querySelectorAll('section table tbody tr').length).toBe(2);
         });
@@ -646,12 +709,15 @@ describe('TodayPageComponent', () => {
                 const f = await create(['Visits.Read', 'Hospitalizations.Read'], withHosp);
                 const root = f.nativeElement as HTMLElement;
                 const cards = Array.from(root.querySelectorAll('[data-testid="hospitalization-card"]'));
+
                 expect(cards.length).toBe(2);
                 expect(root.querySelector('section[aria-label="Aktif yatışlar"] table')).toBeNull();
                 const t = cards[0].textContent ?? '';
+
                 for (const part of ['Pamuk', 'Ali Veli', 'Giriş', '3 gün', 'Planlı taburcu']) {
                     expect(t).toContain(part);
                 }
+
                 expect(cards[0].querySelector('a')?.getAttribute('href')).toBe('/panel/hospitalizations/h1');
             });
 
@@ -659,6 +725,7 @@ describe('TodayPageComponent', () => {
                 narrow(true);
                 const f = await create(['Visits.Read'], withHosp);
                 const root = f.nativeElement as HTMLElement;
+
                 expect(root.querySelectorAll('[data-testid="hospitalization-card"]').length).toBe(2);
                 expect(root.querySelector('[data-testid="hospitalization-card"] a')).toBeNull();
             });
@@ -667,6 +734,7 @@ describe('TodayPageComponent', () => {
                 narrow(false);
                 const f = await create(['Visits.Read'], withHosp);
                 const root = f.nativeElement as HTMLElement;
+
                 expect(root.querySelector('[data-testid="hospitalization-card"]')).toBeNull();
                 expect(root.querySelectorAll('section[aria-label="Aktif yatışlar"] tbody tr').length).toBe(2);
             });
@@ -695,12 +763,15 @@ describe('TodayPageComponent — Benim hastalarım', () => {
             ]
         }).compileComponents();
         const fixture = TestBed.createComponent(TodayPageComponent);
+
         fixture.detectChanges();
+
         return fixture;
     };
 
     it('hekim: varsayılan Benim hastalarım; ilk istek kullanıcı kimliğiyle gider, Tümü süzgeci kaldırır', async () => {
         const f = await create(['Visits.Read', 'Visits.Create'], 'u1');
+
         expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false, responsibleVeterinarianUserId: 'u1' });
         f.componentInstance.setScope('all');
         expect(visits.getToday.calls.mostRecent().args[0]).toEqual({ voided: false });
@@ -708,6 +779,7 @@ describe('TodayPageComponent — Benim hastalarım', () => {
 
     it('hekim değil: süzgeç görünmez, kimlik gönderilmez', async () => {
         const f = await create(['Visits.Read', 'Visits.Create'], null);
+
         expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false });
         expect((f.nativeElement as HTMLElement).textContent).not.toContain('Benim hastalarım');
     });
@@ -722,6 +794,7 @@ describe('TodayPageComponent — Benim hastalarım', () => {
 describe('TodayPageComponent — Benim hastalarım boş liste', () => {
     it('hekimin listesi boşken Size atanmış hasta yok mesajı ve Tümü’ne geç bağlantısı çıkar', async () => {
         const visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
+
         visits.getToday.and.returnValue(of({ date: 'd', activeHospitalizations: [], items: [] }));
         visits.getCurrentVeterinarianUserId.and.returnValue(of('u1'));
         await TestBed.configureTestingModule({
@@ -737,12 +810,15 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
             ]
         }).compileComponents();
         const f = TestBed.createComponent(TodayPageComponent);
+
         f.detectChanges();
         const t = (f.nativeElement as HTMLElement).textContent ?? '';
+
         expect(t).toContain('Size atanmış hasta yok.');
         expect(t).not.toContain('Bugün için randevu veya gelen hasta yok');
 
         const toAll = Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).find((b) => b.textContent?.includes('Tümü’ne geç'));
+
         expect(toAll).toBeDefined();
         toAll!.click();
         expect(visits.getToday.calls.mostRecent().args[0]).toEqual({ voided: false });

@@ -29,6 +29,7 @@ describe('OutstandingBalancesReportService', () => {
     it('liste sözleşmedeki süzgeçleri ve sayfalamayı gönderir; tarih/müşteri/hayvan göndermez', () => {
         service.loadReport({ minAmount: '250', search: 'ayşe', clinicId: 'c1', page: 2, pageSize: 50 }).subscribe();
         const [path, params] = api.get.calls.mostRecent().args as [string, HttpParams];
+
         expect(path).toBe('/api/v1/reports/outstanding-balances');
         expect(params.get('minAmount')).toBe('250');
         expect(params.get('search')).toBe('ayşe');
@@ -40,20 +41,24 @@ describe('OutstandingBalancesReportService', () => {
 
     it('CSV ve XLSX dışa aktarma, sayfalama dışında listeyle aynı süzgeç kümesini gönderir', () => {
         const q = { minAmount: '100', search: 'ali', clinicId: 'c1', page: 3, pageSize: 10 };
+
         service.loadReport(q).subscribe();
         const listParams = api.get.calls.mostRecent().args[1] as HttpParams;
 
         service.exportCsvBlob(q).subscribe();
         const [csvPath, csvParams] = api.getBlob.calls.mostRecent().args as [string, HttpParams];
+
         service.exportXlsxBlob(q).subscribe();
         const [xlsxPath, xlsxParams] = api.getBlob.calls.mostRecent().args as [string, HttpParams];
 
         expect(csvPath).toBe('/api/v1/reports/outstanding-balances/export');
         expect(xlsxPath).toBe('/api/v1/reports/outstanding-balances/export-xlsx');
+
         for (const p of [csvParams, xlsxParams]) {
             expect(p.has('page')).toBeFalse();
             expect(p.has('pageSize')).toBeFalse();
             expect(keys(p)).toEqual(keys(listParams).filter((k) => k !== 'page' && k !== 'pageSize'));
+
             for (const k of p.keys()) {
                 expect(p.get(k)).toBe(listParams.get(k));
             }
@@ -64,6 +69,7 @@ describe('OutstandingBalancesReportService', () => {
         authClinicId = 'jwt-clinic';
         service.loadReport({ minAmount: ' ', search: '' }).subscribe();
         const params = api.get.calls.mostRecent().args[1] as HttpParams;
+
         expect(params.get('clinicId')).toBe('jwt-clinic');
         expect(params.has('minAmount')).toBeFalse();
         expect(params.has('search')).toBeFalse();

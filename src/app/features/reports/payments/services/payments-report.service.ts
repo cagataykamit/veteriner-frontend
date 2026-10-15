@@ -24,6 +24,7 @@ export class PaymentsReportService {
         const params = paymentsReportQueryToHttpParams(merged);
         const page = merged.page ?? 1;
         const pageSize = merged.pageSize ?? 25;
+
         return this.api.get<PaymentsReportDto>(ApiEndpoints.reports.payments(), params).pipe(
             map((raw) => mapPaymentsReportDtoToVm(raw, { page, pageSize })),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -36,6 +37,7 @@ export class PaymentsReportService {
     exportCsvBlob(query: PaymentsReportQuery) {
         const merged = this.mergeClinicContext(query);
         const params = paymentsReportQueryToHttpParams(merged, { omitPaging: true });
+
         return this.api.getBlob(ApiEndpoints.reports.paymentsExport(), params).pipe(
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
@@ -47,6 +49,7 @@ export class PaymentsReportService {
     exportXlsxBlob(query: PaymentsReportQuery) {
         const merged = this.mergeClinicContext(query);
         const params = paymentsReportQueryToHttpParams(merged, { omitPaging: true });
+
         return this.api.getBlob(ApiEndpoints.reports.paymentsExportXlsx(), params).pipe(
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
@@ -56,6 +59,7 @@ export class PaymentsReportService {
 
     private mergeClinicContext(query: PaymentsReportQuery): PaymentsReportQuery {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+
         return {
             ...query,
             clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined

@@ -157,10 +157,12 @@ export class SalesListPageComponent implements OnInit {
     onLazyLoad(event: TableLazyLoadEvent): void {
         const rows = event.rows ?? this.pageSize();
         const page = rows !== this.pageSize() ? 1 : Math.floor((event.first ?? 0) / rows) + 1;
+
         // Tablo yeniden oluşunca ilk tetiklemede konum değişmemiştir; boş yere yeniden yüklenmez.
         if (page === this.page && rows === this.pageSize()) {
             return;
         }
+
         this.page = page;
         this.pageSize.set(rows);
         this.first.set((this.page - 1) * rows);
@@ -171,6 +173,7 @@ export class SalesListPageComponent implements OnInit {
         this.loading.set(true);
         this.error.set(null);
         const range = istanbulDateRangeToUtcIso(this.fromDate || undefined, this.toDate || undefined);
+
         this.salesService
             .getSales({ page: this.page, pageSize: this.pageSize(), includeVoided: this.includeVoided, fromUtc: range.fromUtc, toUtc: range.toUtc })
             .subscribe({

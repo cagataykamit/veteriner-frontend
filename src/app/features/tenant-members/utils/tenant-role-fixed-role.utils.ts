@@ -38,16 +38,19 @@ export function roleKeyFromHaystack(roleName: string, roleId: string): TenantFix
             .map((x) => x.trim())
             .filter((x) => !!x)
     );
+
     for (const def of TENANT_FIXED_ROLE_DEFS) {
         if (
             def.aliases.some((alias) => {
                 const aliasNorm = normalizeTenantRoleLabel(alias);
+
                 return compactCandidates.has(aliasNorm) || tokenCandidates.has(aliasNorm);
             })
         ) {
             return def.key;
         }
     }
+
     return null;
 }
 
@@ -58,18 +61,24 @@ export function roleKeyFromMatrixRow(row: TenantRolePermissionMatrixRowVm): Tena
 /** Matrix sayfası: dört rol kartı sabit sıra; eksik satırlar boş yetki ile doldurulur. */
 export function buildFixedRoleMatrixRows(rows: TenantRolePermissionMatrixRowVm[]): TenantRolePermissionMatrixRowVm[] {
     const byKey = new Map<TenantFixedRoleKey, TenantRolePermissionMatrixRowVm>();
+
     for (const row of rows) {
         const key = roleKeyFromMatrixRow(row);
+
         if (!key || byKey.has(key)) {
             continue;
         }
+
         byKey.set(key, row);
     }
+
     return TENANT_FIXED_ROLE_DEFS.map((def) => {
         const existing = byKey.get(def.key);
+
         if (existing) {
             return existing;
         }
+
         return {
             roleId: def.key,
             roleName: def.label,

@@ -11,23 +11,29 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 /** Liste ve dışa aktarma aynı süzgeç kümesini (`from`, `to`, `clinicId`) gönderir; sayfalama yalnız listede. */
 export function registerQueryToHttpParams(query: ReportListQueryBase, opts?: { omitPaging?: boolean }): HttpParams {
     let p = new HttpParams();
+
     if (!opts?.omitPaging) {
         p = p.set('page', String(query.page ?? 1)).set('pageSize', String(query.pageSize ?? 25));
     }
+
     if (query.from?.trim()) {
         p = p.set('from', query.from.trim());
     }
+
     if (query.to?.trim()) {
         p = p.set('to', query.to.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     for (const key of ['includeVoided', 'productId', 'veterinarianId'] as const) {
         if (query[key]?.trim()) {
             p = p.set(key, query[key].trim());
         }
     }
+
     return p;
 }
 
@@ -47,6 +53,7 @@ export class RegisterReportSource<T> implements ReportListSource<ReportListQuery
         const merged = this.mergeClinicContext(query);
         const page = merged.page ?? 1;
         const pageSize = merged.pageSize ?? 25;
+
         return this.api.get<RegisterDto<T>>(this.path, registerQueryToHttpParams(merged)).pipe(map((raw) => ({ ...raw, page, pageSize })));
     }
 
@@ -60,6 +67,7 @@ export class RegisterReportSource<T> implements ReportListSource<ReportListQuery
 
     private exportBlob(path: string, query: ReportListQueryBase) {
         const params = registerQueryToHttpParams(this.mergeClinicContext(query), { omitPaging: true });
+
         return this.api.getBlob(path, params).pipe(
             catchError((err) => throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback))))
         );
@@ -67,6 +75,7 @@ export class RegisterReportSource<T> implements ReportListSource<ReportListQuery
 
     private mergeClinicContext(query: ReportListQueryBase): ReportListQueryBase {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+
         return { ...query, clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined };
     }
 }

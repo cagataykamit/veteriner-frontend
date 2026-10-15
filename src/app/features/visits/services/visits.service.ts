@@ -40,6 +40,7 @@ export class VisitsService {
     /** Aktif klinik için İstanbul gününün kuyruğu (randevular + gelen hastalar). */
     getToday(query: TodayQuery = {}): Observable<TodayVm> {
         const params = todayQueryToHttpParams(this.auth.getClinicId()?.trim() || null, query);
+
         return this.api.get<TodayDto>(ApiEndpoints.visits.today(), params).pipe(
             map(mapTodayDtoToVm),
             toUserError('Bugün listesi yüklenemedi.')
@@ -68,9 +69,11 @@ export class VisitsService {
     getCurrentVeterinarianUserId(): Observable<string | null> {
         const userId = this.auth.getUserId()?.trim().toLowerCase();
         const clinicId = this.auth.getClinicId()?.trim();
+
         if (!userId || !clinicId) {
             return of(null);
         }
+
         return this.getVeterinarians(clinicId).pipe(
             map((vets) => findVeterinarianUserId(vets, userId)),
             catchError(() => of(null))

@@ -475,9 +475,11 @@ export class TenantMemberDetailPageComponent implements OnInit {
         const base = buildTenantMemberEffectivePermissionSummary(rows, claims, other);
         const permissions = filterTenantFacingMatrixPermissions(base.permissions);
         const groupKeys = new Set<string>();
+
         for (const p of permissions) {
             groupKeys.add(p.group?.trim() || other);
         }
+
         return {
             assignedRoleCount: base.assignedRoleCount,
             uniquePermissionCount: permissions.length,
@@ -496,20 +498,26 @@ export class TenantMemberDetailPageComponent implements OnInit {
     readonly assignableFiltered = computed(() => {
         const m = this.member();
         const opts = this.claimOptions();
+
         if (!m) {
             return opts;
         }
+
         const assigned = new Set(m.claims.map((c) => c.id));
+
         return opts.filter((o) => !assigned.has(o.id));
     });
 
     readonly assignableClinicsFiltered = computed(() => {
         const m = this.member();
         const list = this.tenantClinicOptions();
+
         if (!m) {
             return list;
         }
+
         const assigned = new Set(m.clinics.map((c) => c.id));
+
         return list.filter((c) => !assigned.has(c.id));
     });
 
@@ -519,9 +527,11 @@ export class TenantMemberDetailPageComponent implements OnInit {
         if (v === true) {
             return 'Evet';
         }
+
         if (v === false) {
             return 'Hayır';
         }
+
         return '—';
     }
 
@@ -537,6 +547,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
         if (!this.canManageTenantAccess() || this.member()?.isCurrentUser) {
             return;
         }
+
         this.memberRemoveError.set(null);
         this.removeMemberConfirmOpen.set(true);
     }
@@ -548,18 +559,22 @@ export class TenantMemberDetailPageComponent implements OnInit {
     ngOnInit(): void {
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pm) => {
             const id = pm.get('memberId')?.trim() ?? '';
+
             if (!id) {
                 this.loading.set(false);
                 this.error.set('Geçersiz üye.');
                 this.member.set(null);
+
                 return;
             }
+
             this.load(id);
         });
     }
 
     reload(): void {
         const id = this.member()?.id ?? this.route.snapshot.paramMap.get('memberId')?.trim();
+
         if (id) {
             this.load(id);
         }
@@ -569,11 +584,14 @@ export class TenantMemberDetailPageComponent implements OnInit {
         if (this.member()?.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
+
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
         const claimId = this.selectedClaimId().trim();
+
         if (!memberId || !claimId) {
             return;
         }
+
         this.roleActionError.set(null);
         this.busyAdd.set(true);
         this.tenantMembers.assignMemberClaim(memberId, claimId).subscribe({
@@ -598,11 +616,14 @@ export class TenantMemberDetailPageComponent implements OnInit {
         if (this.member()?.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
+
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
         const cid = operationClaimId.trim();
+
         if (!memberId || !cid) {
             return;
         }
+
         this.roleActionError.set(null);
         this.busyRemoveClaimId.set(cid);
         this.tenantMembers.removeMemberClaim(memberId, cid).subscribe({
@@ -632,11 +653,15 @@ export class TenantMemberDetailPageComponent implements OnInit {
                     summary: 'Bilgi',
                     detail: 'Bu rol zaten atanmış; liste güncellendi.'
                 });
+
                 return;
             }
+
             this.roleActionError.set(memberRoleAssignRemoveMessage(e, 'Rol eklenemedi.'));
+
             return;
         }
+
         this.roleActionError.set('Rol eklenemedi.');
     }
 
@@ -649,11 +674,15 @@ export class TenantMemberDetailPageComponent implements OnInit {
                     summary: 'Bilgi',
                     detail: 'Bu rol zaten kaldırılmış veya bulunamadı; liste güncellendi.'
                 });
+
                 return;
             }
+
             this.roleActionError.set(memberRoleAssignRemoveMessage(e, 'Rol kaldırılamadı.'));
+
             return;
         }
+
         this.roleActionError.set('Rol kaldırılamadı.');
     }
 
@@ -661,11 +690,14 @@ export class TenantMemberDetailPageComponent implements OnInit {
         if (this.member()?.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
+
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
         const clinicId = this.selectedClinicId().trim();
+
         if (!memberId || !clinicId) {
             return;
         }
+
         this.clinicActionError.set(null);
         this.busyAddClinic.set(true);
         this.tenantMembers.assignMemberClinic(memberId, clinicId).subscribe({
@@ -690,11 +722,14 @@ export class TenantMemberDetailPageComponent implements OnInit {
         if (this.member()?.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
+
         const memberId = this.route.snapshot.paramMap.get('memberId')?.trim() ?? '';
         const cid = clinicId.trim();
+
         if (!memberId || !cid) {
             return;
         }
+
         this.clinicActionError.set(null);
         this.busyRemoveClinicId.set(cid);
         this.tenantMembers.removeMemberClinic(memberId, cid).subscribe({
@@ -716,9 +751,11 @@ export class TenantMemberDetailPageComponent implements OnInit {
 
     onRemoveMemberConfirmed(): void {
         const vm = this.member();
+
         if (!vm || vm.isCurrentUser || !this.canManageTenantAccess()) {
             return;
         }
+
         this.memberRemoveError.set(null);
         this.busyRemoveMember.set(true);
         this.tenantMembers.removeMember(vm.id).subscribe({
@@ -734,10 +771,13 @@ export class TenantMemberDetailPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.busyRemoveMember.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     this.memberRemoveError.set(memberRemoveMessage(e, 'Üye çıkarılamadı. Lütfen tekrar deneyin.'));
+
                     return;
                 }
+
                 this.memberRemoveError.set('Üye çıkarılamadı. Lütfen tekrar deneyin.');
             }
         });
@@ -753,11 +793,15 @@ export class TenantMemberDetailPageComponent implements OnInit {
                     summary: 'Bilgi',
                     detail: 'Bu klinik üyeliği zaten mevcut; liste güncellendi.'
                 });
+
                 return;
             }
+
             this.clinicActionError.set(memberClinicAssignRemoveMessage(e, 'Klinik üyeliği eklenemedi.'));
+
             return;
         }
+
         this.clinicActionError.set('Klinik üyeliği eklenemedi.');
     }
 
@@ -770,11 +814,15 @@ export class TenantMemberDetailPageComponent implements OnInit {
                     summary: 'Bilgi',
                     detail: 'Bu klinik üyeliği zaten kaldırılmış veya bulunamadı; liste güncellendi.'
                 });
+
                 return;
             }
+
             this.clinicActionError.set(memberClinicAssignRemoveMessage(e, 'Klinik üyeliği kaldırılamadı.'));
+
             return;
         }
+
         this.clinicActionError.set('Klinik üyeliği kaldırılamadı.');
     }
 
@@ -802,18 +850,21 @@ export class TenantMemberDetailPageComponent implements OnInit {
             claims: this.tenantInvites.listOperationClaims().pipe(
                 catchError(() => {
                     this.claimsOptionsError.set('Atanabilir rol listesi yüklenemedi; rol ekleyemeyebilirsiniz.');
+
                     return of([] as OperationClaimOptionVm[]);
                 })
             ),
             tenantClinics: this.tenantMembers.listTenantClinics().pipe(
                 catchError(() => {
                     this.clinicsPickerError.set('Klinik listesi yüklenemedi; klinik ekleyemeyebilirsiniz.');
+
                     return of([] as ClinicSummary[]);
                 })
             ),
             roleMatrix: this.tenantMembers.getAssignableRolePermissionMatrix().pipe(
                 catchError(() => {
                     this.matrixLoadError.set(this.copy.tenantMemberMatrixForSummaryError);
+
                     return of([] as TenantRolePermissionMatrixRowVm[]);
                 })
             )
@@ -839,6 +890,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
             next: (vm) => this.member.set(vm),
             error: (e: Error) => {
                 const msg = e.message ?? 'Liste yenilenemedi.';
+
                 this.roleActionError.set(msg);
                 this.clinicActionError.set(msg);
             }

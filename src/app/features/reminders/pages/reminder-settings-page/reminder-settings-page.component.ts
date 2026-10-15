@@ -173,13 +173,18 @@ export class ReminderSettingsPageComponent implements OnInit {
         if (this.formDisabled()) {
             return;
         }
+
         this.saveError.set(null);
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         this.saving.set(true);
         const body = mapReminderSettingsFormToUpdateRequest(getReminderSettingsFormValue(this.form));
+
         this.reminders.updateSettings(body).subscribe({
             next: (vm) => {
                 this.saving.set(false);
@@ -213,8 +218,10 @@ export class ReminderSettingsPageComponent implements OnInit {
     private syncDisabledState(): void {
         if (this.formDisabled()) {
             this.form.disable({ emitEvent: false });
+
             return;
         }
+
         this.form.enable({ emitEvent: false });
     }
 }

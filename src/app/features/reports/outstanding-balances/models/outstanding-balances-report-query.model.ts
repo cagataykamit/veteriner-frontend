@@ -11,18 +11,23 @@ export interface OutstandingBalancesReportQuery {
 
 export function outstandingBalancesReportQueryToHttpParams(query: OutstandingBalancesReportQuery, opts?: { omitPaging?: boolean }): HttpParams {
     let p = new HttpParams();
+
     if (!opts?.omitPaging) {
         p = p.set('page', String(query.page ?? 1));
         p = p.set('pageSize', String(query.pageSize ?? 25));
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.minAmount?.trim()) {
         p = p.set('minAmount', query.minAmount.trim());
     }
+
     if (query.search?.trim()) {
         p = p.set('search', query.search.trim());
     }
+
     return p;
 }

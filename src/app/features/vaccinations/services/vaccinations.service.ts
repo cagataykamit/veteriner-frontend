@@ -44,6 +44,7 @@ export class VaccinationsService {
             clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
         };
         const params = vaccinationsQueryToHttpParams(merged);
+
         return this.api.get<VaccinationListItemDtoPagedResult>(ApiEndpoints.vaccinations.list(), params).pipe(
             map((res) => mapPagedVaccinationsToVm(res)),
             catchError((err: HttpErrorResponse) =>
@@ -76,23 +77,29 @@ export class VaccinationsService {
      */
     createVaccination(payload: CreateVaccinationRequest): Observable<VaccinationCreateResultVm> {
         let body: unknown;
+
         try {
             body = mapCreateVaccinationToApiBody(payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'VACCINATION_WRITE_STATUS_UNSUPPORTED') {
                 return throwError(() => new Error('Durum değeri desteklenmiyor. Lütfen tekrar seçin.'));
             }
+
             if (e instanceof Error && e.message === 'VACCINATION_WRITE_CLINIC_REQUIRED') {
                 return throwError(() => new Error('Klinik bilgisi zorunludur.'));
             }
+
             return throwError(() => (e instanceof Error ? e : new Error('Aşı kaydı oluşturulamadı.')));
         }
+
         return this.api.post<unknown>(ApiEndpoints.vaccinations.list(), body).pipe(
             map((raw) => {
                 const id = extractCreatedVaccinationIdFromPostResponse(raw);
+
                 if (!id) {
                     throw new Error('VACCINATION_CREATE_NO_ID_IN_RESPONSE');
                 }
+
                 return mapVaccinationCreateResponse(raw, id);
             }),
             catchError((err: unknown) => {
@@ -100,6 +107,7 @@ export class VaccinationsService {
                     // Create formunda alan bazlı parse için ham HttpErrorResponse korunur.
                     return throwError(() => err);
                 }
+
                 if (err instanceof Error && err.message === 'VACCINATION_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(
                         () =>
@@ -108,6 +116,7 @@ export class VaccinationsService {
                             )
                     );
                 }
+
                 return throwError(() => (err instanceof Error ? err : new Error('Aşı kaydı oluşturulamadı.')));
             })
         );
@@ -115,26 +124,32 @@ export class VaccinationsService {
 
     updateVaccination(id: string, payload: UpdateVaccinationRequest): Observable<void> {
         let body: unknown;
+
         try {
             body = mapUpdateVaccinationToApiBody(id, payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'VACCINATION_WRITE_STATUS_UNSUPPORTED') {
                 return throwError(() => new Error('Durum değeri desteklenmiyor. Lütfen tekrar seçin.'));
             }
+
             if (e instanceof Error && e.message === 'VACCINATION_WRITE_CLINIC_REQUIRED') {
                 return throwError(() => new Error('Klinik bilgisi zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'VACCINATION_WRITE_ID_MISMATCH') {
                 return throwError(() => new Error('Aşı kimliği uyuşmuyor. Sayfayı yenileyip tekrar deneyin.'));
             }
+
             return throwError(() => (e instanceof Error ? e : new Error('Aşı kaydı güncellenemedi.')));
         }
+
         return this.api.put<unknown>(ApiEndpoints.vaccinations.byId(id), body).pipe(
             map(() => void 0),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Aşı kaydı güncellenemedi.')
                 );
@@ -147,38 +162,51 @@ function extractCreatedVaccinationIdFromPostResponse(body: unknown): string | nu
     if (body == null) {
         return null;
     }
+
     if (typeof body === 'string') {
         return body.trim() || null;
     }
+
     if (typeof body !== 'object') {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const idKeys = ['id', 'Id', 'vaccinationId', 'VaccinationId'];
+
     for (const k of idKeys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
+
         if (typeof v === 'number' && !Number.isNaN(v)) {
             return String(v);
         }
     }
+
     const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'vaccination', 'Vaccination'];
+
     for (const w of wrappers) {
         const inner = o[w];
+
         if (inner && typeof inner === 'object') {
             const n = inner as Record<string, unknown>;
+
             for (const k of idKeys) {
                 const v = n[k];
+
                 if (typeof v === 'string' && v.trim()) {
                     return v.trim();
                 }
+
                 if (typeof v === 'number' && !Number.isNaN(v)) {
                     return String(v);
                 }
             }
         }
     }
+
     return null;
 }

@@ -238,18 +238,24 @@ export class TreatmentFormComponent implements OnInit {
             if (this.contextFromExamination()) {
                 return;
             }
+
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const id = trimClientIdControlValue(this.form.controls.clientId.value);
+
             if (!id) {
                 this.form.controls.petId.disable({ emitEvent: false });
                 this.syncExaminationSelectState();
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
@@ -257,15 +263,20 @@ export class TreatmentFormComponent implements OnInit {
             if (this.contextFromExamination()) {
                 return;
             }
+
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
+
             this.form.patchValue({ examinationId: '' }, { emitEvent: false });
+
             if (!pid) {
                 this.relationLoadSeq += 1;
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
+
                 return;
             }
+
             this.loadExaminationsForPet(pid);
         });
         this.tryApplyExaminationRouteContext();
@@ -275,8 +286,10 @@ export class TreatmentFormComponent implements OnInit {
         if (this.contextFromExamination()) {
             return;
         }
+
         const hasPet =
             !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
+
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
         } else {
@@ -299,32 +312,44 @@ export class TreatmentFormComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
         const v = this.form.getRawValue();
         const treatmentDateUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.treatmentDateLocal);
+
         if (!treatmentDateUtc) {
             this.apiFieldErrors.set({ treatmentDateLocal: 'Geçerli bir tedavi tarihi ve saati seçin.' });
             this.form.controls.treatmentDateLocal.markAsTouched();
+
             return;
         }
+
         const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(v.followUpDate.trim()) : null;
+
         if (v.followUpDate?.trim() && !followUpDateUtc) {
             this.submitError.set('Takip tarihi geçersiz.');
+
             return;
         }
+
         const orderMsg = followUpBeforeTreatmentMessage(treatmentDateUtc, followUpDateUtc);
+
         if (orderMsg) {
             this.submitError.set(orderMsg);
+
             return;
         }
 
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
@@ -347,12 +372,16 @@ export class TreatmentFormComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseTreatmentUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
@@ -362,21 +391,27 @@ export class TreatmentFormComponent implements OnInit {
 
     private tryApplyExaminationRouteContext(): void {
         const ctx = parseExaminationCreateRouteContext(this.contextParams());
+
         if (!ctx) {
             return;
         }
+
         this.applyingRouteContext.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
             next: (ex) => {
                 const cId = ex.clientId?.trim() ?? '';
                 const pId = ex.petId?.trim() ?? '';
+
                 if (cId !== ctx.clientId || pId !== ctx.petId) {
                     this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 const listItem = examinationListItemFromDetail(ex);
+
                 this.examinationOptions.set([prescriptionExaminationSelectOption(listItem)]);
                 this.relationLoadSeq += 1;
                 this.form.patchValue(
@@ -391,9 +426,11 @@ export class TreatmentFormComponent implements OnInit {
                 this.form.controls.petId.disable({ emitEvent: false });
                 this.form.controls.examinationId.disable({ emitEvent: false });
                 this.contextFromExamination.set(true);
+
                 if (ex.status === 'Finalized') {
                     this.selectionError.set('Bu muayene kesinleştirilmiş; tedavi eklenemez. Gerekirse muayeneye ek not ekleyin.');
                 }
+
                 this.loadingExaminations.set(false);
                 this.applyingRouteContext.set(false);
             },
@@ -409,6 +446,7 @@ export class TreatmentFormComponent implements OnInit {
     private loadExaminationsForPet(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
+
         this.loadingExaminations.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }).subscribe({
@@ -416,9 +454,11 @@ export class TreatmentFormComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                     return;
                 }
+
                 this.examinationOptions.set(ex.items.map(prescriptionExaminationSelectOption));
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
@@ -427,6 +467,7 @@ export class TreatmentFormComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 this.selectionError.set(this.mapLoadError(e, 'Muayene listesi yüklenemedi.'));
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
@@ -439,8 +480,10 @@ export class TreatmentFormComponent implements OnInit {
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
             const parsed = parseTreatmentUpsertHttpError(e);
+
             return parsed.summaryMessage ?? fallback;
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

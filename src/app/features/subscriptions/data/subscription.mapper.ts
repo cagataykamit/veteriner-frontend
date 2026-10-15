@@ -33,10 +33,13 @@ function toNullableDecimal(value: unknown): number | null {
     if (typeof value === 'number' && Number.isFinite(value)) {
         return value;
     }
+
     if (typeof value === 'string') {
         const n = Number.parseFloat(value);
+
         return Number.isFinite(n) ? n : null;
     }
+
     return null;
 }
 
@@ -44,65 +47,84 @@ function toRawNumberOrString(value: unknown): number | string | null {
     if (typeof value === 'number' && Number.isFinite(value)) {
         return value;
     }
+
     if (typeof value === 'string' && value.trim()) {
         const t = value.trim();
+
         if (/^-?\d+$/.test(t)) {
             return Number.parseInt(t, 10);
         }
+
         return t;
     }
+
     return null;
 }
 
 /** Backend `SubscriptionPlanChangeType`: Upgrade = 1, Downgrade = 2 (JSON sayı). */
 function parsePendingPlanChangeType(raw: unknown): PendingPlanChangeTypeKey {
     const v = toRawNumberOrString(raw);
+
     if (typeof v === 'number') {
         if (v === 1) {
             return 'upgrade';
         }
+
         if (v === 2) {
             return 'downgrade';
         }
+
         return 'unknown';
     }
+
     if (typeof v === 'string') {
         const t = v.trim();
+
         if (/^-?\d+$/.test(t)) {
             return parsePendingPlanChangeType(Number.parseInt(t, 10));
         }
+
         const n = t.toLowerCase().replace(/[^a-z0-9]/g, '');
+
         if (['downgrade', 'down', 'lower'].includes(n)) {
             return 'downgrade';
         }
+
         if (['upgrade', 'up', 'higher'].includes(n)) {
             return 'upgrade';
         }
     }
+
     return 'unknown';
 }
 
 function parsePendingPlanChangeStatus(raw: unknown): PendingPlanChangeStatusKey {
     const v = toRawNumberOrString(raw);
+
     if (typeof v === 'number') {
         if (v === 0) return 'pending';
         if (v === 1) return 'scheduled';
         if (v === 2) return 'cancelled';
         if (v === 3) return 'applied';
+
         return 'unknown';
     }
+
     if (typeof v === 'string') {
         const n = v.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
         if (['pending', 'waiting'].includes(n)) return 'pending';
         if (['scheduled', 'activepending', 'queued'].includes(n)) return 'scheduled';
         if (['cancelled', 'canceled'].includes(n)) return 'cancelled';
         if (['applied', 'completed'].includes(n)) return 'applied';
     }
+
     return 'unknown';
 }
 
 function readPendingPlanChangeTypeRaw(dto: PendingPlanChangeDto): unknown {
     const o = dto as unknown as Record<string, unknown>;
+
     return o['changeType'] ?? o['ChangeType'] ?? o['planChangeType'] ?? o['PlanChangeType'] ?? o['transitionType'] ?? o['TransitionType'];
 }
 
@@ -110,15 +132,18 @@ export function mapPendingPlanChangeDtoToVm(dto: PendingPlanChangeDto | null | u
     if (!dto) {
         return null;
     }
+
     const target = trimOrNull(dto.targetPlanCode);
     const current = trimOrNull(dto.currentPlanCode);
     const changeTypeSource = readPendingPlanChangeTypeRaw(dto);
     const changeTypeRaw = toRawNumberOrString(changeTypeSource);
     const statusRaw = toRawNumberOrString(dto.status);
     const effective = trimOrNull(dto.effectiveAtUtc);
+
     if (!target && !current && !effective && changeTypeRaw === null && statusRaw === null) {
         return null;
     }
+
     return {
         currentPlanCode: current,
         targetPlanCode: target,
@@ -133,9 +158,11 @@ export function mapPendingPlanChangeDtoToVm(dto: PendingPlanChangeDto | null | u
 function mapPlan(dto: { code?: string | null; name?: string | null; description?: string | null; maxUsers?: number | null }): SubscriptionPlanVm | null {
     const code = trimOrNull(dto.code);
     const name = trimOrNull(dto.name);
+
     if (!code && !name) {
         return null;
     }
+
     return {
         code: code ?? name ?? EM_DASH,
         name: name ?? code ?? EM_DASH,
@@ -172,12 +199,15 @@ export function mapSubscriptionSummaryDtoToVm(dto: SubscriptionSummaryDto): Subs
 
 function checkoutSessionStatusRaw(dto: SubscriptionCheckoutSessionDto): string | number | null {
     const s = dto.status;
+
     if (s === null || s === undefined) {
         return null;
     }
+
     if (typeof s === 'number' || typeof s === 'string') {
         return s;
     }
+
     return null;
 }
 

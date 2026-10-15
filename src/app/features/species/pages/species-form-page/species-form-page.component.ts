@@ -176,9 +176,11 @@ export class SpeciesFormPageComponent implements OnInit {
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id');
+
         if (!id) {
             return;
         }
+
         this.editing.set(true);
         this.currentId.set(id);
         this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
@@ -187,9 +189,11 @@ export class SpeciesFormPageComponent implements OnInit {
 
     reloadSpeciesRecord(): void {
         const id = this.currentId();
+
         if (!id) {
             return;
         }
+
         this.loading.set(true);
         this.loadError.set(null);
         this.speciesService.getSpeciesById(id).subscribe({
@@ -213,18 +217,24 @@ export class SpeciesFormPageComponent implements OnInit {
         if (this.ro.mutationBlocked()) {
             return;
         }
+
         if (this.editing() && !this.auth.hasOperationClaim(SPECIES_UPDATE_CLAIM)) {
             return;
         }
+
         if (!this.editing() && !this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM)) {
             return;
         }
+
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
         const payload: SpeciesUpsertRequest = {
             code: v.code.trim(),
@@ -234,6 +244,7 @@ export class SpeciesFormPageComponent implements OnInit {
         };
 
         this.submitting.set(true);
+
         if (this.editing() && this.currentId()) {
             this.speciesService.updateSpecies(this.currentId()!, payload).subscribe({
                 next: () => {
@@ -242,6 +253,7 @@ export class SpeciesFormPageComponent implements OnInit {
                 },
                 error: (e: unknown) => this.onSubmitError(e)
             });
+
             return;
         }
 
@@ -260,12 +272,16 @@ export class SpeciesFormPageComponent implements OnInit {
 
     private onSubmitError(e: unknown): void {
         this.submitting.set(false);
+
         if (e instanceof HttpErrorResponse) {
             const parsed = parseSpeciesUpsertHttpError(e);
+
             this.apiFieldErrors.set(parsed.fieldErrors);
             this.submitError.set(parsed.summaryMessage);
+
             return;
         }
+
         this.submitError.set(panelHttpFailureMessage(e, 'Kayıt sırasında hata oluştu.'));
     }
 }

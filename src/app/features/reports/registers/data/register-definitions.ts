@@ -30,6 +30,7 @@ const quantityText = (q: number | null | undefined) => (q == null ? '' : q.toLoc
 /** Hücre biçimleri sözleşmedeki dışa aktarma biçimiyle aynıdır (REGISTERS_API_CONTRACT bölüm 2 ve 5). */
 const prescriptionText = (p: RegisterPrescriptionDto) => {
     const items = p.items.map((i) => (i.quantity == null ? i.name : `${i.name} ×${quantityText(i.quantity)}`)).join(', ');
+
     return items ? `${p.title}: ${items}` : p.title;
 };
 
@@ -38,6 +39,7 @@ const administrationText = (a: RegisterAdministrationDto) =>
 
 const prescribedItemText = (i: PrescriptionRegisterItemDto) => {
     const detail = [i.pharmacologicalForm, i.packaging].filter(Boolean).join(', ');
+
     return [i.name, detail && `(${detail})`, i.quantity != null && `×${quantityText(i.quantity)}`].filter(Boolean).join(' ');
 };
 

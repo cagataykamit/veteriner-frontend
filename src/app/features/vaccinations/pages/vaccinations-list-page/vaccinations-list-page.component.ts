@@ -291,6 +291,7 @@ export class VaccinationsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const overdueFromUrl = this.route.snapshot.queryParamMap.get('overdue')?.toLowerCase() === 'true';
+
         if (overdueFromUrl) {
             this.clearStateFromSessionStorage();
             this.applyOverdueDashboardDeepLink();
@@ -298,6 +299,7 @@ export class VaccinationsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.syncVaccinationsListQueryParams();
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
@@ -319,8 +321,10 @@ export class VaccinationsListPageComponent implements OnInit {
     applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
@@ -330,9 +334,11 @@ export class VaccinationsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
+
         if (this.activeOverdueOnly() && this.statusFilter.trim() !== '0') {
             this.activeOverdueOnly.set(false);
         }
+
         this.first.set(0);
         this.currentPage.set(1);
         this.persistStateToSessionStorage(1, this.pageSize());
@@ -371,8 +377,10 @@ export class VaccinationsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -382,10 +390,12 @@ export class VaccinationsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
@@ -394,6 +404,7 @@ export class VaccinationsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -401,10 +412,12 @@ export class VaccinationsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
@@ -421,9 +434,11 @@ export class VaccinationsListPageComponent implements OnInit {
         const overdue = this.activeOverdueOnly();
         const effectiveStatus = overdue ? '0' : status.trim();
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${effectiveStatus}|${overdue}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -472,17 +487,22 @@ export class VaccinationsListPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(VACCINATIONS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<VaccinationsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(VACCINATIONS_LIST_STATE_KEY);
+
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.statusFilter = typeof parsed.status === 'string' ? parsed.status : '';
             this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
@@ -494,9 +514,11 @@ export class VaccinationsListPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(VACCINATIONS_LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -511,6 +533,7 @@ export class VaccinationsListPageComponent implements OnInit {
             pageSize,
             overdueOnly: this.activeOverdueOnly()
         };
+
         sessionStorage.setItem(VACCINATIONS_LIST_STATE_KEY, JSON.stringify(state));
     }
 
@@ -521,6 +544,7 @@ export class VaccinationsListPageComponent implements OnInit {
     /** URL’yi filtreyle hizala; sayfa yenilemede `?overdue=true` korunur. */
     private syncVaccinationsListQueryParams(): void {
         const showOverdue = this.activeOverdueOnly() && this.statusFilter.trim() === '0';
+
         void this.router.navigate([], {
             relativeTo: this.route,
             queryParams: { overdue: showOverdue ? 'true' : null },

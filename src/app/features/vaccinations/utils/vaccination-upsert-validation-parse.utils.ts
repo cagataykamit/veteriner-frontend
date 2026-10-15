@@ -12,6 +12,7 @@ type ProblemBody = ProblemDetails & {
 
 function isGenericValidationTitle(s: string): boolean {
     const t = s.trim();
+
     return (
         /one or more validation errors occurred/i.test(s) ||
         /^validation failed/i.test(t) ||
@@ -28,24 +29,30 @@ function resolveVaccinationUpsertNonFieldMessage(err: HttpErrorResponse): string
     const body = err.error as ProblemBody | string | null | undefined;
 
     const mapped = vaccinationStockProblemUserMessage(err);
+
     if (mapped) {
         return mapped;
     }
 
     if (typeof body === 'string') {
         const t = body.trim();
+
         if (t && !isGenericValidationTitle(t)) {
             return t;
         }
+
         return messageFromHttpError(err, FALLBACK_GENERIC);
     }
 
     if (body && typeof body === 'object') {
         const detail = typeof body.detail === 'string' ? body.detail.trim() : '';
+
         if (detail && !isGenericValidationTitle(detail)) {
             return detail;
         }
+
         const title = typeof body.title === 'string' ? body.title.trim() : '';
+
         if (title && !isGenericValidationTitle(title)) {
             return title;
         }

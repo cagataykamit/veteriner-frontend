@@ -41,13 +41,17 @@ export function newCartLine(product: SaleProductVm, key: string): CartLine {
  */
 export function pickScannedProduct(term: string, results: readonly SaleProductVm[]): SaleProductVm | null {
     const t = term.trim().toLocaleLowerCase('tr-TR');
+
     if (!t) {
         return null;
     }
+
     const exact = results.filter((p) => p.barcode.toLocaleLowerCase('tr-TR') === t || p.sku.toLocaleLowerCase('tr-TR') === t);
+
     if (exact.length === 1) {
         return exact[0];
     }
+
     return exact.length === 0 && results.length === 1 ? results[0] : null;
 }
 
@@ -64,18 +68,23 @@ export function cartTotal(lines: readonly Pick<CartLine, 'quantity' | 'unitPrice
 /** Satırın kullanıcıya gösterilecek ilk hatası; geçerliyse `null`. */
 export function cartLineError(line: Pick<CartLine, 'quantity' | 'unitPrice'>): string | null {
     const { quantity, unitPrice } = line;
+
     if (quantity == null || !(quantity > 0)) {
         return 'Miktar 0\'dan büyük olmalı.';
     }
+
     if (quantity > CHARGE_QUANTITY_MAX || !hasAtMostDecimals(quantity, CHARGE_QUANTITY_MAX_DECIMALS)) {
         return `Miktar en çok ${CHARGE_QUANTITY_MAX_DECIMALS} ondalıklı ve ${CHARGE_QUANTITY_MAX} altında olmalı.`;
     }
+
     if (unitPrice == null || !(unitPrice > 0)) {
         return 'Birim fiyat 0\'dan büyük olmalı.';
     }
+
     if (unitPrice > CHARGE_UNIT_PRICE_MAX || !hasAtMostDecimals(unitPrice, CHARGE_UNIT_PRICE_MAX_DECIMALS)) {
         return `Birim fiyat en çok ${CHARGE_UNIT_PRICE_MAX_DECIMALS} ondalıklı olmalı.`;
     }
+
     return computeChargeAmount(quantity, unitPrice) == null ? 'Satır tutarı sıfıra yuvarlanıyor.' : null;
 }
 
@@ -87,6 +96,7 @@ export function effectivePaymentAmount(total: number, isWalkIn: boolean, payment
     if (isWalkIn || payment.mode === 'full') {
         return total;
     }
+
     return payment.mode === 'partial' ? payment.amount : null;
 }
 
@@ -95,10 +105,13 @@ export function paymentError(total: number, isWalkIn: boolean, payment: CartPaym
     if (isWalkIn || payment.mode !== 'partial') {
         return null;
     }
+
     const amount = payment.amount;
+
     if (amount == null || !(amount > 0) || !hasAtMostDecimals(amount, 2)) {
         return 'Kısmi ödeme tutarı 0\'dan büyük olmalı (en çok 2 ondalık).';
     }
+
     return amount >= total ? 'Kısmi ödeme toplamdan az olmalı; tamamını almak için "Tam ödeme" seçin.' : null;
 }
 
@@ -106,12 +119,15 @@ export function cartRequestError(lines: readonly CartLine[], total: number, isWa
     if (lines.length === 0) {
         return 'Sepet boş.';
     }
+
     if (lines.length > SALE_MAX_LINES) {
         return `Sepette en çok ${SALE_MAX_LINES} satır olabilir.`;
     }
+
     if (lines.some((l) => cartLineError(l) != null)) {
         return 'Satırlardaki hataları düzeltin.';
     }
+
     return paymentError(total, isWalkIn, payment);
 }
 
@@ -127,6 +143,7 @@ export function toCreateSaleRequest(input: {
     const isWalkIn = !input.clientId;
     const amount = effectivePaymentAmount(total, isWalkIn, input.payment);
     const notes = input.notes.trim();
+
     return {
         clinicId: input.clinicId || undefined,
         clientId: input.clientId || undefined,

@@ -37,6 +37,7 @@ const exam: ExaminationRegisterRowDto = {
 describe('kayıt defteri tanımları', () => {
     it('muayene defteri sütunları sözleşmedeki sırada; Hasta grubu bitişik', () => {
         const layout = registerHeaderLayout(EXAMINATION_REGISTER.columns);
+
         expect(layout.top.map((c) => c.label)).toEqual([
             'Sıra No',
             'Muayene Tarihi',
@@ -67,6 +68,7 @@ describe('kayıt defteri tanımları', () => {
             'Veteriner Hekim'
         ]);
         const lines = (header: string, row = exam) => EXAMINATION_REGISTER.screenColumns.find((c) => c.header === header)!.lines(row).map((l) => l.text ?? l.items!.join(' · ')).filter(Boolean);
+
         expect(lines('Hasta Sahibi')).toEqual(['Ayşe Yılmaz']);
         expect(lines('Hasta Sahibi', { ...exam, ownerPhone: '905321110001', ownerAddress: 'Kadıköy' })).toEqual(['Ayşe Yılmaz', '+90 532 111 00 01', 'Kadıköy']);
         expect(lines('Hasta')).toEqual(['Pamuk', 'Kedi']);
@@ -81,6 +83,7 @@ describe('kayıt defteri tanımları', () => {
 
     it('reçete defteri dört gruplu üst başlık ve tek ilaç sütunu taşır', () => {
         const layout = registerHeaderLayout(PRESCRIPTION_REGISTER.columns);
+
         expect(layout.top.map((c) => [c.label, c.colSpan, c.rowSpan])).toEqual([
             ['Sıra No', 1, 2],
             ['REÇETENİN', 3, 1],
@@ -94,6 +97,7 @@ describe('kayıt defteri tanımları', () => {
 
     it('yazdırma telefon sütunu ekrandakiyle aynı biçimde (+90 532 111 00 01), ham biçimler normalleşir, boşsa boş kalır', () => {
         const phone = (ownerPhone: string | null) => EXAMINATION_REGISTER.columns.find((c) => c.header === 'Telefonu')!.cell({ ...exam, ownerPhone });
+
         expect(phone('905321110001')).toBe('+90 532 111 00 01');
         expect(phone('0532 111 00 01')).toBe('+90 532 111 00 01');
         expect(phone('0212 555 00 00')).toBe('0212 555 00 00');
@@ -102,6 +106,7 @@ describe('kayıt defteri tanımları', () => {
 
     it('muayene satırı: eksik alanlar boş hücre, tedavi/reçete/uygulama sözleşme biçiminde', () => {
         const cells = EXAMINATION_REGISTER.columns.map((c) => c.cell(exam));
+
         expect(cells).toEqual([
             '7',
             '05.10.2026',
@@ -140,6 +145,7 @@ describe('kayıt defteri tanımları', () => {
             ]
         };
         const cells = PRESCRIPTION_REGISTER.columns.map((c) => c.cell(row));
+
         expect(cells).toEqual(['1', '05.10.2026', '', '', '', '', 'Ali', '', 'İnek', '', '1', 'Dectomax ×1; Serum (Enjeksiyonluk, 100 ml) ×2']);
     });
 
@@ -163,6 +169,7 @@ describe('kayıt defteri tanımları', () => {
             isBatched: true,
             isReversed: true
         };
+
         expect(VACCINE_REGISTER.columns.map((c) => c.header)).toEqual([
             'Sıra No',
             'Ticari Adı',
@@ -193,6 +200,7 @@ describe('kayıt defteri tanımları', () => {
             isBatched: false,
             isReversed: false
         };
+
         expect(MEDICATION_REGISTER.columns.map((c) => c.header)).toEqual([
             'Sıra No',
             'Ürün',
@@ -211,6 +219,7 @@ describe('kayıt defteri tanımları', () => {
 
     it('narkotik defteri: iki gruplu başlık (Alınan / Çıkış), ürün tek hücrede, boş taraf boş; bakiye sütunu yok', () => {
         const layout = registerHeaderLayout(CONTROLLED_SUBSTANCE_REGISTER.columns);
+
         expect(layout.top.map((c) => `${c.label}:${c.colSpan}`)).toEqual([
             'Sıra No:1',
             'Ürün Adı, Ticari Adı ve Farmakolojik Şekli:1',
@@ -236,6 +245,7 @@ describe('kayıt defteri tanımları', () => {
             issuedDate: '2026-10-05',
             isBatched: true
         };
+
         expect(CONTROLLED_SUBSTANCE_REGISTER.columns.map((c) => c.cell(issued))).toEqual([
             '2',
             'Ketamin (Enjeksiyonluk)',
@@ -254,6 +264,7 @@ describe('kayıt defteri tanımları', () => {
     it('narkotik defteri: yönü belirlenemeyen satır ekranda belirtilir', () => {
         const row = { rowNumber: 1, direction: 'Undetermined', productName: 'X', quantity: 1 } as ControlledSubstanceRegisterRowDto;
         const lines = CONTROLLED_SUBSTANCE_REGISTER.screenColumns[1].lines(row).map((l) => l.text);
+
         expect(lines).toContain('Yön belirlenemedi');
     });
 
@@ -276,10 +287,12 @@ describe('kayıt defteri tanımları', () => {
             addedAfterFinalization: true,
             isVoided: false
         };
+
         expect(VACCINE_INFO_REGISTER.columns.map((c) => c.header)).toEqual([
             '#', 'Tarih', 'Hasta Sahibi', 'T.C.', 'Hasta', 'Tür', 'Çip No', 'Ürün', 'Seri No', 'S.K.T', 'Birim', 'Miktar', 'Fiyat', 'Toplam'
         ]);
         const cells = VACCINE_INFO_REGISTER.columns.map((c) => c.cell(row));
+
         expect(cells[3]).toBe('');
         expect(cells[7]).toBe('Karma Aşı (sonradan eklendi)');
         expect(cells[9]).toBe('01.03.2027');
@@ -293,6 +306,7 @@ describe('kayıt defteri tanımları', () => {
         expect(MEDICATION_REGISTER.readClaims).toEqual(['StockMovements.Read']);
         expect(CONTROLLED_SUBSTANCE_REGISTER.readClaims).toEqual(['StockMovements.Read', 'Administrations.Read']);
         expect(VACCINE_INFO_REGISTER.readClaims).toEqual(['Administrations.Read', 'Vaccinations.Read', 'Products.Read']);
+
         for (const [key, def] of Object.entries(REGISTER_DEFINITIONS)) {
             expect(def.book).toBe(key);
         }

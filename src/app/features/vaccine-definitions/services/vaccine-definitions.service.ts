@@ -32,6 +32,7 @@ export class VaccineDefinitionsService {
             ...params
         };
         const httpParams = vaccineDefinitionsQueryToHttpParams(merged);
+
         return this.api.get<VaccineDefinitionDtoPagedResult>(ApiEndpoints.vaccineDefinitions.list(), httpParams).pipe(
             map((res) => mapPagedVaccineDefinitionsToVm(res)),
             catchError((err: HttpErrorResponse) =>

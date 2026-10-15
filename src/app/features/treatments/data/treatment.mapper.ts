@@ -13,6 +13,7 @@ import {
     dateOnlyInputToIstanbulStartUtcIso,
     toIstanbulDateInputValue
 } from '@/app/shared/utils/date.utils';
+
 const EM = '—';
 
 function str(v: string | null | undefined): string {
@@ -25,17 +26,21 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: TreatmentListItemDto | TreatmentDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
@@ -57,6 +62,7 @@ function canonicalPetId(dto: TreatmentListItemDto | TreatmentDetailDto): string 
 
 function canonicalPetName(dto: TreatmentListItemDto | TreatmentDetailDto): string {
     const raw = firstTrimmed(dto.petName, readDtoString(dto, ['PetName', 'AnimalName']));
+
     return raw ?? '';
 }
 
@@ -156,6 +162,7 @@ export function mapPagedTreatmentsToVm(result: TreatmentListItemDtoPagedResult):
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapTreatmentListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -173,55 +180,74 @@ export function treatmentsQueryToHttpParams(query: TreatmentsListQuery): HttpPar
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+
     const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+
     if (fromUtc) {
         p = p.set('dateFromUtc', fromUtc);
     }
+
     const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+
     if (toUtc) {
         p = p.set('dateToUtc', toUtc);
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     return p;
 }
 
 export function mapCreateTreatmentToApiBody(req: CreateTreatmentRequest): TreatmentWriteRequestDto {
     const clinicId = req.clinicId.trim();
     const petId = req.petId.trim();
+
     if (!clinicId) {
         throw new Error('TREATMENT_WRITE_CLINIC_ID_REQUIRED');
     }
+
     if (!petId) {
         throw new Error('TREATMENT_WRITE_PET_ID_REQUIRED');
     }
+
     const treatmentDateUtc = req.treatmentDateUtc?.trim() ?? '';
+
     if (!treatmentDateUtc) {
         throw new Error('TREATMENT_WRITE_DATE_REQUIRED');
     }
+
     const title = req.title.trim();
     const description = req.description.trim();
+
     if (!title) {
         throw new Error('TREATMENT_WRITE_TITLE_REQUIRED');
     }
+
     if (!description) {
         throw new Error('TREATMENT_WRITE_DESCRIPTION_REQUIRED');
     }
+
     const dto: TreatmentWriteRequestDto = {
         clinicId,
         petId,
@@ -232,9 +258,11 @@ export function mapCreateTreatmentToApiBody(req: CreateTreatmentRequest): Treatm
         followUpDateUtc: req.followUpDateUtc?.trim() ? req.followUpDateUtc.trim() : null
     };
     const ex = req.examinationId?.trim();
+
     if (ex) {
         dto.examinationId = ex;
     }
+
     return dto;
 }
 
@@ -269,13 +297,17 @@ export function followUpBeforeTreatmentMessage(treatmentDateUtc: string, followU
     if (!followUpDateUtc?.trim()) {
         return null;
     }
+
     const t = new Date(treatmentDateUtc.trim());
     const f = new Date(followUpDateUtc.trim());
+
     if (Number.isNaN(t.getTime()) || Number.isNaN(f.getTime())) {
         return null;
     }
+
     if (f.getTime() < t.getTime()) {
         return 'Takip tarihi tedavi tarihinden önce olamaz.';
     }
+
     return null;
 }

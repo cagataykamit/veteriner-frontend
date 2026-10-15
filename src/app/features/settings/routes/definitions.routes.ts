@@ -13,6 +13,7 @@ export default [
                 const auth = inject(AuthService);
                 const router = inject(Router);
                 const ok = visibleEntries(DEFINITION_ENTRIES, (claim) => auth.hasOperationClaim(claim)).length > 0;
+
                 return ok ? true : router.createUrlTree(['/notfound']);
             }
         ],

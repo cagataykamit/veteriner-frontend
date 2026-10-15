@@ -23,32 +23,40 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 function firstString(o: Record<string, unknown>, keys: string[]): string | null {
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
+
         if (typeof v === 'number' && !Number.isNaN(v)) {
             return String(v);
         }
     }
+
     return null;
 }
 
 function readTriBool(o: Record<string, unknown>, keys: string[]): boolean | null {
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'boolean') {
             return v;
         }
+
         if (typeof v === 'string') {
             const t = v.trim().toLowerCase();
+
             if (t === 'true' || t === '1') {
                 return true;
             }
+
             if (t === 'false' || t === '0') {
                 return false;
             }
         }
     }
+
     return null;
 }
 
@@ -56,15 +64,19 @@ function extractArray(raw: unknown): unknown[] {
     if (Array.isArray(raw)) {
         return raw;
     }
+
     if (!isRecord(raw)) {
         return [];
     }
+
     for (const k of ['items', 'Items', 'data', 'Data', 'value', 'Value', 'result', 'Result']) {
         const v = raw[k];
+
         if (Array.isArray(v)) {
             return v;
         }
     }
+
     return [];
 }
 
@@ -72,6 +84,7 @@ export function mapOperationClaimItem(raw: unknown): OperationClaimOptionVm | nu
     if (!isRecord(raw)) {
         return null;
     }
+
     const id = firstString(raw, ['id', 'Id', 'operationClaimId', 'OperationClaimId']);
     const name =
         firstString(raw, [
@@ -84,9 +97,11 @@ export function mapOperationClaimItem(raw: unknown): OperationClaimOptionVm | nu
             'title',
             'Title'
         ]) ?? id;
+
     if (!id) {
         return null;
     }
+
     return { id, name: name ?? id };
 }
 
@@ -98,23 +113,29 @@ export function mapTenantInviteCreatedDto(raw: unknown): TenantInviteCreatedVm |
     if (!isRecord(raw)) {
         return null;
     }
+
     let o: Record<string, unknown> = raw;
+
     for (const wrap of ['data', 'Data', 'value', 'Value', 'result', 'Result']) {
         const inner = raw[wrap];
+
         if (isRecord(inner)) {
             o = inner;
             break;
         }
     }
+
     const inviteId = firstString(o, ['inviteId', 'InviteId', 'id', 'Id']);
     const token = firstString(o, ['token', 'Token', 'inviteToken', 'InviteToken']);
     const email = firstString(o, ['email', 'Email']);
     const tenantId = firstString(o, ['tenantId', 'TenantId']);
     const clinicId = firstString(o, ['clinicId', 'ClinicId']);
     const expiresAtUtc = firstString(o, ['expiresAtUtc', 'ExpiresAtUtc']);
+
     if (!token) {
         return null;
     }
+
     return {
         inviteId: inviteId ?? '—',
         token,
@@ -136,25 +157,31 @@ export function mapCreateInviteFormToApiDto(input: {
         clinicId: input.clinicId.trim(),
         operationClaimId: input.operationClaimId.trim()
     };
+
     if (input.expiresAtUtc?.trim()) {
         dto.expiresAtUtc = input.expiresAtUtc.trim();
     }
+
     return dto;
 }
 
 function numFromRecord(o: Record<string, unknown>, keys: string[], fallback: number): number {
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'number' && !Number.isNaN(v)) {
             return v;
         }
+
         if (typeof v === 'string' && v.trim()) {
             const n = Number(v);
+
             if (!Number.isNaN(n)) {
                 return n;
             }
         }
     }
+
     return fallback;
 }
 
@@ -162,12 +189,15 @@ function unwrapPagedInviteRoot(raw: unknown): Record<string, unknown> | null {
     if (!isRecord(raw)) {
         return null;
     }
+
     for (const k of ['data', 'Data', 'value', 'Value', 'result', 'Result']) {
         const inner = raw[k];
+
         if (isRecord(inner) && (inner['items'] !== undefined || inner['Items'] !== undefined)) {
             return inner;
         }
     }
+
     return raw;
 }
 
@@ -175,10 +205,13 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
     if (!isRecord(raw)) {
         return null;
     }
+
     const id = firstString(raw, ['id', 'Id', 'inviteId', 'InviteId']);
+
     if (!id) {
         return null;
     }
+
     const email = firstString(raw, ['email', 'Email']) ?? '—';
     const statusRaw = firstString(raw, ['status', 'Status', 'state', 'State', 'inviteStatus', 'InviteStatus']);
     const isExpiredTri = readTriBool(raw, ['isExpired', 'IsExpired']);
@@ -235,6 +268,7 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
         canCancel,
         canResend
     };
+
     return isCurrentMemberTri === null ? base : { ...base, isCurrentMember: isCurrentMemberTri };
 }
 
@@ -242,18 +276,24 @@ export function mapTenantInviteDetailRaw(raw: unknown): TenantInviteDetailVm | n
     if (!isRecord(raw)) {
         return null;
     }
+
     let o: Record<string, unknown> = raw;
+
     for (const wrap of ['data', 'Data', 'value', 'Value', 'result', 'Result']) {
         const inner = raw[wrap];
+
         if (isRecord(inner)) {
             o = inner;
             break;
         }
     }
+
     const row = mapTenantInviteListItemRaw(o);
+
     if (!row) {
         return null;
     }
+
     const createdAtUtc = firstString(o, ['createdAtUtc', 'CreatedAtUtc', 'createdAt', 'CreatedAt']);
     const token = firstString(o, ['token', 'Token', 'inviteToken', 'InviteToken']);
     const tenantId = firstString(o, ['tenantId', 'TenantId']);
@@ -278,6 +318,7 @@ export function mapTenantInviteDetailRaw(raw: unknown): TenantInviteDetailVm | n
         canCancel: row.canCancel,
         canResend: row.canResend
     };
+
     return row.isCurrentMember !== undefined ? { ...detail, isCurrentMember: row.isCurrentMember } : detail;
 }
 
@@ -289,9 +330,11 @@ export function mapPagedTenantInvitesToVm(raw: unknown): {
     totalPages: number;
 } {
     const root = unwrapPagedInviteRoot(raw);
+
     if (!root) {
         return { items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 };
     }
+
     const items = extractArray(root['items'] ?? root['Items'])
         .map((x) => mapTenantInviteListItemRaw(x))
         .filter((x): x is TenantInviteListItemVm => !!x);
@@ -308,10 +351,13 @@ export function tenantInvitesListQueryToHttpParams(query: TenantInvitesListQuery
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     return p;
 }

@@ -155,21 +155,26 @@ export class VisitQuickRegistrationComponent implements OnInit {
     ngOnInit(): void {
         this.owner.set(this.existingOwner());
         const { fullName, phone } = splitSearchTermForRegistration(this.searchTerm());
+
         this.clientForm.patchValue({ fullName, phone });
         this.loadSpecies();
     }
 
     clientMessage(field: 'fullName' | 'phone'): string | null {
         const api = this.apiClientErrors()[field];
+
         if (api) {
             return api;
         }
+
         const control = this.clientForm.controls[field];
+
         return control.invalid && control.touched ? clientUpsertFieldErrorMessage(field, control.errors) : null;
     }
 
     canSubmit(): boolean {
         const petOk = this.petForm.controls.name.valid && this.petForm.controls.speciesId.valid && this.petForm.controls.microchipNumber.valid;
+
         return petOk && (!!this.owner() || (this.clientForm.controls.fullName.valid && this.clientForm.controls.phone.valid));
     }
 
@@ -177,16 +182,20 @@ export class VisitQuickRegistrationComponent implements OnInit {
         if (this.submitting()) {
             return;
         }
+
         if (!this.canSubmit()) {
             this.clientForm.markAllAsTouched();
             this.petForm.markAllAsTouched();
+
             return;
         }
+
         this.stepError.set(null);
         this.duplicateClient.set(false);
         this.apiClientErrors.set({});
         this.submitting.set(true);
         const owner = this.owner();
+
         if (owner) {
             this.addPetToOwner(owner);
         } else {
@@ -197,6 +206,7 @@ export class VisitQuickRegistrationComponent implements OnInit {
     private registerNewClient(): void {
         const client = this.clientForm.getRawValue();
         const pet = getPetUpsertFormValue(this.petForm);
+
         this.clientsService.quickRegister(mapQuickRegisterFormsToRequest(client, pet)).subscribe({
             next: ({ clientId, petId }) => this.finish(petId, pet.name, pet.speciesId, { id: clientId, name: client.fullName.trim() }),
             error: (e: unknown) => this.failQuickRegister(e)
@@ -206,6 +216,7 @@ export class VisitQuickRegistrationComponent implements OnInit {
     private addPetToOwner(owner: RegistrationOwner): void {
         this.petForm.controls.clientId.setValue(owner.id);
         const payload = mapPetUpsertFormToCreateRequest(getPetUpsertFormValue(this.petForm), []);
+
         this.petsService.createPet(payload).subscribe({
             next: ({ id }) => this.finish(id, payload.name, payload.speciesId, owner),
             error: (e: unknown) => this.failPet(e)
@@ -215,6 +226,7 @@ export class VisitQuickRegistrationComponent implements OnInit {
     private finish(petId: string, petName: string, speciesId: string, owner: RegistrationOwner): void {
         this.submitting.set(false);
         const species = this.speciesOptions().find((o) => o.value === speciesId.trim())?.label ?? '—';
+
         this.registered.emit({
             id: petId,
             label: `${petName.trim()} — ${species} · Sahip: ${owner.name}`,
@@ -225,16 +237,22 @@ export class VisitQuickRegistrationComponent implements OnInit {
 
     private failQuickRegister(e: unknown): void {
         this.submitting.set(false);
+
         if (!(e instanceof HttpErrorResponse)) {
             this.stepError.set(panelHttpFailureMessage(e, 'Kayıt oluşturulamadı.'));
+
             return;
         }
+
         if (problemCodeFromHttpError(e) === DUPLICATE_CLIENT_CODE) {
             this.duplicateClient.set(true);
             this.stepError.set(DUPLICATE_CLIENT_MESSAGE);
+
             return;
         }
+
         const parsed = parseClientCreateHttpError(e);
+
         this.apiClientErrors.set(parsed.fieldErrors);
         this.stepError.set(parsed.summaryMessage ?? 'Kayıt oluşturulamadı. Bilgileri kontrol edin.');
     }

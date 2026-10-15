@@ -40,6 +40,7 @@ const itemDto = (over: Partial<TodayItemDto> = {}): TodayItemDto => ({
 describe('visit mapper — okuma', () => {
     it('create yanıtında created bayrağını korur ve Visit i eşler', () => {
         const vm = mapVisitCreateResultDtoToVm({ created: false, visit: visitDto({ appointmentId: ' a1 ', responsibleVeterinarianName: 'Dr. Ayşe' }) });
+
         expect(vm.created).toBeFalse();
         expect(vm.visit.appointmentId).toBe('a1');
         expect(vm.visit.responsibleVeterinarianName).toBe('Dr. Ayşe');
@@ -56,6 +57,7 @@ describe('visit mapper — okuma', () => {
                 itemDto({ visitId: null, appointmentId: 'a2', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null })
             ]
         });
+
         expect(vm.items.map((i) => i.key)).toEqual(['v1', 'a2']);
         expect(vm.items[1].visitId).toBeNull();
         expect(vm.items[1].careStatus).toBeNull();
@@ -69,6 +71,7 @@ describe('visit mapper — okuma', () => {
             generatedAtUtc: 'g',
             items: [itemDto({ petName: ' ', clientName: null, clientPhone: '', responsibleVeterinarianName: undefined })]
         }).items;
+
         expect(item.petName).toBe('—');
         expect(item.clientName).toBe('—');
         expect(item.clientPhone).toBeNull();
@@ -86,6 +89,7 @@ describe('visit mapper — okuma', () => {
                 itemDto({ chargedAmount: 0, allocatedAmount: 0, outstandingAmount: 0, clientOutstandingAmount: 0 })
             ]
         }).items;
+
         expect(full.hasActiveHospitalization).toBeTrue();
         expect(full.careStatus).toBe('Waiting');
         expect([full.chargedAmount, full.allocatedAmount, full.outstandingAmount, full.clientOutstandingAmount]).toEqual([1000, 400, 600, 900]);
@@ -101,6 +105,7 @@ describe('visit mapper — okuma', () => {
             generatedAtUtc: 'g',
             items: [itemDto({ pendingChargeCount: 2 }), itemDto({}), itemDto({ pendingChargeCount: 0 })]
         }).items;
+
         expect([two.pendingChargeCount, missing.pendingChargeCount, zero.pendingChargeCount]).toEqual([2, null, 0]);
     });
 
@@ -115,6 +120,7 @@ describe('visit mapper — okuma', () => {
                 itemDto({ chargeIndicator: 'Paid', chargeableWorkCount: 0, awaitingLabCount: 0 })
             ]
         }).items;
+
         expect([full.chargeIndicator, full.chargeableWorkCount, full.awaitingLabCount]).toEqual(['ChargeMissing', 2, 1]);
         expect([missing.chargeIndicator, missing.chargeableWorkCount, missing.awaitingLabCount]).toEqual([null, null, null]);
         expect([zero.chargeIndicator, zero.chargeableWorkCount, zero.awaitingLabCount]).toEqual(['Paid', 0, 0]);
@@ -122,6 +128,7 @@ describe('visit mapper — okuma', () => {
 
     it('openItems özeti eşlenir; alan alan null korunur, özet yoksa null', () => {
         const base = { date: 'd', clinicId: 'c', generatedAtUtc: 'g', items: [] };
+
         expect(mapTodayDtoToVm(base).openItems).toBeNull();
         expect(mapTodayDtoToVm({ ...base, openItems: null }).openItems).toBeNull();
         expect(
@@ -134,6 +141,7 @@ describe('visit mapper — okuma', () => {
 
     it('aktif yatışlar eşlenir; alan yoksa boş liste, boş ad — olur, planlı taburcu yoksa null', () => {
         const base = { date: 'd', clinicId: 'c', generatedAtUtc: 'g', items: [] };
+
         expect(mapTodayDtoToVm(base).activeHospitalizations).toEqual([]);
         expect(mapTodayDtoToVm({ ...base, activeHospitalizations: null }).activeHospitalizations).toEqual([]);
         const [full, bare] = mapTodayDtoToVm({
@@ -143,6 +151,7 @@ describe('visit mapper — okuma', () => {
                 { hospitalizationId: 'h2', petId: 'p2', petName: ' ', clientName: null, admittedAtUtc: '2026-10-09T09:00:00Z' }
             ]
         }).activeHospitalizations;
+
         expect(full).toEqual({ hospitalizationId: 'h1', petId: 'p1', petName: 'Pamuk', clientName: 'Ali Veli', admittedAtUtc: '2026-10-08T09:00:00Z', plannedDischargeAtUtc: '2026-10-12T09:00:00Z' });
         expect([bare.petName, bare.clientName, bare.plannedDischargeAtUtc]).toEqual(['—', '—', null]);
     });
@@ -193,6 +202,7 @@ describe('visit mapper — petAlerts', () => {
             generatedAtUtc: 'g',
             items: [itemDto({ petAlerts: { flags: ['Aggressive'], note: 'Isırır' } }), itemDto({ visitId: 'v2' })]
         }).items;
+
         expect(withAlerts.petAlerts).toEqual({ flags: ['Aggressive'], note: 'Isırır' });
         expect(without.petAlerts).toEqual({ flags: [], note: null });
     });

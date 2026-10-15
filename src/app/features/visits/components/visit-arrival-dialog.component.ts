@@ -25,6 +25,7 @@ const PET_SEARCH_PAGE_SIZE = 10;
 function petSelected(c: AbstractControl): ValidationErrors | null {
     // AutoComplete yazarken string, listeden seçilince nesne tutar; yalnızca seçilmiş hasta geçerlidir.
     const v = c.value as PetSuggestion | string | null;
+
     return v && typeof v === 'object' && v.id ? null : { required: true };
 }
 
@@ -196,6 +197,7 @@ export class VisitArrivalDialogComponent {
                         switchMap((r) => this.withOwnerLabels(r.items)),
                         catchError((e: unknown) => {
                             this.loadError.set(panelHttpFailureMessage(e, 'Hasta araması yapılamadı.'));
+
                             return of([] as PetSuggestion[]);
                         })
                     )
@@ -208,12 +210,15 @@ export class VisitArrivalDialogComponent {
     /** Hata yalnız yazılmış ama listeden seçilmemiş metin için gösterilir; boş alan dokunulmadan hata vermez. */
     petTextUnselected(): boolean {
         const v = this.form.controls.pet.value;
+
         return this.form.controls.pet.touched && typeof v === 'string' && v.trim().length > 0;
     }
 
     onPetSearch(event: AutoCompleteCompleteEvent): void {
         const term = event.query.trim();
+
         this.lastSearchTerm.set(term);
+
         if (term) {
             this.loadError.set(null);
             this.petSearch$.next(term);
@@ -229,12 +234,14 @@ export class VisitArrivalDialogComponent {
         this.registration.set(null);
         this.registeredPetId = null;
         this.lastSearchTerm.set('');
+
         // Randevulu geliş: hasta randevudan gelir; devre dışı kontrol geçerliliği etkilemez.
         if (this.appointment()) {
             this.form.controls.pet.disable({ emitEvent: false });
         } else {
             this.form.controls.pet.enable({ emitEvent: false });
         }
+
         this.loadVeterinarians();
     }
 
@@ -245,6 +252,7 @@ export class VisitArrivalDialogComponent {
     /** Seçili hastanın sahibi (liste yanıtında sahip kimliği varsa); "bu sahibe yeni hayvan" için. */
     selectedOwner(): RegistrationOwner | null {
         const pet = this.form.controls.pet.value;
+
         return pet && typeof pet === 'object' && pet.clientId ? { id: pet.clientId, name: pet.clientName } : null;
     }
 
@@ -264,15 +272,21 @@ export class VisitArrivalDialogComponent {
         if (this.submitting()) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const request = this.buildRequest();
+
         if (!request) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.visitsService.createVisit(request).subscribe({
@@ -284,6 +298,7 @@ export class VisitArrivalDialogComponent {
             error: (e: unknown) => {
                 this.submitting.set(false);
                 const message = panelHttpFailureMessage(e, 'Geliş kaydı oluşturulamadı.');
+
                 this.submitError.set(request.petId && request.petId === this.registeredPetId ? `Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: ${message} Yeniden denemek için Kaydet'e basın.` : message);
             }
         });
@@ -292,13 +307,17 @@ export class VisitArrivalDialogComponent {
     private buildRequest(): CreateVisitRequest | null {
         const { pet, veterinarianId, isUrgent } = this.form.getRawValue();
         const appointmentId = this.appointment()?.appointmentId;
+
         if (appointmentId) {
             return { appointmentId, responsibleVeterinarianUserId: veterinarianId, isUrgent };
         }
+
         const clinicId = this.auth.getClinicId()?.trim();
+
         if (!clinicId || !pet || typeof pet !== 'object') {
             return null;
         }
+
         return { clinicId, petId: pet.id, responsibleVeterinarianUserId: veterinarianId, isUrgent };
     }
 
@@ -311,6 +330,7 @@ export class VisitArrivalDialogComponent {
                 catchError(() => of(this.ownerNames.set(id, '—')))
             )
         );
+
         return (lookups.length ? forkJoin(lookups) : of([])).pipe(
             map(() =>
                 pets.map((p) => ({
@@ -326,18 +346,22 @@ export class VisitArrivalDialogComponent {
     /** Hekim opsiyonel: liste yüklenemezse geliş hekimsiz kaydedilebilir. */
     private loadVeterinarians(): void {
         const clinicId = this.auth.getClinicId()?.trim();
+
         if (!clinicId) {
             return;
         }
+
         this.loadingVeterinarians.set(true);
         this.visitsService.getVeterinarians(clinicId).subscribe({
             next: (vets) => {
                 this.veterinarianOptions.set(vets.map((v) => ({ label: v.name, value: v.userId })));
                 // Hekim kullanıcı için varsayılan kendisi; kullanıcı yüklenirken başka seçim yaptıysa ezilmez.
                 const self = findVeterinarianUserId(vets, this.auth.getUserId());
+
                 if (self && !this.form.controls.veterinarianId.value) {
                     this.form.controls.veterinarianId.setValue(self);
                 }
+
                 this.loadingVeterinarians.set(false);
             },
             error: (e: unknown) => {

@@ -58,6 +58,7 @@ describe('SaleNewPageComponent', () => {
 
     const typeAndEnter = async (text: string) => {
         const input = searchInput();
+
         input.value = text;
         input.dispatchEvent(new Event('input'));
         input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
@@ -129,6 +130,7 @@ describe('SaleNewPageComponent', () => {
         await typeAndEnter('a');
         expect(cmp['lines']()).toHaveSize(0);
         const options = el().querySelectorAll<HTMLButtonElement>('[data-testid="sale-results"] button');
+
         expect(options).toHaveSize(2);
         options[1].click();
         fixture.detectChanges();
@@ -138,6 +140,7 @@ describe('SaleNewPageComponent', () => {
     it('birim fiyat satırda düzenlenir ve toplama yansır', async () => {
         await typeAndEnter('8690001');
         const price = el().querySelector<HTMLInputElement>('[id^="p-"]')!;
+
         price.value = '50';
         price.dispatchEvent(new Event('input'));
         fixture.detectChanges();
@@ -148,6 +151,7 @@ describe('SaleNewPageComponent', () => {
     it('parti seçeneklerinde süresi geçmiş parti seçilemez ve kullanılabilir/süresi geçmiş miktar gösterilir', async () => {
         await typeAndEnter('8690001');
         const batch = cmp['lineViews']()[0].batch!;
+
         expect(batch.options!.find((o) => o.value === 'old')!.disabled).toBeTrue();
         expect(el().querySelector('[data-testid="sale-batch"]')!.textContent).toContain('Kullanılabilir 10 adet · Süresi geçmiş 5 adet');
     });
@@ -162,6 +166,7 @@ describe('SaleNewPageComponent', () => {
         fixture.detectChanges();
 
         const req = createSale.calls.mostRecent().args[0] as CreateSaleRequest;
+
         expect(req.clientId).toBeUndefined();
         expect(req.clinicId).toBe('c1');
         expect(req.lines).toEqual([{ productId: 'p1', quantity: 1, unitPrice: 45.5, batchId: undefined }]);
@@ -183,6 +188,7 @@ describe('SaleNewPageComponent', () => {
         cmp['submit']();
 
         const req = createSale.calls.mostRecent().args[0] as CreateSaleRequest;
+
         expect(req.clientId).toBe('cl1');
         expect(req.payment).toBeUndefined();
     });

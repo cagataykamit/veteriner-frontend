@@ -27,6 +27,7 @@ const WALK_IN_NAME = 'Peşin müşteri';
 
 function num(v: number | string | null | undefined): number {
     const n = Number(v);
+
     return Number.isFinite(n) ? n : 0;
 }
 
@@ -49,6 +50,7 @@ export function mapSaleLineDtoToVm(dto: SaleLineDto): SaleLineVm {
     const quantity = num(dto.quantity);
     const lot = dto.lotNumber?.trim() ?? '';
     const expiry = toYmdOrNull(dto.expiryDate);
+
     return {
         id: dto.id,
         productId: dto.productId,
@@ -64,9 +66,11 @@ export function mapSaleLineDtoToVm(dto: SaleLineDto): SaleLineVm {
 
 function productsSummary(lines: SaleLineDto[]): string {
     const names = lines.map((l) => str(l.productName));
+
     if (names.length === 0) {
         return EM;
     }
+
     return names.length <= 2 ? names.join(', ') : `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
 }
 
@@ -74,6 +78,7 @@ export function mapSaleDtoToListItemVm(dto: SaleDto): SaleListItemVm {
     const currency = dto.currency?.trim() || 'TRY';
     const isVoided = dto.status === 'Voided';
     const outstanding = num(dto.outstandingAmount);
+
     return {
         id: dto.id,
         clientId: dto.clientId,
@@ -131,15 +136,19 @@ export function mapCreateSaleResponseToVm(raw: CreateSaleResponseDto): CreateSal
 
 export function salesQueryToHttpParams(query: SalesListQuery): HttpParams {
     let p = new HttpParams().set('page', String(query.page ?? 1)).set('pageSize', String(query.pageSize ?? 20));
+
     for (const key of ['clinicId', 'clientId', 'productId', 'fromUtc', 'toUtc'] as const) {
         const v = query[key]?.trim();
+
         if (v) {
             p = p.set(key, v);
         }
     }
+
     if (query.includeVoided) {
         p = p.set('includeVoided', 'true');
     }
+
     return p;
 }
 

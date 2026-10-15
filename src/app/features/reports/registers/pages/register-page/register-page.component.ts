@@ -146,6 +146,7 @@ export class RegisterPageComponent implements OnInit, OnDestroy {
     constructor() {
         effect(() => {
             const clinicId = this.state.activeClinicId() || this.auth.getClinicId() || '';
+
             if (this.definition.extraFilters?.veterinarian && clinicId) {
                 this.visits.getVeterinarians(clinicId).subscribe({
                     next: (list) => this.veterinarianOptions.set(list.map((v) => ({ label: v.name, value: v.userId }))),
@@ -162,6 +163,7 @@ export class RegisterPageComponent implements OnInit, OnDestroy {
 
     private extraKeys(): ReportExtraKey[] {
         const f = this.definition.extraFilters;
+
         return [f?.includeVoidedLabel && 'includeVoided', f?.product && 'productId', f?.veterinarian && 'veterinarianId'].filter(Boolean) as ReportExtraKey[];
     }
 
@@ -171,12 +173,14 @@ export class RegisterPageComponent implements OnInit, OnDestroy {
         const clinicId = this.state.activeClinicId();
         const clinic = this.state.clinicOptions().find((o) => o.value === clinicId)?.label ?? PANEL_COPY.reportsClinicPanelDefault;
         const range = `${dayText(this.state.activeFromDate())} – ${dayText(this.state.activeToDate())}`;
+
         return `${count} · ${PANEL_COPY.registerDateRange}: ${range} · ${PANEL_COPY.reportsFilterClinic}: ${clinic} · ${PANEL_COPY.registerPrintedAt}: ${formatDateTimeDisplay(new Date())}`;
     });
 
     ngOnInit(): void {
         this.document.body.classList.add(PRINT_BODY_CLASS);
         this.state.init();
+
         if (this.definition.extraFilters?.product) {
             this.products.getProducts({ pageSize: 200 }).subscribe({
                 next: (res) => this.productOptions.set(res.items.filter((p) => p.kind === 'Vaccine').map((p) => ({ label: p.name, value: p.id }))),

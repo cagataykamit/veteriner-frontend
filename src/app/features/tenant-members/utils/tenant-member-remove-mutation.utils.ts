@@ -3,9 +3,11 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 function extractProblemCode(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const ext =
         o['extensions'] && typeof o['extensions'] === 'object' && !Array.isArray(o['extensions'])
@@ -16,7 +18,9 @@ function extractProblemCode(err: HttpErrorResponse): string | null {
         if (!ext) {
             return null;
         }
+
         const v = ext[key];
+
         return typeof v === 'string' && v.trim() ? v.trim() : null;
     };
 
@@ -51,16 +55,21 @@ const MEMBER_REMOVE_MESSAGES: Record<string, string> = {
 /** Kiracı üyesini kurumdan çıkarma hatalarını kullanıcı mesajına çevirir. */
 export function memberRemoveMessage(err: HttpErrorResponse, fallback: string): string {
     const code = extractProblemCode(err);
+
     if (code) {
         const direct = MEMBER_REMOVE_MESSAGES[code];
+
         if (direct) {
             return direct;
         }
+
         const normalized = code.replace(/\./g, '');
         const fuzzy = MEMBER_REMOVE_MESSAGES[normalized];
+
         if (fuzzy) {
             return fuzzy;
         }
     }
+
     return messageFromHttpError(err, fallback);
 }

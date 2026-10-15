@@ -16,14 +16,17 @@ function toTrimmedString(value: unknown): string {
     if (value === null || value === undefined) {
         return '';
     }
+
     if (typeof value === 'string') {
         return value.trim();
     }
+
     return String(value).trim();
 }
 
 function safeText(value: unknown, fallback = '—'): string {
     const t = toTrimmedString(value);
+
     return t || fallback;
 }
 
@@ -31,18 +34,23 @@ function appendQueryParam(params: HttpParams, key: string, value: unknown): Http
     if (value === null || value === undefined) {
         return params;
     }
+
     if (typeof value === 'string') {
         const trimmed = value.trim();
+
         return trimmed ? params.set(key, trimmed) : params;
     }
+
     if (value instanceof Date) {
         return params.set(key, value.toISOString());
     }
+
     return params.set(key, String(value));
 }
 
 export function reminderLogsQueryToHttpParams(query: ReminderLogsQuery): HttpParams {
     let p = new HttpParams();
+
     p = appendQueryParam(p, 'page', query.page);
     p = appendQueryParam(p, 'pageSize', query.pageSize);
     p = appendQueryParam(p, 'reminderType', query.reminderType);
@@ -50,6 +58,7 @@ export function reminderLogsQueryToHttpParams(query: ReminderLogsQuery): HttpPar
     p = appendQueryParam(p, 'fromUtc', query.fromUtc);
     p = appendQueryParam(p, 'toUtc', query.toUtc);
     p = appendQueryParam(p, 'clinicId', query.clinicId);
+
     return p;
 }
 
@@ -80,6 +89,7 @@ export function mapReminderLogItemDtoToVm(dto: ReminderLogItemDto): ReminderLogI
     const relatedRecord = relatedRecordMeta(dto.sourceEntityType, dto.reminderType, sourceEntityId);
     const clinicId = toTrimmedString(dto.clinicId) || null;
     const clinicNameFromApi = toTrimmedString(dto.clinicName);
+
     return {
         id: dto.id,
         clinicId,
@@ -109,79 +119,102 @@ export function mapReminderLogsPagedDtoToVm(dto: ReminderLogsPagedDto): Reminder
 
 function reminderTypeLabel(type: unknown): string {
     const normalized = normalizeReminderType(type);
+
     if (normalized === 0) {
         return 'Randevu';
     }
+
     if (normalized === 1) {
         return 'Aşı';
     }
+
     return safeText(type);
 }
 
 function reminderStatusLabel(status: unknown): string {
     const normalized = normalizeReminderStatus(status);
+
     if (normalized === 0) {
         return 'Bekliyor';
     }
+
     if (normalized === 1) {
         return 'Kuyruğa alındı';
     }
+
     if (normalized === 2) {
         return 'Gönderildi';
     }
+
     if (normalized === 3) {
         return 'Başarısız';
     }
+
     if (normalized === 4) {
         return 'Atlandı';
     }
+
     return safeText(status);
 }
 
 function reminderStatusSeverity(status: unknown): ReminderLogItemVm['statusSeverity'] {
     const normalized = normalizeReminderStatus(status);
+
     if (normalized === 2) {
         return 'success';
     }
+
     if (normalized === 3) {
         return 'danger';
     }
+
     if (normalized === 1) {
         return 'info';
     }
+
     if (normalized === 0) {
         return 'secondary';
     }
+
     if (normalized === 4) {
         return 'warn';
     }
+
     return 'secondary';
 }
 
 function recipientDisplay(dto: ReminderLogItemDto): string {
     const name = toTrimmedString(dto.recipientName);
     const email = toTrimmedString(dto.recipientEmail);
+
     if (name && email) {
         return `${name} (${email})`;
     }
+
     return safeText(name ?? email);
 }
 
 function sourceEntityTypeLabelForDisplay(sourceEntityType: unknown, fallbackReminderType: unknown): string {
     const normalizedSourceEntityType = normalizeReminderType(sourceEntityType);
+
     if (normalizedSourceEntityType === 0) {
         return 'Randevu';
     }
+
     if (normalizedSourceEntityType === 1) {
         return 'Aşı';
     }
+
     const normalizedReminderType = normalizeReminderType(fallbackReminderType);
+
     if (normalizedReminderType === 0) {
         return 'Randevu';
     }
+
     if (normalizedReminderType === 1) {
         return 'Aşı';
     }
+
     return safeText(sourceEntityType, '');
 }
 
@@ -191,6 +224,7 @@ function relatedRecordMeta(
     sourceEntityId: string | null
 ): { label: string; route: string[] | null } {
     const normalizedType = normalizeReminderType(sourceEntityType) ?? normalizeReminderType(fallbackReminderType);
+
     if (normalizedType === 0) {
         if (sourceEntityId) {
             return {
@@ -198,8 +232,10 @@ function relatedRecordMeta(
                 route: ['/panel/appointments', sourceEntityId]
             };
         }
+
         return { label: '—', route: null };
     }
+
     if (normalizedType === 1) {
         if (sourceEntityId) {
             return {
@@ -207,8 +243,10 @@ function relatedRecordMeta(
                 route: ['/panel/vaccinations', sourceEntityId]
             };
         }
+
         return { label: '—', route: null };
     }
+
     return { label: '—', route: null };
 }
 
@@ -216,15 +254,19 @@ const REMINDER_ERROR_DISPLAY_MAX = 240;
 
 function mapErrorDisplay(lastError: unknown): string {
     const text = toTrimmedString(lastError);
+
     if (!text) {
         return '—';
     }
+
     if (isLegacyUnverifiedDispatchError(text)) {
         return 'Gönderim doğrulanamadı';
     }
+
     if (text.length > REMINDER_ERROR_DISPLAY_MAX) {
         return `${text.slice(0, REMINDER_ERROR_DISPLAY_MAX - 1)}…`;
     }
+
     return text;
 }
 
@@ -238,18 +280,24 @@ function normalizeReminderType(value: unknown): 0 | 1 | null {
         if (value === 0 || value === 1) {
             return value;
         }
+
         return null;
     }
+
     const raw = toTrimmedString(value).toLowerCase();
+
     if (!raw) {
         return null;
     }
+
     if (raw === '0' || raw === 'appointment') {
         return 0;
     }
+
     if (raw === '1' || raw === 'vaccination') {
         return 1;
     }
+
     return null;
 }
 
@@ -258,26 +306,35 @@ function normalizeReminderStatus(value: unknown): 0 | 1 | 2 | 3 | 4 | null {
         if (value >= 0 && value <= 4) {
             return value as 0 | 1 | 2 | 3 | 4;
         }
+
         return null;
     }
+
     const raw = toTrimmedString(value).toLowerCase();
+
     if (!raw) {
         return null;
     }
+
     if (raw === '0' || raw === 'pending') {
         return 0;
     }
+
     if (raw === '1' || raw === 'enqueued') {
         return 1;
     }
+
     if (raw === '2' || raw === 'sent') {
         return 2;
     }
+
     if (raw === '3' || raw === 'failed') {
         return 3;
     }
+
     if (raw === '4' || raw === 'skipped') {
         return 4;
     }
+
     return null;
 }

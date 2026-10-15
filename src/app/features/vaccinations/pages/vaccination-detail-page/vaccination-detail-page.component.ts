@@ -229,13 +229,16 @@ export class VaccinationDetailPageComponent implements OnInit {
     headerDescription(v: VaccinationDetailVm): string {
         const st = v.status;
         const parts: string[] = [];
+
         if (st === 0) {
             parts.push(v.dueAtUtc ? `${this.formatDateTime(v.dueAtUtc)} (planlanan uygulama)` : 'Planlanmış');
         } else if (st === 1) {
             parts.push(this.formatDateTime(v.appliedAtUtc));
         }
+
         parts.push(this.statusLabel(v.status));
         parts.push(v.vaccineName);
+
         return parts.join(' · ');
     }
 
@@ -254,14 +257,18 @@ export class VaccinationDetailPageComponent implements OnInit {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id');
+
                     if (!id) {
                         this.error.set('Geçersiz aşı kaydı.');
                         this.loading.set(false);
+
                         return EMPTY;
                     }
+
                     this.lastId = id;
                     this.loading.set(true);
                     this.error.set(null);
+
                     return this.vaccinationsService.getVaccinationById(id);
                 })
             )
@@ -281,6 +288,7 @@ export class VaccinationDetailPageComponent implements OnInit {
         if (!this.lastId) {
             return;
         }
+
         this.loading.set(true);
         this.error.set(null);
         this.vaccinationsService.getVaccinationById(this.lastId).subscribe({

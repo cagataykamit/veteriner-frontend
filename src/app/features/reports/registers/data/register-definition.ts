@@ -70,8 +70,10 @@ export function registerHeaderLayout(columns: readonly Pick<RegisterColumn<never
     const hasGroups = columns.some((c) => c.group);
     const top: RegisterHeaderCell[] = [];
     const sub: string[] = [];
+
     for (const col of columns) {
         const last = top[top.length - 1];
+
         if (!col.group) {
             top.push({ label: col.header, colSpan: 1, rowSpan: hasGroups ? 2 : 1 });
         } else if (last && last.label === col.group && last.rowSpan === 1) {
@@ -82,5 +84,6 @@ export function registerHeaderLayout(columns: readonly Pick<RegisterColumn<never
             sub.push(col.header);
         }
     }
+
     return { top, sub };
 }

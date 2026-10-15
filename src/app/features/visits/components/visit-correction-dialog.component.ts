@@ -122,6 +122,7 @@ export class VisitCorrectionDialogComponent {
 
     readonly actionOptions = computed(() => {
         const status = this.item()?.careStatus;
+
         return status ? correctionActionOptions(status) : [];
     });
 
@@ -146,6 +147,7 @@ export class VisitCorrectionDialogComponent {
     private prepareForm(): void {
         this.submitError.set(null);
         this.form.reset({ action: null, reason: '' });
+
         // Geri almada durum seçimi yoktur; devre dışı kontrol geçerliliği etkilemez.
         if (this.restoring()) {
             this.form.controls.action.disable({ emitEvent: false });
@@ -161,16 +163,21 @@ export class VisitCorrectionDialogComponent {
     onSubmit(): void {
         const visitId = this.item()?.visitId;
         const { action, reason } = this.form.getRawValue();
+
         if (this.submitting() || !visitId) {
             return;
         }
+
         if (this.form.invalid || (!action && !this.restoring())) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         this.submitError.set(null);
         this.submitting.set(true);
         const call$ = this.restoring() ? this.visitsService.restoreVisit(visitId, reason) : this.visitsService.correctVisit(visitId, { action: action!, reason });
+
         call$.subscribe({
             next: (visit) => {
                 this.submitting.set(false);

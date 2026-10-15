@@ -20,6 +20,7 @@ export class SaleProductSearchService {
 
     search(term: string): Observable<SaleProductVm[]> {
         const params = productsQueryToHttpParams({ page: 1, pageSize: SEARCH_PAGE_SIZE, search: term, isActive: true });
+
         return this.api.get<ProductDtoPagedResult>(ApiEndpoints.products.list(), params).pipe(
             map((r) => (r.items ?? []).map(mapProductDtoToSaleProductVm).filter(isSellableProduct)),
             toUserError('Ürünler aranamadı.')

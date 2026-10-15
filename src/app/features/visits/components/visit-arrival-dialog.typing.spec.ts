@@ -38,6 +38,7 @@ describe('VisitArrivalDialogComponent (hasta arama alanına yazma)', () => {
 
     it('yazılan metin, dialog açılış animasyonu bittikten sonra da silinmez; arama tetiklenir; seçilince geçerli olur', async () => {
         const input = document.querySelector('#va-pet') as HTMLInputElement;
+
         expect(input).withContext('arama alanı render edilmeli').not.toBeNull();
         expect(input.disabled).toBeFalse();
         expect(input.readOnly).toBeFalse();

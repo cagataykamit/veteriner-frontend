@@ -201,18 +201,22 @@ export class TreatmentDetailPageComponent implements OnInit {
     /** Reçete oluştur sayfasına taşınan tedavi bağlamı (treatmentId öncelikli parse). */
     prescriptionCreateQueryParams(): Record<string, string> {
         const r = this.row();
+
         if (!r?.clientId?.trim() || !r?.petId?.trim()) {
             return {};
         }
+
         const q: Record<string, string> = {
             clientId: r.clientId.trim(),
             petId: r.petId.trim(),
             treatmentId: r.id
         };
         const ex = r.examinationId?.trim();
+
         if (ex) {
             q['examinationId'] = ex;
         }
+
         return q;
     }
 
@@ -220,11 +224,14 @@ export class TreatmentDetailPageComponent implements OnInit {
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.error.set('Geçersiz tedavi.');
             this.loading.set(false);
+
             return;
         }
+
         this.treatmentId = id;
         this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
         this.reload();

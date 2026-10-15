@@ -106,6 +106,7 @@ describe('VisitArrivalDialogComponent', () => {
 
         it('çift tıklama: yanıt gelmeden ikinci gönderim ikinci istek üretmez', () => {
             const pending = new Subject<VisitCreateResultVm>();
+
             visits.createVisit.and.returnValue(pending);
 
             cmp.onSubmit();
@@ -220,6 +221,7 @@ describe('VisitArrivalDialogComponent', () => {
 describe('VisitArrivalDialogComponent — sorumlu hekim varsayılanı', () => {
     const open = async (userId: string | null, vets: Array<{ userId: string; name: string }>) => {
         const visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['createVisit', 'getVeterinarians']);
+
         visits.getVeterinarians.and.returnValue(of(vets));
         await TestBed.configureTestingModule({
             imports: [VisitArrivalDialogComponent],
@@ -231,15 +233,19 @@ describe('VisitArrivalDialogComponent — sorumlu hekim varsayılanı', () => {
             ]
         }).compileComponents();
         const fixture = TestBed.createComponent(VisitArrivalDialogComponent);
+
         fixture.detectChanges();
         fixture.componentInstance.visible.set(true);
         fixture.detectChanges();
+
         return fixture.componentInstance;
     };
+
     const vets = [{ userId: 'u1', name: 'Dr. Ayşe' }, { userId: 'u2', name: 'Dr. Test Hekim' }];
 
     it('hekim kullanıcıda alan kendisiyle gelir; değiştirilebilir ve temizlenebilir', async () => {
         const cmp = await open('U2', vets);
+
         expect(cmp.form.controls.veterinarianId.value).toBe('u2');
         cmp.form.controls.veterinarianId.setValue('u1');
         expect(cmp.form.controls.veterinarianId.value).toBe('u1');
@@ -249,6 +255,7 @@ describe('VisitArrivalDialogComponent — sorumlu hekim varsayılanı', () => {
 
     it('hekim olmayan kullanıcıda (resepsiyon) alan boş kalır', async () => {
         const cmp = await open('u9', vets);
+
         expect(cmp.form.controls.veterinarianId.value).toBe('');
     });
 });

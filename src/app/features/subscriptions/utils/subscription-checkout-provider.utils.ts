@@ -15,6 +15,7 @@ export function parseSubscriptionCheckoutProvider(raw: unknown): SubscriptionChe
     if (raw === null || raw === undefined) {
         return null;
     }
+
     if (typeof raw === 'number' && Number.isFinite(raw)) {
         const i = Math.trunc(raw);
         const byNum: Record<number, SubscriptionCheckoutProviderSlug> = {
@@ -23,13 +24,17 @@ export function parseSubscriptionCheckoutProvider(raw: unknown): SubscriptionChe
             2: 'stripe',
             3: 'iyzico'
         };
+
         return byNum[i] ?? null;
     }
+
     if (typeof raw === 'string') {
         const t = raw.trim();
+
         if (/^-?\d+$/.test(t)) {
             return parseSubscriptionCheckoutProvider(Number.parseInt(t, 10));
         }
+
         const n = normalizeName(t);
         const byName: Record<string, SubscriptionCheckoutProviderSlug> = {
             none: 'none',
@@ -37,8 +42,10 @@ export function parseSubscriptionCheckoutProvider(raw: unknown): SubscriptionChe
             stripe: 'stripe',
             iyzico: 'iyzico'
         };
+
         return byName[n] ?? null;
     }
+
     return null;
 }
 
@@ -46,12 +53,14 @@ export function subscriptionCheckoutProviderDisplayLabel(slug: SubscriptionCheck
     if (slug === null) {
         return 'Tanımsız';
     }
+
     const labels: Record<SubscriptionCheckoutProviderSlug, string> = {
         none: 'Yok',
         manual: 'Manual',
         stripe: 'Stripe',
         iyzico: 'İyzico'
     };
+
     return labels[slug];
 }
 
@@ -67,11 +76,14 @@ export function shouldOfferManualCheckoutFinalize(session: SubscriptionCheckoutS
     if (!session.canContinue) {
         return false;
     }
+
     if (session.provider === 'manual') {
         return true;
     }
+
     if (session.provider === 'stripe' || session.provider === 'iyzico') {
         return false;
     }
+
     return session.checkoutUrl == null || session.checkoutUrl.trim() === '';
 }

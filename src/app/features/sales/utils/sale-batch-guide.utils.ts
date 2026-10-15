@@ -32,16 +32,20 @@ export function saleBatchGuide(info: ProductStockBatchesVm, batchId: string, qua
 
     if (batchId) {
         const b = info.batches.find((x) => x.id === batchId);
+
         if (!b) {
             return { stockText, hintText: '', warn: false };
         }
+
         const text = `Seçilen parti: ${b.lotNumber} · SKT ${b.expiryText} · kalan ${b.remainingText} ${unit}.`;
+
         return quantity != null && quantity > b.remainingQuantity
             ? { stockText, hintText: `${text} Miktar bu partinin kalanından fazla; ayrı bir satır ekleyin.`, warn: true }
             : { stockText, hintText: text, warn: false };
     }
 
     const s = suggestAdministrationBatch(info, quantity);
+
     switch (s?.kind) {
         case 'batch':
             return { stockText, hintText: `Önerilen parti: ${s.batch.lotNumber} · SKT ${s.batch.expiryText} · kalan ${s.batch.remainingText} ${unit}.`, warn: false };
