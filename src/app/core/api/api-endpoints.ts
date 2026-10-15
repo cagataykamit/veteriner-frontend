@@ -242,7 +242,7 @@ export const ApiEndpoints = {
         cancel: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}/cancel`
     },
     hospitalizations: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`). */
+        /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil, yatış zamanı), `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`). */
         list: () => `/api/v1/hospitalizations`,
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
