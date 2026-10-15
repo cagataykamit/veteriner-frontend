@@ -110,7 +110,7 @@ describe('PetStatusDialogComponent', () => {
             withOpenAppointments(appt('a2', '2999-02-01T09:00:00Z'), appt('old', '2000-01-01T09:00:00Z'), appt('a1', '2999-01-01T09:00:00Z'));
             const c = create(pet);
 
-            expect(getAppointments).toHaveBeenCalledWith({ page: 1, pageSize: 200, petId: 'p1', status: '0', sort: 'ScheduledAtUtc', order: 'asc' });
+            expect(getAppointments).toHaveBeenCalledWith({ page: 1, pageSize: 200, petId: 'p1', status: '0', sort: 'scheduledAtUtc', order: 'asc' });
             expect(c.openAppointments().map((a) => a.id)).toEqual(['a1', 'a2']);
             expect(text()).toContain('Bu hastanın 2 açık randevusu var.');
             expect(text()).toContain('Açık randevuları da iptal et');
