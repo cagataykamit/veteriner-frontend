@@ -43,12 +43,10 @@ export default tseslint.config(
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }],
             'arrow-body-style': ['error', 'as-needed'],
             curly: 0,
-            '@typescript-eslint/member-ordering': [
-                'warn',
-                {
-                    default: ['public-static-field', 'static-field', 'instance-field', 'public-instance-method', 'public-static-field']
-                }
-            ],
+            // Kapalı: projede alanlar ilgili bölümün yanında (sinyal/computed/yetki) gruplanır ve ok fonksiyonlu alanlar kural için
+            // "metot" sayılır. Uymak için alanları yer değiştirmek, alan başlatma sırasını (inject/computed/effect) değiştirir:
+            // davranış riski taşıyan toplu bir yeniden sıralama, okunabilirliğe katkısı yok.
+            '@typescript-eslint/member-ordering': 'off',
             'no-console': 0,
             'prefer-const': 0
         }
