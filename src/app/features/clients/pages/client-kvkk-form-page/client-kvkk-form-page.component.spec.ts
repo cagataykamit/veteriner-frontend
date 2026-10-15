@@ -23,6 +23,7 @@ describe('ClientKvkkFormPageComponent', () => {
     let fixture: ComponentFixture<ClientKvkkFormPageComponent>;
     let getTemplate: jasmine.Spy;
     let clinicId: string | null;
+    let routeData: Record<string, unknown>;
 
     const el = () => fixture.nativeElement as HTMLElement;
 
@@ -31,7 +32,7 @@ describe('ClientKvkkFormPageComponent', () => {
             imports: [ClientKvkkFormPageComponent],
             providers: [
                 provideRouter([]),
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c1' }) } } },
+                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c1' }), data: routeData } } },
                 { provide: AuthService, useValue: { getClinicId: () => clinicId, getClinicName: () => 'Pati Kliniği', hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ id: 'c1', fullName: 'Ali Veli' }) } },
                 { provide: KvkkFormTemplateService, useValue: { getTemplate } }
@@ -43,26 +44,51 @@ describe('ClientKvkkFormPageComponent', () => {
 
     beforeEach(() => {
         clinicId = 'k1';
+        routeData = {};
         getTemplate = jasmine.createSpy('getTemplate').and.returnValue(of(template()));
     });
 
-    it('aktif kliniğin şablonunu müşteri adı ve bugünle doldurur; düzenlenmiş metinde uyarı yok', () => {
+    it('açık rıza: aktif kliniğin şablonunu müşteri adı ve bugünle doldurur; kutu ve imza bloğu basılır; düzenlenmiş metinde uyarı yok', () => {
         create();
-        expect(getTemplate).toHaveBeenCalledOnceWith('k1');
+        expect(getTemplate).toHaveBeenCalledOnceWith('k1', 'consent');
+        expect(el().textContent).toContain('KVKK açık rıza formu');
         expect(el().querySelector('[data-testid="kvkk-form-text"]')?.textContent).toBe(`Pati Kliniği — Ali Veli — ${kvkkFormDate()}`);
+        expect(el().querySelector('[data-testid="kvkk-form-choices"]')?.textContent).toContain('Kabul etmiyorum');
+        expect(el().querySelector('[data-testid="kvkk-form-signature"]')?.textContent).toContain('Ali Veli');
         expect(el().querySelector('[data-testid="kvkk-default-warning"]')).toBeNull();
         expect(el().querySelector('[data-testid="kvkk-print"]')).not.toBeNull();
     });
 
-    it('varsayılan yer tutucu metinde yazdırmadan önce uyarı; düzenleme bağlantısı yalnız Clinics.Update ile', () => {
+    it('varsayılan taslak metinde yazdırmadan önce uyarı; düzenleme bağlantısı yalnız Clinics.Update ile', () => {
         getTemplate.and.returnValue(of(template({ isDefault: true })));
         create();
-        expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('hukuk danışmanınızca onaylanmış');
+        expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('hukuk danışmanınızca onaylanmadan');
         expect(el().querySelector('a[href="/panel/settings/kvkk-form"]')).toBeNull();
 
         TestBed.resetTestingModule();
         create(['Clinics.Update']);
         expect(el().querySelector('a[href="/panel/settings/kvkk-form"]')).not.toBeNull();
+    });
+
+    it('aydınlatma (rota verisi): aydınlatma şablonu doldurulur; Kabul/Kabul etmiyorum kutuları ve imza bloğu basılmaz', () => {
+        routeData = { kvkkKind: 'disclosure' };
+        getTemplate.and.returnValue(of(template({ text: 'Bilgilendirilen: {{clientName}}\nDüzenleme tarihi: {{date}}' })));
+        create();
+
+        expect(getTemplate).toHaveBeenCalledOnceWith('k1', 'disclosure');
+        expect(el().textContent).toContain('KVKK aydınlatma metni');
+        expect(el().querySelector('[data-testid="kvkk-form-text"]')?.textContent).toBe(`Bilgilendirilen: Ali Veli\nDüzenleme tarihi: ${kvkkFormDate()}`);
+        expect(el().querySelector('[data-testid="kvkk-form-choices"]')).toBeNull();
+        expect(el().querySelector('[data-testid="kvkk-form-signature"]')).toBeNull();
+        expect(el().querySelector('[data-testid="kvkk-print"]')).not.toBeNull();
+    });
+
+    it('aydınlatma taslağında düzenleme bağlantısı Ayarlar\'ı aydınlatma türüyle açar', () => {
+        routeData = { kvkkKind: 'disclosure' };
+        getTemplate.and.returnValue(of(template({ isDefault: true })));
+        create(['Clinics.Update']);
+
+        expect(el().querySelector('a[href="/panel/settings/kvkk-form?kind=disclosure"]')).not.toBeNull();
     });
 
     it('aktif klinik yoksa şablon istenmez, açıklayıcı hata gösterilir', () => {

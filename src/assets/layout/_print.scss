@@ -32,7 +32,7 @@
     }
 }
 
-/* Kayıt defterleri ve KVKK açık rıza formu: yerleşim (üst çubuk, menü) gizlenir, içerik sayfanın tamamını kullanır. */
+/* Kayıt defterleri ve KVKK belgeleri (açık rıza, aydınlatma): yerleşim (üst çubuk, menü) gizlenir, içerik sayfanın tamamını kullanır. */
 @media print {
     body.register-page-active,
     body.kvkk-form-print-active {
@@ -58,7 +58,7 @@
     }
 }
 
-/* KVKK açık rıza formu: A4 dikey sayfayı `printKvkkConsentForm` ayarlar; ekran öğeleri gizlenir, form temaya bakmadan siyah-beyaz basılır. */
+/* KVKK açık rıza formu ve aydınlatma metni: A4 dikey sayfayı `printKvkkForm` ayarlar; ekran öğeleri gizlenir, form temaya bakmadan siyah-beyaz basılır. */
 @media print {
     body.kvkk-form-print-active {
         .kvkk-screen-only {

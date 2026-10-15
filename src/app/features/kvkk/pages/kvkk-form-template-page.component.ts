@@ -2,16 +2,24 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { KvkkConsentFormDocumentComponent } from '@/app/features/kvkk/components/kvkk-consent-form-document.component';
+import { KvkkFormDocumentComponent } from '@/app/features/kvkk/components/kvkk-form-document.component';
 import type { KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
 import { KvkkFormTemplateService } from '@/app/features/kvkk/services/kvkk-form-template.service';
-import { KVKK_FORM_DEFAULT_TEXT_WARNING, kvkkFormDate, kvkkFormPlaceholderHint } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import {
+    KVKK_FORM_DEFAULT_TEXT_WARNING,
+    KVKK_TEMPLATE_KINDS,
+    kvkkFormDate,
+    kvkkFormPlaceholderHint,
+    parseKvkkTemplateKind,
+    type KvkkTemplateKind
+} from '@/app/features/kvkk/utils/kvkk-form.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -23,8 +31,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
 
 /**
- * Ayarlar > KVKK form metni (ADR-021 karar 2): aktif kliniğin açık rıza formu şablonu. Ürün hukuki metin üretmez; klinik KVKK danışmanının
- * onayladığı metni yapıştırır. Yer tutucular yazdırırken doldurulur; önizleme müşteri kartından basılan formun aynısıdır (örnek müşteriyle).
+ * Ayarlar > KVKK form metni (ADR-021 karar 2, ADR-024): aktif kliniğin açık rıza formu ve aydınlatma metni şablonları, aynı düzenleyiciyle.
+ * Tür `?kind=disclosure` ile seçilir (yoksa açık rıza). Varsayılan metinler hukuki onay bekleyen taslaklardır; klinik onaylanan metni kaydeder.
+ * Yer tutucular yazdırırken doldurulur; önizleme müşteri kartından basılan belgenin aynısıdır (örnek müşteriyle).
  * İzin `Clinics.Update` (rota koruması); 409 → güncel metin yeniden yüklenir.
  */
 @Component({
@@ -33,23 +42,41 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
     imports: [
         ReactiveFormsModule,
         ButtonModule,
+        ConfirmDialogModule,
         TextareaModule,
         ToastModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
-        KvkkConsentFormDocumentComponent
+        KvkkFormDocumentComponent
     ],
-    providers: [MessageService],
+    providers: [MessageService, ConfirmationService],
     template: `
         <p-toast position="bottom-right" />
+        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
         <app-page-header
             title="KVKK form metni"
-            [description]="'Müşteri kartından yazdırılıp imzalatılan açık rıza formunun metni' + (clinicName ? ' · ' + clinicName : '') + '.'"
+            [description]="'Müşteri kartından yazdırılan açık rıza formu ve aydınlatma metni' + (clinicName ? ' · ' + clinicName : '') + '.'"
         />
 
+        <div class="mb-4 flex flex-wrap gap-2" role="group" aria-label="Metin türü" data-testid="kvkk-kind">
+            @for (k of kindOptions; track k.value) {
+                <button
+                    pButton
+                    type="button"
+                    [label]="k.label"
+                    [class.p-button-outlined]="kind() !== k.value"
+                    [class.p-button-secondary]="kind() !== k.value"
+                    [disabled]="saving()"
+                    [attr.aria-pressed]="kind() === k.value"
+                    [attr.data-kind]="k.value"
+                    (click)="selectKind(k.value)"
+                ></button>
+            }
+        </div>
+
         @if (loading()) {
-            <app-loading-state message="KVKK form metni yükleniyor…" />
+            <app-loading-state [message]="info().label + ' yükleniyor…'" />
         } @else if (loadError()) {
             <div class="card">
                 <app-error-state [detail]="loadError()!" (retry)="load()" />
@@ -62,21 +89,21 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
                         role="note"
                         data-testid="kvkk-default-warning"
                     >
-                        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ defaultWarning }} Metni KVKK danışmanınızın onayladığı metinle değiştirip kaydedin.
+                        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ defaultWarning }} Onaylanan metni buraya kaydedin.
                     </p>
                 } @else if (t.updatedAtUtc) {
                     <p class="m-0 mb-4 text-sm text-muted-color">Son kayıt: {{ formatDt(t.updatedAtUtc) }}</p>
                 }
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Bu işletme salt okunur moddadır; form metni güncellenemez.</p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Bu işletme salt okunur moddadır; metin güncellenemez.</p>
                 }
 
-                <label for="kvkkFormText" class="block text-sm font-medium text-muted-color mb-2">Form metni *</label>
+                <label for="kvkkFormText" class="block text-sm font-medium text-muted-color mb-2">{{ info().label }} *</label>
                 <textarea id="kvkkFormText" pTextarea class="w-full font-mono text-sm" rows="16" [formControl]="text" data-testid="kvkk-template-text"></textarea>
                 <div class="flex flex-wrap justify-between gap-2 mt-1 text-sm">
                     <span class="text-red-500">
                         @if (text.hasError('required') && text.touched) {
-                            Form metni boş olamaz.
+                            Metin boş olamaz.
                         } @else if (text.hasError('maxlength')) {
                             En fazla {{ t.maxLength }} karakter.
                         }
@@ -86,7 +113,14 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
 
                 <div class="mt-4" data-testid="kvkk-placeholders">
                     <p class="m-0 mb-2 text-sm font-medium">Yer tutucular</p>
-                    <p class="m-0 mb-2 text-sm text-muted-color">Metinde aynen yazıldığında yazdırırken doldurulur (büyük/küçük harf önemlidir). Onay kutuları ve imza bloğu formda her zaman bulunur.</p>
+                    <p class="m-0 mb-2 text-sm text-muted-color">
+                        Metinde aynen yazıldığında yazdırırken doldurulur (büyük/küçük harf önemlidir).
+                        @if (info().printsConsentBlock) {
+                            Onay kutuları ve imza bloğu formda her zaman bulunur.
+                        } @else {
+                            Aydınlatma metninde onay kutusu ve imza bloğu basılmaz.
+                        }
+                    </p>
                     <ul class="list-none m-0 p-0 text-sm space-y-1">
                         @for (p of t.placeholders; track p) {
                             <li><code class="font-mono">{{ p }}</code> <span class="text-muted-color">— {{ placeholderHint(p) }}</span></li>
@@ -108,7 +142,7 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
             <div class="card">
                 <h5 class="mt-0 mb-2">Yazdırma önizlemesi</h5>
                 <p class="mt-0 mb-4 text-sm text-muted-color">Kaydedilmemiş değişiklikler dahil; müşteri adı örnektir.</p>
-                <app-kvkk-consent-form-document [template]="textValue()" [clinicName]="clinicName" [clientName]="previewClientName" [date]="previewDate" />
+                <app-kvkk-form-document [template]="textValue()" [kind]="kind()" [clinicName]="clinicName" [clientName]="previewClientName" [date]="previewDate" />
             </div>
         }
     `
@@ -117,6 +151,8 @@ export class KvkkFormTemplatePageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     private readonly templates = inject(KvkkFormTemplateService);
     private readonly messages = inject(MessageService);
+    private readonly confirmation = inject(ConfirmationService);
+    private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -126,7 +162,10 @@ export class KvkkFormTemplatePageComponent implements OnInit {
     readonly clinicName = this.auth.getClinicName()?.trim() ?? '';
     readonly previewClientName = PREVIEW_CLIENT_NAME;
     readonly previewDate = kvkkFormDate();
+    readonly kindOptions = (Object.keys(KVKK_TEMPLATE_KINDS) as KvkkTemplateKind[]).map((value) => ({ value, label: KVKK_TEMPLATE_KINDS[value].label }));
 
+    readonly kind = signal<KvkkTemplateKind>(parseKvkkTemplateKind(this.route.snapshot.queryParamMap.get('kind')));
+    readonly info = computed(() => KVKK_TEMPLATE_KINDS[this.kind()]);
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
     readonly template = signal<KvkkFormTemplateVm | null>(null);
@@ -159,6 +198,31 @@ export class KvkkFormTemplatePageComponent implements OnInit {
         this.load();
     }
 
+    /** Kaydedilmemiş değişiklik varsa tür değişmeden önce onay istenir; seçim adres çubuğuna yazılır (geri dönüşte aynı tür açılır). */
+    selectKind(kind: KvkkTemplateKind): void {
+        if (kind === this.kind() || this.saving()) {
+            return;
+        }
+
+        const t = this.template();
+
+        if (t && this.text.value !== t.text) {
+            this.confirmation.confirm({
+                header: 'Kaydedilmemiş değişiklik',
+                message: `${this.info().label} için yaptığınız değişiklikler kaydedilmedi. Yine de ${KVKK_TEMPLATE_KINDS[kind].label.toLocaleLowerCase('tr-TR')} düzenlemesine geçilsin mi?`,
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: 'Değişiklikleri bırak',
+                rejectLabel: 'Vazgeç',
+                rejectButtonStyleClass: 'p-button-secondary',
+                accept: () => this.switchTo(kind)
+            });
+
+            return;
+        }
+
+        this.switchTo(kind);
+    }
+
     load(): void {
         const clinicId = this.auth.getClinicId()?.trim();
 
@@ -166,21 +230,31 @@ export class KvkkFormTemplatePageComponent implements OnInit {
         this.stale.set(false);
 
         if (!clinicId) {
-            this.loadError.set('KVKK form metni için önce bir klinik seçmelisiniz.');
+            this.loadError.set('KVKK metni için önce bir klinik seçmelisiniz.');
             this.loading.set(false);
 
             return;
         }
 
+        const kind = this.kind();
+
         this.loading.set(true);
         this.loadError.set(null);
-        this.templates.getTemplate(clinicId).subscribe({
+        this.templates.getTemplate(clinicId, kind).subscribe({
             next: (vm) => {
+                if (kind !== this.kind()) {
+                    return;
+                }
+
                 this.apply(vm);
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.loadError.set(e.message || 'KVKK form metni yüklenemedi.');
+                if (kind !== this.kind()) {
+                    return;
+                }
+
+                this.loadError.set(e.message || `${KVKK_TEMPLATE_KINDS[kind].label} yüklenemedi.`);
                 this.loading.set(false);
             }
         });
@@ -189,6 +263,8 @@ export class KvkkFormTemplatePageComponent implements OnInit {
     save(): void {
         const t = this.template();
         const clinicId = this.auth.getClinicId()?.trim();
+        const kind = this.kind();
+        const label = KVKK_TEMPLATE_KINDS[kind].label;
 
         this.text.markAsTouched();
 
@@ -198,21 +274,28 @@ export class KvkkFormTemplatePageComponent implements OnInit {
 
         this.saveError.set(null);
         this.saving.set(true);
-        this.templates.updateTemplate(clinicId, this.text.value, t).subscribe({
+        this.templates.updateTemplate(clinicId, kind, this.text.value, t).subscribe({
             next: (vm) => {
                 this.saving.set(false);
                 this.apply(vm);
-                addTracedToast(this.messages, 'KvkkFormTemplatePage', this.router.url, { severity: 'success', summary: 'Tamam', detail: 'KVKK form metni kaydedildi.' });
+                addTracedToast(this.messages, 'KvkkFormTemplatePage', this.router.url, { severity: 'success', summary: 'Tamam', detail: `${label} kaydedildi.` });
             },
             error: (e: unknown) => {
                 this.saving.set(false);
-                this.saveError.set(panelHttpFailureMessage(e, 'KVKK form metni kaydedilemedi.'));
+                this.saveError.set(panelHttpFailureMessage(e, `${label} kaydedilemedi.`));
 
                 if (e instanceof HttpErrorResponse && problemCodeFromHttpError(e) === 'Clinics.KvkkFormTemplate.ConcurrencyConflict') {
                     this.stale.set(true);
                 }
             }
         });
+    }
+
+    private switchTo(kind: KvkkTemplateKind): void {
+        this.kind.set(kind);
+        this.template.set(null);
+        void this.router.navigate([], { relativeTo: this.route, queryParams: { kind: kind === 'consent' ? null : kind }, queryParamsHandling: 'merge', replaceUrl: true });
+        this.load();
     }
 
     private apply(vm: KvkkFormTemplateVm): void {

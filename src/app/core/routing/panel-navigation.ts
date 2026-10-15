@@ -368,7 +368,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-file-edit',
                 route: '/panel/settings/kvkk-form',
                 claims: [CLINICS_UPDATE_CLAIM],
-                description: 'Müşteriye imzalatılan açık rıza formunun aktif klinikteki metni.'
+                description: 'Müşteriye verilen açık rıza formu ve aydınlatma metninin aktif klinikteki metinleri.'
             },
             { label: 'Organizasyon Ayarları', icon: 'pi pi-fw pi-building', route: '/panel/settings/organization', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Kurum ve fatura bilgileri.' },
             { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', route: '/panel/settings/members', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Üyeler ve rolleri.' },

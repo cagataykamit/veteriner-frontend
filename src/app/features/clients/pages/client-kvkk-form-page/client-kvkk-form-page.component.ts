@@ -5,26 +5,26 @@ import { forkJoin } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { KvkkConsentFormDocumentComponent } from '@/app/features/kvkk/components/kvkk-consent-form-document.component';
+import { KvkkFormDocumentComponent } from '@/app/features/kvkk/components/kvkk-form-document.component';
 import type { KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
 import { KvkkFormTemplateService } from '@/app/features/kvkk/services/kvkk-form-template.service';
-import { KVKK_FORM_DEFAULT_TEXT_WARNING, kvkkFormDate, printKvkkConsentForm } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { KVKK_FORM_DEFAULT_TEXT_WARNING, KVKK_TEMPLATE_KINDS, kvkkFormDate, parseKvkkTemplateKind, printKvkkForm } from '@/app/features/kvkk/utils/kvkk-form.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
 /**
- * Müşteri kartından "KVKK formu yazdır" (ADR-021 karar 1): aktif kliniğin şablonu müşteri adı ve bugünün tarihiyle doldurulur,
- * A4 dikey yazdırılır. Şablon hâlâ yer tutucu varsayılan metinse yazdırmadan önce uyarı gösterilir. Form kâğıtta kalır;
- * sonuç müşteri kartında "Rıza durumunu işaretle" ile kaydedilir.
+ * Müşteri kartından "KVKK formu yazdır" (ADR-021 karar 1) ve "Aydınlatma metni yazdır" (ADR-024): aktif kliniğin ilgili şablonu müşteri adı ve
+ * bugünün tarihiyle doldurulur, A4 dikey yazdırılır. Tür rota verisinden (`kvkkKind`) gelir. Şablon hâlâ taslak varsayılan metinse yazdırmadan
+ * önce uyarı gösterilir. Açık rıza formu kâğıtta kalır; sonuç müşteri kartında "Rıza durumunu işaretle" ile kaydedilir.
  */
 @Component({
     selector: 'app-client-kvkk-form-page',
     standalone: true,
-    imports: [RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, KvkkConsentFormDocumentComponent],
+    imports: [RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, KvkkFormDocumentComponent],
     template: `
         @if (loading()) {
-            <app-loading-state message="KVKK formu hazırlanıyor…" />
+            <app-loading-state [message]="info.documentTitle + ' hazırlanıyor…'" />
         } @else if (error()) {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="load()" />
@@ -34,7 +34,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 <app-page-header
                     [categoryLink]="['/panel/clients', clientId]"
                     categoryLinkLabel="Müşteri kartına dön"
-                    title="KVKK açık rıza formu"
+                    [title]="info.documentTitle"
                     [description]="clientName() + ' · ' + date"
                 >
                     <p-button actions type="button" label="Yazdır" icon="pi pi-print" (onClick)="print()" data-testid="kvkk-print" />
@@ -47,14 +47,14 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                     >
                         <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ defaultWarning }}
                         @if (canEditTemplate) {
-                            <a routerLink="/panel/settings/kvkk-form" class="text-primary no-underline">Ayarlar'da metni düzenle</a>
+                            <a routerLink="/panel/settings/kvkk-form" [queryParams]="editQueryParams" class="text-primary no-underline">Ayarlar'da metni düzenle</a>
                         } @else {
                             <span class="font-normal">Metni klinik yöneticisi Ayarlar'dan değiştirir.</span>
                         }
                     </p>
                 }
             </div>
-            <app-kvkk-consent-form-document [template]="t.text" [clinicName]="clinicName" [clientName]="clientName()" [date]="date" />
+            <app-kvkk-form-document [template]="t.text" [kind]="kind" [clinicName]="clinicName" [clientName]="clientName()" [date]="date" />
         }
     `
 })
@@ -64,6 +64,10 @@ export class ClientKvkkFormPageComponent implements OnInit {
     private readonly clientsService = inject(ClientsService);
     private readonly templates = inject(KvkkFormTemplateService);
 
+    readonly kind = parseKvkkTemplateKind(this.route.snapshot.data?.['kvkkKind']);
+    readonly info = KVKK_TEMPLATE_KINDS[this.kind];
+    /** Ayarlar sayfası türü `?kind=` ile açar; açık rıza varsayılandır, parametre taşımaz. */
+    readonly editQueryParams = this.kind === 'consent' ? null : { kind: this.kind };
     readonly defaultWarning = KVKK_FORM_DEFAULT_TEXT_WARNING;
     readonly canEditTemplate = this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM);
     readonly clientId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -83,7 +87,7 @@ export class ClientKvkkFormPageComponent implements OnInit {
         const clinicId = this.auth.getClinicId()?.trim();
 
         if (!this.clientId || !clinicId) {
-            this.error.set(clinicId ? 'Geçersiz müşteri.' : 'KVKK formu için önce bir klinik seçmelisiniz.');
+            this.error.set(clinicId ? 'Geçersiz müşteri.' : `${this.info.documentTitle} için önce bir klinik seçmelisiniz.`);
             this.loading.set(false);
 
             return;
@@ -91,20 +95,20 @@ export class ClientKvkkFormPageComponent implements OnInit {
 
         this.loading.set(true);
         this.error.set(null);
-        forkJoin({ client: this.clientsService.getClientById(this.clientId), template: this.templates.getTemplate(clinicId) }).subscribe({
+        forkJoin({ client: this.clientsService.getClientById(this.clientId), template: this.templates.getTemplate(clinicId, this.kind) }).subscribe({
             next: ({ client, template }) => {
                 this.clientName.set(client.fullName);
                 this.template.set(template);
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message || 'KVKK formu hazırlanamadı.');
+                this.error.set(e.message || `${this.info.documentTitle} hazırlanamadı.`);
                 this.loading.set(false);
             }
         });
     }
 
     print(): void {
-        printKvkkConsentForm();
+        printKvkkForm();
     }
 }

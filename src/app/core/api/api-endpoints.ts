@@ -36,6 +36,8 @@ export const ApiEndpoints = {
         appointmentSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/appointment-settings`,
         /** KVKK açık rıza formu şablonu; GET `Clinics.Read` | `Clinics.Update` | `Clients.Read`, PUT `Clinics.Update` (`KVKK_CONSENT_API_CONTRACT.md` §2). */
         kvkkFormTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-form-template`,
+        /** KVKK aydınlatma metni şablonu; açık rıza şablonuyla aynı sözleşme ve izinler (`KVKK_CONSENT_API_CONTRACT.md` §2b). */
+        kvkkDisclosureTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-disclosure-template`,
         /** Geliş formundaki sorumlu hekim seçimi (`Visits.Create`). */
         veterinarians: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/veterinarians`
     },

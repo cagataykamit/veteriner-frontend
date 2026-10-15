@@ -156,8 +156,8 @@ const CLINIC_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
         'Kurum bağlamı bulunamadı. Sayfayı yenileyip tekrar deneyin veya oturumu kapatıp yeniden giriş yapın.',
     'Tenants.TenantInactive': 'Bu kurum şu anda aktif değil; klinik eklenemiyor.',
     TenantsTenantInactive: 'Bu kurum şu anda aktif değil; klinik eklenemiyor.',
-    /** `KVKK_CONSENT_API_CONTRACT.md` §2; `Clinics.KvkkFormTemplate.Validation` backend `detail` ile gösterilir. */
-    'Clinics.KvkkFormTemplate.ConcurrencyConflict': 'KVKK form metni siz düzenlerken başka biri tarafından kaydedildi. Güncel metni yükleyip tekrar deneyin.'
+    /** `KVKK_CONSENT_API_CONTRACT.md` §2, §2b (açık rıza ve aydınlatma aynı kod); `Clinics.KvkkFormTemplate.Validation` backend `detail` ile gösterilir. */
+    'Clinics.KvkkFormTemplate.ConcurrencyConflict': 'Bu KVKK metni siz düzenlerken başka biri tarafından kaydedildi. Güncel metni yükleyip tekrar deneyin.'
 };
 
 function clinicPanelProblemUserMessage(err: HttpErrorResponse): string | null {
