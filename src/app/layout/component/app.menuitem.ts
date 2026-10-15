@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, input, signal, viewChild, OnInit, AfterViewInit } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RippleModule } from 'primeng/ripple';
@@ -127,7 +127,7 @@ import { filter } from 'rxjs/operators';
         `
     ]
 })
-export class AppMenuitem {
+export class AppMenuitem implements OnInit, AfterViewInit {
     layoutService = inject(LayoutService);
 
     router = inject(Router);
@@ -145,6 +145,7 @@ export class AppMenuitem {
     /** Simge şeridinde metin görünmez; ad ve sayaç ipucunda (hover/odak) verilir. */
     railTooltip = computed(() => {
         const item = this.item();
+
         return item?.badge ? `${item.label} · ${item.badge} ${item.badgeText || 'bekleyen'}` : (item?.label ?? '');
     });
 
@@ -169,6 +170,7 @@ export class AppMenuitem {
         if (!this.hasFlyout() || event.pointerType !== 'mouse') {
             return;
         }
+
         if (entered) {
             this.openFlyout(false);
         } else {
@@ -179,6 +181,7 @@ export class AppMenuitem {
     /** Klavye odağı paneli odağı taşımadan açar (daraltılmış menüde eski ad ipucunun yerine); fare tıklamasıyla gelen odak açmaz. */
     onLinkFocus(event: FocusEvent) {
         const link = event.target as HTMLElement;
+
         if (this.hasFlyout() && link.matches(':focus-visible')) {
             this.openFlyout(false);
         }
@@ -188,6 +191,7 @@ export class AppMenuitem {
         // Panel body'dedir; odak satırdan panele geçiyorsa açık kalır.
         const next = event.relatedTarget;
         const intoPanel = next instanceof Node && !!document.getElementById(this.flyoutId())?.contains(next);
+
         if (this.flyoutOpen() && !intoPanel) {
             this.flyout.close();
         }
@@ -198,9 +202,11 @@ export class AppMenuitem {
         if (!this.hasFlyout()) {
             return;
         }
+
         if (event.key === 'ArrowRight' || event.key === ' ') {
             event.preventDefault();
             const panel = this.flyoutPanel();
+
             if (panel) {
                 panel.focusItem(0);
             } else {
@@ -224,19 +230,24 @@ export class AppMenuitem {
 
     fullPath = computed(() => {
         const itemPath = this.item()?.path;
+
         if (!itemPath) return this.parentPath();
         const parent = this.parentPath();
+
         if (parent && !itemPath.startsWith(parent)) {
             return parent + itemPath;
         }
+
         return itemPath;
     });
 
     isActive = computed(() => {
         const activePath = this.layoutService.layoutState().activePath;
+
         if (this.item()?.path) {
             return activePath?.startsWith(this.fullPath() ?? '') ?? false;
         }
+
         return false;
     });
 
@@ -264,6 +275,7 @@ export class AppMenuitem {
 
     updateActiveStateFromRoute() {
         const item = this.item();
+
         if (!item?.routerLink) return;
 
         const isRouteActive = this.router.isActive(item.routerLink[0], {
@@ -275,6 +287,7 @@ export class AppMenuitem {
 
         if (isRouteActive) {
             const parentPath = this.parentPath();
+
             if (parentPath) {
                 this.layoutService.layoutState.update((val) => ({
                     ...val,
@@ -289,6 +302,7 @@ export class AppMenuitem {
 
         if (item?.disabled) {
             event.preventDefault();
+
             return;
         }
 

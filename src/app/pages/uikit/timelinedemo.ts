@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {TimelineModule} from 'primeng/timeline';
 import {CardModule} from 'primeng/card';
 import {CommonModule} from '@angular/common';
@@ -102,7 +102,7 @@ import {ButtonModule} from 'primeng/button';
         </div>
     </div>`
 })
-export class TimelineDemo {
+export class TimelineDemo implements OnInit {
     events1: any[] = [];
 
     events2: any[] = [];
