@@ -236,7 +236,7 @@ export const ApiEndpoints = {
         void: (id: string) => `/api/v1/administrations/${encodeURIComponent(id)}/void`
     },
     labResults: {
-        /** Query: `Page`, `PageSize`, `Search`, `FromDate`, `ToDate`, `Sort`, `Order` (+ `clinicId`, `PetId`). */
+        /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil, istem zamanı), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/lab-results`,
         byId: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}`,
         cancel: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}/cancel`
