@@ -42,6 +42,7 @@ describe('payment-allocation.utils', () => {
                 { chargeId: 'b', outstandingAmount: 300 },
                 { chargeId: 'c', outstandingAmount: 100 }
             ];
+
             expect(buildAllocations(charges, { c: 50, a: 400, b: null })).toEqual([
                 { chargeId: 'a', amount: 400 },
                 { chargeId: 'c', amount: 50 }

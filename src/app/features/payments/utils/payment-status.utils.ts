@@ -35,7 +35,9 @@ export function paymentStatusLabel(status: string | null | undefined): string {
     if (status == null || status === '') {
         return EM;
     }
+
     const k = normalizePaymentStatusKey(status);
+
     return LABELS[k] ?? status;
 }
 
@@ -49,32 +51,41 @@ export function paymentStatusSeverity(status: string | null | undefined): Status
     if (status == null || status === '') {
         return 'secondary';
     }
+
     const k = normalizePaymentStatusKey(status);
 
     if (k === '0') {
         return 'warn';
     }
+
     if (k === '1') {
         return 'success';
     }
+
     if (k === '2') {
         return 'danger';
     }
+
     if (k === 'paid' || k === 'completed' || k === 'settled') {
         return 'success';
     }
+
     if (k === 'pending' || k === 'scheduled' || k === 'partial') {
         return 'warn';
     }
+
     if (k === 'overdue' || k === 'failed' || k === 'cancelled' || k === 'canceled' || k === 'refunded') {
         return 'danger';
     }
+
     if (k === 'draft' || k === 'unknown') {
         return 'secondary';
     }
+
     if (k === 'created' || k === 'active' || k === 'closed') {
         return 'info';
     }
+
     if (k === 'done') {
         return 'success';
     }

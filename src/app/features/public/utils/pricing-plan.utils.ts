@@ -104,10 +104,13 @@ export function parsePlanQueryParam(raw: string | null | undefined): PricingPlan
     if (raw == null || !String(raw).trim()) {
         return null;
     }
+
     const key = String(raw).trim().toLowerCase();
+
     if (key === 'basic' || key === 'pro' || key === 'premium') {
         return slugToDef.get(key as PricingPlanSlug) ?? null;
     }
+
     return null;
 }
 
@@ -118,22 +121,29 @@ export function resolveSignupPlan(raw: string | null | undefined): PricingPlanDe
 
 export function defByApiCode(code: string | null | undefined): PricingPlanDef | null {
     const t = code?.trim();
+
     if (!t) {
         return null;
     }
+
     return PRICING_PLAN_DEFS.find((d) => d.apiCode === t) ?? null;
 }
 
 /** Backend `planCode`, slug veya görünen ad — büyük/küçük harf duyarsız. */
 export function defByPlanKey(code: string | null | undefined): PricingPlanDef | null {
     const slug = parsePlanQueryParam(code);
+
     if (slug) {
         return slug;
     }
+
     const byApi = defByApiCode(code);
+
     if (byApi) {
         return byApi;
     }
+
     const normalized = (code ?? '').trim().toLowerCase();
+
     return PRICING_PLAN_DEFS.find((d) => d.apiCode.toLowerCase() === normalized) ?? null;
 }

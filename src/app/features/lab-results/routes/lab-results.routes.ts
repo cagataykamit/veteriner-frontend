@@ -17,6 +17,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: LabResultsListPageComponent
@@ -26,6 +27,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(LAB_RESULTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: LabResultNewPageComponent
@@ -35,6 +37,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: LabResultEditPageComponent
@@ -44,6 +47,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: LabResultDetailPageComponent

@@ -3,6 +3,7 @@ import { kvkkFormTemplateToPutBody, mapKvkkFormTemplateDtoToVm } from './kvkk-fo
 describe('kvkk-form-template.mapper', () => {
     it('varsayılan yanıt: metin korunur, sürüm yok; sabit alanlar gelmezse sözleşme değerleri', () => {
         const vm = mapKvkkFormTemplateDtoToVm({ clinicId: 'k1', text: 'Satır 1\n  Satır 2', isDefault: true, rowVersion: null });
+
         expect(vm).toEqual({
             clinicId: 'k1',
             text: 'Satır 1\n  Satır 2',
@@ -16,6 +17,7 @@ describe('kvkk-form-template.mapper', () => {
 
     it('kayıtlı metin: sürüm ve güncellenme okunur', () => {
         const vm = mapKvkkFormTemplateDtoToVm({ clinicId: 'k1', text: 'X', isDefault: false, rowVersion: 'rv1', updatedAtUtc: '2026-10-15T08:00:00Z', maxLength: 500, placeholders: ['{{date}}'] });
+
         expect([vm.isDefault, vm.rowVersion, vm.updatedAtUtc, vm.maxLength, vm.placeholders]).toEqual([false, 'rv1', '2026-10-15T08:00:00Z', 500, ['{{date}}']]);
     });
 

@@ -8,6 +8,7 @@ import {
 describe('payment mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [paidFromUtc, paidToUtc] olarak gönderir', () => {
         const p = paymentsQueryToHttpParams({ paidFromDate: '2026-10-08', paidToDate: '2026-10-08' });
+
         expect(p.get('paidFromUtc')).toBe('2026-10-07T21:00:00.000Z');
         expect(p.get('paidToUtc')).toBe('2026-10-08T20:59:59.999Z');
     });
@@ -16,6 +17,7 @@ describe('payment mapper — liste tarih parametreleri', () => {
         const p = paymentsQueryToHttpParams({ paidFromDate: '2026-10-08', paidToDate: '2026-10-08' });
         const from = Date.parse(p.get('paidFromUtc')!);
         const to = Date.parse(p.get('paidToUtc')!);
+
         expect(Date.parse('2026-10-07T21:00:00Z')).toBeGreaterThanOrEqual(from);
         expect(Date.parse('2026-10-08T20:59:00Z')).toBeLessThanOrEqual(to);
         expect(Date.parse('2026-10-08T21:00:00Z')).toBeGreaterThan(to);
@@ -23,25 +25,31 @@ describe('payment mapper — liste tarih parametreleri', () => {
 
     it('çoklu gün aralığında bitiş, bitiş gününün sonudur', () => {
         const p = paymentsQueryToHttpParams({ paidFromDate: '2026-10-01', paidToDate: '2026-10-31' });
+
         expect(p.get('paidFromUtc')).toBe('2026-09-30T21:00:00.000Z');
         expect(p.get('paidToUtc')).toBe('2026-10-31T20:59:59.999Z');
     });
 
     it('FromDate/ToDate hiç gönderilmez; tarih yoksa tarih parametresi yok', () => {
         const withDates = paymentsQueryToHttpParams({ paidFromDate: '2026-10-08', paidToDate: '2026-10-09' });
+
         for (const k of ['FromDate', 'ToDate', 'fromDate', 'toDate', 'dateFromUtc', 'dateToUtc']) {
             expect(withDates.has(k)).toBeFalse();
         }
+
         const none = paymentsQueryToHttpParams({});
+
         expect(none.has('paidFromUtc')).toBeFalse();
         expect(none.has('paidToUtc')).toBeFalse();
     });
 
     it('yalnızca bitiş verilirse yalnızca paidToUtc gider; geçersiz tarih atlanır', () => {
         const onlyTo = paymentsQueryToHttpParams({ paidToDate: '2026-10-08' });
+
         expect(onlyTo.has('paidFromUtc')).toBeFalse();
         expect(onlyTo.get('paidToUtc')).toBe('2026-10-08T20:59:59.999Z');
         const invalid = paymentsQueryToHttpParams({ paidFromDate: 'abc', paidToDate: '  ' });
+
         expect(invalid.has('paidFromUtc')).toBeFalse();
         expect(invalid.has('paidToUtc')).toBeFalse();
     });
@@ -50,6 +58,7 @@ describe('payment mapper — liste tarih parametreleri', () => {
 describe('payment.mapper petCount', () => {
     it('liste: petCount > 1 ise "Birden fazla hayvan" etiketi, petId null', () => {
         const vm = mapPaymentListItemDtoToVm({ id: 'p1', petId: null, petName: '', petCount: 2 });
+
         expect(vm.petId).toBeNull();
         expect(vm.petName).toBe(MULTIPLE_PETS_LABEL);
     });
@@ -62,6 +71,7 @@ describe('payment.mapper petCount', () => {
 
     it('detay: petCount > 1 ise etiket ve hasMultiplePets', () => {
         const vm = mapPaymentDetailDtoToVm({ id: 'p1', petId: null, petName: '', petCount: 3 });
+
         expect(vm.petName).toBe(MULTIPLE_PETS_LABEL);
         expect(vm.hasMultiplePets).toBe(true);
         expect(mapPaymentDetailDtoToVm({ id: 'p1', petName: 'Mavis', petCount: 1 }).hasMultiplePets).toBe(false);

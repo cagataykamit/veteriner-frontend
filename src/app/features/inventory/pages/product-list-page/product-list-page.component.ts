@@ -292,10 +292,12 @@ export class ProductListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeIsActiveFilter());
     }
@@ -327,8 +329,10 @@ export class ProductListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -338,10 +342,12 @@ export class ProductListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeIsActiveFilter());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeIsActiveFilter());
     }
@@ -350,6 +356,7 @@ export class ProductListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -357,10 +364,12 @@ export class ProductListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeIsActiveFilter());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeIsActiveFilter());
     }
@@ -377,7 +386,9 @@ export class ProductListPageComponent implements OnInit {
         if (!this.canDeactivateProduct || this.ro.mutationBlocked() || !row.isActive) {
             return;
         }
+
         const productId = row.id;
+
         this.confirmationService.confirm({
             header: 'Ürünü pasifleştir',
             message: 'Bu ürünü pasifleştirmek istediğinize emin misiniz?',
@@ -407,7 +418,9 @@ export class ProductListPageComponent implements OnInit {
         if (!this.canUpdateProduct || this.ro.mutationBlocked() || row.isActive) {
             return;
         }
+
         const productId = row.id;
+
         this.confirmationService.confirm({
             header: 'Ürünü aktifleştir',
             message: 'Bu ürünü tekrar aktif hale getirmek istediğinize emin misiniz?',
@@ -437,17 +450,21 @@ export class ProductListPageComponent implements OnInit {
         if (filter === 'true') {
             return true;
         }
+
         if (filter === 'false') {
             return false;
         }
+
         return undefined;
     }
 
     private loadFromServer(page: number, pageSize: number, search: string, isActiveFilterStr: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}|${isActiveFilterStr}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -477,28 +494,36 @@ export class ProductListPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(PRODUCTS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<ProductsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(PRODUCTS_LIST_STATE_KEY);
+
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.activeSearch.set(this.searchInput.trim());
             const af = typeof parsed.isActiveFilter === 'string' ? parsed.isActiveFilter : '';
+
             this.isActiveFilter = af === 'true' || af === 'false' ? af : '';
             this.activeIsActiveFilter.set(this.isActiveFilter);
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(PRODUCTS_LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -510,6 +535,7 @@ export class ProductListPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(PRODUCTS_LIST_STATE_KEY, JSON.stringify(state));
     }
 

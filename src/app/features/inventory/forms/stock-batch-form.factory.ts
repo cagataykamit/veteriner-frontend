@@ -11,12 +11,14 @@ export const STOCK_BATCH_TRANSPORT_MAX = 200;
 export function dispatchedNotAfterReceivedValidator(group: AbstractControl): ValidationErrors | null {
     const received = group.get('receivedDate')?.value as string | undefined;
     const dispatched = group.get('dispatchedDate')?.value as string | undefined;
+
     return received && dispatched && dispatched > received ? { dispatchedAfterReceived: true } : null;
 }
 
 /** SKT bugünden önceyse (ADR-015 karar 6) girişi kullanıcı açıkça onaylamadan kaydedilemez. */
 function expiredAcknowledgedValidator(group: AbstractControl): ValidationErrors | null {
     const acknowledged = group.get('acknowledgeExpired')?.value === true;
+
     return !acknowledged && isStockBatchExpiryPast(group.get('expiryDate')?.value) ? { expiredNotAcknowledged: true } : null;
 }
 
@@ -55,8 +57,10 @@ export function applyStockBatchRequirement(group: StockBatchFormGroup, required:
         } else {
             control.removeValidators(Validators.required);
         }
+
         control.updateValueAndValidity({ emitEvent: false });
     }
+
     group.updateValueAndValidity({ emitEvent: false });
 }
 
@@ -67,12 +71,14 @@ export function syncStockBatchGroup(group: StockBatchFormGroup, state: { active:
     } else {
         group.disable({ emitEvent: false });
     }
+
     applyStockBatchRequirement(group, state.active && state.required);
 }
 
 /** Geçmiş SKT'li giriş için istek bayrağı; SKT geçmiş değilse hiç gönderilmez. */
 export function getAcknowledgeExpiredRequest(group: StockBatchFormGroup): { acknowledgeExpired?: true } {
     const v = group.getRawValue();
+
     return v.acknowledgeExpired && isStockBatchExpiryPast(v.expiryDate) ? { acknowledgeExpired: true } : {};
 }
 
@@ -91,5 +97,6 @@ export function getStockBatchRequest(group: StockBatchFormGroup): StockMovementB
         transportMethod: orNull(v.transportMethod),
         coldChainMonitor: orNull(v.coldChainMonitor)
     };
+
     return Object.values(batch).every((x) => x === null) ? null : batch;
 }

@@ -6,5 +6,6 @@ export function saveDownload(res: HttpResponse<Blob>, fallbackName: string): voi
     if (!res.body) {
         return;
     }
+
     triggerBlobDownload(res.body, fileNameFromContentDisposition(res.headers.get('Content-Disposition')) ?? fallbackName);
 }

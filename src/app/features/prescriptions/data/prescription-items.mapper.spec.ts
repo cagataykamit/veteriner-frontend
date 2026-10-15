@@ -26,6 +26,7 @@ describe('reçete satırları (mapper)', () => {
                 { id: 'i1', sortOrder: 1, name: 'Dış ilaç', instructions: 'Günde 2 kez' }
             ]
         });
+
         expect(vm.items).toEqual([
             { name: 'Dış ilaç', productId: null, instructions: 'Günde 2 kez', quantity: null },
             { name: 'Serum', productId: 'pr1', instructions: '', quantity: 0.5 }

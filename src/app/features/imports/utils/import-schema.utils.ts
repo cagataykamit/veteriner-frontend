@@ -80,17 +80,22 @@ export function fieldLabel(table: ImportTable, key: string): string {
 /** Kayıtlı eşleme varsa onu, yoksa güvenilir önerileri başlangıç eşlemesi yapar. */
 export function initialColumnMaps(tables: readonly ImportTableInfoDto[]): ImportColumnMaps {
     const maps: ImportColumnMaps = {};
+
     for (const info of tables) {
         const hasSaved = info.columns.some((c) => c.mapped);
         const map: ImportColumnMap = {};
+
         for (const col of info.columns) {
             const key = hasSaved ? col.mapped : col.confidence !== 'None' ? col.suggested : null;
+
             if (key && !map[key]) {
                 map[key] = col.source;
             }
         }
+
         maps[info.table] = map;
     }
+
     return maps;
 }
 
@@ -98,21 +103,27 @@ export function initialColumnMaps(tables: readonly ImportTableInfoDto[]): Import
 export function missingRequired(table: ImportTable, map: ImportColumnMap): string[] {
     const has = (key: string) => !!map[key];
     const missing = REQUIRED[table].filter((k) => !has(k)).map((k) => fieldLabel(table, k));
+
     if (table === 'pets' && !has('MusteriNo') && !OWNER_NAME_AND_PHONE.every(has)) {
         missing.push('Müşteri no (veya sahip ad soyad + telefon)');
     }
+
     if (table === 'vaccinations' && !has('HayvanNo') && !PET_IDENTITY.every(has)) {
         missing.push('Hasta no (veya sahip ad soyad + telefon + hasta adı + tür)');
     }
+
     return missing;
 }
 
 export function columnMapsToRequest(maps: ImportColumnMaps, tables: readonly ImportTableInfoDto[]): ImportMappingRequestDto['columns'] {
     const columns: ImportMappingRequestDto['columns'] = {};
+
     for (const info of tables) {
         const map = maps[info.table] ?? {};
+
         columns[info.table] = Object.fromEntries(Object.entries(map).filter((e): e is [string, string] => !!e[1]));
     }
+
     return columns;
 }
 
@@ -121,6 +132,8 @@ export function mappingConfidence(columns: readonly ImportColumnDto[], source: s
     if (!source) {
         return null;
     }
+
     const col = columns.find((c) => c.source === source);
+
     return !col || col.suggested !== key || col.confidence === 'None' ? 'Manual' : col.confidence;
 }

@@ -25,6 +25,7 @@ import { mapPetAlertsDtoToVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 
 export function trimOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
+
     return t ? t : null;
 }
 
@@ -43,20 +44,25 @@ export function mapSection<TDto, TVm>(
     mapData: (dto: TDto) => TVm | null
 ): PetSummarySectionVm<TVm> {
     const state = section?.state ?? '';
+
     if (NON_OK_STATES.has(state)) {
         return { state: state as PetSummarySectionState, data: null };
     }
+
     if (state === 'Ok' && section?.data) {
         const data = mapData(section.data);
+
         if (data) {
             return { state: 'Ok', data };
         }
     }
+
     return { state: 'Unavailable', data: null };
 }
 
 function mapHospitalization(dto: PetSummaryHospitalizationDto): PetSummaryHospitalizationVm | null {
     const id = trimOrNull(dto.id);
+
     return id
         ? {
               id,
@@ -71,11 +77,13 @@ function mapHospitalization(dto: PetSummaryHospitalizationDto): PetSummaryHospit
 
 function mapApplied(dto: PetSummaryAppliedVaccinationDto | null | undefined): PetSummaryAppliedVaccinationVm | null {
     const id = trimOrNull(dto?.id);
+
     return id ? { id, vaccineName: trimOrNull(dto?.vaccineName) ?? '—', appliedAtUtc: trimOrNull(dto?.appliedAtUtc) } : null;
 }
 
 function mapDue(dto: PetSummaryDueVaccinationDto | null | undefined): PetSummaryDueVaccinationVm | null {
     const id = trimOrNull(dto?.id);
+
     return id
         ? { id, vaccineName: trimOrNull(dto?.vaccineName) ?? '—', dueAtUtc: trimOrNull(dto?.dueAtUtc), isOverdue: dto?.isOverdue === true }
         : null;
@@ -84,16 +92,19 @@ function mapDue(dto: PetSummaryDueVaccinationDto | null | undefined): PetSummary
 function mapVaccinations(dto: PetSummaryVaccinationsDto): PetSummaryVaccinationsVm | null {
     const lastApplied = mapApplied(dto.lastApplied);
     const nextDue = mapDue(dto.nextDue);
+
     return lastApplied || nextDue ? { lastApplied, nextDue } : null;
 }
 
 function mapWeight(dto: PetSummaryWeightDto): PetSummaryWeightVm | null {
     const weightKg = finiteOrNull(dto.weightKg);
+
     return weightKg === null ? null : { weightKg, measuredAtUtc: trimOrNull(dto.measuredAtUtc), examinationId: trimOrNull(dto.examinationId) };
 }
 
 function mapVisit(dto: PetSummaryVisitDto): PetSummaryVisitVm | null {
     const id = trimOrNull(dto.id);
+
     return id
         ? { id, arrivedAtUtc: trimOrNull(dto.arrivedAtUtc), careStatus: trimOrNull(dto.careStatus), clinicName: trimOrNull(dto.clinicName) }
         : null;
@@ -101,6 +112,7 @@ function mapVisit(dto: PetSummaryVisitDto): PetSummaryVisitVm | null {
 
 function mapExamination(dto: PetSummaryExaminationDto): PetSummaryExaminationVm | null {
     const id = trimOrNull(dto.id);
+
     return id
         ? { id, examinedAtUtc: trimOrNull(dto.examinedAtUtc), visitReason: trimOrNull(dto.visitReason), clinicName: trimOrNull(dto.clinicName) }
         : null;

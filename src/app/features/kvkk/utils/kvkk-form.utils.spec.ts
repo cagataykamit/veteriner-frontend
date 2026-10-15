@@ -5,6 +5,7 @@ const values = { clinicName: 'Pati Kliniği', clientName: 'Ali Veli', date: '15.
 describe('kvkk-form.utils', () => {
     it('yer tutucuları her geçtiği yerde doldurur; satır sonlarını korur', () => {
         const text = '{{clinicName}} olarak\n{{clientName}} için {{date}} tarihli form.\n{{clientName}}';
+
         expect(fillKvkkFormTemplate(text, values)).toBe('Pati Kliniği olarak\nAli Veli için 15.10.2026 tarihli form.\nAli Veli');
     });
 

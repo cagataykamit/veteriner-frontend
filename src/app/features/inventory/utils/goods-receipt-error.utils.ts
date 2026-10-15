@@ -28,24 +28,31 @@ const LINE_DETAIL = /^Satır\s+(\d+):\s*([\s\S]*)$/;
 
 function detailOf(err: HttpErrorResponse): string | null {
     const detail = (err.error as { detail?: unknown } | null)?.detail;
+
     return typeof detail === 'string' && detail.trim() ? detail.trim() : null;
 }
 
 function validationLineErrors(err: HttpErrorResponse): Record<number, string> {
     const errors = (err.error as { errors?: unknown } | null)?.errors;
     const out: Record<number, string> = {};
+
     if (!errors || typeof errors !== 'object') {
         return out;
     }
+
     for (const [key, value] of Object.entries(errors as Record<string, unknown>)) {
         const m = LINE_KEY.exec(key);
+
         if (!m) {
             continue;
         }
+
         const index = Number(m[1]);
         const fallback = Array.isArray(value) ? String(value[0] ?? '') : String(value ?? '');
+
         out[index] ??= LINE_FIELD_MESSAGES[m[2].toLowerCase()] ?? (fallback || 'Satırda geçersiz değer var.');
     }
+
     return out;
 }
 
@@ -53,19 +60,25 @@ function validationLineErrors(err: HttpErrorResponse): Record<number, string> {
 export function toGoodsReceiptSubmitError(err: HttpErrorResponse): GoodsReceiptSubmitError {
     const code = problemCodeFromHttpError(err);
     const fieldErrors = validationLineErrors(err);
+
     if (Object.keys(fieldErrors).length > 0) {
         return new GoodsReceiptSubmitError(`Satırlarda düzeltilmesi gereken alanlar var. ${NOTHING_SAVED}`, fieldErrors);
     }
+
     const detail = detailOf(err);
     const line = detail ? LINE_DETAIL.exec(detail) : null;
+
     if (line) {
         return new GoodsReceiptSubmitError(`Satır ${line[1]} kaydedilemedi. ${NOTHING_SAVED}`, { [Number(line[1]) - 1]: line[2].trim() });
     }
+
     if (code === 'GoodsReceipts.DuplicateRequestId') {
         return new GoodsReceiptSubmitError(CODE_MESSAGES[code]);
     }
+
     if (code && CODE_MESSAGES[code]) {
         return new GoodsReceiptSubmitError(`${CODE_MESSAGES[code]} ${NOTHING_SAVED}`);
     }
+
     return new GoodsReceiptSubmitError(`${messageFromHttpError(err, 'Mal kabul kaydedilemedi.')} ${NOTHING_SAVED}`);
 }

@@ -296,13 +296,16 @@ export class ImportReviewStepComponent {
 
     protected setChoice(u: ImportUnmappedValueDto, target: string | null): void {
         const key = this.choiceKey(u);
+
         this.choices.update((cur) => {
             const next = { ...cur };
+
             if (target) {
                 next[key] = target;
             } else {
                 delete next[key];
             }
+
             return next;
         });
     }
@@ -379,6 +382,7 @@ export class ImportReviewStepComponent {
             status: this.statusFilter() ?? undefined,
             code: this.codeFilter() ?? undefined
         };
+
         this.rowsLoading.set(true);
         this.rowsError.set(null);
         this.imports.getRows(this.batch().id, query).subscribe({
@@ -400,10 +404,12 @@ export class ImportReviewStepComponent {
     /** Eşlenemeyen değerlerin türlerine ait katalog listeleri bir kez yüklenir. */
     private loadCatalogs(): void {
         const kinds = new Set((this.preview()?.unmappedValues ?? []).map((u) => u.kind));
+
         for (const kind of kinds) {
             if (this.catalogs()[kind] || this.catalogLoading()[kind]) {
                 continue;
             }
+
             this.catalogLoading.update((cur) => ({ ...cur, [kind]: true }));
             this.catalogSource(kind).subscribe({
                 next: (options) => {

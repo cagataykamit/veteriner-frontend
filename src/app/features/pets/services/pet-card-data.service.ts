@@ -79,6 +79,7 @@ export class PetCardDataService {
         if (!this.auth.hasOperationClaim(claim)) {
             return of(null);
         }
+
         return load().pipe(
             map((data): PetCardSection<T> => ({ state: 'ok', data })),
             catchError(() => of<PetCardSection<T>>({ state: 'error' })),

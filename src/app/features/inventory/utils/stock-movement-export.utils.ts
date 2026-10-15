@@ -17,6 +17,7 @@ export const STOCK_MOVEMENT_CSV_HEADERS = [
 
 function exportDisplayCell(value: string): string {
     const t = (value ?? '').trim();
+
     return t === '—' ? '' : t;
 }
 

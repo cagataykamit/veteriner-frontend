@@ -105,15 +105,19 @@ export class PetCardTimelineComponent implements OnDestroy {
     /** Ödeme yetkisi yoksa "Tümü"nde ödeme de yetki notuna girer ("kayıt yok" ile karışmasın). */
     readonly omittedLabel = computed(() => {
         const filter = this.filter();
+
         if (filter === 'payment') {
             return '';
         }
+
         const types = filter === 'all' && this.payments() === null ? [...this.omittedTypes(), PET_TIMELINE_PAYMENT_TYPE] : this.omittedTypes();
+
         return petTimelineOmittedTypesLabel(types);
     });
 
     private readonly paymentItems = computed(() => {
         const p = this.payments();
+
         return p?.state === 'ok'
             ? p.data.map((row) => paymentToPetTimelineItem(row, formatMoney(row.amount, row.currency ?? 'TRY'), paymentMethodLabel(row.method)))
             : [];
@@ -135,6 +139,7 @@ export class PetCardTimelineComponent implements OnDestroy {
         if (this.filter() === 'payment') {
             return this.payments()?.state === 'error' ? 'Ödemeler yüklenemedi.' : null;
         }
+
         return this.eventsError();
     });
 
@@ -144,6 +149,7 @@ export class PetCardTimelineComponent implements OnDestroy {
         effect(() => {
             const petId = this.petId();
             const filter = this.filter();
+
             untracked(() => this.load(petId, filter));
         });
     }
@@ -159,10 +165,13 @@ export class PetCardTimelineComponent implements OnDestroy {
     private load(petId: string, filter: PetCardTimelineFilter): void {
         this.request?.unsubscribe();
         this.request = null;
+
         if (filter === 'payment' || !petId) {
             return;
         }
+
         const types = [...(PET_CARD_TIMELINE_FILTERS.find((f) => f.value === filter)?.types ?? [])];
+
         this.eventsLoading.set(true);
         this.eventsError.set(null);
         this.request = this.petsService.getPetTimeline(petId, { types, limit: PET_CARD_TIMELINE_LIMIT }).subscribe({

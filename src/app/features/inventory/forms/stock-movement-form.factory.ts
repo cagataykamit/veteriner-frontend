@@ -41,12 +41,15 @@ export function stockMovementQuantityValidator(): ValidatorFn {
         const type = parent?.get('movementType')?.value as StockMovementFormMovementType | undefined;
         const raw = control.value as string | number | null | undefined;
         const n = typeof raw === 'number' ? raw : parseDecimalFormInput(raw as string);
+
         if (n === null) {
             return { required: true };
         }
+
         if (type === 'Adjustment') {
             return n >= 0 ? null : { min: true };
         }
+
         return n > 0 ? null : { minExclusive: true };
     };
 }
@@ -54,13 +57,17 @@ export function stockMovementQuantityValidator(): ValidatorFn {
 function optionalNonNegativeValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const raw = control.value as string | number | null | undefined;
+
         if (raw === null || raw === undefined || raw === '') {
             return null;
         }
+
         const n = typeof raw === 'number' ? raw : parseDecimalFormInput(String(raw));
+
         if (n === null) {
             return { invalidNumber: true };
         }
+
         return n >= 0 ? null : { min: true };
     };
 }
@@ -89,24 +96,30 @@ export function getStockMovementFormValue(form: StockMovementFormGroup, requestI
         typeof qRaw === 'number'
             ? qRaw
             : parseDecimalFormInput(qRaw === null || qRaw === undefined ? '' : String(qRaw));
+
     if (qty === null) {
         throw new Error('Miktar geçersiz.');
     }
+
     let unitCost: number | null = null;
     const ucRaw = v.unitCost;
+
     if (ucRaw !== null && ucRaw !== undefined) {
         if (typeof ucRaw === 'number') {
             unitCost = Number.isFinite(ucRaw) ? ucRaw : null;
         } else {
             const s = String(ucRaw).trim();
+
             if (s !== '') {
                 unitCost = parseDecimalFormInput(s);
             }
         }
     }
+
     const iso = fromIstanbulDateTimeLocalInputToUtcIso(v.occurredAtUtcLocal?.trim() ?? '');
     const reasonT = v.reason?.trim() ?? '';
     const notesT = v.notes?.trim() ?? '';
+
     return {
         clinicId: v.clinicId.trim(),
         productId: v.productId.trim(),

@@ -13,15 +13,19 @@ export class PublicInviteService {
 
     getInviteByToken(token: string): Observable<PublicInviteVm> {
         const t = token?.trim() ?? '';
+
         if (!t) {
             return throwError(() => new Error('Davet bağlantısı eksik.'));
         }
+
         return this.api.get<PublicInviteDetailsDto>(ApiEndpoints.public.inviteByToken(t)).pipe(
             map((dto) => {
                 const vm = mapPublicInviteDetailsDtoToVm(dto, t);
+
                 if (!vm) {
                     throw new Error('Davet bilgisi okunamadı.');
                 }
+
                 return vm;
             })
         );
@@ -29,17 +33,21 @@ export class PublicInviteService {
 
     acceptInvite(token: string): Observable<void> {
         const t = token?.trim() ?? '';
+
         if (!t) {
             return throwError(() => new Error('Davet bağlantısı eksik.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.public.inviteAccept(t), {}).pipe(map(() => void 0));
     }
 
     signupAndAccept(token: string, body: PublicInviteSignupAndAcceptRequestDto): Observable<void> {
         const t = token?.trim() ?? '';
+
         if (!t) {
             return throwError(() => new Error('Davet bağlantısı eksik.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.public.inviteSignupAndAccept(t), body).pipe(map(() => void 0));
     }
 }

@@ -22,15 +22,19 @@ export function allocationAmountError(amount: number | null | undefined, outstan
     if (isBlank(amount)) {
         return null;
     }
+
     if (!Number.isFinite(amount) || (amount as number) < 0) {
         return 'Geçerli bir tutar girin.';
     }
+
     if (!hasAtMostTwoDecimals(amount as number)) {
         return 'En fazla 2 ondalık girin.';
     }
+
     if (toCents(amount as number) > toCents(outstandingAmount)) {
         return 'Kalan tutarı aşamaz.';
     }
+
     return null;
 }
 

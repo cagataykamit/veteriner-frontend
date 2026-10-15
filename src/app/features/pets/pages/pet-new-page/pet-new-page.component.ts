@@ -334,12 +334,16 @@ export class PetNewPageComponent implements OnInit {
             'isNeutered',
             'notes'
         ];
+
         for (const f of fields) {
             const control = this.form.controls[f] as AbstractControl;
+
             control.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[f]) {
                     const next = { ...cur };
+
                     delete next[f];
                     this.apiFieldErrors.set(next);
                 }
@@ -353,16 +357,21 @@ export class PetNewPageComponent implements OnInit {
         this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId) => {
             this.form.controls.breedId.setValue('');
             this.breedOptions.set([]);
+
             if (speciesId === null || speciesId === undefined) {
                 this.form.controls.speciesId.setValue('', { emitEvent: false });
             }
+
             const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
+
             if (!sid) {
                 return;
             }
+
             this.loadBreedsForSpecies(sid);
         });
         const clientId = this.route.snapshot.queryParamMap.get('clientId')?.trim();
+
         if (clientId) {
             this.form.controls.clientId.setValue(clientId);
         }
@@ -375,9 +384,11 @@ export class PetNewPageComponent implements OnInit {
 
     onQuickSpeciesCreated(speciesId: string): void {
         const id = speciesId.trim();
+
         if (!id) {
             return;
         }
+
         this.reloadSpeciesAndSelect(id);
     }
 
@@ -391,19 +402,24 @@ export class PetNewPageComponent implements OnInit {
 
     quickBreedSpeciesLabelForDialog(): string {
         const id = trimClientIdControlValue(this.form.controls.speciesId.value);
+
         if (!id) {
             return '';
         }
+
         const opt = this.speciesOptions().find((o) => o.value === id);
+
         return opt ? `Tür: ${opt.label}` : '';
     }
 
     onQuickBreedCreated(breedId: string): void {
         const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
         const bid = breedId.trim();
+
         if (!sid || !bid) {
             return;
         }
+
         this.loadBreedsForSpecies(sid, bid);
     }
 
@@ -411,10 +427,13 @@ export class PetNewPageComponent implements OnInit {
         if (this.ro.mutationBlocked()) {
             return;
         }
+
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
@@ -428,12 +447,16 @@ export class PetNewPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePetCreateHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
@@ -463,9 +486,11 @@ export class PetNewPageComponent implements OnInit {
 
     private reloadSpeciesAndSelect(speciesId: string): void {
         const id = speciesId.trim();
+
         if (!id) {
             return;
         }
+
         this.loadingSpecies.set(true);
         this.selectionError.set(null);
         this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
@@ -513,12 +538,15 @@ export class PetNewPageComponent implements OnInit {
                     }))
                 );
                 const want = selectBreedId?.trim();
+
                 if (want) {
                     const exists = items.some((x) => x.id === want);
+
                     if (exists) {
                         this.form.controls.breedId.setValue(want, { emitEvent: true });
                     }
                 }
+
                 this.loadingBreeds.set(false);
             },
             error: (e: unknown) => {
@@ -532,6 +560,7 @@ export class PetNewPageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

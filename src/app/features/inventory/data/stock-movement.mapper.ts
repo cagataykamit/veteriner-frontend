@@ -32,7 +32,9 @@ function num(v: number | string | null | undefined): number | null {
     if (v == null || v === '') {
         return null;
     }
+
     const n = Number(v);
+
     return Number.isFinite(n) && !Number.isNaN(n) ? n : null;
 }
 
@@ -41,44 +43,59 @@ export function normalizeMovementKind(raw: unknown): MovementKind {
     if (raw === null || raw === undefined) {
         return 'Unknown';
     }
+
     if (typeof raw === 'number') {
         if (raw === 0) {
             return 'Initial';
         }
+
         if (raw === 1) {
             return 'In';
         }
+
         if (raw === 2) {
             return 'Out';
         }
+
         if (raw === 3) {
             return 'Adjustment';
         }
+
         if (raw === 4) {
             return 'Reversal';
         }
+
         return 'Unknown';
     }
+
     const s = String(raw).trim();
+
     if (!s) {
         return 'Unknown';
     }
+
     const lower = s.toLowerCase();
+
     if (lower === 'initial' || s === '0') {
         return 'Initial';
     }
+
     if (lower === 'in' || s === '1') {
         return 'In';
     }
+
     if (lower === 'out' || s === '2') {
         return 'Out';
     }
+
     if (lower === 'adjustment' || s === '3') {
         return 'Adjustment';
     }
+
     if (lower === 'reversal' || s === '4') {
         return 'Reversal';
     }
+
     return 'Unknown';
 }
 
@@ -86,6 +103,7 @@ export function movementKindToApiParam(kind: MovementKind): string | null {
     if (kind === 'Unknown') {
         return null;
     }
+
     return kind;
 }
 
@@ -140,15 +158,19 @@ export function movementKindSeverity(kind: MovementKind): StatusTagSeverity {
 function referenceLine(type: string | null | undefined, id: string | null | undefined): string {
     const tt = type?.trim();
     const ii = id?.trim();
+
     if (tt && ii) {
         return `${tt} · ${ii}`;
     }
+
     if (tt) {
         return tt;
     }
+
     if (ii) {
         return ii;
     }
+
     return EM;
 }
 
@@ -191,6 +213,7 @@ export function mapPagedStockMovementsToVm(raw: StockMovementDtoPagedResult): {
     totalPages: number;
 } {
     const items = (raw.items ?? []).map((row) => mapStockMovementDtoToVm(row));
+
     return {
         items,
         page: raw.page,
@@ -205,43 +228,56 @@ export function stockMovementsListQueryToHttpParams(
     opts?: { omitPaging?: boolean; omitSearch?: boolean }
 ): HttpParams {
     let p = new HttpParams();
+
     if (!opts?.omitPaging) {
         const page = query.page ?? 1;
         const pageSize = query.pageSize ?? 10;
+
         p = p.set('Page', String(page));
         p = p.set('PageSize', String(pageSize));
     }
+
     if (!opts?.omitSearch && query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('ClinicId', query.clinicId.trim());
     }
+
     if (query.productId?.trim()) {
         p = p.set('ProductId', query.productId.trim());
     }
+
     if (query.productCategoryId?.trim()) {
         p = p.set('ProductCategoryId', query.productCategoryId.trim());
     }
+
     if (query.movementType?.trim()) {
         const k = normalizeMovementKind(query.movementType.trim());
         const apiVal = movementKindToApiParam(k);
+
         if (apiVal) {
             p = p.set('MovementType', apiVal);
         }
     }
+
     if (query.dateFromUtc?.trim()) {
         const iso = dateOnlyInputToIstanbulStartUtcIso(query.dateFromUtc.trim());
+
         if (iso) {
             p = p.set('DateFromUtc', iso);
         }
     }
+
     if (query.dateToUtc?.trim()) {
         const iso = dateOnlyInputToIstanbulEndUtcIso(query.dateToUtc.trim());
+
         if (iso) {
             p = p.set('DateToUtc', iso);
         }
     }
+
     return p;
 }
 

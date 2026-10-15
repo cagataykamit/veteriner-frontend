@@ -27,6 +27,7 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
@@ -38,15 +39,19 @@ function readDtoString(dto: unknown, keys: string[]): string | null {
     if (!isRecord(dto)) {
         return null;
     }
+
     for (const k of keys) {
         if (!(k in dto)) {
             continue;
         }
+
         const v = dto[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
@@ -54,6 +59,7 @@ function num(v: number | string | null | undefined): number | null {
     if (v == null || Number.isNaN(Number(v))) {
         return null;
     }
+
     return Number(v);
 }
 
@@ -62,20 +68,27 @@ function readRawMethodFromUnknown(dto: unknown): unknown {
     if (!isRecord(dto)) {
         return null;
     }
+
     const keys = ['method', 'paymentMethod', 'methodType', 'Method', 'PaymentMethod', 'MethodType'];
+
     for (const k of keys) {
         if (!(k in dto)) {
             continue;
         }
+
         const v = dto[k];
+
         if (v === null || v === undefined) {
             continue;
         }
+
         if (typeof v === 'string' && !v.trim()) {
             continue;
         }
+
         return v;
     }
+
     return null;
 }
 
@@ -152,6 +165,7 @@ function canonicalPaymentListItemId(dto: PaymentListItemDto): string {
 export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListItemVm {
     const clientId = dto.clientId?.trim() ? dto.clientId.trim() : null;
     const petId = dto.petId?.trim() ? dto.petId.trim() : null;
+
     return {
         id: canonicalPaymentListItemId(dto),
         clientId,
@@ -185,6 +199,7 @@ export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm 
 
 export function mapPaymentDetailDtoToEditVm(dto: PaymentDetailDto): PaymentEditVm {
     const amount = detailAmount(dto);
+
     return {
         id: dto.id,
         clientId: detailClientId(dto) ?? '',
@@ -207,6 +222,7 @@ export function mapPagedPaymentsToVm(result: PaymentListItemDtoPagedResult): {
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapPaymentListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -222,40 +238,53 @@ export function mapPagedPaymentsToVm(result: PaymentListItemDtoPagedResult): {
  */
 export function paymentsQueryToHttpParams(query: PaymentsListQuery, opts?: { omitPaging?: boolean }): HttpParams {
     let p = new HttpParams();
+
     if (!opts?.omitPaging) {
         const page = query.page ?? 1;
         const pageSize = query.pageSize ?? 10;
+
         p = p.set('Page', String(page));
         p = p.set('PageSize', String(pageSize));
     }
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.clientId?.trim()) {
         p = p.set('ClientId', query.clientId.trim());
     }
+
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+
     if (query.method?.trim()) {
         try {
             const enumVal = paymentMethodCanonicalToApiEnum(query.method.trim());
+
             p = p.set('Method', String(enumVal));
         } catch {
             /* bilinmeyen yöntem — parametre gönderme */
         }
     }
+
     const paidFromUtc = query.paidFromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.paidFromDate.trim()) : '';
+
     if (paidFromUtc) {
         p = p.set('paidFromUtc', paidFromUtc);
     }
+
     const paidToUtc = query.paidToDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.paidToDate.trim()) : '';
+
     if (paidToUtc) {
         p = p.set('paidToUtc', paidToUtc);
     }
+
     return p;
 }
 
@@ -264,16 +293,20 @@ export function mapUpdatePaymentToApiBody(req: UpdatePaymentRequest): PaymentCre
     const clientId = req.clientId.trim();
     const petId = req.petId?.trim() ? req.petId.trim() : null;
     const clinicId = req.clinicId.trim();
+
     if (!clinicId) {
         throw new Error('PAYMENT_WRITE_CLINIC_ID_REQUIRED');
     }
+
     const appointmentId = req.appointmentId?.trim() ? req.appointmentId.trim() : null;
     const examinationId = req.examinationId?.trim() ? req.examinationId.trim() : null;
     const notes = req.notes?.trim() ? req.notes.trim() : null;
     const paidAtUtc = req.paidAtUtc?.trim() ?? '';
+
     if (!paidAtUtc) {
         throw new Error('PAYMENT_WRITE_PAID_AT_REQUIRED');
     }
+
     const body: PaymentCreateRequestDto = {
         clinicId,
         clientId,
@@ -286,6 +319,7 @@ export function mapUpdatePaymentToApiBody(req: UpdatePaymentRequest): PaymentCre
         paidAtUtc,
         notes
     };
+
     return body;
 }
 
@@ -314,6 +348,7 @@ export interface PaymentUpsertFormAdapterInput {
 export function mapPaymentUpsertFormToWriteRequest(input: PaymentUpsertFormAdapterInput): UpdatePaymentRequest {
     const petRaw = input.petId;
     const petId = typeof petRaw === 'string' && petRaw.trim() ? petRaw.trim() : null;
+
     return {
         clinicId: input.clinicId.trim(),
         clientId: input.clientId.trim(),

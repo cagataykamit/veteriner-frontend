@@ -8,6 +8,7 @@ const orNull = (s: string | null | undefined): string | null => (s?.trim() ? s.t
 /** Form → POST gövdesi. Ürünü seçilmemiş satır doğrulamada elenir; burada gelmesi programlama hatasıdır. */
 export function mapGoodsReceiptFormToRequest(form: GoodsReceiptFormGroup, requestId: string): CreateGoodsReceiptRequest {
     const v = form.getRawValue();
+
     return {
         clinicId: v.clinicId.trim(),
         requestId,
@@ -20,6 +21,7 @@ export function mapGoodsReceiptFormToRequest(form: GoodsReceiptFormGroup, reques
         coldChainMonitor: orNull(v.coldChainMonitor),
         lines: v.lines.map((l) => {
             const expiryDate = orNull(l.expiryDate);
+
             return {
                 productId: (l.product as GoodsReceiptProductPick).id,
                 quantity: Number(l.quantity),

@@ -11,19 +11,23 @@ function bool(v: boolean | null | undefined, defaultFalse = false): boolean {
     if (v === true) {
         return true;
     }
+
     if (v === false) {
         return false;
     }
+
     return defaultFalse;
 }
 
 function readString(dto: Record<string, unknown>, keys: string[]): string | null {
     for (const k of keys) {
         const v = dto[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
@@ -32,11 +36,14 @@ function readBool(dto: Record<string, unknown>, keys: string[]): boolean | null 
         if (!(k in dto)) {
             continue;
         }
+
         const v = dto[k];
+
         if (v === true || v === false) {
             return v;
         }
     }
+
     return null;
 }
 
@@ -44,6 +51,7 @@ export function mapPublicInviteDetailsDtoToVm(raw: unknown, pathToken: string): 
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
         return null;
     }
+
     const dto = raw as PublicInviteDetailsDto & Record<string, unknown>;
 
     const inviteToken =

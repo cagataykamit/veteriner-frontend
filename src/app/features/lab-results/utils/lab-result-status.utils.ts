@@ -17,6 +17,7 @@ const SEVERITIES: Record<LabResultStatus, StatusTagSeverity> = {
 
 export function parseLabResultStatus(raw: string | null | undefined): LabResultStatus | null {
     const t = raw?.trim();
+
     return t && t in LABELS ? (t as LabResultStatus) : null;
 }
 

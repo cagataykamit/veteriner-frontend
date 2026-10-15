@@ -20,6 +20,7 @@ export type PrescriptionItemFormGroup = FormGroup<{
 /** Ürün bağı yoksa ad zorunludur; ürün seçiliyse ad boş kalabilir (sunucu ürün adını kopyalar). */
 function nameOrProductValidator(group: AbstractControl): ValidationErrors | null {
     const { name, productId } = (group as FormGroup).getRawValue() as { name: string | null; productId: string | null };
+
     return (name ?? '').trim() || (productId ?? '').trim() ? null : { nameOrProductRequired: true };
 }
 

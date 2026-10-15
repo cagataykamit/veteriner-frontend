@@ -25,6 +25,7 @@ describe('KvkkFormTemplatePageComponent', () => {
     let blocked: boolean;
 
     const el = () => fixture.nativeElement as HTMLElement;
+
     const create = () => {
         TestBed.configureTestingModule({
             imports: [KvkkFormTemplatePageComponent],
@@ -37,6 +38,7 @@ describe('KvkkFormTemplatePageComponent', () => {
         });
         fixture = TestBed.createComponent(KvkkFormTemplatePageComponent);
         fixture.detectChanges();
+
         return fixture.componentInstance;
     };
 
@@ -50,6 +52,7 @@ describe('KvkkFormTemplatePageComponent', () => {
 
     it('varsayılan metinde uyarı, yer tutucu açıklamaları, sayaç ve canlı önizleme', () => {
         const c = create();
+
         expect(service.getTemplate).toHaveBeenCalledOnceWith('k1');
         expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('hukuk danışmanınızca onaylanmış');
         expect(el().querySelector('[data-testid="kvkk-placeholders"]')?.textContent).toContain('Müşterinin adı soyadı');
@@ -63,6 +66,7 @@ describe('KvkkFormTemplatePageComponent', () => {
 
     it('kaydeder: mevcut sürüm durumuyla gönderilir, yanıt uygulanır ve uyarı kalkar', () => {
         const c = create();
+
         c.text.setValue('Onaylı metin');
         c.save();
         fixture.detectChanges();
@@ -74,6 +78,7 @@ describe('KvkkFormTemplatePageComponent', () => {
 
     it('boş veya sınırı aşan metin ve salt okunur abonelik kaydı engeller', () => {
         const c = create();
+
         c.text.setValue('   ');
         expect(c.canSave()).toBeFalse();
         c.text.setValue('x'.repeat(51));
@@ -84,6 +89,7 @@ describe('KvkkFormTemplatePageComponent', () => {
         TestBed.resetTestingModule();
         blocked = true;
         const ro = create();
+
         ro.text.setValue('Metin');
         expect(ro.canSave()).toBeFalse();
     });
@@ -93,6 +99,7 @@ describe('KvkkFormTemplatePageComponent', () => {
             throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Clinics.KvkkFormTemplate.ConcurrencyConflict' } } }))
         );
         const c = create();
+
         c.text.setValue('Benim metnim');
         c.save();
         fixture.detectChanges();

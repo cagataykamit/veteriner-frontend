@@ -15,7 +15,9 @@ function num(v: number | string | null | undefined): number | null {
     if (v == null || v === '') {
         return null;
     }
+
     const n = Number(v);
+
     return Number.isFinite(n) && !Number.isNaN(n) ? n : null;
 }
 
@@ -24,6 +26,7 @@ export function formatStockQuantityDisplay(value: number | null | undefined): st
     if (value == null || Number.isNaN(value)) {
         return EM;
     }
+
     return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 4 }).format(value);
 }
 
@@ -43,30 +46,38 @@ export function productStocksQueryToHttpParams(query: ProductStocksListQuery): H
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('ClinicId', query.clinicId.trim());
     }
+
     if (query.productId?.trim()) {
         p = p.set('ProductId', query.productId.trim());
     }
+
     if (query.productCategoryId?.trim()) {
         p = p.set('ProductCategoryId', query.productCategoryId.trim());
     }
+
     if (query.isBelowMinimum === true) {
         p = p.set('IsBelowMinimum', 'true');
     } else if (query.isBelowMinimum === false) {
         p = p.set('IsBelowMinimum', 'false');
     }
+
     return p;
 }
 
 export function mapPagedProductStocksToVm(res: ProductStockDtoPagedResult): ProductStocksPagedVm {
     const raw = Array.isArray(res.items) ? res.items : [];
+
     return {
         items: raw.map((dto) => mapProductStockDtoToVm(dto)),
         page: res.page,

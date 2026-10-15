@@ -24,6 +24,7 @@ import type {
 function mapRows<TDto extends { id?: string | null }, TVm>(rows: TDto[] | null | undefined, map: (id: string, dto: TDto) => TVm): TVm[] {
     return (rows ?? []).flatMap((r) => {
         const id = trimOrNull(r?.id);
+
         return id ? [map(id, r)] : [];
     });
 }
@@ -46,6 +47,7 @@ function mapLabResults(dto: PetOpenLabResultsDto): PetOpenLabResultsVm {
 
 function mapPendingCharges(dto: PetPendingChargesSummaryDto): PetPendingChargesSummaryVm | null {
     const count = finiteOrNull(dto.count);
+
     return count === null
         ? null
         : { count, totalAmount: finiteOrNull(dto.totalAmount) ?? 0, unpricedCount: finiteOrNull(dto.unpricedCount) ?? 0, currency: trimOrNull(dto.currency) ?? 'TRY' };
@@ -53,6 +55,7 @@ function mapPendingCharges(dto: PetPendingChargesSummaryDto): PetPendingChargesS
 
 function mapNextAppointment(dto: PetNextAppointmentDto): PetNextAppointmentVm | null {
     const id = trimOrNull(dto.id);
+
     return id
         ? {
               id,
@@ -66,6 +69,7 @@ function mapNextAppointment(dto: PetNextAppointmentDto): PetNextAppointmentVm | 
 
 function mapOutstanding(dto: PetOutstandingDto): PetOutstandingVm | null {
     const clientOutstandingAmount = finiteOrNull(dto.clientOutstandingAmount);
+
     return clientOutstandingAmount === null
         ? null
         : {

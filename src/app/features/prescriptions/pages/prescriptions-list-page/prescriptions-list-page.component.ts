@@ -235,10 +235,12 @@ export class PrescriptionsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
@@ -246,8 +248,10 @@ export class PrescriptionsListPageComponent implements OnInit {
     applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
@@ -298,8 +302,10 @@ export class PrescriptionsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -309,10 +315,12 @@ export class PrescriptionsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
@@ -321,6 +329,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -328,10 +337,12 @@ export class PrescriptionsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
@@ -345,9 +356,11 @@ export class PrescriptionsListPageComponent implements OnInit {
         force = false
     ): void {
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -391,17 +404,22 @@ export class PrescriptionsListPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(PRESCRIPTIONS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<PrescriptionsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(PRESCRIPTIONS_LIST_STATE_KEY);
+
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
             this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
@@ -411,9 +429,11 @@ export class PrescriptionsListPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(PRESCRIPTIONS_LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -426,6 +446,7 @@ export class PrescriptionsListPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(PRESCRIPTIONS_LIST_STATE_KEY, JSON.stringify(state));
     }
 

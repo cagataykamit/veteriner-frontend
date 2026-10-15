@@ -38,6 +38,7 @@ describe('LabResultsService', () => {
     it('PUT gövdesinde rowVersion gider; 200 + {id,rowVersion} yanıtı başarı sayılır', (done) => {
         service.updateLabResult('l1', updateReq()).subscribe(() => done());
         const req = http.expectOne('http://api.test/api/v1/lab-results/l1');
+
         expect(req.request.method).toBe('PUT');
         expect(req.request.body.rowVersion).toBe('AAAAAAAAB9E=');
         req.flush({ id: 'l1', rowVersion: 'AAAAAAAAB9I=' });
@@ -80,6 +81,7 @@ describe('LabResultsService', () => {
     it('sonuçsuz istem: sonuç alanları null gider (Requested)', (done) => {
         service.createLabResult(updateReq({ resultDateUtc: null, resultText: '', rowVersion: undefined })).subscribe(() => done());
         const req = http.expectOne('http://api.test/api/v1/lab-results');
+
         expect(req.request.body.resultDateUtc).toBeNull();
         expect(req.request.body.resultText).toBeNull();
         req.flush({ id: 'l9' });
@@ -98,6 +100,7 @@ describe('LabResultsService', () => {
     it('iptal: gerekçe ve rowVersion cancel ucuna gider', (done) => {
         service.cancelLabResult('l1', '  Yanlış hayvan  ', 'AAAAAAAAB9E=').subscribe(() => done());
         const req = http.expectOne('http://api.test/api/v1/lab-results/l1/cancel');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ reason: 'Yanlış hayvan', rowVersion: 'AAAAAAAAB9E=' });
         req.flush({ id: 'l1', rowVersion: 'x' });
@@ -119,6 +122,7 @@ describe('LabResultsService', () => {
     it('liste süzgeci status parametresi olarak gider; boşsa gönderilmez', (done) => {
         service.getLabResults({ status: 'Cancelled' }).subscribe(() => done());
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/lab-results');
+
         expect(req.request.params.get('Status')).toBe('Cancelled');
         req.flush({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 });
     });

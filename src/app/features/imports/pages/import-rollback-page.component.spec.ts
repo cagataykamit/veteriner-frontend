@@ -58,6 +58,7 @@ describe('ImportRollbackPageComponent', () => {
         });
         fixture = TestBed.createComponent(ImportRollbackPageComponent);
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     }
 
@@ -66,6 +67,7 @@ describe('ImportRollbackPageComponent', () => {
 
     function fill(reason: string, ack: boolean): void {
         const c = fixture.componentInstance;
+
         c.reason.set(reason);
         c.ack.set(ack);
         fixture.detectChanges();
@@ -77,6 +79,7 @@ describe('ImportRollbackPageComponent', () => {
 
     it('Imports.Commit yoksa önizleme istemez ve eylem göstermez', () => {
         const el = create('Committed', { claim: false });
+
         expect(imports.getBatch).not.toHaveBeenCalled();
         expect(text(el)).toContain('aktarma yetkisi gerekir');
     });
@@ -84,6 +87,7 @@ describe('ImportRollbackPageComponent', () => {
     it('sayıları, engelli kayıtları sade nedenle ve uyarıyı gösterir; kişisel veri alanı yoktur', () => {
         const el = create('Committed');
         const t = text(el);
+
         expect(t).toContain('10 müşteri · 12 hasta · 30 aşı');
         expect(t).toContain('Hasta · Hastalar, 12. satır');
         expect(t).toContain('Bağlı geliş (ziyaret) var');
@@ -93,6 +97,7 @@ describe('ImportRollbackPageComponent', () => {
 
     it('varsayılan politika Fail; gerekçe ve onay olmadan gönderilemez', () => {
         const el = create('Committed');
+
         expect(fixture.componentInstance.policy()).toBe('Fail');
         fill('', true);
         expect(submitButton(el)?.disabled).toBeTrue();
@@ -110,6 +115,7 @@ describe('ImportRollbackPageComponent', () => {
         fill('  Yanlış dosya  ', true);
         fixture.componentInstance.submit();
         const body = imports.rollback.calls.mostRecent().args[1];
+
         expect(body.reason).toBe('Yanlış dosya');
         expect(body.blockedPolicy).toBe('DeleteUnblockedOnly');
         expect(body.requestId).toMatch(/^[0-9a-f-]{36}$/);
@@ -122,11 +128,13 @@ describe('ImportRollbackPageComponent', () => {
             status: 409,
             error: { code: 'Imports.RollbackBlocked', extensions: { blocked: { clients: 1, pets: 0, vaccinations: 0 }, blockedItems: [{ entity: 'Client', id: 'c-9', table: 'customers', rowNumber: 3, reasons: ['ClientModified'] }] } }
         });
+
         imports.rollback.and.returnValue(throwError(() => err));
         fill('Yanlış dosya', true);
         fixture.componentInstance.submit();
         fixture.detectChanges();
         const t = text(el);
+
         expect(t).toContain('hiçbir şey silinmedi');
         expect(t).toContain('Müşteri · Müşteriler, 3. satır');
         expect(t).toContain('Müşteri sonradan düzenlenmiş');
@@ -143,12 +151,14 @@ describe('ImportRollbackPageComponent', () => {
         expect(fixture.componentInstance.error()).toContain('farklı bir seçimle');
         fixture.componentInstance.submit();
         const [first, second] = imports.rollback.calls.allArgs().map((a) => a[1].requestId);
+
         expect(first).not.toBe(second);
     });
 
     it('PartiallyRolledBack: kalanları nedenleriyle gösterir ve yeniden deneme sunar', () => {
         const el = create('PartiallyRolledBack', { preview: preview({ status: 'PartiallyRolledBack', rolledBack: { clients: 5, pets: 5, vaccinations: 9 } }) });
         const t = text(el);
+
         expect(t).toContain('kısmen tamamlandı');
         expect(t).toContain('5 müşteri · 5 hasta · 9 aşı');
         expect(t).toContain('Bağlı geliş (ziyaret) var');
@@ -157,6 +167,7 @@ describe('ImportRollbackPageComponent', () => {
 
     it('RolledBack: başarı mesajı gösterir, form göstermez', () => {
         const el = create('RolledBack');
+
         expect(text(el)).toContain('Geri alma tamamlandı');
         expect(submitButton(el)).toBeNull();
     });
@@ -164,6 +175,7 @@ describe('ImportRollbackPageComponent', () => {
     it('RollingBack: ilerleme yoklar ve formu göstermez', async () => {
         imports.getProgress.and.returnValue(of({ id: 'b1', status: 'RollingBack', phase: 'RollingBack', processed: 2, total: 8, updatedAtUtc: null, committedAtUtc: null, leaseActive: true }));
         const el = create('RollingBack');
+
         await new Promise((r) => setTimeout(r, 20));
         fixture.detectChanges();
         expect(imports.getProgress).toHaveBeenCalledWith('b1');

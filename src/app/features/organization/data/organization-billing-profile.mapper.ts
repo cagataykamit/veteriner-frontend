@@ -6,6 +6,7 @@ import type {
 
 function nullableTrimmed(value: string): string | null {
     const trimmed = value.trim();
+
     return trimmed.length ? trimmed : null;
 }
 

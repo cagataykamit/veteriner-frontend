@@ -18,6 +18,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PetsListPageComponent
@@ -27,6 +28,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PETS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PetNewPageComponent
@@ -36,6 +38,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PETS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PetEditPageComponent
@@ -45,6 +48,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PetTimelinePageComponent
@@ -54,6 +58,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PetDetailPageComponent

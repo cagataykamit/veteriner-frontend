@@ -183,6 +183,7 @@ export class PatientsHomePageComponent {
     readonly arrivalPet = signal<PetSuggestion | null>(null);
     readonly noResults = computed(() => {
         const r = this.result();
+
         return this.status() === 'ready' && !!r && r.patients.length === 0 && r.owners.length === 0;
     });
 
@@ -199,6 +200,7 @@ export class PatientsHomePageComponent {
                 if (result === undefined) {
                     return;
                 }
+
                 this.result.set(result);
                 this.status.set(result ? 'ready' : 'error');
             });
@@ -206,13 +208,16 @@ export class PatientsHomePageComponent {
 
     onSearch(): void {
         const term = this.term().trim();
+
         if (term.length < this.minLength) {
             this.result.set(null);
             this.status.set('idle');
             this.searchedTerm.set('');
             this.term$.next('');
+
             return;
         }
+
         this.searchedTerm.set(term);
         this.status.set('loading');
         this.term$.next(term);
@@ -242,6 +247,7 @@ export class PatientsHomePageComponent {
 
     failedMessage(r: PatientSearchResultVm): string {
         const names = r.failedKinds.map((kind) => (kind === 'clients' ? 'Müşteri' : 'Hasta'));
+
         return `${names.join(' ve ')} araması yapılamadı.`;
     }
 }

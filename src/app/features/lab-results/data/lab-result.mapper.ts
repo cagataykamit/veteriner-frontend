@@ -23,17 +23,21 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: LabResultListItemDto | LabResultDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
@@ -55,6 +59,7 @@ function canonicalPetId(dto: LabResultListItemDto | LabResultDetailDto): string 
 
 function canonicalPetName(dto: LabResultListItemDto | LabResultDetailDto): string {
     const raw = firstTrimmed(dto.petName, readDtoString(dto, ['PetName', 'AnimalName']));
+
     return raw ?? '';
 }
 
@@ -159,6 +164,7 @@ export function mapPagedLabResultsToVm(result: LabResultListItemDtoPagedResult):
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapLabResultListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -177,56 +183,75 @@ export function labResultsQueryToHttpParams(query: LabResultsListQuery): HttpPar
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+
     if (query.status) {
         p = p.set('Status', query.status);
     }
+
     const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+
     if (fromUtc) {
         p = p.set('dateFromUtc', fromUtc);
     }
+
     const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+
     if (toUtc) {
         p = p.set('dateToUtc', toUtc);
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     return p;
 }
 
 export function mapCreateLabResultToApiBody(req: CreateLabResultRequest): LabResultWriteRequestDto {
     const clinicId = req.clinicId.trim();
     const petId = req.petId.trim();
+
     if (!clinicId) {
         throw new Error('LAB_RESULT_WRITE_CLINIC_ID_REQUIRED');
     }
+
     if (!petId) {
         throw new Error('LAB_RESULT_WRITE_PET_ID_REQUIRED');
     }
+
     const testName = req.testName.trim();
+
     if (!testName) {
         throw new Error('LAB_RESULT_WRITE_TEST_NAME_REQUIRED');
     }
+
     // Sonuç tarihi ve metni birlikte verilir ya da birlikte verilmez (ikisi de yok → `Requested` istem).
     const resultDateUtc = req.resultDateUtc?.trim() ?? '';
     const resultText = req.resultText?.trim() ?? '';
+
     if (!resultDateUtc !== !resultText) {
         throw new Error('LAB_RESULT_WRITE_RESULT_INCOMPLETE');
     }
+
     const dto: LabResultWriteRequestDto = {
         clinicId,
         petId,
@@ -237,13 +262,17 @@ export function mapCreateLabResultToApiBody(req: CreateLabResultRequest): LabRes
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
     const ex = req.examinationId?.trim();
+
     if (ex) {
         dto.examinationId = ex;
     }
+
     const rowVersion = req.rowVersion?.trim();
+
     if (rowVersion) {
         dto.rowVersion = rowVersion;
     }
+
     return dto;
 }
 

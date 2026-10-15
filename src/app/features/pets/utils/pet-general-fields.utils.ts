@@ -27,5 +27,6 @@ export function buildPetGeneralFields(pet: PetDetailVm): PetGeneralFields {
         { label: 'Kısırlaştırılmış mı?', value: pet.isNeutered }
     ];
     const isEmpty = (v: string | null | undefined): boolean => !v || !v.trim() || v.trim() === EMPTY;
+
     return { filled: fields.filter((f) => !isEmpty(f.value)), empty: fields.filter((f) => isEmpty(f.value)) };
 }

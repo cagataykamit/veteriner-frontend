@@ -43,6 +43,7 @@ export class ImportDropZoneComponent {
     protected readonly error = signal<string | null>(null);
     protected readonly sizeText = computed(() => {
         const size = this.file()?.size ?? 0;
+
         return size >= 1024 * 1024 ? `${(size / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(size / 1024))} KB`;
     });
 
@@ -59,6 +60,7 @@ export class ImportDropZoneComponent {
 
     protected onPick(e: Event): void {
         const input = e.target as HTMLInputElement;
+
         this.accept(input.files?.[0] ?? null);
         input.value = '';
     }
@@ -72,8 +74,11 @@ export class ImportDropZoneComponent {
         if (!file) {
             return;
         }
+
         const problem = precheckImportFile(file, this.extension());
+
         this.error.set(problem);
+
         if (!problem) {
             this.fileChange.emit(file);
         }

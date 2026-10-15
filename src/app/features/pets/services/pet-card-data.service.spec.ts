@@ -19,7 +19,9 @@ describe('PetCardDataService', () => {
 
     const collect = <T>(source: { subscribe(fn: (v: PetCardSection<T>) => void): unknown }) => {
         const values: PetCardSection<T>[] = [];
+
         source.subscribe((v) => values.push(v));
+
         return values;
     };
 
@@ -43,6 +45,7 @@ describe('PetCardDataService', () => {
 
     it('hasta Yapılacaklar tek istekte açık işler ucundan okunur; önce yükleniyor, sonra veri yayar', () => {
         const vm = { petId: 'p1' } as PetOpenItemsVm;
+
         pets.getPetOpenItems.and.returnValue(of(vm));
 
         const values = collect(service.openItems('p1'));
@@ -77,9 +80,11 @@ describe('PetCardDataService', () => {
         claims.add('Pets.Read');
         pets.getPets.and.returnValue(of({ items: [{ id: 'p1', clientId: 'c1' }, { id: 'p9', clientId: 'c9' }] }) as never);
         const petValues = collect(service.clientPets('c1'));
+
         expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1' }));
         expect(pets.getPets.calls.mostRecent().args[0].status).toBeUndefined();
         const lastPets = petValues[1];
+
         expect(lastPets?.state === 'ok' ? lastPets.data.map((p) => p.id) : null).toEqual(['p1']);
     });
 
@@ -89,8 +94,10 @@ describe('PetCardDataService', () => {
 
         claims.add('Charges.Read');
         const page = { items: [{ id: 's1', petId: 'p1' }], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 };
+
         chargeSuggestions.getPending.and.returnValue(of(page) as never);
         const values = collect(service.clientPendingCharges('c1'));
+
         expect(chargeSuggestions.getPending).toHaveBeenCalledOnceWith({ page: 1, pageSize: 200, clientId: 'c1' });
         expect(values[1]).toEqual({ state: 'ok', data: page } as never);
     });

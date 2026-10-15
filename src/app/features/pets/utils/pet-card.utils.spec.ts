@@ -125,6 +125,7 @@ describe('nextScheduledAppointment', () => {
             appt('a3', '2026-10-22T09:00:00Z', 0),
             appt('a4', '2026-10-10T09:00:00Z', 0)
         ];
+
         expect(nextScheduledAppointment(rows, NOW)?.id).toBe('a3');
         expect(nextScheduledAppointment([rows[1], rows[3]], NOW)).toBeNull();
     });
@@ -136,6 +137,7 @@ describe('activeFollowUpTreatments', () => {
     it('takip tarihi bugün veya ileride olanları en yakın önce döndürür', () => {
         const now = new Date(2026, 9, 14, 15, 0);
         const result = activeFollowUpTreatments([t('t1', '2026-10-20T00:00:00Z'), t('t2', null), t('t3', '2026-10-01T00:00:00Z'), t('t4', '2026-10-15T00:00:00Z')], now);
+
         expect(result.map((x) => x.id)).toEqual(['t4', 't1']);
     });
 });
@@ -165,6 +167,7 @@ describe('petCardEmphasis', () => {
 describe('openItemsSection / ownerOutstandingSection', () => {
     it('Forbidden gösterilmez (null), Unavailable alınamadı, Empty ok + veri yok; istek durumu bölüme geçer', () => {
         const items = openItems({ labResults: { state: 'Forbidden', data: null }, pendingCharges: { state: 'Unavailable', data: null } });
+
         expect(openItemsSection(items, (o) => o.labResults)).toBeNull();
         expect(openItemsSection(items, (o) => o.pendingCharges)).toEqual({ state: 'error' });
         expect(openItemsSection(items, (o) => o.vaccinations)).toEqual({ state: 'ok', data: null });
@@ -201,6 +204,7 @@ describe('buildPetTodo', () => {
             { label: 'Aç', route: ['/panel/lab-results', 'l1'] }
         ]);
         const blocked = buildPetTodo(items, ctx(['Vaccinations.Update', 'LabResults.Update'], { mutationBlocked: true }));
+
         expect(blocked.items.every((i) => i.action.label === 'Aç')).toBeTrue();
     });
 
@@ -232,6 +236,7 @@ describe('buildPetTodo', () => {
         const items = openItems({ outstanding: outstanding(1250, 400) });
 
         const [item] = buildPetTodo(items, ctx(['Payments.Create'])).items;
+
         expect(item.kind).toBe('openBalance');
         expect(item.title).toContain('1.250');
         expect(item.detail).toContain('Bu hasta');
@@ -263,6 +268,7 @@ describe('buildPetTodo', () => {
             }),
             ctx([])
         );
+
         expect(view.items.map((i) => i.kind)).toEqual(['overdueVaccine']);
         expect(view.loading).toBeFalse();
         expect(view.failed).toEqual(['Lab']);
@@ -272,6 +278,7 @@ describe('buildPetTodo', () => {
     it('bütün bölümler Forbidden ise (veya uç yetkisizse) liste bilinmiyordur: forbidden işaretlenir', () => {
         const forbidden = { state: 'Forbidden', data: null };
         const all = openItems({ vaccinations: forbidden, labResults: forbidden, pendingCharges: forbidden, outstanding: forbidden });
+
         expect(buildPetTodo(all, ctx([]))).toEqual({ items: [], loading: false, failed: [], forbidden: true });
         expect(buildPetTodo(openItems({ outstanding: forbidden }), ctx([])).forbidden).toBeFalse();
     });
@@ -282,6 +289,7 @@ describe('buildPetTodo', () => {
 
         expect(view.items.map((i) => i.kind)).toEqual(['deceasedAppointment', 'openBalance']);
         const [item] = view.items;
+
         expect(item.tone).toBe('info');
         expect(item.title).toBe('Vefat eden hastanın açık randevusu var');
         expect(item.detail).toContain('En yakını: 20.10.2026');

@@ -226,12 +226,15 @@ export class PaymentEditPageComponent implements OnInit {
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.loadError.set('Geçersiz ödeme kaydı.');
             this.loading.set(false);
             this.paymentLoadRetryEnabled.set(false);
+
             return;
         }
+
         this.paymentId = id;
         this.paymentLoadRetryEnabled.set(true);
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
@@ -240,14 +243,19 @@ export class PaymentEditPageComponent implements OnInit {
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const cid = trimClientIdControlValue(this.form.controls.clientId.value);
+
             if (!cid) {
                 this.form.controls.petId.disable({ emitEvent: false });
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
@@ -272,12 +280,14 @@ export class PaymentEditPageComponent implements OnInit {
                     paidAtLocal: toIstanbulDateTimeLocalInputValue(x.paidAtUtc),
                     note: x.note
                 });
+
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
                     this.form.controls.petId.setValue(x.petId);
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
+
                 this.loading.set(false);
             },
             error: (e: unknown) => {
@@ -294,28 +304,36 @@ export class PaymentEditPageComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
         const v = this.form.getRawValue();
         const amount = parseAmountFormValue(v.amount);
+
         if (amount == null || amount < 0.01) {
             this.submitError.set('Geçerli bir tutar girin.');
+
             return;
         }
 
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
         const paidAtLocal = v.paidAtLocal?.trim() ?? '';
         const paidAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(paidAtLocal);
+
         if (!paidAtUtc) {
             this.submitError.set('Geçerli bir ödeme tarihi / saati seçin.');
+
             return;
         }
 
@@ -340,12 +358,16 @@ export class PaymentEditPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePaymentUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(panelHttpFailureMessage(e, 'Kayıt sırasında hata oluştu.'));
             }
         });
@@ -363,6 +385,7 @@ export class PaymentEditPageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

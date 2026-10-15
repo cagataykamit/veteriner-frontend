@@ -7,11 +7,14 @@ describe('PetTodoPanelComponent', () => {
     const render = (view: PetTodoView, retryable = false) => {
         TestBed.configureTestingModule({ imports: [PetTodoPanelComponent], providers: [provideRouter([])] });
         const fixture = TestBed.createComponent(PetTodoPanelComponent);
+
         fixture.componentRef.setInput('view', view);
         fixture.componentRef.setInput('retryable', retryable);
         fixture.detectChanges();
+
         return fixture;
     };
+
     const el = (view: PetTodoView, retryable = false) => render(view, retryable).nativeElement as HTMLElement;
 
     it('her satır başlık, ayrıntı ve tek tık eylem bağlantısıyla çizilir', () => {
@@ -33,9 +36,11 @@ describe('PetTodoPanelComponent', () => {
         });
 
         const row = root.querySelector('[data-testid="todo-pendingCharge"]') as HTMLElement;
+
         expect(row.textContent).toContain('2 işlem ücret bekliyor');
         expect(row.textContent).toContain('Serum, Enjeksiyon');
         const action = row.querySelector('[data-testid="todo-action"]') as HTMLAnchorElement;
+
         expect(action.textContent).toContain('Ücretlendir');
         expect(action.getAttribute('href')).toBe('/panel/charges/pending?petId=p1');
         expect(action.classList).withContext('eylem çubuğuyla aynı boyut').not.toContain('p-button-sm');
@@ -48,6 +53,7 @@ describe('PetTodoPanelComponent', () => {
         TestBed.resetTestingModule();
 
         const root = el({ loading: false, failed: ['Lab'], forbidden: false, items: [] });
+
         expect(root.querySelector('[data-testid="todo-empty"]')).toBeNull();
         expect(root.querySelector('[data-testid="todo-failed"]')?.textContent).toContain('Lab');
         expect(root.querySelector('[data-testid="todo-retry"]')).withContext('sayfa yeniden okuma sunmuyorsa düğme yok').toBeNull();
@@ -55,6 +61,7 @@ describe('PetTodoPanelComponent', () => {
 
     it('hiçbir kaynağı okuma izni yoksa "yok" değil "yetkiniz yok" der', () => {
         const root = el({ loading: false, failed: [], forbidden: true, items: [] });
+
         expect(root.querySelector('[data-testid="todo-empty"]')).toBeNull();
         expect(root.querySelector('[data-testid="todo-forbidden"]')?.textContent).toContain('Yapılacakları görüntülemek için yetkiniz yok.');
     });
@@ -62,6 +69,7 @@ describe('PetTodoPanelComponent', () => {
     it('alınamayan kaynakta "Yeniden dene" retry yayar; alınamayan yoksa düğme yok', () => {
         const fixture = render({ loading: false, failed: ['Aşı'], forbidden: false, items: [] }, true);
         let retried = 0;
+
         fixture.componentInstance.retry.subscribe(() => retried++);
 
         (fixture.nativeElement.querySelector('[data-testid="todo-retry"]') as HTMLButtonElement).click();

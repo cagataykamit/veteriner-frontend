@@ -25,6 +25,7 @@ function categoryActiveLabel(isActive: boolean): string {
 
 export function mapProductCategoryDtoToListVm(dto: ProductCategoryDto): ProductCategoryListItemVm {
     const isActive = dto.isActive === true;
+
     return {
         id: dto.id,
         name: str(dto.name),
@@ -45,6 +46,7 @@ export interface ProductCategoriesPagedVm {
 
 export function mapPagedProductCategoriesToVm(res: ProductCategoryDtoPagedResult): ProductCategoriesPagedVm {
     const items = (res.items ?? []).map(mapProductCategoryDtoToListVm);
+
     return {
         items,
         page: res.page,
@@ -56,6 +58,7 @@ export function mapPagedProductCategoriesToVm(res: ProductCategoryDtoPagedResult
 
 function optionalDescriptionOrNull(v: string): string | null {
     const t = v.trim();
+
     return t ? t : null;
 }
 

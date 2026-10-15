@@ -71,6 +71,7 @@ describe('PaymentDetailPageComponent — iptal', () => {
         claims.add('Payments.Correct');
         await setup();
         const nav = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
         fixture.componentInstance.afterVoid();
         expect(nav).toHaveBeenCalledWith(['/panel/payments']);
     });

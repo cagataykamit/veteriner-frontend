@@ -320,10 +320,12 @@ export class ProductStocksPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         if (this.route.snapshot.queryParamMap.get('isBelowMinimum') === 'true') {
             this.lowStockFilterInput = 'low';
             this.activeLowStock.set('low');
@@ -351,9 +353,11 @@ export class ProductStocksPageComponent implements OnInit {
 
     activeClinicContextHint(): string {
         const nm = this.auth.getClinicName()?.trim();
+
         if (nm) {
             return `Stoklar aktif klinik bağlamına göre listelenir. Aktif klinik: ${nm}.`;
         }
+
         return 'Stoklar aktif klinik bağlamına göre listelenir.';
     }
 
@@ -361,9 +365,11 @@ export class ProductStocksPageComponent implements OnInit {
         if (this.totalItems() > 0) {
             return '';
         }
+
         if (this.activeLowStock() === 'low') {
             return 'Düşük stokta ürün yok.';
         }
+
         return 'Stok kaydı bulunamadı.';
     }
 
@@ -371,9 +377,11 @@ export class ProductStocksPageComponent implements OnInit {
         if (this.totalItems() > 0) {
             return '';
         }
+
         if (this.isSearchActive() || this.isLowStockFilterApplied() || this.isCategoryFilterApplied()) {
             return this.copy.listEmptyHint;
         }
+
         return '';
     }
 
@@ -410,8 +418,10 @@ export class ProductStocksPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -421,10 +431,12 @@ export class ProductStocksPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
     }
@@ -433,6 +445,7 @@ export class ProductStocksPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -440,10 +453,12 @@ export class ProductStocksPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
     }
@@ -469,9 +484,11 @@ export class ProductStocksPageComponent implements OnInit {
         force = false
     ): void {
         const key = `${page}|${pageSize}|${search.trim()}|${lowStockMode}|${categoryId.trim()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -498,6 +515,7 @@ export class ProductStocksPageComponent implements OnInit {
                         e instanceof Error && e.message.trim()
                             ? e.message.trim()
                             : 'Stok bilgileri yüklenemedi.';
+
                     this.error.set(msg);
                     this.loading.set(false);
                 }
@@ -506,16 +524,20 @@ export class ProductStocksPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(PRODUCT_STOCKS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<StocksListState & { clinicId?: string }>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.lowStockFilterInput = typeof parsed.lowStockFilter === 'string' ? parsed.lowStockFilter : '';
             this.categoryFilterInput = typeof parsed.productCategoryId === 'string' ? parsed.productCategoryId : '';
@@ -525,6 +547,7 @@ export class ProductStocksPageComponent implements OnInit {
             this.currentPage.set(page);
             this.pageSize.set(pageSize);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             return false;
@@ -539,6 +562,7 @@ export class ProductStocksPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(PRODUCT_STOCKS_LIST_STATE_KEY, JSON.stringify(state));
     }
 
@@ -550,6 +574,7 @@ export class ProductStocksPageComponent implements OnInit {
         if (!this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM)) {
             return;
         }
+
         this.exportError.set(null);
         this.exporting.set(true);
         this.fetchAllFilteredStocksForExport().subscribe({
@@ -558,15 +583,19 @@ export class ProductStocksPageComponent implements OnInit {
                 const csv = buildCsvFromStringRows([...PRODUCT_STOCK_CSV_HEADERS], rows);
                 const blob = csvTextToUtf8BlobWithBom(csv);
                 const name = `stok-durumu-${localDateTimeYyyyMmDd_HHmmForFileName()}.csv`;
+
                 triggerBlobDownload(blob, name);
                 this.exporting.set(false);
             },
             error: (e: unknown) => {
                 this.exporting.set(false);
+
                 if (e instanceof InventoryCsvExportRowLimitError) {
                     this.exportError.set('Dışa aktarılacak kayıt sayısı çok yüksek. Lütfen filtreleri daraltın.');
+
                     return;
                 }
+
                 this.exportError.set('Stok durumu dışa aktarılamadı.');
             }
         });
@@ -581,11 +610,13 @@ export class ProductStocksPageComponent implements OnInit {
             isBelowMinimum: lowStockMode === 'low' ? true : undefined,
             productCategoryId: categoryId || undefined
         };
+
         return fetchAllInventoryCsvExportPages$((page, pageSize) => this.stockService.list({ page, pageSize, ...q }));
     }
 
     private mapStockVmToCsvRow(row: ProductStockVm): string[] {
         const statusLabel = row.isBelowMinimum ? 'Düşük stok' : 'Yeterli';
+
         return [
             this.exportDisplayCell(row.productName),
             this.exportDisplayCell(row.productSkuText),
@@ -601,6 +632,7 @@ export class ProductStocksPageComponent implements OnInit {
 
     private exportDisplayCell(value: string): string {
         const t = (value ?? '').trim();
+
         return t === '—' ? '' : t;
     }
 }

@@ -57,46 +57,58 @@ function normalizePaymentUpsertFieldMessage(formKey: PaymentUpsertFormFieldKey, 
     if (formKey === 'paidAtLocal' && isPaymentDateTooFarPastBackendMessage(message)) {
         return PAYMENT_DATE_TOO_FAR_PAST_MESSAGE;
     }
+
     return message.trim();
 }
 
 function problemDetailText(err: HttpErrorResponse): string {
     const body = err.error as Record<string, unknown> | null | undefined;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return '';
     }
+
     const detail = typeof body['detail'] === 'string' ? body['detail'] : typeof body['Detail'] === 'string' ? body['Detail'] : '';
     const title = typeof body['title'] === 'string' ? body['title'] : typeof body['Title'] === 'string' ? body['Title'] : '';
+
     return [detail, title].filter(Boolean).join('\n').trim();
 }
 
 function promotePaymentDatePastFromProblemDetail(err: HttpErrorResponse): PaymentUpsertFieldErrors | null {
     const detail = problemDetailText(err);
+
     if (isPaymentDateTooFarPastBackendMessage(detail)) {
         return { paidAtLocal: PAYMENT_DATE_TOO_FAR_PAST_MESSAGE };
     }
+
     return null;
 }
 
 function promotePaymentDatePastFromUnmappedErrors(err: HttpErrorResponse): PaymentUpsertFieldErrors | null {
     const raw = extractRawValidationErrors(err.error);
+
     if (!raw) {
         return null;
     }
+
     for (const [apiKey, val] of Object.entries(raw)) {
         const normalizedKey = apiKey
             .replace(/^\$/, '')
             .replace(/\[\d+]$/, '')
             .toLowerCase()
             .replace(/[^a-z0-9]/g, '');
+
         if (FIELD_MAP[normalizedKey]) {
             continue;
         }
+
         const msg = firstStringMessage(val);
+
         if (msg && isPaymentDateTooFarPastBackendMessage(msg)) {
             return { paidAtLocal: PAYMENT_DATE_TOO_FAR_PAST_MESSAGE };
         }
     }
+
     return null;
 }
 
@@ -113,11 +125,13 @@ export function parsePaymentUpsertHttpError(err: HttpErrorResponse): ParsedPayme
     }
 
     const fromDetail = promotePaymentDatePastFromProblemDetail(err);
+
     if (fromDetail) {
         return { fieldErrors: fromDetail, summaryMessage: SUMMARY_FIELD_ERRORS };
     }
 
     const fromUnmapped = promotePaymentDatePastFromUnmappedErrors(err);
+
     if (fromUnmapped) {
         return { fieldErrors: fromUnmapped, summaryMessage: SUMMARY_FIELD_ERRORS };
     }

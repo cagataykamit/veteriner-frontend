@@ -20,6 +20,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(PRODUCTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],
@@ -31,6 +32,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(PRODUCTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],
@@ -42,6 +44,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(PRODUCTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],
@@ -53,6 +56,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],
@@ -64,6 +68,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(PRODUCTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],

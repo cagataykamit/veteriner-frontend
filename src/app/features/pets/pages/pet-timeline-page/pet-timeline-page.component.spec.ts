@@ -34,6 +34,7 @@ describe('PetTimelinePageComponent', () => {
     let responder: (q: PetTimelineQuery) => ReturnType<PetsService['getPetTimeline']>;
 
     const el = () => fixture.nativeElement as HTMLElement;
+
     const create = () => {
         fixture = TestBed.createComponent(PetTimelinePageComponent);
         fixture.detectChanges();
@@ -53,6 +54,7 @@ describe('PetTimelinePageComponent', () => {
                         getPetById: () => of({ name: 'Pamuk' }),
                         getPetTimeline: (_id: string, q: PetTimelineQuery) => {
                             calls.push(q);
+
                             return responder(q);
                         }
                     }
@@ -86,6 +88,7 @@ describe('PetTimelinePageComponent', () => {
         expect(el().querySelectorAll('[data-testid="late-entry"]').length).toBe(1);
         expect(el().textContent).toContain('Kesinleştirmeden sonra eklendi');
         const summaries = Array.from(el().querySelectorAll('[data-testid="summary"]'));
+
         expect(summaries[0].className).toContain('text-muted-color');
         expect(summaries[2].className).toContain('text-red-600');
         expect(el().querySelectorAll('[data-testid="event-link"]').length).toBe(0);
@@ -97,6 +100,7 @@ describe('PetTimelinePageComponent', () => {
         create();
 
         const links = el().querySelectorAll('[data-testid="examination-link"]');
+
         expect(links.length).toBe(1);
         expect(links[0].getAttribute('href')).toContain('/panel/examinations/e7');
     });
@@ -115,6 +119,7 @@ describe('PetTimelinePageComponent', () => {
 
     it('yükleme sürerken tekrar tıklama ikinci istek atmaz (çift tıklama kilidi)', () => {
         const pending = new Subject<PetTimelinePageVm>();
+
         responder = (q) => (q.cursor ? pending : of(page([item('Visit', 'v1')], 'CUR1')));
         create();
 

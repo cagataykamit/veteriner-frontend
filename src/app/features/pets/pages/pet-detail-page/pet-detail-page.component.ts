@@ -183,6 +183,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     readonly showEmptyFields = signal(false);
     readonly generalFields = computed(() => {
         const p = this.pet();
+
         return p ? buildPetGeneralFields(p) : { filled: [], empty: [] };
     });
 
@@ -202,6 +203,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
 
     readonly identity = computed(() => {
         const p = this.pet();
+
         return p ? petIdentityParts(p, this.summary()?.latestWeight.data?.weightKg ?? null).join(' · ') : '';
     });
 
@@ -242,15 +244,20 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id');
+
                     this.resetCard();
+
                     if (!id) {
                         this.error.set('Geçersiz pet.');
                         this.loading.set(false);
+
                         return EMPTY;
                     }
+
                     this.lastId = id;
                     this.loading.set(true);
                     this.error.set(null);
+
                     return this.petsService.getPetById(id);
                 })
             )
@@ -271,6 +278,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         if (!this.lastId) {
             return;
         }
+
         this.resetCard();
         this.loading.set(true);
         this.error.set(null);
@@ -286,6 +294,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     /** Durum yanıtı yeni `rowVersion` taşır; açık işler yeniden okunur (vefat eden hastada aşı bölümü boş gelir). */
     onStatusChanged(result: PetStatusUpdateResult): void {
         const p = this.pet();
+
         if (p) {
             this.pet.set({ ...p, ...result });
             this.loadOpenItems(p.id);
@@ -297,6 +306,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         if (!this.lastId) {
             return;
         }
+
         this.petsService.getPetById(this.lastId).subscribe({ next: (p) => this.pet.set(p), error: () => undefined });
     }
 
@@ -324,10 +334,13 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         if (this.historyError()) {
             return { state: 'error' };
         }
+
         const h = this.history();
+
         if (!h) {
             return { state: 'loading' };
         }
+
         return h.omittedBlocks.includes(key) ? null : { state: 'ok', data: pick(h) };
     }
 
@@ -351,9 +364,11 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         this.examinationSubscription = null;
         this.openItemsSubscription?.unsubscribe();
         this.openItemsSubscription = null;
+
         for (const s of [this.openItems, this.lastExamination, this.followUps]) {
             s.set(null);
         }
+
         this.summary.set(null);
         this.summaryLoading.set(false);
         this.summaryError.set(null);

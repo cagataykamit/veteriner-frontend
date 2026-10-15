@@ -17,23 +17,30 @@ export function publicOwnerSignupFailureMessage(err: unknown): string {
     if (!(err instanceof HttpErrorResponse)) {
         return err instanceof Error && err.message.trim() ? err.message.trim() : 'Kayıt tamamlanamadı.';
     }
+
     const problem = readProblemDetailsFromHttp(err);
     const code = problem?.code?.trim() ?? '';
+
     if (code && PUBLIC_OWNER_SIGNUP_CODE_MESSAGES[code]) {
         return PUBLIC_OWNER_SIGNUP_CODE_MESSAGES[code];
     }
+
     const fromValidation = firstValidationMessage(problem?.errors);
+
     if (fromValidation) {
         return fromValidation;
     }
+
     return messageFromHttpError(err, 'Kayıt tamamlanamadı.');
 }
 
 function readProblemDetailsFromHttp(err: HttpErrorResponse): ProblemDetails | null {
     const body = err.error as unknown;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const ext =
         o['extensions'] && typeof o['extensions'] === 'object' && !Array.isArray(o['extensions'])
@@ -44,7 +51,9 @@ function readProblemDetailsFromHttp(err: HttpErrorResponse): ProblemDetails | nu
         if (!ext) {
             return null;
         }
+
         const v = ext[key];
+
         return typeof v === 'string' && v.trim() ? v.trim() : null;
     };
 
@@ -72,13 +81,16 @@ function firstValidationMessage(errors: ProblemDetails['errors'] | null | undefi
     if (!errors || typeof errors !== 'object') {
         return null;
     }
+
     for (const v of Object.values(errors)) {
         if (Array.isArray(v) && v.length > 0 && typeof v[0] === 'string' && v[0].trim()) {
             return v[0].trim();
         }
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }

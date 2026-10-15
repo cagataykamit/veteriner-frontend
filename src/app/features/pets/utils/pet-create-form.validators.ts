@@ -5,17 +5,22 @@ import { validateDateInputYearRange } from '@/app/shared/utils/date-input-valida
 export function petWeightStrValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const v = (control.value ?? '').toString().trim();
+
         if (v === '') {
             return null;
         }
+
         const normalized = v.replace(',', '.');
         const num = Number(normalized);
+
         if (Number.isNaN(num)) {
             return { weightInvalid: true };
         }
+
         if (num < 0 || num > 9999) {
             return { weightInvalid: true };
         }
+
         return null;
     };
 }
@@ -24,12 +29,15 @@ export function petWeightStrValidator(): ValidatorFn {
 export function petBirthDateValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const v = (control.value ?? '').toString().trim();
+
         if (v === '') {
             return null;
         }
+
         if (validateDateInputYearRange(v)) {
             return { birthDateInvalid: true };
         }
+
         return null;
     };
 }

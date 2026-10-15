@@ -230,6 +230,7 @@ export class ImportsListPageComponent implements OnInit {
             s.pets.total ? `${s.pets.total} hasta` : '',
             s.vaccinations.total ? `${s.vaccinations.total} aşı` : ''
         ].filter(Boolean);
+
         return parts.length ? parts.join(' · ') : 'Satır bilgisi yok';
     }
 }

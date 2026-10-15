@@ -394,10 +394,12 @@ export class ProductCategoriesPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeIsActiveFilter());
     }
@@ -406,9 +408,11 @@ export class ProductCategoriesPageComponent implements OnInit {
         if (this.totalItems() > 0) {
             return '';
         }
+
         if (this.isSearchActive() || this.isActiveFilterApplied()) {
             return this.copy.listEmptyMessage;
         }
+
         return 'Henüz ürün kategorisi yok.';
     }
 
@@ -416,9 +420,11 @@ export class ProductCategoriesPageComponent implements OnInit {
         if (this.totalItems() > 0) {
             return '';
         }
+
         if (this.isSearchActive() || this.isActiveFilterApplied()) {
             return this.copy.listEmptyHint;
         }
+
         return '';
     }
 
@@ -457,8 +463,10 @@ export class ProductCategoriesPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -468,10 +476,12 @@ export class ProductCategoriesPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeIsActiveFilter());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeIsActiveFilter());
     }
@@ -480,6 +490,7 @@ export class ProductCategoriesPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -487,10 +498,12 @@ export class ProductCategoriesPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeIsActiveFilter());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeIsActiveFilter());
     }
@@ -507,6 +520,7 @@ export class ProductCategoriesPageComponent implements OnInit {
         if (!this.canCreateCategories || this.ro.mutationBlocked()) {
             return;
         }
+
         this.dialogMode.set('create');
         this.editingId.set(null);
         this.dialogError.set(null);
@@ -519,6 +533,7 @@ export class ProductCategoriesPageComponent implements OnInit {
         if (!this.canUpdateCategories || this.ro.mutationBlocked()) {
             return;
         }
+
         this.dialogMode.set('edit');
         this.editingId.set(row.id);
         this.dialogError.set(null);
@@ -527,6 +542,7 @@ export class ProductCategoriesPageComponent implements OnInit {
         this.categoryService.getDtoById(row.id).subscribe({
             next: (dto) => {
                 const v = mapProductCategoryDtoToFormValue(dto);
+
                 this.dialogForm.reset(v, { emitEvent: false });
                 this.dialogForm.markAsUntouched();
                 this.dialogSubmitting.set(false);
@@ -544,6 +560,7 @@ export class ProductCategoriesPageComponent implements OnInit {
 
     onDialogVisibleChange(visible: boolean): void {
         this.dialogVisible.set(visible);
+
         if (!visible) {
             this.resetDialogFormState();
         }
@@ -560,13 +577,18 @@ export class ProductCategoriesPageComponent implements OnInit {
     submitDialog(): void {
         if (this.dialogForm.invalid || this.dialogSubmitting() || this.ro.mutationBlocked()) {
             this.dialogForm.markAllAsTouched();
+
             return;
         }
+
         const value = getProductCategoryFormValue(this.dialogForm);
+
         this.dialogSubmitting.set(true);
         this.dialogError.set(null);
+
         if (this.dialogMode() === 'create') {
             const body = mapProductCategoryFormToCreateRequest(value);
+
             this.categoryService.create(body).subscribe({
                 next: () => {
                     this.dialogSubmitting.set(false);
@@ -579,14 +601,20 @@ export class ProductCategoriesPageComponent implements OnInit {
                     this.dialogError.set(e.message ?? 'Kayıt başarısız.');
                 }
             });
+
             return;
         }
+
         const id = this.editingId();
+
         if (!id) {
             this.dialogSubmitting.set(false);
+
             return;
         }
+
         const body = mapProductCategoryFormToUpdateRequest(value);
+
         this.categoryService.update(id, body).subscribe({
             next: () => {
                 this.dialogSubmitting.set(false);
@@ -605,7 +633,9 @@ export class ProductCategoriesPageComponent implements OnInit {
         if (!this.canDeactivateCategories || this.ro.mutationBlocked() || !row.isActive) {
             return;
         }
+
         const id = row.id;
+
         this.confirmationService.confirm({
             header: 'Kategoriyi pasifleştir',
             message: 'Bu kategoriyi pasifleştirmek istediğinize emin misiniz?',
@@ -635,7 +665,9 @@ export class ProductCategoriesPageComponent implements OnInit {
         if (!this.canUpdateCategories || this.ro.mutationBlocked() || row.isActive) {
             return;
         }
+
         const id = row.id;
+
         this.confirmationService.confirm({
             header: 'Kategoriyi aktifleştir',
             message: 'Bu kategoriyi tekrar aktif hale getirmek istediğinize emin misiniz?',
@@ -665,9 +697,11 @@ export class ProductCategoriesPageComponent implements OnInit {
         if (filter === 'true') {
             return true;
         }
+
         if (filter === 'false') {
             return false;
         }
+
         return undefined;
     }
 
@@ -679,9 +713,11 @@ export class ProductCategoriesPageComponent implements OnInit {
         force = false
     ): void {
         const key = `${page}|${pageSize}|${search.trim()}|${isActiveFilterStr}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -711,16 +747,20 @@ export class ProductCategoriesPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(PRODUCT_CATEGORIES_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<CategoriesListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.isActiveFilter = typeof parsed.isActiveFilter === 'string' ? parsed.isActiveFilter : '';
             this.activeSearch.set(this.searchInput.trim());
@@ -728,6 +768,7 @@ export class ProductCategoriesPageComponent implements OnInit {
             this.currentPage.set(page);
             this.pageSize.set(pageSize);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             return false;
@@ -741,6 +782,7 @@ export class ProductCategoriesPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(PRODUCT_CATEGORIES_LIST_STATE_KEY, JSON.stringify(state));
     }
 

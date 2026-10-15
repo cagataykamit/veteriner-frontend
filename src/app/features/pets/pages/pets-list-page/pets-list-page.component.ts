@@ -268,16 +268,20 @@ export class PetsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         const contextClientId = readContextFilterParam(this.route, 'clientId');
+
         if (contextClientId) {
             this.activeClientId.set(contextClientId);
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.loadSpeciesOptions();
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
@@ -329,8 +333,10 @@ export class PetsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -340,10 +346,12 @@ export class PetsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
     }
@@ -352,6 +360,7 @@ export class PetsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -359,10 +368,12 @@ export class PetsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
     }
@@ -377,9 +388,11 @@ export class PetsListPageComponent implements OnInit {
       ): void {
         const status = this.activeStatus();
         const key = `${page}|${pageSize}|${search.trim()}|${speciesId.trim()}|${clientId.trim()}|${status}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -442,17 +455,22 @@ export class PetsListPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(PETS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<PetsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(PETS_LIST_STATE_KEY);
+
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.speciesIdInput = typeof parsed.speciesId === 'string' ? parsed.speciesId : '';
             this.statusInput = parsed.status === 'Active' || parsed.status === 'Deceased' ? parsed.status : '';
@@ -462,9 +480,11 @@ export class PetsListPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(PETS_LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -477,6 +497,7 @@ export class PetsListPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(PETS_LIST_STATE_KEY, JSON.stringify(state));
     }
 

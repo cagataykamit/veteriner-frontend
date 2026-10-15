@@ -29,6 +29,7 @@ export class ImportJobProgressComponent {
     /** İlk sonuç yazılana kadar (toplam veya işlenen 0) belirsiz çubuk: doğrulamada kurallar bellekte çalışırken sayı artmaz. */
     protected readonly percent = computed(() => {
         const pr = this.progress();
+
         return pr && pr.total > 0 && pr.processed > 0 ? Math.min(100, Math.round((pr.processed / pr.total) * 100)) : null;
     });
 }

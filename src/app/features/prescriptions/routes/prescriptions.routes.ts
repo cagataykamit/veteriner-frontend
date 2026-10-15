@@ -17,6 +17,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PrescriptionsListPageComponent
@@ -26,6 +27,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PRESCRIPTIONS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PrescriptionNewPageComponent
@@ -35,6 +37,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PrescriptionEditPageComponent
@@ -44,6 +47,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PrescriptionDetailPageComponent

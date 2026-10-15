@@ -17,6 +17,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PAYMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PaymentsListPageComponent
@@ -26,6 +27,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PaymentNewPageComponent
@@ -35,6 +37,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PAYMENTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PaymentEditPageComponent
@@ -44,6 +47,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(PAYMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PaymentDetailPageComponent

@@ -30,9 +30,11 @@ export class ImportsService {
 
     listBatches(page: number, pageSize: number, status?: ImportBatchStatus): Observable<ImportBatchPageDto> {
         let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+
         if (status) {
             params = params.set('status', status);
         }
+
         return this.api.get<ImportBatchPageDto>(ApiEndpoints.imports.batches(), params);
     }
 
@@ -64,15 +66,19 @@ export class ImportsService {
 
     getRows(id: string, query: ImportRowsQuery): Observable<ImportRowPageDto> {
         let params = new HttpParams().set('page', query.page).set('pageSize', query.pageSize);
+
         if (query.table) {
             params = params.set('table', query.table);
         }
+
         if (query.status) {
             params = params.set('status', query.status);
         }
+
         if (query.code) {
             params = params.set('code', query.code);
         }
+
         return this.api.get<ImportRowPageDto>(ApiEndpoints.imports.rows(id), params);
     }
 
@@ -82,9 +88,11 @@ export class ImportsService {
 
     downloadTemplate(format: ImportFileFormat, table?: ImportTable): Observable<HttpResponse<Blob>> {
         let params = new HttpParams().set('format', format);
+
         if (format === 'csv' && table) {
             params = params.set('table', table);
         }
+
         return this.api.getBlob(ApiEndpoints.imports.template(), params);
     }
 

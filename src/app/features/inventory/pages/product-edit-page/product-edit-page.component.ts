@@ -226,13 +226,17 @@ export class ProductEditPageComponent implements OnInit {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id')?.trim();
+
                     if (!id) {
                         this.loadError.set('Geçersiz ürün.');
                         this.loading.set(false);
+
                         return EMPTY;
                     }
+
                     this.loading.set(true);
                     this.loadError.set(null);
+
                     return this.productService.getDtoById(id).pipe(map((dto) => ({ id, dto })));
                 })
             )
@@ -252,9 +256,11 @@ export class ProductEditPageComponent implements OnInit {
 
     reload(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? this.productId();
+
         if (!id) {
             return;
         }
+
         this.loading.set(true);
         this.loadError.set(null);
         this.productService.getDtoById(id).subscribe({
@@ -272,6 +278,7 @@ export class ProductEditPageComponent implements OnInit {
 
     goDetail(): void {
         const id = this.productId();
+
         if (id) {
             void this.router.navigate(['/panel/products', id]);
         } else {
@@ -281,10 +288,13 @@ export class ProductEditPageComponent implements OnInit {
 
     onSubmit(): void {
         const id = this.productId();
+
         if (!id || this.form.invalid || this.submitting() || this.ro.mutationBlocked()) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const raw = this.form.getRawValue();
         const value: ProductUpsertFormValue = {
             name: raw.name,
@@ -301,6 +311,7 @@ export class ProductEditPageComponent implements OnInit {
             presentationForm: raw.presentationForm,
             packaging: raw.packaging
         };
+
         this.submitting.set(true);
         this.submitError.set(null);
         this.productService.updateFromFormValue(id, value).subscribe({
@@ -310,10 +321,13 @@ export class ProductEditPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof Error) {
                     this.submitError.set(e.message);
+
                     return;
                 }
+
                 this.submitError.set(messageFromHttpError(e as never, 'Ürün güncellenemedi.'));
             }
         });

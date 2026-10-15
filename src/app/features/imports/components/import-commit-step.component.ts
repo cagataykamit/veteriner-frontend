@@ -214,6 +214,7 @@ export class ImportCommitStepComponent {
 
     protected readonly totals = computed(() => {
         const s = this.batch().summary;
+
         return IMPORT_TABLES.reduce(
             (acc, t) => ({
                 willCreate: acc.willCreate + s[t].willCreate,
@@ -243,9 +244,11 @@ export class ImportCommitStepComponent {
 
     protected commit(): void {
         const validationId = this.batch().validationId ?? this.preview()?.validationId;
+
         if (!validationId || !this.confirmed) {
             return;
         }
+
         this.busy.set(true);
         this.error.set(null);
         this.blockers.set([]);
@@ -257,11 +260,13 @@ export class ImportCommitStepComponent {
             },
             error: (e: unknown) => {
                 this.busy.set(false);
+
                 if (isEndpointUnavailable(e)) {
                     this.unavailable.set(true);
                 } else {
                     this.error.set(importErrorMessage(e, 'Aktarma başlatılamadı.'));
                     const code = importErrorCode(e);
+
                     if (code === 'Imports.CommitBlocked') {
                         this.blockers.set(importCommitBlockers(e));
                         this.previewStale.emit();
@@ -290,19 +295,25 @@ export class ImportCommitStepComponent {
             },
             error: (e: unknown) => {
                 this.releaseBusy.set(false);
+
                 if (isEndpointUnavailable(e)) {
                     this.releaseUnavailable.set(true);
+
                     return;
                 }
+
                 this.releaseError.set(importErrorMessage(e, 'Hatırlatmalar açılamadı.'));
+
                 if (importErrorCode(e) === 'Imports.ReminderImpactChanged') {
                     // Onay açık kalır; güncel sayı görünür ve kullanıcı yeniden onaylar.
                     const current = reminderImpactCurrentCount(e);
+
                     if (current !== null) {
                         this.releaseCountOverride.set(current);
                     } else {
                         this.confirmingRelease.set(false);
                     }
+
                     this.previewStale.emit();
                 }
             }

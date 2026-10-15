@@ -13,6 +13,7 @@ export function parsePetLifeStatus(raw: unknown): PetLifeStatus {
     if (raw === 2 || raw === '2' || (typeof raw === 'string' && normalizeLookupKey(raw) === 'deceased')) {
         return 'Deceased';
     }
+
     return 'Active';
 }
 
@@ -70,15 +71,20 @@ function buildMetaMap<TMeta>(
 
     for (const def of defs) {
         const seenInDef = new Set<string>();
+
         for (const rawKey of [def.canonical, ...def.aliases]) {
             const nk = normalizeLookupKey(rawKey);
+
             if (nk === '' || seenInDef.has(nk)) {
                 continue;
             }
+
             seenInDef.add(nk);
+
             if (map.has(nk)) {
                 throw new Error(`Duplicate pet metadata key: "${nk}"`);
             }
+
             map.set(nk, def.meta);
         }
     }
@@ -96,6 +102,7 @@ const GENDER_META_BY_KEY = buildMetaMap(
 
 function resolvePetGenderMeta(gender: string | null | undefined): PetGenderMeta | undefined {
     const nk = normalizeLookupKey(gender);
+
     return nk === '' ? undefined : GENDER_META_BY_KEY.get(nk);
 }
 
@@ -103,10 +110,13 @@ export function petGenderLabel(gender: string | null | undefined): string {
     if (gender == null || gender === '' || gender === EM) {
         return EM;
     }
+
     const meta = resolvePetGenderMeta(gender);
+
     if (meta) {
         return meta.label;
     }
+
     return gender;
 }
 
@@ -125,41 +135,54 @@ export function resolvePetGenderFormValue(raw: string | number | null | undefine
     if (raw === null || raw === undefined) {
         return '';
     }
+
     if (typeof raw === 'number') {
         if (raw === 1) {
             return 'male';
         }
+
         if (raw === 2) {
             return 'female';
         }
+
         return '';
     }
+
     const s = String(raw).trim();
+
     if (!s) {
         return '';
     }
+
     if (s === '1') {
         return 'male';
     }
+
     if (s === '2') {
         return 'female';
     }
+
     const n = normalizePetGender(s);
+
     if (!n) {
         return '';
     }
+
     for (const def of GENDER_DEFS) {
         if (!def.write) {
             continue;
         }
+
         if (normalizePetGender(def.canonical) === n) {
             return def.canonical;
         }
+
         for (const a of def.aliases) {
             if (normalizePetGender(a) === n) {
                 return def.canonical;
             }
         }
     }
+
     return '';
 }

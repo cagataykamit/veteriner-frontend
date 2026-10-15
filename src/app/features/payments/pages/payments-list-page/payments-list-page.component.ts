@@ -290,6 +290,7 @@ export class PaymentsListPageComponent implements OnInit {
     voidVisible = false;
     readonly voidSummary = computed(() => {
         const p = this.voidTarget();
+
         return p ? `${p.clientName} · ${formatMoney(p.amount, p.currency || 'TRY')} · ${paymentMethodLabel(p.method)}` : null;
     });
     readonly voidPayment = (reason: string) => this.paymentsService.voidPayment(this.voidTarget()!.id, reason);
@@ -307,10 +308,12 @@ export class PaymentsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
     }
@@ -318,8 +321,10 @@ export class PaymentsListPageComponent implements OnInit {
     applySearch(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
@@ -360,6 +365,7 @@ export class PaymentsListPageComponent implements OnInit {
             this.currentPage.set(this.currentPage() - 1);
             this.first.set((this.currentPage() - 1) * this.pageSize());
         }
+
         this.reload();
     }
 
@@ -387,8 +393,10 @@ export class PaymentsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -398,10 +406,12 @@ export class PaymentsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
     }
@@ -410,6 +420,7 @@ export class PaymentsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -417,10 +428,12 @@ export class PaymentsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
     }
@@ -435,9 +448,11 @@ export class PaymentsListPageComponent implements OnInit {
         force = false
     ): void {
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${method.trim()}|${this.contextPetId()}|${this.contextClientId()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -487,17 +502,22 @@ export class PaymentsListPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(PAYMENTS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<PaymentsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(PAYMENTS_LIST_STATE_KEY);
+
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.methodFilter = typeof parsed.method === 'string' ? parsed.method : '';
             this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
@@ -508,9 +528,11 @@ export class PaymentsListPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(PAYMENTS_LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -524,6 +546,7 @@ export class PaymentsListPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(PAYMENTS_LIST_STATE_KEY, JSON.stringify(state));
     }
 

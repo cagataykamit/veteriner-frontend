@@ -17,6 +17,7 @@ export class ProductStockService {
 
     list(query: ProductStocksListQuery): Observable<ProductStocksPagedVm> {
         const params = productStocksQueryToHttpParams(query);
+
         return this.api.get<ProductStockDtoPagedResult>(ApiEndpoints.productStocks.list(), params).pipe(
             map((raw) => mapPagedProductStocksToVm(raw)),
             catchError((err: HttpErrorResponse) =>

@@ -18,11 +18,13 @@ function str(v: string | null | undefined): string {
 
 function qty(v: number | string | null | undefined): number {
     const n = Number(v);
+
     return Number.isFinite(n) ? n : 0;
 }
 
 function dateText(v: string | null | undefined): string {
     const ymd = toYmdOrNull(v);
+
     return ymd ? formatDateDisplay(ymd) : EM;
 }
 
@@ -30,10 +32,13 @@ function expiryBadge(status: StockBatchExpiryStatus, expiryYmd: string | null, t
     if (status === 'expired') {
         return { label: 'Süresi geçmiş', severity: 'danger' };
     }
+
     if (status === 'soon' && expiryYmd) {
         const days = stockBatchDaysLeft(expiryYmd, todayYmd);
+
         return { label: days === 0 ? 'SKT bugün' : `SKT yaklaşıyor (${days} gün)`, severity: 'warn' };
     }
+
     return { label: '', severity: 'secondary' };
 }
 
@@ -46,6 +51,7 @@ export function mapStockBatchDtoToVm(dto: StockBatchDto, todayYmd: string = ista
     const remaining = qty(dto.remainingQuantity);
     const invoiceNumber = dto.invoiceNumber?.trim() ?? '';
     const invoiceDate = toYmdOrNull(dto.invoiceDate);
+
     return {
         id: dto.id,
         lotNumber: str(dto.lotNumber),
@@ -68,6 +74,7 @@ export function mapStockBatchDtoToVm(dto: StockBatchDto, todayYmd: string = ista
 export function mapProductStockBatchesDtoToVm(dto: ProductStockBatchesDto): ProductStockBatchesVm {
     const today = istanbulTodayYmdNow();
     const unit = dto.unit?.trim() ?? '';
+
     return {
         productId: dto.productId,
         clinicId: dto.clinicId,

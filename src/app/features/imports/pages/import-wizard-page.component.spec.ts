@@ -83,6 +83,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         });
         fixture = TestBed.createComponent(ImportWizardPageComponent);
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     }
 
@@ -109,6 +110,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
 
     it('Doğrula: istek hemen döner, ilerleme gösterilir; Validated olunca parti ve önizleme okunur, validationId oradan gelir', () => {
         const el = create(batch('Mapped'));
+
         imports.saveMapping.and.returnValue(of(batch('Mapped')));
         imports.validate.and.returnValue(of(batch('Validating')));
         imports.getProgress.and.returnValues(of(progress('Validating', 30)), of(progress('Validated')));
@@ -139,6 +141,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
 
     it('ValidationFailed: anlaşılır hata gösterir; "Yeniden doğrula" eşlemeyi yeniden kaydetmeden doğrular', () => {
         const el = create(batch('Validating'));
+
         imports.getProgress.and.returnValue(of(progress('ValidationFailed')));
         imports.getPreview.and.returnValue(of(preview({ status: 'ValidationFailed', validationId: null, canCommit: false })));
         imports.getBatch.and.returnValue(of(batch('ValidationFailed')));
@@ -146,6 +149,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
 
         expect(text(el)).toContain('beklenmeyen bir sorun');
         const retry = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Yeniden doğrula'));
+
         expect(retry).toBeDefined();
 
         imports.validate.and.returnValue(of(batch('Validating')));
@@ -161,6 +165,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     it('geri dönüş: parti Validating ise ilerleme ekranı yoklamayla kendiliğinden sürer; eylemler kapalıdır', () => {
         imports.getProgress.and.returnValue(of(progress('Validating', 60)));
         const el = create(batch('Validating'));
+
         advance(0);
 
         expect(imports.getProgress).toHaveBeenCalledWith('b1');
@@ -189,6 +194,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     it('ağ hatası: tek hata yutulur, art arda hatalarda "Bağlantı sorunu" ve yeniden dene gösterilir', () => {
         imports.getProgress.and.returnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
         const el = create(batch('Validating'));
+
         advance(0);
         expect(fixture.componentInstance.pollError()).toBeNull();
 
@@ -197,6 +203,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
 
         imports.getProgress.and.returnValue(of(progress('Validating', 90)));
         const retry = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Yeniden dene'));
+
         retry!.click();
         advance(0);
 
@@ -207,6 +214,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     it('kira uzun süre boşsa "beklenenden uzun sürüyor" notu gösterir', () => {
         imports.getProgress.and.returnValue(of(progress('Validating', 0, false)));
         const el = create(batch('Validating'));
+
         advance(0);
         expect(text(el)).toContain('İşlem sırada');
         expect(text(el)).not.toContain('beklenenden uzun sürüyor');
@@ -218,6 +226,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     it('uygulama sürerken aynı yoklayıcıyla onay adımında ilerler', () => {
         imports.getProgress.and.returnValue(of(progress('Committing', 40)));
         const el = create(batch('Committing', 'v1'));
+
         advance(0);
         expect(fixture.componentInstance.step()).toBe(4);
         expect(text(el)).toContain('40 / 120 satır işlendi');

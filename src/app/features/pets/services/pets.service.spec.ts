@@ -26,6 +26,7 @@ describe('PetsService (açık işler)', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/pets/p1/open-items');
+
         expect(req.request.method).toBe('GET');
         req.flush({
             petId: 'p1',

@@ -30,6 +30,7 @@ function num(v: number | string | null | undefined): number | null {
     if (v == null || Number.isNaN(Number(v))) {
         return null;
     }
+
     return Number(v);
 }
 
@@ -43,22 +44,27 @@ function productActiveLabel(isActive: boolean): string {
 
 export function currencyCode(dto: ProductDto): string {
     const c = dto.currency?.trim();
+
     return c || 'TRY';
 }
 
 function optionalTrimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim() ?? '';
+
     return t ? t : null;
 }
 
 /** Boş veya yalnızca boşluk → null (SKU / barkod / açıklama / kategori). */
 export function mapProductUpsertFormValueToCreateRequest(value: ProductUpsertFormValue): CreateProductRequest {
     const unitPrice = value.unitPrice;
+
     if (unitPrice == null || Number.isNaN(unitPrice)) {
         throw new Error('PRODUCT_UPSERT_UNIT_PRICE_REQUIRED');
     }
+
     const currency = (value.currency?.trim() || 'TRY').trim();
     const service = value.kind === 'Service';
+
     return {
         productCategoryId: optionalTrimmedOrNull(value.productCategoryId),
         name: value.name.trim(),
@@ -79,6 +85,7 @@ export function mapProductUpsertFormValueToCreateRequest(value: ProductUpsertFor
 /** Sözleşme §2: PUT'ta `null` dokunmaz; boşaltılan metin alanı `""` ile temizlenir. */
 export function mapProductUpsertFormValueToUpdateRequest(value: ProductUpsertFormValue): UpdateProductRequest {
     const service = value.kind === 'Service';
+
     return {
         ...mapProductUpsertFormValueToCreateRequest(value),
         pharmacologicalForm: service ? '' : value.pharmacologicalForm.trim(),
@@ -89,6 +96,7 @@ export function mapProductUpsertFormValueToUpdateRequest(value: ProductUpsertFor
 
 export function mapProductDtoToUpsertFormValue(dto: ProductDto): ProductUpsertFormValue {
     const price = num(dto.unitPrice);
+
     return {
         name: dto.name?.trim() ?? '',
         productCategoryId: dto.productCategoryId?.trim() ?? '',
@@ -108,6 +116,7 @@ export function mapProductDtoToUpsertFormValue(dto: ProductDto): ProductUpsertFo
 
 export function mapProductCategoryDtoToSelectOption(dto: ProductCategoryDto): SelectOption {
     const label = dto.name?.trim() ? dto.name.trim() : '—';
+
     return { label, value: dto.id };
 }
 
@@ -115,16 +124,20 @@ export function productCategoriesQueryToHttpParams(query: ProductCategoriesListQ
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.isActive === true) {
         p = p.set('IsActive', 'true');
     } else if (query.isActive === false) {
         p = p.set('IsActive', 'false');
     }
+
     return p;
 }
 
@@ -132,6 +145,7 @@ export function mapProductDtoToListVm(dto: ProductDto): ProductListItemVm {
     const isActive = dto.isActive === true;
     const currency = currencyCode(dto);
     const unitPrice = num(dto.unitPrice);
+
     return {
         id: dto.id,
         name: str(dto.name),
@@ -156,6 +170,7 @@ export function mapProductDtoToDetailVm(dto: ProductDto): ProductDetailVm {
     const desc = dto.description?.trim() ?? '';
     const kind = productKindFromApi(dto.kind);
     const controlledClass = productControlledClassFromApi(dto.controlledClass);
+
     return {
         id: dto.id,
         name: str(dto.name),
@@ -188,6 +203,7 @@ export function mapPagedProductsToVm(raw: ProductDtoPagedResult): {
     totalPages: number;
 } {
     const items = (raw.items ?? []).map((row) => mapProductDtoToListVm(row));
+
     return {
         items,
         page: raw.page,
@@ -199,22 +215,28 @@ export function mapPagedProductsToVm(raw: ProductDtoPagedResult): {
 
 export function productsQueryToHttpParams(query: ProductsListQuery, opts?: { omitPaging?: boolean }): HttpParams {
     let p = new HttpParams();
+
     if (!opts?.omitPaging) {
         const page = query.page ?? 1;
         const pageSize = query.pageSize ?? 10;
+
         p = p.set('Page', String(page));
         p = p.set('PageSize', String(pageSize));
     }
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.productCategoryId?.trim()) {
         p = p.set('ProductCategoryId', query.productCategoryId.trim());
     }
+
     if (query.isActive === true) {
         p = p.set('IsActive', 'true');
     } else if (query.isActive === false) {
         p = p.set('IsActive', 'false');
     }
+
     return p;
 }

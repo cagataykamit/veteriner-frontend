@@ -8,12 +8,14 @@ const MS_PER_DAY = 86_400_000;
 
 function ymdToUtcMs(ymd: string): number {
     const [y, m, d] = ymd.split('-').map(Number);
+
     return Date.UTC(y, m - 1, d);
 }
 
 /** API tarihi (`yyyy-MM-dd` veya ISO) → `yyyy-MM-dd`; boş/geçersiz → `null`. */
 export function toYmdOrNull(value: string | null | undefined): string | null {
     const m = /^(\d{4}-\d{2}-\d{2})/.exec(value?.trim() ?? '');
+
     return m ? m[1] : null;
 }
 
@@ -26,10 +28,13 @@ export function stockBatchExpiryStatus(expiryYmd: string | null, todayYmd: strin
     if (!expiryYmd) {
         return 'none';
     }
+
     const daysLeft = Math.round((ymdToUtcMs(expiryYmd) - ymdToUtcMs(todayYmd)) / MS_PER_DAY);
+
     if (daysLeft < 0) {
         return 'expired';
     }
+
     return daysLeft <= STOCK_BATCH_EXPIRY_WARNING_DAYS ? 'soon' : 'ok';
 }
 

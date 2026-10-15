@@ -43,9 +43,11 @@ function trimFormText(value: unknown): string {
     if (value == null) {
         return '';
     }
+
     if (typeof value === 'string') {
         return value.trim();
     }
+
     return String(value).trim();
 }
 
@@ -55,28 +57,35 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: PetListItemDto | PetDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoBoolean(dto: PetDetailDto, keys: string[]): boolean | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'boolean') {
             return v;
         }
     }
+
     return null;
 }
 
@@ -84,17 +93,21 @@ function formatBooleanYesNo(v: boolean | null | undefined): string {
     if (v === true) {
         return 'Evet';
     }
+
     if (v === false) {
         return 'Hayır';
     }
+
     return EM;
 }
 
 function canonicalPetIdentityString(dto: PetDetailDto, camelKey: keyof PetDetailDto, pascalKey: string): string {
     const direct = dto[camelKey];
+
     if (typeof direct === 'string' && direct.trim()) {
         return direct.trim();
     }
+
     return readDtoString(dto, [pascalKey]) ?? '';
 }
 
@@ -102,6 +115,7 @@ function canonicalPetIsNeutered(dto: PetDetailDto): boolean | null {
     if (dto.isNeutered === true || dto.isNeutered === false) {
         return dto.isNeutered;
     }
+
     return readDtoBoolean(dto, ['IsNeutered']);
 }
 
@@ -117,21 +131,26 @@ function canonicalBreedDisplay(dto: PetListItemDto | PetDetailDto): string {
 function readPetGenderRaw(dto: PetListItemDto | PetDetailDto): string | number | null | undefined {
     const o = dto as unknown as Record<string, unknown>;
     const g = o['gender'] ?? o['Gender'];
+
     if (g === null || g === undefined) {
         return undefined;
     }
+
     if (typeof g === 'number' && !Number.isNaN(g)) {
         return g;
     }
+
     if (typeof g === 'string' && g.trim()) {
         return g.trim();
     }
+
     return undefined;
 }
 
 /** Detay/liste VM: `petGenderLabel` için canonical `male`/`female` veya boşta EM. */
 function canonicalGenderRaw(dto: PetListItemDto | PetDetailDto): string {
     const resolved = resolvePetGenderFormValue(readPetGenderRaw(dto));
+
     return resolved ? resolved : EM;
 }
 
@@ -164,34 +183,46 @@ export function extractCreatedPetIdFromPostResponse(body: unknown): string | nul
     if (body == null) {
         return null;
     }
+
     if (typeof body === 'string') {
         const t = body.trim();
+
         return t ? t : null;
     }
+
     if (typeof body !== 'object') {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const idKeys = ['id', 'Id', 'petId', 'PetId'];
+
     for (const k of idKeys) {
         const s = pickPetIdString(o[k]);
+
         if (s) {
             return s;
         }
     }
+
     const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'pet', 'Pet'];
+
     for (const w of wrappers) {
         const inner = o[w];
+
         if (inner && typeof inner === 'object') {
             const n = inner as Record<string, unknown>;
+
             for (const k of idKeys) {
                 const s = pickPetIdString(n[k]);
+
                 if (s) {
                     return s;
                 }
             }
         }
     }
+
     return null;
 }
 
@@ -199,9 +230,11 @@ function pickPetIdString(v: unknown): string | null {
     if (typeof v === 'string' && v.trim()) {
         return v.trim();
     }
+
     if (typeof v === 'number' && !Number.isNaN(v)) {
         return String(v);
     }
+
     return null;
 }
 
@@ -214,11 +247,14 @@ export interface PetBreedOptionLike {
 /** Seçili `breedId` için legacy `breed` metin alanı (ırk adı). */
 export function resolvePetBreedWriteLabel(breedId: string, options: ReadonlyArray<PetBreedOptionLike>): string | undefined {
     const id = breedId?.trim();
+
     if (!id) {
         return undefined;
     }
+
     const opt = options.find((x) => x.value === id);
     const label = opt?.label?.trim();
+
     return label ? label : undefined;
 }
 
@@ -234,6 +270,7 @@ export function mapPetUpsertFormToCreateRequest(
     const microchipRaw = trimFormText(v.microchipNumber);
     const passportRaw = trimFormText(v.passportOrTagNumber);
     const protocolRaw = trimFormText(v.specialProtocolNumber);
+
     return {
         clientId: v.clientId.trim(),
         name: v.name.trim(),
@@ -256,16 +293,21 @@ export function mapPetUpsertFormToCreateRequest(
 /** Form canonical (`male` / `female`) → API `PetGender` sayısı (Male=1, Female=2). Bilinmeyen/boş → gönderilmez. */
 function petGenderFormToApiEnum(gender: string | null | undefined): 1 | 2 | null {
     const t = gender?.trim();
+
     if (!t) {
         return null;
     }
+
     const n = normalizePetGender(t);
+
     if (n === 'male') {
         return 1;
     }
+
     if (n === 'female') {
         return 2;
     }
+
     return null;
 }
 
@@ -277,58 +319,81 @@ export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDt
         speciesId: req.speciesId.trim()
     };
     const breedId = req.breedId?.trim();
+
     if (breedId) {
         body.breedId = breedId;
     }
+
     // Geçici geri uyumluluk: text `breed` bekleyen eski backend sürümleri için.
     const breed = req.breed?.trim();
+
     if (breed) {
         body.breed = breed;
     }
+
     const genderNum = petGenderFormToApiEnum(req.gender);
+
     if (genderNum != null) {
         body.gender = genderNum;
     }
+
     const birthIn = trimFormText(req.birthDateInput);
+
     if (birthIn) {
         body.birthDate = birthIn;
     }
+
     const colorId = req.colorId?.trim();
+
     if (colorId) {
         body.colorId = colorId;
     }
+
     if (req.weight != null && !Number.isNaN(Number(req.weight))) {
         body.weight = Number(req.weight);
     }
+
     const notes = trimFormText(req.notes);
+
     if (notes) {
         body.notes = notes;
     }
+
     const microchip = trimFormText(req.microchipNumber);
+
     if (microchip) {
         body.microchipNumber = microchip;
     }
+
     const passport = trimFormText(req.passportOrTagNumber);
+
     if (passport) {
         body.passportOrTagNumber = passport;
     }
+
     const protocol = trimFormText(req.specialProtocolNumber);
+
     if (protocol) {
         body.specialProtocolNumber = protocol;
     }
+
     if (req.alertFlags !== undefined) {
         body.alertFlags = [...req.alertFlags];
     }
+
     if (req.alertNote !== undefined) {
         body.alertNote = req.alertNote;
     }
+
     body.isNeutered = req.isNeutered ?? false;
+
     return body;
 }
 
 export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
     const weightStr =
         dto.weight != null && !Number.isNaN(Number(dto.weight)) ? String(dto.weight) : EM;
+
     return {
         id: dto.id,
         clientId: dto.clientId?.trim() ? dto.clientId : null,
@@ -378,6 +443,7 @@ function canonicalPetDetailOwnerNavId(dto: PetDetailDto): string | null {
         dto.clientId,
         readDtoString(dto, ['ClientId'])
     );
+
     return id ?? null;
 }
 
@@ -433,6 +499,7 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
 /** Detay ve `PUT /pets/{id}/status` yanıtı ortak: vefat tarihi yalnız `Deceased` iken anlamlıdır. */
 function petStatusFields(dto: Pick<PetDetailDto, 'status' | 'deceasedOn' | 'rowVersion'>): PetStatusUpdateResult {
     const status = parsePetLifeStatus(dto.status);
+
     return {
         status,
         deceasedOn: status === 'Deceased' ? safeTrim(dto.deceasedOn) : null,
@@ -446,6 +513,7 @@ export function mapPetStatusUpdateResultDtoToVm(dto: PetStatusUpdateResultDto): 
 
 export function mapPetStatusUpdateToApiBody(req: PetStatusUpdateRequest): PetStatusUpdateRequestDto {
     const deceasedOn = req.status === 'Deceased' ? req.deceasedOn?.trim() : '';
+
     return { status: req.status, ...(deceasedOn ? { deceasedOn } : {}), rowVersion: req.rowVersion };
 }
 
@@ -458,6 +526,7 @@ export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
     const clientId = dto.clientId?.trim() || dto.ownerId?.trim() || '';
     const weightStr =
         dto.weight != null && !Number.isNaN(Number(dto.weight)) ? String(dto.weight) : '';
+
     return {
         id: dto.id,
         clientId,
@@ -484,19 +553,25 @@ export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
 /** `YYYY-MM-dd` veya ISO string → form `type="date"` değeri. */
 function toBirthDateFormInput(raw: string | null | undefined): string {
     const t = firstTrimmed(raw);
+
     if (!t) {
         return '';
     }
+
     if (/^\d{4}-\d{2}-\d{2}$/.test(t)) {
         return t;
     }
+
     const d = new Date(t);
+
     if (Number.isNaN(d.getTime())) {
         return '';
     }
+
     const y = d.getUTCFullYear();
     const m = String(d.getUTCMonth() + 1).padStart(2, '0');
     const day = String(d.getUTCDate()).padStart(2, '0');
+
     return `${y}-${m}-${day}`;
 }
 
@@ -520,15 +595,18 @@ function historyHospitalizationIsActive(dto: PetHistoryHospitalizationItemDto, d
     if (dto.isActive === true) {
         return true;
     }
+
     if (dto.isActive === false) {
         return false;
     }
+
     return discharged == null;
 }
 
 /** GET /pets/{id}/history-summary → VM (bloklar backend’de sıralı; boş dizi güvenli). */
 export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHistorySummaryVm {
     const petId = dto.petId?.trim() ?? '';
+
     return {
         petId,
         petName: str(dto.petName),
@@ -537,11 +615,14 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
         recentAppointments: (dto.recentAppointments ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 const status = parseAppointmentStatusRawToEnum(x.status);
                 const appointmentType = parseAppointmentTypeEnumValue(x.appointmentType);
+
                 return {
                     id,
                     scheduledAtUtc: safeTrim(x.scheduledAtUtc),
@@ -556,9 +637,11 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
         recentExaminations: (dto.recentExaminations ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 return {
                     id,
                     examinedAtUtc: safeTrim(x.examinedAtUtc),
@@ -570,9 +653,11 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
         recentTreatments: (dto.recentTreatments ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 return {
                     id,
                     treatmentDateUtc: safeTrim(x.treatmentDateUtc),
@@ -584,9 +669,11 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
         recentPrescriptions: (dto.recentPrescriptions ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 return {
                     id,
                     prescribedAtUtc: safeTrim(x.prescribedAtUtc),
@@ -598,9 +685,11 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
         recentLabResults: (dto.recentLabResults ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 return {
                     id,
                     resultDateUtc: safeTrim(x.resultDateUtc),
@@ -615,11 +704,14 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
         recentHospitalizations: (dto.recentHospitalizations ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 const dischargedAtUtc = safeTrim(x.dischargedAtUtc);
                 const isActive = historyHospitalizationIsActive(x, dischargedAtUtc);
+
                 return {
                     id,
                     admittedAtUtc: safeTrim(x.admittedAtUtc),
@@ -633,12 +725,15 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
         recentPayments: (dto.recentPayments ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 const amount = x.amount;
                 const num =
                     amount != null && typeof amount === 'number' && !Number.isNaN(amount) ? amount : null;
+
                 return {
                     id,
                     paidAtUtc: safeTrim(x.paidAtUtc),
@@ -655,6 +750,7 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
 
 function safeTrim(v: string | null | undefined): string | null {
     const t = v?.trim();
+
     return t ? t : null;
 }
 
@@ -666,30 +762,39 @@ export function petsQueryToHttpParams(query: PetsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     if (query.speciesId?.trim()) {
         p = p.set('SpeciesId', query.speciesId.trim());
     }
+
     // Geçici geri uyumluluk: bazı eski backend sürümleri text `Species` bekleyebilir.
     if (query.species?.trim()) {
         p = p.set('Species', query.species.trim());
     }
+
     if (query.clientId?.trim()) {
         p = p.set('ClientId', query.clientId.trim());
     }
+
     if (query.status) {
         p = p.set('Status', query.status);
     }
+
     return p;
 }
 

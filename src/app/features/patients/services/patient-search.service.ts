@@ -60,6 +60,7 @@ export class PatientSearchService {
                 const expanded$ = this.auth.hasOperationClaim(PETS_READ_CLAIM) && r.clients.length
                     ? forkJoin(r.clients.map((c) => this.ownerPatients(c)))
                     : of(r.clients.map((client) => ({ client, pets: [] as PatientRowVm[] })));
+
                 return expanded$.pipe(map((expanded) => mergeResults(hits, expanded, r.failedKinds)));
             })
         );
@@ -91,6 +92,7 @@ function mergeResults(hits: PatientRowVm[], expanded: { client: ClientSearchResu
     const seen = new Set(hits.map((p) => p.petId));
     const patients = [...hits];
     const owners: OwnerRowVm[] = [];
+
     for (const { client, pets } of expanded) {
         for (const pet of pets) {
             if (!seen.has(pet.petId)) {
@@ -98,9 +100,11 @@ function mergeResults(hits: PatientRowVm[], expanded: { client: ClientSearchResu
                 patients.push(pet);
             }
         }
+
         if (!pets.length) {
             owners.push({ clientId: client.id, name: client.fullName, phone: client.phone });
         }
     }
+
     return { patients: patients.slice(0, MAX_PATIENTS), owners, failedKinds };
 }

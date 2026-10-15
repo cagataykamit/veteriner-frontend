@@ -15,11 +15,14 @@ export class OrganizationSettingsService {
 
     updateTenantDisplayName(tenantName: string): Observable<void> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         const trimmed = tenantName.trim();
         const body: TenantSettingsUpdateRequestDto = { name: trimmed };
+
         return this.api.put<unknown>(ApiEndpoints.tenants.settings(tenantId), body).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) =>

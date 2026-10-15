@@ -40,13 +40,17 @@ import { ConfirmationService } from 'primeng/api';
 function stockMovementAmountPositiveValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const raw = control.value as string | number | null | undefined;
+
         if (raw === null || raw === undefined || raw === '') {
             return { required: true };
         }
+
         const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
+
         if (!Number.isFinite(n) || n <= 0) {
             return { minExclusive: true };
         }
+
         return null;
     };
 }
@@ -54,13 +58,17 @@ function stockMovementAmountPositiveValidator(): ValidatorFn {
 function optionalNonNegativeNumberValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const raw = control.value as string | number | null | undefined;
+
         if (raw === null || raw === undefined || raw === '') {
             return null;
         }
+
         const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
+
         if (!Number.isFinite(n) || n < 0) {
             return { min: true };
         }
+
         return null;
     };
 }
@@ -677,14 +685,18 @@ export class ProductDetailPageComponent implements OnInit {
 
     stockOperationTypeSelectOptions(): { label: string; value: StockOperationKind }[] {
         const o: { label: string; value: StockOperationKind }[] = [];
+
         if (this.canCreateStockMovement) {
             o.push({ label: 'Stok girişi', value: 'in' });
             o.push({ label: 'Stok çıkışı', value: 'out' });
         }
+
         const row = this.editingStockRow();
+
         if (this.canUpdateProduct && row) {
             o.push({ label: 'Minimum stok ayarla', value: 'minimum' });
         }
+
         return o;
     }
 
@@ -703,12 +715,15 @@ export class ProductDetailPageComponent implements OnInit {
     headerActiveClinicDisplayName(): string {
         const name = this.auth.getClinicName()?.trim();
         const id = this.auth.getClinicId()?.trim();
+
         if (name) {
             return name;
         }
+
         if (id) {
             return id;
         }
+
         return '—';
     }
 
@@ -717,18 +732,23 @@ export class ProductDetailPageComponent implements OnInit {
         if (!this.canOpenStockOperation()) {
             return true;
         }
+
         if (this.stocksLoading()) {
             return true;
         }
+
         const rows = this.stocksRows();
+
         if (rows.length === 0) {
             if (!this.auth.getClinicId()?.trim()) {
                 return true;
             }
+
             if (!this.canCreateStockMovement) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -740,9 +760,11 @@ export class ProductDetailPageComponent implements OnInit {
         if (this.isHeaderStockOperationDisabled() && this.stocksRows().length === 0 && !this.auth.getClinicId()?.trim()) {
             return 'Bu ürün için henüz klinik stok kaydı yok. İlk stok kaydı oluşturmak için klinik bilgisi gereklidir.';
         }
+
         if (this.isHeaderStockOperationDisabled() && this.stocksRows().length === 0 && !this.canCreateStockMovement) {
             return 'Stok girişi/çıkışı için yetki veya klinik bağlamı gerekli.';
         }
+
         return 'Stok girişi, çıkışı veya minimum stok';
     }
 
@@ -750,22 +772,29 @@ export class ProductDetailPageComponent implements OnInit {
         if (!this.canOpenStockOperation() || this.isHeaderStockOperationDisabled()) {
             return;
         }
+
         const rows = this.stocksRows();
+
         if (rows.length === 1) {
             this.openStockOperationDialog(rows[0]);
+
             return;
         }
+
         if (rows.length === 0) {
             const cid = this.auth.getClinicId()?.trim();
+
             if (!cid || !this.canCreateStockMovement) {
                 return;
             }
+
             this.stockOperationHeaderNeedsRowPick.set(false);
             this.stockOperationActiveClinicFallback.set(true);
             this.editingStockRow.set(null);
             this.stockOperationSubmitError.set(null);
             this.clearClinicStockRowControl();
             const defaultOp = this.pickDefaultOperationType();
+
             this.stockOperationForm.reset(
                 {
                     clinicStockRowId: null,
@@ -779,8 +808,10 @@ export class ProductDetailPageComponent implements OnInit {
             );
             this.applyOperationTypeValidators(defaultOp);
             this.stockOperationDialogOpen.set(true);
+
             return;
         }
+
         this.stockOperationHeaderNeedsRowPick.set(true);
         this.stockOperationActiveClinicFallback.set(false);
         this.editingStockRow.set(null);
@@ -817,6 +848,7 @@ export class ProductDetailPageComponent implements OnInit {
         if (this.canCreateStockMovement) {
             return 'in';
         }
+
         return 'minimum';
     }
 
@@ -832,6 +864,7 @@ export class ProductDetailPageComponent implements OnInit {
             unitCostCtrl.setValue(null, { emitEvent: false });
             minCtrl.setValidators([Validators.required, Validators.min(0)]);
             const stock = this.editingStockRow();
+
             if (stock) {
                 minCtrl.setValue(stock.minimumStockLevel, { emitEvent: false });
             }
@@ -840,10 +873,12 @@ export class ProductDetailPageComponent implements OnInit {
             minCtrl.setValue(null, { emitEvent: false });
             amountCtrl.setValidators([stockMovementAmountPositiveValidator()]);
             unitCostCtrl.setValidators([optionalNonNegativeNumberValidator()]);
+
             if (op === 'out') {
                 unitCostCtrl.setValue(null, { emitEvent: false });
             }
         }
+
         amountCtrl.updateValueAndValidity({ emitEvent: false });
         unitCostCtrl.updateValueAndValidity({ emitEvent: false });
         minCtrl.updateValueAndValidity({ emitEvent: false });
@@ -858,9 +893,11 @@ export class ProductDetailPageComponent implements OnInit {
             if (!op) {
                 return;
             }
+
             if (this.stockOperationHeaderNeedsRowPick() && !this.editingStockRow()) {
                 return;
             }
+
             this.applyOperationTypeValidators(op);
         });
 
@@ -868,10 +905,14 @@ export class ProductDetailPageComponent implements OnInit {
             if (!this.stockOperationHeaderNeedsRowPick()) {
                 return;
             }
+
             const row = id ? (this.stocksRows().find((r) => r.id === id) ?? null) : null;
+
             this.editingStockRow.set(row);
+
             if (row) {
                 const op = this.stockOperationForm.controls.operationType.value;
+
                 this.applyOperationTypeValidators(op);
             } else {
                 this.stockOperationForm.controls.amount.clearValidators();
@@ -887,17 +928,21 @@ export class ProductDetailPageComponent implements OnInit {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id');
+
                     if (!id) {
                         this.error.set('Geçersiz ürün.');
                         this.loading.set(false);
+
                         return EMPTY;
                     }
+
                     this.lastId = id;
                     this.loading.set(true);
                     this.error.set(null);
                     this.mutationError.set(null);
                     this.stocksRows.set([]);
                     this.stocksError.set(null);
+
                     return this.productService.getById(id);
                 })
             )
@@ -905,6 +950,7 @@ export class ProductDetailPageComponent implements OnInit {
                 next: (x) => {
                     this.product.set(x);
                     this.loading.set(false);
+
                     if (this.lastId) {
                         this.loadStocks(this.lastId);
                     }
@@ -920,6 +966,7 @@ export class ProductDetailPageComponent implements OnInit {
         if (!this.lastId) {
             return;
         }
+
         this.loading.set(true);
         this.error.set(null);
         this.productService.getById(this.lastId).subscribe({
@@ -961,12 +1008,14 @@ export class ProductDetailPageComponent implements OnInit {
         if (!this.canOpenStockOperation()) {
             return;
         }
+
         this.stockOperationHeaderNeedsRowPick.set(false);
         this.stockOperationActiveClinicFallback.set(false);
         this.clearClinicStockRowControl();
         this.editingStockRow.set(row);
         this.stockOperationSubmitError.set(null);
         const defaultOp = this.pickDefaultOperationType();
+
         this.stockOperationForm.reset(
             {
                 clinicStockRowId: null,
@@ -1015,10 +1064,13 @@ export class ProductDetailPageComponent implements OnInit {
         if (raw === null || raw === undefined || raw === '') {
             return null;
         }
+
         const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
+
         if (!Number.isFinite(n) || n <= 0) {
             return null;
         }
+
         return n;
     }
 
@@ -1026,10 +1078,13 @@ export class ProductDetailPageComponent implements OnInit {
         if (raw === null || raw === undefined || raw === '') {
             return null;
         }
+
         const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
+
         if (!Number.isFinite(n) || n < 0) {
             return null;
         }
+
         return n;
     }
 
@@ -1039,12 +1094,14 @@ export class ProductDetailPageComponent implements OnInit {
 
         if (!productId || this.stockOperationSubmitting() || this.ro.mutationBlocked()) {
             this.stockOperationForm.markAllAsTouched();
+
             return;
         }
 
         if (this.stockOperationPickIncomplete()) {
             this.stockOperationSubmitError.set('Stok işlemi için klinik seçimi gereklidir.');
             this.stockOperationForm.controls.clinicStockRowId.markAllAsTouched();
+
             return;
         }
 
@@ -1053,27 +1110,33 @@ export class ProductDetailPageComponent implements OnInit {
 
         if (!stock && !activeFallback) {
             this.stockOperationForm.markAllAsTouched();
+
             return;
         }
 
         if (op === 'in' || op === 'out') {
             if (!this.canCreateStockMovement) {
                 this.stockOperationSubmitError.set('Bu işlem için yetkiniz yok.');
+
                 return;
             }
         } else if (op === 'minimum') {
             if (!this.canUpdateProduct) {
                 this.stockOperationSubmitError.set('Bu işlem için yetkiniz yok.');
+
                 return;
             }
+
             if (!stock) {
                 this.stockOperationSubmitError.set('Minimum stok için ilgili klinikte ürün stok kaydı gerekir.');
+
                 return;
             }
         }
 
         if (this.stockOperationForm.invalid) {
             this.stockOperationForm.markAllAsTouched();
+
             return;
         }
 
@@ -1081,27 +1144,35 @@ export class ProductDetailPageComponent implements OnInit {
 
         if (op === 'in' || op === 'out') {
             const amount = this.parsePositiveQuantity(raw.amount);
+
             if (amount == null) {
                 this.stockOperationForm.markAllAsTouched();
+
                 return;
             }
+
             const notesTrimmed = raw.notes?.trim() ?? '';
             const defaultReason = op === 'in' ? 'Stok girişi' : 'Stok çıkışı';
             const unitCost =
                 op === 'in' ? this.parseOptionalNonNegativeUnitCost(raw.unitCost as number | string | null | undefined) : null;
 
             let clinicId: string | null = null;
+
             if (activeFallback) {
                 clinicId = this.auth.getClinicId()?.trim() ?? null;
+
                 if (!clinicId) {
                     this.stockOperationSubmitError.set('Stok işlemi için klinik bilgisi gerekli.');
+
                     return;
                 }
             } else if (stock) {
                 clinicId = stock.clinicId;
             }
+
             if (!clinicId) {
                 this.stockOperationSubmitError.set('Stok işlemi için klinik bilgisi gerekli.');
+
                 return;
             }
 
@@ -1133,12 +1204,15 @@ export class ProductDetailPageComponent implements OnInit {
                         this.stockOperationSubmitError.set(e.message ?? 'Stok hareketi kaydedilemedi.');
                     }
                 });
+
             return;
         }
 
         const newMin = raw.minimumStockLevel;
+
         if (newMin == null || !stock) {
             this.stockOperationForm.markAllAsTouched();
+
             return;
         }
 
@@ -1161,15 +1235,18 @@ export class ProductDetailPageComponent implements OnInit {
     private batchRequestFor(op: StockOperationKind): { batch?: NonNullable<ReturnType<typeof getStockBatchRequest>>; acknowledgeExpired?: true } {
         const group = this.stockOperationForm.controls.batch;
         const batch = op === 'in' ? getStockBatchRequest(group) : null;
+
         return batch ? { batch, ...getAcknowledgeExpiredRequest(group) } : {};
     }
 
     onDeactivateClick(): void {
         const id = this.lastId;
         const p = this.product();
+
         if (!id || !p?.isActive || this.ro.mutationBlocked() || !this.canDeactivateProduct) {
             return;
         }
+
         this.confirmationService.confirm({
             header: 'Ürünü pasifleştir',
             message: 'Bu ürünü pasifleştirmek istediğinize emin misiniz?',
@@ -1198,9 +1275,11 @@ export class ProductDetailPageComponent implements OnInit {
     onActivateClick(): void {
         const id = this.lastId;
         const p = this.product();
+
         if (!id || !p || p.isActive || this.ro.mutationBlocked() || !this.canUpdateProduct) {
             return;
         }
+
         this.confirmationService.confirm({
             header: 'Ürünü aktifleştir',
             message: 'Bu ürünü tekrar aktif hale getirmek istediğinize emin misiniz?',

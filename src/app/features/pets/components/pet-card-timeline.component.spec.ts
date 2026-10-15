@@ -31,12 +31,14 @@ describe('PetCardTimelineComponent', () => {
     let responder: () => ReturnType<PetsService['getPetTimeline']>;
 
     const el = () => fixture.nativeElement as HTMLElement;
+
     const create = (payments: PetCardSection<PetHistoryPaymentItemVm[]>) => {
         fixture = TestBed.createComponent(PetCardTimelineComponent);
         fixture.componentRef.setInput('petId', 'p1');
         fixture.componentRef.setInput('payments', payments);
         fixture.detectChanges();
     };
+
     const select = (value: Parameters<PetCardTimelineComponent['filter']['set']>[0]) => {
         fixture.componentInstance.filter.set(value);
         fixture.detectChanges();
@@ -54,6 +56,7 @@ describe('PetCardTimelineComponent', () => {
                     useValue: {
                         getPetTimeline: (_id: string, q: PetTimelineQuery) => {
                             calls.push(q);
+
                             return responder();
                         }
                     }
@@ -67,6 +70,7 @@ describe('PetCardTimelineComponent', () => {
 
         expect(calls[0]).toEqual({ types: [], limit: PET_CARD_TIMELINE_LIMIT });
         const titles = Array.from(el().querySelectorAll('[data-testid="event-link"]')).map((a) => a.getAttribute('href'));
+
         expect(titles).toEqual(['/panel/payments/pay1', '/panel/examinations/e1']);
     });
 

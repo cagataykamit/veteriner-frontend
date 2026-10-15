@@ -62,17 +62,21 @@ function isLikelyMojibake(s: string): boolean {
     if (!s) {
         return false;
     }
+
     if (/do\?rulama|hatas\?|olu\?tu|do\uFFFD|hata\uFFFD/i.test(s)) {
         return true;
     }
+
     if (/bir veya daha fazla/i.test(s) && /\?/.test(s)) {
         return true;
     }
+
     return /\?[ğüşıöçĞÜŞİÖÇa-z]/i.test(s) || /[a-z]\?[a-z]{2,}/i.test(s);
 }
 
 function isGenericValidationTitle(s: string): boolean {
     const t = s.trim();
+
     return (
         /^İstek\s+işlenemedi\.?$/iu.test(t) ||
         /one or more validation errors occurred/i.test(s) ||
@@ -91,18 +95,23 @@ function resolveNonFieldErrorMessage(err: HttpErrorResponse): string {
 
     if (typeof body === 'string') {
         const t = body.trim();
+
         if (t && !isLikelyMojibake(t)) {
             return t;
         }
+
         return FALLBACK_GENERIC;
     }
 
     if (body && typeof body === 'object') {
         const detail = typeof body.detail === 'string' ? body.detail.trim() : '';
+
         if (detail && !isLikelyMojibake(detail) && !isGenericValidationTitle(detail)) {
             return detail;
         }
+
         const title = typeof body.title === 'string' ? body.title.trim() : '';
+
         if (title && !isGenericValidationTitle(title) && !isLikelyMojibake(title)) {
             return title;
         }

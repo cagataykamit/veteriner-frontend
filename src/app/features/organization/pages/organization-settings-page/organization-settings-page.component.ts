@@ -133,6 +133,7 @@ export class OrganizationSettingsPageComponent implements OnInit {
     private readonly syncTenantNameDisabledWithReadOnly = effect(() => {
         const blocked = this.ro.mutationBlocked();
         const c = this.form.controls.tenantName;
+
         if (blocked) {
             if (c.enabled) {
                 c.disable({ emitEvent: false });
@@ -182,12 +183,17 @@ export class OrganizationSettingsPageComponent implements OnInit {
         if (!this.canManageTenantAccess()) {
             return;
         }
+
         this.formError.set(null);
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const name = this.form.controls.tenantName.getRawValue().trim();
+
         this.saving.set(true);
         this.orgSettings
             .updateTenantDisplayName(name)
@@ -218,9 +224,11 @@ export class OrganizationSettingsPageComponent implements OnInit {
 function trimmedRequired(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const v = control.value;
+
         if (typeof v !== 'string' || !v.trim().length) {
             return { required: true };
         }
+
         return null;
     };
 }
@@ -228,8 +236,10 @@ function trimmedRequired(): ValidatorFn {
 /** Mapper boş ad için em dash kullanır; düzenleme alanı boş başlar. */
 function tenantNameForEdit(displayTenantName: string): string {
     const t = displayTenantName.trim();
+
     if (!t || t === '\u2014') {
         return '';
     }
+
     return displayTenantName.trim();
 }

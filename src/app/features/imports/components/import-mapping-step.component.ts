@@ -127,9 +127,11 @@ export class ImportMappingStepComponent {
 
     protected readonly missing = computed(() => {
         const result: Partial<Record<string, string[]>> = {};
+
         for (const info of this.tables()) {
             result[info.table] = missingRequired(info.table, this.maps()[info.table] ?? {});
         }
+
         return result;
     });
 
@@ -138,13 +140,17 @@ export class ImportMappingStepComponent {
     /** Her alan için seçenekler; aynı tabloda başka alana eşlenmiş sütun seçilemez. */
     protected readonly optionsFor = computed(() => {
         const result: Record<string, SourceOption[]> = {};
+
         for (const info of this.tables()) {
             const map = this.maps()[info.table] ?? {};
+
             for (const f of IMPORT_FIELDS[info.table]) {
                 const usedElsewhere = new Set(Object.entries(map).filter(([k, v]) => k !== f.key && v).map(([, v]) => v as string));
+
                 result[`${info.table}|${f.key}`] = info.columns.map((c) => ({ label: c.source, value: c.source, disabled: usedElsewhere.has(c.source) }));
             }
         }
+
         return result;
     });
 
@@ -156,14 +162,17 @@ export class ImportMappingStepComponent {
 
     protected confidence(info: ImportTableInfoDto, key: string): { label: string; severity: StatusTagSeverity } | null {
         const c = mappingConfidence(info.columns, this.maps()[info.table]?.[key] ?? null, key);
+
         if (!c) {
             return null;
         }
+
         return c === 'Exact' ? { label: 'Kesin', severity: 'success' } : c === 'Alias' ? { label: 'Benzer', severity: 'info' } : { label: 'Elle', severity: 'secondary' };
     }
 
     protected unusedColumns(info: ImportTableInfoDto): string[] {
         const used = new Set(Object.values(this.maps()[info.table] ?? {}).filter(Boolean));
+
         return info.columns.filter((c) => !used.has(c.source)).map((c) => c.source);
     }
 }

@@ -219,6 +219,7 @@ export class ImportWizardPageComponent implements OnInit {
 
     ngOnInit(): void {
         const state = history.state as { warnings?: ImportWarningDto[] } | null;
+
         this.warnings.set(Array.isArray(state?.warnings) ? state.warnings : []);
         this.destroyRef.onDestroy(() => this.pollSub?.unsubscribe());
         this.load();
@@ -226,6 +227,7 @@ export class ImportWizardPageComponent implements OnInit {
 
     load(): void {
         const id = this.route.snapshot.paramMap.get('id') ?? '';
+
         this.loading.set(true);
         this.loadError.set(null);
         this.imports.getBatch(id).subscribe({
@@ -234,9 +236,11 @@ export class ImportWizardPageComponent implements OnInit {
                 this.maps.set(initialColumnMaps(b.tables ?? []));
                 this.step.set(this.stepForStatus(b.status));
                 this.loading.set(false);
+
                 if (isPreviewable(b.status)) {
                     this.loadPreview();
                 }
+
                 if (isImportJobRunning(b.status)) {
                     this.startPolling(b.id, b.status);
                 }
@@ -250,9 +254,11 @@ export class ImportWizardPageComponent implements OnInit {
 
     loadPreview(): void {
         const b = this.batch();
+
         if (!b) {
             return;
         }
+
         this.imports.getPreview(b.id).subscribe({
             next: (p) => this.preview.set(p),
             error: (e: unknown) => this.error.set(importErrorMessage(e, 'Doğrulama sonucu yüklenemedi.'))
@@ -262,9 +268,11 @@ export class ImportWizardPageComponent implements OnInit {
     /** Eşlemeyi kaydeder, ardından doğrulamayı arka plan işi olarak başlatır (K13); sonuç yoklanarak beklenir. */
     saveAndValidate(): void {
         const b = this.batch();
+
         if (!b || this.busy()) {
             return;
         }
+
         this.startValidation(
             this.imports
                 .saveMapping(b.id, {
@@ -280,14 +288,17 @@ export class ImportWizardPageComponent implements OnInit {
     /** Kayıtlı eşlemeyle yeniden doğrular (`ValidationFailed` sonrası); sayfadaki seçimler sunucudaki eşlemeyi ezmez. */
     revalidate(): void {
         const b = this.batch();
+
         if (!b || this.busy()) {
             return;
         }
+
         this.startValidation(this.imports.validate(b.id), 'Doğrulama başlatılamadı.');
     }
 
     onBatchChange(b: ImportBatchDto): void {
         this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables } : b));
+
         if (isImportJobRunning(b.status)) {
             this.startPolling(b.id, b.status);
         } else if (isPreviewable(b.status)) {
@@ -298,6 +309,7 @@ export class ImportWizardPageComponent implements OnInit {
     /** Bağlantı sorunundan sonra yoklamayı elle yeniden başlatır; iş bitmişse ilk yanıtla sonuç okunur. */
     retryPolling(): void {
         const b = this.batch();
+
         if (b && isImportJobRunning(b.status)) {
             this.startPolling(b.id, b.status);
         }
@@ -317,6 +329,7 @@ export class ImportWizardPageComponent implements OnInit {
             error: (e: unknown) => {
                 this.busy.set(false);
                 this.error.set(importErrorMessage(e, fallback));
+
                 if (importErrorCode(e) === 'Imports.InvalidState') {
                     // Parti başka bir sekmede doğrulamaya alınmış olabilir: güncel durumu okuyup sürdür.
                     this.reloadBatch();
@@ -328,9 +341,11 @@ export class ImportWizardPageComponent implements OnInit {
     /** Partiyi yeniden okur, adımı durumdan türetir; iş sürüyorsa yoklamaya, bittiyse önizlemeye geçer. */
     private reloadBatch(): void {
         const id = this.batch()?.id;
+
         if (!id) {
             return;
         }
+
         this.imports.getBatch(id).subscribe({
             next: (b) => {
                 this.step.set(this.stepForStatus(b.status));
@@ -344,21 +359,26 @@ export class ImportWizardPageComponent implements OnInit {
         if (n === 1 || this.busy() || this.jobRunning()) {
             return false;
         }
+
         if (n === 2) {
             return this.canManage && this.draft() && this.step() !== 2;
         }
+
         if (n === 3) {
             return !!this.preview() && this.step() !== 3;
         }
+
         return this.step() !== 4 && this.commitStepReachable();
     }
 
     /** Onay adımı: uygulanabilir doğrulama sonucu varken veya aktarma başlamış/bitmiş partide açılır. */
     protected commitStepReachable(): boolean {
         const status = this.batch()?.status;
+
         if (status === 'Validated') {
             return !!this.preview()?.canCommit;
         }
+
         return status !== 'ValidationFailed' && !!this.preview();
     }
 
@@ -372,6 +392,7 @@ export class ImportWizardPageComponent implements OnInit {
         if (status === 'Validating' || status === 'Validated' || status === 'ValidationFailed') {
             return 3;
         }
+
         return ['Committing', 'Committed', 'CommitFailed', 'RollingBack', 'RolledBack', 'PartiallyRolledBack', 'RollbackFailed'].includes(status) ? 4 : 2;
     }
 
@@ -387,6 +408,7 @@ export class ImportWizardPageComponent implements OnInit {
             next: ({ progress, running, stalled }) => {
                 this.progress.set(running ? progress : null);
                 this.stalled.set(running && stalled);
+
                 if (!running) {
                     this.reloadBatch();
                 }

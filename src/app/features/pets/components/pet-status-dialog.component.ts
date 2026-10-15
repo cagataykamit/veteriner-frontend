@@ -173,13 +173,17 @@ export class PetStatusDialogComponent {
     readonly minDate = computed(() => this.pet()?.birthDate?.slice(0, 10) || null);
     readonly dateError = computed(() => {
         const v = this.dateValue();
+
         if (!v) {
             return null;
         }
+
         if (v > this.today()) {
             return 'Vefat tarihi bugünden ileri olamaz.';
         }
+
         const min = this.minDate();
+
         return min && v < min ? 'Vefat tarihi doğum tarihinden önce olamaz.' : null;
     });
 
@@ -207,11 +211,14 @@ export class PetStatusDialogComponent {
 
     onSubmit(): void {
         const p = this.pet();
+
         if (this.submitting() || !p?.rowVersion || (this.markingDeceased() && this.dateError())) {
             return;
         }
+
         const status = this.markingDeceased() ? 'Deceased' : 'Active';
         const toCancel = status === 'Deceased' && this.canCancelAppointments() && this.cancelOpenAppointments.value ? this.openAppointments() : [];
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.petsService
@@ -221,9 +228,11 @@ export class PetStatusDialogComponent {
                 next: ({ result, failures }) => {
                     this.submitting.set(false);
                     this.changed.emit(result);
+
                     if (failures.length < toCancel.length) {
                         this.appointmentsCancelled.emit();
                     }
+
                     if (failures.length > 0) {
                         this.cancelOutcome.set({ total: toCancel.length, failures });
                     } else {
@@ -233,6 +242,7 @@ export class PetStatusDialogComponent {
                 error: (e: unknown) => {
                     this.submitting.set(false);
                     this.submitError.set(panelHttpFailureMessage(e, 'Hasta durumu değiştirilemedi.'));
+
                     if (e instanceof HttpErrorResponse && problemCodeFromHttpError(e) === 'Pets.ConcurrencyConflict') {
                         this.stale.emit();
                     }
@@ -246,9 +256,11 @@ export class PetStatusDialogComponent {
         this.openAppointments.set([]);
         this.appointmentsError.set(null);
         const p = this.pet();
+
         if (!p || !this.markingDeceased() || !this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM)) {
             return;
         }
+
         this.appointmentsLoad = this.appointmentsService
             .getAppointments({ page: 1, pageSize: 200, petId: p.id, status: '0', sort: 'scheduledAtUtc', order: 'asc' })
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -263,6 +275,7 @@ export class PetStatusDialogComponent {
         if (rows.length === 0) {
             return of([]);
         }
+
         return from(rows).pipe(
             concatMap((appointment) =>
                 this.appointmentsService.cancelAppointment(appointment.id, DECEASED_CANCEL_REASON).pipe(

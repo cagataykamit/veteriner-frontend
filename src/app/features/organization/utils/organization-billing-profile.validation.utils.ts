@@ -69,9 +69,11 @@ export const ORG_BILLING_PROFILE_FIELD_MAP: Record<string, OrganizationBillingPr
 export function trimmedRequired(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const v = control.value;
+
         if (typeof v !== 'string' || !v.trim().length) {
             return { required: true };
         }
+
         return null;
     };
 }
@@ -79,16 +81,21 @@ export function trimmedRequired(): ValidatorFn {
 export function trimmedMinLength(min: number): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const v = control.value;
+
         if (typeof v !== 'string') {
             return null;
         }
+
         const trimmed = v.trim();
+
         if (!trimmed.length) {
             return null;
         }
+
         if (trimmed.length < min) {
             return { trimmedMinLength: { requiredLength: min, actualLength: trimmed.length } };
         }
+
         return null;
     };
 }
@@ -100,16 +107,21 @@ export function optionalTrimmedMinLength(min: number): ValidatorFn {
 export function taxNumberValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const raw = control.value;
+
         if (typeof raw !== 'string' || !raw.trim()) {
             return { required: true };
         }
+
         const digits = raw.trim();
+
         if (!/^\d+$/.test(digits)) {
             return { taxNumberDigits: true };
         }
+
         if (digits.length !== 10 && digits.length !== 11) {
             return { taxNumberLength: true };
         }
+
         return null;
     };
 }
@@ -117,34 +129,44 @@ export function taxNumberValidator(): ValidatorFn {
 /** 05XXXXXXXXX, 5XXXXXXXXX, +905XXXXXXXXX, 905XXXXXXXXX */
 export function isValidTurkishCompanyPhone(raw: string): boolean {
     const v = raw.trim();
+
     if (!v) {
         return false;
     }
+
     if (/[a-zA-ZğüşıöçĞÜŞİÖÇ]/.test(v)) {
         return false;
     }
+
     const digits = v.replace(/\D/g, '');
+
     if (digits.length === 10 && digits.startsWith('5')) {
         return true;
     }
+
     if (digits.length === 11 && digits.startsWith('05')) {
         return true;
     }
+
     if (digits.length === 12 && digits.startsWith('905')) {
         return true;
     }
+
     return false;
 }
 
 export function turkishCompanyPhoneValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const raw = control.value;
+
         if (typeof raw !== 'string' || !raw.trim()) {
             return { required: true };
         }
+
         if (!isValidTurkishCompanyPhone(raw)) {
             return { phoneInvalid: true };
         }
+
         return null;
     };
 }
@@ -152,12 +174,15 @@ export function turkishCompanyPhoneValidator(): ValidatorFn {
 export function mustContainDigitValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const raw = control.value;
+
         if (typeof raw !== 'string' || !raw.trim()) {
             return null;
         }
+
         if (!/\d/.test(raw)) {
             return { mustContainDigit: true };
         }
+
         return null;
     };
 }
@@ -200,35 +225,45 @@ export function billingProfileFieldErrorMessage(
     if (!errors) {
         return null;
     }
+
     if (typeof errors['server'] === 'string' && errors['server'].trim()) {
         return errors['server'].trim();
     }
+
     if (errors['required']) {
         return 'Bu alan zorunludur.';
     }
+
     if (errors['trimmedMinLength']) {
         return 'En az 2 karakter olmalıdır.';
     }
+
     if (errors['maxlength']) {
         return `En fazla ${ORG_BILLING_PROFILE_FIELD_MAX[field]} karakter olabilir.`;
     }
+
     if (field === 'taxNumber') {
         if (errors['taxNumberDigits']) {
             return 'Vergi numarası sadece rakam içermelidir.';
         }
+
         if (errors['taxNumberLength']) {
             return 'Vergi numarası 10 veya 11 haneli olmalıdır.';
         }
     }
+
     if (field === 'companyPhone' && errors['phoneInvalid']) {
         return 'Geçerli bir telefon numarası girin.';
     }
+
     if (field === 'invoiceBuildingNo' && errors['mustContainDigit']) {
         return 'Bina no en az bir rakam içermelidir.';
     }
+
     if (field === 'invoiceDoorNo' && errors['mustContainDigit']) {
         return 'Kapı no en az bir rakam içermelidir.';
     }
+
     return null;
 }
 

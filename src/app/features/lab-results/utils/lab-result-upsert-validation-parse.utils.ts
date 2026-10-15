@@ -54,46 +54,58 @@ function normalizeLabResultUpsertFieldMessage(formKey: LabResultUpsertFormFieldK
     if (formKey === 'resultDateLocal' && isLabResultDateTooFarPastBackendMessage(message)) {
         return LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE;
     }
+
     return message.trim();
 }
 
 function problemDetailText(err: HttpErrorResponse): string {
     const body = err.error as Record<string, unknown> | null | undefined;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return '';
     }
+
     const detail = typeof body['detail'] === 'string' ? body['detail'] : typeof body['Detail'] === 'string' ? body['Detail'] : '';
     const title = typeof body['title'] === 'string' ? body['title'] : typeof body['Title'] === 'string' ? body['Title'] : '';
+
     return [detail, title].filter(Boolean).join('\n').trim();
 }
 
 function promoteLabResultDatePastFromProblemDetail(err: HttpErrorResponse): LabResultUpsertFieldErrors | null {
     const detail = problemDetailText(err);
+
     if (isLabResultDateTooFarPastBackendMessage(detail)) {
         return { resultDateLocal: LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE };
     }
+
     return null;
 }
 
 function promoteLabResultDatePastFromUnmappedErrors(err: HttpErrorResponse): LabResultUpsertFieldErrors | null {
     const raw = extractRawValidationErrors(err.error);
+
     if (!raw) {
         return null;
     }
+
     for (const [apiKey, val] of Object.entries(raw)) {
         const normalizedKey = apiKey
             .replace(/^\$/, '')
             .replace(/\[\d+]$/, '')
             .toLowerCase()
             .replace(/[^a-z0-9]/g, '');
+
         if (FIELD_MAP[normalizedKey]) {
             continue;
         }
+
         const msg = firstStringMessage(val);
+
         if (msg && isLabResultDateTooFarPastBackendMessage(msg)) {
             return { resultDateLocal: LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE };
         }
     }
+
     return null;
 }
 
@@ -110,11 +122,13 @@ function parseFieldErrors(err: HttpErrorResponse): Omit<ParsedLabResultUpsertHtt
     }
 
     const fromDetail = promoteLabResultDatePastFromProblemDetail(err);
+
     if (fromDetail) {
         return { fieldErrors: fromDetail, summaryMessage: SUMMARY_FIELD_ERRORS };
     }
 
     const fromUnmapped = promoteLabResultDatePastFromUnmappedErrors(err);
+
     if (fromUnmapped) {
         return { fieldErrors: fromUnmapped, summaryMessage: SUMMARY_FIELD_ERRORS };
     }
@@ -131,5 +145,6 @@ function parseFieldErrors(err: HttpErrorResponse): Omit<ParsedLabResultUpsertHtt
 
 export function parseLabResultUpsertHttpError(err: HttpErrorResponse): ParsedLabResultUpsertHttpError {
     const isConcurrencyConflict = err.status === 409 && problemCodeFromHttpError(err) === LAB_RESULT_CONCURRENCY_CONFLICT_CODE;
+
     return { ...parseFieldErrors(err), isConcurrencyConflict };
 }

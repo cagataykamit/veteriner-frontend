@@ -47,6 +47,7 @@ export function petTimelineTypeIcon(type: string): string {
 /** Olayın kaynak kaydına giden rota; detay sayfası olmayan türde `null`. */
 export function petTimelineEventLink(item: PetTimelineItemVm): string[] | null {
     const path = BY_TYPE.get(item.linkType)?.detailPath;
+
     return path ? [path, item.linkId] : null;
 }
 
@@ -74,9 +75,11 @@ export function petTimelineStatusLabel(item: PetTimelineItemVm): string | null {
     if (!item.status || item.type === 'Administration') {
         return null;
     }
+
     if (item.type === 'Visit' && CARE_STATUSES.has(item.status)) {
         return careStatusLabel(item.status as VisitCareStatus);
     }
+
     return STATUS_LABELS[item.status] ?? null;
 }
 
@@ -131,6 +134,7 @@ export function paymentToPetTimelineItem(
  */
 export function mergePetTimelineItems(a: readonly PetTimelineItemVm[], b: readonly PetTimelineItemVm[], limit: number): PetTimelineItemVm[] {
     const at = (i: PetTimelineItemVm) => parseUtcApiInstantIsoString(i.eventAtUtc)?.getTime() ?? 0;
+
     return [...a, ...b].sort((x, y) => at(y) - at(x)).slice(0, limit);
 }
 

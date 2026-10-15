@@ -30,6 +30,7 @@ export function petCardEmphasis(hasClaim: (claim: string) => boolean): PetCardEm
     if (hasClaim(EXAMINATIONS_CREATE_CLAIM)) {
         return 'clinical';
     }
+
     return hasClaim(PAYMENTS_CREATE_CLAIM) || hasClaim(CHARGES_CREATE_CLAIM) ? 'frontDesk' : 'clinical';
 }
 
@@ -37,20 +38,26 @@ export function petCardEmphasis(hasClaim: (claim: string) => boolean): PetCardEm
 export function petAgeLabel(birthDate: string | null | undefined, now: Date = new Date()): string | null {
     const ymd = birthDate?.trim().slice(0, 10) ?? '';
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+
     if (!m) {
         return null;
     }
+
     const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
     let months = (now.getFullYear() - y) * 12 + (now.getMonth() + 1 - mo);
+
     if (now.getDate() < d) {
         months -= 1;
     }
+
     if (months < 0 || new Date(y, mo - 1, d).getTime() > now.getTime()) {
         return null;
     }
+
     if (months >= 12) {
         return `${Math.floor(months / 12)} yaş`;
     }
+
     return months > 0 ? `${months} ay` : '1 aydan küçük';
 }
 
@@ -62,6 +69,7 @@ export function petIdentityParts(pet: PetDetailVm, measuredWeightKg: number | nu
     const filled = (v: string | null | undefined): v is string => !!v && !!v.trim() && v.trim() !== '—';
     const gender = petGenderLabel(pet.gender);
     const weight = measuredWeightKg !== null ? String(measuredWeightKg) : pet.weight;
+
     return [
         pet.speciesName,
         pet.breed,
@@ -75,6 +83,7 @@ export function petIdentityParts(pet: PetDetailVm, measuredWeightKg: number | nu
 /** İleri tarihli `Planlandı` (açık) randevular, en yakın önce. */
 export function upcomingScheduledAppointments<T extends Pick<PetHistoryAppointmentItemVm, 'scheduledAtUtc' | 'status'>>(rows: readonly T[], now: Date = new Date()): T[] {
     const at = (r: T) => parseUtcApiInstantIsoString(r.scheduledAtUtc)?.getTime() ?? NaN;
+
     return rows.filter((r) => parseAppointmentStatusRawToEnum(r.status) === 0 && at(r) >= now.getTime()).sort((a, b) => at(a) - at(b));
 }
 
@@ -87,6 +96,7 @@ export function nextScheduledAppointment<T extends Pick<PetHistoryAppointmentIte
 export function activeFollowUpTreatments(items: readonly TreatmentListItemVm[], now: Date = new Date()): TreatmentListItemVm[] {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const at = (t: TreatmentListItemVm) => parseUtcApiInstantIsoString(t.followUpDateUtc)?.getTime() ?? NaN;
+
     return items.filter((t) => at(t) >= startOfToday).sort((a, b) => at(a) - at(b));
 }
 
@@ -97,12 +107,14 @@ export function examinationVitalsLine(e: Pick<ExaminationDetailVm, 'temperatureC
         e.heartRateBpm !== null ? `${e.heartRateBpm} atım/dk` : null,
         e.respiratoryRatePerMin !== null ? `${e.respiratoryRatePerMin} soluk/dk` : null
     ].filter((p): p is string => p !== null);
+
     return parts.length ? parts.join(' · ') : null;
 }
 
 /** Muayene eşleyicisi boş metni `—` yapar; kartta "yazılmamış" olarak gösterilsin diye `null`. */
 export function examinationAssessmentText(e: Pick<ExaminationDetailVm, 'assessment'>): string | null {
     const t = e.assessment?.trim() ?? '';
+
     return t && t !== '—' ? t : null;
 }
 
@@ -172,7 +184,9 @@ export function openItemsSection<T>(openItems: PetCardSection<PetOpenItemsVm>, p
     if (openItems?.state !== 'ok') {
         return openItems;
     }
+
     const section = pick(openItems.data);
+
     switch (section.state) {
         case 'Forbidden':
             return null;
@@ -186,6 +200,7 @@ export function openItemsSection<T>(openItems: PetCardSection<PetOpenItemsVm>, p
 /** Başlıktaki "Açık borç": sahibin toplam borcu (bakiye ucuyla aynı değer); `Empty` = borç yok. */
 export function ownerOutstandingSection(openItems: PetCardSection<PetOpenItemsVm>): PetCardSection<Pick<ClientBalanceVm, 'outstandingAmount' | 'currency'>> {
     const s = openItemsSection(openItems, (o) => o.outstanding);
+
     return s?.state === 'ok' ? { state: 'ok', data: { outstandingAmount: s.data?.clientOutstandingAmount ?? 0, currency: s.data?.currency ?? 'TRY' } } : s;
 }
 
@@ -207,6 +222,7 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
 
     // Vefat eden hastanın randevusu otomatik iptal edilmez (K4); iptal kullanıcıya bırakılır, satır yalnız listeye götürür. Uç tek (en yakın) randevu döner, sayı verilmez.
     const nextAppointment = openItems?.state === 'ok' && openItems.data.status === 'Deceased' ? okData(openItemsSection(openItems, (o) => o.nextAppointment)) : null;
+
     if (nextAppointment) {
         items.push({
             key: `deceased-appointment-${nextAppointment.id}`,
@@ -220,9 +236,11 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
     }
 
     const canApplyVaccine = canWrite(VACCINATIONS_UPDATE_CLAIM);
+
     const vaccineItem = (v: PetOpenVaccinationVm, overdue: boolean): PetTodoItem => {
         const due = parseUtcApiInstantIsoString(v.dueAtUtc)?.getTime();
         const lateDays = due === undefined ? 0 : Math.floor((now - due) / DAY_MS);
+
         return {
             key: `vaccine-${v.id}`,
             kind: overdue ? 'overdueVaccine' : 'upcomingVaccine',
@@ -233,10 +251,13 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
             action: canApplyVaccine ? { label: 'Uygula', route: ['/panel/vaccinations', v.id, 'edit'] } : { label: 'Aç', route: ['/panel/vaccinations', v.id] }
         };
     };
+
     const vaccinations = okData(sources.vaccinations);
+
     for (const v of vaccinations?.overdue ?? []) {
         items.push(vaccineItem(v, true));
     }
+
     for (const v of vaccinations?.upcoming ?? []) {
         items.push(vaccineItem(v, false));
     }
@@ -244,6 +265,7 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
     const canEditLab = canWrite(LAB_RESULTS_UPDATE_CLAIM);
     const labAction = (id: string, label: string): PetTodoAction => (canEditLab ? { label, route: ['/panel/lab-results', id, 'edit'] } : { label: 'Aç', route: ['/panel/lab-results', id] });
     const labs = okData(sources.labResults);
+
     for (const l of labs?.awaitingResult ?? []) {
         items.push({
             key: `lab-${l.id}`,
@@ -255,6 +277,7 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
             action: labAction(l.id, 'Sonuç gir')
         });
     }
+
     for (const l of labs?.awaitingInterpretation ?? []) {
         items.push({
             key: `lab-${l.id}`,
@@ -268,8 +291,10 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
     }
 
     const charges = okData(sources.pendingCharges);
+
     if (charges && charges.count > 0) {
         const priced = charges.count - charges.unpricedCount;
+
         items.push({
             key: `pending-charges-${ctx.petId}`,
             kind: 'pendingCharge',
@@ -284,12 +309,14 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
     }
 
     const outstanding = okData(sources.outstanding);
+
     if (outstanding && outstanding.clientOutstandingAmount > 0 && ctx.clientId) {
         const detail =
             outstanding.petOutstandingAmount > 0
                 ? `Bu hasta: ${formatMoney(outstanding.petOutstandingAmount, outstanding.currency)} · sahibin toplam borcu`
                 : 'Sahibin toplam borcu (diğer hastalar veya genel)';
         const action = canWrite(PAYMENTS_CREATE_CLAIM) ? takePaymentAction(ctx.clientId) : { label: 'Bakiyeyi gör', route: ['/panel/clients', ctx.clientId] };
+
         items.push(openBalanceItem(outstanding.clientOutstandingAmount, outstanding.currency, detail, action));
     }
 
@@ -305,6 +332,7 @@ export function todoView<K extends string>(
 ): PetTodoView {
     const order = KIND_ORDER[emphasis];
     const entries = Object.entries(sources) as [K, PetCardSection<unknown>][];
+
     return {
         items: [...items].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind)),
         loading: entries.some(([, s]) => s?.state === 'loading'),
@@ -326,7 +354,9 @@ export function pendingChargesTodoItem(charges: readonly ChargeSuggestionVm[], p
     if (charges.length === 0) {
         return null;
     }
+
     const names = charges.slice(0, 3).map((c) => c.description);
+
     return {
         key: `pending-charges-${petId}`,
         kind: 'pendingCharge',
@@ -360,6 +390,7 @@ export function openBalanceTodoItem(balance: ClientBalanceVm | null, opts: { cli
     if (!balance || balance.outstandingAmount <= 0) {
         return null;
     }
+
     const currency = balance.currency || 'TRY';
     const detail = outstandingByPet(balance)
         .map((p) => `${p.petName?.trim() || 'Genel'} ${formatMoney(p.outstandingAmount, currency)}`)
@@ -368,16 +399,20 @@ export function openBalanceTodoItem(balance: ClientBalanceVm | null, opts: { cli
         opts.canTakePayment && opts.clientId
             ? takePaymentAction(opts.clientId)
             : { label: 'Ücretleri gör', route: ['/panel/charges'], queryParams: { clientId: balance.clientId } };
+
     return openBalanceItem(balance.outstandingAmount, currency, detail, action);
 }
 
 /** Açık ücretlerin hayvan bazında kalan toplamı, büyükten küçüğe; hayvansız (genel) ücretler `petId: null` altında toplanır. */
 export function outstandingByPet(balance: ClientBalanceVm): { petId: string | null; petName: string | null; outstandingAmount: number }[] {
     const byPet = new Map<string | null, { petId: string | null; petName: string | null; outstandingAmount: number }>();
+
     for (const c of balance.openCharges) {
         const row = byPet.get(c.petId) ?? { petId: c.petId, petName: c.petName, outstandingAmount: 0 };
+
         row.outstandingAmount += c.outstandingAmount;
         byPet.set(c.petId, row);
     }
+
     return [...byPet.values()].sort((a, b) => b.outstandingAmount - a.outstandingAmount);
 }

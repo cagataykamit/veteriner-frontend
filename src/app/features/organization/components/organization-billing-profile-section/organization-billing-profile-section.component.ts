@@ -210,6 +210,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
 
     private readonly syncFormDisabledWithAccess = effect(() => {
         const editable = this.canManageTenantAccess();
+
         if (editable) {
             if (this.form.disabled) {
                 this.form.enable({ emitEvent: false });
@@ -229,15 +230,18 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
 
     fieldMessage(field: OrganizationBillingProfileFormFieldKey): string | null {
         const control = this.form.controls[field];
+
         if (!control.invalid || !control.touched) {
             return null;
         }
+
         return billingProfileFieldErrorMessage(field, control.errors);
     }
 
     onTaxNumberInput(): void {
         const control = this.form.controls.taxNumber;
         const sanitized = sanitizeTaxNumberValue(control.value);
+
         if (sanitized !== control.value) {
             control.setValue(sanitized);
         }
@@ -247,14 +251,18 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
         if (!this.canManageTenantAccess()) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         this.clearServerErrors();
         const payload = mapOrganizationBillingProfileFormValueToUpdateRequest(
             getOrganizationBillingProfileUpsertFormValue(this.form)
         );
+
         this.saving.set(true);
         this.billingProfile
             .updateBillingProfile(payload)
@@ -274,6 +282,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
                 },
                 error: (err: unknown) => {
                     const toastDetail = this.applySaveError(err);
+
                     this.messages.add({
                         severity: 'error',
                         summary: 'Hata',
@@ -297,8 +306,10 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
                 if (err instanceof HttpErrorResponse && err.status === 403) {
                     this.forbidden.set(true);
                     this.loading.set(false);
+
                     return;
                 }
+
                 this.loadError.set(
                     err instanceof HttpErrorResponse
                         ? messageFromHttpError(err, BILLING_PROFILE_LOAD_FALLBACK)
@@ -317,22 +328,27 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
                 ? err.message.trim()
                 : BILLING_PROFILE_SAVE_FALLBACK;
         }
+
         const { fieldErrors, summaryMessage } = parseValidationHttpError(err, {
             fieldMap: ORG_BILLING_PROFILE_FIELD_MAP,
             nonFieldMessage: (e) => messageFromHttpError(e, BILLING_PROFILE_SAVE_FALLBACK)
         });
+
         for (const [key, message] of Object.entries(fieldErrors) as Array<
             [OrganizationBillingProfileFormFieldKey, string]
         >) {
             if (BILLING_PROFILE_HIDDEN_UI_FIELDS.has(key)) {
                 continue;
             }
+
             const control = this.form.controls[key];
+
             if (control) {
                 control.setErrors({ ...(control.errors ?? {}), server: message });
                 control.markAsTouched();
             }
         }
+
         return summaryMessage ?? BILLING_PROFILE_SAVE_FALLBACK;
     }
 
@@ -340,10 +356,13 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
         for (const key of Object.keys(this.form.controls) as OrganizationBillingProfileFormFieldKey[]) {
             const control = this.form.controls[key];
             const errors = control.errors;
+
             if (!errors?.['server']) {
                 continue;
             }
+
             const { server: _server, ...rest } = errors;
+
             control.setErrors(Object.keys(rest).length ? rest : null);
         }
     }

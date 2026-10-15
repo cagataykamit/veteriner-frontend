@@ -34,6 +34,7 @@ describe('import-schema.utils', () => {
 
     it('kayıtlı eşleme varsa önerileri yok sayar', () => {
         const saved: ImportTableInfoDto = { ...customers, columns: customers.columns.map((c) => (c.source === 'Notlar' ? { ...c, mapped: 'Adres' } : c)) };
+
         expect(initialColumnMaps([saved])).toEqual({ customers: { Adres: 'Notlar' } });
     });
 
@@ -100,6 +101,7 @@ describe('import-labels.utils', () => {
 
     it('dosya ön kontrolü uzantı, boşluk ve boyutu denetler', () => {
         const file = (name: string, size: number) => ({ name, size }) as File;
+
         expect(precheckImportFile(file('a.xlsx', 10), '.xlsx')).toBeNull();
         expect(precheckImportFile(file('a.xls', 10), '.xlsx')).toContain('.xlsx');
         expect(precheckImportFile(file('a.csv', 0), '.csv')).toBe('Dosya boş.');

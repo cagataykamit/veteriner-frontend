@@ -353,12 +353,16 @@ export class PetEditPageComponent implements OnInit {
             'isNeutered',
             'notes'
         ];
+
         for (const f of fields) {
             const control = this.form.controls[f] as AbstractControl;
+
             control.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[f]) {
                     const next = { ...cur };
+
                     delete next[f];
                     this.apiFieldErrors.set(next);
                 }
@@ -368,12 +372,15 @@ export class PetEditPageComponent implements OnInit {
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.loadError.set('Geçersiz hasta kaydı.');
             this.loading.set(false);
             this.petLoadRetryEnabled.set(false);
+
             return;
         }
+
         this.petId = id;
         this.petLoadRetryEnabled.set(true);
 
@@ -381,16 +388,21 @@ export class PetEditPageComponent implements OnInit {
             if (speciesId === null || speciesId === undefined) {
                 this.form.controls.speciesId.setValue('', { emitEvent: false });
             }
+
             const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
+
             if (!sid) {
                 this.form.controls.breedId.setValue('');
                 this.breedOptions.set([]);
                 this.syncBreedIdControlDisabledState();
+
                 return;
             }
+
             if (!this.isInitializingSpecies) {
                 this.form.controls.breedId.setValue('');
             }
+
             this.loadBreedsForSpecies(sid);
         });
 
@@ -451,9 +463,11 @@ export class PetEditPageComponent implements OnInit {
 
     onQuickSpeciesCreated(speciesId: string): void {
         const id = speciesId.trim();
+
         if (!id) {
             return;
         }
+
         this.reloadSpeciesAndSelect(id);
     }
 
@@ -467,19 +481,24 @@ export class PetEditPageComponent implements OnInit {
 
     quickBreedSpeciesLabelForDialog(): string {
         const id = trimClientIdControlValue(this.form.controls.speciesId.value);
+
         if (!id) {
             return '';
         }
+
         const opt = this.speciesOptions().find((o) => o.value === id);
+
         return opt ? `Tür: ${opt.label}` : '';
     }
 
     onQuickBreedCreated(breedId: string): void {
         const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
         const bid = breedId.trim();
+
         if (!sid || !bid) {
             return;
         }
+
         this.loadBreedsForSpecies(sid, bid);
     }
 
@@ -487,10 +506,13 @@ export class PetEditPageComponent implements OnInit {
         if (this.ro.mutationBlocked()) {
             return;
         }
+
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
@@ -506,12 +528,16 @@ export class PetEditPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePetCreateHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
@@ -551,9 +577,11 @@ export class PetEditPageComponent implements OnInit {
 
     private reloadSpeciesAndSelect(speciesId: string): void {
         const id = speciesId.trim();
+
         if (!id) {
             return;
         }
+
         this.loadingSpecies.set(true);
         this.selectionError.set(null);
         this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
@@ -577,13 +605,16 @@ export class PetEditPageComponent implements OnInit {
             next: (items) => {
                 this.breedOptions.set(items.map((x) => ({ value: x.id, label: x.name })));
                 this.mergeBreedOptionFromCache();
+
                 if (selectedBreedId) {
                     const exists = items.some((x) => x.id === selectedBreedId);
                     const allowFromDetail =
                         !!this.editVmCache?.breedName?.trim() &&
                         (this.editVmCache?.breedId ?? '').trim() === selectedBreedId;
+
                     this.form.controls.breedId.setValue(exists || allowFromDetail ? selectedBreedId : '');
                 }
+
                 this.loadingBreeds.set(false);
                 this.isInitializingSpecies = false;
                 this.syncBreedIdControlDisabledState();
@@ -602,6 +633,7 @@ export class PetEditPageComponent implements OnInit {
         const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
         const disable = !sid || this.loadingBreeds();
         const c = this.form.controls.breedId;
+
         if (disable) {
             c.disable({ emitEvent: false });
         } else {
@@ -613,14 +645,18 @@ export class PetEditPageComponent implements OnInit {
     private mergeColorOptionFromCache(): void {
         const vm = this.editVmCache;
         const cid = vm?.colorId?.trim();
+
         if (!cid) {
             return;
         }
+
         const label = vm?.colorName?.trim() || cid;
         const opts = this.colorOptions();
+
         if (opts.some((o) => o.value === cid)) {
             return;
         }
+
         this.colorOptions.set([{ value: cid, label }, ...opts]);
     }
 
@@ -629,13 +665,17 @@ export class PetEditPageComponent implements OnInit {
         const vm = this.editVmCache;
         const bid = vm?.breedId?.trim();
         const label = vm?.breedName?.trim();
+
         if (!bid || !label) {
             return;
         }
+
         const opts = this.breedOptions();
+
         if (opts.some((o) => o.value === bid)) {
             return;
         }
+
         this.breedOptions.set([{ value: bid, label }, ...opts]);
     }
 

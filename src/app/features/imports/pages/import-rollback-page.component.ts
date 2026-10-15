@@ -269,6 +269,7 @@ export class ImportRollbackPageComponent implements OnInit {
 
     ngOnInit(): void {
         this.destroyRef.onDestroy(() => this.pollSub?.unsubscribe());
+
         if (this.canCommit) {
             this.load();
         }
@@ -276,12 +277,14 @@ export class ImportRollbackPageComponent implements OnInit {
 
     load(): void {
         const id = this.route.snapshot.paramMap.get('id') ?? '';
+
         this.loading.set(true);
         this.loadError.set(null);
         this.imports.getBatch(id).subscribe({
             next: (b) => {
                 this.batch.set(b);
                 this.loading.set(false);
+
                 if (b.status === 'RollingBack') {
                     this.startPolling(b.id);
                 } else if (isRollbackScreenAvailable(b.status) || b.status === 'RolledBack') {
@@ -301,12 +304,15 @@ export class ImportRollbackPageComponent implements OnInit {
 
     private loadPreview(): void {
         const b = this.batch();
+
         if (!b) {
             return;
         }
+
         this.imports.getRollbackPreview(b.id).subscribe({
             next: (p) => {
                 this.preview.set(p);
+
                 if (!p.canDeleteUnblockedOnly && this.policy() === 'DeleteUnblockedOnly') {
                     this.policy.set('Fail');
                 }
@@ -317,9 +323,11 @@ export class ImportRollbackPageComponent implements OnInit {
 
     submit(): void {
         const b = this.batch();
+
         if (!b || !this.canSubmit()) {
             return;
         }
+
         this.busy.set(true);
         this.error.set(null);
         this.blockedError.set(null);
@@ -328,6 +336,7 @@ export class ImportRollbackPageComponent implements OnInit {
                 this.busy.set(false);
                 this.ack.set(false);
                 this.batch.update((cur) => (cur ? { ...res, tables: res.tables ?? cur.tables } : res));
+
                 if (res.status === 'RollingBack') {
                     this.startPolling(res.id);
                 } else {
@@ -343,24 +352,32 @@ export class ImportRollbackPageComponent implements OnInit {
 
     private onSubmitError(e: unknown): void {
         const code = importErrorCode(e);
+
         if (code === 'Imports.RollbackBlocked') {
             const counts = importErrorExtension(e, 'blocked');
+
             this.blockedError.set({ items: rollbackBlockedItems(e), counts: isCounts(counts) ? counts : null });
             this.error.set(importErrorMessage(e, 'Geri alma yapılamadı.'));
             this.loadPreview();
+
             return;
         }
+
         if (code === 'Imports.RequestIdConflict') {
             // Aynı istek anahtarı farklı politikayla gelmiş; yeni anahtarla yeniden gönderilebilir.
             this.requestId = crypto.randomUUID();
             this.error.set('Bu geri alma isteği farklı bir seçimle daha önce gönderilmiş. Sayfayı yenileyip durumu kontrol edin; gerekirse seçiminizi yeniden onaylayın.');
+
             return;
         }
+
         if (code === 'Imports.InvalidState' || code === 'Imports.ConcurrencyConflict') {
             this.error.set(importErrorMessage(e, 'Geri alma başlatılamadı.'));
             this.load();
+
             return;
         }
+
         this.error.set(importErrorMessage(e, 'Geri alma başlatılamadı.'));
     }
 
@@ -379,9 +396,11 @@ export class ImportRollbackPageComponent implements OnInit {
             next: ({ progress, running, stalled }) => {
                 this.progress.set(running ? progress : null);
                 this.stalled.set(running && stalled);
+
                 if (running) {
                     return;
                 }
+
                 this.imports.getBatch(id).subscribe({
                     next: (b) => {
                         this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables } : b));
@@ -399,6 +418,8 @@ function isCounts(v: unknown): v is ImportRollbackCountsDto {
     if (!v || typeof v !== 'object') {
         return false;
     }
+
     const c = v as Record<string, unknown>;
+
     return typeof c['clients'] === 'number' && typeof c['pets'] === 'number' && typeof c['vaccinations'] === 'number';
 }

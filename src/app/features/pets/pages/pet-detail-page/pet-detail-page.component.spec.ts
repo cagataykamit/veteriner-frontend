@@ -91,6 +91,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
     let openItemsCalls: number;
 
     const el = () => fixture.nativeElement as HTMLElement;
+
     const create = () => {
         TestBed.configureTestingModule({
             imports: [PetDetailPageComponent],
@@ -114,6 +115,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                     useValue: {
                         openItems: () => {
                             openItemsCalls++;
+
                             return openItemsSource();
                         },
                         examination: () => of(null),
@@ -237,6 +239,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
 
     it('bütün Yapılacaklar bölümleri yetkisizse "Bekleyen iş yok" değil "yetkiniz yok" yazar', () => {
         const forbidden = { state: 'Forbidden', data: null };
+
         openItemsSource = () => of({ state: 'ok', data: openItems({ vaccinations: forbidden, labResults: forbidden, pendingCharges: forbidden, outstanding: forbidden }) });
         create();
 
@@ -247,6 +250,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
     it('"Yeniden dene" açık işleri yeniden okur: başarıda not kalkar, hata sürerse not kalır', () => {
         openItemsSource = () => of({ state: 'error' });
         create();
+
         const retry = () => {
             (el().querySelector('[data-testid="todo-retry"]') as HTMLButtonElement).click();
             fixture.detectChanges();

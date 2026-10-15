@@ -122,6 +122,7 @@ export class PrescriptionItemsEditorComponent implements OnInit {
         if (!this.canPickProduct) {
             return;
         }
+
         this.productService.getProducts({ page: 1, pageSize: 200, isActive: true, stockTrackedOnly: true }).subscribe({
             next: (r) => this.products.set(r.items),
             error: () => this.products.set([])
@@ -142,11 +143,13 @@ export class PrescriptionItemsEditorComponent implements OnInit {
     optionsFor(g: PrescriptionItemFormGroup): { value: string; label: string }[] {
         const id = g.controls.productId.value;
         const options = this.catalogOptions();
+
         return id && !options.some((o) => o.value === id) ? [{ value: id, label: g.controls.name.value || id }, ...options] : options;
     }
 
     unitFor(g: PrescriptionItemFormGroup): string {
         const id = g.controls.productId.value;
+
         return id ? (this.products().find((p) => p.id === id)?.unit ?? '') : '';
     }
 
@@ -154,8 +157,10 @@ export class PrescriptionItemsEditorComponent implements OnInit {
     onProductChange(g: PrescriptionItemFormGroup, productId: string | null): void {
         if (!productId) {
             g.controls.productId.setValue('');
+
             return;
         }
+
         if (!g.controls.name.value.trim()) {
             g.controls.name.setValue(this.products().find((p) => p.id === productId)?.name ?? '');
         }

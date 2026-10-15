@@ -21,6 +21,7 @@ describe('ImportsService', () => {
     it('listeyi sayfa ve durum süzgeciyle ister', () => {
         service.listBatches(2, 20, 'Validated').subscribe();
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/imports/batches');
+
         expect(req.request.params.get('page')).toBe('2');
         expect(req.request.params.get('pageSize')).toBe('20');
         expect(req.request.params.get('status')).toBe('Validated');
@@ -29,9 +30,11 @@ describe('ImportsService', () => {
 
     it('yüklemeyi multipart gövde olarak gönderir', () => {
         const form = new FormData();
+
         form.append('requestId', 'r-1');
         service.createBatch(form).subscribe();
         const req = http.expectOne('http://api.test/api/v1/imports/batches');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toBe(form);
         req.flush({});
@@ -40,6 +43,7 @@ describe('ImportsService', () => {
     it('eşlemeyi PUT ile kaydeder', () => {
         service.saveMapping('b1', { columns: {}, valueMappings: [], options: { onDuplicateClient: 'Match' } }).subscribe();
         const req = http.expectOne({ method: 'PUT', url: 'http://api.test/api/v1/imports/batches/b1/mapping' });
+
         expect(req.request.body.options).toEqual({ onDuplicateClient: 'Match' });
         req.flush({});
     });
@@ -59,6 +63,7 @@ describe('ImportsService', () => {
 
     it('K13: doğrulama hatasını (409 AnotherJobRunning) çağırana iletir', () => {
         let error: unknown;
+
         service.validate('b1').subscribe({ error: (e: unknown) => (error = e) });
         http.expectOne('http://api.test/api/v1/imports/batches/b1/validate').flush({ code: 'Imports.AnotherJobRunning' }, { status: 409, statusText: 'Conflict' });
         expect((error as { status: number }).status).toBe(409);
@@ -67,6 +72,7 @@ describe('ImportsService', () => {
     it('satır süzgeçlerini sorguya ekler, boş olanları eklemez', () => {
         service.getRows('b1', { page: 1, pageSize: 25, table: 'pets', status: 'Error' }).subscribe();
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/imports/batches/b1/rows');
+
         expect(req.request.params.get('table')).toBe('pets');
         expect(req.request.params.get('status')).toBe('Error');
         expect(req.request.params.has('code')).toBeFalse();
@@ -76,6 +82,7 @@ describe('ImportsService', () => {
     it('şablonu ve hata raporunu dosya olarak ister; CSV şablonu tablo ister', () => {
         service.downloadTemplate('csv', 'pets').subscribe();
         const t = http.expectOne((r) => r.url === 'http://api.test/api/v1/imports/template');
+
         expect(t.request.params.get('format')).toBe('csv');
         expect(t.request.params.get('table')).toBe('pets');
         expect(t.request.responseType).toBe('blob');
@@ -83,6 +90,7 @@ describe('ImportsService', () => {
 
         service.downloadErrorReport('b1', 'xlsx').subscribe();
         const e = http.expectOne((r) => r.url === 'http://api.test/api/v1/imports/batches/b1/errors');
+
         expect(e.request.params.get('format')).toBe('xlsx');
         e.flush(new Blob(['x']));
     });
@@ -90,6 +98,7 @@ describe('ImportsService', () => {
     it('uygulamayı doğrulama kimliği ve hata politikasıyla başlatır', () => {
         service.commit('b1', { validationId: 'v1', onErrors: 'SkipErrorRows' }).subscribe();
         const req = http.expectOne('http://api.test/api/v1/imports/batches/b1/commit');
+
         expect(req.request.body).toEqual({ validationId: 'v1', onErrors: 'SkipErrorRows' });
         req.flush({});
     });
@@ -99,6 +108,7 @@ describe('ImportsService', () => {
         http.expectOne({ method: 'GET', url: 'http://api.test/api/v1/imports/batches/b1/progress' }).flush({});
         service.releaseReminders('b1', 7).subscribe();
         const req = http.expectOne('http://api.test/api/v1/imports/batches/b1/release-reminders');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ confirmEmailCount: 7 });
         req.flush({});
@@ -109,6 +119,7 @@ describe('ImportsService', () => {
         http.expectOne({ method: 'GET', url: 'http://api.test/api/v1/imports/batches/b1/rollback-preview' }).flush({});
         service.rollback('b1', { requestId: 'r-1', reason: 'Yanlış dosya', blockedPolicy: 'Fail' }).subscribe();
         const req = http.expectOne('http://api.test/api/v1/imports/batches/b1/rollback');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ requestId: 'r-1', reason: 'Yanlış dosya', blockedPolicy: 'Fail' });
         req.flush({});

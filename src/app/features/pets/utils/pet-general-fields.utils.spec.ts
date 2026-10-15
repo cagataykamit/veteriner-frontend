@@ -18,6 +18,7 @@ const pet = (over: Partial<PetDetailVm>): PetDetailVm =>
 describe('buildPetGeneralFields', () => {
     it('dolu alanları ve boş alanları (— veya boş metin) ayırır', () => {
         const { filled, empty } = buildPetGeneralFields(pet({}));
+
         expect(filled.map((f) => f.label)).toEqual(['Tür', 'Ağırlık', 'Kısırlaştırılmış mı?']);
         expect(empty.map((f) => f.label)).toEqual(['Cins', 'Cinsiyet', 'Renk', 'Çip numarası', 'Karne / Küpe no', 'Özel protokol no']);
     });
@@ -26,6 +27,7 @@ describe('buildPetGeneralFields', () => {
         const { empty } = buildPetGeneralFields(
             pet({ breed: 'Golden', gender: 'Male', colorName: 'Sarı', microchipNumber: '1', passportOrTagNumber: '2', specialProtocolNumber: '3' })
         );
+
         expect(empty.length).toBe(0);
     });
 });

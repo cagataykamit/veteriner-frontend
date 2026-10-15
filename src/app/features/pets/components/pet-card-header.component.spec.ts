@@ -18,10 +18,12 @@ describe('PetCardHeaderComponent', () => {
     const render = (inputs: { balance?: PetCardSection<{ outstandingAmount: number; currency: string }>; nextAppointment?: PetCardSection<PetNextAppointmentVm | null>; pet?: PetDetailVm }) => {
         TestBed.configureTestingModule({ imports: [PetCardHeaderComponent], providers: [provideRouter([])] });
         const fixture = TestBed.createComponent(PetCardHeaderComponent);
+
         fixture.componentRef.setInput('pet', inputs.pet ?? pet);
         fixture.componentRef.setInput('balance', inputs.balance ?? null);
         fixture.componentRef.setInput('nextAppointment', inputs.nextAppointment ?? null);
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     };
 
@@ -37,6 +39,7 @@ describe('PetCardHeaderComponent', () => {
 
     it('yetki yoksa borç ve randevu alanı hiç gösterilmez; borç yoksa "Yok"; randevu yoksa "Yok"', () => {
         let el = render({});
+
         expect(el.querySelector('[data-testid="account-balance"]')).toBeNull();
         expect(el.querySelector('[data-testid="account-next-appointment"]')).toBeNull();
         expect(el.querySelector('[data-testid="account-last-visit"]')).not.toBeNull();
@@ -49,6 +52,7 @@ describe('PetCardHeaderComponent', () => {
 
     it('telefon yoksa arama bağlantısı çıkmaz', () => {
         const el = render({ pet: { ...pet, clientPhone: '—' } as PetDetailVm });
+
         expect(el.querySelector('[data-testid="owner-phone"]')).toBeNull();
     });
 });

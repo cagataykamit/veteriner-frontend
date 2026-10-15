@@ -9,6 +9,7 @@ const DUPLICATE_PET_USER_MESSAGE =
 
 function isWeak409ConflictText(s: string): boolean {
     const t = s.trim();
+
     return /^conflict$/i.test(t) || /^duplicate$/i.test(t) || /^gone$/i.test(t);
 }
 
@@ -18,14 +19,18 @@ function isWeak409ConflictText(s: string): boolean {
  */
 export function messageFromPetCreateHttpError(err: HttpErrorResponse): string {
     const explicit = messageFromHttpError(err, '').trim();
+
     if (explicit) {
         if (err.status === 409 && isWeak409ConflictText(explicit)) {
             return DUPLICATE_PET_USER_MESSAGE;
         }
+
         return explicit;
     }
+
     if (err.status === 409) {
         return DUPLICATE_PET_USER_MESSAGE;
     }
+
     return messageFromHttpError(err, FALLBACK_GENERIC);
 }

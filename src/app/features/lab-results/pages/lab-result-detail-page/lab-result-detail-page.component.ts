@@ -192,11 +192,14 @@ export class LabResultDetailPageComponent implements OnInit {
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.error.set('Geçersiz kayıt.');
             this.loading.set(false);
+
             return;
         }
+
         this.labResultId = id;
         this.savedMessage.set(SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null);
         this.reload();

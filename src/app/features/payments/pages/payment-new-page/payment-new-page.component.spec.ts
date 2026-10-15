@@ -133,6 +133,7 @@ describe('PaymentNewPageComponent', () => {
         cmp.onAmountInput(cmp.openCharges()[1], '300');
         cmp.onSubmit();
         const req = payments.createPayment.calls.mostRecent().args[0];
+
         expect(req.requestId).toMatch(/^[0-9a-f-]{36}$/);
         expect(req.currency).toBe('TRY');
         expect(req.amount).toBe(700);
@@ -171,6 +172,7 @@ describe('PaymentNewPageComponent', () => {
         cmp.onAmountInput(cmp.openCharges()[0], '500');
         cmp.onSubmit();
         const [first, second] = payments.createPayment.calls.allArgs().map((a) => a[0].requestId);
+
         expect(second).toBe(first);
     });
 
@@ -208,6 +210,7 @@ describe('PaymentNewPageComponent', () => {
         clients.getClientBalance.and.returnValue(of(balance([])));
         await setup();
         const href = (fixture.nativeElement.querySelector('a[href*="/panel/charges/new"]') as HTMLAnchorElement).getAttribute('href');
+
         expect(href).toContain('clientId=cl1');
         expect(href).toContain('visitId=v1');
     });

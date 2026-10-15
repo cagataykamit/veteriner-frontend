@@ -229,23 +229,28 @@ export class PetSummaryCardComponent {
 
     private readonly exam = computed(() => {
         const e = this.lastExamination();
+
         return e?.state === 'ok' ? e.data : null;
     });
     readonly vitals = computed(() => {
         const e = this.exam();
+
         return e ? examinationVitalsLine(e) : null;
     });
     readonly assessment = computed(() => {
         const e = this.exam();
+
         return e ? examinationAssessmentText(e) : null;
     });
     readonly followUpRows = computed(() => {
         const f = this.followUps();
+
         return f?.state === 'ok' ? f.data.slice(0, FOLLOW_UP_LIMIT) : [];
     });
     readonly noActiveCare = computed(() => {
         const f = this.followUps();
         const hospitalization = this.summary()?.activeHospitalization.state;
+
         return hospitalization === 'Empty' && (f === null || (f.state === 'ok' && f.data.length === 0));
     });
 }

@@ -34,6 +34,7 @@ export function getOrganizationBillingProfileUpsertFormValue(
     form: OrganizationBillingProfileUpsertFormGroup
 ): OrganizationBillingProfileUpsertFormValue {
     const raw = form.getRawValue();
+
     return {
         ...raw,
         taxNumber: sanitizeTaxNumberValue(raw.taxNumber)

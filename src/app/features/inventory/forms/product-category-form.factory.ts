@@ -13,6 +13,7 @@ export type ProductCategoryFormControls = ReturnType<typeof createProductCategor
 
 export function getProductCategoryFormValue(form: ProductCategoryFormControls): ProductCategoryFormValue {
     const raw = form.getRawValue();
+
     return {
         name: typeof raw.name === 'string' ? raw.name.trim() : '',
         description: typeof raw.description === 'string' ? raw.description.trim() : ''

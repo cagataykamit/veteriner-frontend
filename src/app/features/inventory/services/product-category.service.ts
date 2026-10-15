@@ -32,15 +32,18 @@ const PRODUCT_CATEGORY_PROBLEM_MESSAGES: Record<string, string> = {
 
 function productCategoryMutationMessage(err: HttpErrorResponse, fallback: string): string {
     const code = problemCodeFromHttpError(err);
+
     if (code) {
         const mapped =
             PRODUCT_CATEGORY_PROBLEM_MESSAGES[code] ??
             PRODUCT_CATEGORY_PROBLEM_MESSAGES[code.replace(/\./g, '')] ??
             null;
+
         if (mapped) {
             return mapped;
         }
     }
+
     return messageFromHttpError(err, fallback);
 }
 
@@ -50,6 +53,7 @@ export class ProductCategoryService {
 
     list(query: ProductCategoriesListQuery): Observable<ProductCategoriesPagedVm> {
         const params = productCategoriesQueryToHttpParams(query);
+
         return this.api.get<ProductCategoryDtoPagedResult>(ApiEndpoints.productCategories.list(), params).pipe(
             map((res) => mapPagedProductCategoriesToVm(res)),
             catchError((err: HttpErrorResponse) =>

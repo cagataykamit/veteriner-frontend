@@ -11,6 +11,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(PRODUCTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],

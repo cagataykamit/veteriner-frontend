@@ -16,6 +16,7 @@ export class StockBatchService {
     /** Kalanı sıfırdan büyük partiler FEFO sıralı + partisiz (devir) bakiye. */
     getByProduct(productId: string, clinicId: string): Observable<ProductStockBatchesVm> {
         const params = new HttpParams().set('clinicId', clinicId);
+
         return this.api
             .get<ProductStockBatchesDto>(ApiEndpoints.products.stockBatches(productId), params)
             .pipe(map(mapProductStockBatchesDtoToVm), toUserError('Parti bilgileri yüklenemedi.'));

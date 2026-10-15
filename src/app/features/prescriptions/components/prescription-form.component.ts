@@ -288,18 +288,24 @@ export class PrescriptionFormComponent implements OnInit {
             if (this.prescriptionContextLocked()) {
                 return;
             }
+
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const id = trimClientIdControlValue(this.form.controls.clientId.value);
+
             if (!id) {
                 this.form.controls.petId.disable({ emitEvent: false });
                 this.syncPrescriptionRelationSelects();
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
@@ -307,8 +313,11 @@ export class PrescriptionFormComponent implements OnInit {
             if (this.prescriptionContextLocked()) {
                 return;
             }
+
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
+
             this.form.patchValue({ examinationId: '', treatmentId: '' }, { emitEvent: false });
+
             if (!pid) {
                 this.relationLoadSeq += 1;
                 this.examinationOptions.set([]);
@@ -317,8 +326,10 @@ export class PrescriptionFormComponent implements OnInit {
                 this.loadingExaminations.set(false);
                 this.loadingTreatments.set(false);
                 this.syncPrescriptionRelationSelects();
+
                 return;
             }
+
             this.loadRelationsForPet(pid);
         });
 
@@ -330,12 +341,16 @@ export class PrescriptionFormComponent implements OnInit {
             if (this.prescriptionContextLocked()) {
                 return;
             }
+
             const id = String(tid ?? '').trim();
+
             if (!id) {
                 return;
             }
+
             const t = this.allTreatmentsForPet.find((x) => x.id === id);
             const ex = t?.examinationId?.trim();
+
             if (ex && this.form.controls.examinationId.value?.trim() !== ex) {
                 this.form.controls.examinationId.setValue(ex, { emitEvent: true });
             }
@@ -347,15 +362,20 @@ export class PrescriptionFormComponent implements OnInit {
         if (this.contextFromTreatment()) {
             this.form.controls.examinationId.disable({ emitEvent: false });
             this.form.controls.treatmentId.disable({ emitEvent: false });
+
             return;
         }
+
         if (this.contextFromExamination()) {
             this.form.controls.examinationId.disable({ emitEvent: false });
             this.form.controls.treatmentId.enable({ emitEvent: false });
+
             return;
         }
+
         const hasPet =
             !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
+
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
             this.form.controls.treatmentId.disable({ emitEvent: false });
@@ -385,31 +405,43 @@ export class PrescriptionFormComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
         const v = this.form.getRawValue();
         const prescribedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.prescribedAtLocal);
+
         if (!prescribedAtUtc) {
             this.submitError.set('Geçerli bir reçete tarihi ve saati seçin.');
+
             return;
         }
+
         const followUpDateUtc = v.followUpDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(v.followUpDate.trim()) : null;
+
         if (v.followUpDate?.trim() && !followUpDateUtc) {
             this.submitError.set('Takip tarihi geçersiz.');
+
             return;
         }
+
         const orderMsg = followUpBeforePrescribedMessage(prescribedAtUtc, followUpDateUtc);
+
         if (orderMsg) {
             this.submitError.set(orderMsg);
+
             return;
         }
 
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
@@ -434,12 +466,16 @@ export class PrescriptionFormComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePrescriptionUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
@@ -448,6 +484,7 @@ export class PrescriptionFormComponent implements OnInit {
     private loadRelationsForPet(petId: string, lockExamination?: ExaminationDetailVm): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
+
         this.loadingExaminations.set(true);
         this.loadingTreatments.set(true);
         this.selectionError.set(null);
@@ -460,20 +497,27 @@ export class PrescriptionFormComponent implements OnInit {
                     if (lockExamination) {
                         this.applyingRouteContext.set(false);
                     }
+
                     return;
                 }
+
                 if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                     if (lockExamination) {
                         this.applyingRouteContext.set(false);
                     }
+
                     return;
                 }
+
                 let examItems = [...ex.items];
+
                 if (lockExamination) {
                     const lid = lockExamination.id.trim();
+
                     if (!examItems.some((item) => item.id === lid)) {
                         examItems = [examinationListItemFromDetail(lockExamination), ...examItems];
                     }
+
                     this.examinationOptions.set(examItems.map(prescriptionExaminationSelectOption));
                     this.allTreatmentsForPet = tr.items;
                     this.form.patchValue({ examinationId: lid }, { emitEvent: false });
@@ -487,6 +531,7 @@ export class PrescriptionFormComponent implements OnInit {
                     this.applyTreatmentFilter();
                     this.syncPrescriptionRelationSelects();
                 }
+
                 this.loadingExaminations.set(false);
                 this.loadingTreatments.set(false);
             },
@@ -494,6 +539,7 @@ export class PrescriptionFormComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 this.selectionError.set(this.mapLoadError(e, 'Muayene veya tedavi listesi yüklenemedi.'));
                 this.examinationOptions.set([]);
                 this.treatmentOptions.set([]);
@@ -501,6 +547,7 @@ export class PrescriptionFormComponent implements OnInit {
                 this.loadingExaminations.set(false);
                 this.loadingTreatments.set(false);
                 this.syncPrescriptionRelationSelects();
+
                 if (lockExamination) {
                     this.applyingRouteContext.set(false);
                 }
@@ -510,10 +557,13 @@ export class PrescriptionFormComponent implements OnInit {
 
     private tryApplyRouteContexts(): void {
         const tCtx = parseTreatmentPrescriptionRouteContext(this.contextParams());
+
         if (tCtx) {
             this.tryApplyTreatmentRouteContext(tCtx);
+
             return;
         }
+
         this.tryApplyExaminationRouteContext();
     }
 
@@ -524,18 +574,24 @@ export class PrescriptionFormComponent implements OnInit {
             next: (t) => {
                 const cId = t.clientId?.trim() ?? '';
                 const pId = t.petId?.trim() ?? '';
+
                 if (cId !== ctx.clientId || pId !== ctx.petId) {
                     this.selectionError.set('Tedavi bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 const tEx = t.examinationId?.trim() ?? '';
                 const qEx = ctx.examinationId?.trim() ?? '';
+
                 if (qEx && tEx && qEx !== tEx) {
                     this.selectionError.set('Muayene bilgisi tedavi kaydı ile uyuşmuyor.');
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 this.form.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
                 this.form.controls.clientId.disable({ emitEvent: false });
                 this.form.controls.petId.disable({ emitEvent: false });
@@ -552,11 +608,14 @@ export class PrescriptionFormComponent implements OnInit {
     private loadRelationsForPetForTreatmentContext(t: TreatmentDetailVm): void {
         const seq = ++this.relationLoadSeq;
         const pid = (t.petId ?? '').trim();
+
         if (!pid) {
             this.selectionError.set('Tedavi kaydında hasta bilgisi yok.');
             this.applyingRouteContext.set(false);
+
             return;
         }
+
         this.loadingExaminations.set(true);
         this.loadingTreatments.set(true);
         this.selectionError.set(null);
@@ -567,25 +626,34 @@ export class PrescriptionFormComponent implements OnInit {
             next: ({ ex, tr }) => {
                 if (seq !== this.relationLoadSeq) {
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 let examItems: ExaminationListItemVm[] = [...ex.items];
                 let trItems: TreatmentListItemVm[] = [...tr.items];
+
                 if (!trItems.some((x) => x.id === t.id)) {
                     trItems = [treatmentListItemFromDetail(t), ...trItems];
                 }
+
                 const exId = t.examinationId?.trim() ?? '';
+
                 if (exId && !examItems.some((e) => e.id === exId)) {
                     this.examinationsService.getExaminationById(exId).subscribe({
                         next: (exD) => {
                             if (seq !== this.relationLoadSeq) {
                                 this.applyingRouteContext.set(false);
+
                                 return;
                             }
+
                             examItems = [examinationListItemFromDetail(exD), ...examItems];
                             this.finalizeTreatmentContextPrescription(seq, examItems, trItems, t, exId);
                         },
@@ -600,14 +668,17 @@ export class PrescriptionFormComponent implements OnInit {
                             this.applyingRouteContext.set(false);
                         }
                     });
+
                     return;
                 }
+
                 this.finalizeTreatmentContextPrescription(seq, examItems, trItems, t, exId);
             },
             error: (e: unknown) => {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 this.selectionError.set(this.mapLoadError(e, 'Muayene veya tedavi listesi yüklenemedi.'));
                 this.examinationOptions.set([]);
                 this.treatmentOptions.set([]);
@@ -628,10 +699,13 @@ export class PrescriptionFormComponent implements OnInit {
         examinationIdValue: string
     ): void {
         const pid = (t.petId ?? '').trim();
+
         if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
             this.applyingRouteContext.set(false);
+
             return;
         }
+
         this.examinationOptions.set(examItems.map(prescriptionExaminationSelectOption));
         this.allTreatmentsForPet = trItems;
         this.form.patchValue(
@@ -652,20 +726,25 @@ export class PrescriptionFormComponent implements OnInit {
 
     private tryApplyExaminationRouteContext(): void {
         const ctx = parseExaminationCreateRouteContext(this.contextParams());
+
         if (!ctx) {
             return;
         }
+
         this.applyingRouteContext.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
             next: (ex) => {
                 const cId = ex.clientId?.trim() ?? '';
                 const pId = ex.petId?.trim() ?? '';
+
                 if (cId !== ctx.clientId || pId !== ctx.petId) {
                     this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 this.form.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
                 this.form.controls.clientId.disable({ emitEvent: false });
                 this.form.controls.petId.disable({ emitEvent: false });
@@ -684,8 +763,10 @@ export class PrescriptionFormComponent implements OnInit {
     private applyTreatmentFilter(): void {
         const examId = this.form.controls.examinationId.value?.trim() ?? '';
         const filtered = filterTreatmentsByExamination(this.allTreatmentsForPet, examId || null);
+
         this.treatmentOptions.set(filtered.map(prescriptionTreatmentSelectOption));
         const cur = this.form.controls.treatmentId.value?.trim() ?? '';
+
         if (cur && !filtered.some((t) => t.id === cur)) {
             this.form.controls.treatmentId.setValue('', { emitEvent: false });
         }
@@ -697,8 +778,10 @@ export class PrescriptionFormComponent implements OnInit {
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
             const parsed = parsePrescriptionUpsertHttpError(e);
+
             return parsed.summaryMessage ?? fallback;
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

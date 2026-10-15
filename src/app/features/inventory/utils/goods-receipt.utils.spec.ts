@@ -27,6 +27,7 @@ describe('toGoodsReceiptSubmitError', () => {
 
     it('doğrulama hatasını 0 tabanlı lines[i].alan anahtarından satıra yansıtır', () => {
         const e = toGoodsReceiptSubmitError(http(400, { code: 'Validation.FluentValidation', errors: { 'lines[2].quantity': ['must be > 0'] } }));
+
         expect(e.lineErrors[2]).toContain('Miktar');
         expect(e.message).toContain('Hiçbir satır kaydedilmedi');
     });
@@ -35,6 +36,7 @@ describe('toGoodsReceiptSubmitError', () => {
         const e = toGoodsReceiptSubmitError(
             http(400, { code: 'StockBatches.LotAndExpiryRequired', detail: 'Satır 3: Aşı ve kontrollü ürünlerde seri/lot no ve son kullanma tarihi zorunludur.' })
         );
+
         expect(e.lineErrors[2]).toBe('Aşı ve kontrollü ürünlerde seri/lot no ve son kullanma tarihi zorunludur.');
         expect(e.message).toContain('Satır 3');
         expect(e.message).toContain('Hiçbir satır kaydedilmedi');
@@ -42,6 +44,7 @@ describe('toGoodsReceiptSubmitError', () => {
 
     it('409 DuplicateRequestId için sade mesaj verir', () => {
         const e = toGoodsReceiptSubmitError(http(409, { code: 'GoodsReceipts.DuplicateRequestId' }));
+
         expect(e.message).toContain('farklı içerikli');
         expect(e.lineErrors).toEqual({});
     });

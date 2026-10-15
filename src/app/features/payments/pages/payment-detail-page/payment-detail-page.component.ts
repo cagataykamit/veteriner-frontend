@@ -262,9 +262,11 @@ export class PaymentDetailPageComponent implements OnInit {
     headerDescription(p: PaymentDetailVm): string {
         const parts: string[] = [this.moneyLine(p), this.methodLabel(p.method)];
         const paid = p.paidAtUtc?.trim();
+
         if (paid) {
             parts.push('Ödeme: ' + this.formatPaidAtUtc(paid));
         }
+
         return parts.join(' · ');
     }
 
@@ -283,14 +285,18 @@ export class PaymentDetailPageComponent implements OnInit {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id');
+
                     if (!id) {
                         this.error.set('Geçersiz ödeme.');
                         this.loading.set(false);
+
                         return EMPTY;
                     }
+
                     this.lastId = id;
                     this.loading.set(true);
                     this.error.set(null);
+
                     return this.paymentsService.getPaymentById(id);
                 })
             )
@@ -316,6 +322,7 @@ export class PaymentDetailPageComponent implements OnInit {
         if (!this.lastId) {
             return;
         }
+
         this.loading.set(true);
         this.error.set(null);
         this.paymentsService.getPaymentById(this.lastId).subscribe({

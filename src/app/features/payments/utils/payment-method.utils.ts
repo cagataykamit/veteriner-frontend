@@ -41,53 +41,70 @@ export function resolvePaymentMethodFormValue(raw: unknown): CanonicalPaymentMet
     if (raw === null || raw === undefined) {
         return null;
     }
+
     if (typeof raw === 'number') {
         if (!Number.isFinite(raw) || Number.isNaN(raw)) {
             return null;
         }
+
         if (raw === 0) {
             return 'cash';
         }
+
         if (raw === 1) {
             return 'card';
         }
+
         if (raw === 2) {
             return 'transfer';
         }
+
         return null;
     }
+
     const s = String(raw).trim();
+
     if (s === '') {
         return null;
     }
+
     if (/^-?\d+(\.\d+)?$/.test(s)) {
         return resolvePaymentMethodFormValue(Number(s));
     }
+
     const k = normalizeFilterKey(s);
+
     if (k === 'cash') {
         return 'cash';
     }
+
     if (k === 'card' || k === 'creditcard' || k === 'debitcard' || k === 'bankcard' || k === 'pos' || k === 'virtualpos') {
         return 'card';
     }
+
     if (k === 'transfer' || k === 'banktransfer' || k === 'wiretransfer' || k === 'eft') {
         return 'transfer';
     }
+
     return null;
 }
 
 /** Create/update body: canonical string → backend numeric enum. */
 export function paymentMethodCanonicalToApiEnum(method: string): number {
     const k = normalizeFilterKey(method.trim());
+
     if (k === 'cash') {
         return 0;
     }
+
     if (k === 'card' || k === 'creditcard' || k === 'debitcard' || k === 'bankcard' || k === 'pos' || k === 'virtualpos') {
         return 1;
     }
+
     if (k === 'transfer' || k === 'banktransfer' || k === 'wiretransfer' || k === 'eft') {
         return 2;
     }
+
     throw new Error('PAYMENT_WRITE_METHOD_UNSUPPORTED');
 }
 
@@ -103,16 +120,22 @@ export function paymentMethodLabel(method: unknown): string {
     if (method === null || method === undefined) {
         return EM;
     }
+
     if (typeof method === 'string' && method.trim() === '') {
         return EM;
     }
+
     const c = resolvePaymentMethodFormValue(method);
+
     if (c != null) {
         return LABELS[c];
     }
+
     if (typeof method === 'string') {
         const k = normalizePaymentMethodKey(method);
+
         return EXTRA_LABELS[k] ?? EM;
     }
+
     return EM;
 }

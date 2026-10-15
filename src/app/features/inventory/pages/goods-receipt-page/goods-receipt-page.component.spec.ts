@@ -51,6 +51,7 @@ describe('GoodsReceiptPageComponent', () => {
         await setup({ productId: 'p1', quantity: '7' });
         expect(products.getById).toHaveBeenCalledWith('p1');
         const v = cmp.lines.at(0).getRawValue();
+
         expect((v.product as GoodsReceiptProductPick).id).toBe('p1');
         expect(v.quantity).toBe(7);
         expect(cmp.form.controls.clinicId.value).toBe('c1');
@@ -72,6 +73,7 @@ describe('GoodsReceiptPageComponent', () => {
         cmp.lines.at(0).patchValue({ acknowledgeExpired: true });
         cmp.onSubmit();
         const sent = service.create.calls.mostRecent().args[0] as CreateGoodsReceiptRequest;
+
         expect(sent.lines[0]).toEqual(jasmine.objectContaining({ productId: 'p2', lotNumber: 'L1', expiryDate: '2020-01-01', acknowledgeExpired: true }));
     });
 
@@ -91,6 +93,7 @@ describe('GoodsReceiptPageComponent', () => {
 
         cmp.onSubmit();
         const [first, second] = service.create.calls.allArgs().map((a) => a[0] as CreateGoodsReceiptRequest);
+
         expect(second.requestId).toBe(first.requestId);
         expect(cmp.result()).toEqual({ created: true, lineCount: 1 });
     });
@@ -101,6 +104,7 @@ describe('GoodsReceiptPageComponent', () => {
         fillFirstLine(plain);
         cmp.onSubmit();
         const first = (service.create.calls.mostRecent().args[0] as CreateGoodsReceiptRequest).requestId;
+
         cmp.startNew();
         fillFirstLine(plain);
         cmp.onSubmit();
@@ -109,13 +113,17 @@ describe('GoodsReceiptPageComponent', () => {
 
     it('satır sayısı 100 ile sınırlıdır; son satır silinmez', async () => {
         await setup();
+
         for (let i = 0; i < 150; i++) {
             cmp.addLine();
         }
+
         expect(cmp.lines.length).toBe(100);
+
         while (cmp.lines.length > 1) {
             cmp.removeLine(0);
         }
+
         cmp.removeLine(0);
         expect(cmp.lines.length).toBe(1);
     });

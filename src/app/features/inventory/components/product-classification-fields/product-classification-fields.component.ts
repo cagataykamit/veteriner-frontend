@@ -94,6 +94,7 @@ export class ProductClassificationFieldsComponent {
 
     protected requiresLot(): boolean {
         const { kind, controlledClass } = this.form().getRawValue();
+
         return productRequiresLotAndExpiry(kind, controlledClass);
     }
 }

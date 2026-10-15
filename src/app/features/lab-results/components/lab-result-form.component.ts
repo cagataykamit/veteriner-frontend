@@ -238,18 +238,24 @@ export class LabResultFormComponent implements OnInit {
             if (this.contextFromExamination()) {
                 return;
             }
+
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const id = trimClientIdControlValue(this.form.controls.clientId.value);
+
             if (!id) {
                 this.form.controls.petId.disable({ emitEvent: false });
                 this.syncExaminationSelectState();
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
@@ -257,15 +263,20 @@ export class LabResultFormComponent implements OnInit {
             if (this.contextFromExamination()) {
                 return;
             }
+
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
+
             this.form.patchValue({ examinationId: '' }, { emitEvent: false });
+
             if (!pid) {
                 this.relationLoadSeq += 1;
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
+
                 return;
             }
+
             this.loadExaminationsForPet(pid);
         });
         this.tryApplyExaminationRouteContext();
@@ -276,8 +287,10 @@ export class LabResultFormComponent implements OnInit {
         if (this.contextFromExamination()) {
             return;
         }
+
         const hasPet =
             !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
+
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
         } else {
@@ -300,21 +313,27 @@ export class LabResultFormComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
         const v = this.form.getRawValue();
         const resultDateUtc = v.resultDateLocal.trim() ? fromIstanbulDateTimeLocalInputToUtcIso(v.resultDateLocal) : null;
+
         if (v.resultDateLocal.trim() && !resultDateUtc) {
             this.submitError.set('Geçerli bir sonuç tarihi ve saati seçin.');
+
             return;
         }
 
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
@@ -337,12 +356,16 @@ export class LabResultFormComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseLabResultUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
@@ -353,6 +376,7 @@ export class LabResultFormComponent implements OnInit {
     private loadExaminationsForPet(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
+
         this.loadingExaminations.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }).subscribe({
@@ -360,9 +384,11 @@ export class LabResultFormComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                     return;
                 }
+
                 this.examinationOptions.set(ex.items.map(prescriptionExaminationSelectOption));
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
@@ -371,6 +397,7 @@ export class LabResultFormComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 this.selectionError.set(this.mapLoadError(e, 'Muayene listesi yüklenemedi.'));
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
@@ -381,21 +408,27 @@ export class LabResultFormComponent implements OnInit {
 
     private tryApplyExaminationRouteContext(): void {
         const ctx = parseExaminationCreateRouteContext(this.contextParams());
+
         if (!ctx) {
             return;
         }
+
         this.applyingRouteContext.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
             next: (ex) => {
                 const cId = ex.clientId?.trim() ?? '';
                 const pId = ex.petId?.trim() ?? '';
+
                 if (cId !== ctx.clientId || pId !== ctx.petId) {
                     this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 const listItem = examinationListItemFromDetail(ex);
+
                 this.examinationOptions.set([prescriptionExaminationSelectOption(listItem)]);
                 this.relationLoadSeq += 1;
                 this.form.patchValue(
@@ -426,6 +459,7 @@ export class LabResultFormComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

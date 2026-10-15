@@ -11,6 +11,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],

@@ -189,6 +189,7 @@ export class ProductCreatePageComponent implements OnInit {
         if (!this.canReadCategories) {
             return;
         }
+
         this.categoryService.list({ page: 1, pageSize: 200, isActive: true }).subscribe({
             next: (r) => {
                 this.categoryOptions.set((r.items ?? []).map(mapProductCategoryListItemVmToSelectOption));
@@ -209,8 +210,10 @@ export class ProductCreatePageComponent implements OnInit {
     onSubmit(): void {
         if (this.form.invalid || this.submitting() || this.ro.mutationBlocked()) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const raw = this.form.getRawValue();
         const value: ProductUpsertFormValue = {
             name: raw.name,
@@ -227,11 +230,13 @@ export class ProductCreatePageComponent implements OnInit {
             presentationForm: raw.presentationForm,
             packaging: raw.packaging
         };
+
         this.submitting.set(true);
         this.submitError.set(null);
         this.productService.createFromFormValue(value).subscribe({
             next: (id) => {
                 this.submitting.set(false);
+
                 if (id?.trim()) {
                     void this.router.navigate(['/panel/products', id.trim()]);
                 } else {
@@ -240,10 +245,13 @@ export class ProductCreatePageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof Error) {
                     this.submitError.set(e.message);
+
                     return;
                 }
+
                 this.submitError.set(messageFromHttpError(e as never, 'Ürün oluşturulamadı.'));
             }
         });

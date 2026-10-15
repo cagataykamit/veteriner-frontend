@@ -271,18 +271,25 @@ export class PaymentNewPageComponent implements OnInit {
         this.formValid.set(this.form.valid);
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.submitError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const id = trimClientIdControlValue(this.form.controls.clientId.value);
+
             this.clientIdValue.set(id);
+
             if (this.context && this.context.clientId !== id) {
                 this.context = null;
             }
+
             if (!id) {
                 this.resetCharges();
+
                 return;
             }
+
             this.loadBalance(id);
         });
         this.applyRouteContext();
@@ -316,28 +323,37 @@ export class PaymentNewPageComponent implements OnInit {
         if (this.submitting() || this.ro.mutationBlocked()) {
             return;
         }
+
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         if (!this.canSubmit()) {
             this.submitError.set('En az bir ücrete geçerli bir tutar girin.');
+
             return;
         }
 
         const v = this.form.getRawValue();
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
         const paidAtLocal = v.paidAtLocal?.trim() ?? '';
         const paidAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(paidAtLocal);
+
         if (!paidAtUtc) {
             this.submitError.set('Geçerli bir ödeme tarihi / saati seçin.');
+
             return;
         }
 
@@ -365,10 +381,13 @@ export class PaymentNewPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     this.handleHttpError(e);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
@@ -376,16 +395,22 @@ export class PaymentNewPageComponent implements OnInit {
 
     private handleHttpError(e: HttpErrorResponse): void {
         const code = problemCodeFromHttpError(e);
+
         if (code && STALE_BALANCE_CODES.has(code)) {
             this.submitError.set(STALE_BALANCE_MESSAGE);
             this.loadBalance(this.clientIdValue(), true);
+
             return;
         }
+
         if (code === 'Payments.DuplicateRequestMismatch') {
             this.submitError.set(DUPLICATE_MISMATCH_MESSAGE);
+
             return;
         }
+
         const parsed = parsePaymentUpsertHttpError(e);
+
         this.apiFieldErrors.set(parsed.fieldErrors);
         this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
     }
@@ -394,9 +419,11 @@ export class PaymentNewPageComponent implements OnInit {
     private applyRouteContext(): void {
         const q = this.route.snapshot.queryParamMap;
         const clientId = q.get('clientId')?.trim() ?? '';
+
         if (!clientId) {
             return;
         }
+
         this.context = {
             clientId,
             examinationId: q.get('examinationId')?.trim() || null,
@@ -415,9 +442,11 @@ export class PaymentNewPageComponent implements OnInit {
 
     private loadBalance(clientId: string, keepAmounts = false): void {
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!keepAmounts) {
             this.resetCharges();
         }
+
         this.balanceLoading.set(true);
         this.balanceError.set(null);
         this.clientsService.getClientBalance(clientId).subscribe({
@@ -425,7 +454,9 @@ export class PaymentNewPageComponent implements OnInit {
                 if (clientId !== this.clientIdValue()) {
                     return;
                 }
+
                 const charges = b.openCharges.filter((c) => c.clinicId === clinicId);
+
                 this.openCharges.set(charges);
                 this.amounts.update((a) => (keepAmounts ? this.keepEnteredAmounts(charges, a) : this.contextAmounts(charges)));
                 this.balanceLoading.set(false);
@@ -434,6 +465,7 @@ export class PaymentNewPageComponent implements OnInit {
                 if (clientId !== this.clientIdValue()) {
                     return;
                 }
+
                 this.balanceError.set(e.message ?? 'Açık ücretler yüklenemedi.');
                 this.balanceLoading.set(false);
             }
@@ -444,26 +476,32 @@ export class PaymentNewPageComponent implements OnInit {
     private contextAmounts(charges: ClientOpenChargeVm[]): Record<string, number | null> {
         const ctx = this.context;
         const filled: Record<string, number | null> = {};
+
         if (!ctx || (!ctx.chargeId && !ctx.examinationId && !ctx.visitId)) {
             return filled;
         }
+
         for (const c of charges) {
             const matches = ctx.chargeId ? c.chargeId === ctx.chargeId : ctx.examinationId ? c.examinationId === ctx.examinationId : c.visitId === ctx.visitId;
+
             if (matches) {
                 filled[c.chargeId] = c.outstandingAmount;
             }
         }
+
         return filled;
     }
 
     /** Yeniden okumada girilen tutarlar korunur (kapanmış ücretinki atılır); yeni kalanı aşan tutar satır hatası gösterir. */
     private keepEnteredAmounts(charges: ClientOpenChargeVm[], previous: Record<string, number | null>): Record<string, number | null> {
         const kept: Record<string, number | null> = {};
+
         for (const c of charges) {
             if (previous[c.chargeId] != null) {
                 kept[c.chargeId] = previous[c.chargeId];
             }
         }
+
         return kept;
     }
 }

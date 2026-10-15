@@ -179,7 +179,9 @@ export function importErrorMessage(err: unknown, fallback: string): string {
     if (!(err instanceof HttpErrorResponse)) {
         return err instanceof Error && err.message ? err.message : fallback;
     }
+
     const code = problemCodeFromHttpError(err);
+
     return (code && PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
 }
 
@@ -193,9 +195,11 @@ export function duplicateBatchId(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse) || problemCodeFromHttpError(err) !== 'Imports.DuplicateFile') {
         return null;
     }
+
     const body = err.error as Record<string, unknown> | null;
     const ext = body && typeof body === 'object' ? (body['extensions'] as Record<string, unknown> | undefined) : undefined;
     const id = ext?.['batchId'] ?? body?.['batchId'];
+
     return typeof id === 'string' && id.trim() ? id.trim() : null;
 }
 
@@ -204,24 +208,30 @@ export function importErrorExtension(err: unknown, key: string): unknown {
     if (!(err instanceof HttpErrorResponse)) {
         return undefined;
     }
+
     const body = err.error as Record<string, unknown> | null;
+
     if (!body || typeof body !== 'object') {
         return undefined;
     }
+
     const ext = body['extensions'];
     const fromExt = ext && typeof ext === 'object' ? (ext as Record<string, unknown>)[key] : undefined;
+
     return fromExt ?? body[key];
 }
 
 /** 409 `Imports.CommitBlocked` yanıtındaki engel kodları (`extensions.blockers`). */
 export function importCommitBlockers(err: unknown): string[] {
     const v = importErrorExtension(err, 'blockers');
+
     return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
 }
 
 /** 409 `Imports.ReminderImpactChanged` yanıtındaki güncel e-posta sayısı. */
 export function reminderImpactCurrentCount(err: unknown): number | null {
     const v = importErrorExtension(err, 'emailsWithinReminderWindow');
+
     return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null;
 }
 
@@ -233,9 +243,11 @@ export function isEndpointUnavailable(err: unknown): boolean {
     if (!(err instanceof HttpErrorResponse)) {
         return false;
     }
+
     if (err.status === 405 || err.status === 501) {
         return true;
     }
+
     return err.status === 404 && !problemCodeFromHttpError(err);
 }
 
@@ -294,9 +306,11 @@ export function rollbackWarningLabel(code: string): string {
 /** 409 `Imports.RollbackBlocked` yanıtındaki engelli kayıtlar (`extensions.blockedItems`, en çok 50); yalnız kimlik/satır/neden alanları alınır. */
 export function rollbackBlockedItems(err: unknown): ImportRollbackBlockedItemDto[] {
     const v = importErrorExtension(err, 'blockedItems');
+
     if (!Array.isArray(v)) {
         return [];
     }
+
     return v
         .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
         .map((x) => ({
@@ -313,14 +327,18 @@ export const IMPORT_MAX_FILE_BYTES = 10 * 1024 * 1024;
 /** Yükleme öncesi ön kontrol; backend imzaya bakar, burada yalnız uzantı/boyut/boşluk denetlenir. Sorun yoksa `null`. */
 export function precheckImportFile(file: File, extension: '.xlsx' | '.csv'): string | null {
     const name = file.name.toLowerCase();
+
     if (!name.endsWith(extension)) {
         return extension === '.xlsx' ? 'Yalnızca .xlsx dosyası yüklenebilir (.xls ve makrolu dosyalar desteklenmez).' : 'Yalnızca .csv dosyası yüklenebilir.';
     }
+
     if (file.size === 0) {
         return 'Dosya boş.';
     }
+
     if (file.size > IMPORT_MAX_FILE_BYTES) {
         return 'Dosya 10 MB sınırını aşıyor.';
     }
+
     return null;
 }

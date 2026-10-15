@@ -17,25 +17,32 @@ const INVITE_CODE_MESSAGES: Record<string, string> = {
 
 function readProblemFromHttp(err: HttpErrorResponse): ProblemDetails | null {
     const body = err.error as unknown;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const ext =
         o['extensions'] && typeof o['extensions'] === 'object' && !Array.isArray(o['extensions'])
             ? (o['extensions'] as Record<string, unknown>)
             : null;
+
     const pickExt = (key: string): string | null => {
         if (!ext) {
             return null;
         }
+
         const v = ext[key];
+
         return typeof v === 'string' && v.trim() ? v.trim() : null;
     };
+
     const code =
         (typeof o['code'] === 'string' && o['code'].trim() ? o['code'].trim() : null) ||
         (typeof o['Code'] === 'string' && o['Code'].trim() ? o['Code'].trim() : null) ||
         pickExt('code');
+
     return {
         code: code ?? null,
         detail: typeof o['detail'] === 'string' ? o['detail'] : null,
@@ -48,14 +55,17 @@ function firstValidationMessage(errors: ProblemDetails['errors'] | null | undefi
     if (!errors || typeof errors !== 'object') {
         return null;
     }
+
     for (const v of Object.values(errors)) {
         if (Array.isArray(v) && v[0] && typeof v[0] === 'string' && v[0].trim()) {
             return v[0].trim();
         }
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
@@ -63,14 +73,19 @@ export function publicInviteFailureMessage(err: unknown, fallback: string): stri
     if (!(err instanceof HttpErrorResponse)) {
         return err instanceof Error && err.message.trim() ? err.message.trim() : fallback;
     }
+
     const p = readProblemFromHttp(err);
     const code = p?.code?.trim() ?? '';
+
     if (code && INVITE_CODE_MESSAGES[code]) {
         return INVITE_CODE_MESSAGES[code];
     }
+
     const v = firstValidationMessage(p?.errors);
+
     if (v) {
         return v;
     }
+
     return messageFromHttpError(err, fallback);
 }

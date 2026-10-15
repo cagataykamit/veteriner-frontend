@@ -306,11 +306,13 @@ export class ProductStockMovementsPageComponent implements OnInit {
 
     readonly productDetailLink = () => {
         const id = this.productId();
+
         return id ? ['/panel/products', id] : ['/panel/products'];
     };
 
     private sessionKey(): string {
         const id = this.productId();
+
         return id ? `panel:inventory:product-stock-movements:${id}:listState` : '';
     }
 
@@ -319,22 +321,28 @@ export class ProductStockMovementsPageComponent implements OnInit {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id')?.trim();
+
                     if (!id) {
                         this.routeError.set('Geçersiz ürün.');
                         this.loading.set(false);
+
                         return EMPTY;
                     }
+
                     this.routeError.set(null);
                     this.productId.set(id);
                     this.productLabel.set(null);
                     this.error.set(null);
                     this.suppressNextLazy = true;
                     const restored = this.restoreStateFromSessionStorage(id);
+
                     if (!restored) {
                         this.currentPage.set(1);
                         this.first.set(0);
                     }
+
                     this.loading.set(true);
+
                     return this.productService.getById(id).pipe(
                         tap({
                             next: (p) => this.productLabel.set(`${p.name} (${p.sku})`),
@@ -342,6 +350,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
                         }),
                         catchError(() => {
                             this.productLabel.set(null);
+
                             return of(undefined);
                         }),
                         switchMap(() => this.stockMovementService.listByProductId(id, this.buildQueryFromSignals()))
@@ -357,9 +366,11 @@ export class ProductStockMovementsPageComponent implements OnInit {
                     this.first.set((r.page - 1) * r.pageSize);
                     this.persistStateToSessionStorage(r.page, r.pageSize);
                     const pid = this.productId();
+
                     if (pid) {
                         this.lastLoadKey = `${pid}|${r.page}|${r.pageSize}|${this.activeMovementType()}|${this.activeDateFrom()}|${this.activeDateTo()}`;
                     }
+
                     this.loading.set(false);
                     this.suppressNextLazy = true;
                 },
@@ -385,13 +396,16 @@ export class ProductStockMovementsPageComponent implements OnInit {
         this.exportError.set(null);
         let from = this.dateFromInput?.trim() ?? '';
         let to = this.dateToInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.dateFromInput = from;
             this.dateToInput = to;
         }
+
         this.activeMovementType.set(String(this.movementTypeFilter ?? '').trim());
         this.activeDateFrom.set(from);
         this.activeDateTo.set(to);
@@ -422,13 +436,17 @@ export class ProductStockMovementsPageComponent implements OnInit {
 
     private reloadWithCurrentFilters(force = false): void {
         const id = this.productId();
+
         if (!id || this.routeError()) {
             return;
         }
+
         const key = `${id}|${this.currentPage()}|${this.pageSize()}|${this.activeMovementType()}|${this.activeDateFrom()}|${this.activeDateTo()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -449,9 +467,11 @@ export class ProductStockMovementsPageComponent implements OnInit {
                     this.first.set((r.page - 1) * r.pageSize);
                     this.persistStateToSessionStorage(r.page, r.pageSize);
                     const pid = this.productId();
+
                     if (pid) {
                         this.lastLoadKey = `${pid}|${r.page}|${r.pageSize}|${this.activeMovementType()}|${this.activeDateFrom()}|${this.activeDateTo()}`;
                     }
+
                     this.loading.set(false);
                     this.suppressNextLazy = true;
                 },
@@ -465,8 +485,10 @@ export class ProductStockMovementsPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -477,10 +499,12 @@ export class ProductStockMovementsPageComponent implements OnInit {
             this.pageSize.set(rows);
             this.persistStateToSessionStorage(1, rows);
             this.reloadWithCurrentFilters(true);
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.currentPage.set(page);
         this.pageSize.set(rows);
@@ -492,6 +516,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -500,10 +525,12 @@ export class ProductStockMovementsPageComponent implements OnInit {
             this.pageSize.set(rows);
             this.persistStateToSessionStorage(1, rows);
             this.reloadWithCurrentFilters(true);
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.currentPage.set(page);
         this.pageSize.set(rows);
@@ -525,17 +552,22 @@ export class ProductStockMovementsPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(productId: string): boolean {
         const raw = sessionStorage.getItem(`panel:inventory:product-stock-movements:${productId}:listState`);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<ProductStockMovementsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(`panel:inventory:product-stock-movements:${productId}:listState`);
+
                 return false;
             }
+
             this.movementTypeFilter =
                 typeof parsed.movementType === 'string' &&
                 ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType)
@@ -549,18 +581,22 @@ export class ProductStockMovementsPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(`panel:inventory:product-stock-movements:${productId}:listState`);
+
             return false;
         }
     }
 
     private persistStateToSessionStorage(page: number, pageSize: number): void {
         const key = this.sessionKey();
+
         if (!key) {
             return;
         }
+
         const state: ProductStockMovementsListState = {
             movementType: this.activeMovementType(),
             dateFrom: this.dateFromInput.trim(),
@@ -568,11 +604,13 @@ export class ProductStockMovementsPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(key, JSON.stringify(state));
     }
 
     private clearStateFromSessionStorage(): void {
         const key = this.sessionKey();
+
         if (key) {
             sessionStorage.removeItem(key);
         }
@@ -591,10 +629,13 @@ export class ProductStockMovementsPageComponent implements OnInit {
         if (!this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM)) {
             return;
         }
+
         const id = this.productId();
+
         if (!id || this.routeError()) {
             return;
         }
+
         this.exportError.set(null);
         this.exporting.set(true);
         this.fetchAllFilteredProductStockMovementsForExport(id).subscribe({
@@ -603,15 +644,19 @@ export class ProductStockMovementsPageComponent implements OnInit {
                 const csv = buildCsvFromStringRows([...STOCK_MOVEMENT_CSV_HEADERS], rows);
                 const blob = csvTextToUtf8BlobWithBom(csv);
                 const name = `urun-stok-hareketleri-${localDateTimeYyyyMmDd_HHmmForFileName()}.csv`;
+
                 triggerBlobDownload(blob, name);
                 this.exporting.set(false);
             },
             error: (e: unknown) => {
                 this.exporting.set(false);
+
                 if (e instanceof InventoryCsvExportRowLimitError) {
                     this.exportError.set('Dışa aktarılacak kayıt sayısı çok yüksek. Lütfen filtreleri daraltın.');
+
                     return;
                 }
+
                 this.exportError.set('Stok hareketleri dışa aktarılamadı.');
             }
         });
@@ -626,6 +671,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
             dateFromUtc: dateFrom || undefined,
             dateToUtc: dateTo || undefined
         };
+
         return fetchAllInventoryCsvExportPages$((page, pageSize) =>
             this.stockMovementService.listByProductId(productId, { page, pageSize, ...q })
         );

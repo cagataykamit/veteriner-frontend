@@ -13,6 +13,7 @@ export function valueChoiceKey(kind: ImportValueKind, source: string): string {
 export function valueChoicesToRequest(choices: ImportValueChoices): ImportValueMappingDto[] {
     return Object.entries(choices).map(([key, target]) => {
         const sep = key.indexOf('|');
+
         return {
             kind: key.slice(0, sep) as ImportValueKind,
             source: key.slice(sep + 1),

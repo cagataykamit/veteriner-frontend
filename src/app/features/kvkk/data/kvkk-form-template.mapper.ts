@@ -8,6 +8,7 @@ function trimmedOrNull(v: string | null | undefined): string | null {
 /** Metin olduğu gibi korunur (satır sonları anlamlı); sabit alanlar gelmezse sözleşme değerleri. */
 export function mapKvkkFormTemplateDtoToVm(dto: KvkkFormTemplateDto): KvkkFormTemplateVm {
     const placeholders = (dto.placeholders ?? []).filter((p) => typeof p === 'string' && p.trim());
+
     return {
         clinicId: dto.clinicId?.trim() ?? '',
         text: dto.text ?? '',

@@ -18,12 +18,15 @@ export function labResultResultFieldsValidator(resultRequired: () => boolean = (
     return (group: AbstractControl): ValidationErrors | null => {
         const hasDate = filled(group.get('resultDateLocal'));
         const hasText = filled(group.get('resultText'));
+
         if (hasDate !== hasText || (resultRequired() && !hasText)) {
             return { [LAB_RESULT_INCOMPLETE_ERROR_KEY]: true };
         }
+
         if (!hasText && filled(group.get('interpretation'))) {
             return { [LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_ERROR_KEY]: true };
         }
+
         return null;
     };
 }

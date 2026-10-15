@@ -67,6 +67,7 @@ describe('PaymentsListPageComponent — iptal', () => {
 
     it('tablo satırında İptal et yalnız simgeyle yer tutar; erişilebilir ad ve ipucu korunur', async () => {
         const iconButton = () => fixture.nativeElement.querySelector('button[aria-label="İptal et"]') as HTMLButtonElement | null;
+
         await setup();
         expect(iconButton()).toBeNull();
         fixture.destroy();
@@ -81,9 +82,11 @@ describe('PaymentsListPageComponent — iptal', () => {
 
     it('uzun müşteri adı tabloda tek satırda kesilir; tam ad ipucunda kalır', async () => {
         const longName = 'Ayşe Gülizar Karamanoğlu Yılmaz';
+
         payments.getPayments.and.returnValue(of({ items: [{ ...row, clientName: longName }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
         await setup();
         const el = fixture.nativeElement.querySelector(`table [title="${longName}"]`) as HTMLElement;
+
         expect(el.classList).toContain('truncate');
         expect(el.textContent!.trim()).toBe(longName);
     });
@@ -93,6 +96,7 @@ describe('PaymentsListPageComponent — iptal', () => {
         payments.voidPayment.and.returnValue(of(void 0));
         await setup();
         const cmp = fixture.componentInstance;
+
         cmp.openVoid(row);
         expect(cmp.voidSummary()).toContain('Ali Veli');
         await firstValueFrom(cmp.voidPayment('Yanlış tutar girildi'));

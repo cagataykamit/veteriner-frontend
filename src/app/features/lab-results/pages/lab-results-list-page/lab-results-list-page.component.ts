@@ -261,8 +261,10 @@ export class LabResultsListPageComponent implements OnInit {
     applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
@@ -313,11 +315,14 @@ export class LabResultsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
     }
 
@@ -325,6 +330,7 @@ export class LabResultsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const first = state.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.suppressNextLazy = true;
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
     }
@@ -339,9 +345,11 @@ export class LabResultsListPageComponent implements OnInit {
         force = false
     ): void {
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status}|${this.contextPetId()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);

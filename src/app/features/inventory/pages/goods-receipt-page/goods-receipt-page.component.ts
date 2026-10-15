@@ -264,6 +264,7 @@ export class GoodsReceiptPageComponent implements OnInit {
     private readonly linesChanged = toSignal(this.lines.valueChanges.pipe(startWith(null)));
     protected readonly totalText = computed(() => {
         this.linesChanged();
+
         return MONEY.format(goodsReceiptTotalCost(this.lines.getRawValue()));
     });
 
@@ -288,8 +289,10 @@ export class GoodsReceiptPageComponent implements OnInit {
 
     ngOnInit(): void {
         const q = this.route.snapshot.queryParamMap;
+
         this.loadClinics(q.get('clinicId')?.trim() || this.auth.getClinicId()?.trim() || '');
         const productId = q.get('productId')?.trim();
+
         if (productId) {
             this.prefillLine(productId, Number(q.get('quantity')));
         }
@@ -297,6 +300,7 @@ export class GoodsReceiptPageComponent implements OnInit {
 
     onProductSearch(event: AutoCompleteCompleteEvent): void {
         const term = event.query.trim();
+
         if (term) {
             this.productSearch$.next(term);
         }
@@ -306,8 +310,11 @@ export class GoodsReceiptPageComponent implements OnInit {
         if (this.lines.length >= GOODS_RECEIPT_MAX_LINES) {
             return null;
         }
+
         const line = createGoodsReceiptLineGroup(this.fb);
+
         this.lines.push(line);
+
         return line;
     }
 
@@ -321,23 +328,29 @@ export class GoodsReceiptPageComponent implements OnInit {
     /** Ürün alanı dışındaki girdide Enter: sonraki satırın ürününe geç, son satırsa yeni satır aç. */
     onRowEnter(event: Event, index: number): void {
         const target = event.target as HTMLElement;
+
         if (target.tagName !== 'INPUT' || (target as HTMLInputElement).type === 'checkbox' || target.closest('p-autocomplete')) {
             return;
         }
+
         event.preventDefault();
+
         if (index === this.lines.length - 1 && !this.addLine()) {
             return;
         }
+
         setTimeout(() => document.getElementById(`gr-product-${index + 1}`)?.focus());
     }
 
     requiresLot(line: GoodsReceiptLineGroup): boolean {
         const p = line.controls.product.value;
+
         return !!p && typeof p !== 'string' && p.requiresLotAndExpiry;
     }
 
     lineTotalText(line: GoodsReceiptLineGroup): string {
         const { quantity, unitCost } = line.getRawValue();
+
         return goodsReceiptTotalCost([{ quantity, unitCost }]) > 0 ? MONEY.format(goodsReceiptTotalCost([{ quantity, unitCost }])) : '—';
     }
 
@@ -345,17 +358,23 @@ export class GoodsReceiptPageComponent implements OnInit {
     rowNotes(line: GoodsReceiptLineGroup, index: number): { errors: string[]; expired: boolean } | null {
         const errors: string[] = [];
         const server = this.lineErrors()[index];
+
         if (server) {
             errors.push(server);
         }
+
         const showLocal = line.touched || this.attempted();
+
         if (showLocal && (line.hasError('lotRequired') || line.hasError('expiryRequired'))) {
             errors.push('Aşı ve kontrollü ürünlerde seri/lot no ile son kullanma tarihi zorunludur.');
         }
+
         const expired = isStockBatchExpiryPast(line.controls.expiryDate.value);
+
         if (line.hasError('expiredNotAcknowledged') && showLocal) {
             errors.push('Son kullanma tarihi geçmiş; kaydetmek için bu satırı onaylayın.');
         }
+
         return errors.length > 0 || expired ? { errors, expired } : null;
     }
 
@@ -363,13 +382,16 @@ export class GoodsReceiptPageComponent implements OnInit {
         if (this.ro.mutationBlocked() || this.submitting()) {
             return;
         }
+
         this.attempted.set(true);
         this.form.markAllAsTouched();
         this.submitError.set(null);
         this.lineErrors.set({});
+
         if (this.form.invalid) {
             return;
         }
+
         this.submitting.set(true);
         this.goodsReceipts.create(mapGoodsReceiptFormToRequest(this.form, this.requestId)).subscribe({
             next: (r) => {
@@ -387,6 +409,7 @@ export class GoodsReceiptPageComponent implements OnInit {
     /** Başarıdan sonra temiz form ve yeni `requestId`. */
     startNew(): void {
         const clinicId = this.form.controls.clinicId.value;
+
         this.form.reset({ clinicId });
         this.lines.clear();
         this.lines.push(createGoodsReceiptLineGroup(this.fb));
@@ -401,6 +424,7 @@ export class GoodsReceiptPageComponent implements OnInit {
         this.productService.getById(productId).subscribe({
             next: (p) => {
                 const line = this.lines.at(0);
+
                 line.patchValue({
                     product: { id: p.id, label: `${p.name} (${p.sku})`, barcode: p.barcode, requiresLotAndExpiry: p.requiresLotAndExpiry },
                     quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : null
@@ -416,15 +440,19 @@ export class GoodsReceiptPageComponent implements OnInit {
             next: (rows) => {
                 this.clinicsLoading.set(false);
                 const opts: SelectOption[] = rows.filter((c) => c.isActive !== false).map((c) => ({ label: c.name.trim() ? c.name : c.id, value: c.id }));
+
                 this.clinicOptions.set(opts);
                 const cid = preferredClinicId || (opts.length === 1 ? opts[0].value : '');
+
                 if (cid && !opts.some((o) => o.value === cid)) {
                     this.clinicOptions.set([{ label: this.auth.getClinicName()?.trim() || 'Aktif klinik', value: cid }, ...opts]);
                 }
+
                 this.form.patchValue({ clinicId: cid });
             },
             error: () => {
                 this.clinicsLoading.set(false);
+
                 if (preferredClinicId) {
                     this.clinicOptions.set([{ label: this.auth.getClinicName()?.trim() || 'Aktif klinik', value: preferredClinicId }]);
                     this.form.patchValue({ clinicId: preferredClinicId });

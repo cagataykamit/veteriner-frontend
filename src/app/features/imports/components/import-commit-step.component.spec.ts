@@ -46,6 +46,7 @@ describe('ImportCommitStepComponent', () => {
         fixture.componentRef.setInput('canCommitClaim', opts.claim ?? true);
         fixture.componentRef.setInput('progress', opts.progress ?? null);
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     }
 
@@ -57,9 +58,11 @@ describe('ImportCommitStepComponent', () => {
     it('uç yayında değilken (404 gövdesiz) nazik mesaj gösterir ve başarı bildirmez', () => {
         imports.commit.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
         const emitted: ImportBatchDto[] = [];
+
         create(batch('Validated'));
         fixture.componentInstance.batchChange.subscribe((b) => emitted.push(b));
         const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+
         cmp.confirmed = true;
         cmp.commit();
         fixture.detectChanges();
@@ -73,10 +76,12 @@ describe('ImportCommitStepComponent', () => {
         imports.commit.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.ValidationStale' } })));
         create(batch('Validated'));
         const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+
         cmp.confirmed = true;
         cmp.commit();
         fixture.detectChanges();
         const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
         expect(text).not.toContain('Uygulama henüz etkin değil');
         expect(text).toContain('Yeniden doğrulayın');
     });
@@ -89,11 +94,13 @@ describe('ImportCommitStepComponent', () => {
 
     it('aktarma sürerken ilerleme gösterir', () => {
         const el = create({ ...batch('Committing'), progress: { phase: 'Committing', processed: 50, total: 200 } });
+
         expect(el.textContent).toContain('50 / 200');
     });
 
     it('yoklama yanıtındaki ilerlemeyi ve sırada bekleme notunu gösterir', () => {
         const el = create(batch('Committing'), { progress: { id: 'b1', status: 'Committing', phase: 'Committing', processed: 30, total: 120, updatedAtUtc: null, committedAtUtc: null, leaseActive: false } });
+
         expect(el.textContent).toContain('30 / 120');
         expect(el.textContent).toContain('Sayfayı kapatabilirsiniz');
     });
@@ -102,12 +109,15 @@ describe('ImportCommitStepComponent', () => {
         imports.commit.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.CommitBlocked', blockers: ['Imports.OwnerLinkUnavailable'] } })));
         create(batch('Validated'));
         let stale = 0;
+
         fixture.componentInstance.previewStale.subscribe(() => stale++);
         const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+
         cmp.confirmed = true;
         cmp.commit();
         fixture.detectChanges();
         const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
         expect(text).toContain('başlatılamıyor');
         expect(text).toContain('Hastalar müşterilere bağlanamıyor');
         expect(text).not.toContain('Uygulama henüz etkin değil');
@@ -118,6 +128,7 @@ describe('ImportCommitStepComponent', () => {
         imports.commit.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'Imports.AccessDenied' } })));
         create(batch('Validated'));
         const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+
         cmp.confirmed = true;
         cmp.commit();
         fixture.detectChanges();
@@ -126,29 +137,35 @@ describe('ImportCommitStepComponent', () => {
 
     it('commit yetkisi yoksa onay adımı salt okunurdur', () => {
         const el = create(batch('Validated'), { claim: false });
+
         expect(el.textContent).toContain('aktarma yetkisi gerekir');
         expect(el.querySelector('#importConfirm')).toBeNull();
     });
 
     it('CommitFailed durumunda nazik hata ve sayıları gösterir', () => {
         const el = create(batch('CommitFailed'));
+
         expect(el.textContent).toContain('beklenmeyen bir sorun');
         expect(el.textContent).toContain('Oluşturuldu');
     });
 
     it('tamamlanınca uygulama satır sorunlarını sade metinle gösterir', () => {
         const el = create(committed(), { preview: committedPreview });
+
         expect(el.textContent).toContain('mevcutla eşleşti');
         expect(el.textContent).toContain('2 satır');
     });
 
     it('hatırlatma açma: sayı onayıyla gönderir, kiracı notunu gösterir, parti güncellemesini bildirir', () => {
         const released = { ...committed(), remindersReleasedAtUtc: '2026-10-14T09:05:00Z' };
+
         imports.releaseReminders.and.returnValue(of({ batch: released, reminderImpact: committedPreview.reminderImpact, alreadyReleased: false, note: 'Ayar kapalı.' }));
         create(committed(), { preview: committedPreview });
         const emitted: ImportBatchDto[] = [];
+
         fixture.componentInstance.batchChange.subscribe((b) => emitted.push(b));
         const cmp = fixture.componentInstance as unknown as { release(p: ImportPreviewDto): void };
+
         cmp.release(committedPreview);
         expect(imports.releaseReminders).toHaveBeenCalledWith('b1', 5);
         expect(emitted).toEqual([released]);
@@ -164,6 +181,7 @@ describe('ImportCommitStepComponent', () => {
         );
         create(committed(), { preview: committedPreview });
         const cmp = fixture.componentInstance as unknown as { release(p: ImportPreviewDto): void; confirmingRelease: { set(v: boolean): void } };
+
         cmp.confirmingRelease.set(true);
         cmp.release(committedPreview);
         fixture.detectChanges();

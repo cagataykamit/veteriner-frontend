@@ -258,6 +258,7 @@ export class StockMovementCreateDialogComponent {
 
     movementHint(): string {
         const t = this.form.controls.movementType.value as StockMovementFormMovementType;
+
         return STOCK_MOVEMENT_CREATE_MOVEMENT_OPTIONS.find((o) => o.value === t)?.hint ?? '';
     }
 
@@ -286,12 +287,14 @@ export class StockMovementCreateDialogComponent {
             if (!this.visible()) {
                 return;
             }
+
             untracked(() => this.prepareOpen());
         });
     }
 
     onVisibleChange(next: boolean): void {
         this.visibleChange.emit(next);
+
         if (!next) {
             this.submitError.set(null);
         }
@@ -307,9 +310,11 @@ export class StockMovementCreateDialogComponent {
         if (this.ro.mutationBlocked() || this.submitting()) {
             return true;
         }
+
         if (!this.fixedProductId()?.trim() && !this.productsLoading() && this.productOptions().length === 0) {
             return true;
         }
+
         return this.form.invalid || !this.form.controls.clinicId.value?.trim();
     }
 
@@ -317,22 +322,30 @@ export class StockMovementCreateDialogComponent {
         if (this.ro.mutationBlocked()) {
             return;
         }
+
         if (!this.form.controls.clinicId.value?.trim()) {
             this.submitError.set('Stok hareketi için klinik seçimi gerekli.');
             this.form.controls.clinicId.markAsTouched();
+
             return;
         }
+
         this.form.markAllAsTouched();
+
         if (this.form.invalid || this.submitting()) {
             return;
         }
+
         let body;
+
         try {
             body = mapStockMovementUpsertFormValueToCreateRequest(getStockMovementFormValue(this.form, this.requestId));
         } catch {
             this.submitError.set('Form doğrulanamadı.');
+
             return;
         }
+
         this.submitting.set(true);
         this.submitError.set(null);
         this.stockMovementService.create(body).subscribe({
@@ -368,6 +381,7 @@ export class StockMovementCreateDialogComponent {
         this.requestId = crypto.randomUUID();
 
         const fixedPid = this.fixedProductId()?.trim() ?? '';
+
         if (fixedPid) {
             this.form.patchValue({ productId: fixedPid });
             this.form.controls.productId.disable({ emitEvent: false });
@@ -379,6 +393,7 @@ export class StockMovementCreateDialogComponent {
 
         const preferredClinic =
             this.defaultClinicId()?.trim() ?? this.auth.getClinicId()?.trim() ?? '';
+
         this.loadClinics(preferredClinic);
     }
 
@@ -392,27 +407,34 @@ export class StockMovementCreateDialogComponent {
                     label: c.name.trim() ? c.name : c.id,
                     value: c.id
                 }));
+
                 this.clinicOptions.set(opts);
                 let cid = preferredClinicId.trim();
+
                 if (!cid && opts.length === 1) {
                     cid = opts[0].value;
                 }
+
                 if (cid && !opts.some((o) => o.value === cid)) {
                     const nm = this.auth.getClinicName()?.trim();
+
                     opts.unshift({
                         label: nm ? `${nm}` : `Klinik (${cid.slice(0, 8)}…)`,
                         value: cid
                     });
                     this.clinicOptions.set([...opts]);
                 }
+
                 this.form.patchValue({ clinicId: cid });
             },
             error: () => {
                 this.clinicsLoading.set(false);
                 this.clinicsLoadError.set('Klinik listesi yüklenemedi.');
                 const fallbackId = preferredClinicId.trim() || this.auth.getClinicId()?.trim() || '';
+
                 if (fallbackId) {
                     const nm = this.auth.getClinicName()?.trim();
+
                     this.clinicOptions.set([
                         {
                             label: nm ? `${nm}` : 'Aktif klinik',
@@ -437,6 +459,7 @@ export class StockMovementCreateDialogComponent {
                     label: `${p.name} (${p.sku})`,
                     value: p.id
                 }));
+
                 this.productOptions.set(opts);
             },
             error: () => {

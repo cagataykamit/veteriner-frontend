@@ -15,6 +15,7 @@ import {
     dateOnlyInputToIstanbulStartUtcIso,
     toIstanbulDateInputValue
 } from '@/app/shared/utils/date.utils';
+
 const EM = '—';
 
 function str(v: string | null | undefined): string {
@@ -27,17 +28,21 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: PrescriptionListItemDto | PrescriptionDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
@@ -59,6 +64,7 @@ function canonicalPetId(dto: PrescriptionListItemDto | PrescriptionDetailDto): s
 
 function canonicalPetName(dto: PrescriptionListItemDto | PrescriptionDetailDto): string {
     const raw = firstTrimmed(dto.petName, readDtoString(dto, ['PetName', 'AnimalName']));
+
     return raw ?? '';
 }
 
@@ -187,6 +193,7 @@ export function mapPagedPrescriptionsToVm(result: PrescriptionListItemDtoPagedRe
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapPrescriptionListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -204,55 +211,74 @@ export function prescriptionsQueryToHttpParams(query: PrescriptionsListQuery): H
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+
     const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+
     if (fromUtc) {
         p = p.set('dateFromUtc', fromUtc);
     }
+
     const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+
     if (toUtc) {
         p = p.set('dateToUtc', toUtc);
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     return p;
 }
 
 export function mapCreatePrescriptionToApiBody(req: CreatePrescriptionRequest): PrescriptionWriteRequestDto {
     const clinicId = req.clinicId.trim();
     const petId = req.petId.trim();
+
     if (!clinicId) {
         throw new Error('PRESCRIPTION_WRITE_CLINIC_ID_REQUIRED');
     }
+
     if (!petId) {
         throw new Error('PRESCRIPTION_WRITE_PET_ID_REQUIRED');
     }
+
     const prescribedAtUtc = req.prescribedAtUtc?.trim() ?? '';
+
     if (!prescribedAtUtc) {
         throw new Error('PRESCRIPTION_WRITE_DATE_REQUIRED');
     }
+
     const title = req.title.trim();
     const content = req.content.trim();
+
     if (!title) {
         throw new Error('PRESCRIPTION_WRITE_TITLE_REQUIRED');
     }
+
     if (!content) {
         throw new Error('PRESCRIPTION_WRITE_CONTENT_REQUIRED');
     }
+
     const dto: PrescriptionWriteRequestDto = {
         clinicId,
         petId,
@@ -263,16 +289,21 @@ export function mapCreatePrescriptionToApiBody(req: CreatePrescriptionRequest): 
         followUpDateUtc: req.followUpDateUtc?.trim() ? req.followUpDateUtc.trim() : null
     };
     const ex = req.examinationId?.trim();
+
     if (ex) {
         dto.examinationId = ex;
     }
+
     const tr = req.treatmentId?.trim();
+
     if (tr) {
         dto.treatmentId = tr;
     }
+
     if (req.items !== undefined) {
         dto.items = mapPrescriptionItemInputsToApi(req.items);
     }
+
     return dto;
 }
 
@@ -309,13 +340,17 @@ export function followUpBeforePrescribedMessage(prescribedAtUtc: string, followU
     if (!followUpDateUtc?.trim()) {
         return null;
     }
+
     const t = new Date(prescribedAtUtc.trim());
     const f = new Date(followUpDateUtc.trim());
+
     if (Number.isNaN(t.getTime()) || Number.isNaN(f.getTime())) {
         return null;
     }
+
     if (f.getTime() < t.getTime()) {
         return 'Takip tarihi reçete tarihinden önce olamaz.';
     }
+
     return null;
 }

@@ -21,6 +21,7 @@ describe('stock batch form', () => {
 
     it('dolu alanlar kırpılır, boşlar null olur', () => {
         const g = createStockBatchFormGroup(fb);
+
         g.patchValue({ lotNumber: ' L-1 ', expiryDate: '2027-01-31', supplierName: 'Vet İlaç' });
         expect(getStockBatchRequest(g)).toEqual(
             jasmine.objectContaining({ lotNumber: 'L-1', expiryDate: '2027-01-31', supplierName: 'Vet İlaç', invoiceNumber: null, coldChainMonitor: null })
@@ -29,6 +30,7 @@ describe('stock batch form', () => {
 
     it('zorunlu üründe seri no ve SKT boşsa geçersiz; zorunluluk kalkınca geçerli', () => {
         const g = createStockBatchFormGroup(fb);
+
         applyStockBatchRequirement(g, true);
         expect(g.controls.lotNumber.hasError('required')).toBeTrue();
         expect(g.controls.expiryDate.hasError('required')).toBeTrue();
@@ -41,6 +43,7 @@ describe('stock batch form', () => {
 
     it('SKT geçmişse onay kutusu işaretlenmeden geçersiz; onayla geçerli ve istek bayrağı eklenir', () => {
         const g = createStockBatchFormGroup(fb);
+
         g.patchValue({ lotNumber: 'L', expiryDate: '2020-01-01' });
         expect(g.hasError('expiredNotAcknowledged')).toBeTrue();
         expect(getAcknowledgeExpiredRequest(g)).toEqual({});
@@ -53,6 +56,7 @@ describe('stock batch form', () => {
 
     it('depo çıkış tarihi geliş tarihinden sonraysa geçersiz', () => {
         const g = createStockBatchFormGroup(fb);
+
         g.patchValue({ receivedDate: '2026-10-10', dispatchedDate: '2026-10-11' });
         expect(g.hasError('dispatchedAfterReceived')).toBeTrue();
         g.patchValue({ dispatchedDate: '2026-10-09' });
@@ -61,6 +65,7 @@ describe('stock batch form', () => {
 
     it('stok girişi dışında parti bloğu pasif olur ve doğrulamayı etkilemez', () => {
         const g = createStockBatchFormGroup(fb);
+
         syncStockBatchGroup(g, { active: false, required: true });
         expect(g.disabled).toBeTrue();
         expect(g.valid).toBeFalse(); // pasif grup `invalid` değildir ama `valid` de değildir
@@ -79,14 +84,17 @@ describe('stock batch form', () => {
 
     it('stok hareketi isteğine yalnız girişte batch ve requestId girer', () => {
         const form = createStockMovementFormGroup(fb);
+
         form.patchValue({ clinicId: 'c', productId: 'p', movementType: 'In', quantity: 5 });
         form.controls.batch.patchValue({ lotNumber: 'L-9', expiryDate: '2027-05-01' });
         const entry = mapStockMovementUpsertFormValueToCreateRequest(getStockMovementFormValue(form, 'rid-1'));
+
         expect(entry.requestId).toBe('rid-1');
         expect(entry.batch).toEqual(jasmine.objectContaining({ lotNumber: 'L-9', expiryDate: '2027-05-01' }));
 
         form.patchValue({ movementType: 'Out' });
         const out = mapStockMovementUpsertFormValueToCreateRequest(getStockMovementFormValue(form, 'rid-2'));
+
         expect('batch' in out).toBeFalse();
     });
 });
@@ -110,6 +118,7 @@ describe('ürün isteği (sınıf alanları)', () => {
 
     it('oluşturmada boş metin null, sınıf alanları string enum olarak gider', () => {
         const req = mapProductUpsertFormValueToCreateRequest(value);
+
         expect(req.kind).toBe('Vaccine');
         expect(req.controlledClass).toBe('None');
         expect(req.pharmacologicalForm).toBe('Süspansiyon');
@@ -118,6 +127,7 @@ describe('ürün isteği (sınıf alanları)', () => {
 
     it('güncellemede boşaltılan metin "" ile temizlenir (null dokunmaz)', () => {
         const req = mapProductUpsertFormValueToUpdateRequest(value);
+
         expect(req.presentationForm).toBe('');
         expect(req.packaging).toBe('');
     });

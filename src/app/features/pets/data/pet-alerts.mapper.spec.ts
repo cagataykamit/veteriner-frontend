@@ -36,12 +36,14 @@ describe('pet uyarıları — mapper', () => {
         const body = mapCreatePetToApiBody(
             mapPetUpsertFormToCreateRequest(form({ alertFlags: edit.petAlerts!.flags, alertNote: edit.petAlerts!.note ?? '' }), [])
         );
+
         expect(body.alertFlags).toEqual(['Allergy', 'Aggressive']);
         expect(body.alertNote).toBe('Isırır');
     });
 
     it('tüm bayrakları kaldırınca [] ve boş not gider (temizle); bayraksız not gönderilmez', () => {
         const body = mapCreatePetToApiBody(mapPetUpsertFormToCreateRequest(form({ alertFlags: [], alertNote: 'artık not' }), []));
+
         expect(body.alertFlags).toEqual([]);
         expect(body.alertNote).toBe('');
     });
@@ -49,6 +51,7 @@ describe('pet uyarıları — mapper', () => {
     it('uyarı alanları bilinmiyorsa (undefined) gövdeye hiç girmez', () => {
         const req = { ...mapPetUpsertFormToCreateRequest(form(), []), alertFlags: undefined, alertNote: undefined };
         const body = mapCreatePetToApiBody(req);
+
         expect('alertFlags' in body).toBeFalse();
         expect('alertNote' in body).toBeFalse();
     });

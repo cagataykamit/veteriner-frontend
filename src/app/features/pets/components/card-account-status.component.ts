@@ -75,10 +75,12 @@ export class CardAccountStatusComponent {
 
     readonly outstanding = computed(() => {
         const b = this.balance();
+
         return b?.state === 'ok' ? b.data.outstandingAmount : 0;
     });
     readonly outstandingLabel = computed(() => {
         const b = this.balance();
+
         return b?.state === 'ok' ? formatMoney(b.data.outstandingAmount, b.data.currency || 'TRY') : '';
     });
 }

@@ -293,10 +293,12 @@ export class StockMovementsPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.loadFromServer(
             this.currentPage(),
@@ -312,8 +314,10 @@ export class StockMovementsPageComponent implements OnInit {
         this.exportError.set(null);
         let from = this.dateFromInput?.trim() ?? '';
         let to = this.dateToInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.dateFromInput = from;
@@ -362,8 +366,10 @@ export class StockMovementsPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -373,10 +379,12 @@ export class StockMovementsPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
     }
@@ -385,6 +393,7 @@ export class StockMovementsPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -392,10 +401,12 @@ export class StockMovementsPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
     }
@@ -426,9 +437,11 @@ export class StockMovementsPageComponent implements OnInit {
         force = false
     ): void {
         const key = `${page}|${pageSize}|${search.trim()}|${movementType}|${dateFrom}|${dateTo}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -460,17 +473,22 @@ export class StockMovementsPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<StockMovementsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(LIST_STATE_KEY);
+
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.activeSearch.set(this.searchInput.trim());
             this.movementTypeFilter =
@@ -486,9 +504,11 @@ export class StockMovementsPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -502,6 +522,7 @@ export class StockMovementsPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(LIST_STATE_KEY, JSON.stringify(state));
     }
 
@@ -522,6 +543,7 @@ export class StockMovementsPageComponent implements OnInit {
         if (!this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM)) {
             return;
         }
+
         this.exportError.set(null);
         this.exporting.set(true);
         this.fetchAllFilteredStockMovementsForExport().subscribe({
@@ -530,15 +552,19 @@ export class StockMovementsPageComponent implements OnInit {
                 const csv = buildCsvFromStringRows([...STOCK_MOVEMENT_CSV_HEADERS], rows);
                 const blob = csvTextToUtf8BlobWithBom(csv);
                 const name = `stok-hareketleri-${localDateTimeYyyyMmDd_HHmmForFileName()}.csv`;
+
                 triggerBlobDownload(blob, name);
                 this.exporting.set(false);
             },
             error: (e: unknown) => {
                 this.exporting.set(false);
+
                 if (e instanceof InventoryCsvExportRowLimitError) {
                     this.exportError.set('Dışa aktarılacak kayıt sayısı çok yüksek. Lütfen filtreleri daraltın.');
+
                     return;
                 }
+
                 this.exportError.set('Stok hareketleri dışa aktarılamadı.');
             }
         });
@@ -555,6 +581,7 @@ export class StockMovementsPageComponent implements OnInit {
             dateFromUtc: dateFrom || undefined,
             dateToUtc: dateTo || undefined
         };
+
         return fetchAllInventoryCsvExportPages$((page, pageSize) =>
             this.stockMovementService.list({ page, pageSize, ...q })
         );

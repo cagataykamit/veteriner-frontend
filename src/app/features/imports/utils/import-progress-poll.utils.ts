@@ -28,13 +28,16 @@ export function pollImportProgress(fetch: () => Observable<ImportCommitProgressD
     return defer(() => {
         let failures = 0;
         let waitingSince: number | null = null;
+
         return timer(0, IMPORT_PROGRESS_POLL_MS).pipe(
             exhaustMap(() => fetch().pipe(catchError((e: unknown) => (++failures >= IMPORT_PROGRESS_MAX_FAILURES ? throwError(() => e) : EMPTY)))),
             map((progress): ImportProgressTick => {
                 failures = 0;
                 const running = progress.status === job;
                 const now = asyncScheduler.now();
+
                 waitingSince = running && !progress.leaseActive ? (waitingSince ?? now) : null;
+
                 return { progress, running, stalled: waitingSince !== null && now - waitingSince >= IMPORT_JOB_STALL_MS };
             }),
             takeWhile((t) => t.running, true)

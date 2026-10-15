@@ -289,11 +289,14 @@ export class LabResultEditPageComponent implements OnInit {
             'interpretation',
             'notes'
         ];
+
         for (const f of fields) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[f]) {
                     const next = { ...cur };
+
                     delete next[f];
                     this.apiFieldErrors.set(next);
                 }
@@ -304,45 +307,59 @@ export class LabResultEditPageComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.loadError.set('Geçersiz kayıt.');
             this.loading.set(false);
+
             return;
         }
+
         this.labResultId = id;
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const cid = trimClientIdControlValue(this.form.controls.clientId.value);
+
             if (!cid) {
                 this.form.controls.petId.disable({ emitEvent: false });
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
+
             if (!pid) {
                 this.relationLoadSeq += 1;
                 this.form.patchValue({ examinationId: '' }, { emitEvent: false });
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
+
                 return;
             }
+
             if (this.initialRelationHydratePending) {
                 this.initialRelationHydratePending = false;
                 const vm = this.editVmCache;
+
                 if (vm) {
                     void this.loadExaminationsForPetHydrate(pid, vm);
                 }
+
                 return;
             }
+
             this.form.patchValue({ examinationId: '' }, { emitEvent: false });
             this.loadExaminationsForPetFresh(pid);
         });
@@ -362,14 +379,18 @@ export class LabResultEditPageComponent implements OnInit {
                 if (x.status === 'Cancelled') {
                     this.loadError.set('İptal edilmiş lab kaydı düzenlenemez.');
                     this.loading.set(false);
+
                     return;
                 }
+
                 this.editVmCache = x;
                 this.status.set(x.status);
                 this.examinationFinalized.set(false);
+
                 for (const c of [this.form.controls.clientId, this.form.controls.testName, this.form.controls.examinationId]) {
                     c.enable({ emitEvent: false });
                 }
+
                 this.rowVersion = x.rowVersion;
                 this.conflict.set(false);
                 this.submitError.set(null);
@@ -385,6 +406,7 @@ export class LabResultEditPageComponent implements OnInit {
                     },
                     { emitEvent: false }
                 );
+
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
                     this.initialRelationHydratePending = true;
@@ -392,6 +414,7 @@ export class LabResultEditPageComponent implements OnInit {
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
+
                 this.loading.set(false);
                 this.lockIdentityWhenExaminationFinalized(x.examinationId);
             },
@@ -407,12 +430,15 @@ export class LabResultEditPageComponent implements OnInit {
         if (!examinationId) {
             return;
         }
+
         this.examinationsService.getExaminationById(examinationId).subscribe({
             next: (ex) => {
                 if (ex.status !== 'Finalized') {
                     return;
                 }
+
                 this.examinationFinalized.set(true);
+
                 for (const c of [this.form.controls.clientId, this.form.controls.petId, this.form.controls.examinationId, this.form.controls.testName]) {
                     c.disable({ emitEvent: false });
                 }
@@ -430,20 +456,27 @@ export class LabResultEditPageComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
         const resultDateUtc = v.resultDateLocal.trim() ? fromIstanbulDateTimeLocalInputToUtcIso(v.resultDateLocal) : null;
+
         if (v.resultDateLocal.trim() && !resultDateUtc) {
             this.submitError.set('Geçerli bir sonuç tarihi ve saati seçin.');
+
             return;
         }
 
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
@@ -467,13 +500,17 @@ export class LabResultEditPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseLabResultUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.conflict.set(parsed.isConcurrencyConflict);
                     this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
@@ -490,6 +527,7 @@ export class LabResultEditPageComponent implements OnInit {
     private loadExaminationsForPetFresh(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
+
         this.loadingExaminations.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }).subscribe({
@@ -497,6 +535,7 @@ export class LabResultEditPageComponent implements OnInit {
                 if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                     return;
                 }
+
                 this.examinationOptions.set(ex.items.map(prescriptionExaminationSelectOption));
                 this.loadingExaminations.set(false);
             },
@@ -504,6 +543,7 @@ export class LabResultEditPageComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 this.selectionError.set(this.mapLoadError(e, 'Muayene listesi yüklenemedi.'));
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
@@ -514,34 +554,43 @@ export class LabResultEditPageComponent implements OnInit {
     private async loadExaminationsForPetHydrate(petId: string, vm: LabResultEditVm): Promise<void> {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
+
         this.loadingExaminations.set(true);
         this.selectionError.set(null);
+
         try {
             const ex = await firstValueFrom(
                 this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid })
             );
+
             if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                 return;
             }
+
             let items = [...ex.items];
             const exW = vm.examinationId?.trim() ?? '';
+
             if (exW && !items.some((e) => e.id === exW)) {
                 try {
                     const d = await firstValueFrom(this.examinationsService.getExaminationById(exW));
+
                     items = [examinationListItemFromDetail(d), ...items];
                 } catch {
                     /* liste dışı muayene yüklenemezse atlanır */
                 }
             }
+
             if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                 return;
             }
+
             this.examinationOptions.set(items.map(prescriptionExaminationSelectOption));
             this.form.controls.examinationId.setValue(exW, { emitEvent: false });
         } catch (e: unknown) {
             if (seq !== this.relationLoadSeq) {
                 return;
             }
+
             this.selectionError.set(this.mapLoadError(e, 'Muayene listesi yüklenemedi.'));
             this.examinationOptions.set([]);
         } finally {
@@ -558,6 +607,7 @@ export class LabResultEditPageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

@@ -19,7 +19,9 @@ describe('PatientSearchService', () => {
     const run = (result: GlobalSearchResultVm) => {
         global.search.and.returnValue(of(result));
         let out: unknown;
+
         service.search('x').subscribe((r) => (out = r));
+
         return out as import('./patient-search.service').PatientSearchResultVm;
     };
 
@@ -39,6 +41,7 @@ describe('PatientSearchService', () => {
 
     it('hayvan eşleşmesi sahip bilgisiyle tek satır olur', () => {
         const r = run({ clients: [], pets: [{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', microchip: '985', deceased: false }], failedKinds: [] });
+
         expect(r.patients).toEqual([{ petId: 'p1', petName: 'Pamuk', summary: 'Kedi · Tekir', microchip: '985', clientId: 'c1', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', deceased: false }]);
         expect(r.owners).toEqual([]);
     });
@@ -46,6 +49,7 @@ describe('PatientSearchService', () => {
     it('sahip adıyla bulunan müşterinin hayvanları eklenir; doğrudan bulunan hayvan tekrarlanmaz', () => {
         pets.getPets.and.returnValue(of(page([petItem('p1', 'Pamuk'), petItem('p2', 'Boncuk')])));
         const r = run({ clients: [ali], pets: [{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '', microchip: '', deceased: false }], failedKinds: [] });
+
         expect(pets.getPets).toHaveBeenCalledWith({ page: 1, pageSize: 5, clientId: 'c1' });
         expect(r.patients.map((p) => p.petId)).toEqual(['p1', 'p2']);
         expect(r.patients[1].ownerName).toBe('Ali Veli');
@@ -55,6 +59,7 @@ describe('PatientSearchService', () => {
     it('hayvanı olmayan sahip ayrı listelenir', () => {
         pets.getPets.and.returnValue(of(page([])));
         const r = run({ clients: [ali], pets: [], failedKinds: [] });
+
         expect(r.patients).toEqual([]);
         expect(r.owners).toEqual([{ clientId: 'c1', name: 'Ali Veli', phone: '+90 532 123 45 67' }]);
     });
@@ -62,6 +67,7 @@ describe('PatientSearchService', () => {
     it('Pets.Read yoksa sahip hayvanları sorgulanmaz', () => {
         claims.delete('Pets.Read');
         const r = run({ clients: [ali], pets: [], failedKinds: [] });
+
         expect(pets.getPets).not.toHaveBeenCalled();
         expect(r.owners.length).toBe(1);
     });
@@ -69,6 +75,7 @@ describe('PatientSearchService', () => {
     it('başka sahibe ait dönen hayvan süzülür; kısmi hata iletilir', () => {
         pets.getPets.and.returnValue(of(page([petItem('p9', 'Karabaş', 'c2')])));
         const r = run({ clients: [ali], pets: [], failedKinds: ['pets'] });
+
         expect(r.patients).toEqual([]);
         expect(r.failedKinds).toEqual(['pets']);
     });

@@ -201,11 +201,14 @@ export class PrescriptionDetailPageComponent implements OnInit {
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.error.set('Geçersiz reçete.');
             this.loading.set(false);
+
             return;
         }
+
         this.prescriptionId = id;
         this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
         this.reload();

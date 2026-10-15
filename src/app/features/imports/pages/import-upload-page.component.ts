@@ -219,18 +219,23 @@ export class ImportUploadPageComponent implements OnInit {
         if (!this.canSubmit) {
             return;
         }
+
         const form = new FormData();
+
         form.append('requestId', this.requestId);
+
         if (this.mode === 'xlsx') {
             form.append('file', this.xlsxFile()!);
         } else {
             const files = this.csvFiles();
+
             if (files.customers) form.append('customersFile', files.customers);
             if (files.pets) form.append('petsFile', files.pets);
             if (files.vaccinations) form.append('vaccinationsFile', files.vaccinations);
             if (this.encoding) form.append('encoding', this.encoding);
             if (this.delimiter) form.append('delimiter', this.delimiter);
         }
+
         if (this.clinicId) form.append('clinicId', this.clinicId);
         if (this.name.trim()) form.append('name', this.name.trim());
 

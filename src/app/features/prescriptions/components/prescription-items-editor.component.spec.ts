@@ -33,6 +33,7 @@ describe('PrescriptionItemsEditorComponent', () => {
         fixture.componentRef.setInput('items', items);
         fixture.detectChanges();
     };
+
     const el = () => fixture.nativeElement as HTMLElement;
     const rows = () => el().querySelectorAll('[data-testid="prescription-item-row"]');
     const click = (id: string) => (el().querySelector(`[data-testid="${id}"] button`) as HTMLButtonElement).click();
@@ -64,6 +65,7 @@ describe('PrescriptionItemsEditorComponent', () => {
         for (let i = 0; i < PRESCRIPTION_ITEMS_MAX; i++) {
             items.push(createPrescriptionItemGroup({ name: `İlaç ${i}` }));
         }
+
         await setup();
         expect(el().querySelector('[data-testid="prescription-item-add"] button')?.hasAttribute('disabled')).toBeTrue();
         cmp.addRow();
@@ -72,6 +74,7 @@ describe('PrescriptionItemsEditorComponent', () => {
 
     it('ad ve ürün ikisi de boşsa satır geçersiz; yalnız ad veya yalnız ürün geçerli', () => {
         const g = createPrescriptionItemGroup();
+
         expect(g.hasError('nameOrProductRequired')).toBeTrue();
         g.controls.name.setValue('Dış ilaç');
         expect(g.valid).toBeTrue();
@@ -82,10 +85,12 @@ describe('PrescriptionItemsEditorComponent', () => {
 
     it('miktar 0, 4 ondalık veya çok büyükse geçersiz', () => {
         const g = createPrescriptionItemGroup({ name: 'X' });
+
         for (const q of [0, -2, 0.0001, 100001]) {
             g.controls.quantity.setValue(q);
             expect(g.controls.quantity.valid).withContext(String(q)).toBeFalse();
         }
+
         g.controls.quantity.setValue(14);
         expect(g.valid).toBeTrue();
     });
@@ -93,10 +98,12 @@ describe('PrescriptionItemsEditorComponent', () => {
     it('ürün seçilince boş ad ürün adıyla dolar, dolu ad korunur; temizlenince bağ boşalır', async () => {
         await setup();
         const a = createPrescriptionItemGroup();
+
         a.controls.productId.setValue('pr1');
         cmp.onProductChange(a, 'pr1');
         expect(a.controls.name.value).toBe('Serum');
         const b = createPrescriptionItemGroup({ name: 'Özel ad' });
+
         cmp.onProductChange(b, 'pr1');
         expect(b.controls.name.value).toBe('Özel ad');
         b.controls.productId.setValue('pr1');
@@ -113,6 +120,7 @@ describe('PrescriptionItemsEditorComponent', () => {
 
     it('istek satırları kırpılır; ürün bağı olmayan satır productId null gönderir', () => {
         const arr = createPrescriptionItemsArray([{ name: ' Amoksisilin ', productId: null, instructions: ' 2x1 ', quantity: 14 }]);
+
         expect(prescriptionItemsFormToInputs(arr)).toEqual([{ name: 'Amoksisilin', productId: null, instructions: '2x1', quantity: 14 }]);
     });
 });

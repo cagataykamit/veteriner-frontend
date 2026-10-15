@@ -30,6 +30,7 @@ describe('PaymentsService.voidPayment', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/payments/p1/void');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ reason: 'Yanlış tutar girildi' });
         req.flush(null, { status: 204, statusText: 'No Content' });

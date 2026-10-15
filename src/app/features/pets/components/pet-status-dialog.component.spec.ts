@@ -39,6 +39,7 @@ describe('PetStatusDialogComponent', () => {
         fixture.componentRef.setInput('pet', p);
         fixture.componentInstance.visible.set(true);
         fixture.detectChanges();
+
         return fixture.componentInstance;
     };
 
@@ -58,6 +59,7 @@ describe('PetStatusDialogComponent', () => {
     it('aktif hayvanı tarih ve rowVersion ile vefat olarak işaretler, sonucu yayar ve kapanır', () => {
         const c = create(pet);
         const changed = jasmine.createSpy('changed');
+
         c.changed.subscribe(changed);
         c.deceasedOn.setValue('2026-01-02');
 
@@ -70,6 +72,7 @@ describe('PetStatusDialogComponent', () => {
 
     it('tarih boşsa tarihsiz gönderir; gelecek veya doğumdan önceki tarih engellenir', () => {
         const c = create(pet);
+
         c.deceasedOn.setValue('2999-01-01');
         expect(c.dateError()).toContain('ileri');
         c.deceasedOn.setValue('2019-01-01');
@@ -84,6 +87,7 @@ describe('PetStatusDialogComponent', () => {
 
     it('vefat eden hayvanda aktife alır (tarih gönderilmez, randevu listesi okunmaz)', () => {
         const c = create({ ...pet, status: 'Deceased', deceasedOn: '2026-01-02' });
+
         expect(c.markingDeceased()).toBeFalse();
         expect(getAppointments).not.toHaveBeenCalled();
         c.onSubmit();
@@ -96,6 +100,7 @@ describe('PetStatusDialogComponent', () => {
         );
         const c = create(pet);
         const stale = jasmine.createSpy('stale');
+
         c.stale.subscribe(stale);
 
         c.onSubmit();
@@ -124,6 +129,7 @@ describe('PetStatusDialogComponent', () => {
         it('kutu varsayılan işaretsiz; işaretsizken randevu iptal çağrısı yapılmaz', () => {
             withOpenAppointments(appt('a1', '2999-01-01T09:00:00Z'));
             const c = create(pet);
+
             expect(c.cancelOpenAppointments.value).toBeFalse();
 
             c.onSubmit();
@@ -136,16 +142,20 @@ describe('PetStatusDialogComponent', () => {
         it('işaretliyse önce durum kaydedilir, sonra her randevu gerekçeyle iptal edilir ve pencere kapanır', () => {
             withOpenAppointments(appt('a1', '2999-01-01T09:00:00Z'), appt('a2', '2999-02-01T09:00:00Z'));
             const order: string[] = [];
+
             updatePetStatus.and.callFake(() => {
                 order.push('status');
+
                 return of({ status: 'Deceased', deceasedOn: null, rowVersion: 'rv2' });
             });
             cancelAppointment.and.callFake((id: string) => {
                 order.push(id);
+
                 return of(void 0);
             });
             const c = create(pet);
             const cancelled = jasmine.createSpy('appointmentsCancelled');
+
             c.appointmentsCancelled.subscribe(cancelled);
             c.cancelOpenAppointments.setValue(true);
 
@@ -162,6 +172,7 @@ describe('PetStatusDialogComponent', () => {
             cancelAppointment.and.callFake((id: string) => (id === 'a2' ? throwError(() => new Error('Randevu durumu bu işleme uygun değil.')) : of(void 0)));
             const c = create(pet);
             const changed = jasmine.createSpy('changed');
+
             c.changed.subscribe(changed);
             c.cancelOpenAppointments.setValue(true);
 
@@ -179,6 +190,7 @@ describe('PetStatusDialogComponent', () => {
             withOpenAppointments(appt('a1', '2999-01-01T09:00:00Z'));
             updatePetStatus.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
             const c = create(pet);
+
             c.cancelOpenAppointments.setValue(true);
 
             c.onSubmit();
@@ -191,6 +203,7 @@ describe('PetStatusDialogComponent', () => {
             claims = ['Appointments.Read'];
             withOpenAppointments(appt('a1', '2999-01-01T09:00:00Z'));
             const c = create(pet);
+
             c.cancelOpenAppointments.setValue(true);
 
             expect(text()).toContain('Bu hastanın 1 açık randevusu var.');

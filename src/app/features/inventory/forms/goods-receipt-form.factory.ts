@@ -8,19 +8,23 @@ function goodsReceiptLineValidator(line: AbstractControl): ValidationErrors | nu
     const lot = String(line.get('lotNumber')?.value ?? '').trim();
     const expiry = String(line.get('expiryDate')?.value ?? '').trim();
     const errors: ValidationErrors = {};
+
     if (!product || typeof product === 'string') {
         errors['productMissing'] = true;
     } else if (product.requiresLotAndExpiry) {
         if (!lot) {
             errors['lotRequired'] = true;
         }
+
         if (!expiry) {
             errors['expiryRequired'] = true;
         }
     }
+
     if (isStockBatchExpiryPast(expiry) && line.get('acknowledgeExpired')?.value !== true) {
         errors['expiredNotAcknowledged'] = true;
     }
+
     return Object.keys(errors).length > 0 ? errors : null;
 }
 

@@ -44,8 +44,10 @@ describe('PetSummaryCardComponent', () => {
         fixture.componentRef.setInput('lastExamination', extra.lastExamination ?? null);
         fixture.componentRef.setInput('followUps', extra.followUps ?? null);
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     };
+
     const section = (el: HTMLElement, name: string) => el.querySelector(`[data-testid="section-${name}"]`) as HTMLElement;
 
     beforeEach(async () => {
@@ -66,6 +68,7 @@ describe('PetSummaryCardComponent', () => {
 
     it('vital ve değerlendirme yoksa değer uydurulmaz, boş durum gösterilir; muayene yoksa "Kayıt yok"', () => {
         let el = render(ok, { lastExamination: exam({ temperatureC: null, heartRateBpm: null, respiratoryRatePerMin: null, assessment: '—' }) });
+
         expect(section(el, 'vitals').textContent).toContain('vital ölçülmemiş');
         expect(section(el, 'assessment').textContent).toContain('değerlendirme yazılmamış');
 
@@ -85,6 +88,7 @@ describe('PetSummaryCardComponent', () => {
             { ...ok, activeHospitalization: { state: 'Ok', data: { id: 'h1', clinicName: null, admittedAtUtc: '2026-10-12T08:00:00Z', plannedDischargeAtUtc: null, reason: 'Gözlem', examinationId: null } } },
             { followUps }
         );
+
         expect(section(el, 'active-care').textContent).toContain('Gözlem');
         expect(section(el, 'active-care').querySelectorAll('[data-testid="follow-up"]').length).toBe(1);
 
@@ -108,6 +112,7 @@ describe('PetSummaryCardComponent', () => {
     it('özet ucu tümden başarısızsa hata ve "Tekrar dene" gösterilir; retry olayı çıkar', () => {
         const el = render(null, { error: 'Hasta özeti yüklenemedi.' });
         let retried = 0;
+
         fixture.componentInstance.retry.subscribe(() => retried++);
 
         expect(el.querySelector('[data-testid="summary-error"]')?.textContent).toContain('Hasta özeti yüklenemedi.');

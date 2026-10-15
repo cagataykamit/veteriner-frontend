@@ -45,8 +45,10 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
             ]
         });
         const fixture = TestBed.createComponent(LabResultDetailPageComponent);
+
         fixture.detectChanges();
         const actions = (fixture.nativeElement as HTMLElement).querySelectorAll('[actions]');
+
         return Array.from(actions).flatMap((c) => Array.from(c.querySelectorAll('a, button')).map((e) => e.textContent?.trim() ?? ''));
     };
 
@@ -85,7 +87,9 @@ describe('LabResultDetailPageComponent — kayıt sonrası onay', () => {
             ]
         });
         const fixture = TestBed.createComponent(LabResultDetailPageComponent);
+
         fixture.detectChanges();
+
         return (fixture.nativeElement as HTMLElement).querySelector('p.text-sm.font-medium')?.textContent?.trim() ?? null;
     };
 

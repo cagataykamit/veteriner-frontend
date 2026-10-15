@@ -7,6 +7,7 @@ export function prescriptionExaminationSelectOption(ex: ExaminationListItemVm): 
     const dt = formatUtcIsoAsLocalDateTimeDisplay(ex.examinedAtUtc);
     const vr = (ex.visitReason ?? '').trim() || '—';
     const short = vr.length > 56 ? `${vr.slice(0, 53)}…` : vr;
+
     return { value: ex.id, label: `${dt} · ${short}` };
 }
 
@@ -14,6 +15,7 @@ export function prescriptionTreatmentSelectOption(t: TreatmentListItemVm): Selec
     const dt = formatUtcIsoAsLocalDateTimeDisplay(t.treatmentDateUtc);
     const title = (t.title ?? '').trim() || '—';
     const short = title.length > 56 ? `${title.slice(0, 53)}…` : title;
+
     return { value: t.id, label: `${dt} · ${short}` };
 }
 
@@ -26,9 +28,11 @@ export function filterTreatmentsByExamination(
     examinationId: string | null | undefined
 ): TreatmentListItemVm[] {
     const ex = examinationId?.trim() ?? '';
+
     if (!ex) {
         return treatments;
     }
+
     return treatments.filter((t) => (t.examinationId?.trim() ?? '') === ex);
 }
 

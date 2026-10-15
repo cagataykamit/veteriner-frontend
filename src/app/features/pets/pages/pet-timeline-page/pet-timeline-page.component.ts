@@ -156,12 +156,16 @@ export class PetTimelinePageComponent implements OnInit {
     ngOnInit(): void {
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
             const id = params.get('id')?.trim() ?? '';
+
             this.petId.set(id);
             this.petName.set(null);
+
             if (!id) {
                 this.error.set('Geçersiz hasta.');
+
                 return;
             }
+
             this.petsService
                 .getPetById(id)
                 .pipe(takeUntilDestroyed(this.destroyRef))
@@ -176,9 +180,11 @@ export class PetTimelinePageComponent implements OnInit {
 
     toggleType(type: PetTimelineType, selected: boolean): void {
         const next = this.selectedTypes().filter((t) => t !== type);
+
         if (selected) {
             next.push(type);
         }
+
         this.selectedTypes.set(PET_TIMELINE_TYPES.map((d) => d.value).filter((v) => next.includes(v)));
         this.reload();
     }
@@ -187,12 +193,15 @@ export class PetTimelinePageComponent implements OnInit {
     setDateRange(from: string | null, to: string | null): void {
         let nextFrom = from?.trim() ?? '';
         let nextTo = to?.trim() ?? '';
+
         if (nextFrom && nextTo && nextFrom > nextTo) {
             [nextFrom, nextTo] = [nextTo, nextFrom];
         }
+
         if (nextFrom === this.fromDate() && nextTo === this.toDate()) {
             return;
         }
+
         this.fromDate.set(nextFrom);
         this.toDate.set(nextTo);
         this.reload();
@@ -206,9 +215,11 @@ export class PetTimelinePageComponent implements OnInit {
     /** İlk sayfayı baştan yükler (süzgeç değişimi veya yeniden deneme); uçuştaki istek iptal edilir. */
     reload(): void {
         const petId = this.petId();
+
         if (!petId) {
             return;
         }
+
         this.request?.unsubscribe();
         this.loading.set(true);
         this.loadingMore.set(false);
@@ -233,14 +244,17 @@ export class PetTimelinePageComponent implements OnInit {
     /** Aynı süzgeçlerle `nextCursor` sonrasını ekler; çift tıklamada ikinci istek atılmaz. */
     loadMore(): void {
         const cursor = this.nextCursor();
+
         if (!cursor || this.loadingMore() || this.loading()) {
             return;
         }
+
         this.loadingMore.set(true);
         this.loadMoreError.set(null);
         this.request = this.petsService.getPetTimeline(this.petId(), this.query(cursor)).subscribe({
             next: (page) => {
                 const known = new Set(this.items().map((i) => i.key));
+
                 this.items.update((list) => [...list, ...page.items.filter((i) => !known.has(i.key))]);
                 this.nextCursor.set(page.nextCursor);
                 this.omittedTypes.set(page.omittedTypes);

@@ -37,6 +37,7 @@ export class PrescriptionsService {
             clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
         };
         const params = prescriptionsQueryToHttpParams(merged);
+
         return this.api.get<PrescriptionListItemDtoPagedResult>(ApiEndpoints.prescriptions.list(), params).pipe(
             map((res) => mapPagedPrescriptionsToVm(res)),
             catchError((err: HttpErrorResponse) =>
@@ -65,32 +66,41 @@ export class PrescriptionsService {
 
     createPrescription(payload: CreatePrescriptionRequest): Observable<{ id: string }> {
         let body: unknown;
+
         try {
             body = mapCreatePrescriptionToApiBody(payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_CLINIC_ID_REQUIRED') {
                 return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
+
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_PET_ID_REQUIRED') {
                 return throwError(() => new Error('Hasta seçimi zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_DATE_REQUIRED') {
                 return throwError(() => new Error('Reçete tarihi / saati zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_TITLE_REQUIRED') {
                 return throwError(() => new Error('Başlık zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_CONTENT_REQUIRED') {
                 return throwError(() => new Error('İçerik zorunludur.'));
             }
+
             return throwError(() => (e instanceof Error ? e : new Error('Reçete oluşturulamadı.')));
         }
+
         return this.api.post<unknown>(ApiEndpoints.prescriptions.list(), body).pipe(
             map((raw) => {
                 const id = extractCreatedPrescriptionIdFromPostResponse(raw);
+
                 if (!id) {
                     throw new Error('PRESCRIPTION_CREATE_NO_ID_IN_RESPONSE');
                 }
+
                 return { id };
             }),
             catchError((err: unknown) => {
@@ -98,6 +108,7 @@ export class PrescriptionsService {
                     // Create formunda alan bazlı parse için ham HttpErrorResponse korunur.
                     return throwError(() => err);
                 }
+
                 if (err instanceof Error && err.message === 'PRESCRIPTION_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(
                         () =>
@@ -106,6 +117,7 @@ export class PrescriptionsService {
                             )
                     );
                 }
+
                 return throwError(() => (err instanceof Error ? err : new Error('Reçete oluşturulamadı.')));
             })
         );
@@ -113,32 +125,40 @@ export class PrescriptionsService {
 
     updatePrescription(id: string, payload: CreatePrescriptionRequest): Observable<void> {
         let body: unknown;
+
         try {
             body = mapCreatePrescriptionToApiBody(payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_CLINIC_ID_REQUIRED') {
                 return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
+
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_PET_ID_REQUIRED') {
                 return throwError(() => new Error('Hasta seçimi zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_DATE_REQUIRED') {
                 return throwError(() => new Error('Reçete tarihi / saati zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_TITLE_REQUIRED') {
                 return throwError(() => new Error('Başlık zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'PRESCRIPTION_WRITE_CONTENT_REQUIRED') {
                 return throwError(() => new Error('İçerik zorunludur.'));
             }
+
             return throwError(() => (e instanceof Error ? e : new Error('Reçete güncellenemedi.')));
         }
+
         return this.api.put<unknown>(ApiEndpoints.prescriptions.byId(id), body).pipe(
             map(() => void 0),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 return throwError(() => (err instanceof Error ? err : new Error('Reçete güncellenemedi.')));
             })
         );
@@ -149,38 +169,51 @@ function extractCreatedPrescriptionIdFromPostResponse(body: unknown): string | n
     if (body == null) {
         return null;
     }
+
     if (typeof body === 'string') {
         return body.trim() || null;
     }
+
     if (typeof body !== 'object') {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const idKeys = ['id', 'Id', 'prescriptionId', 'PrescriptionId'];
+
     for (const k of idKeys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
+
         if (typeof v === 'number' && !Number.isNaN(v)) {
             return String(v);
         }
     }
+
     const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'prescription', 'Prescription'];
+
     for (const w of wrappers) {
         const inner = o[w];
+
         if (inner && typeof inner === 'object') {
             const n = inner as Record<string, unknown>;
+
             for (const k of idKeys) {
                 const v = n[k];
+
                 if (typeof v === 'string' && v.trim()) {
                     return v.trim();
                 }
+
                 if (typeof v === 'number' && !Number.isNaN(v)) {
                     return String(v);
                 }
             }
         }
     }
+
     return null;
 }

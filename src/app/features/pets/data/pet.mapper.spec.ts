@@ -24,8 +24,10 @@ describe('pet.mapper hayvan durumu (ADR-020 S5)', () => {
 
     it('detay vefat tarihini yalnız vefat edende ve rowVersion ile okur', () => {
         const deceased = mapPetDetailDtoToVm({ id: 'p1', status: 'Deceased', deceasedOn: '2026-10-14', rowVersion: 'AAAAAAAAB9E=' });
+
         expect([deceased.status, deceased.deceasedOn, deceased.rowVersion]).toEqual(['Deceased', '2026-10-14', 'AAAAAAAAB9E=']);
         const active = mapPetDetailDtoToVm({ id: 'p2', status: 'Active', deceasedOn: '2026-10-14' });
+
         expect([active.status, active.deceasedOn, active.rowVersion]).toEqual(['Active', null, null]);
     });
 

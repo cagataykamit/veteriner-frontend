@@ -46,9 +46,11 @@ const STOCK_MOVEMENT_CREATE_MESSAGES: Record<string, string> = {
 
 function stockMovementCreateUserMessage(err: HttpErrorResponse): string {
     const code = problemCodeFromHttpError(err);
+
     if (code && STOCK_MOVEMENT_CREATE_MESSAGES[code]) {
         return STOCK_MOVEMENT_CREATE_MESSAGES[code]!;
     }
+
     return messageFromHttpError(err, 'Stok hareketi kaydedilemedi.');
 }
 
@@ -58,6 +60,7 @@ export class StockMovementService {
 
     list(query: StockMovementsListQuery): Observable<StockMovementsPagedVm> {
         const params = stockMovementsListQueryToHttpParams(query);
+
         return this.api.get<StockMovementDtoPagedResult>(ApiEndpoints.stockMovements.list(), params).pipe(
             map((res) => mapPagedStockMovementsToVm(res)),
             catchError((err: HttpErrorResponse) =>
@@ -69,6 +72,7 @@ export class StockMovementService {
     /** Ürün içi liste — `productId` URL’de; `Search` gönderilmez (endpoint uyumu). */
     listByProductId(productId: string, query: StockMovementsListQuery): Observable<StockMovementsPagedVm> {
         const params = stockMovementsListQueryToHttpParams(query, { omitSearch: true });
+
         return this.api
             .get<StockMovementDtoPagedResult>(ApiEndpoints.products.stockMovements(productId), params)
             .pipe(

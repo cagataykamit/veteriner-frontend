@@ -27,7 +27,9 @@ describe('PetsListPageComponent — süzgeçler', () => {
             ]
         });
         const fixture = TestBed.createComponent(PetsListPageComponent);
+
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     }
 
@@ -35,9 +37,11 @@ describe('PetsListPageComponent — süzgeçler', () => {
 
     it('ayrı müşteri seçicisi yoktur; tek arama kutusu sahip, telefon ve mikroçipi de kapsar', () => {
         const el = create();
+
         expect(el.querySelector('app-client-search')).toBeNull();
         expect(el.querySelectorAll('app-search-input').length).toBe(1);
         const placeholder = el.querySelector('input#petSearch')!.getAttribute('placeholder');
+
         expect(placeholder).toContain('mikroçip');
         expect(placeholder).toContain('telefon');
         expect(el.querySelector('app-context-filter-chip')).toBeNull();
@@ -45,6 +49,7 @@ describe('PetsListPageComponent — süzgeçler', () => {
 
     it('müşteri kartından gelen ?clientId süzgeci çip olarak görünür ve isteğe gider', () => {
         const el = create({ clientId: 'c1' });
+
         expect(el.querySelector('app-context-filter-chip')).not.toBeNull();
         expect(pets.getPets.calls.mostRecent().args[0].clientId).toBe('c1');
     });

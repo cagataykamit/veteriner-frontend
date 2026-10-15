@@ -11,6 +11,7 @@ export default [
             () => {
                 const auth = inject(AuthService);
                 const router = inject(Router);
+
                 return auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
             }
         ],

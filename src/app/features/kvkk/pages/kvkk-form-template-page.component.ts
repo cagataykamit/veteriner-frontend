@@ -143,6 +143,7 @@ export class KvkkFormTemplatePageComponent implements OnInit {
     readonly canSave = computed(() => {
         const t = this.template();
         const v = this.textValue();
+
         return !!t && !this.ro.mutationBlocked() && !this.saving() && !this.stale() && !!v.trim() && v.length <= t.maxLength;
     });
 
@@ -160,13 +161,17 @@ export class KvkkFormTemplatePageComponent implements OnInit {
 
     load(): void {
         const clinicId = this.auth.getClinicId()?.trim();
+
         this.saveError.set(null);
         this.stale.set(false);
+
         if (!clinicId) {
             this.loadError.set('KVKK form metni için önce bir klinik seçmelisiniz.');
             this.loading.set(false);
+
             return;
         }
+
         this.loading.set(true);
         this.loadError.set(null);
         this.templates.getTemplate(clinicId).subscribe({
@@ -184,10 +189,13 @@ export class KvkkFormTemplatePageComponent implements OnInit {
     save(): void {
         const t = this.template();
         const clinicId = this.auth.getClinicId()?.trim();
+
         this.text.markAsTouched();
+
         if (!t || !clinicId || !this.canSave()) {
             return;
         }
+
         this.saveError.set(null);
         this.saving.set(true);
         this.templates.updateTemplate(clinicId, this.text.value, t).subscribe({
@@ -199,6 +207,7 @@ export class KvkkFormTemplatePageComponent implements OnInit {
             error: (e: unknown) => {
                 this.saving.set(false);
                 this.saveError.set(panelHttpFailureMessage(e, 'KVKK form metni kaydedilemedi.'));
+
                 if (e instanceof HttpErrorResponse && problemCodeFromHttpError(e) === 'Clinics.KvkkFormTemplate.ConcurrencyConflict') {
                     this.stale.set(true);
                 }
