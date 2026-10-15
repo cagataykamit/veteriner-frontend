@@ -34,7 +34,6 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import {
     buildVaccinationAppliedDueForSubmit,
-    localDateTimeLocalInputMaxNow,
     minDateTimeLocalMinuteAfter,
     minDateTimeLocalMinuteAfterNow,
     vaccinationAppliedNotFutureValidator,
@@ -45,7 +44,6 @@ import {
 import {
     DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMax,
     effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
 

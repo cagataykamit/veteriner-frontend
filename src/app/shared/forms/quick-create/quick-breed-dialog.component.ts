@@ -7,7 +7,6 @@ import type { BreedUpsertRequest } from '@/app/features/breeds/models/breed-upse
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import {
     type BreedUpsertFieldErrors,
-    type BreedUpsertFormFieldKey,
     parseBreedUpsertHttpError
 } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';

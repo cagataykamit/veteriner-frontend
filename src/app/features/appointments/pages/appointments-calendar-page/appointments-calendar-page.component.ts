@@ -4,7 +4,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import type {
-    AppointmentCalendarDayGroupVm,
     AppointmentCalendarItemVm
 } from '@/app/features/appointments/models/appointment-calendar-vm.model';
 import { groupCalendarItemsByDay } from '@/app/features/appointments/data/appointment-calendar.mapper';

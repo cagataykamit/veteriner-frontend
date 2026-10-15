@@ -11,7 +11,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { BREEDS_CREATE_CLAIM, CLIENTS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { BREEDS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { PetAlertFieldsComponent } from '@/app/features/pets/components/pet-alert-fields.component';

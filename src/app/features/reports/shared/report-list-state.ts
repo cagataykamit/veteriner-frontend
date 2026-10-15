@@ -548,7 +548,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 }
 
 /** Ortak süzgeç ve sonuç bileşenleri rapora özgü sorgu/sonuç tipini bilmez. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyReportListState = ReportListState<any, ReportListResultBase>;
 
 function defaultReportFromYyyyMmDd(): string {

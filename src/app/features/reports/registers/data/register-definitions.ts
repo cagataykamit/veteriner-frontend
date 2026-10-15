@@ -333,7 +333,6 @@ export const VACCINE_INFO_REGISTER: RegisterDefinition<VaccineInfoRegisterRowDto
 };
 
 /** Sayfa bileşeni satır tipini bilmez; rota verisindeki `register` anahtarı → defter tanımı. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyRegisterDefinition = RegisterDefinition<any>;
 
 export const REGISTER_DEFINITIONS: Readonly<Record<string, AnyRegisterDefinition>> = {

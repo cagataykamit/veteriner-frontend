@@ -260,9 +260,7 @@ export class AppConfigurator {
         }
     ];
 
-    selectedPrimaryColor = computed(() => {
-        return this.layoutService.layoutConfig().primary;
-    });
+    selectedPrimaryColor = computed(() => this.layoutService.layoutConfig().primary);
 
     selectedSurfaceColor = computed(() => this.layoutService.layoutConfig().surface);
 

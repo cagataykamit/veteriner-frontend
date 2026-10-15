@@ -32,6 +32,8 @@ export default tseslint.config(
             '@angular-eslint/no-output-on-prefix': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-inferrable-types': 'off',
+            // `_` önekli parametre bilinçli kullanılmıyor demektir (arayüz imzası); `...rest` ile ayıklanan alan da kullanılmaz.
+            '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }],
             'arrow-body-style': ['error', 'as-needed'],
             curly: 0,
             '@typescript-eslint/member-ordering': [

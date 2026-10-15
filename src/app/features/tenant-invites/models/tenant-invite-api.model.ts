@@ -47,7 +47,7 @@ export interface TenantInviteListItemDto {
 }
 
 /** Tek davet GET — liste satırı ile aynı kök alanlar (+ detay alanları mapper’da birleşir). */
-export interface TenantInviteDetailDto extends TenantInviteListItemDto {}
+export type TenantInviteDetailDto = TenantInviteListItemDto;
 
 export interface TenantInviteListItemDtoPagedResult {
     items?: TenantInviteListItemDto[] | null;

@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router, UrlTree } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
 import { panelReturnUrlOrDefault } from './auth-return-url.utils';
 import { AuthService } from './auth.service';

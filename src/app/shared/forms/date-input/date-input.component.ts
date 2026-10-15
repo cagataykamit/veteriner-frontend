@@ -177,6 +177,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         if (openInstance && openInstance !== this) {
             openInstance.closePanel();
         }
+        // eslint-disable-next-line @typescript-eslint/no-this-alias -- takma ad değil: modül düzeyindeki tek açık panel kaydı
         openInstance = this;
     }
 

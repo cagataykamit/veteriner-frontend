@@ -28,7 +28,6 @@ import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/se
 import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
-import { filterPetsByClientId, petOptionsFromList } from '@/app/shared/forms/client-pet-selection.utils';
 import {
     parseVaccinationCreateRouteContext,
     type VaccinationCreateRouteContext
@@ -37,12 +36,11 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
-import type { VaccinationUpsertFieldErrors, VaccinationUpsertFormFieldKey } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
+import type { VaccinationUpsertFieldErrors } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import {
     buildVaccinationAppliedDueForSubmit,
-    localDateTimeLocalInputMaxNow,
     minDateTimeLocalMinuteAfter,
     minDateTimeLocalMinuteAfterNow,
     vaccinationAppliedNotFutureValidator,
@@ -53,7 +51,6 @@ import {
 import {
     DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMax,
     effectiveDateTimeLocalInputMin
 } from '@/app/shared/utils/date-input-validation.utils';
 

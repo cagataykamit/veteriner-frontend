@@ -683,7 +683,6 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         const visitCtx = parseVisitExaminationRouteContext(this.route.snapshot.queryParamMap);
         if (visitCtx) {
             this.applyVisitRouteContext(visitCtx);
-        } else {
         }
         this.selectionForm.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             if (this.contextFromAppointment()) {

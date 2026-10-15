@@ -37,7 +37,7 @@ import {
     fetchAllInventoryCsvExportPages$,
     InventoryCsvExportRowLimitError
 } from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
-import { EMPTY, catchError, map, of, switchMap, tap, type Observable } from 'rxjs';
+import { EMPTY, catchError, of, switchMap, tap, type Observable } from 'rxjs';
 
 type ProductStockMovementsListState = {
     movementType: string;

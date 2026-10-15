@@ -1,6 +1,5 @@
 import { HttpParams } from '@angular/common/http';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
-import type { TenantMemberListItemDtoPagedResult } from '@/app/features/tenant-members/models/tenant-members-api.model';
 import type { TenantMembersListQuery } from '@/app/features/tenant-members/models/tenant-members-query.model';
 import type {
     TenantMemberClaimVm,

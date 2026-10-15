@@ -11,7 +11,6 @@ import type { BreedDetailVm } from '@/app/features/breeds/models/breed-vm.model'
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import {
     type BreedUpsertFieldErrors,
-    type BreedUpsertFormFieldKey,
     parseBreedUpsertHttpError
 } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
 import { AuthService } from '@/app/core/auth/auth.service';

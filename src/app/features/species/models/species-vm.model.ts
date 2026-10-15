@@ -6,4 +6,4 @@ export interface SpeciesListItemVm {
     displayOrder: number;
 }
 
-export interface SpeciesDetailVm extends SpeciesListItemVm {}
+export type SpeciesDetailVm = SpeciesListItemVm;

@@ -10,7 +10,6 @@ import type { SpeciesUpsertRequest } from '@/app/features/species/models/species
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import {
     type SpeciesUpsertFieldErrors,
-    type SpeciesUpsertFormFieldKey,
     parseSpeciesUpsertHttpError
 } from '@/app/features/species/utils/species-upsert-validation-parse.utils';
 import { AuthService } from '@/app/core/auth/auth.service';

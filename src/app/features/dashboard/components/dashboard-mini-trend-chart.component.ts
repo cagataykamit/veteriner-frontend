@@ -37,7 +37,7 @@ export class DashboardMiniTrendChartComponent {
         effect(() => {
             this.points();
             this.valueKind();
-            this.layoutService.layoutConfig().darkTheme;
+            this.layoutService.layoutConfig();
             setTimeout(() => this.refreshChart(), 0);
         });
     }
