@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { type Observable, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ChargeCreateResultVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
@@ -35,6 +35,20 @@ const created: ChargeVm = {
 const todayItem = (over: Partial<TodayItemVm>): TodayItemVm =>
     ({ key: 'v1', visitId: 'v1', petId: 'p1', petName: 'Pamuk', clientId: 'cl1', arrivedAtUtc: '2026-10-10T07:00:00Z', isVoided: false, ...over }) as TodayItemVm;
 
+interface ExamQuery {
+    clientId: string;
+    petId?: string;
+}
+
+interface ExamItem {
+    id: string;
+    examinedAtUtc: string;
+    petName: string;
+    visitReason: string;
+}
+
+const exam = (id: string, petName: string): ExamItem => ({ id, examinedAtUtc: '2026-10-09T08:00:00Z', petName, visitReason: 'Kontrol' });
+
 describe('ChargeNewPageComponent', () => {
     let fixture: ComponentFixture<ChargeNewPageComponent>;
     let cmp: ChargeNewPageComponent;
@@ -45,6 +59,7 @@ describe('ChargeNewPageComponent', () => {
     let queryClientId: string | null;
     let queryVisitId: string | null = null;
     let queryPetId: string | null = null;
+    let getExaminations: (q: ExamQuery) => Observable<{ items: ExamItem[] }>;
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -58,10 +73,7 @@ describe('ChargeNewPageComponent', () => {
                 { provide: PetsService, useValue: { getPetById: () => of({ id: 'p1', name: 'Pamuk', speciesName: 'Kedi' }), getPets: () => of({ items: [{ id: 'p1', name: 'Pamuk', speciesName: 'Kedi', clientId: 'cl1' }] }) } },
                 {
                     provide: ExaminationsService,
-                    useValue: {
-                        getExaminations: () =>
-                            of({ items: [{ id: 'ex1', examinedAtUtc: '2026-10-09T08:00:00Z', petName: 'Pamuk', visitReason: 'Kontrol' }] })
-                    }
+                    useValue: { getExaminations: (q: ExamQuery) => getExaminations(q) }
                 },
                 {
                     provide: VisitsService,
@@ -104,6 +116,7 @@ describe('ChargeNewPageComponent', () => {
         queryVisitId = null;
         queryPetId = null;
         queryClientId = null;
+        getExaminations = () => of({ items: [exam('ex1', 'Pamuk')] });
     });
 
     it('tutar önizlemesi miktar × birim fiyattan hesaplanır ve 2 haneye yuvarlanır', async () => {
@@ -267,6 +280,68 @@ describe('ChargeNewPageComponent', () => {
         expect(cmp.form.controls.petId.value).toBe('');
         expect(cmp.form.controls.visitId.value).toBe('');
         expect(cmp.form.controls.examinationId.value).toBe('');
+    });
+
+    describe('muayene seçenekleri yarışı', () => {
+        let pending: Map<string, Subject<{ items: ExamItem[] }>>;
+        const key = (q: ExamQuery) => `${q.clientId}|${q.petId ?? ''}`;
+
+        const respond = (k: string, items: ExamItem[]) => {
+            pending.get(k)!.next({ items });
+            pending.get(k)!.complete();
+        };
+
+        const optionIds = () => cmp.examinationOptions().map((o) => o.value);
+
+        beforeEach(() => {
+            pending = new Map();
+
+            getExaminations = (q) => {
+                const s = new Subject<{ items: ExamItem[] }>();
+
+                pending.set(key(q), s);
+
+                return s;
+            };
+        });
+
+        it('hasta hızlı değişince geç gelen eski hasta yanıtı yok sayılır', async () => {
+            await setup();
+            cmp.form.controls.clientId.setValue('cl1');
+            cmp.form.controls.petId.setValue('p1');
+            cmp.form.controls.petId.setValue('p2');
+
+            respond('cl1|p2', [exam('ex2', 'Boncuk')]);
+            respond('cl1|p1', [exam('ex1', 'Pamuk')]);
+            respond('cl1|', [exam('ex1', 'Pamuk'), exam('ex2', 'Boncuk')]);
+
+            expect(optionIds()).toEqual(['ex2']);
+            expect(cmp.loadingExaminations()).toBeFalse();
+        });
+
+        it('adresten müşteri ve hasta birlikte dolunca geç gelen yalnız-müşteri yanıtı hasta listesini ezmez', async () => {
+            queryClientId = 'cl1';
+            queryPetId = 'p1';
+            await setup();
+            expect([...pending.keys()]).toEqual(['cl1|', 'cl1|p1']);
+
+            respond('cl1|p1', [exam('ex1', 'Pamuk')]);
+            respond('cl1|', [exam('ex1', 'Pamuk'), exam('ex2', 'Boncuk')]);
+
+            expect(optionIds()).toEqual(['ex1']);
+            expect(cmp.loadingExaminations()).toBeFalse();
+        });
+
+        it('bekleyen istek varken müşteri temizlenirse yükleniyor durumu kapanır ve eski yanıt yok sayılır', async () => {
+            await setup();
+            cmp.form.controls.clientId.setValue('cl1');
+            cmp.form.controls.clientId.setValue('');
+
+            respond('cl1|', [exam('ex1', 'Pamuk')]);
+
+            expect(optionIds()).toEqual([]);
+            expect(cmp.loadingExaminations()).toBeFalse();
+        });
     });
 
     it('seçilen geliş ve muayene isteğe taşınır', async () => {

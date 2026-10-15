@@ -3,7 +3,7 @@ import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angula
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { startWith } from 'rxjs';
+import { startWith, type Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -23,11 +23,7 @@ import { ExaminationsService } from '@/app/features/examinations/services/examin
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
-import {
-    isStalePetListResponse,
-    trimClientIdControlValue,
-    type SelectOption
-} from '@/app/shared/forms/client-pet-selection.utils';
+import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
@@ -192,6 +188,7 @@ export class ChargeNewPageComponent implements OnInit {
     readonly loadError = signal<string | null>(null);
     readonly loadingExaminations = signal(false);
     readonly examinationOptions = signal<SelectOption[]>([]);
+    private examinationsSub?: Subscription;
     private readonly todayItems = signal<TodayItemVm[]>([]);
     /** "Bugün" listesinin tarihi (yyyy-MM-dd); önceki günden süren gelişler bağlanabilir geliş sayılmaz. */
     private readonly todayDate = signal('');
@@ -350,32 +347,37 @@ export class ChargeNewPageComponent implements OnInit {
             });
     }
 
+    /**
+     * Müşteri veya hasta her değiştiğinde önceki istek iptal edilir; böylece geç gelen eski yanıt
+     * (ör. adresten birlikte dolumda önce giden "yalnız müşteri" isteği) güncel listeyi ezemez.
+     */
     private loadExaminations(clientId: string, petId = ''): void {
+        this.examinationsSub?.unsubscribe();
+
         if (!this.canLinkExamination || !clientId) {
+            this.loadingExaminations.set(false);
+
             return;
         }
 
         this.loadingExaminations.set(true);
-        this.examinationsService.getExaminations({ page: 1, pageSize: 50, clientId, petId: petId || undefined }).subscribe({
-            next: (r) => {
-                if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
+        this.examinationsSub = this.examinationsService
+            .getExaminations({ page: 1, pageSize: 50, clientId, petId: petId || undefined })
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (r) => {
+                    this.examinationOptions.set(
+                        r.items.map((e) => ({
+                            value: e.id,
+                            label: `${formatUtcIsoAsLocalDateTimeDisplay(e.examinedAtUtc)} — ${e.petName} — ${e.visitReason}`
+                        }))
+                    );
                     this.loadingExaminations.set(false);
-
-                    return;
+                },
+                error: () => {
+                    this.examinationOptions.set([]);
+                    this.loadingExaminations.set(false);
                 }
-
-                this.examinationOptions.set(
-                    r.items.map((e) => ({
-                        value: e.id,
-                        label: `${formatUtcIsoAsLocalDateTimeDisplay(e.examinedAtUtc)} — ${e.petName} — ${e.visitReason}`
-                    }))
-                );
-                this.loadingExaminations.set(false);
-            },
-            error: () => {
-                this.examinationOptions.set([]);
-                this.loadingExaminations.set(false);
-            }
-        });
+            });
     }
 }
