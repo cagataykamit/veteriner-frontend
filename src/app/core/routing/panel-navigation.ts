@@ -233,8 +233,8 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
         heading: 'Günlük iş',
         category: 'Panel',
         entries: [
-            { label: 'Bugün', icon: 'pi pi-fw pi-sun', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
-            tabbedEntry('Randevular', 'pi pi-fw pi-calendar', [
+            { label: 'Bugün', icon: 'fa-solid fa-fw fa-calendar-day', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
+            tabbedEntry('Randevular', 'fa-solid fa-fw fa-calendar-check', [
                 { label: 'Liste', listLabel: 'Randevular', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
                 { label: 'Takvim', listLabel: 'Randevu takvimi', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] }
             ])
@@ -243,7 +243,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
     {
         heading: 'Müşteri ve hasta',
         entries: [
-            tabbedEntry('Müşteri ve Hasta', 'pi pi-fw pi-heart', [
+            tabbedEntry('Müşteri ve Hasta', 'fa-solid fa-fw fa-paw', [
                 { label: 'Ara', listLabel: 'Hastalar', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
                 { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
                 { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
@@ -255,7 +255,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
         entries: [
             tabbedEntry(
                 'Kayıtlar',
-                'pi pi-fw pi-clipboard',
+                'fa-solid fa-fw fa-notes-medical',
                 [
                     { label: 'Muayeneler', route: '/panel/examinations', claims: [EXAMINATIONS_READ_CLAIM] },
                     { label: 'Tedaviler', route: '/panel/treatments', claims: [TREATMENTS_READ_CLAIM] },
@@ -272,13 +272,13 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
     {
         heading: 'Para ve stok',
         entries: [
-            tabbedEntry('Para', 'pi pi-fw pi-wallet', [
+            tabbedEntry('Para', 'fa-solid fa-fw fa-wallet', [
                 { label: 'Ücretler', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
                 { label: 'Ücret bekleyenler', route: '/panel/charges/pending', claims: [CHARGES_READ_CLAIM] },
                 { label: 'Ödemeler', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
                 { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] }
             ]),
-            tabbedEntry('Stok', 'pi pi-fw pi-box', [
+            tabbedEntry('Stok', 'fa-solid fa-fw fa-boxes-stacked', [
                 { label: 'Ürünler', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
                 { label: 'Stok durumu', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
                 { label: 'Stok hareketleri', route: '/panel/stock-movements', claims: [STOCK_MOVEMENTS_READ_CLAIM] },
@@ -295,12 +295,12 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             {
                 label: 'Raporlar',
                 category: 'Raporlar',
-                icon: 'pi pi-fw pi-chart-line',
+                icon: 'fa-solid fa-fw fa-chart-line',
                 route: REPORTS_ROUTE,
                 claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
             },
-            { label: 'Özet', category: 'Panel', icon: 'pi pi-fw pi-th-large', route: '/panel/dashboard', claims: [MANAGER_LEVEL_CLAIM] },
-            { label: 'Ayarlar', icon: 'pi pi-fw pi-cog', route: SETTINGS_ROUTE }
+            { label: 'Özet', category: 'Panel', icon: 'fa-solid fa-fw fa-gauge', route: '/panel/dashboard', claims: [MANAGER_LEVEL_CLAIM] },
+            { label: 'Ayarlar', icon: 'fa-solid fa-fw fa-gear', route: SETTINGS_ROUTE }
         ]
     }
 ];

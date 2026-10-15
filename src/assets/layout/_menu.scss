@@ -295,8 +295,8 @@ $menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-roundi
                     width: $menu-icon-column;
                     margin-right: 0;
                     text-align: center;
-                    color: var(--text-color-secondary);
-                    -webkit-text-stroke: 0.1px currentColor;
+                    color: var(--text-color);
+                    // Dolu (Font Awesome) simge: ek kontur gerekmez
                 }
 
                 &.active-route .layout-menuitem-icon {

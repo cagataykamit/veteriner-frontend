@@ -35,7 +35,9 @@
                         ],
                         "styles": [
                             "src/assets/styles.scss",
-                            "src/assets/tailwind.css"
+                            "src/assets/tailwind.css",
+                            "node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css",
+                            "node_modules/@fortawesome/fontawesome-free/css/solid.min.css"
                         ],
                         "scripts": []
                     },
