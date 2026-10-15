@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
+import { PRIVACY_POLICY_DOCUMENT, TERMS_OF_USE_DOCUMENT } from '@/app/features/public/utils/legal-documents.utils';
 
 @Component({
     selector: 'app-public-footer',
@@ -99,6 +100,15 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-10 pt-6 border-t border-white/15"
                     >
                         <p class="public-on-brand-subtle text-xs m-0">© {{ year }} Vetinity. Tüm hakları saklıdır.</p>
+                        <nav class="flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label="Hukuki metinler">
+                            @for (link of legalLinks; track link.path) {
+                                <a
+                                    [routerLink]="link.path"
+                                    class="public-on-brand-subtle no-underline hover:text-[var(--public-on-brand)] transition-colors"
+                                    >{{ link.shortTitle }}</a
+                                >
+                            }
+                        </nav>
                         <p class="public-on-brand-subtle text-xs m-0">Veteriner klinik yönetimi için tasarlandı.</p>
                     </div>
                 </div>
@@ -109,4 +119,5 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
 export class PublicFooterComponent {
     readonly brand = VETINITY_BRAND_LOGOS;
     readonly year = new Date().getFullYear();
+    readonly legalLinks = [PRIVACY_POLICY_DOCUMENT, TERMS_OF_USE_DOCUMENT];
 }

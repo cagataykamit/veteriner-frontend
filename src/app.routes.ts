@@ -26,6 +26,16 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./app/pages/public/pricing-page.component').then((m) => m.PricingPageComponent)
     },
     {
+        path: 'privacy',
+        data: { legalDocument: 'privacy' },
+        loadComponent: () => import('./app/pages/public/legal-document-page.component').then((m) => m.LegalDocumentPageComponent)
+    },
+    {
+        path: 'terms',
+        data: { legalDocument: 'terms' },
+        loadComponent: () => import('./app/pages/public/legal-document-page.component').then((m) => m.LegalDocumentPageComponent)
+    },
+    {
         path: 'join/:token',
         loadComponent: () => import('./app/pages/public/join-invite-page.component').then((m) => m.JoinInvitePageComponent)
     },
