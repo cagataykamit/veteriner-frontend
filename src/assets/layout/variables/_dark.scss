@@ -4,6 +4,17 @@
     --code-color: var(--p-surface-100);
 }
 
+/*
+ * Koyu temada menü kartı (surface-900) sayfa zemininden (surface-950) zor ayrılıyordu (~1.1:1). Kart, flyout paneli gibi ince bir
+ * --surface-border çizgisiyle çevrelenir; gölge halkası yerleşime girmez (menü ölçüleri ve kaydırmasız sığma hesabı değişmez),
+ * sol kenarda ekran dışında kalır. Açık tema etkilenmez.
+ */
+@media (min-width: 992px) {
+    :root[class*='app-dark'] .layout-wrapper.layout-static .layout-sidebar {
+        box-shadow: 0 0 0 1px var(--surface-border);
+    }
+}
+
 /* Koyu temada gri düğme/sekme, gri kart üstünde sınırsız kalıyordu (bileşen sınırı ~1.2:1); WCAG 1.4.11 için ≥3:1 sınır. */
 :root[class*='app-dark'] {
     .p-button.p-button-secondary:not(.p-button-text),
