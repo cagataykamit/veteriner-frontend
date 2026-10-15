@@ -49,10 +49,13 @@ export class AppPageHeaderComponent {
     private readonly menuCategory = categoryForUrl(MENU_GROUPS, this.router.url);
     private readonly linkListLabel = computed(() => {
         const link = this.categoryLink();
+
         if (link == null) {
             return undefined;
         }
+
         const url = typeof link === 'string' ? link : this.router.serializeUrl(link instanceof UrlTree ? link : this.router.createUrlTree([...link]));
+
         return listLabelForUrl(url);
     });
     private readonly category = computed(() => this.linkListLabel() ?? this.menuCategory);
@@ -62,6 +65,7 @@ export class AppPageHeaderComponent {
     protected readonly categoryLinkAriaLabel = computed(() => {
         const text = this.categoryText();
         const label = this.categoryLinkLabel();
+
         return label && label !== text ? `${text}: ${label}` : null;
     });
 }

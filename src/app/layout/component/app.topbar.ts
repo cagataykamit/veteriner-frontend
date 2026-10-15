@@ -136,6 +136,7 @@ export class AppTopbar implements OnInit, OnDestroy {
             doc.querySelectorAll(selector).forEach((el) => {
                 const overlay =
                     el.closest(TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS) ?? el;
+
                 if (!removed.has(overlay)) {
                     removed.add(overlay);
                     overlay.remove();

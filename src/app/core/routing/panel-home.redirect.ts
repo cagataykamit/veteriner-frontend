@@ -5,5 +5,6 @@ import { firstAccessibleRoute, MENU_GROUPS, SETTINGS_ROUTE } from '@/app/core/ro
 /** `/panel` açılış sayfası: menüdeki ilk erişilebilir öğe; Bugün yetkisi olana Bugün (ADR-017 K5). */
 export function panelHomeRedirect(): string {
     const auth = inject(AuthService);
+
     return firstAccessibleRoute(MENU_GROUPS, (claim) => auth.hasOperationClaim(claim)) ?? SETTINGS_ROUTE;
 }

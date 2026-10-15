@@ -7,5 +7,6 @@ import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.consta
 export const tenantManagementGuard: CanActivateFn = () => {
     const auth = inject(AuthService);
     const router = inject(Router);
+
     return auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) ? true : router.createUrlTree(['/notfound']);
 };

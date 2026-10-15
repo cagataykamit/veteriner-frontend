@@ -42,6 +42,7 @@ export class AppLayout {
 
         effect(() => {
             const state = this.layoutService.layoutState();
+
             if (state.mobileMenuActive) {
                 document.body.classList.add('blocked-scroll');
             } else {
@@ -51,6 +52,7 @@ export class AppLayout {
 
         afterNextRender(() => {
             const el = this.primePanelOverlayHostEl()?.nativeElement ?? null;
+
             this.layoutService.setPrimePanelOverlayHost(el);
         });
 
@@ -62,6 +64,7 @@ export class AppLayout {
     containerClass = computed(() => {
         const config = this.layoutService.layoutConfig();
         const state = this.layoutService.layoutState();
+
         return {
             'layout-overlay': config.menuMode === 'overlay',
             'layout-static': config.menuMode === 'static',

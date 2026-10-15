@@ -18,9 +18,11 @@ export class TenantAccessService {
     /** `GET /api/v1/tenants/{tenantId}/access-state` — kiracı salt okunur durumu (abonelik özetinden bağımsız). */
     getTenantAccessState(): Observable<TenantAccessStateVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
         if (!tenantId?.trim()) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.tenants.accessState(tenantId)).pipe(
             map(mapTenantAccessStateDtoToVm),
             catchError((err: HttpErrorResponse) =>

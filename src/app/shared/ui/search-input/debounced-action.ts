@@ -9,6 +9,8 @@ import { Subject, debounceTime } from 'rxjs';
  */
 export function debouncedAction(action: () => void, ms = 400): () => void {
     const trigger$ = new Subject<void>();
+
     trigger$.pipe(debounceTime(ms), takeUntilDestroyed(inject(DestroyRef))).subscribe(() => action());
+
     return () => trigger$.next();
 }

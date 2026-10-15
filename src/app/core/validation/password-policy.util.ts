@@ -30,15 +30,19 @@ export function getStrongPasswordValidationErrors(password: string): ValidationE
     if (password.length < PASSWORD_MIN_LENGTH) {
         errors['minlength'] = { requiredLength: PASSWORD_MIN_LENGTH, actualLength: password.length };
     }
+
     if (!UPPERCASE_PATTERN.test(password)) {
         errors['missingUppercase'] = true;
     }
+
     if (!LOWERCASE_PATTERN.test(password)) {
         errors['missingLowercase'] = true;
     }
+
     if (!DIGIT_PATTERN.test(password)) {
         errors['missingDigit'] = true;
     }
+
     if (!SPECIAL_CHAR_PATTERN.test(password)) {
         errors['missingSpecialChar'] = true;
     }
@@ -49,12 +53,15 @@ export function getStrongPasswordValidationErrors(password: string): ValidationE
 export function strongPasswordValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const value = control.value;
+
         if (value == null || value === '') {
             return null;
         }
+
         if (typeof value !== 'string') {
             return null;
         }
+
         return getStrongPasswordValidationErrors(value);
     };
 }
@@ -67,24 +74,31 @@ export function getPasswordPolicyErrorMessage(errors: ValidationErrors | null | 
     if (!errors) {
         return null;
     }
+
     if (errors['required']) {
         return PASSWORD_ERROR_MESSAGES.required;
     }
+
     if (errors['minlength']) {
         return PASSWORD_ERROR_MESSAGES.minlength;
     }
+
     if (errors['missingUppercase']) {
         return PASSWORD_ERROR_MESSAGES.missingUppercase;
     }
+
     if (errors['missingLowercase']) {
         return PASSWORD_ERROR_MESSAGES.missingLowercase;
     }
+
     if (errors['missingDigit']) {
         return PASSWORD_ERROR_MESSAGES.missingDigit;
     }
+
     if (errors['missingSpecialChar']) {
         return PASSWORD_ERROR_MESSAGES.missingSpecialChar;
     }
+
     return null;
 }
 
@@ -92,6 +106,7 @@ export function validateStrongPasswordValue(password: string): string | null {
     if (!password) {
         return PASSWORD_ERROR_MESSAGES.required;
     }
+
     return getPasswordPolicyErrorMessage(getStrongPasswordValidationErrors(password));
 }
 
@@ -102,12 +117,15 @@ export function passwordsMatchValidator(
     return (group: AbstractControl): ValidationErrors | null => {
         const newPassword = group.get(passwordKey)?.value;
         const confirmPassword = group.get(confirmKey)?.value;
+
         if (typeof newPassword !== 'string' || typeof confirmPassword !== 'string') {
             return null;
         }
+
         if (confirmPassword.length > 0 && newPassword !== confirmPassword) {
             return { passwordMismatch: true };
         }
+
         return null;
     };
 }

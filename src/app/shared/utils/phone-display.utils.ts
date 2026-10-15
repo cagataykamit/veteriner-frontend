@@ -12,14 +12,18 @@ export const CLIENT_PHONE_DISPLAY_PLACEHOLDER = '—';
  */
 export function formatClientPhoneForDisplay(value: string | null | undefined): string {
     const t = (value ?? '').trim();
+
     if (!t || t === CLIENT_PHONE_DISPLAY_PLACEHOLDER) {
         return CLIENT_PHONE_DISPLAY_PLACEHOLDER;
     }
+
     const d = t.replace(/\D/g, '');
     const national = toTurkishMobileNational10(d);
+
     if (!national) {
         return t;
     }
+
     return `+90 ${national.slice(0, 3)} ${national.slice(3, 6)} ${national.slice(6, 8)} ${national.slice(8, 10)}`;
 }
 
@@ -30,17 +34,21 @@ function toTurkishMobileNational10(digits: string): string | null {
     if (digits.length === 10 && digits.startsWith('5')) {
         return digits;
     }
+
     if (digits.length === 11 && digits.startsWith('05')) {
         return digits.slice(1);
     }
+
     if (digits.length === 12 && digits.startsWith('90') && digits[2] === '5') {
         return digits.slice(2);
     }
+
     return null;
 }
 
 /** Aranabilir `tel:` bağlantısı; gösterilecek numara yoksa `null` (bağlantı çıkmaz). */
 export function clientPhoneTelHref(value: string | null | undefined): string | null {
     const digits = (value ?? '').replace(/[^\d+]/g, '');
+
     return formatClientPhoneForDisplay(value) !== CLIENT_PHONE_DISPLAY_PLACEHOLDER && digits ? `tel:${digits}` : null;
 }

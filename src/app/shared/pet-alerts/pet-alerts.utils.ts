@@ -40,6 +40,7 @@ export function mapPetAlertsDtoToVm(dto: PetAlertsDto | null | undefined): PetAl
     const present = new Set((dto?.flags ?? []).filter((f) => KNOWN_FLAGS.has(f)));
     const flags = PET_ALERT_OPTIONS.filter((o) => present.has(o.value)).map((o) => o.value);
     const note = dto?.note?.trim();
+
     return { flags, note: flags.length > 0 && note ? note : null };
 }
 
@@ -50,10 +51,13 @@ export function petAlertDefinitions(alerts: PetAlertsVm): PetAlertDefinition[] {
 /** Rozet `title` / ekran okuyucu metni: "Alerji, Agresif — not"; uyarı yoksa `null`. */
 export function petAlertsSummary(alerts: PetAlertsVm): string | null {
     const labels = petAlertDefinitions(alerts).map((o) => o.label);
+
     if (labels.length === 0) {
         return null;
     }
+
     const joined = labels.join(', ');
+
     return alerts.note ? `${joined} — ${alerts.note}` : joined;
 }
 
@@ -63,5 +67,6 @@ export function petAlertsSummary(alerts: PetAlertsVm): string | null {
  */
 export function petAlertsFormToWrite(flags: readonly PetAlertFlag[], note: string): { alertFlags: PetAlertFlag[]; alertNote: string } {
     const ordered = PET_ALERT_OPTIONS.filter((o) => flags.includes(o.value)).map((o) => o.value);
+
     return { alertFlags: ordered, alertNote: ordered.length > 0 ? note.trim() : '' };
 }

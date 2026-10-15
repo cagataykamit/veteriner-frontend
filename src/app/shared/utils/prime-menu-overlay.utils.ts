@@ -8,6 +8,7 @@ function containsPrimeMenuOverlay(child: Element): boolean {
 
 export function removeOrphanedPrimeMenuPopupsFromBody(doc: Document): void {
     const { body } = doc;
+
     if (!body) {
         return;
     }
@@ -19,6 +20,7 @@ export function removeOrphanedPrimeMenuPopupsFromBody(doc: Document): void {
             toRemove.push(child);
             continue;
         }
+
         if (child.tagName.toLowerCase() === 'p-motion' && containsPrimeMenuOverlay(child)) {
             toRemove.push(child);
         }

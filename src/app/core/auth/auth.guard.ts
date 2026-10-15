@@ -10,6 +10,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
     const loginTree = router.createUrlTree(['/auth/login'], {
         queryParams: { returnUrl: panelReturnUrlOrDefault(state.url) }
     });
+
     return auth.ensureValidAccessToken().pipe(
         map(() => {
             if (auth.isAuthenticated()) {
@@ -18,8 +19,10 @@ export const authGuard: CanActivateFn = (_route, state) => {
                         queryParams: { returnUrl: panelReturnUrlOrDefault(state.url) }
                     });
                 }
+
                 return true;
             }
+
             return loginTree;
         }),
         catchError(() => of(loginTree))

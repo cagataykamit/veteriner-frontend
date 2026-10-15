@@ -35,6 +35,7 @@ describe('panel-navigation — kayıt defteri kartları', () => {
 describe('panel-navigation', () => {
     it('en geniş izinle menü ADR-023 bölümlerindedir; Yönetim bölümü (Ayarlar dahil) en alta sabitlenir', () => {
         const groups = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
+
         expect(groups.map((g) => [g.heading, labels([g])])).toEqual([
             ['Günlük iş', ['Bugün', 'Randevular']],
             ['Müşteri ve hasta', ['Müşteri ve Hasta']],
@@ -44,12 +45,14 @@ describe('panel-navigation', () => {
         ]);
         expect(groups.every((g) => g.label === undefined)).toBeTrue();
         const last = groups[groups.length - 1];
+
         expect(last.pinned).toBeTrue();
         expect(groups.filter((g) => g.pinned)).toHaveSize(1);
     });
 
     it('tüm girişleri izinle gizlenen bölüm başlığıyla birlikte düşer', () => {
         const headings = (hasClaim: (c: string) => boolean) => visibleGroups(MENU_GROUPS, hasClaim).map((g) => g.heading);
+
         expect(headings(() => false)).toEqual(['Yönetim']);
         expect(headings(only('Pets.Read'))).toEqual(['Müşteri ve hasta', 'Yönetim']);
         expect(headings(only('Appointments.Read', 'Products.Read'))).toEqual(['Günlük iş', 'Para ve stok', 'Yönetim']);
@@ -57,21 +60,25 @@ describe('panel-navigation', () => {
 
     it('her menü öğesinin simgesi ayrıdır (simge şeridinde öğeler ayırt edilebilir)', () => {
         const icons = MENU_GROUPS.flatMap((g) => g.entries.map((e) => e.icon));
+
         expect(new Set(icons).size).toBe(icons.length);
     });
 
     it('sayaç yalnız Bugün ve Kayıtlar öğelerinde, Kayıtlar altında Lab sekmesinde tanımlıdır', () => {
         const badged = MENU_GROUPS.flatMap((g) => g.entries).filter((e) => e.badge);
+
         expect(badged.map((e) => [e.label, e.badge])).toEqual([
             ['Bugün', 'waitingVisits'],
             ['Kayıtlar', 'requestedLabResults']
         ]);
         const tabBadges = entry('Kayıtlar').tabs!.filter((t) => t.badge);
+
         expect(tabBadges.map((t) => [t.label, t.badge])).toEqual([['Lab sonuçları', 'requestedLabResults']]);
     });
 
     it('birleşik öğelerin sekmeleri mevcut liste rotalarıdır', () => {
         const tabs = (label: string) => entry(label).tabs!.map((t) => [t.label, t.route]);
+
         expect(tabs('Müşteri ve Hasta')).toEqual([
             ['Ara', '/panel/patients'],
             ['Müşteriler', '/panel/clients'],
@@ -93,6 +100,7 @@ describe('panel-navigation', () => {
 
     it('Tür, Irk ve Kategori ana menüde yer almaz', () => {
         const groups = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
+
         expect(labels(groups)).not.toContain('Türler');
         expect(labels(groups)).not.toContain('Irklar');
         expect(labels(groups)).not.toContain('Kategoriler');
@@ -105,6 +113,7 @@ describe('panel-navigation', () => {
 
     it('Bugün yalnız Visits.Read ile görünür; birleşik öğe en az bir sekmesi yetkiliyse görünür', () => {
         const groups = visibleGroups(MENU_GROUPS, only('Visits.Read', 'Clients.Read'));
+
         expect(labels(groups)).toEqual(['Bugün', 'Müşteri ve Hasta', 'Raporlar', 'Ayarlar']);
     });
 
@@ -118,8 +127,10 @@ describe('panel-navigation', () => {
 
     it('Ayarlar kartları izne göre süzülür; Tanımlar yalnız tanım izni varken görünür', () => {
         const none = labels(visibleGroups(SETTINGS_SECTIONS, () => false));
+
         expect(none).toEqual(['Hesabım']);
         const withCategory = labels(visibleGroups(SETTINGS_SECTIONS, (c) => c === 'ProductCategories.Read'));
+
         expect(withCategory).toEqual(['Hesabım', 'Tanımlar']);
     });
 
@@ -153,6 +164,7 @@ describe('panel-navigation', () => {
 
     it('menüde tek Raporlar girişi vardır; ayrı rapor öğeleri yoktur', () => {
         const all = labels(visibleGroups(MENU_GROUPS, (c) => allClaims.has(c)));
+
         expect(all.filter((l) => l === 'Raporlar')).toHaveSize(1);
         expect(all.filter((l) => l.endsWith('Raporu'))).toEqual([]);
     });
@@ -172,6 +184,7 @@ describe('panel-navigation', () => {
 
     it('entryForUrl sekme adreslerini ve alt yollarını birleşik öğeye bağlar', () => {
         const label = (url: string) => entryForUrl(MENU_GROUPS, url)?.label;
+
         expect(label('/panel/pets/abc?tab=1')).toBe('Müşteri ve Hasta');
         expect(label('/panel/clients?x=1')).toBe('Müşteri ve Hasta');
         expect(label('/panel/patients')).toBe('Müşteri ve Hasta');
@@ -193,6 +206,7 @@ describe('panel-navigation', () => {
         for (const group of MENU_GROUPS) {
             for (const item of group.entries) {
                 const category = categoryForUrl(MENU_GROUPS, item.route);
+
                 expect(category).withContext(item.label).toBeTruthy();
                 expect(category).not.toBe(group.heading);
             }
@@ -201,6 +215,7 @@ describe('panel-navigation', () => {
 
     it('categoryForUrl öğenin adını, kategorisiz öğede grup kategorisini verir', () => {
         const category = (url: string) => categoryForUrl(MENU_GROUPS, url);
+
         expect(category('/panel/appointments')).toBe('Randevular');
         expect(category('/panel/appointments/calendar')).toBe('Randevular');
         expect(category('/panel/payments')).toBe('Para');
@@ -296,6 +311,7 @@ describe('panel-navigation', () => {
 
     it('Rapor Merkezi kartları izne göre süzülür ve gruplanır', () => {
         const all = visibleGroups(REPORT_SECTIONS, () => true);
+
         expect(all.map((g) => g.label)).toEqual(['Randevu ve ziyaret', 'Klinik', 'Para', 'Kayıt defterleri']);
         expect(labels(all)).toEqual([
             'Randevu Raporu',
@@ -312,6 +328,7 @@ describe('panel-navigation', () => {
             'Aşı Bilgi Raporu'
         ]);
         const some = visibleGroups(REPORT_SECTIONS, (c) => c === 'Payments.Read' || c === 'Examinations.Read');
+
         expect(labels(some)).toEqual(['Muayene Raporu', 'Gün sonu', 'Ödeme Raporu', 'Muayene Kayıt Defteri']);
         expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Visits.Read'))).toEqual(['Gün sonu']);
         expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Charges.Read'))).toEqual(['Borç Raporu']);

@@ -48,18 +48,22 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
 /** Panel sayfa adını URL'den çözer; panel dışı veya bilinmeyen yol için `null`. */
 export function resolvePanelPageTitle(url: string): string | null {
     const path = url.split(/[?#]/)[0].replace(/^\/+|\/+$/g, '');
+
     if (!path.startsWith('panel/')) {
         return null;
     }
+
     const rest = path.slice('panel/'.length);
     let best: string | null = null;
     let bestLength = -1;
+
     for (const [prefix, title] of PANEL_PAGE_TITLES) {
         if ((rest === prefix || rest.startsWith(`${prefix}/`)) && prefix.length > bestLength) {
             best = title;
             bestLength = prefix.length;
         }
     }
+
     return best;
 }
 
@@ -73,6 +77,7 @@ export class PageTitleStrategy extends TitleStrategy {
 
     override updateTitle(snapshot: RouterStateSnapshot): void {
         const pageTitle = this.buildTitle(snapshot) ?? resolvePanelPageTitle(snapshot.url);
+
         if (pageTitle) {
             this.title.setTitle(`${pageTitle} — ${TITLE_SUFFIX}`);
         }

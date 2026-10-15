@@ -13,6 +13,7 @@ export function extractRawValidationErrors(body: unknown): Record<string, unknow
     if (!body || typeof body !== 'object') {
         return null;
     }
+
     const o = body as Record<string, unknown>;
 
     const candidates: unknown[] = [
@@ -22,11 +23,13 @@ export function extractRawValidationErrors(body: unknown): Record<string, unknow
         o['validationErrors'],
         o['ValidationErrors']
     ];
+
     for (const c of candidates) {
         if (c && typeof c === 'object' && !Array.isArray(c)) {
             return c as Record<string, unknown>;
         }
     }
+
     return null;
 }
 
@@ -34,6 +37,7 @@ export function firstStringMessage(v: unknown): string | null {
     if (typeof v === 'string' && v.trim()) {
         return v.trim();
     }
+
     if (Array.isArray(v)) {
         for (const item of v) {
             if (typeof item === 'string' && item.trim()) {
@@ -41,6 +45,7 @@ export function firstStringMessage(v: unknown): string | null {
             }
         }
     }
+
     return null;
 }
 
@@ -58,6 +63,7 @@ export function parseValidationFieldErrors<K extends string>(
 ): FieldErrors<K> {
     const out: FieldErrors<K> = {};
     const raw = extractRawValidationErrors(body);
+
     if (!raw) {
         return out;
     }
@@ -65,15 +71,20 @@ export function parseValidationFieldErrors<K extends string>(
     for (const [apiKey, val] of Object.entries(raw)) {
         const normalizedKey = normalizeApiFieldKey(apiKey);
         const formKey = options.fieldMap[normalizedKey];
+
         if (!formKey || out[formKey]) {
             continue;
         }
+
         const msg = firstStringMessage(val);
+
         if (!msg) {
             continue;
         }
+
         out[formKey] = options.normalizeMessage ? options.normalizeMessage(formKey, msg) : msg;
     }
+
     return out;
 }
 
@@ -93,12 +104,14 @@ export function parseValidationHttpError<K extends string>(
         fieldMap: options.fieldMap,
         normalizeMessage: options.normalizeMessage
     });
+
     if (Object.keys(fieldErrors).length > 0) {
         return {
             fieldErrors,
             summaryMessage: options.fieldErrorsSummaryMessage ?? DEFAULT_VALIDATION_SUMMARY_MESSAGE
         };
     }
+
     return {
         fieldErrors: {},
         summaryMessage: options.nonFieldMessage(err)

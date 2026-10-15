@@ -100,10 +100,13 @@ export class ReasonConfirmDialogComponent {
         if (this.submitting()) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.execute()(this.form.controls.reason.value).subscribe({

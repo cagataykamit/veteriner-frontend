@@ -190,6 +190,7 @@ export class ResetPasswordPageComponent implements OnInit {
         });
         removeOrphanedPrimeMenuPopupsFromBody(this.document);
         const rawToken = this.route.snapshot.queryParamMap.get('token')?.trim() ?? '';
+
         this.token.set(rawToken || null);
     }
 
@@ -201,25 +202,34 @@ export class ResetPasswordPageComponent implements OnInit {
         if (this.loading() || !this.token()) {
             return;
         }
+
         this.formSubmitAttempted.set(true);
         this.formError.set(null);
         this.apiFieldErrors.set({});
         this.passwordMismatch.set(false);
+
         if (resetForm.invalid) {
             resetForm.control.markAllAsTouched();
+
             return;
         }
+
         const policyErrors = getStrongPasswordValidationErrors(this.newPassword);
+
         if (policyErrors) {
             resetForm.controls['newPassword']?.setErrors(policyErrors);
             resetForm.controls['newPassword']?.markAsTouched();
+
             return;
         }
+
         if (this.newPassword !== this.confirmPassword) {
             this.passwordMismatch.set(true);
             resetForm.controls['confirmPassword']?.markAsTouched();
+
             return;
         }
+
         this.loading.set(true);
         this.passwordReset
             .confirmReset(this.token()!, this.newPassword)
@@ -230,10 +240,13 @@ export class ResetPasswordPageComponent implements OnInit {
                 },
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
+
                     if (http) {
                         this.handleHttpError(http);
+
                         return;
                     }
+
                     this.formError.set(CONFIRM_RESET_FALLBACK);
                 }
             });
@@ -243,11 +256,14 @@ export class ResetPasswordPageComponent implements OnInit {
         const fieldErrors = parseValidationFieldErrors<ResetPasswordFieldKey>(http.error, {
             fieldMap: RESET_PASSWORD_FIELD_MAP
         });
+
         if (Object.keys(fieldErrors).length > 0) {
             this.apiFieldErrors.set(fieldErrors);
             this.formError.set(null);
+
             return;
         }
+
         this.apiFieldErrors.set({});
         this.formError.set(this.resolveError(http));
     }
@@ -256,9 +272,11 @@ export class ResetPasswordPageComponent implements OnInit {
         if (http.status === 401) {
             return TOKEN_ERROR_MESSAGE;
         }
+
         if (http.status === 429) {
             return RATE_LIMIT_MESSAGE;
         }
+
         return messageFromHttpError(http, CONFIRM_RESET_FALLBACK);
     }
 }

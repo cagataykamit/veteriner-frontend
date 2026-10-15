@@ -8,6 +8,7 @@ const problem = (code: string) =>
 describe('api-error: hayvan durumu kodları (ADR-020 S5)', () => {
     it('Pets.Deceased yeni geliş/muayene/randevu için Türkçe ve yol gösteren mesaj olur', () => {
         const msg = messageFromHttpError(problem('Pets.Deceased'));
+
         expect(msg).toContain('vefat');
         expect(msg).toContain('Aktife al');
     });

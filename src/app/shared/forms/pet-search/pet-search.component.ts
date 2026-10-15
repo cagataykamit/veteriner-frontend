@@ -138,6 +138,7 @@ export class PetSearchComponent implements ControlValueAccessor {
     onModelChange(value: PetSearchResult | string | null): void {
         this.model.set(value);
         const id = value !== null && typeof value === 'object' ? value.id : '';
+
         if (id !== this.selectedId) {
             this.selectedId = id;
             this.onChange(id);
@@ -151,15 +152,21 @@ export class PetSearchComponent implements ControlValueAccessor {
 
     writeValue(id: string | null): void {
         const value = (id ?? '').trim();
+
         this.selectedId = value;
+
         if (!value) {
             this.model.set(null);
+
             return;
         }
+
         const current = this.model();
+
         if (current !== null && typeof current === 'object' && current.id === value) {
             return;
         }
+
         this.resolve(value, (p) => {
             if (this.selectedId === value) {
                 this.model.set(p);
@@ -181,18 +188,23 @@ export class PetSearchComponent implements ControlValueAccessor {
 
     private load(term: string) {
         const clientId = this.clientId().trim();
+
         if (!clientId && this.requireClient()) {
             return of([] as PetSearchResult[]);
         }
+
         const search = term.trim();
         const status = this.activeOnly() ? 'Active' : undefined;
+
         return this.pets.getPets({ page: 1, pageSize: PAGE_SIZE, clientId: clientId || undefined, search: search || undefined, status }).pipe(
             map((r) => {
                 const hasOwner = r.items.some((p) => (p.clientId ?? '').trim());
+
                 return (clientId && hasOwner ? filterPetsByClientId(r.items, clientId) : r.items).map((p) => ({ id: p.id, label: petSelectLabel(p) }));
             }),
             catchError((e: unknown) => {
                 this.searchError.set(panelHttpFailureMessage(e, 'Hasta listesi yüklenemedi.'));
+
                 return of([] as PetSearchResult[]);
             })
         );

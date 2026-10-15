@@ -114,8 +114,10 @@ export class AppClinicSwitcher implements OnDestroy {
     readonly menuItems = computed<MenuItem[]>(() => {
         const activeId = this.activeId();
         const busy = this.submitting();
+
         return this.clinics().map((c) => {
             const isActive = c.id === activeId;
+
             return {
                 label: c.name,
                 icon: isActive ? 'pi pi-check' : 'pi pi-circle',
@@ -144,8 +146,10 @@ export class AppClinicSwitcher implements OnDestroy {
                 if (!this.canOpenClinicSwitcher()) {
                     return;
                 }
+
                 this.showClinicMenuFromTrigger();
             });
+
             return;
         }
 
@@ -155,9 +159,11 @@ export class AppClinicSwitcher implements OnDestroy {
     /** PrimeNG `Menu.show` async callback'te orijinal `currentTarget` null olabilir; canlı trigger kullan. */
     private showClinicMenuFromTrigger(): void {
         const target = this.triggerEl()?.nativeElement;
+
         if (!target) {
             return;
         }
+
         this.menuRef()?.show({ currentTarget: target });
     }
 
@@ -165,6 +171,7 @@ export class AppClinicSwitcher implements OnDestroy {
         if (this.loading()) {
             return;
         }
+
         this.loading.set(true);
         this.auth
             .getMyClinics(forceRefresh)
@@ -173,15 +180,18 @@ export class AppClinicSwitcher implements OnDestroy {
                 next: (items) => {
                     this.clinics.set(sortClinicsByName(filterClinicsForSelection(items)));
                     this.hasLoadedOnce.set(true);
+
                     if (!this.canOpenClinicSwitcher()) {
                         this.menuRef()?.hide();
                     }
+
                     then?.();
                 },
                 error: (e: unknown) => {
                     if (forceRefresh) {
                         return;
                     }
+
                     this.showErrorToast(e, 'Klinikler yüklenemedi.');
                 }
             });
@@ -189,9 +199,11 @@ export class AppClinicSwitcher implements OnDestroy {
 
     private onSelect(item: ClinicSummary): void {
         this.menuRef()?.hide();
+
         if (item.id === this.activeId()) {
             return;
         }
+
         this.submitting.set(true);
         this.auth
             .selectClinic(item.id, item.name)
@@ -219,6 +231,7 @@ export class AppClinicSwitcher implements OnDestroy {
 
     private showErrorToast(e: unknown, fallback: string): void {
         const message = e instanceof HttpErrorResponse ? authFailureMessage(e, fallback) : fallback;
+
         addTracedToast(this.messages, 'clinic-switcher', '/panel', {
             severity: 'error',
             summary: 'Hata',

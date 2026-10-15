@@ -38,6 +38,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const token = auth.getAccessToken();
 
     let outgoing = req;
+
     if (!isPublic && token) {
         outgoing = req.clone({
             setHeaders: {
@@ -55,6 +56,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                     auth.clearSession();
                     navigateReauth();
                 }
+
                 return throwError(() => err);
             }
 
@@ -69,37 +71,45 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             if (req.headers.has(AUTH_RETRY_HEADER)) {
                 auth.clearSession();
                 navigateReauth();
+
                 return throwError(() => err);
             }
 
             if (!auth.getRefreshToken()) {
                 auth.clearSession();
                 navigateReauth();
+
                 return throwError(() => err);
             }
 
             return auth.refreshSession().pipe(
                 switchMap((session) => {
                     const newAccess = session.accessToken ?? auth.getAccessToken();
+
                     if (!newAccess) {
                         auth.clearSession();
                         navigateReauth();
+
                         return throwError(() => err);
                     }
+
                     const retry = req.clone({
                         setHeaders: {
                             Authorization: `Bearer ${newAccess}`,
                             [AUTH_RETRY_HEADER]: '1'
                         }
                     });
+
                     return next(retry);
                 }),
                 catchError((refreshErr: unknown) => {
                     if (refreshErr instanceof HttpErrorResponse && refreshErr.status === 429) {
                         return throwError(() => refreshErr);
                     }
+
                     auth.clearSession();
                     navigateReauth();
+
                     return throwError(() => err);
                 })
             );

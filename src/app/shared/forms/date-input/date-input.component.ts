@@ -112,9 +112,11 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         if (this.editing()) {
             return null;
         }
+
         if (this.unparsable()) {
             return this.timeMissing() ? TIME_MISSING_MESSAGE : INVALID_MESSAGES[this.type()];
         }
+
         return this.outOfRange() ? this.rangeMessage() : null;
     });
 
@@ -127,19 +129,23 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
         // Capture: PrimeNG'in kendi `input` dinleyicisinden önce çalışır; maskelenmiş metni PrimeNG çözümler.
         const onInput = (event: Event): void => this.onRawInput(event);
+
         const onFocus = (event: Event): void => {
             if (event.target instanceof HTMLInputElement) {
                 this.lastMasked = event.target.value;
             }
         };
+
         // Odak, alanın ve panelin dışındaki bir kontrole (Filtrele, sonraki alan vb.) geçince panel kapanır; panel içi tıklamalar (odak panelde) kapatmaz.
         const onFocusOut = (event: FocusEvent): void => {
             const next = event.relatedTarget;
             const panel = (this.picker() as unknown as PickerInternals | undefined)?.overlay;
+
             if (next instanceof Node && !host.contains(next) && !panel?.contains(next)) {
                 this.closePanel();
             }
         };
+
         host.addEventListener('input', onInput, true);
         host.addEventListener('focusin', onFocus, true);
         host.addEventListener('focusout', onFocusOut, true);
@@ -157,17 +163,22 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
      */
     private onRawInput(event: Event): void {
         const el = event.target;
+
         if (!(el instanceof HTMLInputElement)) {
             return;
         }
+
         const masked = applyDateMask(this.type(), el.value, el.selectionStart ?? el.value.length, this.lastMasked, (event as InputEvent).inputType ?? '');
+
         if (masked.text !== el.value) {
             el.value = masked.text;
             el.setSelectionRange(masked.caret, masked.caret);
         }
+
         this.lastMasked = masked.text;
         this.editing.set(true);
         const picker = this.picker() as unknown as { isKeydown: boolean } | undefined;
+
         if (picker) {
             picker.isKeydown = true;
         }
@@ -177,6 +188,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         if (openInstance && openInstance !== this) {
             openInstance.closePanel();
         }
+
         // eslint-disable-next-line @typescript-eslint/no-this-alias -- takma ad değil: modül düzeyindeki tek açık panel kaydı
         openInstance = this;
     }
@@ -190,6 +202,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     /** Paneli odağı girdiye çekmeden kapatır (`hideOverlay` odağı geri alıp sonraki alanı bölerdi). */
     private closePanel(): void {
         const picker = this.picker() as unknown as PickerInternals | undefined;
+
         if (picker?.overlayVisible) {
             picker.overlayVisible = false;
             picker.cd.markForCheck();
@@ -206,26 +219,32 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         const unparsable = typeof value === 'string' && value.trim() !== '';
         const outOfRange = value instanceof Date && this.isOutOfRange(value);
         const changed = this.unparsable() !== unparsable || this.outOfRange() !== outOfRange;
+
         this.unparsable.set(unparsable);
         this.timeMissing.set(unparsable && this.type() === 'datetime-local' && isDateWithoutTime(value as string));
         this.outOfRange.set(outOfRange);
+
         if (changed) {
             this.onValidatorChange();
         }
+
         // Çözümlenemeyen yazıda görünümü ezme: yazı sürerken PrimeNG girdiyi geri yazarsa kullanıcı yazamaz.
         if (!unparsable) {
             this.view.set(value instanceof Date ? value : null);
         }
+
         this.onChange(value instanceof Date ? formatDateInputValue(this.type(), value) : '');
     }
 
     writeValue(value: string | null): void {
         const date = parseDateInputValue(this.type(), value);
         const hadError = this.unparsable() || this.outOfRange();
+
         this.unparsable.set(false);
         this.timeMissing.set(false);
         this.outOfRange.set(false);
         this.view.set(date);
+
         if (hadError) {
             // `view` değişmediyse (null→null) ngModel girdiyi sıfırlamaz; yazı kalıntısını elle temizle.
             this.picker()?.writeValue(date);
@@ -237,6 +256,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         if (this.unparsable()) {
             return { dateInvalid: true };
         }
+
         return this.outOfRange() ? { dateOutOfRange: true } : null;
     }
 
@@ -260,8 +280,10 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         if (this.type() === 'time') {
             return false;
         }
+
         const min = this.minDate();
         const max = this.resolveMax(); // taze: "şimdi" sınırı zamanla ilerler
+
         // Tarih türünde gün başı (00:00), tarih-saatte dakika karşılaştırılır.
         return (!!min && value.getTime() < min.getTime()) || (!!max && value.getTime() > max.getTime());
     }
@@ -270,6 +292,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         if (this.type() === 'time') {
             return null;
         }
+
         return parseDateInputValue('datetime-local', this.max()) ?? resolveLimitMax(this.type(), this.limit());
     }
 
@@ -283,15 +306,19 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         // 1900 / 9999 gibi uç sınırlar kullanıcıya anlamlı değil; yalnız gerçek (dar) sınırlar mesaja girer.
         const useMin = !!min && min.getFullYear() > 1900;
         const useMax = !!max && max.getFullYear() < 9999;
+
         if (useMin && useMax) {
             return `${subject} ${formatDateInputDisplay(type, min)} ile ${formatDateInputDisplay(type, max)} arasında olmalıdır.`;
         }
+
         if (useMin) {
             return `${subject} ${formatDateInputDisplay(type, min)} veya sonrası olmalıdır.`;
         }
+
         if (useMax) {
             return `${subject} ${formatDateInputDisplay(type, max)} veya öncesi olmalıdır.`;
         }
+
         return 'Tarih izin verilen aralığın dışında.';
     }
 }

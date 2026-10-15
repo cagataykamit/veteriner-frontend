@@ -49,9 +49,11 @@ describe('applyDateMask (saf maske)', () => {
     /** Kullanıcı gibi: her tuş ayrı, imleç sonda. */
     const typed = (type: DateInputType, keys: string): string => {
         let text = '';
+
         for (const k of keys) {
             text = applyDateMask(type, text + k, (text + k).length).text;
         }
+
         return text;
     };
 
@@ -82,6 +84,7 @@ describe('applyDateMask (saf maske)', () => {
     it('geçersiz rakam atılınca imleç doğru konumda kalır', () => {
         // "21.|" konumunda 5 yazıldı → atılır, imleç "21|" (ayırıcı henüz yok)
         const r = applyDateMask('date', '215', 3);
+
         expect(r.text).toBe('21');
         expect(r.caret).toBe(2);
     });
@@ -100,6 +103,7 @@ describe('applyDateMask (saf maske)', () => {
     it('Backspace ayırıcıyı silince (rakamlar aynı) önündeki rakam silinir, imleç ayırıcıda takılmaz', () => {
         // "24.11.1991", imleç "24.|11" → Backspace noktayı siler: ham "2411.1991", imleç 2
         const r = applyDateMask('date', '2411.1991', 2, '24.11.1991', 'deleteContentBackward');
+
         expect(r.text).toBe('21.11.991');
         // sıradan rakam silme etkilenmez
         expect(applyDateMask('date', '24.11.199', 9, '24.11.1991', 'deleteContentBackward').text).toBe('24.11.199');
@@ -107,6 +111,7 @@ describe('applyDateMask (saf maske)', () => {
 
     it('Delete ayırıcıyı silince sonraki rakam silinir', () => {
         const r = applyDateMask('date', '2411.1991', 2, '24.11.1991', 'deleteContentForward');
+
         expect(r.text).toBe('24.11.991');
     });
 });
@@ -120,16 +125,20 @@ describe('DateInputComponent — maske, hata ve aralık (gerçek input)', () => 
     /** Gerçek yazma gibi: her karakter ayrı tuş + input olayı. */
     const typeChars = async (text: string) => {
         const el = input();
+
         el.focus();
+
         for (const ch of text) {
             el.dispatchEvent(new KeyboardEvent('keydown', { key: ch, bubbles: true }));
             const pos = el.selectionStart ?? el.value.length;
+
             el.value = el.value.slice(0, pos) + ch + el.value.slice(pos);
             el.setSelectionRange(pos + 1, pos + 1);
             el.dispatchEvent(new InputEvent('input', { bubbles: true, data: ch, inputType: 'insertText' }));
             fixture.detectChanges();
             await wait(15); // gerçek tuş aralığı: ngModel geri yazımı karakterler arasında çalışır
         }
+
         fixture.detectChanges();
         await wait(50);
     };
@@ -269,6 +278,7 @@ describe('DateInputComponent — maske, hata ve aralık (gerçek input)', () => 
         fixture.detectChanges();
         await wait(400);
         const header = [...document.querySelectorAll('.p-datepicker-header, .p-datepicker-title')].map((e) => e.textContent).join(' ');
+
         expect(header).toContain('Kasım');
         expect(header).toContain('1991');
     });

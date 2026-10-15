@@ -13,9 +13,11 @@ export function parseExaminationCreateRouteContext(params: ParamMap): Examinatio
     const clientId = params.get('clientId')?.trim() ?? '';
     const petId = params.get('petId')?.trim() ?? '';
     const examinationId = params.get('examinationId')?.trim() ?? '';
+
     if (!clientId || !petId || !examinationId) {
         return null;
     }
+
     return { clientId, petId, examinationId };
 }
 
@@ -32,10 +34,13 @@ export function parseTreatmentPrescriptionRouteContext(params: ParamMap): Treatm
     const treatmentId = params.get('treatmentId')?.trim() ?? '';
     const clientId = params.get('clientId')?.trim() ?? '';
     const petId = params.get('petId')?.trim() ?? '';
+
     if (!treatmentId || !clientId || !petId) {
         return null;
     }
+
     const examinationId = params.get('examinationId')?.trim() ?? '';
+
     return { clientId, petId, treatmentId, examinationId: examinationId || null };
 }
 
@@ -50,9 +55,11 @@ export function parseAppointmentExaminationRouteContext(params: ParamMap): Appoi
     const clientId = params.get('clientId')?.trim() ?? '';
     const petId = params.get('petId')?.trim() ?? '';
     const appointmentId = params.get('appointmentId')?.trim() ?? '';
+
     if (!clientId || !petId || !appointmentId) {
         return null;
     }
+
     return { clientId, petId, appointmentId };
 }
 
@@ -67,9 +74,11 @@ export function parseVisitExaminationRouteContext(params: ParamMap): VisitExamin
     const visitId = params.get('visitId')?.trim() ?? '';
     const clientId = params.get('clientId')?.trim() ?? '';
     const petId = params.get('petId')?.trim() ?? '';
+
     if (!visitId || !clientId || !petId) {
         return null;
     }
+
     return { visitId, clientId, petId };
 }
 
@@ -83,10 +92,13 @@ export interface VaccinationCreateRouteContext {
 export function parseVaccinationCreateRouteContext(params: ParamMap): VaccinationCreateRouteContext | null {
     const clientId = params.get('clientId')?.trim() ?? '';
     const petId = params.get('petId')?.trim() ?? '';
+
     if (!clientId || !petId) {
         return null;
     }
+
     const examinationId = params.get('examinationId')?.trim() ?? '';
+
     return { clientId, petId, examinationId: examinationId || null };
 }
 
@@ -100,16 +112,20 @@ export function parsePetRouteContext(params: ParamMap): PetRouteContext | null {
     const clientId = params.get('clientId')?.trim() ?? '';
     const petId = params.get('petId')?.trim() ?? '';
     const hasOtherContext = ['visitId', 'examinationId', 'appointmentId', 'treatmentId'].some((k) => params.get(k)?.trim());
+
     return clientId && petId && !hasOtherContext ? { clientId, petId } : null;
 }
 
 /** Hayvan bağlamı varsa müşteri ve hayvan seçimini önceden doldurur (müşteri değişimi hayvanı sıfırladığı için sıra önemli). */
 export function prefillPetFromRoute(params: ParamMap, clientControl: AbstractControl<string>, petControl: AbstractControl<string>): boolean {
     const ctx = parsePetRouteContext(params);
+
     if (!ctx) {
         return false;
     }
+
     clientControl.setValue(ctx.clientId);
     petControl.setValue(ctx.petId);
+
     return true;
 }

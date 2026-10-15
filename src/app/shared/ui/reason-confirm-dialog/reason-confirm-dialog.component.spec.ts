@@ -56,6 +56,7 @@ describe('ReasonConfirmDialogComponent', () => {
 
     it('çağrı sürerken ikinci gönderim yoksayılır', () => {
         const pending = new Subject<void>();
+
         execute.and.returnValue(pending);
         cmp.form.controls.reason.setValue('Yanlış tutar girildi');
         cmp.onSubmit();

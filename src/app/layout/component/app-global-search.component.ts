@@ -185,6 +185,7 @@ export class AppGlobalSearch {
     /** Klavye gezintisi için müşteriler ve hayvanlar tek sırada. */
     protected readonly options = computed<SearchOption[]>(() => {
         const r = this.result();
+
         return r
             ? [
                   ...r.clients.map((c, i) => ({ id: this.optionId(i), route: ['/panel/clients', c.id] })),
@@ -208,6 +209,7 @@ export class AppGlobalSearch {
                 if (result === undefined) {
                     return;
                 }
+
                 this.result.set(result);
                 this.activeIndex.set(0);
                 this.status.set(result ? 'ready' : 'error');
@@ -243,27 +245,34 @@ export class AppGlobalSearch {
     protected onInput(value: string): void {
         this.query.set(value);
         const term = value.trim();
+
         if (term.length < this.minLength) {
             this.result.set(null);
             this.status.set('idle');
             this.term$.next('');
+
             return;
         }
+
         this.status.set('loading');
         this.term$.next(term);
     }
 
     protected onInputKeydown(event: KeyboardEvent): void {
         const count = this.options().length;
+
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
             event.preventDefault();
+
             if (count) {
                 const step = event.key === 'ArrowDown' ? 1 : -1;
+
                 this.activeIndex.set((this.activeIndex() + step + count) % count);
                 document.getElementById(this.activeOptionId() ?? '')?.scrollIntoView({ block: 'nearest' });
             }
         } else if (event.key === 'Enter') {
             const option = this.options()[this.activeIndex()];
+
             if (option) {
                 event.preventDefault();
                 this.close();
@@ -274,6 +283,7 @@ export class AppGlobalSearch {
 
     protected failedMessage(r: GlobalSearchResultVm): string {
         const names = r.failedKinds.map((kind) => (kind === 'clients' ? 'Müşteri' : 'Hasta'));
+
         return `${names.join(' ve ')} araması yapılamadı.`;
     }
 
@@ -281,6 +291,7 @@ export class AppGlobalSearch {
         if (!this.enabled || this.visible()) {
             return;
         }
+
         const ctrlK = (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'k';
         const slash =
             event.key === '/' &&
@@ -288,6 +299,7 @@ export class AppGlobalSearch {
             !event.metaKey &&
             !event.altKey &&
             !(event.target as Element | null)?.closest?.(EDITABLE_TARGET);
+
         if (ctrlK || slash) {
             event.preventDefault();
             this.open();

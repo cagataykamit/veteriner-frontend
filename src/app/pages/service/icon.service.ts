@@ -16,6 +16,7 @@ export class IconService {
         return this.http.get(this.apiUrl).pipe(
             map((response: any) => {
                 this.icons = response.icons;
+
                 return this.icons;
             })
         );

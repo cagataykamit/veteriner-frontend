@@ -19,7 +19,9 @@ describe('AppSectionTabsComponent', () => {
         });
         await TestBed.inject(Router).navigateByUrl(url);
         const fixture = TestBed.createComponent(AppSectionTabsComponent);
+
         fixture.detectChanges();
+
         return fixture;
     };
 
@@ -33,6 +35,7 @@ describe('AppSectionTabsComponent', () => {
 
     it('liste adresinde sekmeleri gösterir ve etkin sekmeyi işaretler', async () => {
         const fixture = await create('/panel/appointments/calendar');
+
         expect(tabs(fixture).map((a) => a.getAttribute('href'))).toEqual(['/panel/appointments', '/panel/appointments/calendar']);
         expect(tabs(fixture).map((a) => a.getAttribute('aria-current'))).toEqual([null, 'page']);
     });
@@ -48,6 +51,7 @@ describe('AppSectionTabsComponent', () => {
         counts = { requestedLabResults: 4 };
         const fixture = await create('/panel/examinations');
         const lab = tabs(fixture).find((a) => a.textContent?.includes('Lab sonuçları'));
+
         expect(lab?.textContent).toContain('(4');
         expect(tabs(fixture).filter((a) => a.textContent?.includes('('))).toHaveSize(1);
     });

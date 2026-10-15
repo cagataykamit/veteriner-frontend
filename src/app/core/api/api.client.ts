@@ -40,6 +40,7 @@ export class ApiClient {
     private url(path: string): string {
         const base = this.baseUrl.replace(/\/$/, '');
         const p = path.startsWith('/') ? path : `/${path}`;
+
         return `${base}${p}`;
     }
 }

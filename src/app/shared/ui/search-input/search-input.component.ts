@@ -65,6 +65,7 @@ export class SearchInputComponent {
     onType(text: string): void {
         this.value.set(text);
         const length = text.trim().length;
+
         // Boşalınca listeyi geri getir; 1 karakterde (min. uzunluğun altında) bekle.
         if (length === 0 || length >= this.minLength()) {
             this.typed$.next();

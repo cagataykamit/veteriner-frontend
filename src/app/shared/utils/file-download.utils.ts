@@ -5,8 +5,10 @@ export function fileNameFromContentDisposition(header: string | null | undefined
     if (!header?.trim()) {
         return null;
     }
+
     const m = /filename\*?=(?:UTF-8'')?["']?([^"';]+)/i.exec(header.trim());
     const raw = m?.[1]?.trim();
+
     return raw ? decodeURIComponent(raw.replace(/["']/g, '')) : null;
 }
 
@@ -14,6 +16,7 @@ export function fileNameFromContentDisposition(header: string | null | undefined
 export function triggerBlobDownload(blob: Blob, fileName: string): void {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+
     a.href = url;
     a.download = fileName;
     a.rel = 'noopener';

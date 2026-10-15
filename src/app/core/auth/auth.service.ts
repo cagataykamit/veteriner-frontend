@@ -41,12 +41,15 @@ export class AuthService {
     readonly activeClinicLabel = computed(() => {
         const name = this.getClinicName();
         const id = this.getClinicId();
+
         if (name?.trim()) {
             return name.trim();
         }
+
         if (id?.trim()) {
             return id.trim();
         }
+
         return null;
     });
 
@@ -82,15 +85,19 @@ export class AuthService {
     getUserId(): string | null {
         const token = this.getAccessToken();
         const payload = token ? this.decodeJwtPayload(token) : null;
+
         return payload ? this.firstString(payload['sub'], payload['Sub'], payload['user_id'], payload['UserId'])?.trim() || null : null;
     }
 
     getClinicId(): string | null {
         const fromToken = this.readClinicClaimsFromCurrentToken().id;
+
         if (fromToken) {
             return fromToken;
         }
+
         const stored = this.activeClinicIdSignal();
+
         return stored?.trim() ? stored.trim() : null;
     }
 
@@ -100,15 +107,19 @@ export class AuthService {
      */
     getJwtClinicId(): string | null {
         const fromToken = this.readClinicClaimsFromCurrentToken().id;
+
         return fromToken?.trim() ? fromToken.trim() : null;
     }
 
     getClinicName(): string | null {
         const fromToken = this.readClinicClaimsFromCurrentToken().name;
+
         if (fromToken) {
             return fromToken;
         }
+
         const stored = this.activeClinicNameSignal();
+
         return stored?.trim() ? stored.trim() : null;
     }
 
@@ -142,15 +153,18 @@ export class AuthService {
             shared !== null &&
             identity === this.myClinicsCachedIdentity &&
             now - this.myClinicsFetchedAtMs < this.MY_CLINICS_TTL_MS;
+
         if (cacheWarm) {
             return shared;
         }
+
         this.myClinicsCachedIdentity = identity;
         this.myClinicsFetchedAtMs = now;
         this.myClinicsShared$ = this.api.get<unknown>(ApiEndpoints.me.clinics()).pipe(
             map((raw) => this.mapClinicsResponse(raw)),
             shareReplay({ bufferSize: 1, refCount: false })
         );
+
         return this.myClinicsShared$;
     }
 
@@ -167,9 +181,11 @@ export class AuthService {
      */
     hasOperationClaim(claim: string): boolean {
         const wanted = claim.trim().toLocaleLowerCase('tr-TR');
+
         if (!wanted) {
             return false;
         }
+
         return this.readOperationClaimsFromCurrentToken().some((c) => c === wanted);
     }
 
@@ -183,21 +199,26 @@ export class AuthService {
         if (clinics.length <= 0) {
             return { kind: 'none' };
         }
+
         if (clinics.length === 1) {
             return { kind: 'single', clinic: clinics[0] };
         }
+
         return { kind: 'multiple' };
     }
 
     selectClinic(clinicId: string, clinicName?: string | null): Observable<SessionTokens> {
         const refreshToken = this.getRefreshToken()?.trim() ?? '';
+
         if (!refreshToken) {
             return throwError(() => new Error('Klinik seçimi için yenileme anahtarı bulunamadı. Lütfen tekrar giriş yapın.'));
         }
+
         const body: SelectClinicRequest = {
             refreshToken,
             clinicId: clinicId.trim()
         };
+
         return this.api.post<LoginResultRaw>(ApiEndpoints.auth.selectClinic(), body).pipe(
             map((raw) => this.mapTokenResponse(raw)),
             tap((tokens) => {
@@ -216,16 +237,21 @@ export class AuthService {
         if (this.refreshShare) {
             return this.refreshShare;
         }
+
         const rt = this.getRefreshToken();
+
         if (!rt) {
             return throwError(() => new Error('Yenileme anahtarı yok.'));
         }
+
         const body: RefreshTokenRequest = { refreshToken: rt };
+
         this.refreshShare = this.api.post<LoginResultRaw>(ApiEndpoints.auth.refresh(), body).pipe(
             map((raw) => this.mapTokenResponse(raw)),
             tap((tokens) => this.persistFromTokens(tokens)),
             catchError((err) => {
                 this.refreshShare = null;
+
                 return throwError(() => err);
             }),
             finalize(() => {
@@ -233,6 +259,7 @@ export class AuthService {
             }),
             shareReplay({ bufferSize: 1, refCount: false })
         );
+
         return this.refreshShare;
     }
 
@@ -244,25 +271,33 @@ export class AuthService {
      */
     ensureValidAccessToken(leewaySeconds = 30): Observable<string | null> {
         const current = this.getAccessToken();
+
         if (!current) {
             this.authReadySignal.set(true);
+
             return of(null);
         }
+
         if (!this.isAccessTokenExpired(leewaySeconds)) {
             this.authReadySignal.set(true);
+
             return of(current);
         }
+
         if (!this.getRefreshToken()) {
             this.clearSession();
             this.authReadySignal.set(true);
+
             return of(null);
         }
+
         return this.refreshSession().pipe(
             map((session) => session.accessToken ?? this.getAccessToken()),
             tap(() => this.authReadySignal.set(true)),
             catchError((err) => {
                 this.clearSession();
                 this.authReadySignal.set(true);
+
                 return throwError(() => err);
             })
         );
@@ -270,13 +305,17 @@ export class AuthService {
 
     isAccessTokenExpired(leewaySeconds = 30): boolean {
         const token = this.getAccessToken();
+
         if (!token) {
             return true;
         }
+
         const expEpochMs = this.readTokenExpiryEpochMs(token);
+
         if (!expEpochMs) {
             return false;
         }
+
         return Date.now() >= expEpochMs - Math.max(0, leewaySeconds) * 1000;
     }
 
@@ -304,11 +343,15 @@ export class AuthService {
     /** Backend logout endpoint'i + typed response normalize + local session clear. */
     logoutCurrentSession(): Observable<AuthOperationResponse> {
         const rt = this.getRefreshToken()?.trim() ?? '';
+
         if (!rt) {
             this.clearSession();
+
             return of({ success: true });
         }
+
         const body: RefreshTokenRequest = { refreshToken: rt };
+
         return this.api.post<unknown>(ApiEndpoints.auth.logout(), body).pipe(
             map((raw) => this.mapAuthOperationResponse(raw)),
             tap(() => this.clearSession())
@@ -318,11 +361,15 @@ export class AuthService {
     /** Backend logout-all endpoint'i + typed response normalize + local session clear. */
     logoutAllSessions(): Observable<AuthOperationResponse> {
         const rt = this.getRefreshToken()?.trim() ?? '';
+
         if (!rt) {
             this.clearSession();
+
             return of({ success: true });
         }
+
         const body: RefreshTokenRequest = { refreshToken: rt };
+
         return this.api.post<unknown>(ApiEndpoints.auth.logoutAll(), body).pipe(
             map((raw) => this.mapAuthOperationResponse(raw)),
             tap(() => this.clearSession())
@@ -331,17 +378,22 @@ export class AuthService {
 
     private persistFromTokens(tokens: SessionTokens): void {
         const prevIdentity = this.computeMyClinicsCacheIdentityForAccessToken(this.getAccessToken());
+
         if (tokens.accessToken) {
             localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
             this.tokenSignal.set(tokens.accessToken);
         }
+
         if (tokens.refreshToken) {
             localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
         }
+
         const nextIdentity = this.computeMyClinicsCacheIdentityForAccessToken(this.getAccessToken());
+
         if (prevIdentity !== nextIdentity) {
             this.clearMyClinicsCache();
         }
+
         this.syncClinicFromTokenClaims();
     }
 
@@ -357,6 +409,7 @@ export class AuthService {
         if (!raw || typeof raw !== 'object') {
             return { accessToken: null, refreshToken: null, expiresAt: null };
         }
+
         const r = raw as LoginResultRaw;
         const access =
             (r['accessToken'] ?? r['access_token'] ?? r['AccessToken']) as string | null | undefined;
@@ -366,14 +419,17 @@ export class AuthService {
         const resolvedTenantIdRaw = (r['resolvedTenantId'] ?? r['ResolvedTenantId']) as string | null | undefined;
         const tmc = r['tenantMembershipCount'] ?? r['TenantMembershipCount'];
         let tenantCount: number | null = null;
+
         if (typeof tmc === 'number' && !Number.isNaN(tmc)) {
             tenantCount = tmc;
         } else if (typeof tmc === 'string') {
             const n = Number.parseInt(tmc, 10);
+
             if (!Number.isNaN(n)) {
                 tenantCount = n;
             }
         }
+
         return {
             accessToken: typeof access === 'string' && access.trim() ? access.trim() : null,
             refreshToken: typeof refresh === 'string' && refresh.trim() ? refresh.trim() : null,
@@ -391,6 +447,7 @@ export class AuthService {
         if (!raw || typeof raw !== 'object') {
             return { success: false };
         }
+
         const r = raw as Record<string, unknown>;
         const successRaw = r['success'] ?? r['Success'] ?? r['ok'] ?? r['Ok'];
         const success = successRaw === true;
@@ -398,11 +455,13 @@ export class AuthService {
             typeof (r['message'] ?? r['Message']) === 'string'
                 ? String(r['message'] ?? r['Message'])
                 : null;
+
         return { success, message };
     }
 
     private mapClinicsResponse(raw: unknown): ClinicSummary[] {
         const list = this.extractClinicArray(raw);
+
         return list
             .map((x) => this.normalizeClinic(x))
             .filter((x): x is ClinicSummary => !!x)
@@ -413,9 +472,11 @@ export class AuthService {
         if (Array.isArray(raw)) {
             return raw;
         }
+
         if (!raw || typeof raw !== 'object') {
             return [];
         }
+
         const o = raw as Record<string, unknown>;
         const candidates = [
             o['items'],
@@ -429,11 +490,13 @@ export class AuthService {
             o['clinics'],
             o['Clinics']
         ];
+
         for (const c of candidates) {
             if (Array.isArray(c)) {
                 return c;
             }
         }
+
         return [];
     }
 
@@ -441,17 +504,22 @@ export class AuthService {
         if (!raw || typeof raw !== 'object') {
             return null;
         }
+
         const o = raw as Record<string, unknown>;
         const id = this.firstString(o['id'], o['Id'], o['clinicId'], o['ClinicId']);
         const name = this.firstString(o['name'], o['Name'], o['clinicName'], o['ClinicName'], o['title'], o['Title']);
+
         if (!id || !name) {
             return null;
         }
+
         const isActive = this.readClinicIsActiveTri(o);
         const base: ClinicSummary = { id: id.trim(), name: name.trim() };
+
         if (isActive !== null) {
             base.isActive = isActive;
         }
+
         return base;
     }
 
@@ -459,28 +527,35 @@ export class AuthService {
     private readClinicIsActiveTri(o: Record<string, unknown>): boolean | null {
         for (const k of ['isActive', 'IsActive', 'active', 'Active']) {
             const v = o[k];
+
             if (typeof v === 'boolean') {
                 return v;
             }
+
             if (typeof v === 'string') {
                 const t = v.trim().toLowerCase();
+
                 if (t === 'true' || t === '1') {
                     return true;
                 }
+
                 if (t === 'false' || t === '0') {
                     return false;
                 }
             }
         }
+
         return null;
     }
 
     private syncClinicFromTokenClaims(): void {
         const claims = this.readClinicClaimsFromCurrentToken();
+
         if (claims.id) {
             localStorage.setItem(ACTIVE_CLINIC_ID_KEY, claims.id);
             this.activeClinicIdSignal.set(claims.id);
         }
+
         if (claims.name) {
             localStorage.setItem(ACTIVE_CLINIC_NAME_KEY, claims.name);
             this.activeClinicNameSignal.set(claims.name);
@@ -489,11 +564,14 @@ export class AuthService {
 
     private setActiveClinicContext(id: string, name: string | null): void {
         const trimmedId = id.trim();
+
         if (trimmedId) {
             localStorage.setItem(ACTIVE_CLINIC_ID_KEY, trimmedId);
             this.activeClinicIdSignal.set(trimmedId);
         }
+
         const trimmedName = name?.trim() ?? '';
+
         if (trimmedName) {
             localStorage.setItem(ACTIVE_CLINIC_NAME_KEY, trimmedName);
             this.activeClinicNameSignal.set(trimmedName);
@@ -509,13 +587,17 @@ export class AuthService {
 
     private readClinicClaimsFromCurrentToken(): { id: string | null; name: string | null } {
         const token = this.getAccessToken();
+
         if (!token) {
             return { id: null, name: null };
         }
+
         const payload = this.decodeJwtPayload(token);
+
         if (!payload) {
             return { id: null, name: null };
         }
+
         const id = this.firstString(
             payload['clinic_id'],
             payload['clinicId'],
@@ -528,6 +610,7 @@ export class AuthService {
             payload['ClinicName'],
             payload['clinicDisplayName']
         );
+
         return {
             id: id?.trim() || null,
             name: name?.trim() || null
@@ -540,13 +623,17 @@ export class AuthService {
      */
     private readOperationClaimsFromCurrentToken(): string[] {
         const token = this.getAccessToken();
+
         if (!token) {
             return [];
         }
+
         const payload = this.decodeJwtPayload(token);
+
         if (!payload) {
             return [];
         }
+
         const keys = [
             'permissions',
             'Permissions',
@@ -563,27 +650,34 @@ export class AuthService {
             'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
         ];
         const out = new Set<string>();
+
         for (const k of keys) {
             this.collectClaimStrings(payload[k]).forEach((v) => {
                 const n = v.trim().toLocaleLowerCase('tr-TR');
+
                 if (n) {
                     out.add(n);
                 }
             });
         }
+
         return Array.from(out);
     }
 
     /** `getMyClinics` önbellek anahtarı: aynı kullanıcı+kiracıda TTL tutulur; yenilemede token string değişse de anahtar sabit kalabilir. */
     private computeMyClinicsCacheIdentityForAccessToken(token: string | null): string {
         const t = token?.trim() ?? '';
+
         if (!t) {
             return '';
         }
+
         const payload = this.decodeJwtPayload(t);
+
         if (!payload) {
             return t;
         }
+
         const sub = this.firstString(payload['sub'], payload['Sub'], payload['user_id'], payload['UserId']) ?? '';
         const tenant =
             this.firstString(
@@ -595,22 +689,27 @@ export class AuthService {
             ) ?? '';
         const s = sub.trim();
         const tn = tenant.trim();
+
         if (s || tn) {
             return `${s}|${tn}`;
         }
+
         return t;
     }
 
     private decodeJwtPayload(token: string): Record<string, unknown> | null {
         try {
             const parts = token.split('.');
+
             if (parts.length < 2) {
                 return null;
             }
+
             const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
             const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
             const json = atob(padded);
             const parsed = JSON.parse(json) as unknown;
+
             return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
         } catch {
             return null;
@@ -619,34 +718,44 @@ export class AuthService {
 
     private readTokenExpiryEpochMs(token: string): number | null {
         const payload = this.decodeJwtPayload(token);
+
         if (!payload) {
             return null;
         }
+
         const expRaw = payload['exp'] ?? payload['Exp'];
+
         if (typeof expRaw === 'number' && Number.isFinite(expRaw)) {
             return expRaw > 1_000_000_000_000 ? expRaw : expRaw * 1000;
         }
+
         if (typeof expRaw === 'string') {
             const n = Number(expRaw.trim());
+
             if (Number.isFinite(n)) {
                 return n > 1_000_000_000_000 ? n : n * 1000;
             }
         }
+
         return null;
     }
 
     private collectClaimStrings(v: unknown): string[] {
         if (typeof v === 'string') {
             const raw = v.trim();
+
             if (!raw) {
                 return [];
             }
+
             // `scope` / `scp` gibi boşluk ayrımlı claimleri de aç.
             return raw.split(/\s+/).filter((x) => x.trim().length > 0);
         }
+
         if (Array.isArray(v)) {
             return v.filter((x): x is string => typeof x === 'string' && x.trim().length > 0);
         }
+
         return [];
     }
 
@@ -656,6 +765,7 @@ export class AuthService {
                 return v;
             }
         }
+
         return null;
     }
 }

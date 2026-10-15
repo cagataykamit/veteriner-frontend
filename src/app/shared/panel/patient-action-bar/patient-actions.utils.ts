@@ -67,6 +67,7 @@ const CARE_START_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
 export function buildPatientActions(ctx: PatientActionContext, hasClaim: (claim: string) => boolean): PatientAction[] {
     const visible = (a: PatientActionDefinition) =>
         hasClaim(a.claim) && (ctx.petId ? a.key !== 'newPet' : CLIENT_PAGE_KEYS.has(a.key)) && !(ctx.petDeceased && CARE_START_KEYS.has(a.key));
+
     return ACTIONS.filter(visible).map(({ key, label, icon, route, carriesPet }): PatientAction => ({
         key,
         label,

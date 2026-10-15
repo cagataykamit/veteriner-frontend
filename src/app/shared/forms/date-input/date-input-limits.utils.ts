@@ -21,12 +21,16 @@ export function resolveLimitMax(type: DateInputType, limit: DateInputLimit, now:
     if (limit === 'none' || type === 'time') {
         return null;
     }
+
     const wall = istanbulNow(now);
+
     if (limit === 'planned') {
         wall.setFullYear(wall.getFullYear() + PLANNED_MAX_YEARS);
     }
+
     if (type === 'date') {
         wall.setHours(0, 0, 0, 0); // tarih türünde gün başı karşılaştırılır
     }
+
     return wall;
 }

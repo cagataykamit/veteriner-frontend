@@ -85,6 +85,7 @@ describe('PetSearchComponent', () => {
 
     it('gerçek input: yazılan metin silinmez ve debounce sonrası arama yapılır', async () => {
         const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
         input.focus();
         input.value = 'b';
         input.dispatchEvent(new Event('input', { bubbles: true }));

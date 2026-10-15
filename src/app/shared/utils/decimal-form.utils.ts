@@ -6,14 +6,19 @@ export function parseDecimalFormInput(input: string | number | null | undefined)
     if (input === null || input === undefined) {
         return null;
     }
+
     if (typeof input === 'number') {
         return Number.isFinite(input) && !Number.isNaN(input) ? input : null;
     }
+
     const t = input.trim();
+
     if (t === '') {
         return null;
     }
+
     const n = Number(t.replace(',', '.'));
+
     return Number.isFinite(n) && !Number.isNaN(n) ? n : null;
 }
 
@@ -27,5 +32,6 @@ export function parseAmountFormValue(value: string | number | null | undefined):
 /** Form patch / `input[type=number]` string beklediğinde. */
 export function amountToFormString(value: string | number | null | undefined): string {
     const n = parseAmountFormValue(value);
+
     return n != null ? String(n) : '';
 }

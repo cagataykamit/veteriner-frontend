@@ -4,5 +4,6 @@ export function formatMoney(amount: number | null | undefined, currency = 'TRY',
     if (amount == null || Number.isNaN(amount)) {
         return '—';
     }
+
     return new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 2 }).format(amount);
 }

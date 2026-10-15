@@ -98,8 +98,10 @@ export class QuickBreedDialogComponent {
     constructor() {
         this.form.controls.name.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
             const cur = this.apiFieldErrors();
+
             if (cur.name) {
                 const next = { ...cur };
+
                 delete next.name;
                 this.apiFieldErrors.set(next);
             }
@@ -126,17 +128,23 @@ export class QuickBreedDialogComponent {
         if (this.ro.mutationBlocked()) {
             return;
         }
+
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         const sid = this.speciesIdContext();
+
         if (!sid) {
             this.submitError.set('Tür seçili değil.');
+
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
         const payload: BreedUpsertRequest = {
             speciesId: sid,
@@ -152,12 +160,16 @@ export class QuickBreedDialogComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseBreedUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });

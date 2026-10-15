@@ -5,27 +5,35 @@ import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 /** Sunucunun genel ProblemDetails başlıkları / Angular transport metni — kullanıcıya göstermek için yetersiz. */
 export function isUnhelpfulProblemText(s: string): boolean {
     const t = s.trim();
+
     if (!t) {
         return true;
     }
+
     if (/^http failure response for /i.test(t)) {
         return true;
     }
+
     if (/^İstek\s+işlenemedi\.?$/iu.test(t)) {
         return true;
     }
+
     if (/^İstek\s+başarısız\.?$/iu.test(t)) {
         return true;
     }
+
     if (/one or more validation errors occurred/i.test(t)) {
         return true;
     }
+
     if (/^validation failed/i.test(t)) {
         return true;
     }
+
     if (/^bad request$/i.test(t)) {
         return true;
     }
+
     return false;
 }
 
@@ -33,9 +41,11 @@ export function isUnhelpfulProblemText(s: string): boolean {
 export function rateLimitUserMessage(err: HttpErrorResponse): string {
     const retryAfter = err.headers.get('Retry-After');
     const sec = retryAfter ? Number.parseInt(retryAfter, 10) : NaN;
+
     if (!Number.isNaN(sec) && sec > 0) {
         return `Çok fazla istek gönderildi. Lütfen ${sec} saniye sonra tekrar deneyin.`;
     }
+
     return 'Çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin.';
 }
 
@@ -79,25 +89,32 @@ export function problemCodeFromHttpError(err: HttpErrorResponse): string | null 
 
 function readProblemCodeFromHttp(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const ext =
         o['extensions'] && typeof o['extensions'] === 'object' && !Array.isArray(o['extensions'])
             ? (o['extensions'] as Record<string, unknown>)
             : null;
+
     const pickExt = (key: string): string | null => {
         if (!ext) {
             return null;
         }
+
         const v = ext[key];
+
         return typeof v === 'string' && v.trim() ? v.trim() : null;
     };
+
     const code =
         (typeof o['code'] === 'string' && o['code'].trim() ? o['code'].trim() : null) ||
         (typeof o['Code'] === 'string' && o['Code'].trim() ? o['Code'].trim() : null) ||
         pickExt('code');
+
     return code ?? null;
 }
 
@@ -115,9 +132,11 @@ const TENANT_ORGANIZATION_PROBLEM_MESSAGES: Record<string, string> = {
 
 function tenantOrganizationProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     if (!code) {
         return null;
     }
+
     return TENANT_ORGANIZATION_PROBLEM_MESSAGES[code] ?? TENANT_ORGANIZATION_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
@@ -143,9 +162,11 @@ const CLINIC_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 
 function clinicPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     if (!code) {
         return null;
     }
+
     return CLINIC_PANEL_PROBLEM_MESSAGES[code] ?? CLINIC_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
@@ -157,9 +178,11 @@ const REMINDER_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 
 function reminderPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     if (!code) {
         return null;
     }
+
     return REMINDER_PANEL_PROBLEM_MESSAGES[code] ?? REMINDER_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
@@ -200,9 +223,11 @@ export function vaccinationStockProblemUserMessage(err: HttpErrorResponse): stri
 
 function vaccinationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     if (!code) {
         return null;
     }
+
     return VACCINATION_PANEL_PROBLEM_MESSAGES[code] ?? VACCINATION_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
 }
 
@@ -237,6 +262,7 @@ const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 
 function visitPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     return code ? (VISIT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
@@ -278,6 +304,7 @@ const CHARGE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 
 function chargePanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     return code ? (CHARGE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
@@ -307,6 +334,7 @@ const SALE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 
 function salePanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     return code ? (SALE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
@@ -323,6 +351,7 @@ const EXAMINATION_FINALIZE_PROBLEM_MESSAGES: Record<string, string> = {
 
 function examinationFinalizeProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     return code ? (EXAMINATION_FINALIZE_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
@@ -337,6 +366,7 @@ const LAB_RESULT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 
 function labResultPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     return code ? (LAB_RESULT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
@@ -360,6 +390,7 @@ const HOSPITALIZATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 
 function hospitalizationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     return code ? (HOSPITALIZATION_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
@@ -393,24 +424,31 @@ const ADMINISTRATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
 
 function administrationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     return code ? (ADMINISTRATION_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
 }
 
 function lookupSubscriptionWriteMessageByCode(code: string): string | null {
     const t = code.trim();
+
     if (!t) {
         return null;
     }
+
     const direct = SUBSCRIPTION_WRITE_USER_MESSAGES[t];
+
     if (direct) {
         return direct;
     }
+
     const needle = t.replace(/\./g, '');
+
     for (const [k, v] of Object.entries(SUBSCRIPTION_WRITE_USER_MESSAGES)) {
         if (k.replace(/\./g, '') === needle) {
             return v;
         }
     }
+
     return null;
 }
 
@@ -420,105 +458,144 @@ function lookupSubscriptionWriteMessageByCode(code: string): string | null {
  */
 function subscriptionMissingFromProblemBody(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const detail =
         typeof o['detail'] === 'string' ? o['detail'] : typeof o['Detail'] === 'string' ? o['Detail'] : '';
     const title =
         typeof o['title'] === 'string' ? o['title'] : typeof o['Title'] === 'string' ? o['Title'] : '';
     const blob = `${detail}\n${title}`.toLocaleLowerCase('tr-TR');
+
     if (!blob.trim()) {
         return null;
     }
+
     if (/abonelik\s+kayd[ıi]\s+bulunamad[ıi]/.test(blob)) {
         return SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE;
     }
+
     if (/kirac[ıi]\s+için\s+abonelik/.test(blob) && /bulunamad[ıi]/.test(blob)) {
         return SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE;
     }
+
     if (/abonelik\s+kayd[ıi].*bulunamad[ıi]/.test(blob) && /kirac[ıi]/.test(blob)) {
         return SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE;
     }
+
     return null;
 }
 
 function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
     const code = readProblemCodeFromHttp(err);
+
     if (code) {
         const fromCode = lookupSubscriptionWriteMessageByCode(code);
+
         if (fromCode) {
             return fromCode;
         }
     }
+
     return subscriptionMissingFromProblemBody(err);
 }
 
 /** Panel listeleri / formlar: ProblemDetails, düz metin ve HTTP durumuna göre anlamlı mesaj. */
 export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek başarısız.'): string {
     const subscriptionMsg = subscriptionWriteUserMessage(err);
+
     if (subscriptionMsg) {
         return subscriptionMsg;
     }
+
     const tenantOrgMsg = tenantOrganizationProblemUserMessage(err);
+
     if (tenantOrgMsg) {
         return tenantOrgMsg;
     }
+
     const reminderPanelMsg = reminderPanelProblemUserMessage(err);
+
     if (reminderPanelMsg) {
         return reminderPanelMsg;
     }
+
     const vaccinationPanelMsg = vaccinationPanelProblemUserMessage(err);
+
     if (vaccinationPanelMsg) {
         return vaccinationPanelMsg;
     }
+
     const clinicPanelMsg = clinicPanelProblemUserMessage(err);
+
     if (clinicPanelMsg) {
         return clinicPanelMsg;
     }
+
     const visitPanelMsg = visitPanelProblemUserMessage(err);
+
     if (visitPanelMsg) {
         return visitPanelMsg;
     }
+
     const chargePanelMsg = chargePanelProblemUserMessage(err);
+
     if (chargePanelMsg) {
         return chargePanelMsg;
     }
+
     const administrationPanelMsg = administrationPanelProblemUserMessage(err);
+
     if (administrationPanelMsg) {
         return administrationPanelMsg;
     }
+
     const salePanelMsg = salePanelProblemUserMessage(err);
+
     if (salePanelMsg) {
         return salePanelMsg;
     }
+
     const labResultPanelMsg =labResultPanelProblemUserMessage(err);
+
     if (labResultPanelMsg) {
         return labResultPanelMsg;
     }
+
     const hospitalizationPanelMsg = hospitalizationPanelProblemUserMessage(err);
+
     if (hospitalizationPanelMsg) {
         return hospitalizationPanelMsg;
     }
+
     const examinationFinalizeMsg = examinationFinalizeProblemUserMessage(err);
+
     if (examinationFinalizeMsg) {
         return examinationFinalizeMsg;
     }
 
     const body = err.error as ProblemDetails | string | null | undefined;
+
     if (body && typeof body === 'object') {
         const detail = typeof body.detail === 'string' ? body.detail.trim() : '';
+
         if (detail && !isUnhelpfulProblemText(detail)) {
             return detail;
         }
+
         const title = typeof body.title === 'string' ? body.title.trim() : '';
+
         if (title && !isUnhelpfulProblemText(title)) {
             return title;
         }
     }
+
     if (typeof body === 'string') {
         const t = body.trim();
+
         if (t && !isUnhelpfulProblemText(t)) {
             return t;
         }
@@ -529,6 +606,7 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     }
 
     const fromStatus = panelHttpStatusUserMessage(err.status);
+
     if (fromStatus) {
         return fromStatus;
     }
@@ -536,6 +614,7 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     if (err.message?.trim() && !isUnhelpfulProblemText(err.message)) {
         return err.message.trim();
     }
+
     return fallback;
 }
 
@@ -543,21 +622,27 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
 function httpErrorDiagnosticBlobLower(err: HttpErrorResponse): string {
     const parts: string[] = [];
     const body = err.error as unknown;
+
     if (body && typeof body === 'object' && !Array.isArray(body)) {
         const o = body as Record<string, unknown>;
+
         for (const k of ['detail', 'Detail', 'title', 'Title']) {
             const v = o[k];
+
             if (typeof v === 'string' && v.trim()) {
                 parts.push(v.trim());
             }
         }
     }
+
     if (typeof body === 'string' && body.trim()) {
         parts.push(body.trim());
     }
+
     if (err.message?.trim()) {
         parts.push(err.message.trim());
     }
+
     return parts.join('\n').toLocaleLowerCase('tr-TR');
 }
 
@@ -569,24 +654,32 @@ export function isReportRecoverableClinicConstraint403(err: unknown): boolean {
     if (!(err instanceof HttpErrorResponse)) {
         return false;
     }
+
     if (err.status !== 403) {
         return false;
     }
+
     const codeRaw = readProblemCodeFromHttp(err);
     const code = codeRaw?.replace(/\./g, '').toLowerCase() ?? '';
+
     if (code === 'reportsaccessdenied') {
         return false;
     }
+
     if (code === 'clinicsaccessdenied' || code === 'tenantscontextmissing') {
         return true;
     }
+
     const blob = httpErrorDiagnosticBlobLower(err);
+
     if (blob.includes('jwt') && blob.includes('clinic')) {
         return true;
     }
+
     if (blob.includes('clinic_id') && /farklı|reddedildi|uyumsuz|güvenlik/.test(blob)) {
         return true;
     }
+
     return false;
 }
 
@@ -601,12 +694,15 @@ export function panelHttpFailureMessage(err: unknown, fallback: string): string 
     if (err instanceof HttpErrorResponse) {
         return messageFromHttpError(err, fallback);
     }
+
     if (err instanceof Error) {
         const m = err.message?.trim() ?? '';
+
         if (m && !isUnhelpfulProblemText(m)) {
             return m;
         }
     }
+
     return fallback;
 }
 

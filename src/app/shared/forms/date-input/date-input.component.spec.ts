@@ -30,6 +30,7 @@ describe('DateInputComponent', () => {
     /** Gerçek kullanıcı gibi: tuş basışı + metin + input olayı (PrimeNG yalnız tuşla gelen girdiyi işler). */
     const typeText = async (text: string) => {
         const el = input();
+
         el.focus();
         el.dispatchEvent(new KeyboardEvent('keydown', { key: text.slice(-1), bubbles: true }));
         el.value = text;
@@ -66,6 +67,7 @@ describe('DateInputComponent', () => {
     it('tuş olayı olmadan gelen girdi (yapıştırma, otomatik doldurma, dikte) da işlenir', async () => {
         await create('date');
         const el = input();
+
         el.focus();
         el.value = '11.10.2026';
         el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -137,6 +139,7 @@ describe('DateInputComponent', () => {
         await wait(400);
         expect(panel()).not.toBeNull();
         const day = [...document.querySelectorAll('.p-datepicker-day')].find((d) => d.textContent?.trim() === '15' && !d.classList.contains('p-datepicker-other-month')) as HTMLElement;
+
         expect(day).toBeDefined();
         day.click();
         fixture.detectChanges();
@@ -157,6 +160,7 @@ describe('DateInputComponent', () => {
         await wait(400);
         const dayEl = (n: string) => [...document.querySelectorAll('.p-datepicker-day')].find((d) => d.textContent?.trim() === n && !d.classList.contains('p-datepicker-other-month')) as HTMLElement;
         const disabled = (e: HTMLElement) => e.classList.contains('p-disabled') || e.getAttribute('aria-disabled') === 'true' || e.hasAttribute('data-p-disabled');
+
         expect(disabled(dayEl('3'))).toBeTrue();
         expect(disabled(dayEl('25'))).toBeTrue();
         expect(disabled(dayEl('12'))).toBeFalse();
@@ -168,6 +172,7 @@ describe('DateInputComponent', () => {
         fixture.detectChanges();
         await wait(50);
         const clear = fixture.nativeElement.querySelector('.p-datepicker-clear-icon, [data-pc-section="clearicon"]') as Element;
+
         expect(clear).not.toBeNull();
         clear.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         fixture.detectChanges();
@@ -199,14 +204,17 @@ describe('DateInputComponent', () => {
             await wait(400);
             expect(panel()).not.toBeNull();
         };
+
         const panelOpen = () => {
             const p = panel();
+
             return !!p && p.isConnected && getComputedStyle(p).visibility !== 'hidden' && getComputedStyle(p).opacity !== '0';
         };
 
         it('dışarıya (başka düğmeye) basınca panel kapanır', async () => {
             await create('date');
             const btn = document.createElement('button');
+
             document.body.appendChild(btn);
             await openPanel();
             btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
@@ -220,6 +228,7 @@ describe('DateInputComponent', () => {
         it('yazıp Tab ile alandan çıkınca panel kapanır', async () => {
             await create('date');
             const btn = document.createElement('button');
+
             document.body.appendChild(btn);
             await openPanel();
             await typeText('11.10.2026');
@@ -234,6 +243,7 @@ describe('DateInputComponent', () => {
         it('tarih-saat: gün seçince tarih+saat paneli açık kalır, dışarı basınca kapanır', async () => {
             await create('datetime-local');
             const btn = document.createElement('button');
+
             document.body.appendChild(btn);
             await openPanel();
             btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
@@ -251,6 +261,7 @@ describe('DateInputComponent', () => {
             await wait(50);
             await openPanel();
             const day = [...document.querySelectorAll('.p-datepicker-day')].find((d) => d.textContent?.trim() === '15' && !d.classList.contains('p-datepicker-other-month')) as HTMLElement;
+
             day.click();
             fixture.detectChanges();
             await wait(600);
@@ -260,6 +271,7 @@ describe('DateInputComponent', () => {
         it('yazılan tam tarihten sonra dışarı basınca panel kapanır (maske yolu)', async () => {
             await create('date');
             const btn = document.createElement('button');
+
             document.body.appendChild(btn);
             await typeText('11.10.2026');
             await wait(400);
@@ -274,6 +286,7 @@ describe('DateInputComponent', () => {
         it('odak dışarıdaki bir düğmeye geçince (mousedown olmadan) panel kapanır', async () => {
             await create('date');
             const btn = document.createElement('button');
+
             document.body.appendChild(btn);
             await openPanel();
             btn.focus();
@@ -286,11 +299,13 @@ describe('DateInputComponent', () => {
         it('ikinci takvim açılınca birincinin paneli kapanır (en çok bir panel)', async () => {
             await create('date');
             const second = TestBed.createComponent(HostComponent);
+
             document.body.appendChild(second.nativeElement);
             second.detectChanges();
             await wait(50);
             await openPanel();
             const secondInput = second.nativeElement.querySelector('input#d') as HTMLInputElement;
+
             secondInput.focus();
             secondInput.click();
             second.detectChanges();

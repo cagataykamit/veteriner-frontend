@@ -30,6 +30,7 @@ describe('SearchInputComponent (ortak arama kutusu)', () => {
 
     const type = async (text: string) => {
         const el = input();
+
         el.value = text;
         el.dispatchEvent(new Event('input', { bubbles: true }));
         fixture.detectChanges();
@@ -77,6 +78,7 @@ describe('SearchInputComponent (ortak arama kutusu)', () => {
         expect(fixture.nativeElement.querySelector('button[aria-label="Aramayı temizle"]')).toBeNull();
         await type('ali');
         const clear = fixture.nativeElement.querySelector('button[aria-label="Aramayı temizle"]') as HTMLButtonElement;
+
         expect(clear).not.toBeNull();
         clear.click();
         fixture.detectChanges();
@@ -108,6 +110,7 @@ describe('debouncedAction', () => {
         await TestBed.configureTestingModule({ imports: [DebounceHostComponent] }).compileComponents();
         const f = TestBed.createComponent(DebounceHostComponent);
         const c = f.componentInstance;
+
         c.schedule();
         await wait(20);
         c.schedule();

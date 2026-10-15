@@ -83,6 +83,7 @@ export class AppMenuFlyout implements AfterViewInit {
                 this.flyout.close();
             }
         };
+
         window.addEventListener('resize', close);
         document.addEventListener('scroll', close, true);
         inject(DestroyRef).onDestroy(() => {
@@ -95,6 +96,7 @@ export class AppMenuFlyout implements AfterViewInit {
     ngAfterViewInit(): void {
         document.body.appendChild(this.host);
         this.position();
+
         if (this.focusFirst()) {
             this.focusItem(0);
         }
@@ -103,6 +105,7 @@ export class AppMenuFlyout implements AfterViewInit {
     /** Sekmeye odaklanır; dizin dışı değerler başa/sona sarar. */
     focusItem(index: number): void {
         const items = this.items();
+
         items[((index % items.length) + items.length) % items.length]?.focus();
     }
 
@@ -110,6 +113,7 @@ export class AppMenuFlyout implements AfterViewInit {
         if (event.pointerType !== 'mouse') {
             return;
         }
+
         if (entered) {
             this.flyout.cancelClose();
         } else {
@@ -119,15 +123,18 @@ export class AppMenuFlyout implements AfterViewInit {
 
     protected onFocusOut(event: FocusEvent): void {
         const next = event.relatedTarget;
+
         if (next instanceof Node && (this.host.contains(next) || this.anchor().contains(next))) {
             return;
         }
+
         this.flyout.close();
     }
 
     protected onKeydown(event: KeyboardEvent): void {
         const items = this.items();
         const current = items.indexOf(document.activeElement as HTMLElement);
+
         switch (event.key) {
             case 'ArrowDown':
                 this.focusItem(current + 1);
@@ -151,10 +158,12 @@ export class AppMenuFlyout implements AfterViewInit {
             case 'Tab':
                 // Odak satıra döner; tarayıcının Tab işlemi oradan bir sonraki/önceki öğeye geçer.
                 this.returnFocus();
+
                 return;
             default:
                 return;
         }
+
         event.preventDefault();
     }
 
@@ -174,6 +183,7 @@ export class AppMenuFlyout implements AfterViewInit {
         const { offsetWidth: width, offsetHeight: height } = this.host;
         const maxLeft = window.innerWidth - VIEWPORT_MARGIN_PX - width;
         const maxTop = window.innerHeight - VIEWPORT_MARGIN_PX - height;
+
         this.host.style.left = `${Math.max(VIEWPORT_MARGIN_PX, Math.min(anchor.right + ANCHOR_GAP_PX, maxLeft))}px`;
         this.host.style.top = `${Math.max(VIEWPORT_MARGIN_PX, Math.min(anchor.top, maxTop))}px`;
     }

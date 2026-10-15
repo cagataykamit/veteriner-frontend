@@ -21,6 +21,7 @@ describe('panel yönlendirmeleri', () => {
 
     const go = async (url: string) => {
         await router.navigateByUrl(url);
+
         return router.url;
     };
 

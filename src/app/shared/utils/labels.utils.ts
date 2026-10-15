@@ -3,6 +3,7 @@ export function labelFromMap<T extends string>(value: T | null | undefined, map:
     if (value == null) {
         return fallback;
     }
+
     return map[value] ?? fallback;
 }
 
@@ -20,8 +21,10 @@ export function appointmentStatusLabel(status: number | string | null | undefine
     if (status === null || status === undefined) {
         return '—';
     }
+
     if (typeof status === 'number') {
         return APPOINTMENT_STATUS_BY_CODE[status] ?? `Durum (${status})`;
     }
+
     return status;
 }

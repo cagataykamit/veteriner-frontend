@@ -216,6 +216,7 @@ export class Login implements OnInit {
         removeOrphanedPrimeMenuPopupsFromBody(this.document);
         this.loadRememberedLogin();
         const q = this.route.snapshot.queryParamMap;
+
         if (q.get('reauth') === '1') {
             this.sessionRenewHint.set('Oturum süresi doldu veya oturum yenilenemedi. Lütfen tekrar giriş yapın.');
             void this.router.navigate([], {
@@ -225,12 +226,15 @@ export class Login implements OnInit {
                 replaceUrl: true
             });
         }
+
         if (q.get('registered') === '1') {
             this.registeredHint.set('Kayıt tamamlandı. E-posta ve şifrenizle giriş yapabilirsiniz.');
             const prefillEmail = q.get('email')?.trim();
+
             if (prefillEmail) {
                 this.email = prefillEmail;
             }
+
             void this.router.navigate([], {
                 relativeTo: this.route,
                 queryParams: { registered: null, email: null },
@@ -238,12 +242,15 @@ export class Login implements OnInit {
                 replaceUrl: true
             });
         }
+
         if (q.get('inviteAccepted') === '1') {
             this.inviteAcceptedHint.set('Davet için hesabınız hazır. Giriş yaparak devam edebilirsiniz.');
             const prefillEmail = q.get('email')?.trim();
+
             if (prefillEmail) {
                 this.email = prefillEmail;
             }
+
             void this.router.navigate([], {
                 relativeTo: this.route,
                 queryParams: { inviteAccepted: null, email: null },
@@ -251,9 +258,11 @@ export class Login implements OnInit {
                 replaceUrl: true
             });
         }
+
         if (q.get('inviteToken')?.trim()) {
             this.inviteLoginHint.set('Daveti tamamlamak için davet edilen e-posta adresiyle giriş yapın.');
             const prefillEmail = q.get('email')?.trim();
+
             if (prefillEmail) {
                 this.email = prefillEmail;
             }
@@ -264,21 +273,28 @@ export class Login implements OnInit {
         if (this.signInLoading()) {
             return;
         }
+
         this.formSubmitAttempted.set(true);
         this.loginError.set(null);
         this.apiFieldErrors.set({});
         this.sessionRenewHint.set(null);
         this.inviteLoginHint.set(null);
+
         if (loginForm.invalid) {
             loginForm.control.markAllAsTouched();
+
             return;
         }
+
         const email = this.email?.trim() ?? '';
+
         if (!email) {
             loginForm.controls['email']?.setErrors({ required: true });
             loginForm.controls['email']?.markAsTouched();
+
             return;
         }
+
         this.signInLoading.set(true);
         this.auth
             .login({
@@ -290,18 +306,23 @@ export class Login implements OnInit {
                 next: () => {
                     if (!this.auth.isAuthenticated()) {
                         this.loginError.set('Sunucu yanıtı geçersiz: oturum anahtarı alınamadı.');
+
                         return;
                     }
+
                     this.persistRememberedLogin(email, this.rememberMe);
                     this.loginError.set(null);
                     this.resolveClinicStepAfterLogin();
                 },
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
+
                     if (http) {
                         this.handleLoginHttpError(http);
+
                         return;
                     }
+
                     this.loginError.set('Giriş başarısız.');
                 }
             });
@@ -311,11 +332,14 @@ export class Login implements OnInit {
         const fieldErrors = parseValidationFieldErrors<LoginFieldKey>(http.error, {
             fieldMap: LOGIN_VALIDATION_FIELD_MAP
         });
+
         if (Object.keys(fieldErrors).length > 0) {
             this.apiFieldErrors.set(fieldErrors);
             this.loginError.set(null);
+
             return;
         }
+
         this.apiFieldErrors.set({});
         this.loginError.set(this.resolveLoginHttpError(http));
     }
@@ -324,10 +348,13 @@ export class Login implements OnInit {
         if (http.status === 401) {
             return LOGIN_INVALID_CREDENTIALS_MESSAGE;
         }
+
         const message = loginFailureMessage(http);
+
         if (http.status === 400 && this.shouldTreatAsInvalidCredentials(http, message)) {
             return LOGIN_INVALID_CREDENTIALS_MESSAGE;
         }
+
         return message;
     }
 
@@ -335,17 +362,23 @@ export class Login implements OnInit {
         if (message === LOGIN_INVALID_CREDENTIALS_MESSAGE) {
             return true;
         }
+
         const code = problemCodeFromHttpError(http)?.trim() ?? '';
+
         if (code.startsWith('Auth.Unauthorized.')) {
             return true;
         }
+
         const normalized = message.toLocaleLowerCase('tr-TR');
+
         if (/gönderilen bilgiler doğrulanamadı/.test(normalized)) {
             return true;
         }
+
         if (/aşağıdaki alanları kontrol edin/.test(normalized)) {
             return true;
         }
+
         return false;
     }
 
@@ -353,18 +386,24 @@ export class Login implements OnInit {
         this.auth.getMyClinics().subscribe({
             next: (clinics) => {
                 const decision = this.auth.resolveClinicDecision(clinics);
+
                 if (decision.kind === 'none') {
                     this.loginError.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
+
                     return;
                 }
+
                 if (decision.kind === 'single') {
                     this.autoSelectSingleClinic(decision.clinic);
+
                     return;
                 }
+
                 this.navigateToSelectClinic(decision, clinics);
             },
             error: (err: unknown) => {
                 const http = err instanceof HttpErrorResponse ? err : null;
+
                 this.loginError.set(http ? authFailureMessage(http, 'Klinikler yüklenemedi.') : 'Klinikler yüklenemedi.');
             }
         });
@@ -378,14 +417,18 @@ export class Login implements OnInit {
             .subscribe({
                 next: () => {
                     const it = this.inviteTokenFromRoute();
+
                     if (it) {
                         void this.router.navigate(['/join', it]);
+
                         return;
                     }
+
                     void this.router.navigateByUrl(this.safeReturnUrl());
                 },
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
+
                     this.loginError.set(http ? authFailureMessage(http, 'Klinik seçimi yapılamadı.') : 'Klinik seçimi yapılamadı.');
                 }
             });
@@ -397,6 +440,7 @@ export class Login implements OnInit {
 
     private inviteTokenFromRoute(): string | null {
         const t = this.route.snapshot.queryParamMap.get('inviteToken')?.trim();
+
         return t || null;
     }
 
@@ -404,7 +448,9 @@ export class Login implements OnInit {
         if (decision.kind !== 'multiple') {
             return;
         }
+
         const inviteTok = this.inviteTokenFromRoute();
+
         void this.router.navigate(['/auth/select-clinic'], {
             queryParams: {
                 returnUrl: this.safeReturnUrl(),
@@ -418,13 +464,18 @@ export class Login implements OnInit {
         if (typeof localStorage === 'undefined') {
             return;
         }
+
         try {
             const rememberMe = localStorage.getItem(REMEMBER_ME_STORAGE_KEY) === '1';
+
             this.rememberMe = rememberMe;
+
             if (!rememberMe) {
                 return;
             }
+
             const storedEmail = localStorage.getItem(REMEMBERED_EMAIL_STORAGE_KEY)?.trim() ?? '';
+
             if (storedEmail) {
                 this.email = storedEmail;
             }
@@ -437,15 +488,19 @@ export class Login implements OnInit {
         if (typeof localStorage === 'undefined') {
             return;
         }
+
         try {
             if (rememberMe) {
                 const trimmed = email.trim();
+
                 if (trimmed) {
                     localStorage.setItem(REMEMBERED_EMAIL_STORAGE_KEY, trimmed);
                     localStorage.setItem(REMEMBER_ME_STORAGE_KEY, '1');
                 }
+
                 return;
             }
+
             localStorage.removeItem(REMEMBERED_EMAIL_STORAGE_KEY);
             localStorage.removeItem(REMEMBER_ME_STORAGE_KEY);
         } catch {

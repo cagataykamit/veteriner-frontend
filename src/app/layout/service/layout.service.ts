@@ -85,9 +85,11 @@ export class LayoutService {
 
     constructor() {
         const storedTheme = this.readStoredTheme();
+
         if (storedTheme !== null) {
             this.layoutConfig.update((state) => ({ ...state, darkTheme: storedTheme === 'dark' }));
         }
+
         this.applyDarkModeClass(this.layoutConfig().darkTheme);
 
         window.matchMedia(DESKTOP_MEDIA_QUERY).addEventListener('change', (event) => this.desktopViewport.set(event.matches));
@@ -97,6 +99,7 @@ export class LayoutService {
 
             if (!this.initialized) {
                 this.initialized = true;
+
                 return;
             }
 
@@ -109,6 +112,7 @@ export class LayoutService {
         if (this.layoutConfig().darkTheme === enabled) {
             return;
         }
+
         this.layoutConfig.update((config) => ({ ...config, darkTheme: enabled }));
     }
 
@@ -119,14 +123,17 @@ export class LayoutService {
     private readStoredTheme(): VetinityThemePreference | null {
         try {
             const value = localStorage.getItem(VETINITY_THEME_STORAGE_KEY);
+
             if (value === 'dark' || value === 'light') {
                 return value;
             }
 
             const legacy = localStorage.getItem(LEGACY_DARK_THEME_STORAGE_KEY);
+
             if (legacy === 'true') {
                 return 'dark';
             }
+
             if (legacy === 'false') {
                 return 'light';
             }
@@ -178,6 +185,7 @@ export class LayoutService {
 
         if (this.isDesktop()) {
             const collapsed = !this.layoutState().staticMenuDesktopInactive;
+
             this.layoutState.update((prev) => ({ ...prev, staticMenuDesktopInactive: collapsed }));
             writeMenuCollapsed(this.menuPreferenceUserId, collapsed);
         } else {
@@ -206,16 +214,21 @@ export class LayoutService {
 export function readVetinityThemePreferenceFromStorage(): VetinityThemePreference | null {
     try {
         const value = localStorage.getItem(VETINITY_THEME_STORAGE_KEY);
+
         if (value === 'dark' || value === 'light') {
             return value;
         }
+
         const legacy = localStorage.getItem(LEGACY_DARK_THEME_STORAGE_KEY);
+
         if (legacy === 'true') {
             return 'dark';
         }
+
         if (legacy === 'false') {
             return 'light';
         }
+
         return null;
     } catch {
         return null;

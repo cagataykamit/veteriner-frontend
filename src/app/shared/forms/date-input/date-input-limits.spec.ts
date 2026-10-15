@@ -23,6 +23,7 @@ describe('resolveLimitMax (üst sınır politikası)', () => {
 
     it('İstanbul gün sınırı: UTC 22:30 İstanbul’da ertesi gün 01:30', () => {
         const lateUtc = new Date('2026-10-11T22:30:00Z');
+
         expect(formatDateInputValue('date', resolveLimitMax('date', 'past', lateUtc))).toBe('2026-10-12');
     });
 
@@ -53,6 +54,7 @@ describe('DateInputComponent — limit', () => {
 
     const typeText = async (text: string) => {
         const el = input();
+
         el.focus();
         el.dispatchEvent(new KeyboardEvent('keydown', { key: text.slice(-1), bubbles: true }));
         el.value = text;
@@ -66,8 +68,10 @@ describe('DateInputComponent — limit', () => {
 
     const ymd = (offsetYears: number, offsetDays = 0): string => {
         const d = new Date();
+
         d.setFullYear(d.getFullYear() + offsetYears);
         d.setDate(d.getDate() + offsetDays);
+
         return `${String(d.getDate()).padStart(2, '0')}${String(d.getMonth() + 1).padStart(2, '0')}${d.getFullYear()}`;
     };
 

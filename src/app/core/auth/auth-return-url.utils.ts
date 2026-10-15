@@ -3,6 +3,7 @@
  */
 export function safePanelReturnUrl(raw: string | null | undefined): string | null {
     const s = raw?.trim();
+
     return s && s.startsWith('/panel') && !s.startsWith('//') ? s : null;
 }
 

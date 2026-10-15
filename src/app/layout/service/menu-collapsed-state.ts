@@ -7,6 +7,7 @@ export function readMenuCollapsed(userId: string | null): boolean {
     if (!userId) {
         return false;
     }
+
     try {
         return localStorage.getItem(key(userId)) === 'true';
     } catch {
@@ -18,6 +19,7 @@ export function writeMenuCollapsed(userId: string | null, collapsed: boolean): v
     if (!userId) {
         return;
     }
+
     try {
         localStorage.setItem(key(userId), String(collapsed));
     } catch {

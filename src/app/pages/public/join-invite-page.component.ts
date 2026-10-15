@@ -183,11 +183,14 @@ export class JoinInvitePageComponent implements OnInit {
         removeOrphanedPrimeMenuPopupsFromBody(document);
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((p) => {
             const token = p.get('token')?.trim() ?? '';
+
             if (!token) {
                 this.loading.set(false);
                 this.loadError.set('Davet bağlantısında eksik bilgi var.');
+
                 return;
             }
+
             this.reloadInvite(token);
         });
     }
@@ -196,9 +199,11 @@ export class JoinInvitePageComponent implements OnInit {
         if (!this.auth.isAuthenticated() || !inv.canJoin || inv.isExpired) {
             return false;
         }
+
         if (inv.requiresSignup) {
             return false;
         }
+
         return true;
     }
 
@@ -214,6 +219,7 @@ export class JoinInvitePageComponent implements OnInit {
     goToLoginAfterSignup(): void {
         const inv = this.vm();
         const email = inv?.email?.trim() ?? '';
+
         void this.router.navigate(['/auth/login'], {
             queryParams: {
                 inviteAccepted: '1',
@@ -248,10 +254,13 @@ export class JoinInvitePageComponent implements OnInit {
         this.passwordFieldError.set(null);
         const pw = this.invitePassword ?? '';
         const passwordPolicyError = validateStrongPasswordValue(pw);
+
         if (passwordPolicyError) {
             this.passwordFieldError.set(passwordPolicyError);
+
             return;
         }
+
         this.actionLoading.set(true);
         this.invites
             .signupAndAccept(inv.inviteToken, { password: pw })

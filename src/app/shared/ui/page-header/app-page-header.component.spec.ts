@@ -18,8 +18,10 @@ describe('AppPageHeaderComponent', () => {
         TestBed.configureTestingModule({ providers: [provideRouter([{ path: '**', children: [] }])] });
         await TestBed.inject(Router).navigateByUrl(url);
         const fixture = TestBed.createComponent(HostComponent);
+
         setup(fixture.componentInstance);
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     }
 
@@ -30,6 +32,7 @@ describe('AppPageHeaderComponent', () => {
     it('categoryLink yoksa menüdeki kategori (Panel, Ayarlar) düz yazı olarak çizilmez; ilk satır başlıktır', async () => {
         for (const url of ['/panel/today', '/panel/dashboard', '/panel/settings/clinics', '/panel/appointments', '/panel/yok']) {
             const el = await create(url);
+
             expect(categoryLink(el)).withContext(url).toBeNull();
             expect(el.querySelector('span')).withContext(url).toBeNull();
             expect(firstLine(el)).withContext(url).toBe('Başlık');
@@ -42,6 +45,7 @@ describe('AppPageHeaderComponent', () => {
             host.categoryLinkLabel = 'Randevu listesine dön';
         });
         const link = categoryLink(el)!;
+
         expect(link.getAttribute('href')).toBe('/panel/appointments');
         expect(link.textContent?.trim()).toBe('Randevular');
         expect(link.getAttribute('aria-label')).toBe('Randevular: Randevu listesine dön');
@@ -51,6 +55,7 @@ describe('AppPageHeaderComponent', () => {
     it('bağlantı yazısı menü grubu değil hedef listenin adıdır (sekme, menü öğesi, Ayarlar kartı)', async () => {
         const text = async (url: string, link: string | readonly unknown[]) =>
             categoryLink(await create(url, (host) => (host.categoryLink = link)))!.textContent?.trim();
+
         expect(await text('/panel/pets/p1', '/panel/pets')).toBe('Hastalar');
         expect(await text('/panel/clients/c1', '/panel/clients')).toBe('Müşteriler');
         expect(await text('/panel/examinations/e1', '/panel/examinations')).toBe('Muayeneler');
@@ -64,6 +69,7 @@ describe('AppPageHeaderComponent', () => {
         const el = await create('/panel/appointments/a1', (host) => {
             host.categoryLink = TestBed.inject(Router).parseUrl('/panel/today?visit=v1');
         });
+
         expect(categoryLink(el)!.textContent?.trim()).toBe('Bugün');
     });
 
@@ -72,6 +78,7 @@ describe('AppPageHeaderComponent', () => {
             host.categoryLink = ['/panel/pets', 'p1'];
             host.categoryLinkLabel = 'Hasta kartına dön';
         });
+
         expect(categoryLink(detail)!.textContent?.trim()).toBe('Müşteri ve Hasta');
 
         const unknown = await create('/panel/yok', (host) => {
@@ -79,6 +86,7 @@ describe('AppPageHeaderComponent', () => {
             host.categoryLinkLabel = 'Geri dön';
         });
         const link = categoryLink(unknown)!;
+
         expect(link.textContent?.trim()).toBe('Geri dön');
         expect(link.getAttribute('aria-label')).toBeNull();
     });

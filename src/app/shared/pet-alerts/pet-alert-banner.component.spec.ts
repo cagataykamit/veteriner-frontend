@@ -10,8 +10,10 @@ describe('PetAlertBannerComponent', () => {
     const create = (petId: string | null) => {
         TestBed.configureTestingModule({ imports: [PetAlertBannerComponent], providers: [{ provide: PetsService, useValue: pets }] });
         const fixture = TestBed.createComponent(PetAlertBannerComponent);
+
         fixture.componentRef.setInput('petId', petId);
         fixture.detectChanges();
+
         return fixture;
     };
 
@@ -22,6 +24,7 @@ describe('PetAlertBannerComponent', () => {
     it('uyarısı olan hayvanda rozetleri ve notu gösterir', () => {
         pets.getPetById.and.returnValue(of({ petAlerts: { flags: ['Allergy', 'AnesthesiaRisk'], note: 'Penisiline alerjik' } } as unknown as PetDetailVm));
         const el: HTMLElement = create('p1').nativeElement;
+
         expect(el.querySelector('[aria-label="Hasta uyarıları"]')).not.toBeNull();
         expect(el.textContent).toContain('Alerji');
         expect(el.textContent).toContain('Anestezi riski');

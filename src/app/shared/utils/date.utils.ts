@@ -9,6 +9,7 @@ export function localDateYyyyMmDd(d: Date = new Date()): string {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
+
     return `${y}-${m}-${day}`;
 }
 
@@ -20,10 +21,13 @@ function formatInstantInIstanbul(value: string | Date | null | undefined, option
     if (value == null || value === '') {
         return '—';
     }
+
     const d = value instanceof Date ? value : parseUtcApiInstantIsoString(value);
+
     if (!d || Number.isNaN(d.getTime())) {
         return '—';
     }
+
     return new Intl.DateTimeFormat(locale, { timeZone: DEFAULT_UTC_DISPLAY_TIME_ZONE, ...options }).format(d);
 }
 
@@ -55,19 +59,26 @@ export function parseUtcApiInstantIsoString(value: string | null | undefined): D
     if (value == null) {
         return null;
     }
+
     let s = value.trim();
+
     if (!s) {
         return null;
     }
+
     if (s.includes(' ') && !s.includes('T')) {
         s = s.replace(' ', 'T');
     }
+
     if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
         const d = new Date(s);
+
         return Number.isNaN(d.getTime()) ? null : d;
     }
+
     const normalized = hasExplicitIso8601Zone(s) ? s : `${s}Z`;
     const d = new Date(normalized);
+
     return Number.isNaN(d.getTime()) ? null : d;
 }
 
@@ -104,20 +115,26 @@ export function formatUtcToLocalTime(value: string | Date | null | undefined): s
 /** UTC ISO → HTML `type="date"` (`yyyy-MM-dd`) — Europe/Istanbul duvar takvimi. */
 export function toIstanbulDateInputValue(value: string | null | undefined): string {
     const d = parseUtcApiInstantIsoString(value);
+
     if (!d) {
         return '';
     }
+
     const p = getZonedWallParts(d.getTime(), DEFAULT_UTC_DISPLAY_TIME_ZONE);
+
     return `${p.y}-${String(p.mo).padStart(2, '0')}-${String(p.d).padStart(2, '0')}`;
 }
 
 /** UTC ISO → form saat (`HH:mm`) — Europe/Istanbul duvar saati. */
 export function toIstanbulTimeInputValue(value: string | null | undefined): string {
     const d = parseUtcApiInstantIsoString(value);
+
     if (!d) {
         return '';
     }
+
     const p = getZonedWallParts(d.getTime(), DEFAULT_UTC_DISPLAY_TIME_ZONE);
+
     return `${String(p.h).padStart(2, '0')}:${String(p.mi).padStart(2, '0')}`;
 }
 
@@ -132,18 +149,22 @@ export function toIstanbulDateTimeInputParts(value: string | null | undefined): 
 /** Istanbul `yyyy-MM-dd` + `HH:mm` → UTC ISO (`…000Z`). */
 export function fromIstanbulDateAndTimeToUtcIso(date: string, time: string): string | null {
     const ms = utcMsFromIstanbulWallDateTime(date, time);
+
     if (ms === null) {
         return null;
     }
+
     return new Date(ms).toISOString().replace(/\.\d{3}Z$/, '.000Z');
 }
 
 /** UTC ISO → HTML `datetime-local` (`yyyy-MM-ddTHH:mm`) — Europe/Istanbul. */
 export function toIstanbulDateTimeLocalInputValue(value: string | null | undefined): string {
     const { date, time } = toIstanbulDateTimeInputParts(value);
+
     if (!date || !time) {
         return '';
     }
+
     return `${date}T${time}`;
 }
 
@@ -152,22 +173,30 @@ export function fromIstanbulDateTimeLocalInputToUtcIso(value: string | null | un
     if (value == null || value === '') {
         return null;
     }
+
     let s = value.trim();
+
     if (!s) {
         return null;
     }
+
     if (s.includes(' ') && !s.includes('T')) {
         s = s.replace(' ', 'T');
     }
+
     const tIdx = s.indexOf('T');
+
     if (tIdx < 0) {
         return null;
     }
+
     const date = s.slice(0, tIdx);
     const timeMatch = s.slice(tIdx + 1).match(/^(\d{2}):(\d{2})/);
+
     if (!timeMatch) {
         return null;
     }
+
     return fromIstanbulDateAndTimeToUtcIso(date, `${timeMatch[1]}:${timeMatch[2]}`);
 }
 
@@ -176,6 +205,7 @@ export function toUtcIsoFromLocalDate(value: Date | null | undefined): string | 
     if (!value || Number.isNaN(value.getTime())) {
         return null;
     }
+
     return value.toISOString();
 }
 
@@ -186,14 +216,17 @@ export function toUtcIsoFromLocalDate(value: Date | null | undefined): string | 
  */
 export function utcIsoStringToDateTimeLocalInput(value: string | null | undefined): string {
     const d = parseUtcApiInstantIsoString(value);
+
     if (!d) {
         return '';
     }
+
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
+
     return `${y}-${m}-${day}T${hh}:${mm}`;
 }
 
@@ -205,10 +238,13 @@ export function dateTimeLocalInputToIsoUtc(localValue: string): string {
     if (!localValue?.trim()) {
         return '';
     }
+
     const d = new Date(localValue);
+
     if (Number.isNaN(d.getTime())) {
         return '';
     }
+
     return d.toISOString();
 }
 
@@ -217,10 +253,13 @@ export function dateOnlyInputToUtcIso(dateStr: string): string {
     if (!dateStr?.trim()) {
         return '';
     }
+
     const [y, m, d] = dateStr.split('-').map(Number);
+
     if (!y || !m || !d) {
         return '';
     }
+
     return new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)).toISOString();
 }
 
@@ -229,40 +268,52 @@ export function dateOnlyInputToUtcIsoEndOfDay(dateStr: string): string {
     if (!dateStr?.trim()) {
         return '';
     }
+
     const [y, m, d] = dateStr.split('-').map(Number);
+
     if (!y || !m || !d) {
         return '';
     }
+
     return new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999)).toISOString();
 }
 
 function parseYyyyMmDd(dateStr: string): { y: number; m: number; d: number } | null {
     const t = dateStr.trim();
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+
     if (!m) {
         return null;
     }
+
     const y = Number(m[1]);
     const mo = Number(m[2]);
     const d = Number(m[3]);
+
     if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d) || mo < 1 || mo > 12 || d < 1 || d > 31) {
         return null;
     }
+
     return { y, m: mo, d };
 }
 
 export function addGregorianDaysToYmd(ymd: string, deltaDays: number): string | null {
     const p = parseYyyyMmDd(ymd);
+
     if (!p) {
         return null;
     }
+
     const dt = new Date(Date.UTC(p.y, p.m - 1, p.d + deltaDays));
+
     if (Number.isNaN(dt.getTime())) {
         return null;
     }
+
     const yy = dt.getUTCFullYear();
     const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
     const dd = String(dt.getUTCDate()).padStart(2, '0');
+
     return `${yy}-${mm}-${dd}`;
 }
 
@@ -271,58 +322,75 @@ type ZonedWallParts = { y: number; mo: number; d: number; h: number; mi: number;
 /** İlk UTC anı — `timeZone` yerelinde `targetYmd` + `HH:mm` duvar saati (saniye 0). */
 function utcMsFromIstanbulWallDateTime(targetYmd: string, timeHm: string): number | null {
     const parsed = parseYyyyMmDd(targetYmd);
+
     if (!parsed) {
         return null;
     }
+
     const tm = timeHm.trim().match(/^(\d{2}):(\d{2})$/);
+
     if (!tm) {
         return null;
     }
+
     const th = Number(tm[1]);
     const tmi = Number(tm[2]);
+
     if (!Number.isFinite(th) || !Number.isFinite(tmi) || th < 0 || th > 23 || tmi < 0 || tmi > 59) {
         return null;
     }
+
     const ty = parsed.y;
     const tmo = parsed.m;
     const td = parsed.d;
 
     const atOrAfterTarget = (utcMs: number): boolean => {
         const p = getZonedWallParts(utcMs, DEFAULT_UTC_DISPLAY_TIME_ZONE);
+
         if (p.y !== ty) {
             return p.y > ty;
         }
+
         if (p.mo !== tmo) {
             return p.mo > tmo;
         }
+
         if (p.d !== td) {
             return p.d > td;
         }
+
         if (p.h !== th) {
             return p.h > th;
         }
+
         if (p.mi !== tmi) {
             return p.mi > tmi;
         }
+
         if (p.s !== 0) {
             return p.s > 0;
         }
+
         return p.frac >= 0;
     };
 
     let lo = Date.UTC(parsed.y, parsed.m - 1, parsed.d - 2, 12, 0, 0, 0);
     let hi = Date.UTC(parsed.y, parsed.m - 1, parsed.d + 2, 12, 0, 0, 0);
+
     if (!atOrAfterTarget(hi)) {
         return null;
     }
+
     while (lo < hi) {
         const mid = Math.floor((lo + hi) / 2);
+
         if (atOrAfterTarget(mid)) {
             hi = mid;
         } else {
             lo = mid + 1;
         }
     }
+
     return lo;
 }
 
@@ -339,12 +407,16 @@ function getZonedWallParts(utcMs: number, timeZone: string): ZonedWallParts {
         fractionalSecondDigits: 3
     });
     const parts = f.formatToParts(new Date(utcMs));
+
     const get = (type: Intl.DateTimeFormatPartTypes): number => {
         const hit = parts.find((x) => x.type === type);
+
         return hit ? Number(hit.value) : 0;
     };
+
     const fracRaw = parts.find((x) => x.type === 'fractionalSecond')?.value;
     const frac = fracRaw !== undefined && fracRaw !== '' ? Number(fracRaw) : 0;
+
     return {
         y: get('year'),
         mo: get('month'),
@@ -359,49 +431,62 @@ function getZonedWallParts(utcMs: number, timeZone: string): ZonedWallParts {
 /** İlk UTC anı (epoch ms) — `timeZone` yerelinde `targetYmd` günü 00:00:00.000 veya sonrası. */
 function firstUtcInstantOnOrAfterIstanbulCalendarDayStart(targetYmd: string): number | null {
     const parsed = parseYyyyMmDd(targetYmd);
+
     if (!parsed) {
         return null;
     }
+
     const ty = parsed.y;
     const tm = parsed.m;
     const td = parsed.d;
 
     const atOrAfterDayStart = (utcMs: number): boolean => {
         const p = getZonedWallParts(utcMs, REPORT_FILTER_TIME_ZONE);
+
         if (p.y !== ty) {
             return p.y > ty;
         }
+
         if (p.mo !== tm) {
             return p.mo > tm;
         }
+
         if (p.d !== td) {
             return p.d > td;
         }
+
         if (p.h !== 0) {
             return p.h > 0;
         }
+
         if (p.mi !== 0) {
             return p.mi > 0;
         }
+
         if (p.s !== 0) {
             return p.s > 0;
         }
+
         return p.frac >= 0;
     };
 
     let lo = Date.UTC(parsed.y, parsed.m - 1, parsed.d - 2, 12, 0, 0, 0);
     let hi = Date.UTC(parsed.y, parsed.m - 1, parsed.d + 2, 12, 0, 0, 0);
+
     if (!atOrAfterDayStart(hi)) {
         return null;
     }
+
     while (lo < hi) {
         const mid = Math.floor((lo + hi) / 2);
+
         if (atOrAfterDayStart(mid)) {
             hi = mid;
         } else {
             lo = mid + 1;
         }
     }
+
     return lo;
 }
 
@@ -411,6 +496,7 @@ function firstUtcInstantOnOrAfterIstanbulCalendarDayStart(targetYmd: string): nu
  */
 export function dateOnlyInputToIstanbulStartUtcIso(ymd: string): string {
     const ms = firstUtcInstantOnOrAfterIstanbulCalendarDayStart(ymd);
+
     return ms === null ? '' : new Date(ms).toISOString();
 }
 
@@ -420,10 +506,13 @@ export function dateOnlyInputToIstanbulStartUtcIso(ymd: string): string {
  */
 export function dateOnlyInputToIstanbulEndUtcIso(ymd: string): string {
     const nextYmd = addGregorianDaysToYmd(ymd, 1);
+
     if (!nextYmd) {
         return '';
     }
+
     const nextStart = firstUtcInstantOnOrAfterIstanbulCalendarDayStart(nextYmd);
+
     return nextStart === null ? '' : new Date(nextStart - 1).toISOString();
 }
 
@@ -434,20 +523,26 @@ export function dateOnlyInputToIstanbulEndUtcIso(ymd: string): string {
 export function istanbulDateRangeToUtcIso(fromDate: string | undefined, toDate: string | undefined): { fromUtc?: string; toUtc?: string } {
     const out: { fromUtc?: string; toUtc?: string } = {};
     const from = fromDate?.trim();
+
     if (from) {
         const iso = dateOnlyInputToIstanbulStartUtcIso(from);
+
         if (iso) {
             out.fromUtc = iso;
         }
     }
+
     const to = toDate?.trim();
+
     if (to) {
         const next = addGregorianDaysToYmd(to, 1);
         const iso = next ? dateOnlyInputToIstanbulStartUtcIso(next) : '';
+
         if (iso) {
             out.toUtc = iso;
         }
     }
+
     return out;
 }
 
@@ -458,5 +553,6 @@ export function localDateTimeYyyyMmDd_HHmmForFileName(d: Date = new Date()): str
     const day = String(d.getDate()).padStart(2, '0');
     const h = String(d.getHours()).padStart(2, '0');
     const min = String(d.getMinutes()).padStart(2, '0');
+
     return `${y}${m}${day}-${h}${min}`;
 }

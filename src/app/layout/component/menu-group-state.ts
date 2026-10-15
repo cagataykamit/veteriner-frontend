@@ -7,9 +7,11 @@ export type MenuGroupPreferences = Readonly<Record<string, boolean>>;
 export function readMenuGroupPreferences(): MenuGroupPreferences {
     try {
         const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+
         if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
             return {};
         }
+
         return Object.fromEntries(Object.entries(parsed).filter(([, open]) => typeof open === 'boolean'));
     } catch {
         return {};

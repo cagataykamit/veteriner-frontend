@@ -52,14 +52,17 @@ describe('ClientSearchComponent', () => {
 
     const typeInto = (text: string) => {
         const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
         input.focus();
         input.value = text;
         input.dispatchEvent(new Event('input', { bubbles: true }));
+
         return input;
     };
 
     it('gerçek input: tek karakter (min. uzunluğun altı) yazılınca metin silinmez, arama tetiklenmez', async () => {
         const input = typeInto('m');
+
         await wait(1000);
         fixture.detectChanges();
         expect(input.value).toBe('m');
@@ -70,6 +73,7 @@ describe('ClientSearchComponent', () => {
         typeInto('m');
         await wait(500);
         const input = typeInto('ma');
+
         await wait(100);
         typeInto('mak');
         await wait(500);

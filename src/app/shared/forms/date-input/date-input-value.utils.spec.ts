@@ -3,12 +3,14 @@ import { formatDateInputValue, isDateWithoutTime, parseDateInputValue } from './
 describe('date-input-value utils', () => {
     it('date: metin ↔ Date gidiş-dönüş aynı kalır', () => {
         const d = parseDateInputValue('date', '2026-10-11')!;
+
         expect([d.getFullYear(), d.getMonth(), d.getDate()]).toEqual([2026, 9, 11]);
         expect(formatDateInputValue('date', d)).toBe('2026-10-11');
     });
 
     it('datetime-local: saat ve dakika korunur (saniye varsa yok sayılır)', () => {
         const d = parseDateInputValue('datetime-local', '2026-10-11T13:30:45')!;
+
         expect([d.getHours(), d.getMinutes()]).toEqual([13, 30]);
         expect(formatDateInputValue('datetime-local', d)).toBe('2026-10-11T13:30');
     });
@@ -44,6 +46,7 @@ describe('date-input-value utils', () => {
 
     it('iki haneli yıl 19xx olmaz: yıl 0026 olduğu gibi korunur', () => {
         const d = parseDateInputValue('date', '0026-01-01')!;
+
         expect(d.getFullYear()).toBe(26);
         expect(formatDateInputValue('date', d)).toBe('0026-01-01');
     });

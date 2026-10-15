@@ -22,7 +22,9 @@ describe('AppMenu', () => {
             ]
         });
         const fixture = TestBed.createComponent(AppMenu);
+
         fixture.detectChanges();
+
         return fixture;
     };
 
@@ -54,6 +56,7 @@ describe('AppMenu', () => {
 
     it('menü ADR-023 bölüm başlıklarıyla gruplanır; başlıklar açılıp kapanmaz, Yönetim bölümü alta sabittir', () => {
         const fixture = create();
+
         expect(outline(fixture)).toEqual([
             '# Günlük iş',
             'Bugün',
@@ -73,6 +76,7 @@ describe('AppMenu', () => {
         expect(root(fixture).querySelector('.layout-menu-group-toggle')).toBeNull();
         expect(root(fixture).querySelector('.layout-menu-divider')).toBeNull();
         const pinned = root(fixture).querySelector('.layout-menu-pinned')!;
+
         expect(pinned.querySelector('.layout-menu-heading')?.textContent?.trim()).toBe('Yönetim');
         expect(Array.from(pinned.querySelectorAll('.layout-menuitem-text')).map((el) => el.textContent?.trim())).toEqual(['Raporlar', 'Özet', 'Ayarlar']);
     });
@@ -84,6 +88,7 @@ describe('AppMenu', () => {
     it('simge şeridinde bölüm başlıkları yerine ince ayırıcı çıkar', () => {
         rail.set(true);
         const fixture = create();
+
         expect(root(fixture).querySelector('.layout-menu-heading')).toBeNull();
         expect(outline(fixture)).toEqual(['—', 'Bugün', 'Randevular', '—', 'Müşteri ve Hasta', '—', 'Kayıtlar', '—', 'Para', 'Stok', '—', 'Raporlar', 'Özet', 'Ayarlar']);
     });
@@ -91,11 +96,15 @@ describe('AppMenu', () => {
     it('simge şeridinde aynı öğeler görünür ve her biri tek bağlantıdır; simge ve ad aynı tıklanabilir satırın içindedir', () => {
         rail.set(true);
         const fixture = create();
+
         expect(labels(fixture)).toContain('Kayıtlar');
         const items = Array.from(root(fixture).querySelectorAll('li[app-menuitem]'));
+
         expect(items.length).toBe(9);
+
         for (const li of items) {
             const links = li.querySelectorAll('a');
+
             expect(links.length).toBe(1);
             expect(links[0].querySelector('.layout-menuitem-icon')).not.toBeNull();
             expect(links[0].querySelector('.layout-menuitem-text')?.textContent?.trim()).toBeTruthy();
@@ -104,6 +113,7 @@ describe('AppMenu', () => {
 
     it('izinsiz sekme görünmez: bağlantı yetkili ilk sekmeye gider, hiç yetkili sekme yoksa öğe çıkmaz', () => {
         const fixture = create((claim) => claim === 'StockMovements.Read');
+
         expect(labels(fixture)).toEqual(['Stok', 'Raporlar', 'Ayarlar']);
         expect(link(fixture, 'Stok').getAttribute('href')).toBe('/panel/stock-movements');
     });
@@ -114,6 +124,7 @@ describe('AppMenu', () => {
 
     it('öğe, sekmelerinden herhangi birindeki sayfada vurgulanır', async () => {
         const fixture = create();
+
         await TestBed.inject(Router).navigateByUrl('/panel/pets?clientId=c1');
         fixture.detectChanges();
         expect(link(fixture, 'Müşteri ve Hasta').classList).toContain('active-route');
@@ -129,12 +140,14 @@ describe('AppMenu', () => {
     it('sayaç bekleyen sayıyı gösterir; 0 gizli, 99 üstü 99+; Kayıtlar sayacının metni neyi saydığını söyler', () => {
         counts = { waitingVisits: 3, requestedLabResults: 250 };
         const fixture = create();
+
         expect(badges(fixture)).toEqual(['3', '99+']);
         expect(link(fixture, 'Kayıtlar').querySelector('.sr-only')?.textContent?.trim()).toBe('sonuç bekleyen lab istemi');
         expect(link(fixture, 'Bugün').querySelector('.sr-only')?.textContent?.trim()).toBe('bekleyen');
 
         counts = { waitingVisits: 0, requestedLabResults: null };
         const hidden = TestBed.createComponent(AppMenu);
+
         hidden.detectChanges();
         expect(badges(hidden)).toEqual([]);
     });
@@ -142,10 +155,12 @@ describe('AppMenu', () => {
     describe('alt sayfa paneli (flyout)', () => {
         const row = (fixture: ComponentFixture<AppMenu>, label: string) => link(fixture, label).closest('li') as HTMLElement;
         const pointer = (el: Element, type: 'pointerenter' | 'pointerleave', pointerType = 'mouse') => el.dispatchEvent(new PointerEvent(type, { pointerType }));
+
         const hover = (fixture: ComponentFixture<AppMenu>, label: string, pointerType = 'mouse') => {
             pointer(row(fixture, label), 'pointerenter', pointerType);
             fixture.detectChanges();
         };
+
         const panels = () => Array.from(document.querySelectorAll<HTMLElement>('.layout-menu-flyout'));
         const panel = () => panels()[0];
         const items = () => Array.from(panel()?.querySelectorAll<HTMLAnchorElement>('[role="menuitem"]') ?? []);
@@ -160,12 +175,15 @@ describe('AppMenu', () => {
 
         it('açık menüde ok ve açılır işaret yalnız sekmeli satırlardadır; sekmesiz satırda panel açılmaz', () => {
             const fixture = create();
+
             for (const label of ['Bugün', ...tabbed, 'Raporlar', 'Özet', 'Ayarlar']) {
                 const hasFlyout = tabbed.includes(label);
+
                 expect(link(fixture, label).querySelector('.layout-menuitem-flyout-toggler') !== null).withContext(label).toBe(hasFlyout);
                 expect(link(fixture, label).getAttribute('aria-haspopup')).withContext(label).toBe(hasFlyout ? 'menu' : null);
                 expect(link(fixture, label).getAttribute('aria-expanded')).withContext(label).toBe(hasFlyout ? 'false' : null);
             }
+
             hover(fixture, 'Bugün');
             hover(fixture, 'Ayarlar');
             expect(panels()).toEqual([]);
@@ -174,6 +192,7 @@ describe('AppMenu', () => {
         it('fareyle üzerine gelince sekmeler body altındaki panelde açılır (kenar çubuğu kırpmaz); panele geçerken kapanmaz, çıkınca kapanır', () => {
             jasmine.clock().install();
             const fixture = create();
+
             hover(fixture, 'Kayıtlar');
             expect(panels().length).toBe(1);
             expect(panel().parentElement).toBe(document.body);
@@ -200,6 +219,7 @@ describe('AppMenu', () => {
 
         it('aynı anda tek panel açıktır', () => {
             const fixture = create();
+
             hover(fixture, 'Para');
             hover(fixture, 'Stok');
             expect(panels().length).toBe(1);
@@ -208,6 +228,7 @@ describe('AppMenu', () => {
 
         it('dokunmatikte panel açılmaz; dokunuş satırın mevcut gezinmesini yapar', () => {
             const fixture = create();
+
             hover(fixture, 'Para', 'touch');
             expect(panels()).toEqual([]);
             expect(link(fixture, 'Para').getAttribute('href')).toBe('/panel/charges');
@@ -215,12 +236,14 @@ describe('AppMenu', () => {
 
         it('yalnız yetkili sekmeler görünür; tek sekme kalırsa ok ve panel yoktur', () => {
             const fixture = create((claim) => claim === 'Products.Read');
+
             hover(fixture, 'Stok');
             expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu']);
 
             TestBed.resetTestingModule();
             panels().forEach((p) => p.remove());
             const single = create((claim) => claim === 'StockMovements.Read');
+
             expect(link(single, 'Stok').querySelector('.layout-menuitem-flyout-toggler')).toBeNull();
             expect(link(single, 'Stok').getAttribute('aria-haspopup')).toBeNull();
             hover(single, 'Stok');
@@ -230,24 +253,29 @@ describe('AppMenu', () => {
         it('etkin sekme vurgulanır (aria-current); sayaçlı sekme panelde de sayacı gösterir', async () => {
             counts = { requestedLabResults: 4 };
             const fixture = create();
+
             await TestBed.inject(Router).navigateByUrl('/panel/charges/pending');
             fixture.detectChanges();
             hover(fixture, 'Para');
             const active = items().filter((a) => a.classList.contains('active-route'));
+
             expect(active.map((a) => a.textContent?.trim())).toEqual(['Ücret bekleyenler']);
             expect(active[0].getAttribute('aria-current')).toBe('page');
 
             hover(fixture, 'Kayıtlar');
             expect(items().filter((a) => a.classList.contains('active-route'))).toEqual([]);
             const lab = items().find((a) => a.textContent?.includes('Lab sonuçları'))!;
+
             expect(lab.querySelector('.layout-menuitem-badge')?.firstChild?.textContent).toBe('4');
             expect(items().filter((a) => a.querySelector('.layout-menuitem-badge'))).toHaveSize(1);
         });
 
         it('sekmeye tıklamak o sayfaya gider ve paneli kapatır', async () => {
             const fixture = create();
+
             hover(fixture, 'Randevular');
             const calendar = items().find((a) => a.textContent?.trim() === 'Takvim')!;
+
             expect(calendar.getAttribute('href')).toBe('/panel/appointments/calendar');
             calendar.click();
             await fixture.whenStable();
@@ -259,6 +287,7 @@ describe('AppMenu', () => {
         it('klavye: Sağ ok açıp ilk sekmeye odaklanır, Aşağı/Yukarı gezinir, Escape kapatıp odağı satıra verir', () => {
             const fixture = create();
             const para = link(fixture, 'Para');
+
             para.focus();
             key(para, 'ArrowRight');
             fixture.detectChanges();
@@ -280,6 +309,7 @@ describe('AppMenu', () => {
 
         it('klavye: Tab ile odaklanan satır paneli odağı taşımadan açar; odak başka satıra geçince kapanır', () => {
             const fixture = create();
+
             link(fixture, 'Stok').focus();
             fixture.detectChanges();
             expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
@@ -293,10 +323,12 @@ describe('AppMenu', () => {
         it('klavye: Tab panelden çıkarken paneli kapatır ve odağı satıra verir (tarayıcı oradan devam eder)', () => {
             const fixture = create();
             const para = link(fixture, 'Para');
+
             para.focus();
             key(para, 'ArrowRight');
             fixture.detectChanges();
             const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+
             items()[0].dispatchEvent(tab);
             fixture.detectChanges();
             expect(tab.defaultPrevented).toBeFalse();
@@ -308,6 +340,7 @@ describe('AppMenu', () => {
             const fixture = create();
             const para = link(fixture, 'Para');
             const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+
             para.dispatchEvent(enter);
             fixture.detectChanges();
             expect(enter.defaultPrevented).toBeFalse();
@@ -322,6 +355,7 @@ describe('AppMenu', () => {
         it('daraltılmış menüde ad ipucu yerine başlıklı panel açılır; sekmesiz satırda panel yoktur', () => {
             rail.set(true);
             const fixture = create();
+
             hover(fixture, 'Özet');
             expect(panels()).toEqual([]);
             expect(link(fixture, 'Özet').getAttribute('aria-haspopup')).toBeNull();
@@ -334,6 +368,7 @@ describe('AppMenu', () => {
 
         it('sayfa değişince açık panel kapanır', async () => {
             const fixture = create();
+
             hover(fixture, 'Stok');
             await TestBed.inject(Router).navigateByUrl('/panel/today');
             fixture.detectChanges();

@@ -7,6 +7,7 @@ describe('printWithPageStyle', () => {
             expect(document.body.classList).toContain('test-print-active');
             expect(Array.from(document.head.querySelectorAll('style')).some((s) => s.textContent === '@page { size: A4 portrait; }')).toBeTrue();
         });
+
         (win as unknown as { print: () => void }).print = print;
 
         printWithPageStyle('test-print-active', '@page { size: A4 portrait; }', document, win);

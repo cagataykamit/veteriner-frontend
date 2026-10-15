@@ -21,6 +21,7 @@ describe('ücret önerisi ve hizmet hata kodları', () => {
     for (const [code, fragment] of cases) {
         it(`${code} sade Türkçe mesaja çevrilir`, () => {
             const msg = messageFromHttpError(problem(code), 'Genel hata');
+
             expect(msg).toContain(fragment);
             expect(msg).not.toBe('Genel hata');
         });

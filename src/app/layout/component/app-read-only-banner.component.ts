@@ -66,16 +66,21 @@ export class AppReadOnlyBannerComponent {
     /** Öncelik: backend `message`; yoksa rol bazlı sabit metin. */
     detailLine(): string | null {
         const a = this.ctx.accessState();
+
         if (!a?.isReadOnly) {
             return null;
         }
+
         const custom = a.message?.trim();
+
         if (custom) {
             return custom;
         }
+
         if (this.ctx.showReadOnlyBannerSubscriptionActions()) {
             return 'Deneme süreniz sona ermiş veya hesabınız yazma için kapalı. Verileri görüntüleyebilirsiniz; yazma işlemleri devre dışıdır. Aboneliği görüntüleyerek paket seçeneklerinizi inceleyin.';
         }
+
         return 'Bu işletme şu anda salt okunur moddadır; yeni kayıt veya düzenleme yapılamaz. Devam etmek için işletme yöneticinizin aboneliği güncellemesi gerekir.';
     }
 }

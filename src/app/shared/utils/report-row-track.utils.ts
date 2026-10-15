@@ -4,5 +4,6 @@
  */
 export function reportTableRowTrackKey(row: { id: string }, index: number): string | number {
     const t = row.id?.trim();
+
     return t ? t : index;
 }

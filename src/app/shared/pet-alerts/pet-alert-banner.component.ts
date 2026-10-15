@@ -35,10 +35,13 @@ export class PetAlertBannerComponent {
         effect(() => {
             const id = this.petId()?.trim() ?? '';
             const seq = ++this.seq;
+
             this.alerts.set(NO_PET_ALERTS);
+
             if (!id) {
                 return;
             }
+
             this.petsService.getPetById(id).subscribe({
                 next: (p) => {
                     if (seq === this.seq) {

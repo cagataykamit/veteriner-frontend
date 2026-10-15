@@ -174,19 +174,26 @@ export class ForgotPasswordPageComponent implements OnInit {
         if (this.loading()) {
             return;
         }
+
         this.formSubmitAttempted.set(true);
         this.formError.set(null);
         this.apiFieldErrors.set({});
+
         if (forgotForm.invalid) {
             forgotForm.control.markAllAsTouched();
+
             return;
         }
+
         const trimmedEmail = this.email?.trim() ?? '';
+
         if (!trimmedEmail) {
             forgotForm.controls['email']?.setErrors({ required: true });
             forgotForm.controls['email']?.markAsTouched();
+
             return;
         }
+
         this.loading.set(true);
         this.passwordReset
             .requestReset(trimmedEmail)
@@ -197,10 +204,13 @@ export class ForgotPasswordPageComponent implements OnInit {
                 },
                 error: (err: unknown) => {
                     const http = err instanceof HttpErrorResponse ? err : null;
+
                     if (http) {
                         this.handleHttpError(http);
+
                         return;
                     }
+
                     this.formError.set(REQUEST_RESET_FALLBACK);
                 }
             });
@@ -210,11 +220,14 @@ export class ForgotPasswordPageComponent implements OnInit {
         const fieldErrors = parseValidationFieldErrors<ForgotPasswordFieldKey>(http.error, {
             fieldMap: FORGOT_PASSWORD_FIELD_MAP
         });
+
         if (Object.keys(fieldErrors).length > 0) {
             this.apiFieldErrors.set(fieldErrors);
             this.formError.set(null);
+
             return;
         }
+
         this.apiFieldErrors.set({});
         this.formError.set(this.resolveError(http));
     }
@@ -223,6 +236,7 @@ export class ForgotPasswordPageComponent implements OnInit {
         if (http.status === 429) {
             return RATE_LIMIT_MESSAGE;
         }
+
         return messageFromHttpError(http, REQUEST_RESET_FALLBACK);
     }
 }

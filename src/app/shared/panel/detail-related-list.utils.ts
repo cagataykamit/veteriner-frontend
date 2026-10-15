@@ -9,6 +9,7 @@ export interface DetailRelatedListSlice<T> {
 export function sliceDetailRelatedList<T>(items: readonly T[] | null | undefined): DetailRelatedListSlice<T> {
     const arr = items ?? [];
     const total = arr.length;
+
     return {
         displayed: arr.slice(0, DETAIL_RELATED_LIST_LIMIT),
         total

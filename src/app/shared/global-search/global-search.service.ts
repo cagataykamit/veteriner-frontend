@@ -55,6 +55,7 @@ export class GlobalSearchService {
             ? this.clientSearch.search(term).pipe(
                   catchError(() => {
                       failedKinds.push('clients');
+
                       return of([] as ClientSearchResultVm[]);
                   })
               )
@@ -63,10 +64,12 @@ export class GlobalSearchService {
             ? this.searchPets(term).pipe(
                   catchError(() => {
                       failedKinds.push('pets');
+
                       return of([] as GlobalSearchPetVm[]);
                   })
               )
             : of([] as GlobalSearchPetVm[]);
+
         return forkJoin({ clients: clients$, pets: pets$ }).pipe(map((r) => ({ ...r, failedKinds })));
     }
 
@@ -99,6 +102,7 @@ export class GlobalSearchService {
 
 function present(value: string): string {
     const t = value.trim();
+
     return t === NO_VALUE ? '' : t;
 }
 

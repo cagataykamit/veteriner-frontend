@@ -20,10 +20,12 @@ describe('hayvan rota bağlamı', () => {
     it('prefillPetFromRoute müşteri ve hayvan kontrollerini doldurur; bağlam yoksa dokunmaz', () => {
         const client = new FormControl('', { nonNullable: true });
         const pet = new FormControl('', { nonNullable: true });
+
         expect(prefillPetFromRoute(params({ clientId: 'c1', petId: 'p1' }), client, pet)).toBeTrue();
         expect([client.value, pet.value]).toEqual(['c1', 'p1']);
         const c2 = new FormControl('', { nonNullable: true });
         const p2 = new FormControl('', { nonNullable: true });
+
         expect(prefillPetFromRoute(params({ clientId: 'c1' }), c2, p2)).toBeFalse();
         expect([c2.value, p2.value]).toEqual(['', '']);
     });

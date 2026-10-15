@@ -100,6 +100,7 @@ export class AppMenu {
         const url = this.currentUrl();
         const current = entryForUrl(MENU_GROUPS, url);
         const hasClaim = (claim: string) => this.auth.hasOperationClaim(claim);
+
         return visibleGroups(MENU_GROUPS, hasClaim).map((group) => ({
             label: group.label,
             heading: group.heading,
@@ -138,6 +139,7 @@ export class AppMenu {
     /** Alt sayfa paneli sekmeleri: menü verisindeki yetkili sekmeler (sekme çubuğuyla aynı kural), etkin sekme ve sayaçları. */
     private flyoutTabs(entry: MenuEntry, url: string, hasClaim: (claim: string) => boolean): MenuFlyoutTab[] | undefined {
         const flyout = flyoutTabsFor(entry, url, hasClaim);
+
         return flyout?.tabs.map((tab) => ({ label: tab.label, route: tab.route, badge: this.badgeLabel(tab.badge), active: tab === flyout.active }));
     }
 
@@ -151,12 +153,14 @@ export class AppMenu {
 
     protected toggle(label: string): void {
         const open = this.sections().find((s) => s.label === label)?.open ?? false;
+
         this.setOpen(label, !open);
     }
 
     /** Gezilen sayfanın grubu açık değilse açar; kullanıcının kapattığı diğer gruplara dokunmaz. */
     private openGroupOf(url: string): void {
         const label = groupForUrl(MENU_GROUPS, url)?.label;
+
         if (label && this.sections().find((s) => s.label === label)?.open === false) {
             this.setOpen(label, true);
         }

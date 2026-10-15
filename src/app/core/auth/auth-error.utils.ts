@@ -37,23 +37,31 @@ const AUTH_PROBLEM_CODE_MESSAGES: Record<string, string> = {
 
 function messageForAuthProblemCode(code: string, context: 'login' | 'general'): string | null {
     const trimmed = code.trim();
+
     if (!trimmed) {
         return null;
     }
+
     const exact = AUTH_PROBLEM_CODE_MESSAGES[trimmed];
+
     if (exact) {
         return exact;
     }
+
     const fuzzy = AUTH_PROBLEM_CODE_MESSAGES[trimmed.replace(/\./g, '')];
+
     if (fuzzy) {
         return fuzzy;
     }
+
     if (trimmed.startsWith('Auth.Unauthorized.')) {
         return context === 'login' ? LOGIN_INVALID_CREDENTIALS_MESSAGE : 'Yetkisiz işlem. Lütfen tekrar giriş yapın.';
     }
+
     if (trimmed.startsWith('Auth.Validation.')) {
         return 'İstek geçersiz. Alanları kontrol edip tekrar deneyin.';
     }
+
     return null;
 }
 
@@ -64,23 +72,30 @@ export function loginFailureMessage(err: HttpErrorResponse): string {
     if (err.status === 0 || err.status === 429) {
         return authFailureMessage(err, 'Giriş başarısız.');
     }
+
     const problem = readProblemDetails(err);
     const code = problem?.code?.trim() ?? '';
+
     if (code) {
         const byCode = messageForAuthProblemCode(code, 'login');
+
         if (byCode) {
             return byCode;
         }
     }
+
     if (err.status === 401) {
         return LOGIN_INVALID_CREDENTIALS_MESSAGE;
     }
+
     if (err.status === 400 && code) {
         const byCode = messageForAuthProblemCode(code, 'login');
+
         if (byCode) {
             return byCode;
         }
     }
+
     return authFailureMessage(err, 'Giriş başarısız.');
 }
 
@@ -91,6 +106,7 @@ export function authRefreshFailureMessage(err: unknown, fallback = 'Oturum yenil
     if (err instanceof HttpErrorResponse) {
         return authFailureMessage(err, fallback);
     }
+
     return panelHttpFailureMessage(err, fallback);
 }
 
@@ -100,14 +116,18 @@ export function authFailureMessage(err: HttpErrorResponse, fallback = 'İşlem b
     }
 
     const problem = readProblemDetails(err);
+
     logProblemContext(problem);
 
     const code = problem?.code?.trim() ?? '';
+
     if (code) {
         if (code === 'RateLimit.Exceeded' || err.status === 429) {
             return rateLimitUserMessage(err);
         }
+
         const byCode = messageForAuthProblemCode(code, 'general');
+
         if (byCode) {
             return byCode;
         }
@@ -119,26 +139,32 @@ export function authFailureMessage(err: HttpErrorResponse, fallback = 'İşlem b
 
     if (err.status === 401) {
         const detail = problem?.detail?.trim() ?? '';
+
         if (detail && !isUnhelpfulProblemText(detail)) {
             return detail;
         }
+
         return 'Yetkisiz işlem. Lütfen tekrar giriş yapın.';
     }
 
     if (problem?.detail?.trim() && !isUnhelpfulProblemText(problem.detail)) {
         return problem.detail.trim();
     }
+
     if (problem?.title?.trim() && !isUnhelpfulProblemText(problem.title)) {
         return problem.title.trim();
     }
+
     return messageFromHttpError(err, fallback);
 }
 
 function readProblemDetails(err: HttpErrorResponse): ProblemDetails | null {
     const body = err.error as unknown;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const ext =
         o['extensions'] && typeof o['extensions'] === 'object' && !Array.isArray(o['extensions'])
@@ -149,7 +175,9 @@ function readProblemDetails(err: HttpErrorResponse): ProblemDetails | null {
         if (!ext) {
             return null;
         }
+
         const v = ext[key];
+
         return typeof v === 'string' && v.trim() ? v.trim() : null;
     };
 
@@ -181,9 +209,11 @@ function logProblemContext(problem: ProblemDetails | null): void {
     if (!problem) {
         return;
     }
+
     if (!problem.code && !problem.traceId && !problem.correlationId) {
         return;
     }
+
     console.debug('[auth-problem-details]', {
         code: problem.code ?? null,
         traceId: problem.traceId ?? null,

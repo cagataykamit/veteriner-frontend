@@ -19,14 +19,17 @@ class HostComponent {
 describe('AppListHeaderComponent', () => {
     function create(count: number | null = 16): HTMLElement {
         const fixture = TestBed.createComponent(HostComponent);
+
         fixture.componentInstance.count = count;
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     }
 
     it('başlığı sayfanın tek h1 başlığı olarak yazar ve kayıt sayısını gösterir', () => {
         const el = create();
         const headings = el.querySelectorAll('h1');
+
         expect(headings.length).toBe(1);
         expect(headings[0].textContent?.trim()).toBe('Müşteriler');
         expect(el.textContent).toContain('16 kayıt');
@@ -42,6 +45,7 @@ describe('AppListHeaderComponent', () => {
         const search = el.querySelector('[data-testid="search"]')!;
         const createLink = el.querySelector('[data-testid="create"]')!;
         const clear = el.querySelector('[data-testid="clear"]')!;
+
         expect(clear.parentElement).toBe(createLink.parentElement);
         expect(search.parentElement).toBe(clear.parentElement!.parentElement);
         expect(search.compareDocumentPosition(createLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

@@ -14,6 +14,7 @@ export function trimClientIdControlValue(value: unknown): string {
     if (value === null || value === undefined) {
         return '';
     }
+
     return String(value).trim();
 }
 
@@ -43,9 +44,11 @@ export function petOptionsFromList(items: PetListItemVm[]): SelectOption[] {
  */
 export function filterPetsByClientId(pets: PetListItemVm[], clientId: string | null): PetListItemVm[] {
     const id = clientId?.trim();
+
     if (!id) {
         return [];
     }
+
     return pets.filter((p) => (p.clientId ?? '').trim() === id);
 }
 

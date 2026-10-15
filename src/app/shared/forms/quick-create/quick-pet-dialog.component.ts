@@ -198,12 +198,16 @@ export class QuickPetDialogComponent {
             'weightStr',
             'notes'
         ];
+
         for (const f of fields) {
             const control = this.form.controls[f] as AbstractControl;
+
             control.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[f]) {
                     const next = { ...cur };
+
                     delete next[f];
                     this.apiFieldErrors.set(next);
                 }
@@ -213,14 +217,19 @@ export class QuickPetDialogComponent {
         this.form.controls.speciesId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((speciesId) => {
             this.form.controls.breedId.setValue('');
             this.breedOptions.set([]);
+
             if (speciesId === null || speciesId === undefined) {
                 this.form.controls.speciesId.setValue('', { emitEvent: false });
             }
+
             const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
+
             if (!sid) {
                 this.syncBreedIdDisabledState();
+
                 return;
             }
+
             this.loadBreedsForSpecies(sid);
         });
     }
@@ -243,6 +252,7 @@ export class QuickPetDialogComponent {
         });
         this.breedOptions.set([]);
         this.syncBreedIdDisabledState();
+
         if (!this.speciesOptions().length) {
             this.loadSpecies();
         }
@@ -266,19 +276,24 @@ export class QuickPetDialogComponent {
 
     quickBreedSpeciesLabelForDialog(): string {
         const id = trimClientIdControlValue(this.form.controls.speciesId.value);
+
         if (!id) {
             return '';
         }
+
         const opt = this.speciesOptions().find((o) => o.value === id);
+
         return opt ? `Tür: ${opt.label}` : '';
     }
 
     onQuickBreedCreated(breedId: string): void {
         const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
         const bid = breedId.trim();
+
         if (!sid || !bid) {
             return;
         }
+
         this.loadBreedsForSpecies(sid, bid);
     }
 
@@ -286,13 +301,18 @@ export class QuickPetDialogComponent {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         const cid = this.ownerClientIdTrimmed();
+
         if (!cid) {
             this.submitError.set('Önce müşteri seçin.');
+
             return;
         }
+
         this.form.controls.clientId.setValue(cid, { emitEvent: false });
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
@@ -307,12 +327,16 @@ export class QuickPetDialogComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePetCreateHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
@@ -351,12 +375,15 @@ export class QuickPetDialogComponent {
                     }))
                 );
                 const want = selectBreedId?.trim();
+
                 if (want) {
                     const exists = items.some((x) => x.id === want);
+
                     if (exists) {
                         this.form.controls.breedId.setValue(want, { emitEvent: true });
                     }
                 }
+
                 this.loadingBreeds.set(false);
                 this.syncBreedIdDisabledState();
             },
@@ -372,10 +399,13 @@ export class QuickPetDialogComponent {
         const sid = trimClientIdControlValue(this.form.controls.speciesId.value);
         const shouldDisable = !sid || this.loadingBreeds();
         const control = this.form.controls.breedId;
+
         if (shouldDisable) {
             control.disable({ emitEvent: false });
+
             return;
         }
+
         control.enable({ emitEvent: false });
     }
 
@@ -383,6 +413,7 @@ export class QuickPetDialogComponent {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

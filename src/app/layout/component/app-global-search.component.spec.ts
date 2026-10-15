@@ -27,21 +27,28 @@ describe('AppGlobalSearch', () => {
         fixture = TestBed.createComponent(AppGlobalSearch);
         fixture.detectChanges();
     };
+
     const key = (init: KeyboardEventInit, target: EventTarget = document.body) => {
         const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
+
         target.dispatchEvent(event);
         fixture.detectChanges();
+
         return event;
     };
+
     const dialogOpen = () => !!document.querySelector('.p-dialog');
     // Kapanış animasyonu bitene kadar DOM'da kalabilir; açık/kapalı durumu bileşenden okunur.
     const isVisible = () => (fixture.componentInstance as unknown as { visible: () => boolean }).visible();
+
     const settle = async () => {
         await fixture.whenStable();
         fixture.detectChanges();
     };
+
     const typeQuery = async (value: string) => {
         const input = document.querySelector<HTMLInputElement>('.p-dialog input')!;
+
         input.value = value;
         input.dispatchEvent(new Event('input'));
         await new Promise((resolve) => setTimeout(resolve, 350));
@@ -60,6 +67,7 @@ describe('AppGlobalSearch', () => {
     it('Ctrl+K ve / pencereyi açar; yazı alanında / açmaz', async () => {
         create();
         const slash = key({ key: '/' });
+
         expect(slash.defaultPrevented).toBeTrue();
         expect(dialogOpen()).toBeTrue();
 
@@ -67,6 +75,7 @@ describe('AppGlobalSearch', () => {
         document.querySelectorAll('.p-dialog-mask').forEach((el) => el.remove());
         create();
         const field = document.body.appendChild(document.createElement('input'));
+
         key({ key: '/' }, field);
         field.remove();
         expect(dialogOpen()).toBeFalse();
@@ -89,6 +98,7 @@ describe('AppGlobalSearch', () => {
         await typeQuery('pamuk');
         expect(search.search).toHaveBeenCalledOnceWith('pamuk');
         const text = document.querySelector('.p-dialog')!.textContent!;
+
         expect(text).toContain('Müşteriler');
         expect(text).toContain('Hastalar');
         expect(text).toContain('Sahip: Ali Veli');
@@ -99,9 +109,11 @@ describe('AppGlobalSearch', () => {
     it('ok tuşları seçimi gezdirir, Enter seçili kaydın detayına gider', async () => {
         create();
         const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+
         key({ key: '/' });
         await typeQuery('pamuk');
         const input = document.querySelector<HTMLInputElement>('.p-dialog input')!;
+
         key({ key: 'ArrowDown' }, input);
         expect(input.getAttribute('aria-activedescendant')).toBe('global-search-listbox-option-1');
         key({ key: 'Enter' }, input);
@@ -124,6 +136,7 @@ describe('AppGlobalSearch', () => {
         create();
         key({ key: '/' });
         const pending = new Subject<GlobalSearchResultVm>();
+
         search.search.and.returnValue(pending);
         await typeQuery('pamuk');
         expect(document.querySelector('.p-dialog')!.textContent).toContain('Aranıyor');

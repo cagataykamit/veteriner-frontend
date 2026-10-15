@@ -5,6 +5,7 @@ const DEFAULT_DELIMITER = ';';
 function escapeCsvField(value: string, delimiter: string): string {
     const mustQuote = value.includes(delimiter) || value.includes('"') || /[\r\n]/.test(value);
     const escaped = value.replace(/"/g, '""');
+
     return mustQuote ? `"${escaped}"` : escaped;
 }
 
@@ -13,6 +14,7 @@ export function buildCsvFromStringRows(header: string[], rows: string[][], delim
         header.map((c) => escapeCsvField(c, delimiter)).join(delimiter),
         ...rows.map((row) => row.map((c) => escapeCsvField(c ?? '', delimiter)).join(delimiter))
     ];
+
     return lines.join('\r\n');
 }
 

@@ -59,6 +59,7 @@ describe('Filtreli p-select ortak davranışı', () => {
     it('açılınca filtre kutusu açık, "Ara…" yer tutuculu ve odakta', async () => {
         await open();
         const input = filterInput();
+
         expect(input).not.toBeNull();
         expect(input!.placeholder).toBe('Ara…');
         expect(document.activeElement).toBe(input);
@@ -67,6 +68,7 @@ describe('Filtreli p-select ortak davranışı', () => {
     it('eşleşme yoksa Türkçe "Sonuç bulunamadı" gösterir', async () => {
         await open();
         const input = filterInput()!;
+
         input.value = 'zzzz';
         input.dispatchEvent(new Event('input', { bubbles: true }));
         fixture.detectChanges();
@@ -79,6 +81,7 @@ describe('Filtreli p-select ortak davranışı', () => {
         fixture.componentInstance.control.setValue('k');
         fixture.detectChanges();
         const clear = fixture.nativeElement.querySelector('.p-select-clear-icon, [data-pc-section="clearicon"]') as Element;
+
         expect(clear).not.toBeNull();
         clear.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         fixture.detectChanges();

@@ -424,6 +424,7 @@ function matchForUrl(groups: readonly MenuGroup[], url: string): { group: MenuGr
     const path = url.split(/[?#]/)[0];
     let best: { group: MenuGroup; entry: MenuEntry } | undefined;
     let bestLength = -1;
+
     for (const group of groups) {
         for (const entry of group.entries) {
             for (const route of entryRoutes(entry)) {
@@ -434,6 +435,7 @@ function matchForUrl(groups: readonly MenuGroup[], url: string): { group: MenuGr
             }
         }
     }
+
     return best;
 }
 
@@ -450,6 +452,7 @@ export function groupForUrl(groups: readonly MenuGroup[], url: string): MenuGrou
 /** Sayfa başlığı üstündeki kategori etiketi: girişin kendi kategorisi, yoksa grubun adı; menüde olmayan adres için `undefined`. */
 export function categoryForUrl(groups: readonly MenuGroup[], url: string): string | undefined {
     const match = matchForUrl(groups, url);
+
     return match?.entry.category ?? match?.group.label ?? match?.group.category;
 }
 
@@ -461,10 +464,13 @@ export function listLabelForUrl(url: string): string | undefined {
     const path = url.split(/[?#]/)[0];
     const entries = MENU_GROUPS.flatMap((g) => g.entries);
     const tab = entries.flatMap((e) => e.tabs ?? []).find((t) => t.route === path);
+
     if (tab) {
         return tab.listLabel ?? tab.label;
     }
+
     const cards = [...SETTINGS_SECTIONS, ...REPORT_SECTIONS].flatMap((s) => s.entries);
+
     return [...entries, ...cards, ...DEFINITION_ENTRIES].find((e) => e.route === path)?.label;
 }
 
@@ -487,6 +493,7 @@ export function menuLinkRoute(entry: MenuEntry, hasClaim: HasClaim): string {
 /** Giriş sonrası açılış sayfası: menüdeki ilk erişilebilir öğe (Bugün izni varsa Bugün). */
 export function firstAccessibleRoute(groups: readonly MenuGroup[], hasClaim: HasClaim): string | undefined {
     const first = visibleGroups(groups, hasClaim)[0]?.entries[0];
+
     return first && menuLinkRoute(first, hasClaim);
 }
 
@@ -499,12 +506,14 @@ export function tabsForUrl(groups: readonly MenuGroup[], url: string, hasClaim: 
     const entry = groups.flatMap((g) => g.entries).find((e) => e.tabs?.some((tab) => tab.route === path));
     const tabs = entry ? switchableTabs(entry, hasClaim) : [];
     const active = tabs.find((tab) => tab.route === path);
+
     return active ? { tabs, active } : undefined;
 }
 
 /** Öğenin aralarında geçiş yapılabilen sekmeleri: yetkili sekmeler, en az iki tane ise; değilse boş (sekme çubuğu ve alt sayfa paneli çıkmaz). */
 function switchableTabs(entry: MenuEntry, hasClaim: HasClaim): MenuTab[] {
     const tabs = entry.tabs ? visibleEntries(entry.tabs, hasClaim) : [];
+
     return tabs.length > 1 ? tabs : [];
 }
 
@@ -514,10 +523,13 @@ function switchableTabs(entry: MenuEntry, hasClaim: HasClaim): MenuTab[] {
  */
 export function flyoutTabsFor(entry: MenuEntry, url: string, hasClaim: HasClaim): { tabs: MenuTab[]; active?: MenuTab } | undefined {
     const tabs = switchableTabs(entry, hasClaim);
+
     if (!tabs.length) {
         return undefined;
     }
+
     const path = url.split(/[?#]/)[0];
     const active = tabs.filter((tab) => coversPath(path, tab.route)).sort((a, b) => b.route.length - a.route.length)[0];
+
     return { tabs, active };
 }

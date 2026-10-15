@@ -111,16 +111,21 @@ export class SelectClinicPage implements OnInit {
 
     onContinue(): void {
         const clinicId = this.selectedClinicId?.trim() ?? '';
+
         if (!clinicId) {
             return;
         }
+
         const selected = this.clinics().find((x) => x.id === clinicId) ?? null;
+
         if (!selected) {
             this.error.set(
                 'Seçilen klinik artık listede yok veya pasif. Lütfen sayfayı yenileyin veya listeden tekrar seçin.'
             );
+
             return;
         }
+
         this.submitting.set(true);
         this.error.set(null);
         this.auth
@@ -129,10 +134,13 @@ export class SelectClinicPage implements OnInit {
             .subscribe({
                 next: () => {
                     const inviteToken = this.inviteTokenQuery();
+
                     if (inviteToken) {
                         void this.router.navigate(['/join', inviteToken]);
+
                         return;
                     }
+
                     void this.router.navigateByUrl(this.safeReturnUrl());
                 },
                 error: (e: unknown) => {
@@ -143,9 +151,11 @@ export class SelectClinicPage implements OnInit {
 
     private loadClinicsAndBranch(): void {
         const fromLogin = this.clinicsFromLogin;
+
         if (fromLogin) {
             this.error.set(null);
             this.applyClinicsList(fromLogin);
+
             return;
         }
 
@@ -166,18 +176,24 @@ export class SelectClinicPage implements OnInit {
 
     private applyClinicsList(items: ClinicSummary[]): void {
         const selectable = filterClinicsForSelection(items);
+
         this.clinics.set(selectable);
         this.loading.set(false);
         const decision = this.auth.resolveClinicDecision(selectable);
+
         if (decision.kind === 'none') {
             this.error.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
+
             return;
         }
+
         if (decision.kind === 'single') {
             this.selectedClinicId = decision.clinic.id;
             this.onContinue();
+
             return;
         }
+
         this.selectedClinicId = selectable[0]?.id ?? null;
     }
 
@@ -194,52 +210,67 @@ export class SelectClinicPage implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return authFailureMessage(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }
 
 function clinicsFromNavigationState(nav: Navigation | null): ClinicSummary[] | null {
     const raw = nav?.extras?.state?.['clinics'];
+
     if (!Array.isArray(raw) || raw.length === 0) {
         return null;
     }
+
     const out: ClinicSummary[] = [];
+
     for (const item of raw) {
         if (!item || typeof item !== 'object') {
             return null;
         }
+
         const o = item as Record<string, unknown>;
         const id = o['id'];
         const name = o['name'];
+
         if (typeof id !== 'string' || typeof name !== 'string' || !id.trim() || !name.trim()) {
             return null;
         }
+
         const row: ClinicSummary = { id: id.trim(), name: name.trim() };
         const active = readClinicIsActiveFromState(o);
+
         if (active !== null) {
             row.isActive = active;
         }
+
         out.push(row);
     }
+
     return filterClinicsForSelection(out);
 }
 
 function readClinicIsActiveFromState(o: Record<string, unknown>): boolean | null {
     for (const k of ['isActive', 'IsActive', 'active', 'Active']) {
         const v = o[k];
+
         if (typeof v === 'boolean') {
             return v;
         }
+
         if (typeof v === 'string') {
             const t = v.trim().toLowerCase();
+
             if (t === 'true' || t === '1') {
                 return true;
             }
+
             if (t === 'false' || t === '0') {
                 return false;
             }
         }
     }
+
     return null;
 }
 

@@ -18,6 +18,7 @@ export function menuBadgeLabel(count: number | null | undefined): string | null 
     if (!count || count <= 0) {
         return null;
     }
+
     return count > MAX_BADGE_COUNT ? `${MAX_BADGE_COUNT}+` : String(count);
 }
 
@@ -54,10 +55,12 @@ export class MenuBadgeService {
 
     refresh(): void {
         const clinicId = this.auth.getClinicId()?.trim() || null;
+
         if (clinicId !== this.clinicId) {
             this.clinicId = clinicId;
             this.counts.set({ waitingVisits: null, requestedLabResults: null });
         }
+
         this.track(
             'waitingVisits',
             VISITS_READ_CLAIM,
@@ -72,10 +75,13 @@ export class MenuBadgeService {
 
     private track(key: MenuBadgeKey, claim: string, load: () => Observable<number>): void {
         this.inflight.get(key)?.unsubscribe();
+
         if (!this.auth.hasOperationClaim(claim)) {
             this.set(key, null);
+
             return;
         }
+
         this.inflight.set(
             key,
             load().subscribe({

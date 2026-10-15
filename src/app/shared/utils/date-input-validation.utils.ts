@@ -26,35 +26,42 @@ function yearRangeError(): ValidationErrors {
 
 function normalizeDateTimeLocalRaw(value: string): string {
     let s = value.trim();
+
     if (s.includes(' ') && !s.includes('T')) {
         s = s.replace(' ', 'T');
     }
+
     return s;
 }
 
 /** Boş değilse yıl tam 4 hane ve [1000, 9999] aralığında olmalı; takvim geçerli olmalı. */
 export function validateDateInputYearRange(value: string | null | undefined): ValidationErrors | null {
     const v = (value ?? '').toString().trim();
+
     if (v === '') {
         return null;
     }
 
     const match = /^(\d+)-(\d{2})-(\d{2})$/.exec(v);
+
     if (!match) {
         return yearRangeError();
     }
 
     const yearStr = match[1];
+
     if (yearStr.length !== 4) {
         return yearRangeError();
     }
 
     const y = Number(yearStr);
+
     if (!Number.isFinite(y) || y < MIN_YEAR || y > MAX_YEAR) {
         return yearRangeError();
     }
 
     const iso = dateOnlyInputToUtcIso(v);
+
     if (!iso) {
         return yearRangeError();
     }
@@ -65,12 +72,14 @@ export function validateDateInputYearRange(value: string | null | undefined): Va
 /** Boş değilse `datetime-local` yıl tam 4 hane ve parse edilebilir olmalı. */
 export function validateDateTimeLocalInputYearRange(value: string | null | undefined): ValidationErrors | null {
     const v = (value ?? '').toString().trim();
+
     if (v === '') {
         return null;
     }
 
     const normalized = normalizeDateTimeLocalRaw(v);
     const tIdx = normalized.indexOf('T');
+
     if (tIdx < 0) {
         return yearRangeError();
     }
@@ -78,6 +87,7 @@ export function validateDateTimeLocalInputYearRange(value: string | null | undef
     const datePart = normalized.slice(0, tIdx);
     const timePart = normalized.slice(tIdx + 1);
     const dateError = validateDateInputYearRange(datePart);
+
     if (dateError) {
         return dateError;
     }
@@ -87,6 +97,7 @@ export function validateDateTimeLocalInputYearRange(value: string | null | undef
     }
 
     const iso = fromIstanbulDateTimeLocalInputToUtcIso(normalized);
+
     if (!iso) {
         return yearRangeError();
     }
@@ -107,35 +118,43 @@ export function dateTimeYearRangeValidator(): ValidatorFn {
 /** Mevcut iş kuralı min ile taban min birleştirilir (daha kısıtlayıcı olan). */
 export function effectiveDateInputMin(existingMin?: string | null): string {
     const existing = existingMin?.trim() ?? '';
+
     if (!existing) {
         return DATE_INPUT_MIN;
     }
+
     return existing >= DATE_INPUT_MIN ? existing : DATE_INPUT_MIN;
 }
 
 /** Mevcut iş kuralı max ile üst sınır birleştirilir (9999'u aşmaz). */
 export function effectiveDateInputMax(existingMax?: string | null): string {
     const existing = existingMax?.trim() ?? '';
+
     if (!existing) {
         return DATE_INPUT_MAX;
     }
+
     return existing <= DATE_INPUT_MAX ? existing : DATE_INPUT_MAX;
 }
 
 /** Mevcut iş kuralı min ile taban min birleştirilir (datetime-local). */
 export function effectiveDateTimeLocalInputMin(existingMin?: string | null): string {
     const existing = existingMin?.trim() ?? '';
+
     if (!existing) {
         return DATETIME_LOCAL_INPUT_MIN;
     }
+
     return existing >= DATETIME_LOCAL_INPUT_MIN ? existing : DATETIME_LOCAL_INPUT_MIN;
 }
 
 /** Mevcut iş kuralı max ile üst sınır birleştirilir (datetime-local). */
 export function effectiveDateTimeLocalInputMax(existingMax?: string | null): string {
     const existing = existingMax?.trim() ?? '';
+
     if (!existing) {
         return DATETIME_LOCAL_INPUT_MAX;
     }
+
     return existing <= DATETIME_LOCAL_INPUT_MAX ? existing : DATETIME_LOCAL_INPUT_MAX;
 }

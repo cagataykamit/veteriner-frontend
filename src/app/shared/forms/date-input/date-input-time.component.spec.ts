@@ -30,6 +30,7 @@ describe('DateInputComponent — saat alanı (klinik çalışma saatleri)', () =
         await wait(50);
         fixture.detectChanges();
         const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
         expect(input).not.toBeNull();
         expect(input.value).toBe('09:30');
     });

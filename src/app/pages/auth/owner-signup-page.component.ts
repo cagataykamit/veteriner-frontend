@@ -212,6 +212,7 @@ export class OwnerSignupPageComponent implements OnInit {
             if (this.successResult()) {
                 return;
             }
+
             this.selectedPlan.set(resolveSignupPlan(q.get('plan')));
         });
     }
@@ -220,6 +221,7 @@ export class OwnerSignupPageComponent implements OnInit {
         if (this.submitting()) {
             return;
         }
+
         this.formError.set(null);
         this.passwordFieldError.set(null);
 
@@ -233,15 +235,19 @@ export class OwnerSignupPageComponent implements OnInit {
 
         if (!tenantName || !clinicName || !clinicCity || !email || !password) {
             this.formError.set('Tüm zorunlu alanları doldurun.');
+
             if (!password) {
                 this.passwordFieldError.set(validateStrongPasswordValue(''));
             }
+
             return;
         }
 
         const passwordPolicyError = validateStrongPasswordValue(password);
+
         if (passwordPolicyError) {
             this.passwordFieldError.set(passwordPolicyError);
+
             return;
         }
 
@@ -275,6 +281,7 @@ export class OwnerSignupPageComponent implements OnInit {
 
     goToLogin(): void {
         const email = this.loginEmailAfterSuccess().trim();
+
         void this.router.navigate(['/auth/login'], {
             queryParams: {
                 registered: '1',

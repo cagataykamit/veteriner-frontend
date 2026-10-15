@@ -113,6 +113,7 @@ export class ClientSearchComponent implements ControlValueAccessor {
                     this.search.search(term).pipe(
                         catchError((e: unknown) => {
                             this.searchError.set(panelHttpFailureMessage(e, 'Müşteri araması yapılamadı.'));
+
                             return of([] as ClientSearchResultVm[]);
                         })
                     )
@@ -131,6 +132,7 @@ export class ClientSearchComponent implements ControlValueAccessor {
     onModelChange(value: ClientSearchResultVm | string | null): void {
         this.model.set(value);
         const id = value !== null && typeof value === 'object' ? value.id : '';
+
         if (id !== this.selectedId) {
             this.selectedId = id;
             this.onChange(id);
@@ -146,14 +148,19 @@ export class ClientSearchComponent implements ControlValueAccessor {
 
     writeValue(id: string | null): void {
         const value = (id ?? '').trim();
+
         this.selectedId = value;
+
         if (!value) {
             this.model.set(null);
+
             return;
         }
+
         if (this.model() !== null && typeof this.model() === 'object' && (this.model() as ClientSearchResultVm).id === value) {
             return;
         }
+
         this.search.getById(value).subscribe({
             next: (c) => {
                 if (this.selectedId === value) {
