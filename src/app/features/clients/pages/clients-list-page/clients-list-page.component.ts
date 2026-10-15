@@ -187,10 +187,12 @@ export class ClientsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch());
     }
@@ -222,8 +224,10 @@ export class ClientsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -233,10 +237,12 @@ export class ClientsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch());
     }
@@ -245,6 +251,7 @@ export class ClientsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -252,19 +259,23 @@ export class ClientsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch());
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch());
     }
 
     private loadFromServer(page: number, pageSize: number, search: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -298,25 +309,32 @@ export class ClientsListPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(CLIENTS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<ClientsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(CLIENTS_LIST_STATE_KEY);
+
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.activeSearch.set(this.searchInput.trim());
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(CLIENTS_LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -327,6 +345,7 @@ export class ClientsListPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(CLIENTS_LIST_STATE_KEY, JSON.stringify(state));
     }
 

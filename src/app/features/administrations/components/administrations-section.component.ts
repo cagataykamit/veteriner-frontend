@@ -161,6 +161,7 @@ export class AdministrationsSectionComponent {
         effect(() => {
             this.treatmentId();
             this.examinationId();
+
             if (this.canRead) {
                 untracked(() => this.reload());
             }
@@ -208,6 +209,7 @@ export class AdministrationsSectionComponent {
 
     onSaved(result: AdministrationCreateResultVm): void {
         const notice = administrationSavedNotice(result, 'Uygulama');
+
         this.notice.set(notice.text);
         this.noticeIsWarning.set(notice.warn);
         this.reload();

@@ -64,6 +64,7 @@ describe('ChargesListPageComponent', () => {
     it('satırı TRY biçimiyle gösterir (birim fiyat ve tutar)', async () => {
         await setup();
         const text = fixture.nativeElement.textContent as string;
+
         expect(text).toContain('Genel muayene');
         expect(text).toContain('Ali Veli');
         expect(text).toContain('375,50');
@@ -73,6 +74,7 @@ describe('ChargesListPageComponent', () => {
     it('Ödenen ve Kalan sütunları: kısmi ödemede kalan tutar gösterilir', async () => {
         await setup();
         const text = fixture.nativeElement.textContent as string;
+
         expect(text).toContain('Ödenen');
         expect(text).toContain('Kalan');
         expect(text).toContain('₺200,00');
@@ -95,6 +97,7 @@ describe('ChargesListPageComponent', () => {
         claims.add('Charges.Create');
         await setup();
         const link = fixture.nativeElement.querySelector('a[href="/panel/charges/new"]');
+
         expect(link).not.toBeNull();
     });
 
@@ -129,8 +132,10 @@ describe('ChargesListPageComponent', () => {
     it('Charges.Correct varsa Düzelt ve İptal et yalnız simge olarak görünür; erişilebilir ad ve ipucu korunur', async () => {
         claims.add('Charges.Correct');
         await setup();
+
         for (const label of ['Düzelt', 'İptal et']) {
             const button = actionButton(label);
+
             expect(button).not.toBeNull();
             expect(button!.textContent!.trim()).toBe('');
             expect(button!.closest('[title]')?.getAttribute('title')).toBe(label);
@@ -141,6 +146,7 @@ describe('ChargesListPageComponent', () => {
         claims.add('Charges.Correct');
         await setup();
         const cmp = fixture.componentInstance;
+
         actionButton('Düzelt')!.click();
         expect(cmp.correctionVisible).toBeTrue();
         expect(cmp.actionTarget()).toEqual(row);
@@ -159,10 +165,13 @@ describe('ChargesListPageComponent', () => {
 
     it('uzun müşteri, hayvan ve açıklama tek satırda kesilir; tam metin ipucunda kalır', async () => {
         const long = { ...row, clientName: 'Ayşe Gülizar Karamanoğlu Yılmaz', petName: 'Prenses Minnoş Pamukçuk', description: 'Kapsamlı genel muayene ve kan tahlili' };
+
         charges.getCharges.and.returnValue(of(page([long])));
         await setup();
+
         for (const text of [long.clientName, long.petName, long.description]) {
             const el = fixture.nativeElement.querySelector(`[title="${text}"]`) as HTMLElement;
+
             expect(el).withContext(text).not.toBeNull();
             expect(el.classList).toContain('truncate');
             expect(el.textContent!.trim()).toBe(text);
@@ -172,6 +181,7 @@ describe('ChargesListPageComponent', () => {
     it('müşteri süzgeci kısa yer tutucuyla ortak süzgeç alanında gösterilir', async () => {
         await setup();
         const input = fixture.nativeElement.querySelector('#chargeClientFilter') as HTMLInputElement;
+
         expect(input.getAttribute('placeholder')).toBe('Müşteri ara…');
         expect(input.closest('app-filter-field')).not.toBeNull();
     });
@@ -180,6 +190,7 @@ describe('ChargesListPageComponent', () => {
         claims.add('Payments.Create');
         await setup();
         const link = fixture.nativeElement.querySelector('a[href^="/panel/payments/new"]') as HTMLAnchorElement;
+
         expect(link.textContent).toContain('Ödeme al');
         expect(link.getAttribute('href')).toContain('clientId=cl1');
         expect(link.getAttribute('href')).toContain('chargeId=ch1');
@@ -205,10 +216,12 @@ describe('ChargesListPageComponent', () => {
         charges.voidCharge.and.returnValue(of(void 0));
         await setup();
         const cmp = fixture.componentInstance;
+
         cmp.openVoid(row);
         await firstValueFrom(cmp.voidCharge('Yanlış girildi'));
         expect(charges.voidCharge).toHaveBeenCalledOnceWith('ch1', 'Yanlış girildi');
         const before = charges.getCharges.calls.count();
+
         cmp.reload();
         expect(charges.getCharges.calls.count()).toBe(before + 1);
     });

@@ -61,6 +61,7 @@ describe('ExaminationAddendumDialogComponent', () => {
 
     it('gönderim sürerken tekrar tıklama ikinci ek not oluşturmaz (backend idempotent değil)', () => {
         const pending = new Subject<ExaminationAddendumVm>();
+
         service.addAddendum.and.returnValue(pending);
         fill('Hatalı kilo', 'Doğru kilo 12,4');
 

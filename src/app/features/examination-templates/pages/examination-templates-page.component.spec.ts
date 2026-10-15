@@ -75,6 +75,7 @@ describe('ExaminationTemplatesPageComponent', () => {
         await create();
         expect(templates.list).toHaveBeenCalledWith(jasmine.objectContaining({ includeInactive: true, page: 1 }));
         const rows = rowTexts();
+
         expect(rows[0]).toContain('Sistem');
         expect(rows[0]).toContain('Salt okunur');
         expect(rows[0]).toContain('Kopyala ve düzenle');
@@ -110,6 +111,7 @@ describe('ExaminationTemplatesPageComponent', () => {
     it('sistem şablonu düzenlenemez ve pasifleştirilemez; kopyalama düzenleyiciyi copy kipinde açar', async () => {
         await create();
         const system = tpl('s1', 'Rutin muayene', { isSystem: true });
+
         cmp.openEditor('edit', system);
         expect(cmp.editorVisible()).toBeFalse();
         cmp.setActive(system, false);
@@ -123,6 +125,7 @@ describe('ExaminationTemplatesPageComponent', () => {
     it('düzenleyici çakışması mesaj gösterir ve listeyi yeniler', async () => {
         await create();
         const before = templates.list.calls.count();
+
         cmp.onEditorConflict('Şablon bu arada değişmiş; liste yenilendi, tekrar deneyin.');
         expect(cmp.listActionError()).toContain('değişmiş');
         expect(templates.list.calls.count()).toBe(before + 1);

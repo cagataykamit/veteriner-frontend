@@ -217,14 +217,18 @@ export class ExaminationPatientContextComponent {
             const petId = this.petId()?.trim() ?? '';
             const excludeId = this.excludeExaminationId()?.trim() ?? '';
             const seq = ++this.seq;
+
             this.summary.set(null);
             this.overdue.set(null);
             this.treatments.set(null);
             this.recentExams.set(null);
+
             if (!petId) {
                 return;
             }
+
             this.load(seq, this.summary, this.petsService.getPetSummary(petId));
+
             if (this.canReadVaccinations) {
                 this.load(
                     seq,
@@ -233,9 +237,11 @@ export class ExaminationPatientContextComponent {
                     (r) => ({ items: r.items, total: r.totalItems })
                 );
             }
+
             if (this.canReadTreatments) {
                 this.load(seq, this.treatments, this.treatmentsService.getTreatments({ petId, page: 1, pageSize: TREATMENT_FETCH_SIZE }), (r) => r.items);
             }
+
             if (this.canReadExaminations) {
                 this.load(seq, this.recentExams, this.related.loadSiblingExaminationsForPet(petId, excludeId));
             }

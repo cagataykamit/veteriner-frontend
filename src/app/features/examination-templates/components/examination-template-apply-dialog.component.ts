@@ -186,14 +186,17 @@ export class ExaminationTemplateApplyDialogComponent {
 
     readonly textPreview = computed(() => {
         const t = this.selected();
+
         return t ? TEXT_PREVIEW.map((s) => ({ label: s.label, text: t[s.field]?.trim() ?? '' })).filter((s) => !!s.text) : [];
     });
     readonly inactiveLineNames = computed(() => {
         const t = this.selected();
+
         return t ? templateInactiveLineNames(t) : [];
     });
     readonly reapplyWarning = computed(() => {
         const t = this.selected();
+
         return !!t && t.lines.length > 0 && this.appliedTemplateIds().has(t.id);
     });
     readonly canSubmit = computed(() => !!this.selected() && !!this.rowVersion() && !this.submitting() && this.inactiveLineNames().length === 0);
@@ -259,9 +262,11 @@ export class ExaminationTemplateApplyDialogComponent {
     onSubmit(): void {
         const template = this.selected();
         const rowVersion = this.rowVersion();
+
         if (!template || !rowVersion || !this.canSubmit()) {
             return;
         }
+
         this.submitting.set(true);
         this.submitError.set(null);
         this.templatesService.apply(this.examinationId(), template.id, rowVersion).subscribe({
@@ -273,17 +278,24 @@ export class ExaminationTemplateApplyDialogComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (!(e instanceof ExaminationTemplateError)) {
                     this.submitError.set(e instanceof Error ? e.message : 'Şablon uygulanamadı.');
+
                     return;
                 }
+
                 const message = e.withProductName((id) => template.lines.find((l) => l.productId === id)?.productName);
+
                 if (e.code === EXAMINATION_FINALIZED_CODE) {
                     this.visible.set(false);
                     this.stale.emit(message);
+
                     return;
                 }
+
                 this.submitError.set(message);
+
                 if (e.code === EXAMINATION_CONCURRENCY_CONFLICT_CODE) {
                     this.stale.emit(message);
                 } else if (e.code === 'ExaminationTemplates.Inactive' || e.code === 'ExaminationTemplates.NotFound') {

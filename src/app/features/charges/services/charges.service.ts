@@ -30,6 +30,7 @@ export class ChargesService {
     /** Aktif klinik kapsamında ücret listesi (kapsamsız kiracı geneli liste yoktur). */
     getCharges(query: ChargesListQuery = {}): Observable<ChargesPagedVm> {
         const clinicId = query.clinicId?.trim() || this.auth.getClinicId()?.trim() || undefined;
+
         return this.api
             .get<ChargePagedResultDto>(ApiEndpoints.charges.list(), chargesQueryToHttpParams({ ...query, clinicId }))
             .pipe(map(mapPagedChargesToVm), toUserError('Ücret listesi yüklenemedi.'));
@@ -38,9 +39,11 @@ export class ChargesService {
     /** 201 yeni ücret; 200 aynı `requestId` ile daha önce kaydedilmiş ücret (`created: false`, hata değildir). */
     createCharge(req: CreateChargeRequest): Observable<ChargeCreateResultVm> {
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             return throwError(() => new Error('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         return this.api
             .post<ChargeCreateResultDto>(ApiEndpoints.charges.list(), mapCreateChargeToApiBody(clinicId, req))
             .pipe(map(mapChargeCreateResultDtoToVm), toUserError('Ücret kaydedilemedi.'));

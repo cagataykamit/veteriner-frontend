@@ -51,6 +51,7 @@ export class HospitalizationsService {
             clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
         };
         const params = hospitalizationsQueryToHttpParams(merged);
+
         return this.api
             .get<HospitalizationListItemDtoPagedResult>(ApiEndpoints.hospitalizations.list(), params)
             .pipe(
@@ -74,10 +75,12 @@ export class HospitalizationsService {
         return this.api.get<HospitalizationDetailDto>(ApiEndpoints.hospitalizations.byId(id)).pipe(
             map((dto) => {
                 const vm = mapHospitalizationDetailDtoToEditVm(dto);
+
                 if (!vm.rowVersion) {
                     // Sürümsüz kayıt eşzamanlılık korumasız yazılır; sürüm yoksa düzenlemeye izin verme.
                     throw new Error('Sunucu kayıt sürümünü (rowVersion) döndürmedi; düzenleme yapılamaz.');
                 }
+
                 return vm;
             }),
             catchError((err: unknown) =>
@@ -94,35 +97,44 @@ export class HospitalizationsService {
 
     createHospitalization(payload: CreateHospitalizationRequest): Observable<{ id: string }> {
         let body: unknown;
+
         try {
             body = mapCreateHospitalizationToApiBody(payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_CLINIC_ID_REQUIRED') {
                 return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
+
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_PET_ID_REQUIRED') {
                 return throwError(() => new Error('Hasta seçimi zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_ADMITTED_AT_REQUIRED') {
                 return throwError(() => new Error('Yatış tarihi / saati zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_REASON_REQUIRED') {
                 return throwError(() => new Error('Yatış nedeni zorunludur.'));
             }
+
             return throwError(() => (e instanceof Error ? e : new Error('Kayıt oluşturulamadı.')));
         }
+
         return this.api.post<unknown>(ApiEndpoints.hospitalizations.list(), body).pipe(
             map((raw) => {
                 const hid = extractCreatedHospitalizationIdFromPostResponse(raw);
+
                 if (!hid) {
                     throw new Error('HOSPITALIZATION_CREATE_NO_ID_IN_RESPONSE');
                 }
+
                 return { id: hid };
             }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 if (err instanceof Error && err.message === 'HOSPITALIZATION_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(
                         () =>
@@ -131,6 +143,7 @@ export class HospitalizationsService {
                             )
                     );
                 }
+
                 return throwError(() => (err instanceof Error ? err : new Error('Kayıt oluşturulamadı.')));
             })
         );
@@ -139,29 +152,36 @@ export class HospitalizationsService {
     /** PUT; `rowVersion` GET'ten alınan sürümdür. Hata, kodu ayrıştırabilmek için ham `HttpErrorResponse` olarak iletilir. */
     updateHospitalization(id: string, payload: CreateHospitalizationRequest): Observable<HospitalizationWriteResult> {
         let body: unknown;
+
         try {
             body = mapCreateHospitalizationToApiBody(payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_CLINIC_ID_REQUIRED') {
                 return throwError(() => new Error('Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.'));
             }
+
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_PET_ID_REQUIRED') {
                 return throwError(() => new Error('Hasta seçimi zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_ADMITTED_AT_REQUIRED') {
                 return throwError(() => new Error('Yatış tarihi / saati zorunludur.'));
             }
+
             if (e instanceof Error && e.message === 'HOSPITALIZATION_WRITE_REASON_REQUIRED') {
                 return throwError(() => new Error('Yatış nedeni zorunludur.'));
             }
+
             return throwError(() => (e instanceof Error ? e : new Error('Kayıt güncellenemedi.')));
         }
+
         return this.api.put<HospitalizationWriteResultDto>(ApiEndpoints.hospitalizations.byId(id), body).pipe(
             map((dto) => mapHospitalizationWriteResultDto(dto, id)),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 return throwError(() => (err instanceof Error ? err : new Error('Kayıt güncellenemedi.')));
             })
         );
@@ -169,20 +189,24 @@ export class HospitalizationsService {
 
     dischargeHospitalization(id: string, payload: DischargeHospitalizationRequest): Observable<HospitalizationWriteResult> {
         let body: unknown;
+
         try {
             body = mapDischargeHospitalizationToApiBody(payload);
         } catch (e: unknown) {
             if (e instanceof Error && e.message === 'HOSPITALIZATION_DISCHARGE_DATE_REQUIRED') {
                 return throwError(() => new Error('Taburcu tarihi / saati zorunludur.'));
             }
+
             return throwError(() => (e instanceof Error ? e : new Error('Taburcu işlemi yapılamadı.')));
         }
+
         return this.api.post<HospitalizationWriteResultDto>(ApiEndpoints.hospitalizations.discharge(id), body).pipe(
             map((dto) => mapHospitalizationWriteResultDto(dto, id)),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 return throwError(() => (err instanceof Error ? err : new Error('Taburcu işlemi yapılamadı.')));
             })
         );
@@ -193,38 +217,51 @@ function extractCreatedHospitalizationIdFromPostResponse(body: unknown): string 
     if (body == null) {
         return null;
     }
+
     if (typeof body === 'string') {
         return body.trim() || null;
     }
+
     if (typeof body !== 'object') {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const idKeys = ['id', 'Id', 'hospitalizationId', 'HospitalizationId'];
+
     for (const k of idKeys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
+
         if (typeof v === 'number' && !Number.isNaN(v)) {
             return String(v);
         }
     }
+
     const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'hospitalization', 'Hospitalization'];
+
     for (const w of wrappers) {
         const inner = o[w];
+
         if (inner && typeof inner === 'object') {
             const n = inner as Record<string, unknown>;
+
             for (const k of idKeys) {
                 const v = n[k];
+
                 if (typeof v === 'string' && v.trim()) {
                     return v.trim();
                 }
+
                 if (typeof v === 'number' && !Number.isNaN(v)) {
                     return String(v);
                 }
             }
         }
     }
+
     return null;
 }

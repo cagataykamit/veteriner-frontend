@@ -40,6 +40,7 @@ describe('examination-template.utils', () => {
 
     it('uygulama özeti metin, stok ve hizmet sonucunu söyler', () => {
         const withText = template({ visitReason: 'Kaşıntı', lines: [line('a')] });
+
         expect(
             templateApplySummary(
                 withText,

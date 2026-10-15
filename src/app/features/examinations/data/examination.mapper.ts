@@ -46,6 +46,7 @@ function finiteNumberOrNull(v: unknown): number | null {
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
+
     return t ? t : null;
 }
 
@@ -64,33 +65,41 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: ExaminationListItemDto | ExaminationDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readNestedName(dto: Record<string, unknown>, objectKeys: string[], nameKeys: string[]): string | null {
     for (const ok of objectKeys) {
         const inner = dto[ok];
+
         if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
             const io = inner as Record<string, unknown>;
+
             for (const nk of nameKeys) {
                 const v = io[nk];
+
                 if (typeof v === 'string' && v.trim()) {
                     return v.trim();
                 }
             }
         }
     }
+
     return null;
 }
 
@@ -113,6 +122,7 @@ function rawClientName(dto: ExaminationListItemDto | ExaminationDetailDto): stri
         'fullName',
         'FullName'
     ]);
+
     return firstTrimmed(
         dto.clientName,
         dto.ownerName,
@@ -136,6 +146,7 @@ function rawPetName(dto: ExaminationListItemDto | ExaminationDetailDto): string 
         'fullName',
         'FullName'
     ]);
+
     return firstTrimmed(
         dto.petName,
         dto.animalName,
@@ -263,24 +274,30 @@ export function mapExaminationDetailDtoToEditVm(dto: ExaminationDetailDto): Exam
 export function mapExaminationWriteResultDtoToVm(raw: unknown): ExaminationWriteResultVm | null {
     if (typeof raw === 'string') {
         const id = raw.trim();
+
         return id ? { id, rowVersion: null } : null;
     }
+
     if (!raw || typeof raw !== 'object') {
         return null;
     }
+
     const o = raw as Partial<ExaminationWriteResultDto> & Record<string, unknown>;
     const id = firstTrimmed(
         typeof o.id === 'string' ? o.id : null,
         typeof o['Id'] === 'string' ? (o['Id'] as string) : null,
         typeof o['examinationId'] === 'string' ? (o['examinationId'] as string) : null
     );
+
     if (!id) {
         return null;
     }
+
     const rv = firstTrimmed(
         typeof o.rowVersion === 'string' ? o.rowVersion : null,
         typeof o['RowVersion'] === 'string' ? (o['RowVersion'] as string) : null
     );
+
     return { id, rowVersion: rv };
 }
 
@@ -292,6 +309,7 @@ export function mapPagedExaminationsToVm(result: ExaminationListItemDtoPagedResu
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapExaminationListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -303,6 +321,7 @@ export function mapPagedExaminationsToVm(result: ExaminationListItemDtoPagedResu
 
 function relatedSafeTrim(v: string | null | undefined): string | null {
     const t = v?.trim();
+
     return t ? t : null;
 }
 
@@ -310,20 +329,24 @@ function relatedHospitalizationIsActive(dto: ExaminationRelatedHospitalizationIt
     if (dto.isActive === true) {
         return true;
     }
+
     if (dto.isActive === false) {
         return false;
     }
+
     return discharged == null;
 }
 
 function relatedVaccinationStatus(v: string | null | undefined): ExaminationRelatedVaccinationStatus {
     const s = v?.trim().toLowerCase();
+
     return s === 'cancelled' ? 'Cancelled' : s === 'scheduled' ? 'Scheduled' : 'Applied';
 }
 
 /** GET /examinations/{id}/related-summary → VM. */
 export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSummaryDto): ExaminationRelatedSummaryVm {
     const examinationId = dto.examinationId?.trim() ?? '';
+
     return {
         examinationId,
         petId: dto.petId?.trim() ? dto.petId.trim() : null,
@@ -333,9 +356,11 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
         treatments: (dto.treatments ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 return {
                     id,
                     treatmentDateUtc: relatedSafeTrim(x.treatmentDateUtc),
@@ -348,9 +373,11 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
         prescriptions: (dto.prescriptions ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 return {
                     id,
                     prescribedAtUtc: relatedSafeTrim(x.prescribedAtUtc),
@@ -364,9 +391,11 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
         labResults: (dto.labResults ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 return {
                     id,
                     resultDateUtc: relatedSafeTrim(x.resultDateUtc),
@@ -382,11 +411,14 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
         hospitalizations: (dto.hospitalizations ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 const dischargedAtUtc = relatedSafeTrim(x.dischargedAtUtc);
                 const isActive = relatedHospitalizationIsActive(x, dischargedAtUtc);
+
                 return {
                     id,
                     admittedAtUtc: relatedSafeTrim(x.admittedAtUtc),
@@ -401,9 +433,11 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
         vaccinations: (dto.vaccinations ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 return {
                     id,
                     vaccineName: x.vaccineName?.trim() ? x.vaccineName.trim() : 'Aşı kaydı',
@@ -418,12 +452,15 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
         payments: (dto.payments ?? [])
             .map((x) => {
                 const id = x.id?.trim();
+
                 if (!id) {
                     return null;
                 }
+
                 const amount = x.amount;
                 const num =
                     amount != null && typeof amount === 'number' && !Number.isNaN(amount) ? amount : null;
+
                 return {
                     id,
                     paidAtUtc: relatedSafeTrim(x.paidAtUtc),
@@ -448,36 +485,48 @@ export function examinationsQueryToHttpParams(query: ExaminationsListQuery): Htt
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+
     if (query.clientId?.trim()) {
         p = p.set('ClientId', query.clientId.trim());
     }
+
     if (query.appointmentId?.trim()) {
         p = p.set('appointmentId', query.appointmentId.trim());
     }
+
     const range = istanbulDateRangeToUtcIso(query.fromDate, query.toDate);
+
     if (range.fromUtc) {
         p = p.set('dateFromUtc', range.fromUtc);
     }
+
     if (range.toUtc) {
         p = p.set('dateToUtc', range.toUtc);
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     return p;
 }
 
@@ -549,29 +598,39 @@ export function mapUpdateExaminationToApiBody(req: UpdateExaminationRequest): Ex
         rowVersion: req.rowVersion
     };
     const appt = trimmedOrNull(req.appointmentId);
+
     if (appt) {
         body.appointmentId = appt;
     }
+
     if (req.clearVitals) {
         body.clearVitals = true;
+
         return body;
     }
+
     if (req.weightKg != null) {
         body.weightKg = req.weightKg;
     }
+
     if (req.temperatureC != null) {
         body.temperatureC = req.temperatureC;
     }
+
     if (req.heartRateBpm != null) {
         body.heartRateBpm = req.heartRateBpm;
     }
+
     if (req.respiratoryRatePerMin != null) {
         body.respiratoryRatePerMin = req.respiratoryRatePerMin;
     }
+
     const measuredAt = hasAnyVital(req) ? trimmedOrNull(req.vitalsMeasuredAtUtc) : null;
+
     if (measuredAt) {
         body.vitalsMeasuredAtUtc = measuredAt;
     }
+
     return body;
 }
 
@@ -591,14 +650,17 @@ function vitalsFromForm(
     };
     let measured: string | null = null;
     const local = f.vitalsMeasuredAtLocal?.trim() ?? '';
+
     if (local) {
         const orig = originalVitalsMeasuredAtUtc?.trim() ?? '';
+
         // Değişmediyse kayıtlı anı aynen koru (datetime-local saniyeyi keser).
         measured =
             orig && toIstanbulDateTimeLocalInputValue(orig) === local
                 ? orig
                 : fromIstanbulDateTimeLocalInputToUtcIso(local);
     }
+
     return { ...vitals, vitalsMeasuredAtUtc: measured };
 }
 
@@ -608,10 +670,13 @@ export function mapExaminationFormToCreateRequest(
     ctx: { clinicId: string; petId: string; appointmentId?: string | null; visitId?: string | null }
 ): CreateExaminationRequest | null {
     const examinedAtUtc = fromIstanbulDateAndTimeToUtcIso(f.examinationDate, f.examinationTime);
+
     if (!examinedAtUtc) {
         return null;
     }
+
     const visitId = trimmedOrNull(ctx.visitId);
+
     return {
         // Visit bağlamında klinik, hayvan ve randevu sunucuda Visit'ten türetilir; çakışabilecek değer iletilmez.
         ...(visitId
@@ -641,10 +706,13 @@ export function mapExaminationFormToUpdateRequest(
     >
 ): UpdateExaminationRequest | null {
     const examinedAtUtc = fromIstanbulDateAndTimeToUtcIso(f.examinationDate, f.examinationTime);
+
     if (!examinedAtUtc) {
         return null;
     }
+
     const vitals = vitalsFromForm(f, current.vitalsMeasuredAtUtc);
+
     return {
         clinicId: current.clinicId,
         petId: current.petId,

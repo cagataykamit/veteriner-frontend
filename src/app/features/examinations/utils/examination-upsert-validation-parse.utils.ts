@@ -69,6 +69,7 @@ const FIELD_MAP: Record<string, ExaminationUpsertFormFieldKey> = {
 
 export function parseExaminationUpsertHttpError(err: HttpErrorResponse): ParsedExaminationUpsertHttpError {
     const code = problemCodeFromHttpError(err);
+
     // 409 yalnızca eşzamanlılık çakışması içindir; başka 409 kodları genel hata yoluna düşer.
     if (err.status === 409 && code === EXAMINATION_CONCURRENCY_CONFLICT_CODE) {
         return {
@@ -78,10 +79,12 @@ export function parseExaminationUpsertHttpError(err: HttpErrorResponse): ParsedE
             isConcurrencyConflict: true
         };
     }
+
     const parsed = parseValidationHttpError<ExaminationUpsertFormFieldKey>(err, {
         fieldMap: FIELD_MAP,
         nonFieldMessage: (e) => messageFromHttpError(e, FALLBACK_GENERIC),
         fieldErrorsSummaryMessage: SUMMARY_FIELD_ERRORS
     });
+
     return { ...parsed, code, isConcurrencyConflict: false };
 }

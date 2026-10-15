@@ -118,6 +118,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
 
         expect(service.updateExamination).toHaveBeenCalledTimes(1);
         const [id, payload] = service.updateExamination.calls.mostRecent().args;
+
         expect(id).toBe('e1');
         expect(payload.rowVersion).toBe('V1');
         expect(payload.appointmentId).toBe('appt-1');
@@ -143,6 +144,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
 
         fixture.detectChanges();
         const link = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('a[target="_blank"]');
+
         expect(link).not.toBeNull();
         expect(link!.getAttribute('href')).toContain('/panel/examinations/e1');
     });
@@ -192,6 +194,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         cmp.onSubmit();
 
         const payload = service.updateExamination.calls.mostRecent().args[1];
+
         expect(payload.plan).toBe('');
         expect(payload.notes).toBe('eski not');
     });
@@ -204,6 +207,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         cmp.onSubmit();
 
         const first = service.updateExamination.calls.argsFor(0)[1];
+
         expect(first.clearVitals).toBeTrue();
         expect(first.weightKg).toBeNull();
     });
@@ -227,6 +231,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         cmp.onSubmit();
 
         const payload = service.updateExamination.calls.mostRecent().args[1];
+
         expect(payload.clearVitals).toBeFalse();
         expect(payload.weightKg).toBe(5);
     });
@@ -241,6 +246,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
 
     it('kayıt sürerken ikinci gönderim yoksayılır; başarıdan sonra da yeniden gönderilmez', () => {
         const inFlight = new Subject<{ id: string; rowVersion: string }>();
+
         service.updateExamination.and.returnValue(inFlight);
         typeNote('x');
         cmp.onSubmit();
@@ -273,10 +279,12 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         const route = TestBed.inject(ActivatedRoute) as unknown as {
             snapshot: { paramMap: unknown; routeConfig: { path: string } };
         };
+
         route.snapshot.paramMap = convertToParamMap({});
         route.snapshot.routeConfig = { path: 'new' };
         service.createExamination.and.returnValue(of({ id: 'n1', rowVersion: 'A' }));
         const created = TestBed.createComponent(ExaminationWorkspacePageComponent);
+
         created.detectChanges();
         const c = created.componentInstance;
 
@@ -336,6 +344,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         fixture.detectChanges();
 
         const el = fixture.nativeElement as HTMLElement;
+
         expect(el.querySelectorAll('[data-testid="clinical-term-picker"]').length).toBe(2);
         expect(el.querySelector('#visitReasonTerm')).not.toBeNull();
         expect(el.querySelector('#assessmentTerm')).not.toBeNull();

@@ -116,6 +116,7 @@ export class ClientPetsPanelComponent {
 
     readonly okRows = computed(() => {
         const r = this.rows();
+
         return r?.state === 'ok' ? r.data : [];
     });
     readonly deceasedCount = computed(() => this.okRows().filter((r) => r.pet.status === 'Deceased').length);
@@ -126,6 +127,7 @@ export class ClientPetsPanelComponent {
 
     identity(row: ClientPetRow): string {
         const filled = (v: string | null | undefined): v is string => !!v && !!v.trim() && v.trim() !== '—';
+
         return [row.pet.speciesName, row.pet.breed, row.pet.colorName].filter(filled).join(' · ');
     }
 

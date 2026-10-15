@@ -25,6 +25,7 @@ describe('ClientKvkkFormPageComponent', () => {
     let clinicId: string | null;
 
     const el = () => fixture.nativeElement as HTMLElement;
+
     const create = (claims: string[] = []) => {
         TestBed.configureTestingModule({
             imports: [ClientKvkkFormPageComponent],

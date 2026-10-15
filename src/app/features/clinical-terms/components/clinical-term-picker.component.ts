@@ -150,6 +150,7 @@ export class ClinicalTermPickerComponent {
     /** Yalnız aranmış, sınır içindeki bir metin eklenebilir; salt okunur kiracıda yazma yok. */
     canAdd(): boolean {
         const name = this.lastQuery().trim();
+
         return this.canCreate && !this.ro.mutationBlocked() && !!name && name.length <= CLINICAL_TERM_NAME_MAX;
     }
 
@@ -159,6 +160,7 @@ export class ClinicalTermPickerComponent {
 
     onComplete(event: AutoCompleteCompleteEvent): void {
         const term = event.query ?? '';
+
         this.lastQuery.set(term);
         this.searchError.set(null);
         this.actionError.set(null);
@@ -174,7 +176,9 @@ export class ClinicalTermPickerComponent {
         if (!this.canAdd() || this.adding()) {
             return;
         }
+
         const name = this.lastQuery();
+
         this.adding.set(true);
         this.actionError.set(null);
         this.inactiveNamesake.set(null);
@@ -186,8 +190,10 @@ export class ClinicalTermPickerComponent {
             error: (e: unknown) => {
                 if (e instanceof ClinicalTermError && e.isDuplicateName) {
                     this.showInactiveNamesake(name, e.message);
+
                     return;
                 }
+
                 this.adding.set(false);
                 this.actionError.set(e instanceof Error ? e.message : 'Terim sözlüğe eklenemedi.');
             }
@@ -197,9 +203,11 @@ export class ClinicalTermPickerComponent {
     /** Çakışan pasif terimi etkinleştirir (yönetim ekranıyla aynı uç) ve adını, seçilmiş gibi alana yazar. */
     activate(): void {
         const term = this.inactiveNamesake();
+
         if (!term || !this.canActivate() || this.activating()) {
             return;
         }
+
         this.activating.set(true);
         this.actionError.set(null);
         this.terms.setActive(term.id, true).subscribe({
@@ -220,10 +228,12 @@ export class ClinicalTermPickerComponent {
      */
     private showInactiveNamesake(name: string, duplicateMessage: string): void {
         const key = clinicalTermNameKey(name);
+
         this.terms.list({ kind: this.kind(), search: name, includeInactive: true, page: 1, pageSize: PAGE_SIZE }).subscribe({
             next: (r) => {
                 this.adding.set(false);
                 const namesake = r.items.find((t) => !t.isActive && clinicalTermNameKey(t.name) === key);
+
                 if (namesake) {
                     this.inactiveNamesake.set(namesake);
                 } else {
@@ -241,10 +251,12 @@ export class ClinicalTermPickerComponent {
     private write(name: string): void {
         const control = this.control();
         const next = appendClinicalTermToText(control.value, name);
+
         if (next !== control.value) {
             control.setValue(next);
             control.markAsDirty();
         }
+
         this.query.set(null);
         this.lastQuery.set('');
         this.suggestions.set([]);
@@ -256,6 +268,7 @@ export class ClinicalTermPickerComponent {
             map((r) => r.items),
             catchError((e: unknown) => {
                 this.searchError.set(panelHttpFailureMessage(e, 'Sözlük yüklenemedi.'));
+
                 return of([] as ClinicalTermDto[]);
             })
         );

@@ -85,9 +85,11 @@ export class ExaminationFinalizeDialogComponent {
 
     onSubmit(): void {
         const rowVersion = this.rowVersion();
+
         if (this.submitting() || !rowVersion) {
             return;
         }
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.examinationsService.finalizeExamination(this.examinationId(), rowVersion).subscribe({

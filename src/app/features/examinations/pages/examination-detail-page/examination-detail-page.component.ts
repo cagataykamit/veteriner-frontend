@@ -421,10 +421,12 @@ export class ExaminationDetailPageComponent implements OnInit {
     /** Kesinleştirme kontrol listesi (sağ panel) ve onaydaki uyarılar aynı kuraldan türer (engel değil). */
     readonly finalizeChecklist = computed(() => {
         const e = this.exam();
+
         return e ? finalizeChecklist(e, this.relatedSummary()) : [];
     });
     readonly finalizeWarnings = computed(() => {
         const e = this.exam();
+
         return e ? finalizeWarnings(e, this.relatedSummary()) : [];
     });
     readonly relatedPaymentsView = computed(() => sliceDetailRelatedList(this.relatedSummary()?.payments));
@@ -433,9 +435,11 @@ export class ExaminationDetailPageComponent implements OnInit {
     /** Kayıt metin bölümleri: dolu olanlar başlıklı gösterilir, boşlar tek satırda "Girilmemiş" altında toplanır. */
     private readonly textSections = computed(() => {
         const e = this.exam();
+
         if (!e) {
             return [];
         }
+
         return RECORD_TEXT_SECTIONS.map((s) => ({ ...s, text: e[s.field] }));
     });
     readonly recordSectionsBeforeVitals = computed(() => this.textSections().filter((s) => !s.afterVitals && s.text !== this.emptyMark));
@@ -448,9 +452,11 @@ export class ExaminationDetailPageComponent implements OnInit {
     /** Vital satırı: yalnız ölçülmüş değerler; hiçbiri yoksa satır "Ölçülmemiş" der. */
     readonly vitals = computed(() => {
         const e = this.exam();
+
         if (!e) {
             return [];
         }
+
         return [
             { label: 'Kilo', value: e.weightKg, unit: 'kg' },
             { label: 'Sıcaklık', value: e.temperatureC, unit: '°C' },
@@ -499,6 +505,7 @@ export class ExaminationDetailPageComponent implements OnInit {
         if (!this.templateDialogVisible()) {
             addTracedToast(this.messages, 'ExaminationDetailPage', this.router.url, { severity: 'warn', summary: 'Uyarı', detail: message });
         }
+
         this.refreshAfterTemplate();
     }
 
@@ -509,9 +516,11 @@ export class ExaminationDetailPageComponent implements OnInit {
     /** Yeni sürüm ve durum yerel kaydedilir; kesinleştiren adı için kaydı sessizce yeniler. */
     onFinalized(result: ExaminationFinalizeResultVm): void {
         const current = this.exam();
+
         if (current) {
             this.exam.set({ ...current, status: result.status, finalizedAtUtc: result.finalizedAtUtc, rowVersion: result.rowVersion });
         }
+
         addTracedToast(this.messages, 'ExaminationDetailPage', this.router.url, {
             severity: 'success',
             summary: 'Tamam',
@@ -539,16 +548,20 @@ export class ExaminationDetailPageComponent implements OnInit {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id');
+
                     if (!id) {
                         this.error.set('Geçersiz muayene.');
                         this.loading.set(false);
                         this.resetRelatedSummary();
+
                         return EMPTY;
                     }
+
                     this.lastId = id;
                     this.loading.set(true);
                     this.error.set(null);
                     this.resetRelatedSummary();
+
                     return this.examinationsService.getExaminationById(id);
                 })
             )
@@ -570,6 +583,7 @@ export class ExaminationDetailPageComponent implements OnInit {
         if (!this.lastId) {
             return;
         }
+
         this.loading.set(true);
         this.error.set(null);
         this.resetRelatedSummary();
@@ -598,6 +612,7 @@ export class ExaminationDetailPageComponent implements OnInit {
         if (!this.lastId) {
             return;
         }
+
         this.loadRelatedSummary(this.lastId);
     }
 
@@ -606,7 +621,9 @@ export class ExaminationDetailPageComponent implements OnInit {
         if (!this.lastId) {
             return;
         }
+
         const id = this.lastId;
+
         this.examinationsService.getExaminationById(id).subscribe({ next: (x) => this.exam.set(x), error: () => undefined });
         this.loadRelatedSummary(id);
         this.administrations()?.reload();
@@ -640,6 +657,7 @@ export class ExaminationDetailPageComponent implements OnInit {
             this.apptItems.set([]);
             this.apptLoading.set(false);
             this.apptError.set(null);
+
             return;
         }
 

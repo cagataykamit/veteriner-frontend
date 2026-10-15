@@ -288,25 +288,31 @@ export class HospitalizationFormComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.form.controls.examinationId.disable({ emitEvent: false });
+
         if (this.canLinkVisit) {
             this.visitsService.getToday().subscribe({
                 next: (t) => this.todayItems.set(t.items),
                 error: () => this.todayItems.set([])
             });
         }
+
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
             if (this.contextLocked()) {
                 return;
             }
+
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
             const id = trimClientIdControlValue(this.form.controls.clientId.value);
+
             if (!id) {
                 this.form.controls.petId.disable({ emitEvent: false });
                 this.syncExaminationSelectState();
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
 
@@ -314,16 +320,21 @@ export class HospitalizationFormComponent implements OnInit {
             if (this.contextLocked()) {
                 return;
             }
+
             const pid = trimClientIdControlValue(this.form.controls.petId.value);
+
             this.selectedPetId.set(pid);
             this.form.patchValue({ examinationId: '', visitId: '' }, { emitEvent: false });
+
             if (!pid) {
                 this.relationLoadSeq += 1;
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
+
                 return;
             }
+
             this.loadExaminationsForPet(pid);
         });
         this.tryApplyExaminationRouteContext();
@@ -335,8 +346,10 @@ export class HospitalizationFormComponent implements OnInit {
         if (this.contextFromExamination()) {
             return;
         }
+
         const hasPet =
             !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
+
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
         } else {
@@ -363,27 +376,36 @@ export class HospitalizationFormComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
         const v = this.form.getRawValue();
         const admittedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.admittedAtLocal);
+
         if (!admittedAtUtc) {
             this.submitError.set('Geçerli bir yatış tarihi ve saati seçin.');
+
             return;
         }
+
         const plannedRaw = v.plannedDischargeAtLocal?.trim();
         const plannedDischargeAtUtc = plannedRaw ? fromIstanbulDateTimeLocalInputToUtcIso(plannedRaw) : null;
+
         if (plannedRaw && !plannedDischargeAtUtc) {
             this.submitError.set('Planlı taburcu tarihi geçersiz.');
+
             return;
         }
 
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
 
@@ -407,12 +429,16 @@ export class HospitalizationFormComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseHospitalizationUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(Object.keys(parsed.fieldErrors).length > 0 ? null : parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
@@ -423,6 +449,7 @@ export class HospitalizationFormComponent implements OnInit {
     private loadExaminationsForPet(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
+
         this.loadingExaminations.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }).subscribe({
@@ -430,9 +457,11 @@ export class HospitalizationFormComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 if (trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                     return;
                 }
+
                 this.examinationOptions.set(ex.items.map(hospitalizationExaminationOption));
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
@@ -441,6 +470,7 @@ export class HospitalizationFormComponent implements OnInit {
                 if (seq !== this.relationLoadSeq) {
                     return;
                 }
+
                 this.selectionError.set(this.mapLoadError(e, 'Muayene listesi yüklenemedi.'));
                 this.examinationOptions.set([]);
                 this.loadingExaminations.set(false);
@@ -451,25 +481,33 @@ export class HospitalizationFormComponent implements OnInit {
 
     private tryApplyExaminationRouteContext(): void {
         const ctx = parseExaminationCreateRouteContext(this.contextParams());
+
         if (!ctx) {
             return;
         }
+
         this.applyingRouteContext.set(true);
         this.selectionError.set(null);
         this.examinationsService.getExaminationById(ctx.examinationId).subscribe({
             next: (ex) => {
                 const cId = ex.clientId?.trim() ?? '';
                 const pId = ex.petId?.trim() ?? '';
+
                 if (cId !== ctx.clientId || pId !== ctx.petId) {
                     this.selectionError.set('Muayene bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 if (ex.status === 'Finalized') {
                     this.applyFinalizedExaminationContext(cId, pId);
+
                     return;
                 }
+
                 const listItem = examinationListItemFromDetail(ex);
+
                 this.examinationOptions.set([hospitalizationExaminationOption(listItem)]);
                 this.relationLoadSeq += 1;
                 this.form.patchValue(
@@ -510,14 +548,19 @@ export class HospitalizationFormComponent implements OnInit {
         if (parseExaminationCreateRouteContext(this.contextParams())) {
             return;
         }
+
         const ctx = parseVisitExaminationRouteContext(this.contextParams());
+
         if (!ctx) {
             return;
         }
+
         this.form.patchValue({ clientId: ctx.clientId, petId: ctx.petId, visitId: ctx.visitId }, { emitEvent: false });
+
         for (const c of [this.form.controls.clientId, this.form.controls.petId, this.form.controls.visitId]) {
             c.disable({ emitEvent: false });
         }
+
         this.selectedPetId.set(ctx.petId);
         this.contextVisitId.set(ctx.visitId);
         this.contextFromVisit.set(true);
@@ -528,6 +571,7 @@ export class HospitalizationFormComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 }

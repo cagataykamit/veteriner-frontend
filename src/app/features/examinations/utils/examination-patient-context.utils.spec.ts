@@ -22,6 +22,7 @@ describe('contextWeight', () => {
                 latestWeight: { state: 'Ok', data: { weightKg: 4.4, measuredAtUtc: '2026-10-10T08:00:00Z', examinationId: 'e0' } }
             })
         );
+
         expect(w).toEqual({ weightKg: 4.4, source: 'examination', measuredAtUtc: '2026-10-10T08:00:00Z' });
     });
 

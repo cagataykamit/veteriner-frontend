@@ -67,6 +67,7 @@ export function dashboardVmWithPendingLists(summaries: DashboardSummariesPhaseRe
         vaccinationItems: { data: [], error: null },
         examinationItems: { data: [], error: null }
     };
+
     return mergeDashboardListPhaseIntoVm(summaries, pending);
 }
 
@@ -132,6 +133,7 @@ export class DashboardService {
         if (!canViewFinance) {
             return of({ data: null, error: null });
         }
+
         return this.api
             .get<DashboardFinanceSummaryDto>(ApiEndpoints.dashboard.financeSummary())
             .pipe(
@@ -188,6 +190,7 @@ export class DashboardService {
                 const actionItems = capabilities.data.canViewOperationalAlerts
                     ? buildOperationalActionItems(operationalAlerts.data)
                     : [];
+
                 return {
                     summary,
                     capabilities,
@@ -268,12 +271,16 @@ export class DashboardService {
 
 function isSameLocalDay(item: AppointmentListItemVm, yyyyMmDd: string): boolean {
     const v = item.scheduledAtUtc?.trim();
+
     if (!v) {
         return false;
     }
+
     const d = new Date(v);
+
     if (Number.isNaN(d.getTime())) {
         return false;
     }
+
     return localDateYyyyMmDd(d) === yyyyMmDd;
 }

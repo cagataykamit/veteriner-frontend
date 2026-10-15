@@ -24,6 +24,7 @@ const FIELD_MAP: Record<string, ClinicUpsertFormFieldKey> = {
 
 export function parseClinicUpsertHttpError(err: HttpErrorResponse, fallbackGeneric?: string): ParsedClinicUpsertHttpError {
     const fb = fallbackGeneric?.trim() ? fallbackGeneric.trim() : FALLBACK_UPDATE;
+
     return parseValidationHttpError<ClinicUpsertFormFieldKey>(err, {
         fieldMap: FIELD_MAP,
         nonFieldMessage: (e) => messageFromHttpError(e, fb),

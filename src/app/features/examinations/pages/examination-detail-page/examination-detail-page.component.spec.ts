@@ -50,9 +50,11 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
     const create = (queryParams: Record<string, string>) => {
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
         const route = TestBed.inject(ActivatedRoute) as unknown as { snapshot: { queryParamMap: unknown } };
+
         route.snapshot.queryParamMap = convertToParamMap(queryParams);
         const fixture = TestBed.createComponent(ExaminationDetailPageComponent);
         const toastAdd = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
+
         fixture.detectChanges();
 
         return { navigate, toastAdd };
@@ -128,6 +130,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
             'getAddenda',
             'finalizeExamination'
         ]);
+
         service.getExaminationById.and.returnValue(of(vm));
         service.getExaminationRelatedSummary.and.returnValue(of(relatedSummary) as never);
         service.getAddenda.and.returnValue(of([{ id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo 12,4', createdAtUtc: '2026-10-11T10:05:00Z', createdByName: 'Dr. Ayşe' }]));
@@ -160,9 +163,12 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
             ]
         }).compileComponents();
         const fixture = TestBed.createComponent(ExaminationDetailPageComponent);
+
         fixture.detectChanges();
+
         return { fixture, service, el: fixture.nativeElement as HTMLElement };
     };
+
     const has = (el: HTMLElement, testId: string) => el.querySelector(`[data-testid="${testId}"]`) !== null;
     const label = (el: HTMLElement) => el.textContent ?? '';
 
@@ -199,10 +205,12 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup(detailVm, ADD_CLAIMS);
 
         expect(has(el, 'procedures-section')).toBeTrue();
+
         for (const kind of ['treatment', 'prescription', 'vaccination', 'lab', 'hospitalization']) {
             expect(addButton(el, kind)).withContext(kind).not.toBeNull();
             expect(addButton(el, kind)?.disabled).withContext(kind).toBeFalse();
         }
+
         expect(has(el, 'procedure-lock-reason')).toBeFalse();
         expect(el.querySelector('a[href*="/panel/treatments/new"]')).toBeNull();
     });
@@ -212,6 +220,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
         expect(addButton(el, 'treatment')).not.toBeNull();
         expect(addButton(el, 'lab')).not.toBeNull();
+
         for (const kind of ['prescription', 'vaccination', 'hospitalization']) {
             expect(addButton(el, kind)).withContext(kind).toBeNull();
         }
@@ -232,10 +241,12 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
     it('Ödeme Oluştur yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
         const hekim = await setup(detailVm, ['Examinations.Update']);
+
         expect(hekim.el.querySelector('a[href*="/panel/payments/new"]')).toBeNull();
         TestBed.resetTestingModule();
 
         const yetkili = await setup(detailVm, ['Examinations.Update', 'Payments.Create']);
+
         expect(yetkili.el.querySelector('a[href*="/panel/payments/new"]')).not.toBeNull();
     });
 
@@ -244,6 +255,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
         for (const path of ['payments', 'examinations', 'appointments']) {
             const a = Array.from(el.querySelectorAll(`a[href^="/panel/${path}?"]`));
+
             expect(a.length).withContext(path).toBeGreaterThan(0);
             expect(a[0].getAttribute('href')).withContext(path).toContain('petId=pet-1');
         }
@@ -255,6 +267,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         for (const kind of ['treatment', 'prescription', 'vaccination']) {
             expect(addButton(el, kind)?.disabled).withContext(kind).toBeTrue();
         }
+
         expect(addButton(el, 'lab')?.disabled).toBeFalse();
         expect(addButton(el, 'hospitalization')?.disabled).toBeFalse();
         expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('yalnız gerekçeli uygulama ve ek not eklenebilir');
@@ -264,6 +277,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { fixture } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize']);
 
         const warnings = fixture.componentInstance.finalizeWarnings();
+
         expect(warnings.some((w) => w.includes('tanı'))).toBeTrue();
         expect(warnings.some((w) => w.includes('Plan'))).toBeTrue();
         expect(warnings.some((w) => w.includes('Muayeneye bağlı'))).toBeTrue();
@@ -276,6 +290,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const order = Array.from(workspace.querySelectorAll('[data-testid="patient-context"], [data-testid="exam-record"], [data-testid="finalize-checklist"]')).map((x) =>
             x.getAttribute('data-testid')
         );
+
         expect(order).toEqual(['patient-context', 'exam-record', 'finalize-checklist']);
         expect(workspace.querySelector('[data-testid="procedures-section"]')).not.toBeNull();
     });
@@ -284,6 +299,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup(detailVm, ['Examinations.Read']);
 
         const record = el.querySelector('[data-testid="exam-record"]')!;
+
         expect(record.querySelector('[data-testid="record-empty-sections"]')?.textContent).toContain(
             'Anamnez, Klinik bulgular, Değerlendirme / tanı, Plan / tedavi planı, Ek notlar'
         );
@@ -296,6 +312,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup({ ...detailVm, weightKg: 4.25, temperatureC: 38.6, findings: 'Mukozalar soluk' }, ['Examinations.Read']);
 
         const vitals = Array.from(el.querySelectorAll('[data-testid="vital"]')).map((v) => Array.from(v.children).map((c) => c.textContent?.trim()));
+
         expect(vitals).toEqual([
             ['Kilo', '4.25 kg'],
             ['Sıcaklık', '38.6 °C']
@@ -307,6 +324,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup({ ...detailVm, assessment: 'Gastrit' }, ['Examinations.Read'], { examinationId: 'e1', pendingChargeCount: 2 });
 
         const item = (key: string) => el.querySelector(`[data-testid="check-${key}"]`);
+
         expect(item('assessment')?.getAttribute('data-ok')).toBe('true');
         expect(item('plan')?.getAttribute('data-ok')).toBe('false');
         expect(item('pendingCharges')?.getAttribute('data-ok')).toBe('false');
@@ -317,6 +335,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup({ ...detailVm, status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z', finalizedByName: 'Dr. Ayşe' }, ['Examinations.Read']);
 
         const panel = el.querySelector('[data-testid="finalize-checklist"]')?.textContent ?? '';
+
         expect(panel).toContain('yalnız gerekçeli uygulama ve ek not eklenebilir');
         expect(el.querySelector('[data-testid="check-plan"]')).toBeNull();
     });
@@ -340,6 +359,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
     it('şablon uygulandıktan sonra muayene ve ilgili kayıt özeti yeniden okunur', async () => {
         const { fixture, service } = await setup(detailVm, TEMPLATE_CLAIMS);
+
         service.getExaminationById.and.returnValue(of({ ...detailVm, visitReason: 'İştahsızlık, Kulak kaşıntısı', rowVersion: 'V2' }));
         const relatedBefore = service.getExaminationRelatedSummary.calls.count();
 
@@ -355,6 +375,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
     it('kesinleştirme sonrası durum Kesinleşti olur, sürüm yenilenir ve düğme kalkar', async () => {
         const { fixture, service, el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize']);
+
         service.getExaminationById.and.returnValue(of(finalizedVm));
 
         fixture.componentInstance.onFinalized({ id: 'e1', rowVersion: 'V2', status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z' });

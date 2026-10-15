@@ -12,6 +12,7 @@ function problem(status: number, code: string): HttpErrorResponse {
 describe('hospitalization-upsert-validation-parse.utils', () => {
     it('409 Hospitalizations.ConcurrencyConflict çakışma sayılır ve anlaşılır mesaj verir', () => {
         const parsed = parseHospitalizationUpsertHttpError(problem(409, 'Hospitalizations.ConcurrencyConflict'));
+
         expect(parsed.isConcurrencyConflict).toBeTrue();
         expect(parsed.summaryMessage).toContain('başka biri tarafından güncellendi');
     });
@@ -22,6 +23,7 @@ describe('hospitalization-upsert-validation-parse.utils', () => {
 
     it('409 Examinations.Finalized muayene alanına yatışa özel Türkçe mesaj yazar, çakışma değildir', () => {
         const parsed = parseHospitalizationUpsertHttpError(problem(409, 'Examinations.Finalized'));
+
         expect(parsed.isConcurrencyConflict).toBeFalse();
         expect(parsed.fieldErrors.examinationId).toBe(HOSPITALIZATION_EXAMINATION_FINALIZED_MESSAGE);
     });

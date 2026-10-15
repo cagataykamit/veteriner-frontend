@@ -45,15 +45,19 @@ export function pickUpcomingVaccinations(
 ): VaccinationListItemVm[] {
     const horizonMs = horizonDays * 86400000;
     const now = Date.now();
+
     return [...items]
         .filter((v) => {
             if (!v.dueAtUtc?.trim()) {
                 return false;
             }
+
             const t = new Date(v.dueAtUtc).getTime();
+
             if (Number.isNaN(t)) {
                 return false;
             }
+
             return t <= now + horizonMs;
         })
         .sort((a, b) => new Date(a.dueAtUtc!).getTime() - new Date(b.dueAtUtc!).getTime())
@@ -65,6 +69,7 @@ export function sortAppointmentsByScheduledAsc(items: AppointmentListItemVm[]): 
     return [...items].sort((a, b) => {
         const ta = a.scheduledAtUtc ? new Date(a.scheduledAtUtc).getTime() : 0;
         const tb = b.scheduledAtUtc ? new Date(b.scheduledAtUtc).getTime() : 0;
+
         return ta - tb;
     });
 }
@@ -106,6 +111,7 @@ function item(
     if (count <= 0) {
         return null;
     }
+
     return { key, title, description, severity, count, route, queryParams };
 }
 
@@ -113,9 +119,11 @@ function severityRank(severity: DashboardActionSeverity): number {
     if (severity === 'danger') {
         return 0;
     }
+
     if (severity === 'warning') {
         return 1;
     }
+
     return 2;
 }
 
@@ -172,6 +180,7 @@ export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm
 
 export function buildDashboardAlerts(capabilities: DashboardCapabilitiesVm): DashboardActionItemVm[] {
     const items: DashboardActionItemVm[] = [];
+
     if (capabilities.isTenantReadOnly) {
         items.push({
             key: 'tenantReadOnly',
@@ -182,5 +191,6 @@ export function buildDashboardAlerts(capabilities: DashboardCapabilitiesVm): Das
             route: null
         });
     }
+
     return items;
 }

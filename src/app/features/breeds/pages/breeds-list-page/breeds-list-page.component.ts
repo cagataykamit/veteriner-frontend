@@ -194,6 +194,7 @@ export class BreedsListPageComponent implements OnInit {
         this.loading.set(true);
         this.error.set(null);
         const q = this.appliedSearch().trim();
+
         this.breedsService.getBreedList({ search: q || undefined, panelList: true }).subscribe({
             next: (items) => {
                 this.breedRows.set(items);

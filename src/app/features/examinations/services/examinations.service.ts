@@ -62,6 +62,7 @@ export class ExaminationsService {
             clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
         };
         const params = examinationsQueryToHttpParams(merged);
+
         return this.api.get<ExaminationListItemDtoPagedResult>(ApiEndpoints.examinations.list(), params).pipe(
             map((res) => mapPagedExaminationsToVm(res)),
             catchError((err: HttpErrorResponse) =>
@@ -120,10 +121,12 @@ export class ExaminationsService {
         return this.api.get<ExaminationDetailDto>(ApiEndpoints.examinations.byId(id)).pipe(
             map((dto) => {
                 const vm = mapExaminationDetailDtoToEditVm(dto);
+
                 if (!vm.rowVersion) {
                     // Sürümsüz PUT backend'de 400 verir; sürüm yoksa düzenlemeye izin verme.
                     throw new Error('Sunucu kayıt sürümünü (rowVersion) döndürmedi; düzenleme yapılamaz.');
                 }
+
                 return vm;
             }),
             catchError((err: unknown) =>
@@ -140,12 +143,15 @@ export class ExaminationsService {
 
     createExamination(payload: CreateExaminationRequest): Observable<ExaminationWriteResultVm> {
         const body = mapCreateExaminationToApiBody(payload);
+
         return this.api.post<unknown>(ApiEndpoints.examinations.list(), body).pipe(
             map((raw) => {
                 const result = mapExaminationWriteResultDtoToVm(raw);
+
                 if (!result) {
                     throw new Error('EXAMINATION_CREATE_NO_ID_IN_RESPONSE');
                 }
+
                 return result;
             }),
             catchError((err: unknown) => {
@@ -153,6 +159,7 @@ export class ExaminationsService {
                     // Create formunda alan bazlı parse için ham HttpErrorResponse korunur.
                     return throwError(() => err);
                 }
+
                 if (err instanceof Error && err.message === 'EXAMINATION_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(
                         () =>
@@ -161,6 +168,7 @@ export class ExaminationsService {
                             )
                     );
                 }
+
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Muayene oluşturulamadı.')
                 );
@@ -171,12 +179,14 @@ export class ExaminationsService {
     /** PUT; `rowVersion` zorunlu. Hata, çakışma kodunu (`code`) ayrıştırabilmek için ham `HttpErrorResponse` olarak iletilir. */
     updateExamination(id: string, payload: UpdateExaminationRequest): Observable<ExaminationWriteResultVm> {
         const body = mapUpdateExaminationToApiBody(payload);
+
         return this.api.put<unknown>(ApiEndpoints.examinations.byId(id), body).pipe(
             map((raw) => mapExaminationWriteResultDtoToVm(raw) ?? { id, rowVersion: null }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Muayene güncellenemedi.')
                 );

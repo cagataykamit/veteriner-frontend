@@ -52,6 +52,7 @@ describe('ExaminationsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/examinations/e1');
+
         expect(req.request.method).toBe('PUT');
         expect(req.request.body.rowVersion).toBe('AQIDBAUGBwgJCgs=');
         expect(req.request.body.appointmentId).toBe('appt-1');
@@ -91,6 +92,7 @@ describe('ExaminationsService', () => {
                 done();
             });
         const req = http.expectOne('http://api.test/api/v1/examinations');
+
         expect('rowVersion' in req.request.body).toBeFalse();
         req.flush({ id: 'n1', rowVersion: 'AAA=' }, { status: 201, statusText: 'Created' });
     });
@@ -113,6 +115,7 @@ describe('ExaminationsService', () => {
     it('liste isteği FromDate/ToDate yerine dateFromUtc/dateToUtc gönderir', () => {
         service.getExaminations({ fromDate: '2026-10-08', toDate: '2026-10-08' }).subscribe();
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/examinations');
+
         expect(req.request.params.get('dateFromUtc')).toBe('2026-10-07T21:00:00.000Z');
         expect(req.request.params.get('dateToUtc')).toBe('2026-10-08T21:00:00.000Z');
         expect(req.request.params.has('FromDate')).toBeFalse();
@@ -128,6 +131,7 @@ describe('ExaminationsService', () => {
                 done();
             });
             const req = http.expectOne('http://api.test/api/v1/examinations/e1/finalize');
+
             expect(req.request.method).toBe('POST');
             expect(req.request.body).toEqual({ rowVersion: 'AAAAAAAAB9E=' });
             req.flush({ id: 'e1', rowVersion: 'AAAAAAAAB9F=', status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z', finalizedByUserId: 'u1' });
@@ -135,6 +139,7 @@ describe('ExaminationsService', () => {
 
         it('finalize 409 ConcurrencyConflict ve AlreadyFinalized Türkçe mesaja çevrilir', () => {
             const messages: string[] = [];
+
             for (const code of ['Examinations.ConcurrencyConflict', 'Examinations.AlreadyFinalized']) {
                 service.finalizeExamination('e1', 'V').subscribe({ error: (e: Error) => messages.push(e.message) });
                 http.expectOne('http://api.test/api/v1/examinations/e1/finalize').flush(problem(409, code), { status: 409, statusText: 'Conflict' });
@@ -161,11 +166,13 @@ describe('ExaminationsService', () => {
         it('ek not yazma: POST /addenda kırpılmış gerekçe ve metinle; 409 NotFinalized mesajı Türkçe', () => {
             service.addAddendum('e1', { reason: '  Hatalı kilo  ', text: ' Doğru kilo ' }).subscribe();
             const ok = http.expectOne('http://api.test/api/v1/examinations/e1/addenda');
+
             expect(ok.request.method).toBe('POST');
             expect(ok.request.body).toEqual({ reason: 'Hatalı kilo', text: 'Doğru kilo' });
             ok.flush({ id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo' }, { status: 201, statusText: 'Created' });
 
             let message = '';
+
             service.addAddendum('e1', { reason: 'Hatalı kilo', text: 'x' }).subscribe({ error: (e: Error) => (message = e.message) });
             http.expectOne('http://api.test/api/v1/examinations/e1/addenda').flush(problem(409, 'Examinations.NotFinalized'), { status: 409, statusText: 'Conflict' });
 

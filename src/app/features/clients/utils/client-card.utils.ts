@@ -43,12 +43,14 @@ export function buildClientTodo(sources: ClientTodoSources, ctx: ClientTodoConte
 
     for (const charges of groupByPet(okData(sources.pendingCharges) ?? []).values()) {
         const item = pendingChargesTodoItem(charges, charges[0].petId, canWrite(CHARGES_CREATE_CLAIM), charges[0].petName);
+
         if (item) {
             items.push(item);
         }
     }
 
     const balance = openBalanceTodoItem(okData(sources.balance), { clientId: ctx.clientId, canTakePayment: canWrite(PAYMENTS_CREATE_CLAIM) });
+
     if (balance) {
         items.push(balance);
     }
@@ -59,6 +61,7 @@ export function buildClientTodo(sources: ClientTodoSources, ctx: ClientTodoConte
 /** Müşteri kartında "Geldi"nin önceden seçeceği hayvan: tek aktif hayvan varsa o (vefat eden yeni geliş açamaz). */
 export function soleActivePet(pets: readonly PetListItemVm[]): PetListItemVm | null {
     const active = pets.filter((p) => p.status !== 'Deceased');
+
     return active.length === 1 ? active[0] : null;
 }
 
@@ -83,6 +86,7 @@ export function buildClientPetRows(
 ): ClientPetRow[] {
     const outstanding = balance ? new Map(outstandingByPet(balance).map((p) => [p.petId, p.outstandingAmount])) : null;
     const pending = pendingCharges ? groupByPet(pendingCharges) : null;
+
     return pets.map((pet) => ({
         pet,
         outstandingAmount: outstanding ? (outstanding.get(pet.id) ?? 0) : null,
@@ -114,6 +118,7 @@ export interface PendingChargesSummary {
 export function pendingChargesSummary(page: Pick<ChargeSuggestionsPagedVm, 'items' | 'totalItems'>): PendingChargesSummary {
     let amount = 0;
     let unpricedCount = 0;
+
     for (const c of page.items) {
         if (c.suggestedUnitPrice === null) {
             unpricedCount += 1;
@@ -121,6 +126,7 @@ export function pendingChargesSummary(page: Pick<ChargeSuggestionsPagedVm, 'item
             amount += computeChargeAmount(c.quantity, c.suggestedUnitPrice) ?? 0;
         }
     }
+
     return {
         count: page.totalItems,
         amount: Math.round(amount * 100) / 100,
@@ -132,8 +138,10 @@ export function pendingChargesSummary(page: Pick<ChargeSuggestionsPagedVm, 'item
 
 function groupByPet(charges: readonly ChargeSuggestionVm[]): Map<string, ChargeSuggestionVm[]> {
     const byPet = new Map<string, ChargeSuggestionVm[]>();
+
     for (const c of charges) {
         byPet.set(c.petId, [...(byPet.get(c.petId) ?? []), c]);
     }
+
     return byPet;
 }

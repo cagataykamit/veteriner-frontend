@@ -37,31 +37,43 @@ export function parseAppointmentStatusRawToEnum(raw: unknown): number | null {
     if (raw === null || raw === undefined) {
         return null;
     }
+
     if (typeof raw === 'number' && Number.isFinite(raw)) {
         const i = Math.trunc(raw);
+
         return i >= 0 && i <= 3 ? i : null;
     }
+
     const s = String(raw).trim();
+
     if (!s) {
         return null;
     }
+
     if (/^-?\d+$/.test(s)) {
         const i = Number.parseInt(s, 10);
+
         return i >= 0 && i <= 3 ? i : null;
     }
+
     const k = s.toLocaleLowerCase('tr-TR');
+
     if (k === 'scheduled' || k === 'planned' || k === 'planlandi' || k === 'planlandı') {
         return 0;
     }
+
     if (k === 'completed' || k === 'done' || k === 'tamamlandi' || k === 'tamamlandı') {
         return 1;
     }
+
     if (k === 'cancelled' || k === 'canceled' || k === 'iptal' || k === 'cancel') {
         return 2;
     }
+
     if (k === 'noshow' || k === 'no-show' || k === 'no_show' || k === 'gelmedi') {
         return 3;
     }
+
     return null;
 }
 
@@ -69,9 +81,11 @@ export function appointmentStatusEnumLabel(status: number | null | undefined): s
     if (status === null || status === undefined) {
         return EM;
     }
+
     if (status === 0 || status === 1 || status === 2 || status === 3) {
         return ENUM_LABEL[status];
     }
+
     return `Durum (${status})`;
 }
 
@@ -79,6 +93,7 @@ export function appointmentStatusEnumSeverity(status: number | null | undefined)
     if (status === 0 || status === 1 || status === 2 || status === 3) {
         return ENUM_SEVERITY[status];
     }
+
     return 'secondary';
 }
 
@@ -89,14 +104,19 @@ export function appointmentStatusLabel(status: number | string | null | undefine
     if (status === null || status === undefined) {
         return EM;
     }
+
     if (typeof status === 'number') {
         return appointmentStatusEnumLabel(status);
     }
+
     const n = parseAppointmentStatusRawToEnum(status);
+
     if (n !== null) {
         return appointmentStatusEnumLabel(n);
     }
+
     const t = status.trim();
+
     return t || EM;
 }
 
@@ -104,13 +124,17 @@ export function appointmentStatusSeverity(status: number | string | null | undef
     if (status === null || status === undefined) {
         return 'secondary';
     }
+
     if (typeof status === 'number') {
         return appointmentStatusEnumSeverity(status);
     }
+
     const n = parseAppointmentStatusRawToEnum(status);
+
     if (n !== null) {
         return appointmentStatusEnumSeverity(n);
     }
+
     return 'secondary';
 }
 
@@ -119,10 +143,13 @@ export function isAppointmentCancelledStatus(status: number | string | null | un
     if (status === null || status === undefined) {
         return false;
     }
+
     if (typeof status === 'number') {
         return status === 2;
     }
+
     const n = parseAppointmentStatusRawToEnum(status);
+
     return n === 2;
 }
 
@@ -136,7 +163,9 @@ export function canMarkAppointmentNoShow(status: number | string | null | undefi
     if (parseAppointmentStatusRawToEnum(status) !== 0 || !scheduledAtUtc) {
         return false;
     }
+
     const at = new Date(scheduledAtUtc).getTime();
+
     return !Number.isNaN(at) && at <= now.getTime();
 }
 

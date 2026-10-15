@@ -62,6 +62,7 @@ describe('ChargeCorrectionDialogComponent', () => {
 
     it('değişiklik + gerekçeyle ücret düzeltilir, diyalog kapanır ve güncel ücret yayılır', () => {
         const updated = { ...charge, unitPrice: 600, amount: 600 };
+
         charges.correctCharge.and.returnValue(of(updated));
         cmp.form.patchValue({ unitPrice: 600, reason: 'Fiyat yanlış okundu' });
         cmp.onSubmit();

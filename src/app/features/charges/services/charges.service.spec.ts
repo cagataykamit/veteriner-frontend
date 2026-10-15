@@ -51,6 +51,7 @@ describe('ChargesService', () => {
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/charges');
+
         expect(req.request.method).toBe('GET');
         expect(req.request.params.get('clinicId')).toBe('c1');
         expect(req.request.params.get('clientId')).toBe('cl1');
@@ -78,6 +79,7 @@ describe('ChargesService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/charges');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({
             clinicId: 'c1',
@@ -135,6 +137,7 @@ describe('ChargesService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/charges/ch1');
+
         expect(req.request.method).toBe('PUT');
         expect(req.request.body).toEqual({ description: 'Genel muayene', quantity: 1, unitPrice: 600, reason: 'Fiyat yanlış okundu' });
         req.flush({ ...charge, unitPrice: 600, amount: 600 });
@@ -159,6 +162,7 @@ describe('ChargesService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/charges/ch1/void');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ reason: 'Yanlış girildi' });
         req.flush(null, { status: 204, statusText: 'No Content' });
@@ -210,6 +214,7 @@ describe('Charge hata kodları (messageFromHttpError)', () => {
         it(`${code} için Türkçe, ham kod içermeyen mesaj verir`, () => {
             const err = new HttpErrorResponse({ status: 400, error: { title: 'Bad Request', extensions: { code } } });
             const msg = messageFromHttpError(err, 'varsayılan');
+
             expect(msg).not.toBe('varsayılan');
             expect(msg).not.toMatch(/Charges\.|Payments\./);
             expect(msg.endsWith('.')).toBeTrue();
@@ -221,6 +226,7 @@ describe('Charge hata kodları (messageFromHttpError)', () => {
             status: 400,
             error: { title: 'Bad Request', detail: 'Miktar sıfırdan büyük olmalıdır.', extensions: { code: 'Charges.Validation' } }
         });
+
         expect(messageFromHttpError(err)).toBe('Miktar sıfırdan büyük olmalıdır.');
     });
 });

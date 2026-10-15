@@ -15,6 +15,7 @@ export const CLIENT_CONTACT_CHANNEL_OPTIONS: ReadonlyArray<{ label: string; valu
 /** API değeri (büyük/küçük harf duyarsız) → kanal; eksik/bilinmeyen değer `None`. */
 export function parseClientContactChannel(raw: unknown): ClientContactChannel {
     const key = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+
     return CLIENT_CONTACT_CHANNEL_OPTIONS.find((o) => o.value.toLowerCase() === key)?.value ?? 'None';
 }
 

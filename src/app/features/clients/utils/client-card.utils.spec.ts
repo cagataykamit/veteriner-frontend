@@ -74,18 +74,21 @@ describe('buildClientTodo', () => {
         expect(item.action).toEqual({ label: 'Ödeme al', route: ['/panel/payments/new'], queryParams: { clientId: 'c1' } });
 
         const fallback = { label: 'Ücretleri gör', route: ['/panel/charges'], queryParams: { clientId: 'c1' } };
+
         expect(buildClientTodo(sources({ balance: { state: 'ok', data: b } }), ctx([])).items[0].action).toEqual(fallback);
         expect(buildClientTodo(sources({ balance: { state: 'ok', data: b } }), ctx(['Payments.Create'], { mutationBlocked: true })).items[0].action).toEqual(fallback);
     });
 
     it('rol vurgusu hasta kartıyla aynı: klinik önce ücret bekleyen, resepsiyon önce borç', () => {
         const s = sources({ pendingCharges: { state: 'ok', data: [charge('1', 'p1', 'Pamuk')] }, balance: { state: 'ok', data: balance([openCharge('p1', 'Pamuk', 50)]) } });
+
         expect(buildClientTodo(s, ctx([])).items.map((i) => i.kind)).toEqual(['pendingCharge', 'openBalance']);
         expect(buildClientTodo(s, ctx([], { emphasis: 'frontDesk' })).items.map((i) => i.kind)).toEqual(['openBalance', 'pendingCharge']);
     });
 
     it('yükleniyor ve alınamadı ayrı raporlanır; yetkisiz (null) kaynak ikisine de girmez, hepsi yetkisizse forbidden', () => {
         const view = buildClientTodo({ pendingCharges: { state: 'loading' }, balance: { state: 'error' } }, ctx([]));
+
         expect(view).toEqual({ items: [], loading: true, failed: ['Bakiye'], forbidden: false });
         expect(buildClientTodo({ pendingCharges: null, balance: null }, ctx([]))).toEqual({ items: [], loading: false, failed: [], forbidden: true });
         expect(buildClientTodo({ pendingCharges: null, balance: { state: 'loading' } }, ctx([])).forbidden).toBeFalse();
@@ -110,6 +113,7 @@ describe('buildClientPetRows', () => {
 
     it('bakiye veya ücret bekleyen okunamıyorsa ilgili alan null kalır (sıfır sanılmaz)', () => {
         const [row] = buildClientPetRows([pet('p1', 'Pamuk')], null, null, [], NOW);
+
         expect(row.outstandingAmount).toBeNull();
         expect(row.pendingChargeCount).toBeNull();
     });
@@ -120,6 +124,7 @@ describe('pendingChargesSummary (müşteri bazlı ücret bekleyen, sözleşme §
 
     it('sayı totalItems; tutar quantity × önerilen fiyat (satır başına yuvarlama), fiyatsız kalem ayrı sayılır', () => {
         const s = pendingChargesSummary({ items: [priced('a', 2, 12.5), priced('b', 0.333, 10), priced('c', 1, null)], totalItems: 3 });
+
         expect(s).toEqual({ count: 3, amount: 28.33, currency: 'TRY', unpricedCount: 1, partial: false });
     });
 

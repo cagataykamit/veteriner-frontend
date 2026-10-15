@@ -18,6 +18,7 @@ describe('administrationSavedNotice', () => {
 
     it('minimum altında uyarı verir', () => {
         const n = administrationSavedNotice(result(true, true), 'Uygulama');
+
         expect(n.warn).toBeTrue();
         expect(n.text).toContain('minimum düzeyin altına indi');
     });

@@ -32,6 +32,7 @@ export class ChargeSuggestionsService {
     /** Aktif klinik kapsamında yalnız bekleyen kalemler; her zaman sunucudan okunur. */
     getPending(query: ChargeSuggestionsListQuery = {}): Observable<ChargeSuggestionsPagedVm> {
         const clinicId = this.auth.getClinicId()?.trim() || undefined;
+
         return this.api
             .get<ChargeSuggestionPagedResultDto>(ApiEndpoints.chargeSuggestions.list(), chargeSuggestionsQueryToHttpParams({ ...query, clinicId }))
             .pipe(map(mapPagedChargeSuggestionsToVm), toUserError('Bekleyen ücretler yüklenemedi.'));

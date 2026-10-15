@@ -191,6 +191,7 @@ export class ChargesListPageComponent implements OnInit {
 
     readonly voidSummary = computed(() => {
         const c = this.actionTarget();
+
         return c ? `${c.clientName} · ${c.description} · ${formatMoney(c.amount, c.currency || 'TRY')}` : null;
     });
     readonly voidCharge = (reason: string) => this.chargesService.voidCharge(this.actionTarget()!.id, reason);
@@ -230,9 +231,11 @@ export class ChargesListPageComponent implements OnInit {
     onLazyLoad(event: TableLazyLoadEvent): void {
         const rows = event.rows ?? this.pageSize();
         const page = Math.floor((event.first ?? 0) / rows) + 1;
+
         if (page === Math.floor(this.first() / this.pageSize()) + 1 && rows === this.pageSize()) {
             return;
         }
+
         this.load(page, rows);
     }
 
@@ -244,8 +247,10 @@ export class ChargesListPageComponent implements OnInit {
                 // Son sayfadaki son kayıt iptal edilince boş sayfa yerine bir önceki sayfaya dön.
                 if (r.items.length === 0 && page > 1) {
                     this.load(page - 1, pageSize);
+
                     return;
                 }
+
                 this.rows.set(r.items);
                 this.totalItems.set(r.totalItems);
                 this.pageSize.set(r.pageSize);

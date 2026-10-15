@@ -24,6 +24,7 @@ describe('ExaminationTemplatesService', () => {
     it('liste sorgusu yalnız dolu parametreleri gönderir', () => {
         service.list({ search: ' kulak ', includeInactive: true, page: 2, pageSize: 50 }).subscribe();
         const req = http.expectOne((r) => r.url === BASE);
+
         expect(req.request.params.get('search')).toBe('kulak');
         expect(req.request.params.get('includeInactive')).toBe('true');
         expect(req.request.params.get('page')).toBe('2');
@@ -32,20 +33,24 @@ describe('ExaminationTemplatesService', () => {
 
         service.list({ search: ' ' }).subscribe();
         const plain = http.expectOne((r) => r.url === BASE);
+
         expect(plain.request.params.keys()).toEqual([]);
         plain.flush(empty);
     });
 
     it('ekle POST, düzenle PUT + rowVersion, aktiflik ayrı uçlar', () => {
         const body = { name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: null, lines: [{ productId: 'p1', quantity: 1 }] };
+
         service.create(body).subscribe();
         const post = http.expectOne(BASE);
+
         expect(post.request.method).toBe('POST');
         expect(post.request.body).toEqual(body);
         post.flush({});
 
         service.update('t1', body, 'AAAAAAAAB9I=').subscribe();
         const put = http.expectOne(`${BASE}/t1`);
+
         expect(put.request.method).toBe('PUT');
         expect(put.request.body).toEqual({ ...body, rowVersion: 'AAAAAAAAB9I=' });
         put.flush({});
@@ -59,6 +64,7 @@ describe('ExaminationTemplatesService', () => {
     it('uygula muayene sürümüyle gider', () => {
         service.apply('e1', 't1', 'V1').subscribe();
         const req = http.expectOne('http://api.test/api/v1/examinations/e1/apply-template');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ templateId: 't1', rowVersion: 'V1' });
         req.flush({ examinationId: 'e1', rowVersion: 'V2', updatedFields: [], administrations: [], services: [] });
@@ -66,6 +72,7 @@ describe('ExaminationTemplatesService', () => {
 
     it('kod Türkçe mesaja çevrilir; reddedilen satırın productId si ürün adıyla mesaja girer', () => {
         let finalized: ExaminationTemplateError | undefined;
+
         service.apply('e1', 't1', 'V1').subscribe({ error: (e: ExaminationTemplateError) => (finalized = e) });
         http.expectOne('http://api.test/api/v1/examinations/e1/apply-template').flush(
             { status: 409, code: 'Examinations.Finalized' },
@@ -75,6 +82,7 @@ describe('ExaminationTemplatesService', () => {
         expect(finalized?.message).toContain('kesinleştirilmiş');
 
         let stock: ExaminationTemplateError | undefined;
+
         service.apply('e1', 't1', 'V1').subscribe({ error: (e: ExaminationTemplateError) => (stock = e) });
         http.expectOne('http://api.test/api/v1/examinations/e1/apply-template').flush(
             { status: 400, code: 'Administrations.InsufficientStock', detail: 'Yetersiz stok.', productId: 'p1' },
@@ -85,6 +93,7 @@ describe('ExaminationTemplatesService', () => {
         expect(stock?.withProductName(() => null)).toBe('Yetersiz stok.');
 
         let vaccine: ExaminationTemplateError | undefined;
+
         service.create({ name: 'X', visitReason: null, findings: null, plan: null, lines: [] }).subscribe({
             error: (e: ExaminationTemplateError) => (vaccine = e)
         });

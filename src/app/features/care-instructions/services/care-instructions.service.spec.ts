@@ -43,6 +43,7 @@ describe('CareInstructionsService', () => {
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/care-instructions');
+
         expect(req.request.params.get('hospitalizationId')).toBe('h1');
         expect(req.request.params.get('clinicId')).toBe('c1');
         req.flush({ items: [dto], page: 1, pageSize: 50, totalItems: 1, totalPages: 1 });
@@ -54,6 +55,7 @@ describe('CareInstructionsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/care-instructions');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ clinicId: 'c1', petId: 'p1', hospitalizationId: 'h1', text: 'Dinlendirin' });
         req.flush('ci2', { status: 201, statusText: 'Created' });
@@ -78,6 +80,7 @@ describe('CareInstructionsService', () => {
             }
         });
         const req = http.expectOne('http://api.test/api/v1/care-instructions/ci1');
+
         expect(req.request.method).toBe('PUT');
         expect(req.request.body).toEqual({ text: 'Yeni metin', rowVersion: 'AAAAAAAAB9E=' });
         req.flush({ extensions: { code: 'CareInstructions.ConcurrencyConflict' } }, { status: 409, statusText: 'Conflict' });

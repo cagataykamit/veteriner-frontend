@@ -32,34 +32,43 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: HospitalizationListItemDto | HospitalizationDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoBoolean(dto: HospitalizationListItemDto | HospitalizationDetailDto, keys: string[]): boolean | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'boolean') {
             return v;
         }
+
         if (v === 'true' || v === true) {
             return true;
         }
+
         if (v === 'false' || v === false) {
             return false;
         }
     }
+
     return null;
 }
 
@@ -81,6 +90,7 @@ function canonicalPetId(dto: HospitalizationListItemDto | HospitalizationDetailD
 
 function canonicalPetName(dto: HospitalizationListItemDto | HospitalizationDetailDto): string {
     const raw = firstTrimmed(dto.petName, readDtoString(dto, ['PetName', 'AnimalName']));
+
     return raw ?? '';
 }
 
@@ -137,9 +147,11 @@ function canonicalUpdatedAt(dto: HospitalizationDetailDto): string | null {
  */
 function canonicalIsActive(dto: HospitalizationListItemDto | HospitalizationDetailDto): boolean {
     const explicit = readDtoBoolean(dto, ['isActive', 'IsActive']);
+
     if (explicit !== null) {
         return explicit;
     }
+
     return !canonicalDischargedAt(dto);
 }
 
@@ -214,6 +226,7 @@ export function mapPagedHospitalizationsToVm(result: HospitalizationListItemDtoP
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapHospitalizationListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -233,56 +246,75 @@ export function hospitalizationsQueryToHttpParams(query: HospitalizationsListQue
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+
     if (query.activeOnly === true) {
         p = p.set('ActiveOnly', 'true');
     } else if (query.activeOnly === false) {
         p = p.set('ActiveOnly', 'false');
     }
+
     const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+
     if (fromUtc) {
         p = p.set('dateFromUtc', fromUtc);
     }
+
     const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+
     if (toUtc) {
         p = p.set('dateToUtc', toUtc);
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     return p;
 }
 
 export function mapCreateHospitalizationToApiBody(req: CreateHospitalizationRequest): HospitalizationWriteRequestDto {
     const clinicId = req.clinicId.trim();
     const petId = req.petId.trim();
+
     if (!clinicId) {
         throw new Error('HOSPITALIZATION_WRITE_CLINIC_ID_REQUIRED');
     }
+
     if (!petId) {
         throw new Error('HOSPITALIZATION_WRITE_PET_ID_REQUIRED');
     }
+
     const admittedAtUtc = req.admittedAtUtc?.trim() ?? '';
+
     if (!admittedAtUtc) {
         throw new Error('HOSPITALIZATION_WRITE_ADMITTED_AT_REQUIRED');
     }
+
     const reason = req.reason.trim();
+
     if (!reason) {
         throw new Error('HOSPITALIZATION_WRITE_REASON_REQUIRED');
     }
+
     const planned = req.plannedDischargeAtUtc?.trim();
     const dto: HospitalizationWriteRequestDto = {
         clinicId,
@@ -293,20 +325,27 @@ export function mapCreateHospitalizationToApiBody(req: CreateHospitalizationRequ
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
     const ex = req.examinationId?.trim();
+
     if (ex) {
         dto.examinationId = ex;
     }
+
     const visitId = req.visitId?.trim();
+
     if (visitId) {
         dto.visitId = visitId;
     }
+
     if (req.location != null) {
         dto.location = req.location.trim();
     }
+
     const rowVersion = req.rowVersion?.trim();
+
     if (rowVersion) {
         dto.rowVersion = rowVersion;
     }
+
     return dto;
 }
 
@@ -342,17 +381,21 @@ export function mapHospitalizationUpsertFormToCreateRequest(
 
 export function mapDischargeHospitalizationToApiBody(req: DischargeHospitalizationRequest): DischargeHospitalizationRequestDto {
     const d = req.dischargedAtUtc.trim();
+
     if (!d) {
         throw new Error('HOSPITALIZATION_DISCHARGE_DATE_REQUIRED');
     }
+
     const dto: DischargeHospitalizationRequestDto = {
         dischargedAtUtc: d,
         dischargeNote: req.dischargeNote?.trim() ? req.dischargeNote.trim() : null
     };
     const rowVersion = req.rowVersion?.trim();
+
     if (rowVersion) {
         dto.rowVersion = rowVersion;
     }
+
     return dto;
 }
 

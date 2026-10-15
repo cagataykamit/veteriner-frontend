@@ -68,29 +68,37 @@ export function breedListQueryToHttpParams(options?: {
 }): HttpParams | undefined {
     let params = new HttpParams();
     let has = false;
+
     if (options?.activeOnly === true) {
         params = params.set('isActive', 'true');
         has = true;
     }
+
     const sid = options?.speciesId?.trim();
+
     if (sid) {
         params = params.set('speciesId', sid);
         has = true;
     }
+
     const q = options?.search?.trim();
+
     if (q) {
         params = params.set('search', q);
         has = true;
     }
+
     if (options?.page != null && options?.pageSize != null) {
         params = params.set('Page', String(options.page)).set('PageSize', String(options.pageSize));
         has = true;
     }
+
     return has ? params : undefined;
 }
 
 export function mapBreedListResponseToVm(raw: unknown): BreedListItemVm[] {
     const items = extractBreedListItems(raw);
+
     return items.map((x) => mapBreedListItemDtoToVm(x));
 }
 
@@ -98,39 +106,52 @@ export function extractCreatedBreedIdFromPostResponse(body: unknown): string | n
     if (body == null) {
         return null;
     }
+
     if (typeof body === 'string') {
         return body.trim() || null;
     }
+
     if (typeof body !== 'object') {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const idKeys = ['id', 'Id', 'breedId', 'BreedId'];
+
     for (const k of idKeys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
+
         if (typeof v === 'number' && !Number.isNaN(v)) {
             return String(v);
         }
     }
+
     const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'breed', 'Breed'];
+
     for (const w of wrappers) {
         const inner = o[w];
+
         if (inner && typeof inner === 'object') {
             const n = inner as Record<string, unknown>;
+
             for (const k of idKeys) {
                 const v = n[k];
+
                 if (typeof v === 'string' && v.trim()) {
                     return v.trim();
                 }
+
                 if (typeof v === 'number' && !Number.isNaN(v)) {
                     return String(v);
                 }
             }
         }
     }
+
     return null;
 }
 
@@ -138,22 +159,28 @@ function extractBreedListItems(raw: unknown): BreedListItemDto[] {
     if (Array.isArray(raw)) {
         return raw.filter(isBreedLike).map(normalizeBreedLike);
     }
+
     if (!raw || typeof raw !== 'object') {
         return [];
     }
+
     const o = raw as Record<string, unknown>;
     const candidates = [o['items'], o['data'], o['value'], o['result']];
+
     for (const c of candidates) {
         if (Array.isArray(c)) {
             return c.filter(isBreedLike).map(normalizeBreedLike);
         }
+
         if (c && typeof c === 'object') {
             const inner = c as Record<string, unknown>;
+
             if (Array.isArray(inner['items'])) {
                 return inner['items'].filter(isBreedLike).map(normalizeBreedLike);
             }
         }
     }
+
     return [];
 }
 
@@ -161,7 +188,9 @@ function isBreedLike(v: unknown): v is BreedListItemDto {
     if (!v || typeof v !== 'object') {
         return false;
     }
+
     const o = v as Record<string, unknown>;
+
     return typeof o['id'] === 'string' || typeof o['Id'] === 'string';
 }
 
@@ -173,6 +202,7 @@ function normalizeBreedLike(v: BreedListItemDto): BreedListItemDto {
         Name?: string | null;
         IsActive?: boolean | null;
     };
+
     return {
         id: o.id ?? o.Id ?? '',
         speciesId: o.speciesId ?? o.SpeciesId ?? null,

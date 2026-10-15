@@ -37,6 +37,7 @@ describe('appointment status — Gelmedi (NoShow)', () => {
             for (const s of [1, 2, 3, null]) {
                 expect(canMarkAppointmentNoShow(s, '2026-10-10T09:00:00Z', now)).toBeFalse();
             }
+
             expect(canMarkAppointmentNoShow(0, null, now)).toBeFalse();
             expect(canMarkAppointmentNoShow(0, 'geçersiz', now)).toBeFalse();
         });

@@ -31,6 +31,7 @@ const dto = (over: Partial<ChargeDto> = {}): ChargeDto => ({
 describe('charge mapper — okuma', () => {
     it('DTO yu VM ye eşler; boş opsiyonelleri null yapar', () => {
         const vm = mapChargeDtoToVm(dto({ petId: ' ', petName: null, visitId: ' v1 ' }));
+
         expect(vm.petId).toBeNull();
         expect(vm.petName).toBeNull();
         expect(vm.visitId).toBe('v1');
@@ -40,9 +41,11 @@ describe('charge mapper — okuma', () => {
 
     it('ödenen ve kalan tutarı eşler; eski yanıtta yoksa null', () => {
         const vm = mapChargeDtoToVm(dto());
+
         expect(vm.allocatedAmount).toBe(250);
         expect(vm.outstandingAmount).toBe(500);
         const old = mapChargeDtoToVm(dto({ allocatedAmount: undefined, outstandingAmount: undefined }));
+
         expect(old.allocatedAmount).toBeNull();
         expect(old.outstandingAmount).toBeNull();
     });
@@ -53,12 +56,14 @@ describe('charge mapper — okuma', () => {
 
     it('sayfalı sonucu eşler; items null ise boş dizi', () => {
         const vm = mapPagedChargesToVm({ items: null, page: 2, pageSize: 20, totalItems: 25, totalPages: 2 });
+
         expect(vm).toEqual({ items: [], page: 2, pageSize: 20, totalItems: 25, totalPages: 2 });
         expect(mapPagedChargesToVm({ items: [dto()], page: 1, pageSize: 20, totalItems: 1, totalPages: 1 }).items[0].id).toBe('ch1');
     });
 
     it('create sonucunda created bayrağını korur', () => {
         const vm = mapChargeCreateResultDtoToVm({ created: false, charge: dto() });
+
         expect(vm.created).toBeFalse();
         expect(vm.charge.id).toBe('ch1');
     });
@@ -76,6 +81,7 @@ describe('charge mapper — yazma ve sorgu', () => {
             unitPrice: 10.5,
             requestId: 'rid'
         });
+
         expect(body).toEqual({
             clinicId: 'c1',
             clientId: 'cl1',
@@ -93,6 +99,7 @@ describe('charge mapper — yazma ve sorgu', () => {
 
     it('liste sorgusu varsayılan sayfalama ve yalnız dolu filtreleri gönderir', () => {
         const p = chargesQueryToHttpParams({ clinicId: 'c1', clientId: ' cl1 ', petId: ' ' });
+
         expect(p.get('page')).toBe('1');
         expect(p.get('pageSize')).toBe('20');
         expect(p.get('clinicId')).toBe('c1');

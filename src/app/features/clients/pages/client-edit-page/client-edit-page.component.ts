@@ -140,8 +140,10 @@ export class ClientEditPageComponent implements OnInit {
         for (const f of CLIENT_UPSERT_FORM_FIELDS) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[f]) {
                     const next = { ...cur };
+
                     delete next[f];
                     this.apiFieldErrors.set(next);
                 }
@@ -151,31 +153,40 @@ export class ClientEditPageComponent implements OnInit {
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id');
+
         if (!id) {
             this.loadError.set('Geçersiz müşteri.');
+
             return;
         }
+
         this.currentId.set(id);
         this.reload();
     }
 
     fieldMessage(field: ClientCreateFormFieldKey): string | null {
         const api = this.apiFieldErrors()[field];
+
         if (api) {
             return api;
         }
+
         const control = this.form.controls[field];
+
         if (!control.invalid || !control.touched) {
             return null;
         }
+
         return clientUpsertFieldErrorMessage(field, control.errors);
     }
 
     reload(): void {
         const id = this.currentId();
+
         if (!id) {
             return;
         }
+
         this.loading.set(true);
         this.loadError.set(null);
         this.clientsService.getClientById(id).subscribe({
@@ -201,10 +212,13 @@ export class ClientEditPageComponent implements OnInit {
         if (this.ro.mutationBlocked()) {
             return;
         }
+
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid || !this.currentId()) {
             this.form.markAllAsTouched();
+
             return;
         }
 
@@ -218,12 +232,16 @@ export class ClientEditPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseClientCreateHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(panelHttpFailureMessage(e, 'Kayıt sırasında hata oluştu.'));
             }
         });
@@ -233,6 +251,7 @@ export class ClientEditPageComponent implements OnInit {
         if (!this.currentId()) {
             return;
         }
+
         void this.router.navigate(['/panel/clients', this.currentId()!]);
     }
 }

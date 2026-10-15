@@ -255,6 +255,7 @@ export class ClinicalTermsPageComponent implements OnInit {
 
     onLazyLoad(event: TableLazyLoadEvent): void {
         const page = Math.floor((event.first ?? 0) / PAGE_SIZE) + 1;
+
         if (page !== this.first() / PAGE_SIZE + 1) {
             this.load(page);
         }
@@ -271,13 +272,17 @@ export class ClinicalTermsPageComponent implements OnInit {
     submitDialog(): void {
         if (this.dialogForm.invalid || this.submitting()) {
             this.dialogForm.markAllAsTouched();
+
             return;
         }
+
         const name = this.dialogForm.getRawValue().name;
         const row = this.editing();
+
         this.submitting.set(true);
         this.dialogError.set(null);
         const request = row ? this.terms.rename(row.id, name, row.rowVersion) : this.terms.create(this.kind(), name);
+
         request.subscribe({
             next: () => {
                 this.submitting.set(false);
@@ -286,13 +291,16 @@ export class ClinicalTermsPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof ClinicalTermError && e.isConflict) {
                     // Eski sürümle tekrar denenmesin: pencere kapanır, liste yenilenir, kullanıcı güncel kayıtla yeniden açar.
                     this.dialogVisible.set(false);
                     this.listActionError.set(e.message);
                     this.reload();
+
                     return;
                 }
+
                 this.dialogError.set(e instanceof Error ? e.message : 'Kayıt başarısız.');
             }
         });
@@ -315,6 +323,7 @@ export class ClinicalTermsPageComponent implements OnInit {
         if (!this.canDeactivate || row.isSystem || this.ro.mutationBlocked() || this.mutatingId() !== null) {
             return;
         }
+
         this.mutatingId.set(row.id);
         this.listActionError.set(null);
         this.terms.setActive(row.id, active).subscribe({
@@ -331,9 +340,11 @@ export class ClinicalTermsPageComponent implements OnInit {
 
     private openDialog(row: ClinicalTermDto | null): void {
         const allowed = row ? this.canUpdate && !row.isSystem : this.canCreate;
+
         if (!allowed || this.ro.mutationBlocked()) {
             return;
         }
+
         this.editing.set(row);
         this.dialogError.set(null);
         this.listActionError.set(null);

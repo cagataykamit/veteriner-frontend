@@ -276,10 +276,13 @@ export class AppointmentsListPageComponent implements OnInit {
         const date = formatUtcIsoAsLocalDateDisplay(row.scheduledAtUtc);
         const start = formatUtcIsoAsLocalTimeDisplay(row.scheduledAtUtc);
         const end = formatUtcIsoAsLocalTimeDisplay(row.scheduledEndUtc);
+
         if (!start || start === '—') {
             return date;
         }
+
         const range = end && end !== '—' && end !== start ? `${start}–${end}` : start;
+
         return `${date} · ${range}`;
     };
     readonly statusLabel = appointmentStatusLabel;
@@ -294,10 +297,12 @@ export class AppointmentsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
@@ -305,8 +310,10 @@ export class AppointmentsListPageComponent implements OnInit {
     applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
@@ -360,8 +367,10 @@ export class AppointmentsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? this.pageSize();
         const eventFirst = event.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
@@ -371,10 +380,12 @@ export class AppointmentsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
@@ -383,6 +394,7 @@ export class AppointmentsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const eventFirst = state.first ?? 0;
         const rowsChanged = rows !== this.pageSize();
+
         this.suppressNextLazy = true;
 
         if (rowsChanged) {
@@ -390,10 +402,12 @@ export class AppointmentsListPageComponent implements OnInit {
             this.currentPage.set(1);
             this.persistStateToSessionStorage(1, rows);
             this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
+
             return;
         }
 
         const page = Math.floor(eventFirst / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
@@ -408,9 +422,11 @@ export class AppointmentsListPageComponent implements OnInit {
         force = false
     ): void {
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}|${this.contextPetId()}|${this.contextClientId()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -462,17 +478,22 @@ export class AppointmentsListPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(APPOINTMENTS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<AppointmentListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(APPOINTMENTS_LIST_STATE_KEY);
+
                 return false;
             }
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.statusFilter = typeof parsed.status === 'string' ? parsed.status : '';
             this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
@@ -483,9 +504,11 @@ export class AppointmentsListPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(APPOINTMENTS_LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -499,6 +522,7 @@ export class AppointmentsListPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(APPOINTMENTS_LIST_STATE_KEY, JSON.stringify(state));
     }
 

@@ -10,9 +10,12 @@ export interface ContextWeightVm {
 
 export function contextWeight(summary: PetSummaryVm | null): ContextWeightVm | null {
     const latest = summary?.latestWeight.data;
+
     if (latest) {
         return { weightKg: latest.weightKg, source: 'examination', measuredAtUtc: latest.measuredAtUtc };
     }
+
     const profile = summary?.profileWeightKg ?? null;
+
     return profile !== null ? { weightKg: profile, source: 'profile', measuredAtUtc: null } : null;
 }

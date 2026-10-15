@@ -13,6 +13,7 @@ export const FINALIZED_EXAMINATION_OPTION_HINT = 'kesinleşmiş — yatış bağ
 
 export function hospitalizationExaminationOption(ex: ExaminationListItemVm): HospitalizationRelationOption {
     const base = prescriptionExaminationSelectOption(ex);
+
     return ex.status === 'Finalized' ? { ...base, label: `${base.label} (${FINALIZED_EXAMINATION_OPTION_HINT})`, disabled: true } : base;
 }
 
@@ -28,5 +29,6 @@ export function hospitalizationVisitOptions(items: TodayItemVm[], petId: string,
             label: `${i.petName} — ${formatUtcIsoAsLocalTimeDisplay(i.arrivedAtUtc)} gelişi`
         }));
     const current = currentVisitId.trim();
+
     return current && !options.some((o) => o.value === current) ? [{ value: current, label: 'Kayıtlı geliş bağı' }, ...options] : options;
 }

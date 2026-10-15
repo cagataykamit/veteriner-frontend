@@ -18,6 +18,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClientsListPageComponent
@@ -27,6 +28,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(CLIENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClientNewPageComponent
@@ -36,6 +38,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClientEditPageComponent
@@ -45,6 +48,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClientKvkkFormPageComponent
@@ -54,6 +58,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClientDetailPageComponent

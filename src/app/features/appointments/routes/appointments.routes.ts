@@ -18,6 +18,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: AppointmentsListPageComponent
@@ -27,6 +28,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: AppointmentsCalendarPageComponent
@@ -36,6 +38,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: AppointmentNewPageComponent
@@ -45,6 +48,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: AppointmentEditPageComponent
@@ -54,6 +58,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: AppointmentDetailPageComponent

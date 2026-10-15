@@ -118,6 +118,7 @@ export class ChargeSuggestionConvertDialogComponent {
         this.formValue();
         const { quantity, unitPrice } = this.form.getRawValue();
         const amount = computeChargeAmount(quantity, unitPrice);
+
         return amount === null ? '—' : formatMoney(amount, this.suggestion()?.currency || 'TRY');
     });
 
@@ -125,6 +126,7 @@ export class ChargeSuggestionConvertDialogComponent {
         this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.submitError.set(null));
         effect(() => {
             const s = this.suggestion();
+
             if (this.visible() && s) {
                 untracked(() => {
                     this.submitError.set(null);
@@ -140,19 +142,24 @@ export class ChargeSuggestionConvertDialogComponent {
 
     onSubmit(): void {
         const s = this.suggestion();
+
         if (this.submitting() || !s) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const { description, quantity, unitPrice } = this.form.getRawValue();
         const overrides: ChargeSuggestionOverrides = {
             ...(description.trim() !== s.description.trim() ? { description: description.trim() } : {}),
             ...(quantity !== s.quantity ? { quantity: quantity! } : {}),
             ...(unitPrice !== s.suggestedUnitPrice ? { unitPrice: unitPrice! } : {})
         };
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.execute()(overrides).subscribe({

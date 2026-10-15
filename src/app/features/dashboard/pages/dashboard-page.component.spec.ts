@@ -27,7 +27,9 @@ describe('DashboardPageComponent hızlı işlemler', () => {
             ]
         });
         const fixture = TestBed.createComponent(DashboardPageComponent);
+
         fixture.detectChanges();
+
         return fixture;
     };
 
@@ -36,24 +38,28 @@ describe('DashboardPageComponent hızlı işlemler', () => {
 
     it('Visits.Create izni varken Randevusuz geliş düğmesi görünür, diğer düğmeler kalır', () => {
         const fixture = create([VISITS_CREATE_CLAIM, APPOINTMENTS_READ_CLAIM]);
+
         expect(walkInButton(fixture)).toBeDefined();
         expect(fixture.nativeElement.textContent).toContain('Yeni Randevu');
     });
 
     it('Visits.Create izni yokken düğme ve diyalog yoktur', () => {
         const fixture = create([APPOINTMENTS_READ_CLAIM]);
+
         expect(walkInButton(fixture)).toBeUndefined();
         expect(fixture.nativeElement.querySelector('app-visit-arrival-dialog')).toBeNull();
     });
 
     it('abonelik salt okunursa düğme devre dışıdır', () => {
         const fixture = create([VISITS_CREATE_CLAIM], true);
+
         expect(walkInButton(fixture)?.disabled).toBeTrue();
     });
 
     it('düğme geliş diyaloğunu açar; kayıt sonrası Bugün sayfasına gidilir', () => {
         const fixture = create([VISITS_CREATE_CLAIM]);
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
         walkInButton(fixture)!.click();
         expect(fixture.componentInstance.walkInOpen()).toBeTrue();
         fixture.componentInstance.onWalkInArrived();

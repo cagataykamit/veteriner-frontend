@@ -45,12 +45,15 @@ export function procedureAddState(kind: ProcedureKind, ctx: { finalized: boolean
     if (ctx.mutationBlocked) {
         return { disabled: true, reason: READ_ONLY_TENANT_MESSAGE, note: null };
     }
+
     if (ctx.finalized && LOCKED_WHEN_FINALIZED.includes(kind)) {
         return { disabled: true, reason: FINALIZED_LOCK_MESSAGE, note: null };
     }
+
     if (ctx.finalized && kind === 'hospitalization') {
         return { disabled: false, reason: null, note: FINALIZED_HOSPITALIZATION_NOTE };
     }
+
     return { disabled: false, reason: null, note: null };
 }
 
@@ -95,10 +98,12 @@ export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null):
             cancelled: r.status === 'Cancelled'
         }))
     ];
+
     return rows.sort((a, b) => {
         if (!a.atUtc || !b.atUtc) {
             return a.atUtc ? -1 : b.atUtc ? 1 : 0;
         }
+
         return a.atUtc.localeCompare(b.atUtc);
     });
 }
@@ -107,6 +112,7 @@ const EMPTY_TEXT_MARK = '—';
 
 function isBlank(value: string | null | undefined): boolean {
     const v = value?.trim() ?? '';
+
     return v === '' || v === EMPTY_TEXT_MARK;
 }
 
@@ -134,6 +140,7 @@ export function finalizeChecklist(
         { key: 'assessment', ok: !isBlank(exam.assessment), okLabel: 'Değerlendirme / tanı girildi', warning: 'Değerlendirme / tanı girilmemiş.' },
         { key: 'plan', ok: !isBlank(exam.plan), okLabel: 'Plan / takip girildi', warning: 'Plan / takip bilgisi girilmemiş.' }
     ];
+
     if (summary) {
         items.push({
             key: 'procedures',
@@ -142,7 +149,9 @@ export function finalizeChecklist(
             warning: 'Muayeneye bağlı tedavi, reçete, aşı, lab istemi veya yatış kaydı yok (uygulama bu denetime dahil değildir).'
         });
     }
+
     const pending = summary?.pendingChargeCount;
+
     if (pending !== null && pending !== undefined) {
         items.push({
             key: 'pendingCharges',
@@ -151,6 +160,7 @@ export function finalizeChecklist(
             warning: `${pending} ücret bekliyor (resepsiyon ücrete çevirmedi veya ücretsiz saymadı).`
         });
     }
+
     return items;
 }
 

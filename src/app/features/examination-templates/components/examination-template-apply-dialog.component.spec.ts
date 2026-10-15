@@ -66,10 +66,12 @@ describe('ExaminationTemplateApplyDialogComponent', () => {
         cmp.select(otitis);
         fixture.detectChanges();
         const preview = body().querySelector('[data-testid="template-preview"]')?.textContent ?? '';
+
         expect(preview).toContain('Şikâyete eklenecek');
         expect(preview).toContain('Kulak kaşıntısı');
         expect(preview).not.toContain('Plana eklenecek');
         const lines = Array.from(body().querySelectorAll('[data-testid="template-preview-line"]')).map((l) => l.textContent ?? '');
+
         expect(lines[0]).toContain('Hizmet');
         expect(lines[1]).toContain('Stoktan düşer');
         expect(body().querySelector('[data-testid="template-reapply-warning"]')).toBeNull();
@@ -129,6 +131,7 @@ describe('ExaminationTemplateApplyDialogComponent', () => {
         service.apply.and.returnValue(throwError(() => new ExaminationTemplateError('Şablon pasifleştirilmiş.', 'ExaminationTemplates.Inactive')));
         cmp.select(otitis);
         const before = service.list.calls.count();
+
         cmp.onSubmit();
         expect(cmp.selected()).toBeNull();
         expect(service.list.calls.count()).toBe(before + 1);

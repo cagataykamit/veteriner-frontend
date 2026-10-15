@@ -44,12 +44,14 @@ describe('ClientsListPageComponent — ortak arama davranışı', () => {
 
     it('"Ara" düğmesi yoktur, "Temizle" vardır', () => {
         const buttons = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).map((b) => b.textContent?.trim());
+
         expect(buttons).not.toContain('Ara');
         expect(buttons).toContain('Temizle');
     });
 
     it('2+ karakter yazınca bekleme sonrası sunucu aramasına gider; tek karakterde gitmez', async () => {
         const before = clients.getClients.calls.count();
+
         await type('a');
         await wait(500);
         expect(clients.getClients.calls.count()).toBe(before);
@@ -61,6 +63,7 @@ describe('ClientsListPageComponent — ortak arama davranışı', () => {
 
     it('Enter anında arar', async () => {
         const before = clients.getClients.calls.count();
+
         await type('veli');
         input().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
         expect(clients.getClients.calls.count()).toBe(before + 1);
@@ -71,6 +74,7 @@ describe('ClientsListPageComponent — ortak arama davranışı', () => {
         await type('ali');
         await wait(500);
         const clear = fixture.nativeElement.querySelector('button[aria-label="Aramayı temizle"]') as HTMLButtonElement;
+
         clear.click();
         fixture.detectChanges();
         await wait(0);
@@ -84,6 +88,7 @@ describe('ClientsListPageComponent — tek başlık', () => {
     function create(response: ReturnType<ClientsService['getClients']> = of({ items: [], page: 1, pageSize: 10, totalItems: 16, totalPages: 2 })): HTMLElement {
         sessionStorage.clear();
         const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClients']);
+
         clients.getClients.and.returnValue(response);
         TestBed.configureTestingModule({
             imports: [ClientsListPageComponent],
@@ -95,7 +100,9 @@ describe('ClientsListPageComponent — tek başlık', () => {
             ]
         });
         const fixture = TestBed.createComponent(ClientsListPageComponent);
+
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     }
 
@@ -103,8 +110,10 @@ describe('ClientsListPageComponent — tek başlık', () => {
 
     it('sayfa başlığı ve kategori satırı yoktur; tek h1 kart başlığıdır ve kayıt sayısı yanında', () => {
         const el = create();
+
         expect(el.querySelector('app-page-header')).toBeNull();
         const headings = Array.from(el.querySelectorAll('h1, h2, h3, h4, h5'));
+
         expect(headings.map((h) => [h.tagName, h.textContent?.trim()])).toEqual([['H1', 'Müşteriler']]);
         expect(el.querySelector('app-list-header')!.textContent).toContain('16 kayıt');
     });
@@ -113,12 +122,14 @@ describe('ClientsListPageComponent — tek başlık', () => {
         const el = create();
         const createLink = el.querySelector('a[href="/panel/clients/new"]')!;
         const clear = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Temizle')!;
+
         expect(createLink.parentElement).toBe(clear.closest('p-button')!.parentElement);
         expect(el.querySelector('input#clientSearch')!.compareDocumentPosition(createLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it('ilk yükleme sürerken de başlık ve birincil eylem görünür', () => {
         const el = create(new Subject<never>());
+
         expect(el.querySelector('app-loading-state')).not.toBeNull();
         expect(el.querySelector('h1')?.textContent?.trim()).toBe('Müşteriler');
         expect(el.querySelector('a[href="/panel/clients/new"]')).not.toBeNull();

@@ -81,11 +81,14 @@ export class ClientKvkkFormPageComponent implements OnInit {
 
     load(): void {
         const clinicId = this.auth.getClinicId()?.trim();
+
         if (!this.clientId || !clinicId) {
             this.error.set(clinicId ? 'Geçersiz müşteri.' : 'KVKK formu için önce bir klinik seçmelisiniz.');
             this.loading.set(false);
+
             return;
         }
+
         this.loading.set(true);
         this.error.set(null);
         forkJoin({ client: this.clientsService.getClientById(this.clientId), template: this.templates.getTemplate(clinicId) }).subscribe({

@@ -7,6 +7,7 @@ import { AdministrationsListPageComponent } from '@/app/features/administrations
 function requireClaim(claim: string): CanActivateFn {
     return () => {
         const router = inject(Router);
+
         return inject(AuthService).hasOperationClaim(claim) ? true : router.createUrlTree(['/notfound']);
     };
 }

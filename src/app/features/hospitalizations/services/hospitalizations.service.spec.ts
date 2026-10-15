@@ -43,6 +43,7 @@ describe('HospitalizationsService', () => {
             done();
         });
         const req = http.expectOne(URL);
+
         expect(req.request.method).toBe('PUT');
         expect(req.request.body.rowVersion).toBe('AAAAAAAAB9E=');
         expect(req.request.body.location).toBe('');
@@ -53,6 +54,7 @@ describe('HospitalizationsService', () => {
     it('PUT: konum null ise gönderilmez (dokunma), visitId verilirse gider', (done) => {
         service.updateHospitalization('h1', { ...update, location: null, visitId: 'v1' }).subscribe(() => done());
         const req = http.expectOne(URL);
+
         expect('location' in req.request.body).toBeFalse();
         expect(req.request.body.visitId).toBe('v1');
         req.flush({ id: 'h1', rowVersion: 'x' });
@@ -80,6 +82,7 @@ describe('HospitalizationsService', () => {
                 done();
             });
         const req = http.expectOne(`${URL}/discharge`);
+
         expect(req.request.body).toEqual({ dischargedAtUtc: '2026-10-14T08:00:00Z', dischargeNote: 'Eve gitti', rowVersion: 'AAAAAAAAB9E=' });
         req.flush({ id: 'h1', rowVersion: 'AAAAAAAAB9M=' });
     });

@@ -12,6 +12,7 @@ export const ADDENDUM_TEXT_MAX = 4000;
 /** Metin kırpılmış uzunlukla doğrulanır (boşluk-only metin geçersiz). */
 function addendumText(c: { value: unknown }): { addendumText: true } | null {
     const len = typeof c.value === 'string' ? c.value.trim().length : 0;
+
     return len >= 1 && len <= ADDENDUM_TEXT_MAX ? null : { addendumText: true };
 }
 
@@ -110,10 +111,13 @@ export class ExaminationAddendumDialogComponent {
         if (this.submitting()) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.examinationsService.addAddendum(this.examinationId(), this.form.getRawValue()).subscribe({

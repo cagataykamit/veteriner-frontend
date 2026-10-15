@@ -57,9 +57,11 @@ describe('AdministrationsSectionComponent', () => {
         fixture = TestBed.createComponent(AdministrationsSectionComponent);
         fixture.componentRef.setInput('petId', 'p1');
         fixture.componentRef.setInput('examinationId', 'e1');
+
         if (inputs.treatmentId) {
             fixture.componentRef.setInput('treatmentId', inputs.treatmentId);
         }
+
         fixture.componentRef.setInput('locked', inputs.locked ?? false);
         fixture.detectChanges();
         await fixture.whenStable();
@@ -114,9 +116,11 @@ describe('AdministrationsSectionComponent', () => {
         service.getAdministrations.and.returnValue(of(page([])));
         await setup();
         const el = fixture.nativeElement as HTMLElement;
+
         expect(el.querySelector('[data-testid="administrations-empty"]')?.textContent).toContain('Bu kayıtta uygulanan ürün yok.');
         expect(el.querySelector('app-empty-state')).toBeNull();
         const header = el.querySelector('h5')!.parentElement!;
+
         expect(header.querySelector('[data-testid="administrations-show-voided"]')).not.toBeNull();
         expect(header.querySelector('[data-testid="administration-add"]')).not.toBeNull();
     });

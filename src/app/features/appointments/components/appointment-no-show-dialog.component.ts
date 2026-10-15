@@ -99,17 +99,23 @@ export class AppointmentNoShowDialogComponent {
 
     onSubmit(): void {
         const id = this.appointmentId();
+
         if (this.submitting() || !id) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const reason = this.form.getRawValue().reason;
+
         this.submitError.set(null);
         this.submitting.set(true);
         const call$ = this.reverting() ? this.appointments.revertNoShow(id, reason) : this.appointments.markNoShow(id, reason);
+
         call$.subscribe({
             next: () => {
                 this.submitting.set(false);

@@ -40,30 +40,39 @@ function toClinicalTermError<T>(fallback: string): MonoTypeOperatorFunction<T> {
         if (!(err instanceof HttpErrorResponse)) {
             return throwError(() => err);
         }
+
         const code = problemCodeFromHttpError(err);
         const message = (code && CLINICAL_TERM_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
+
         return throwError(() => new ClinicalTermError(message, code === CONCURRENCY_CONFLICT_CODE, code === DUPLICATE_NAME_CODE));
     });
 }
 
 function listQueryToHttpParams(q: ClinicalTermsListQuery): HttpParams {
     let p = new HttpParams();
+
     if (q.kind) {
         p = p.set('kind', q.kind);
     }
+
     const search = q.search?.trim();
+
     if (search) {
         p = p.set('search', search);
     }
+
     if (q.includeInactive) {
         p = p.set('includeInactive', 'true');
     }
+
     if (q.page) {
         p = p.set('page', String(q.page));
     }
+
     if (q.pageSize) {
         p = p.set('pageSize', String(q.pageSize));
     }
+
     return p;
 }
 
@@ -92,6 +101,7 @@ export class ClinicalTermsService {
 
     setActive(id: string, active: boolean): Observable<void> {
         const path = active ? ApiEndpoints.clinicalTerms.activate(id) : ApiEndpoints.clinicalTerms.deactivate(id);
+
         return this.api.post<unknown>(path, {}).pipe(
             map(() => undefined),
             toClinicalTermError(active ? 'Terim etkinleştirilemedi.' : 'Terim pasifleştirilemedi.')

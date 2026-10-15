@@ -48,6 +48,7 @@ describe('ExaminationProceduresSectionComponent', () => {
         changed = 0;
         cmp.changed.subscribe(() => changed++);
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     };
 
@@ -70,6 +71,7 @@ describe('ExaminationProceduresSectionComponent', () => {
 
         expect(cmp.drawerVisible()).toBeTrue();
         const ctx = cmp.contextParams();
+
         expect(ctx.get('clientId')).toBe('client-1');
         expect(ctx.get('petId')).toBe('pet-1');
         expect(ctx.get('examinationId')).toBe('e1');
@@ -94,6 +96,7 @@ describe('ExaminationProceduresSectionComponent', () => {
         expect(byText('Kuduz')).toBeDefined();
         expect(byText('Karma').textContent).toContain('Planlı');
         const cancelled = byText('Lösemi');
+
         expect(cancelled.textContent).toContain('İptal');
         expect(cancelled.getAttribute('data-cancelled')).toBe('true');
         expect(cancelled.querySelector('.line-through')).not.toBeNull();
@@ -103,6 +106,7 @@ describe('ExaminationProceduresSectionComponent', () => {
     it('aşı kaydı stok bildirimiyle gelir; liste yerel eklenmez, özetten tazelenmesi istenir (çift satır yok)', () => {
         create();
         const before = cmp.rows().length;
+
         cmp.onVaccinationSaved({ id: 'v1', stockNotice: { text: 'Aşı kaydedildi; kalan stok 8 doz.', warn: false } });
 
         expect(cmp.notice()).toContain('kalan stok 8 doz');
@@ -112,6 +116,7 @@ describe('ExaminationProceduresSectionComponent', () => {
 
     it('özet boşsa nötr ve kompakt (tek satır) boş durum gösterir', () => {
         const el = create();
+
         fixture.componentRef.setInput('summary', { ...summary, treatments: [], vaccinations: [] });
         fixture.detectChanges();
 
@@ -122,6 +127,7 @@ describe('ExaminationProceduresSectionComponent', () => {
 
     it('kesinleşmiş muayenede kilitli türü açmaz ve neden gösterilir', () => {
         const el = create({ ...exam, status: 'Finalized' } as ExaminationDetailVm);
+
         cmp.open('treatment');
         fixture.detectChanges();
 

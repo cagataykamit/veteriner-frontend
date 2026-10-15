@@ -71,54 +71,68 @@ function normalizeHospitalizationUpsertFieldMessage(formKey: HospitalizationUpse
     if (formKey === 'admittedAtLocal' && isHospitalizationDateTooFarPastBackendMessage(message)) {
         return HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE;
     }
+
     return message.trim();
 }
 
 function problemDetailText(err: HttpErrorResponse): string {
     const body = err.error as Record<string, unknown> | null | undefined;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return '';
     }
+
     const detail = typeof body['detail'] === 'string' ? body['detail'] : typeof body['Detail'] === 'string' ? body['Detail'] : '';
     const title = typeof body['title'] === 'string' ? body['title'] : typeof body['Title'] === 'string' ? body['Title'] : '';
+
     return [detail, title].filter(Boolean).join('\n').trim();
 }
 
 function promoteHospitalizationDatePastFromProblemDetail(err: HttpErrorResponse): HospitalizationUpsertFieldErrors | null {
     const detail = problemDetailText(err);
+
     if (isHospitalizationDateTooFarPastBackendMessage(detail)) {
         return { admittedAtLocal: HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE };
     }
+
     return null;
 }
 
 function promoteHospitalizationDatePastFromUnmappedErrors(err: HttpErrorResponse): HospitalizationUpsertFieldErrors | null {
     const raw = extractRawValidationErrors(err.error);
+
     if (!raw) {
         return null;
     }
+
     for (const [apiKey, val] of Object.entries(raw)) {
         const normalizedKey = apiKey
             .replace(/^\$/, '')
             .replace(/\[\d+]$/, '')
             .toLowerCase()
             .replace(/[^a-z0-9]/g, '');
+
         if (FIELD_MAP[normalizedKey]) {
             continue;
         }
+
         const msg = firstStringMessage(val);
+
         if (msg && isHospitalizationDateTooFarPastBackendMessage(msg)) {
             return { admittedAtLocal: HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE };
         }
     }
+
     return null;
 }
 
 export function parseHospitalizationUpsertHttpError(err: HttpErrorResponse): ParsedHospitalizationUpsertHttpError {
     const finalized = examinationFinalizedMessage(err);
+
     if (finalized) {
         return { fieldErrors: { examinationId: finalized }, summaryMessage: SUMMARY_FIELD_ERRORS, isConcurrencyConflict: false };
     }
+
     return { ...parseUpsertFieldErrors(err), isConcurrencyConflict: isConcurrencyConflict(err) };
 }
 
@@ -135,11 +149,13 @@ function parseUpsertFieldErrors(err: HttpErrorResponse): Omit<ParsedHospitalizat
     }
 
     const fromDetail = promoteHospitalizationDatePastFromProblemDetail(err);
+
     if (fromDetail) {
         return { fieldErrors: fromDetail, summaryMessage: SUMMARY_FIELD_ERRORS };
     }
 
     const fromUnmapped = promoteHospitalizationDatePastFromUnmappedErrors(err);
+
     if (fromUnmapped) {
         return { fieldErrors: fromUnmapped, summaryMessage: SUMMARY_FIELD_ERRORS };
     }
@@ -180,5 +196,6 @@ export function parseHospitalizationDischargeHttpError(
         nonFieldMessage: (e) => messageFromHttpError(e, 'Taburcu işlemi tamamlanamadı.'),
         fieldErrorsSummaryMessage: SUMMARY_FIELD_ERRORS
     });
+
     return { ...parsed, isConcurrencyConflict: isConcurrencyConflict(err) };
 }

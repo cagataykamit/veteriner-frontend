@@ -59,17 +59,21 @@ function requiredTrimmed(c: AbstractControl): ValidationErrors | null {
 /** Vital değerler opsiyonel; girildiyse `> 0` (üst sınır/uyarı eşiği yok). */
 function positiveWhenPresent(c: AbstractControl): ValidationErrors | null {
     const v = c.value as number | null;
+
     if (v === null || v === undefined) {
         return null;
     }
+
     return typeof v === 'number' && v > 0 ? null : { positive: true };
 }
 
 function integerWhenPresent(c: AbstractControl): ValidationErrors | null {
     const v = c.value as number | null;
+
     if (v === null || v === undefined) {
         return null;
     }
+
     return Number.isInteger(v) ? null : { integer: true };
 }
 
@@ -473,11 +477,14 @@ export class ExaminationWorkspacePageComponent implements OnInit {
             ['plan', 'plan'],
             ['notes', 'notes']
         ];
+
         for (const [errKey, controlKey] of fieldMap) {
             (this.form.controls[controlKey] as AbstractControl).valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[errKey]) {
                     const next = { ...cur };
+
                     delete next[errKey];
                     this.apiFieldErrors.set(next);
                 }
@@ -488,16 +495,22 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         this.isEdit = this.route.snapshot.routeConfig?.path?.includes(':id') === true;
+
         if (this.isEdit) {
             if (!id) {
                 this.loadError.set('Geçersiz muayene.');
+
                 return;
             }
+
             this.examinationId = id;
             this.reload();
+
             return;
         }
+
         this.initCreateMode();
     }
 
@@ -518,14 +531,17 @@ export class ExaminationWorkspacePageComponent implements OnInit {
 
     vitalError(key: VitalKey): string | null {
         const c = this.form.controls[key];
+
         if (c.touched || c.dirty) {
             if (c.hasError('positive')) {
                 return 'Değer 0’dan büyük olmalıdır.';
             }
+
             if (c.hasError('integer')) {
                 return 'Tam sayı giriniz.';
             }
         }
+
         return this.apiFieldErrors()[key] ?? null;
     }
 
@@ -537,6 +553,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
             next: (x) => {
                 this.current = x;
                 const { date, time } = toIstanbulDateTimeInputParts(x.examinedAtUtc);
+
                 this.timeOptions.set(examinationTimeSelectOptionsWithLegacy(time));
                 this.form.reset(
                     {
@@ -557,11 +574,13 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                     { emitEvent: false }
                 );
                 this.finalized.set(x.status === 'Finalized');
+
                 if (this.finalized()) {
                     this.form.disable({ emitEvent: false });
                 } else {
                     this.form.enable({ emitEvent: false });
                 }
+
                 this.apiFieldErrors.set({});
                 this.submitError.set(null);
                 this.conflict.set(false);
@@ -583,19 +602,26 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         if (this.submitting() || this.finalized()) {
             return;
         }
+
         this.submitError.set(null);
         this.conflict.set(false);
         this.apiFieldErrors.set({});
+
         if (this.cancelledAppointmentBlocked()) {
             this.submitError.set(this.copy.cancelledAppointmentExamCreateBlocked);
+
             return;
         }
+
         if (this.form.invalid || (!this.isEdit && this.selectionForm.invalid)) {
             this.form.markAllAsTouched();
             this.selectionForm.markAllAsTouched();
+
             return;
         }
+
         const v: ExaminationWorkspaceFormValue = this.form.getRawValue();
+
         if (this.isEdit) {
             this.submitUpdate(v);
         } else {
@@ -605,20 +631,26 @@ export class ExaminationWorkspacePageComponent implements OnInit {
 
     private submitCreate(v: ExaminationWorkspaceFormValue): void {
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
+
         const payload = mapExaminationFormToCreateRequest(v, {
             clinicId,
             petId: this.selectionForm.getRawValue().petId,
             appointmentId: this.appointmentContextId(),
             visitId: this.visitContextId()
         });
+
         if (!payload) {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
+
             return;
         }
+
         this.submitting.set(true);
         this.examinationsService.createExamination(payload).subscribe({
             next: ({ id }) => this.goToSavedDetail(id),
@@ -628,14 +660,19 @@ export class ExaminationWorkspacePageComponent implements OnInit {
 
     private submitUpdate(v: ExaminationWorkspaceFormValue): void {
         const current = this.current;
+
         if (!current) {
             return;
         }
+
         const payload = mapExaminationFormToUpdateRequest(v, current);
+
         if (!payload) {
             this.submitError.set('Geçerli bir muayene tarihi ve saati seçin.');
+
             return;
         }
+
         this.submitting.set(true);
         this.examinationsService.updateExamination(this.examinationId, payload).subscribe({
             next: () => this.goToSavedDetail(this.examinationId),
@@ -654,13 +691,17 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     /** Hata durumunda form değerlerine dokunulmaz; yalnızca mesaj ve alan hataları işlenir. */
     private handleSubmitError(e: unknown, fallback: string): void {
         this.submitting.set(false);
+
         if (e instanceof HttpErrorResponse) {
             const parsed = parseExaminationUpsertHttpError(e);
+
             this.apiFieldErrors.set(parsed.fieldErrors);
             this.submitError.set(parsed.summaryMessage);
             this.conflict.set(parsed.isConcurrencyConflict);
+
             return;
         }
+
         this.submitError.set(e instanceof Error ? e.message : fallback);
     }
 
@@ -670,6 +711,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
 
     goAppointmentDetail(): void {
         const id = this.blockedAppointmentId();
+
         void this.router.navigate(id ? ['/panel/appointments', id] : ['/panel/appointments']);
     }
 
@@ -681,25 +723,34 @@ export class ExaminationWorkspacePageComponent implements OnInit {
 
     private initCreateMode(): void {
         const visitCtx = parseVisitExaminationRouteContext(this.route.snapshot.queryParamMap);
+
         if (visitCtx) {
             this.applyVisitRouteContext(visitCtx);
         }
+
         this.selectionForm.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             if (this.contextFromAppointment()) {
                 return;
             }
+
             this.selectionForm.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.selectionForm.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const id = trimClientIdControlValue(this.selectionForm.controls.clientId.value);
+
             this.selectedClientId.set(id || null);
+
             if (!id) {
                 this.selectionForm.controls.petId.disable({ emitEvent: false });
+
                 return;
             }
+
             this.selectionForm.controls.petId.enable({ emitEvent: false });
         });
         this.selectionForm.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((petId) => {
@@ -716,14 +767,17 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 
     private tryApplyAppointmentRouteContext(): void {
         const ctx = parseAppointmentExaminationRouteContext(this.route.snapshot.queryParamMap);
+
         if (!ctx) {
             return;
         }
+
         this.applyingRouteContext.set(true);
         this.selectionError.set(null);
         this.appointmentsService.getAppointmentById(ctx.appointmentId).subscribe({
@@ -736,15 +790,20 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                     this.form.disable({ emitEvent: false });
                     this.selectionError.set(this.copy.cancelledAppointmentExamCreateBlocked);
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 const cId = ap.clientId?.trim() ?? '';
                 const pId = ap.petId?.trim() ?? '';
+
                 if (cId !== ctx.clientId || pId !== ctx.petId) {
                     this.selectionError.set('Randevu bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
                     this.applyingRouteContext.set(false);
+
                     return;
                 }
+
                 this.appointmentContextId.set(ctx.appointmentId);
                 this.selectionForm.controls.petId.enable({ emitEvent: false });
                 this.selectionForm.patchValue({ clientId: cId, petId: pId }, { emitEvent: false });
@@ -772,12 +831,16 @@ export class ExaminationWorkspacePageComponent implements OnInit {
             next: (visit) => {
                 if (visit.isVoided || visit.careStatus === 'Completed') {
                     this.rejectVisitContext('Bu geliş kaydı tamamlanmış veya yanlış geliş olarak işaretlenmiş; muayene açılamaz.');
+
                     return;
                 }
+
                 if (visit.petId !== ctx.petId) {
                     this.rejectVisitContext('Geliş bağlamı adres çubuğundaki bilgilerle uyuşmuyor.');
+
                     return;
                 }
+
                 this.visitContextId.set(ctx.visitId);
                 this.selectedClientId.set(ctx.clientId);
                 this.selectedPetId.set(ctx.petId);

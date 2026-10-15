@@ -56,6 +56,7 @@ describe('ClinicalTermsPageComponent', () => {
         await create();
         expect(terms.list).toHaveBeenCalledWith(jasmine.objectContaining({ kind: 'Diagnosis', includeInactive: true, page: 1 }));
         const rows = rowTexts();
+
         expect(rows[0]).toContain('Sistem');
         expect(rows[0]).toContain('Salt okunur');
         expect(rows[0]).not.toContain('Adı düzelt');
@@ -103,6 +104,7 @@ describe('ClinicalTermsPageComponent', () => {
         terms.rename.and.returnValue(throwError(() => new ClinicalTermError('Kayıt bu arada değişmiş; liste yenilendi, tekrar deneyin.', true)));
         await create();
         const before = terms.list.calls.count();
+
         cmp.openRename(term('c1', 'Otitis'));
         cmp.dialogForm.setValue({ name: 'Otitis externa' });
         cmp.submitDialog();
@@ -125,6 +127,7 @@ describe('ClinicalTermsPageComponent', () => {
     it('sistem terimi düzeltilemez ve pasifleştirilemez', async () => {
         await create();
         const system = term('s1', 'Gastroenterit', { isSystem: true });
+
         cmp.openRename(system);
         expect(cmp.dialogVisible()).toBeFalse();
         cmp.setActive(system, false);

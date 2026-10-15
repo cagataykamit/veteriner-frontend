@@ -930,15 +930,20 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
 
     ngOnInit(): void {
         const ok = this.auth.hasSelectedClinic();
+
         this.clinicContextOk.set(ok);
+
         if (!ok) {
             this.loading.set(false);
             this.listsLoading.set(false);
             this.dash.set(null);
             this.resetLowStockState();
+
             return;
         }
+
         this.reload();
+
         if (typeof window !== 'undefined') {
             fromEvent(window, 'scroll')
                 .pipe(take(1), takeUntilDestroyed(this.destroyRef))
@@ -946,6 +951,7 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
                     this.requestBelowFoldOnce();
                 });
         }
+
         this.destroyRef.onDestroy(() => {
             this.disconnectBelowFoldObserver();
             this.clearBelowFoldSetupTimer();
@@ -960,8 +966,10 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (!this.clinicContextOk()) {
             return this.copy.dashboardNeedClinicHint;
         }
+
         const label = this.auth.activeClinicLabel()?.trim();
         const who = label ? label : 'Seçili klinik';
+
         return `${who} için günlük operasyon durumu, yaklaşan takipler ve kritik uyarılar.`;
     }
 
@@ -969,9 +977,11 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (!this.clinicContextOk()) {
             return;
         }
+
         if (this.summariesLoadingInFlight) {
             return;
         }
+
         this.summariesLoadingInFlight = true;
         this.resetBelowFoldStateForReload();
         this.loading.set(true);
@@ -983,9 +993,11 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
                     this.loading.set(false);
                     this.summariesLoadingInFlight = false;
                     this.loadLowStockIfAllowed();
+
                     if (this.belowFoldRequested() && !this.belowFoldLoaded()) {
                         this.requestBelowFoldOnce();
                     }
+
                     this.scheduleBelowFoldObserverSetup();
                 },
                 error: () => {
@@ -1000,6 +1012,7 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (n === undefined || n === null) {
             return '—';
         }
+
         return n;
     }
 
@@ -1017,9 +1030,11 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
 
     canShowPaymentsQuickAction(): boolean {
         const d = this.dash();
+
         if (d) {
             return d.canViewFinance;
         }
+
         return this.auth.hasOperationClaim('Payments.Read');
     }
 
@@ -1047,9 +1062,11 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (severity === 'danger') {
             return 'Kritik';
         }
+
         if (severity === 'warning') {
             return 'Dikkat';
         }
+
         return 'Bilgi';
     }
 
@@ -1057,6 +1074,7 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (severity === 'warning') {
             return 'warn';
         }
+
         return severity;
     }
 
@@ -1068,11 +1086,13 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (!this.belowFoldLoaded()) {
             return d.summary.data?.todayAppointmentsCount ?? null;
         }
+
         // "Bugünkü randevular" kartı ve tablosu aynı kavramı göstersin:
         // öncelik tablo verisi (aynı source/filter), fallback summary sayacı.
         if (!d.todayAppointments.error) {
             return d.todayAppointments.data.length;
         }
+
         return d.summary.data?.todayAppointmentsCount ?? null;
     }
 
@@ -1088,14 +1108,17 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
     petSpeciesText(row: DashboardRecentPetDto): string {
         const species = row.speciesName?.trim() || row.species?.trim() || '-';
         const breed = row.breedName?.trim() || row.breed?.trim() || '';
+
         return breed ? `${species} · ${breed}` : species;
     }
 
     private hasAnyClaim(...claims: readonly string[]): boolean {
         const d = this.dash();
+
         if (d?.capabilities.data.isOwner || d?.capabilities.data.isAdmin) {
             return true;
         }
+
         return claims.some((claim) => this.auth.hasOperationClaim(claim));
     }
 
@@ -1103,16 +1126,21 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (this.belowFoldLoaded() || this.belowFoldLoading()) {
             return;
         }
+
         this.belowFoldRequested.set(true);
         this.belowFoldError.set(null);
         this.disconnectBelowFoldObserver();
+
         if (this.summariesLoadingInFlight || this.loading()) {
             return;
         }
+
         const current = this.dash();
+
         if (!current) {
             return;
         }
+
         this.loadBelowFoldData({
             summary: current.summary,
             capabilities: current.capabilities,
@@ -1133,6 +1161,7 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (this.belowFoldLoaded() || this.belowFoldLoading()) {
             return;
         }
+
         this.setBelowFoldLoading(true);
         forkJoin({
             lists: this.dashboardService.loadDashboardListsPhase(),
@@ -1157,23 +1186,33 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (this.belowFoldLoaded()) {
             return;
         }
+
         if (typeof window === 'undefined') {
             this.requestBelowFoldOnce();
+
             return;
         }
+
         const el = this.belowFoldTriggerEl()?.nativeElement ?? null;
+
         if (!el) {
             return;
         }
+
         const preloadMarginPx = 300;
+
         if (el.getBoundingClientRect().top <= window.innerHeight + preloadMarginPx) {
             this.requestBelowFoldOnce();
+
             return;
         }
+
         if (typeof IntersectionObserver === 'undefined') {
             this.requestBelowFoldOnce();
+
             return;
         }
+
         this.disconnectBelowFoldObserver();
         this.belowFoldObserver = new IntersectionObserver(
             (entries) => {
@@ -1211,6 +1250,7 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
         if (typeof window === 'undefined') {
             return;
         }
+
         this.clearBelowFoldSetupTimer();
         this.belowFoldSetupTimer = setTimeout(() => {
             this.belowFoldSetupTimer = null;
@@ -1234,8 +1274,10 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
     private loadLowStockIfAllowed(): void {
         if (!this.clinicContextOk() || !this.canReadProducts) {
             this.resetLowStockState();
+
             return;
         }
+
         this.lowStockLoading.set(true);
         this.lowStockError.set(null);
         this.productStockService.list({ page: 1, pageSize: 5, isBelowMinimum: true }).subscribe({

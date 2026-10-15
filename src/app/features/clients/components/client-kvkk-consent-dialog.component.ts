@@ -103,6 +103,7 @@ export class ClientKvkkConsentDialogComponent {
     readonly today = signal(toIstanbulDateInputValue(new Date().toISOString()));
     readonly dateError = computed(() => {
         const v = this.dateValue();
+
         return v && v > this.today() ? 'Form tarihi bugünden ileri olamaz.' : null;
     });
 
@@ -115,6 +116,7 @@ export class ClientKvkkConsentDialogComponent {
             if (this.visible()) {
                 untracked(() => {
                     const consent = this.client()?.kvkkConsent;
+
                     this.submitError.set(null);
                     this.today.set(toIstanbulDateInputValue(new Date().toISOString()));
                     this.status.setValue(consent && consent.status !== 'None' ? consent.status : 'Accepted');
@@ -126,9 +128,11 @@ export class ClientKvkkConsentDialogComponent {
 
     submit(status: KvkkConsentStatus): void {
         const c = this.client();
+
         if (this.submitting() || !c?.rowVersion || (status !== 'None' && this.dateError())) {
             return;
         }
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.clientsService.updateKvkkConsent(c.id, { status, recordedOn: status === 'None' ? null : this.recordedOn.value.trim() || null, rowVersion: c.rowVersion }).subscribe({
@@ -140,6 +144,7 @@ export class ClientKvkkConsentDialogComponent {
             error: (e: unknown) => {
                 this.submitting.set(false);
                 this.submitError.set(panelHttpFailureMessage(e, 'KVKK rıza durumu kaydedilemedi.'));
+
                 if (e instanceof HttpErrorResponse && problemCodeFromHttpError(e) === 'Clients.ConcurrencyConflict') {
                     this.stale.emit();
                 }

@@ -35,6 +35,7 @@ export class ClinicsService {
         if (!this.auth.getAccessToken()?.trim()) {
             return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.clinics.list()).pipe(
             map((raw) => mapClinicsListRaw(raw)),
             catchError((err: HttpErrorResponse) =>
@@ -46,18 +47,23 @@ export class ClinicsService {
     /** `GET /api/v1/clinics/{id}` */
     getClinicById(clinicId: string): Observable<ClinicDetailVm> {
         const id = clinicId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz klinik kimliği.'));
         }
+
         if (!this.auth.getAccessToken()?.trim()) {
             return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.clinics.byId(id)).pipe(
             map((raw) => {
                 const vm = mapClinicDetailRaw(raw);
+
                 if (!vm) {
                     throw new Error('Klinik yanıtı okunamadı.');
                 }
+
                 return vm;
             }),
             catchError((err: HttpErrorResponse) =>
@@ -69,15 +75,19 @@ export class ClinicsService {
     /** `PUT /api/v1/clinics/{id}` — 200 + ClinicDetailDto */
     updateClinic(clinicId: string, body: ClinicUpdateRequestDto): Observable<ClinicDetailVm> {
         const id = clinicId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz klinik kimliği.'));
         }
+
         return this.api.put<ClinicDetailDto | unknown>(ApiEndpoints.clinics.byId(id), body).pipe(
             map((raw) => {
                 const vm = mapClinicDetailRaw(raw);
+
                 if (!vm) {
                     throw new Error('Klinik yanıtı okunamadı.');
                 }
+
                 return vm;
             }),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -98,7 +108,9 @@ export class ClinicsService {
         if (!this.auth.getAccessToken()?.trim()) {
             return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
         }
+
         const body: ClinicCreateRequestDto = clinicProfileToWriteDto(value);
+
         return this.api.post<unknown>(ApiEndpoints.clinics.list(), body).pipe(
             map((raw) => ({ createdId: extractCreatedClinicIdFromPostResponse(raw) })),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -108,9 +120,11 @@ export class ClinicsService {
     /** `POST .../deactivate` — gövde boş. */
     deactivateClinic(clinicId: string): Observable<void> {
         const id = clinicId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz klinik kimliği.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.clinics.deactivate(id), {}).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -120,9 +134,11 @@ export class ClinicsService {
     /** `POST .../activate` — gövde boş. */
     activateClinic(clinicId: string): Observable<void> {
         const id = clinicId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz klinik kimliği.'));
         }
+
         return this.api.post<unknown>(ApiEndpoints.clinics.activate(id), {}).pipe(
             map(() => undefined),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -132,12 +148,15 @@ export class ClinicsService {
     /** `GET /api/v1/clinics/{id}/working-hours` */
     getWorkingHours(clinicId: string): Observable<ClinicWorkingHourVm[]> {
         const id = clinicId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz klinik kimliği.'));
         }
+
         if (!this.auth.getAccessToken()?.trim()) {
             return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.clinics.workingHours(id)).pipe(
             map((raw) => mapClinicWorkingHoursResponse(raw)),
             catchError((err: HttpErrorResponse) =>
@@ -152,9 +171,11 @@ export class ClinicsService {
         body: UpdateClinicWorkingHoursRequestDto
     ): Observable<ClinicWorkingHourVm[]> {
         const id = clinicId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz klinik kimliği.'));
         }
+
         return this.api.put<unknown>(ApiEndpoints.clinics.workingHours(id), body).pipe(
             map((raw) => mapClinicWorkingHoursResponse(raw)),
             catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -164,12 +185,15 @@ export class ClinicsService {
     /** `GET /api/v1/clinics/{id}/appointment-settings` */
     getAppointmentSettings(clinicId: string): Observable<ClinicAppointmentSettingsVm> {
         const id = clinicId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz klinik kimliği.'));
         }
+
         if (!this.auth.getAccessToken()?.trim()) {
             return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
         }
+
         return this.api.get<unknown>(ApiEndpoints.clinics.appointmentSettings(id)).pipe(
             map((raw) => mapClinicAppointmentSettingsResponse(raw)),
             catchError((err: HttpErrorResponse) =>
@@ -184,9 +208,11 @@ export class ClinicsService {
         body: UpdateClinicAppointmentSettingsRequestDto
     ): Observable<ClinicAppointmentSettingsVm> {
         const id = clinicId.trim();
+
         if (!id) {
             return throwError(() => new Error('Geçersiz klinik kimliği.'));
         }
+
         return this.api.put<unknown>(ApiEndpoints.clinics.appointmentSettings(id), body).pipe(
             map((raw) => mapClinicAppointmentSettingsResponse(raw)),
             catchError((err: HttpErrorResponse) => throwError(() => err))

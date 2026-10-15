@@ -41,6 +41,7 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
         cmp.saveDisplayName();
 
         const req = http.expectOne('http://api.test/api/v1/me/display-name');
+
         expect(req.request.method).toBe('PUT');
         expect(req.request.body).toEqual({ displayName: 'Dr. Ayşe Yılmaz' });
         req.flush(null, { status: 204, statusText: 'No Content' });
@@ -54,6 +55,7 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
         cmp.displayNameControl.setValue('   ');
         cmp.saveDisplayName();
         const req = http.expectOne('http://api.test/api/v1/me/display-name');
+
         expect(req.request.body).toEqual({ displayName: null });
         req.flush(null, { status: 204, statusText: 'No Content' });
         expect(cmp.summary()?.displayName).toBeNull();
@@ -70,6 +72,7 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
         cmp.saveDisplayName();
         cmp.saveDisplayName();
         const req = http.expectOne('http://api.test/api/v1/me/display-name');
+
         req.flush({ detail: 'Ad geçersiz.' }, { status: 400, statusText: 'Bad Request' });
 
         expect(cmp.displayNameSaving()).toBeFalse();

@@ -33,6 +33,7 @@ export class AdministrationsService {
     /** Aktif klinik kapsamında uygulama listesi (kapsamsız liste yoktur). */
     getAdministrations(query: AdministrationsListQuery = {}): Observable<AdministrationsPagedVm> {
         const clinicId = query.clinicId?.trim() || this.auth.getClinicId()?.trim() || undefined;
+
         return this.api
             .get<AdministrationPagedResultDto>(ApiEndpoints.administrations.list(), administrationsQueryToHttpParams({ ...query, clinicId }))
             .pipe(map(mapPagedAdministrationsToVm), toUserError('Uygulama listesi yüklenemedi.'));
@@ -41,9 +42,11 @@ export class AdministrationsService {
     /** 201 yeni uygulama (stok düşer); 200 aynı `requestId` ile daha önce kaydedilmiş uygulama (`created: false`, hata değildir). */
     createAdministration(req: CreateAdministrationRequest): Observable<AdministrationCreateResultVm> {
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             return throwError(() => new Error('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         return this.api
             .post<AdministrationCreateResultDto>(ApiEndpoints.administrations.list(), mapCreateAdministrationToApiBody(clinicId, req))
             .pipe(map(mapAdministrationCreateResultDtoToVm), toUserError('Uygulama kaydedilemedi.'));

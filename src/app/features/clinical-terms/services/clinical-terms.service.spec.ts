@@ -21,6 +21,7 @@ describe('ClinicalTermsService', () => {
     it('liste sorgusu yalnız dolu parametreleri gönderir', () => {
         service.list({ kind: 'Diagnosis', search: '  otit ', includeInactive: true, page: 2, pageSize: 50 }).subscribe();
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/clinical-terms');
+
         expect(req.request.params.get('kind')).toBe('Diagnosis');
         expect(req.request.params.get('search')).toBe('otit');
         expect(req.request.params.get('includeInactive')).toBe('true');
@@ -30,6 +31,7 @@ describe('ClinicalTermsService', () => {
 
         service.list({ kind: 'Complaint', search: ' ' }).subscribe();
         const plain = http.expectOne((r) => r.url === 'http://api.test/api/v1/clinical-terms');
+
         expect(plain.request.params.keys()).toEqual(['kind']);
         plain.flush({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0 });
     });
@@ -37,12 +39,14 @@ describe('ClinicalTermsService', () => {
     it('ekleme ve ad düzeltme gövdesi sözleşmeye uyar', () => {
         service.create('Complaint', ' Kulak akıntısı ').subscribe();
         const post = http.expectOne('http://api.test/api/v1/clinical-terms');
+
         expect(post.request.method).toBe('POST');
         expect(post.request.body).toEqual({ kind: 'Complaint', name: 'Kulak akıntısı' });
         post.flush({});
 
         service.rename('t1', 'Otitis externa', 'AAAAAAAAB9I=').subscribe();
         const put = http.expectOne('http://api.test/api/v1/clinical-terms/t1');
+
         expect(put.request.method).toBe('PUT');
         expect(put.request.body).toEqual({ name: 'Otitis externa', rowVersion: 'AAAAAAAAB9I=' });
         put.flush({});
@@ -57,6 +61,7 @@ describe('ClinicalTermsService', () => {
 
     it('409 çakışması işaretlenir; mükerrer ad anlaşılır mesaja çevrilir', () => {
         let conflict: ClinicalTermError | undefined;
+
         service.rename('t1', 'X', 'V1').subscribe({ error: (e: ClinicalTermError) => (conflict = e) });
         http.expectOne('http://api.test/api/v1/clinical-terms/t1').flush(
             { status: 409, code: 'ClinicalTerms.ConcurrencyConflict' },
@@ -66,6 +71,7 @@ describe('ClinicalTermsService', () => {
         expect(conflict?.isDuplicateName).toBeFalse();
 
         let duplicate: ClinicalTermError | undefined;
+
         service.create('Diagnosis', 'GASTROENTERİT').subscribe({ error: (e: ClinicalTermError) => (duplicate = e) });
         http.expectOne('http://api.test/api/v1/clinical-terms').flush(
             { status: 409, extensions: { code: 'ClinicalTerms.DuplicateName' } },

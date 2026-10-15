@@ -54,6 +54,7 @@ export class DashboardMiniTrendChartComponent {
             if (primary.startsWith('#') && primary.length === 7) {
                 return `${primary}22`;
             }
+
             return 'rgba(59, 130, 246, 0.12)';
         })();
 
@@ -78,6 +79,7 @@ export class DashboardMiniTrendChartComponent {
             if (kind === 'money') {
                 return formatMoney(n, 'TRY', 'tr-TR');
             }
+
             return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100);
         };
 
@@ -91,9 +93,11 @@ export class DashboardMiniTrendChartComponent {
                     callbacks: {
                         label: (ctx: { parsed?: { y?: number } }) => {
                             const y = ctx.parsed?.y;
+
                             if (y == null || Number.isNaN(y)) {
                                 return '';
                             }
+
                             return kind === 'money' ? formatMoney(y, 'TRY') : `${y} randevu`;
                         }
                     }
@@ -117,9 +121,11 @@ export class DashboardMiniTrendChartComponent {
                         font: { size: 10 },
                         callback: (v: string | number) => {
                             const n = typeof v === 'number' ? v : Number(v);
+
                             if (Number.isNaN(n)) {
                                 return '';
                             }
+
                             return fmtY(n);
                         }
                     },

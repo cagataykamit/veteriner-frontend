@@ -21,6 +21,7 @@ export class AccountService {
     /** Boş değer adı temizler (sunucuda e-posta türevi ad kullanılır). */
     updateDisplayName(displayName: string): Observable<void> {
         const body = { displayName: displayName.trim() || null };
+
         return this.api.put<unknown>(ApiEndpoints.me.displayName(), body).pipe(map(() => undefined));
     }
 
@@ -30,6 +31,7 @@ export class AccountService {
             newPassword: request.newPassword.trim(),
             confirmPassword: request.confirmPassword.trim()
         };
+
         return this.api.post<unknown>(ApiEndpoints.me.changePassword(), body).pipe(map(() => undefined));
     }
 }

@@ -112,10 +112,12 @@ describe('AdministrationCreateDialogComponent', () => {
 
     it('sınır dışı miktarlar reddedilir (0, 4 ondalık, 100000 üstü)', () => {
         cmp.form.patchValue({ productId: 'pr1' });
+
         for (const q of [0, -1, 0.0001, 100001]) {
             cmp.form.controls.quantity.setValue(q);
             expect(cmp.form.controls.quantity.valid).withContext(String(q)).toBeFalse();
         }
+
         cmp.form.controls.quantity.setValue(0.5);
         expect(cmp.form.controls.quantity.valid).toBeTrue();
     });
@@ -130,6 +132,7 @@ describe('AdministrationCreateDialogComponent', () => {
         cmp.form.patchValue({ productId: 'pr1', quantity: 0.5, notes: 'Damar yolu' });
         cmp.onSubmit();
         const arg = service.createAdministration.calls.mostRecent().args[0];
+
         expect(arg).toEqual(jasmine.objectContaining({ petId: 'p1', examinationId: 'e1', productId: 'pr1', quantity: 0.5, notes: 'Damar yolu', administeredAtUtc: null }));
         expect(arg.requestId).toBeTruthy();
         expect(cmp.visible()).toBeFalse();
@@ -165,6 +168,7 @@ describe('AdministrationCreateDialogComponent', () => {
         service.createAdministration.and.returnValue(of(result(true)));
         cmp.onSubmit();
         const [first, second] = service.createAdministration.calls.all().map((c) => c.args[0].requestId);
+
         expect(second).toBe(first);
 
         cmp.visible.set(true);
@@ -188,6 +192,7 @@ describe('AdministrationCreateDialogComponent', () => {
         cmp.visible.set(true);
         fixture.detectChanges();
         const doc = (fixture.nativeElement as HTMLElement).ownerDocument;
+
         expect(doc.querySelector('[data-testid="late-entry-reason"]')).not.toBeNull();
         expect(doc.body.textContent).toContain('Kesinleştirmeden sonra eklendi');
 
@@ -236,6 +241,7 @@ describe('AdministrationCreateDialogComponent', () => {
         batches.getByProduct.and.returnValue(of(batchInfo([batch('old', { isExpired: true, expiryStatus: 'expired' }), batch('b2')])));
         cmp.form.patchValue({ productId: 'pr2' });
         const old = cmp.batchOptions().find((o) => o.value === 'old');
+
         expect(old?.disabled).toBeTrue();
         expect(old?.label).toContain('süresi geçmiş');
     });

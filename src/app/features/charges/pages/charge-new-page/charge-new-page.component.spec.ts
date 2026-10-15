@@ -152,6 +152,7 @@ describe('ChargeNewPageComponent', () => {
         fill({ description: ' Genel muayene ' });
         cmp.onSubmit();
         const req = charges.createCharge.calls.mostRecent().args[0];
+
         expect(req.clientId).toBe('cl1');
         expect(req.quantity).toBe(1);
         expect(req.unitPrice).toBe(750);
@@ -162,6 +163,7 @@ describe('ChargeNewPageComponent', () => {
     it('Payments.Create varsa ücret kaydından sonra ödeme formuna müşteri, ücret ve geliş bağlamıyla geçer', async () => {
         claims.add('Payments.Create');
         const withVisit = { ...created, visitId: 'v1', examinationId: 'ex1' };
+
         charges.createCharge.and.returnValue(of({ created: true, charge: withVisit } as ChargeCreateResultVm));
         await setup();
         fill();
@@ -175,6 +177,7 @@ describe('ChargeNewPageComponent', () => {
         claims.add('Payments.Create');
         await setup();
         const labels = () => Array.from(fixture.nativeElement.querySelectorAll('form p-button')).map((b) => (b as HTMLElement).textContent?.trim());
+
         expect(labels()).toContain('Kaydet ve ödemeyi şimdi al');
         expect(labels()).toContain('Kaydet');
         TestBed.resetTestingModule();
@@ -186,6 +189,7 @@ describe('ChargeNewPageComponent', () => {
 
     it('çift tıklama: istek sürerken ikinci gönderim yapılmaz ve düğme kilitlidir', async () => {
         const pending = new Subject<ChargeCreateResultVm>();
+
         charges.createCharge.and.returnValue(pending);
         await setup();
         fill();
@@ -208,6 +212,7 @@ describe('ChargeNewPageComponent', () => {
         expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('bu müşteriye ait değil');
         cmp.onSubmit();
         const [first, second] = charges.createCharge.calls.allArgs().map((a) => a[0].requestId);
+
         expect(second).toBe(first);
         expect(router.navigate).not.toHaveBeenCalled();
     });
@@ -271,6 +276,7 @@ describe('ChargeNewPageComponent', () => {
         cmp.form.patchValue({ visitId: 'v1', examinationId: 'ex1' });
         cmp.onSubmit();
         const req = charges.createCharge.calls.mostRecent().args[0];
+
         expect(req.visitId).toBe('v1');
         expect(req.examinationId).toBe('ex1');
     });

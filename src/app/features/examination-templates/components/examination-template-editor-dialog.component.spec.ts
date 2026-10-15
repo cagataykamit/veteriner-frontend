@@ -74,6 +74,7 @@ describe('ExaminationTemplateEditorDialogComponent', () => {
         expect(products.getProducts).toHaveBeenCalledWith({ page: 1, pageSize: 200, isActive: true });
         const [first, second] = cmp.lines.controls;
         const labels = cmp.optionsFor(first).map((o) => o.label);
+
         expect(labels).toEqual(['Kulak damlası', 'Kulak temizliği · Hizmet']);
         expect(cmp.optionsFor(second)[0]).toEqual({ value: 'old', label: 'Eski damla' });
         expect(cmp.inactiveNote(second)).toContain('pasif');
@@ -97,6 +98,7 @@ describe('ExaminationTemplateEditorDialogComponent', () => {
     it('kopyala ve düzenle içeriği yeni adla POST eder', async () => {
         templates.create.and.returnValue(of(own));
         const system = { ...own, id: 'sys', isSystem: true, lines: [] };
+
         await open('copy', system);
         expect(cmp.form.controls.name.value).toBe('Otitis paketi (kopya)');
         cmp.submit();

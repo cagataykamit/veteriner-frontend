@@ -21,6 +21,7 @@ describe('ClientKvkkConsentDialogComponent', () => {
         fixture.componentRef.setInput('client', c);
         fixture.componentInstance.visible.set(true);
         fixture.detectChanges();
+
         return fixture.componentInstance;
     };
 
@@ -30,10 +31,12 @@ describe('ClientKvkkConsentDialogComponent', () => {
 
     it('Yok iken Kabul ve bugün varsayılır; seçim, tarih ve rowVersion ile kaydeder, sonucu yayar ve kapanır', () => {
         const c = create(client);
+
         expect(c.status.value).toBe('Accepted');
         expect(c.recordedOn.value).toBe(c.today());
         expect(c.canRevert()).toBeFalse();
         const changed = jasmine.createSpy('changed');
+
         c.changed.subscribe(changed);
 
         c.status.setValue('Declined');
@@ -47,6 +50,7 @@ describe('ClientKvkkConsentDialogComponent', () => {
 
     it('ileri tarih engellenir; işaretli kayıtta mevcut değerler gelir ve Yok\'a geri al tarihsiz gönderilir', () => {
         const c = create({ ...client, kvkkConsent: { status: 'Declined', recordedOn: '2025-05-05', recordedByName: 'Ayşe' } });
+
         expect([c.status.value, c.recordedOn.value]).toEqual(['Declined', '2025-05-05']);
         expect(c.canRevert()).toBeTrue();
 
@@ -61,6 +65,7 @@ describe('ClientKvkkConsentDialogComponent', () => {
 
     it('rowVersion yoksa gönderilmez', () => {
         const c = create({ ...client, rowVersion: null });
+
         c.submit('Accepted');
         expect(updateKvkkConsent).not.toHaveBeenCalled();
     });
@@ -71,6 +76,7 @@ describe('ClientKvkkConsentDialogComponent', () => {
         );
         const c = create(client);
         const stale = jasmine.createSpy('stale');
+
         c.stale.subscribe(stale);
 
         c.submit('Accepted');

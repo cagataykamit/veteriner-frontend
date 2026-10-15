@@ -15,6 +15,7 @@ describe('hızlı kayıt — mapper', () => {
             { fullName: ' Ali Veli ', phone: ' 0555 111 22 33 ' },
             { name: ' Pamuk ', speciesId: ' s1 ', microchipNumber: '  ' }
         );
+
         expect(req).toEqual({ fullName: 'Ali Veli', phone: '0555 111 22 33', petName: 'Pamuk', speciesId: 's1', microchipNumber: undefined });
         expect(mapQuickRegisterToApiBody(req)).toEqual({ fullName: 'Ali Veli', phone: '0555 111 22 33', petName: 'Pamuk', speciesId: 's1' });
     });
@@ -53,6 +54,7 @@ describe('ClientsService.quickRegister', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/clients/quick-register');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual(request);
         req.flush({ clientId: 'c1', petId: 'p1' }, { status: 201, statusText: 'Created' });

@@ -17,6 +17,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: HospitalizationsListPageComponent
@@ -26,6 +27,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(HOSPITALIZATIONS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: HospitalizationNewPageComponent
@@ -35,6 +37,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: HospitalizationEditPageComponent
@@ -44,6 +47,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: HospitalizationDetailPageComponent

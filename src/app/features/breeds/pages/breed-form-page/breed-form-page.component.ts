@@ -200,9 +200,11 @@ export class BreedFormPageComponent implements OnInit {
         this.form.controls.speciesId.enable({ emitEvent: false });
         this.loadSpeciesOptions();
         const id = this.route.snapshot.paramMap.get('id');
+
         if (!id) {
             return;
         }
+
         this.editing.set(true);
         this.currentId.set(id);
         this.reloadBreedRecord();
@@ -210,9 +212,11 @@ export class BreedFormPageComponent implements OnInit {
 
     reloadBreedRecord(): void {
         const id = this.currentId();
+
         if (!id) {
             return;
         }
+
         this.loading.set(true);
         this.loadError.set(null);
         this.breedsService.getBreedById(id).subscribe({
@@ -238,27 +242,35 @@ export class BreedFormPageComponent implements OnInit {
         if (this.ro.mutationBlocked()) {
             return;
         }
+
         if (this.editing() && !this.auth.hasOperationClaim(BREEDS_UPDATE_CLAIM)) {
             return;
         }
+
         if (!this.editing() && !this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM)) {
             return;
         }
+
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
 
         this.submitting.set(true);
+
         if (this.editing() && this.currentId()) {
             const payload: BreedUpsertRequest = {
                 speciesId: v.speciesId.trim(),
                 name: v.name.trim(),
                 isActive: !!v.isActive
             };
+
             this.breedsService.updateBreed(this.currentId()!, payload).subscribe({
                 next: () => {
                     this.submitting.set(false);
@@ -266,6 +278,7 @@ export class BreedFormPageComponent implements OnInit {
                 },
                 error: (e: unknown) => this.onSubmitError(e)
             });
+
             return;
         }
 
@@ -273,6 +286,7 @@ export class BreedFormPageComponent implements OnInit {
             speciesId: v.speciesId.trim(),
             name: v.name.trim()
         };
+
         this.breedsService.createBreed(createPayload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
@@ -288,26 +302,33 @@ export class BreedFormPageComponent implements OnInit {
 
     onQuickSpeciesCreated(speciesId: string): void {
         const id = speciesId.trim();
+
         if (!id) {
             return;
         }
+
         this.reloadSpeciesAndSelect(id);
     }
 
     private mergeSpeciesOptionFromDetail(vm: BreedDetailVm): void {
         const sid = vm.speciesId?.trim();
+
         if (!sid) {
             return;
         }
+
         const opts = this.speciesOptions();
+
         if (opts.some((o) => o.value === sid)) {
             return;
         }
+
         const name = vm.speciesName?.trim();
         const code = vm.speciesCode?.trim();
         const hasName = !!name && name !== '-';
         const hasCode = !!code && code !== '—';
         let label: string;
+
         if (hasName && hasCode) {
             label = `${name} (${code})`;
         } else if (hasName) {
@@ -317,6 +338,7 @@ export class BreedFormPageComponent implements OnInit {
         } else {
             label = sid;
         }
+
         this.speciesOptions.set([{ label, value: sid }, ...opts]);
     }
 
@@ -325,9 +347,11 @@ export class BreedFormPageComponent implements OnInit {
         this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
             next: (items) => {
                 this.speciesOptions.set(this.mapSpeciesOptions(items));
+
                 if (this.breedDetailForMerge) {
                     this.mergeSpeciesOptionFromDetail(this.breedDetailForMerge);
                 }
+
                 this.loadingSpecies.set(false);
             },
             error: (e: unknown) => {
@@ -339,9 +363,11 @@ export class BreedFormPageComponent implements OnInit {
 
     private reloadSpeciesAndSelect(speciesId: string): void {
         const id = speciesId.trim();
+
         if (!id) {
             return;
         }
+
         this.loadingSpecies.set(true);
         this.speciesService.getSpeciesList({ activeOnly: true }).subscribe({
             next: (items) => {
@@ -365,12 +391,16 @@ export class BreedFormPageComponent implements OnInit {
 
     private onSubmitError(e: unknown): void {
         this.submitting.set(false);
+
         if (e instanceof HttpErrorResponse) {
             const parsed = parseBreedUpsertHttpError(e);
+
             this.apiFieldErrors.set(parsed.fieldErrors);
             this.submitError.set(parsed.summaryMessage);
+
             return;
         }
+
         this.submitError.set(panelHttpFailureMessage(e, 'Kayıt sırasında hata oluştu.'));
     }
 }

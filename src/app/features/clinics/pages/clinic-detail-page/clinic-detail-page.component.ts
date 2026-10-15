@@ -424,6 +424,7 @@ export class ClinicDetailPageComponent implements OnInit {
 
     onClinicPhoneBlur(): void {
         const c = this.form.controls.phone;
+
         c.setValue(formatClinicPhoneForInput(c.value), { emitEvent: false });
     }
 
@@ -463,6 +464,7 @@ export class ClinicDetailPageComponent implements OnInit {
     private readonly formEditLockEffect = effect(() => {
         const lock =
             !this.canUpdateClinic || this.ro.mutationBlocked() || this.saving() || this.busyDeactivate() || this.busyActivate();
+
         if (lock) {
             if (this.form.enabled) {
                 this.form.disable({ emitEvent: false });
@@ -499,11 +501,14 @@ export class ClinicDetailPageComponent implements OnInit {
 
     private applyWhRowTimeLocks(g: FormGroup): void {
         const closed = g.get('isClosed')?.value === true;
+
         for (const k of ['opensAt', 'closesAt', 'breakStartsAt', 'breakEndsAt'] as const) {
             const c = g.get(k);
+
             if (!c) {
                 continue;
             }
+
             if (closed) {
                 c.disable({ emitEvent: false });
             } else {
@@ -516,9 +521,11 @@ export class ClinicDetailPageComponent implements OnInit {
         const lock =
             this.ro.mutationBlocked() || !this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) || this.whSaving();
         const arr = this.whDays;
+
         for (const ctrl of arr.controls) {
             const g = ctrl as FormGroup;
             const closedCtrl = g.get('isClosed');
+
             if (closedCtrl) {
                 if (lock) {
                     closedCtrl.disable({ emitEvent: false });
@@ -526,6 +533,7 @@ export class ClinicDetailPageComponent implements OnInit {
                     closedCtrl.enable({ emitEvent: false });
                 }
             }
+
             if (lock) {
                 for (const k of ['opensAt', 'closesAt', 'breakStartsAt', 'breakEndsAt'] as const) {
                     g.get(k)?.disable({ emitEvent: false });
@@ -545,6 +553,7 @@ export class ClinicDetailPageComponent implements OnInit {
     private readonly apSettingsFormLockEffect = effect(() => {
         const lock =
             this.ro.mutationBlocked() || !this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) || this.apSettingsSaving();
+
         if (lock) {
             if (this.apSettingsForm.enabled) {
                 this.apSettingsForm.disable({ emitEvent: false });
@@ -572,6 +581,7 @@ export class ClinicDetailPageComponent implements OnInit {
 
     retryWorkingHoursLoad(): void {
         const id = this.detail()?.id;
+
         if (id) {
             this.loadWorkingHours(id);
         }
@@ -590,6 +600,7 @@ export class ClinicDetailPageComponent implements OnInit {
 
     retryAppointmentSettingsLoad(): void {
         const id = this.detail()?.id;
+
         if (id) {
             this.loadAppointmentSettings(id);
         }
@@ -640,7 +651,9 @@ export class ClinicDetailPageComponent implements OnInit {
 
     private patchWorkingHoursForm(items: ClinicWorkingHourVm[]): void {
         const arr = this.whDays;
+
         arr.clear();
+
         for (const vm of [...items].sort((a, b) => a.dayOfWeek - b.dayOfWeek)) {
             const g = this.fb.group(
                 {
@@ -654,6 +667,7 @@ export class ClinicDetailPageComponent implements OnInit {
                 },
                 { validators: [clinicWorkingDayGroupValidator] }
             );
+
             arr.push(g);
             g.get('isClosed')!
                 .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
@@ -667,6 +681,7 @@ export class ClinicDetailPageComponent implements OnInit {
                     }
                 });
         }
+
         this.applyWhFormGlobalLock();
     }
 
@@ -674,26 +689,36 @@ export class ClinicDetailPageComponent implements OnInit {
         if (!this.canSaveWorkingHours()) {
             return;
         }
+
         const id = this.detail()?.id ?? this.route.snapshot.paramMap.get('clinicId')?.trim() ?? '';
+
         if (!id) {
             return;
         }
+
         this.whFormError.set(null);
         this.whDays.controls.forEach((c) => (c as FormGroup).markAllAsTouched());
         this.whDays.updateValueAndValidity({ emitEvent: false });
+
         if (this.whForm.invalid) {
             for (const c of this.whDays.controls) {
                 const msg = clinicWorkingDayErrorMessage((c as FormGroup).errors);
+
                 if (msg) {
                     this.whFormError.set(msg);
+
                     return;
                 }
             }
+
             this.whFormError.set('Lütfen çalışma saatlerini kontrol edin.');
+
             return;
         }
+
         const days = this.whDays.getRawValue() as ClinicWorkingHourFormValue[];
         const body = clinicWorkingHoursFormToPutBody(days);
+
         this.whSaving.set(true);
         this.clinicsApi.updateWorkingHours(id, body).subscribe({
             next: (items) => {
@@ -708,6 +733,7 @@ export class ClinicDetailPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.whSaving.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     this.whFormError.set(
                         clinicWorkingHoursMutationMessage(e, 'Çalışma saatleri güncellenemedi.')
@@ -723,27 +749,38 @@ export class ClinicDetailPageComponent implements OnInit {
         if (!this.canSaveAppointmentSettings()) {
             return;
         }
+
         const id = this.detail()?.id ?? this.route.snapshot.paramMap.get('clinicId')?.trim() ?? '';
+
         if (!id) {
             return;
         }
+
         this.apSettingsFormError.set(null);
         this.apSettingsForm.markAllAsTouched();
         this.apSettingsForm.updateValueAndValidity({ emitEvent: false });
+
         if (this.apSettingsForm.invalid) {
             if (this.apSettingsForm.controls.defaultAppointmentDurationMinutes.invalid) {
                 this.apSettingsFormError.set('Varsayılan randevu süresi 5 ile 240 dakika arasında olmalıdır.');
+
                 return;
             }
+
             if (this.apSettingsForm.controls.slotIntervalMinutes.invalid) {
                 this.apSettingsFormError.set('Randevu başlangıç aralığı 5 ile 120 dakika arasında olmalıdır.');
+
                 return;
             }
+
             this.apSettingsFormError.set('Lütfen randevu varsayılanlarını kontrol edin.');
+
             return;
         }
+
         const value = this.apSettingsForm.getRawValue() as ClinicAppointmentSettingsFormValue;
         const body = clinicAppointmentSettingsFormToPutBody(value);
+
         this.apSettingsSaving.set(true);
         this.clinicsApi.updateAppointmentSettings(id, body).subscribe({
             next: (vm) => {
@@ -758,12 +795,15 @@ export class ClinicDetailPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.apSettingsSaving.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     this.apSettingsFormError.set(
                         clinicAppointmentSettingsMutationMessage(e, 'Randevu varsayılanları güncellenemedi.')
                     );
+
                     return;
                 }
+
                 this.apSettingsFormError.set('Randevu varsayılanları güncellenemedi.');
             }
         });
@@ -772,17 +812,21 @@ export class ClinicDetailPageComponent implements OnInit {
     ngOnInit(): void {
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pm) => {
             const id = pm.get('clinicId')?.trim() ?? '';
+
             if (!id) {
                 this.loading.set(false);
                 this.loadError.set('Geçersiz klinik.');
+
                 return;
             }
+
             this.load(id);
         });
     }
 
     reload(): void {
         const id = this.detail()?.id ?? this.route.snapshot.paramMap.get('clinicId')?.trim();
+
         if (id) {
             this.load(id);
         }
@@ -818,20 +862,27 @@ export class ClinicDetailPageComponent implements OnInit {
         if (this.ro.mutationBlocked() || !this.canUpdateClinic) {
             return;
         }
+
         this.formError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const id = this.detail()?.id ?? this.route.snapshot.paramMap.get('clinicId')?.trim() ?? '';
+
         if (!id) {
             return;
         }
+
         this.form.controls.phone.setValue(formatClinicPhoneForInput(this.form.controls.phone.value), {
             emitEvent: false
         });
         const v = this.form.getRawValue() as ClinicUpsertFormValue;
+
         this.saving.set(true);
         this.clinicsApi.updateClinicFromForm(id, v).subscribe({
             next: (vm) => {
@@ -854,16 +905,22 @@ export class ClinicDetailPageComponent implements OnInit {
     private handlePutError(e: unknown): void {
         if (!(e instanceof HttpErrorResponse)) {
             this.formError.set('Klinik güncellenemedi.');
+
             return;
         }
+
         const parsed = parseClinicUpsertHttpError(e);
+
         if (Object.keys(parsed.fieldErrors).length > 0) {
             this.apiFieldErrors.set(parsed.fieldErrors);
+
             if (parsed.summaryMessage) {
                 this.formError.set(parsed.summaryMessage);
             }
+
             return;
         }
+
         this.formError.set(clinicSettingsMutationMessage(e, 'Klinik güncellenemedi.'));
     }
 
@@ -871,10 +928,13 @@ export class ClinicDetailPageComponent implements OnInit {
         if (this.ro.mutationBlocked() || !this.canUpdateClinic) {
             return;
         }
+
         const id = this.detail()?.id ?? '';
+
         if (!id) {
             return;
         }
+
         this.formError.set(null);
         this.busyDeactivate.set(true);
         this.clinicsApi.deactivateClinic(id).subscribe({
@@ -902,8 +962,10 @@ export class ClinicDetailPageComponent implements OnInit {
                 summary: 'Bilgi',
                 detail: 'Bu klinik zaten pasif; bilgiler güncellendi.'
             });
+
             return;
         }
+
         this.formError.set(
             e instanceof HttpErrorResponse
                 ? clinicSettingsMutationMessage(e, 'Klinik pasife alınamadı.')
@@ -915,10 +977,13 @@ export class ClinicDetailPageComponent implements OnInit {
         if (this.ro.mutationBlocked() || !this.canUpdateClinic) {
             return;
         }
+
         const id = this.detail()?.id ?? '';
+
         if (!id) {
             return;
         }
+
         this.formError.set(null);
         this.busyActivate.set(true);
         this.clinicsApi.activateClinic(id).subscribe({
@@ -946,8 +1011,10 @@ export class ClinicDetailPageComponent implements OnInit {
                 summary: 'Bilgi',
                 detail: 'Bu klinik zaten aktif; bilgiler güncellendi.'
             });
+
             return;
         }
+
         this.formError.set(
             e instanceof HttpErrorResponse
                 ? clinicSettingsMutationMessage(e, 'Klinik aktifleştirilemedi.')

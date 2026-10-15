@@ -177,6 +177,7 @@ export class AdministrationCreateDialogComponent {
     readonly unit = computed(() => {
         this.formValue();
         const id = this.form.controls.productId.value;
+
         return this.products().find((p) => p.id === id)?.unit ?? '';
     });
 
@@ -213,17 +214,23 @@ export class AdministrationCreateDialogComponent {
         if (this.submitting()) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
         const at = v.administeredAtLocal.trim();
         const administeredAtUtc = at ? fromIstanbulDateTimeLocalInputToUtcIso(at) : null;
+
         if (at && !administeredAtUtc) {
             this.submitError.set('Geçerli bir uygulama zamanı girin.');
+
             return;
         }
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.administrationsService
@@ -257,6 +264,7 @@ export class AdministrationCreateDialogComponent {
         if (this.productsLoaded || this.loadingProducts()) {
             return;
         }
+
         this.loadingProducts.set(true);
         this.productsError.set(null);
         this.productService.getProducts({ page: 1, pageSize: 200, isActive: true, stockTrackedOnly: true }).subscribe({

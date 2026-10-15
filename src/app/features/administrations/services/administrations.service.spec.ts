@@ -50,6 +50,7 @@ describe('AdministrationsService', () => {
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/administrations');
+
         expect(req.request.params.get('clinicId')).toBe('c1');
         expect(req.request.params.get('examinationId')).toBe('e1');
         expect(req.request.params.has('includeVoided')).toBeFalse();
@@ -62,6 +63,7 @@ describe('AdministrationsService', () => {
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/administrations');
+
         expect(req.request.params.get('includeVoided')).toBe('true');
         req.flush({ items: [{ ...dto, status: 'Voided', voidReason: 'Yanlış ürün' }], page: 1, pageSize: 20, totalItems: 1, totalPages: 1 });
     });
@@ -74,6 +76,7 @@ describe('AdministrationsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/administrations');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({
             clinicId: 'c1',
@@ -120,6 +123,7 @@ describe('AdministrationsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/administrations/a1/void');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ reason: 'Yanlış ürün seçildi', stockOutcome: 'StockReturned' });
         req.flush({ ...dto, status: 'Voided', voidReason: 'Yanlış ürün seçildi', voidStockOutcome: 'StockReturned' });
@@ -131,6 +135,7 @@ describe('AdministrationsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/administrations/a1/void');
+
         expect(req.request.body).toEqual({ reason: 'Şişe kırıldı', stockOutcome: 'WrittenOff' });
         req.flush({ ...dto, status: 'Voided', voidReason: 'Şişe kırıldı', voidStockOutcome: 'WrittenOff' });
     });
@@ -142,6 +147,7 @@ describe('AdministrationsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/administrations');
+
         expect(req.request.body.lateEntryReason).toBe('Unutulmuş');
         req.flush({
             created: true,
@@ -156,6 +162,7 @@ describe('AdministrationsService', () => {
             status: 400,
             error: { title: 'x', detail: 'Yetersiz bakiye: kullanılabilir 3, süresi geçmiş 5 (hariç)', extensions: { code: 'Administrations.InsufficientStock' } }
         });
+
         expect(messageFromHttpError(insufficient, 'f')).toBe('Yetersiz bakiye: kullanılabilir 3, süresi geçmiş 5 (hariç)');
         expect(messageFromHttpError(problem('Administrations.AlreadyVoided', 409), 'f')).toContain('zaten iptal');
         expect(messageFromHttpError(problem('Administrations.LateEntryReasonRequired', 400), 'f')).toContain('gerekçe');

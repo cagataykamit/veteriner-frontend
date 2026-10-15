@@ -70,6 +70,7 @@ describe('ChargeSuggestionsService', () => {
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/charge-suggestions');
+
         expect(req.request.method).toBe('GET');
         expect(req.request.params.get('clinicId')).toBe('c1');
         expect(req.request.params.get('visitId')).toBe('v1');
@@ -98,6 +99,7 @@ describe('ChargeSuggestionsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/charge-suggestions/s1/convert');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ requestId: 'rid-1' });
         req.flush({ created: true, charge }, { status: 201, statusText: 'Created' });
@@ -106,6 +108,7 @@ describe('ChargeSuggestionsService', () => {
     it('düzenleyerek çevirme: yalnız verilen alanlar gider, açıklama kırpılır', (done) => {
         service.convert('s1', { description: ' Serum ', unitPrice: 130, requestId: 'rid-2' }).subscribe(() => done());
         const req = http.expectOne('http://api.test/api/v1/charge-suggestions/s1/convert');
+
         expect(req.request.body).toEqual({ description: 'Serum', unitPrice: 130, requestId: 'rid-2' });
         req.flush({ created: true, charge }, { status: 201, statusText: 'Created' });
     });
@@ -141,6 +144,7 @@ describe('ChargeSuggestionsService', () => {
             done();
         });
         const req = http.expectOne('http://api.test/api/v1/charge-suggestions/s1/waive');
+
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual({ reason: 'Hasta sahibine bedelsiz verildi' });
         req.flush({ ...suggestion, status: 'Waived', waiveReason: 'Hasta sahibine bedelsiz verildi' });

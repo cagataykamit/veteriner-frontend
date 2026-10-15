@@ -11,12 +11,15 @@ export function isValidTurkishMobileDigits(d: string): boolean {
     if (d.length === 10 && d.startsWith('5')) {
         return true;
     }
+
     if (d.length === 11 && d.startsWith('05')) {
         return true;
     }
+
     if (d.length === 12 && d.startsWith('905')) {
         return true;
     }
+
     return false;
 }
 

@@ -47,12 +47,15 @@ function templateContentValidator(g: AbstractControl): ValidationErrors | null {
     const v = g.value as { visitReason: string; findings: string; plan: string; lines: { productId: string }[] };
     const ids = v.lines.map((l) => l.productId).filter(Boolean);
     const errors: ValidationErrors = {};
+
     if (!templateHasText(v) && v.lines.length === 0) {
         errors['contentRequired'] = true;
     }
+
     if (new Set(ids).size !== ids.length) {
         errors['duplicateProduct'] = true;
     }
+
     return Object.keys(errors).length > 0 ? errors : null;
 }
 
@@ -243,6 +246,7 @@ export class ExaminationTemplateEditorDialogComponent {
             .filter((p) => p.kind !== 'Vaccine')
             .map((p) => {
                 const sku = p.sku && p.sku !== '—' ? ` (${p.sku})` : '';
+
                 return { value: p.id, label: `${p.name}${sku}${isStockTrackedKind(p.kind) ? '' : ' · Hizmet'}` };
             })
     );
@@ -281,30 +285,37 @@ export class ExaminationTemplateEditorDialogComponent {
     optionsFor(g: LineGroup): { value: string; label: string }[] {
         const id = g.controls.productId.value;
         const options = this.catalogOptions();
+
         return id && !options.some((o) => o.value === id) ? [{ value: id, label: this.sourceLine(id)?.productName ?? id }, ...options] : options;
     }
 
     unitFor(g: LineGroup): string {
         this.formValue();
         const id = g.controls.productId.value;
+
         return id ? (this.products().find((p) => p.id === id)?.unit ?? this.sourceLine(id)?.unit ?? '') : '';
     }
 
     inactiveNote(g: LineGroup): string | null {
         const id = g.controls.productId.value;
+
         return id && this.sourceLine(id)?.productIsActive === false ? 'Ürün pasif; bu satırla şablon uygulanamaz. Satırı çıkarın veya ürünü etkinleştirin.' : null;
     }
 
     submit(): void {
         if (this.form.invalid || this.submitting()) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const source = this.source();
         const request = this.toRequest();
+
         this.submitting.set(true);
         this.submitError.set(null);
         const call = this.mode() === 'edit' && source ? this.templates.update(source.id, request, source.rowVersion) : this.templates.create(request);
+
         call.subscribe({
             next: (dto) => {
                 this.submitting.set(false);
@@ -313,16 +324,21 @@ export class ExaminationTemplateEditorDialogComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof ExaminationTemplateError && e.code === TEMPLATE_CONCURRENCY_CONFLICT_CODE) {
                     this.visible.set(false);
                     this.conflict.emit(e.message);
+
                     return;
                 }
+
                 if (e instanceof ExaminationTemplateError) {
                     this.submitError.set(e.withProductName((id) => this.productName(id)));
                     this.errorProductId.set(e.productId);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt başarısız.');
             }
         });
@@ -331,6 +347,7 @@ export class ExaminationTemplateEditorDialogComponent {
     private toRequest(): ExaminationTemplateUpsertRequest {
         const v = this.form.getRawValue();
         const text = (s: string) => s.trim() || null;
+
         return {
             name: v.name.trim(),
             visitReason: text(v.visitReason),
@@ -343,12 +360,15 @@ export class ExaminationTemplateEditorDialogComponent {
     private reset(): void {
         const source = this.source();
         const mode = this.mode();
+
         this.submitError.set(null);
         this.errorProductId.set(null);
         this.lines.clear({ emitEvent: false });
+
         for (const l of source?.lines ?? []) {
             this.lines.push(this.createLine(l.productId, l.quantity), { emitEvent: false });
         }
+
         this.form.reset({
             name: source ? (mode === 'copy' ? `${source.name} (kopya)` : source.name) : '',
             visitReason: source?.visitReason ?? '',
@@ -371,6 +391,7 @@ export class ExaminationTemplateEditorDialogComponent {
         if (!this.canPickProduct || this.productsLoaded || this.loadingProducts()) {
             return;
         }
+
         this.loadingProducts.set(true);
         this.productsError.set(null);
         this.productService.getProducts({ page: 1, pageSize: 200, isActive: true }).subscribe({

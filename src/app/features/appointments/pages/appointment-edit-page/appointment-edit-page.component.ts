@@ -277,12 +277,15 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly canCompleteAppointment = this.auth.hasOperationClaim(APPOINTMENTS_COMPLETE_CLAIM);
     private readonly writableStatusOptions = APPOINTMENT_WRITE_STATUS_OPTIONS.filter((x) => {
         const v = String(x.value);
+
         if (v === '2') {
             return this.canCancelAppointment;
         }
+
         if (v === '1') {
             return this.canCompleteAppointment;
         }
+
         return true;
     });
     /** Gelmedi (3) formdan seçilmez; yalnızca zaten gelmedi olan randevuda mevcut durum olarak görünür (yüklemede eklenir). */
@@ -307,12 +310,15 @@ export class AppointmentEditPageComponent implements OnInit {
     constructor() {
         const clearApiError = (f: AppointmentUpsertFormFieldKey): void => {
             const cur = this.apiFieldErrors();
+
             if (cur[f]) {
                 const next = { ...cur };
+
                 delete next[f];
                 this.apiFieldErrors.set(next);
             }
         };
+
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('clientId'));
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('petId'));
         this.form.controls.scheduledDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
@@ -329,25 +335,33 @@ export class AppointmentEditPageComponent implements OnInit {
         this.loadSlotIntervalHint();
         this.loadWorkingHours();
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.loadError.set('Geçersiz randevu.');
             this.loading.set(false);
+
             return;
         }
+
         this.appointmentId = id;
 
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.controls.petId.setValue('');
             this.submitError.set(null);
             this.selectionError.set(null);
+
             if (clientId === null || clientId === undefined) {
                 this.form.controls.clientId.setValue('', { emitEvent: false });
             }
+
             const cid = trimClientIdControlValue(this.form.controls.clientId.value);
+
             if (!cid) {
                 this.form.controls.petId.disable({ emitEvent: false });
+
                 return;
             }
+
             this.form.controls.petId.enable({ emitEvent: false });
         });
         this.form.controls.scheduledDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildTimeOptions());
@@ -376,12 +390,14 @@ export class AppointmentEditPageComponent implements OnInit {
                     },
                     { emitEvent: false }
                 );
+
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
                     this.form.controls.petId.setValue(x.petId);
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
+
                 this.legacyInitialTime = this.form.controls.scheduledTime.value.trim() || null;
                 this.rebuildTimeOptions();
                 this.loading.set(false);
@@ -396,38 +412,54 @@ export class AppointmentEditPageComponent implements OnInit {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
         const scheduledAtUtc = fromIstanbulDateAndTimeToUtcIso(v.scheduledDate, v.scheduledTime);
+
         if (!scheduledAtUtc) {
             this.submitError.set('Geçerli bir tarih ve saat seçin.');
+
             return;
         }
+
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             this.submitError.set('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.');
+
             return;
         }
+
         const appointmentType = v.appointmentType;
+
         if (appointmentType === null || appointmentType === undefined) {
             this.form.markAllAsTouched();
             this.submitError.set('Randevu Türü seçin.');
+
             return;
         }
+
         const statusNum = v.status;
+
         if (statusNum === null || statusNum === undefined || ![0, 1, 2, 3].includes(statusNum)) {
             this.form.markAllAsTouched();
             this.submitError.set('Durum seçin.');
+
             return;
         }
 
         const durationMinutes = Math.trunc(Number(v.durationMinutes));
+
         if (!Number.isFinite(durationMinutes) || durationMinutes < 5 || durationMinutes > 240) {
             this.form.markAllAsTouched();
             this.submitError.set('Randevu süresi 5 ile 240 dakika arasında olmalıdır.');
+
             return;
         }
 
@@ -454,17 +486,24 @@ export class AppointmentEditPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const clinicMsg = messageFromClinicResolutionHttpError(e);
+
                     if (clinicMsg) {
                         this.submitError.set(clinicMsg);
+
                         return;
                     }
+
                     const parsed = parseAppointmentUpsertHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
@@ -474,21 +513,27 @@ export class AppointmentEditPageComponent implements OnInit {
         if (target === this.editVmCache?.status) {
             return of(void 0);
         }
+
         if (target === 1) {
             return this.appointmentsService.completeAppointment(this.appointmentId);
         }
+
         if (target === 2) {
             return this.appointmentsService.cancelAppointment(this.appointmentId);
         }
+
         return of(void 0);
     }
 
     goDetail(): void {
         const safeUrl = this.returnUrl();
+
         if (safeUrl) {
             void this.router.navigateByUrl(safeUrl);
+
             return;
         }
+
         void this.router.navigate(['/panel/appointments', this.appointmentId], {
             queryParams: this.returnContextQueryParams() ?? undefined
         });
@@ -502,16 +547,20 @@ export class AppointmentEditPageComponent implements OnInit {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
         }
+
         return e instanceof Error ? e.message : fallback;
     }
 
     private loadSlotIntervalHint(): void {
         const clinicId = this.auth.getClinicId()?.trim();
+
         if (!clinicId) {
             this.clinicSlotIntervalMinutes.set(null);
             this.rebuildTimeOptions();
+
             return;
         }
+
         this.clinicsApi.getAppointmentSettings(clinicId).subscribe({
             next: (settings) => {
                 this.clinicSlotIntervalMinutes.set(settings.slotIntervalMinutes);
@@ -526,12 +575,15 @@ export class AppointmentEditPageComponent implements OnInit {
 
     private loadWorkingHours(): void {
         const clinicId = this.auth.getClinicId()?.trim();
+
         if (!clinicId) {
             this.workingHours = [];
             this.workingHoursLoadError.set('Çalışma saatleri alınamadı.');
             this.rebuildTimeOptions();
+
             return;
         }
+
         this.workingHoursLoadError.set(null);
         this.clinicsApi.getWorkingHours(clinicId).subscribe({
             next: (items) => {
@@ -555,36 +607,46 @@ export class AppointmentEditPageComponent implements OnInit {
 
         if (!date || !Number.isFinite(duration) || duration < 5 || duration > 240 || interval <= 0) {
             this.timeOptions.set(legacy ? [{ value: legacy, label: `Mevcut saat: ${legacy}` }] : []);
+
             if (!legacy) {
                 this.form.controls.scheduledTime.setValue('', { emitEvent: false });
             }
+
             return;
         }
 
         if (this.workingHours.length === 0) {
             this.timeOptions.set(legacy ? [{ value: legacy, label: `Mevcut saat: ${legacy}` }] : []);
+
             return;
         }
 
         const day = this.resolveWorkingDay(date);
+
         if (!day || day.isClosed) {
             this.timeOptions.set(legacy ? [{ value: legacy, label: `Mevcut saat: ${legacy}` }] : []);
+
             if (!legacy) {
                 this.form.controls.scheduledTime.setValue('', { emitEvent: false });
             }
+
             return;
         }
 
         const options = this.buildTimeOptions(day, duration, interval);
         let selected = this.form.controls.scheduledTime.value.trim();
+
         if (!selected && legacy) {
             selected = legacy;
             this.form.controls.scheduledTime.setValue(legacy, { emitEvent: false });
         }
+
         if (selected && !options.some((o) => o.value === selected)) {
             options.unshift({ value: selected, label: `Mevcut saat: ${selected}` });
         }
+
         this.timeOptions.set(options);
+
         if (selected && !options.some((o) => o.value === selected)) {
             this.form.controls.scheduledTime.setValue('', { emitEvent: false });
             this.legacyInitialTime = null;
@@ -593,35 +655,46 @@ export class AppointmentEditPageComponent implements OnInit {
 
     private resolveWorkingDay(dateYmd: string): ClinicWorkingHourVm | null {
         const date = new Date(`${dateYmd}T00:00:00`);
+
         if (Number.isNaN(date.getTime())) {
             return null;
         }
+
         const dow = date.getDay();
+
         return this.workingHours.find((x) => x.dayOfWeek === dow) ?? null;
     }
 
     private buildTimeOptions(day: ClinicWorkingHourVm, durationMinutes: number, intervalMinutes: number): SelectOption[] {
         const open = this.timeToMinutes(day.opensAt);
         const close = this.timeToMinutes(day.closesAt);
+
         if (open === null || close === null || open >= close) {
             return [];
         }
+
         const breakStart = this.timeToMinutes(day.breakStartsAt);
         const breakEnd = this.timeToMinutes(day.breakEndsAt);
         const opts: SelectOption[] = [];
+
         for (let start = open; start < close; start += intervalMinutes) {
             const end = start + durationMinutes;
+
             if (end > close) {
                 continue;
             }
+
             if (breakStart !== null && breakEnd !== null && start < breakEnd && end > breakStart) {
                 continue;
             }
+
             const hh = String(Math.floor(start / 60)).padStart(2, '0');
             const mm = String(start % 60).padStart(2, '0');
             const hm = `${hh}:${mm}`;
+
             opts.push({ value: hm, label: hm });
         }
+
         return opts;
     }
 
@@ -629,46 +702,61 @@ export class AppointmentEditPageComponent implements OnInit {
         if (!value?.trim()) {
             return null;
         }
+
         const m = value.trim().match(/^(\d{1,2}):(\d{2})/);
+
         if (!m) {
             return null;
         }
+
         const h = Number(m[1]);
         const mm = Number(m[2]);
+
         if (!Number.isFinite(h) || !Number.isFinite(mm) || h < 0 || h > 23 || mm < 0 || mm > 59) {
             return null;
         }
+
         return h * 60 + mm;
     }
 
     private returnContextQueryParams(): Record<string, string> | null {
         const url = this.returnUrl();
+
         if (!url) {
             return null;
         }
+
         return { returnUrl: url, returnLabel: this.backLabel() };
     }
 
     private readReturnContext(): void {
         const query = this.route.snapshot.queryParamMap;
         const safeUrl = this.normalizeSafeReturnUrl(query.get('returnUrl'));
+
         this.returnUrl.set(safeUrl);
+
         if (safeUrl) {
             const label = query.get('returnLabel')?.trim();
+
             this.backLabel.set(label || 'Randevu takvimine dön');
+
             return;
         }
+
         this.backLabel.set('Randevu listesine dön');
     }
 
     private normalizeSafeReturnUrl(raw: string | null): string | null {
         const value = raw?.trim();
+
         if (!value) {
             return null;
         }
+
         if (!value.startsWith('/panel/')) {
             return null;
         }
+
         return value;
     }
 }

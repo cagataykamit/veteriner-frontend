@@ -17,6 +17,7 @@ import { toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.u
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
+
     return t ? t : null;
 }
 
@@ -77,15 +78,19 @@ export function mapAdministrationCreateResultDtoToVm(dto: AdministrationCreateRe
 /** GET `/api/v1/administrations` — `clinicId` zorunlu kapsam olduğundan çağıran sağlar; iptaller varsayılan gizli. */
 export function administrationsQueryToHttpParams(query: AdministrationsListQuery): HttpParams {
     let p = new HttpParams().set('page', String(query.page ?? 1)).set('pageSize', String(query.pageSize ?? 20));
+
     for (const key of ['clinicId', 'petId', 'examinationId', 'treatmentId', 'productId'] as const) {
         const v = query[key]?.trim();
+
         if (v) {
             p = p.set(key, v);
         }
     }
+
     if (query.includeVoided) {
         p = p.set('includeVoided', 'true');
     }
+
     return p;
 }
 

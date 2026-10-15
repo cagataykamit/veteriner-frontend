@@ -39,14 +39,19 @@ export function createAdministrationBatchPicker(controls: AdministrationBatchPic
 
     const load = (productId: string | null) => {
         const clinicId = auth.getClinicId()?.trim();
+
         if (!productId || !clinicId) {
             loading.set(false);
+
             return of(null);
         }
+
         loading.set(true);
+
         return stockBatchService.getByProduct(productId, clinicId).pipe(
             catchError((e: Error) => {
                 error.set(e.message || 'Parti bilgisi yüklenemedi.');
+
                 return of(null);
             })
         );
@@ -69,6 +74,7 @@ export function createAdministrationBatchPicker(controls: AdministrationBatchPic
 
     const options = computed(() => {
         const unit = info()?.unit ?? '';
+
         return [
             { value: '', label: "Otomatik — SKT'si en yakın uygun parti", disabled: false },
             ...(info()?.batches ?? []).map((b) => ({
@@ -83,23 +89,31 @@ export function createAdministrationBatchPicker(controls: AdministrationBatchPic
     const guide = computed<AdministrationBatchGuide | null>(() => {
         formValue();
         const current = info();
+
         if (!current) {
             return null;
         }
+
         const quantity = controls.quantity.value;
         const batchId = controls.batchId.value;
         const unit = current.unit;
+
         if (batchId) {
             const b = current.batches.find((x) => x.id === batchId);
+
             if (!b) {
                 return null;
             }
+
             const text = `Seçilen parti: ${b.lotNumber} · SKT ${b.expiryText} · kalan ${b.remainingText} ${unit}.`;
+
             return quantity != null && quantity > b.remainingQuantity
                 ? { text: `${text} Miktar bu partinin kalanından fazla; bir uygulama iki partiye bölünmez.`, warn: true }
                 : { text, warn: false };
         }
+
         const s = suggestAdministrationBatch(current, quantity);
+
         switch (s?.kind) {
             case 'batch':
                 return { text: `Önerilen parti: ${s.batch.lotNumber} · SKT ${s.batch.expiryText} · kalan ${s.batch.remainingText} ${unit}.`, warn: false };

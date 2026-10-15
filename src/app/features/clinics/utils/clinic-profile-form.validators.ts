@@ -10,9 +10,11 @@ export function clinicOptionalEmailValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const raw = control.value;
         const v = typeof raw === 'string' ? raw.trim() : '';
+
         if (!v) {
             return null;
         }
+
         return Validators.email(control);
     };
 }

@@ -28,21 +28,27 @@ const APPOINTMENT_CONFLICT_CODE_MESSAGES: Record<string, string> = {
 
 function extractAppointmentProblemCode(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
+
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const ext =
         o['extensions'] && typeof o['extensions'] === 'object' && !Array.isArray(o['extensions'])
             ? (o['extensions'] as Record<string, unknown>)
             : null;
+
     const pickExt = (key: string): string | null => {
         if (!ext) {
             return null;
         }
+
         const v = ext[key];
+
         return typeof v === 'string' && v.trim() ? v.trim() : null;
     };
+
     return (
         (typeof o['code'] === 'string' && o['code'].trim() ? o['code'].trim() : null) ||
         (typeof o['Code'] === 'string' && o['Code'].trim() ? o['Code'].trim() : null) ||
@@ -53,15 +59,19 @@ function extractAppointmentProblemCode(err: HttpErrorResponse): string | null {
 
 function conflictMessageForProblemCode(code: string): string | null {
     const direct = APPOINTMENT_CONFLICT_CODE_MESSAGES[code];
+
     if (direct) {
         return direct;
     }
+
     const noDots = code.replace(/\./g, '');
+
     return APPOINTMENT_CONFLICT_CODE_MESSAGES[noDots] ?? null;
 }
 
 function isWeak409ConflictText(s: string): boolean {
     const t = s.trim();
+
     return /^conflict$/i.test(t) || /^duplicate$/i.test(t) || /^gone$/i.test(t);
 }
 
@@ -71,22 +81,28 @@ function isWeak409ConflictText(s: string): boolean {
  */
 export function messageFromAppointmentUpsertHttpError(err: HttpErrorResponse): string {
     const problemCode = extractAppointmentProblemCode(err);
+
     if (problemCode) {
         const mapped = conflictMessageForProblemCode(problemCode);
+
         if (mapped) {
             return mapped;
         }
     }
 
     const explicit = messageFromHttpError(err, '').trim();
+
     if (explicit) {
         if (err.status === 409 && isWeak409ConflictText(explicit)) {
             return APPOINTMENT_CONFLICT_USER_MESSAGE;
         }
+
         return explicit;
     }
+
     if (err.status === 409) {
         return APPOINTMENT_CONFLICT_USER_MESSAGE;
     }
+
     return messageFromHttpError(err, FALLBACK_GENERIC);
 }

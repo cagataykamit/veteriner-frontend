@@ -271,10 +271,12 @@ export class HospitalizationsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+
         if (!restored) {
             this.currentPage.set(1);
             this.first.set(0);
         }
+
         this.suppressNextLazy = true;
         this.loadFromServer(
             this.currentPage(),
@@ -290,17 +292,21 @@ export class HospitalizationsListPageComponent implements OnInit {
         if (f === 'active') {
             return true;
         }
+
         if (f === 'discharged') {
             return false;
         }
+
         return undefined;
     }
 
     applyFilters(): void {
         let from = this.fromDateInput?.trim() ?? '';
         let to = this.toDateInput?.trim() ?? '';
+
         if (from && to && from > to) {
             const t = from;
+
             from = to;
             to = t;
             this.fromDateInput = from;
@@ -355,11 +361,14 @@ export class HospitalizationsListPageComponent implements OnInit {
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;
+
             return;
         }
+
         const rows = event.rows ?? 10;
         const first = event.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
     }
@@ -368,6 +377,7 @@ export class HospitalizationsListPageComponent implements OnInit {
         const rows = state.rows ?? this.pageSize();
         const first = state.first ?? 0;
         const page = Math.floor(first / rows) + 1;
+
         this.suppressNextLazy = true;
         this.persistStateToSessionStorage(page, rows);
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
@@ -384,9 +394,11 @@ export class HospitalizationsListPageComponent implements OnInit {
     ): void {
         const ao = this.activeOnlyFromFilter(filter);
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${filter}|${ao ?? 'all'}|${this.contextPetId()}`;
+
         if (!force && key === this.lastLoadKey) {
             return;
         }
+
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
@@ -435,18 +447,24 @@ export class HospitalizationsListPageComponent implements OnInit {
 
     private restoreStateFromSessionStorage(): boolean {
         const raw = sessionStorage.getItem(HOSPITALIZATIONS_LIST_STATE_KEY);
+
         if (!raw) {
             return false;
         }
+
         try {
             const parsed = JSON.parse(raw) as Partial<HospitalizationsListState>;
             const page = Number(parsed.page);
             const pageSize = Number(parsed.pageSize);
+
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
                 sessionStorage.removeItem(HOSPITALIZATIONS_LIST_STATE_KEY);
+
                 return false;
             }
+
             const activeFilter = parsed.activeFilter === 'active' || parsed.activeFilter === 'discharged' ? parsed.activeFilter : 'all';
+
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
             this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
@@ -458,9 +476,11 @@ export class HospitalizationsListPageComponent implements OnInit {
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
+
             return true;
         } catch {
             sessionStorage.removeItem(HOSPITALIZATIONS_LIST_STATE_KEY);
+
             return false;
         }
     }
@@ -474,6 +494,7 @@ export class HospitalizationsListPageComponent implements OnInit {
             page,
             pageSize
         };
+
         sessionStorage.setItem(HOSPITALIZATIONS_LIST_STATE_KEY, JSON.stringify(state));
     }
 

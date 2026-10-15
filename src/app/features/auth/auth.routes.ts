@@ -20,11 +20,14 @@ export default [
         canActivate: [(route) => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             if (auth.isAuthenticated()) {
                 return true;
             }
+
             const returnUrl = route.queryParamMap.get('returnUrl')?.trim() ?? '';
             const inviteToken = route.queryParamMap.get('inviteToken')?.trim() ?? '';
+
             return router.createUrlTree(['/auth/login'], {
                 queryParams: {
                     ...(returnUrl ? { returnUrl } : {}),

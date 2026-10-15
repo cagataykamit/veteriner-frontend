@@ -33,33 +33,41 @@ function firstTrimmed(...vals: Array<string | null | undefined>): string | null 
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readDtoString(dto: AppointmentDetailDto, keys: string[]): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     for (const k of keys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
 function readNestedName(dto: Record<string, unknown>, objectKeys: string[], nameKeys: string[]): string | null {
     for (const ok of objectKeys) {
         const inner = dto[ok];
+
         if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
             const io = inner as Record<string, unknown>;
+
             for (const nk of nameKeys) {
                 const v = io[nk];
+
                 if (typeof v === 'string' && v.trim()) {
                     return v.trim();
                 }
             }
         }
     }
+
     return null;
 }
 
@@ -97,6 +105,7 @@ function rawClientNameDetail(dto: AppointmentDetailDto): string | null {
         'fullName',
         'FullName'
     ]);
+
     return firstTrimmed(dto.clientName, dto.ownerName, readDtoString(dto, ['ClientName', 'OwnerName', 'CustomerName']), nested);
 }
 
@@ -107,6 +116,7 @@ function rawPetNameDetail(dto: AppointmentDetailDto): string | null {
         'fullName',
         'FullName'
     ]);
+
     return firstTrimmed(dto.petName, dto.animalName, readDtoString(dto, ['PetName', 'AnimalName']), nested);
 }
 
@@ -119,17 +129,22 @@ function readFirstScalarFromDto(o: Record<string, unknown>, keys: string[]): unk
         if (!(k in o)) {
             continue;
         }
+
         const v = o[k];
+
         if (v === null || v === undefined) {
             continue;
         }
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
+
         if (typeof v === 'number' && Number.isFinite(v) && !Number.isNaN(v)) {
             return v;
         }
     }
+
     return null;
 }
 
@@ -137,18 +152,21 @@ function readFirstScalarFromDto(o: Record<string, unknown>, keys: string[]): unk
 function readAppointmentTypeNumericFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): number | null {
     const o = dto as unknown as Record<string, unknown>;
     const v = readFirstScalarFromDto(o, ['appointmentType', 'AppointmentType']);
+
     return parseAppointmentTypeEnumValue(v);
 }
 
 function readAppointmentTypeNameFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
     const o = dto as unknown as Record<string, unknown>;
     const v = o['appointmentTypeName'] ?? o['AppointmentTypeName'];
+
     return typeof v === 'string' && v.trim() ? v.trim() : null;
 }
 
 function readSpeciesNameFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): string | null {
     const o = dto as unknown as Record<string, unknown>;
     const v = o['speciesName'] ?? o['SpeciesName'];
+
     return typeof v === 'string' && v.trim() ? v.trim() : null;
 }
 
@@ -164,17 +182,20 @@ function readAppointmentStatusEnumFromDto(dto: AppointmentListItemDto | Appointm
         'lifecycleStatus',
         'LifecycleStatus'
     ]);
+
     return parseAppointmentStatusRawToEnum(v);
 }
 
 function readAppointmentLifecycleEnumFromDto(dto: AppointmentListItemDto | AppointmentDetailDto): number | null {
     const o = dto as unknown as Record<string, unknown>;
     const v = readFirstScalarFromDto(o, ['lifecycleStatus', 'LifecycleStatus', 'lifecycle', 'Lifecycle']);
+
     return parseAppointmentStatusRawToEnum(v);
 }
 
 export function formatAppointmentDurationLabel(minutes: number): string {
     const n = Number.isFinite(minutes) ? Math.trunc(minutes) : DEFAULT_APPOINTMENT_DURATION_MINUTES;
+
     return `${n} dk`;
 }
 
@@ -183,7 +204,9 @@ export function normalizeAppointmentDurationMinutesFromApi(raw: unknown): number
     if (raw === null || raw === undefined) {
         return DEFAULT_APPOINTMENT_DURATION_MINUTES;
     }
+
     let n: number;
+
     if (typeof raw === 'number' && Number.isFinite(raw)) {
         n = Math.trunc(raw);
     } else if (typeof raw === 'string' && /^\d+$/.test(raw.trim())) {
@@ -191,9 +214,11 @@ export function normalizeAppointmentDurationMinutesFromApi(raw: unknown): number
     } else {
         return DEFAULT_APPOINTMENT_DURATION_MINUTES;
     }
+
     if (n < 5 || n > 240) {
         return DEFAULT_APPOINTMENT_DURATION_MINUTES;
     }
+
     return n;
 }
 
@@ -203,40 +228,50 @@ export function resolveAppointmentScheduledEndUtc(
     durationMinutes: number
 ): string | null {
     const trimmedEnd = explicitEndUtc?.trim() ? explicitEndUtc.trim() : null;
+
     if (trimmedEnd) {
         return trimmedEnd;
     }
+
     if (!scheduledAtUtc?.trim()) {
         return null;
     }
+
     const start = parseUtcApiInstantIsoString(scheduledAtUtc);
+
     if (!start) {
         return null;
     }
+
     const safeMinutes =
         Number.isFinite(durationMinutes) && durationMinutes > 0
             ? Math.trunc(durationMinutes)
             : DEFAULT_APPOINTMENT_DURATION_MINUTES;
+
     return new Date(start.getTime() + safeMinutes * 60 * 1000).toISOString();
 }
 
 function readDurationMinutesFromDtoRecord(o: Record<string, unknown>): number {
     const v = readFirstScalarFromDto(o, ['durationMinutes', 'DurationMinutes']);
+
     return normalizeAppointmentDurationMinutesFromApi(v);
 }
 
 function readScheduledEndUtcFromDtoRecord(o: Record<string, unknown>): string | null {
     for (const k of ['scheduledEndUtc', 'ScheduledEndUtc']) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
     }
+
     return null;
 }
 
 function canonicalScheduledAtUtcList(dto: AppointmentListItemDto): string | null {
     const o = dto as unknown as Record<string, unknown>;
+
     return firstTrimmed(
         dto.scheduledAtUtc,
         typeof o['ScheduledAtUtc'] === 'string' ? (o['ScheduledAtUtc'] as string) : undefined,
@@ -267,6 +302,7 @@ export function mapAppointmentListItemDtoToVm(dto: AppointmentListItemDto): Appo
         readScheduledEndUtcFromDtoRecord(rawRecord),
         durationMinutes
     );
+
     return {
         id: canonicalAppointmentListItemId(dto),
         scheduledAtUtc,
@@ -299,6 +335,7 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
     const clientId = canonicalClientIdDetail(dto);
     const petId = canonicalPetIdDetail(dto);
     const notes = canonicalNotesDetail(dto);
+
     return {
         id: dto.id,
         scheduledAtUtc: scheduledAt,
@@ -327,6 +364,7 @@ export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): Appo
     const petId = canonicalPetIdDetail(dto) ?? '';
     const rawRecord = dto as unknown as Record<string, unknown>;
     const durationMinutes = readDurationMinutesFromDtoRecord(rawRecord);
+
     return {
         id: dto.id,
         clientId,
@@ -375,14 +413,17 @@ export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): Ap
         ...(statusParsed === null ? {} : { status: statusParsed }),
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
+
     return clinicId ? { ...base, clinicId } : base;
 }
 
 export function mapAppointmentUpsertFormToUpdateRequest(id: string, input: AppointmentUpsertFormAdapterInput): UpdateAppointmentRequest {
     const statusParsed = parseAppointmentStatusRawToEnum(input.status);
+
     if (statusParsed === null) {
         throw new Error('Geçersiz randevu durumu (0–3 beklenir).');
     }
+
     return {
         id: id.trim(),
         clinicId: input.clinicId.trim(),
@@ -398,9 +439,11 @@ export function mapAppointmentUpsertFormToUpdateRequest(id: string, input: Appoi
 export function mapUpdateAppointmentToApiBody(req: UpdateAppointmentRequest): AppointmentUpdateRequestDto {
     const clinicId = req.clinicId?.trim() ? req.clinicId.trim() : '';
     const statusParsed = parseAppointmentStatusRawToEnum(req.status);
+
     if (statusParsed === null) {
         throw new Error('Geçersiz randevu durumu (0–3 beklenir).');
     }
+
     const base: AppointmentUpdateRequestDto = {
         id: req.id.trim(),
         petId: req.petId.trim(),
@@ -410,6 +453,7 @@ export function mapUpdateAppointmentToApiBody(req: UpdateAppointmentRequest): Ap
         status: statusParsed,
         notes: req.notes?.trim() ? req.notes.trim() : null
     };
+
     return clinicId ? { ...base, clinicId } : base;
 }
 
@@ -421,6 +465,7 @@ export function mapPagedAppointmentsToVm(result: AppointmentListItemDtoPagedResu
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapAppointmentListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -439,37 +484,50 @@ export function appointmentsQueryToHttpParams(query: AppointmentsListQuery): Htt
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.petId?.trim()) {
         p = p.set('PetId', query.petId.trim());
     }
+
     if (query.clientId?.trim()) {
         p = p.set('ClientId', query.clientId.trim());
     }
+
     if (query.status?.trim()) {
         p = p.set('Status', query.status.trim());
     }
+
     const fromUtc = query.fromDate?.trim() ? dateOnlyInputToIstanbulStartUtcIso(query.fromDate.trim()) : '';
+
     if (fromUtc) {
         p = p.set('dateFromUtc', fromUtc);
     }
+
     const toUtc = query.toDate?.trim() ? dateOnlyInputToIstanbulEndUtcIso(query.toDate.trim()) : '';
+
     if (toUtc) {
         p = p.set('dateToUtc', toUtc);
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     return p;
 }
 

@@ -151,6 +151,7 @@ export class CareInstructionsSectionComponent {
     constructor() {
         effect(() => {
             this.hospitalizationId();
+
             if (this.canRead) {
                 untracked(() => this.reload());
             }
@@ -184,18 +185,23 @@ export class CareInstructionsSectionComponent {
         if (this.submitting() || this.ro.mutationBlocked()) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const text = this.form.controls.text.value;
         const target = this.editing();
+
         this.submitError.set(null);
         this.conflict.set(false);
         this.submitting.set(true);
         const request$ = target
             ? this.careInstructionsService.updateCareInstruction(target.id, text, target.rowVersion)
             : this.careInstructionsService.createCareInstruction({ petId: this.petId(), hospitalizationId: this.hospitalizationId(), text });
+
         request$.subscribe({
             next: () => {
                 this.submitting.set(false);
@@ -204,11 +210,14 @@ export class CareInstructionsSectionComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     this.conflict.set(e.status === 409 && problemCodeFromHttpError(e) === CONCURRENCY_CONFLICT_CODE);
                     this.submitError.set(messageFromHttpError(e, 'Bakım talimatı kaydedilemedi.'));
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Bakım talimatı kaydedilemedi.');
             }
         });

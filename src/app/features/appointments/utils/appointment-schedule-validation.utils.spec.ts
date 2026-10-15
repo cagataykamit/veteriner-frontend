@@ -57,6 +57,7 @@ describe('appointment-schedule-validation (backend penceresiyle hizalı)', () =>
 
     it('gün doğrulayıcısı: 7 günden eski gün reddedilir, sınır ve sonrası serbest, boş serbest', () => {
         const v = appointmentCreateScheduleDateValidator();
+
         expect(v(new FormControl('2026-10-03'))).toEqual({ tooFarPast: true });
         expect(v(new FormControl('2026-10-04'))).toBeNull();
         expect(v(new FormControl('2026-10-11'))).toBeNull();
@@ -69,11 +70,13 @@ describe('appointment-schedule-validation (backend penceresiyle hizalı)', () =>
 
     it('saat listesi: bugünün geçmiş saatleri listede kalır', () => {
         const options = [{ label: '08:00', value: '08:00' }, { label: '16:00', value: '16:00' }];
+
         expect(filterAllowedIstanbulTimeOptions('2026-10-11', options)).toEqual(options);
     });
 
     it('saat listesi: sınır gününde yalnız pencere dışı slotlar çıkar', () => {
         const options = [{ label: '14:45', value: '14:45' }, { label: '15:00', value: '15:00' }, { label: '16:00', value: '16:00' }];
+
         expect(filterAllowedIstanbulTimeOptions('2026-10-04', options).map((o) => o.value)).toEqual(['15:00', '16:00']);
     });
 });

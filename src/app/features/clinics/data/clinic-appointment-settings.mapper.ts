@@ -18,35 +18,44 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 function pickNumber(raw: Record<string, unknown>, keys: string[]): number | null {
     for (const key of keys) {
         const value = raw[key];
+
         if (typeof value === 'number' && Number.isFinite(value)) {
             return value;
         }
+
         if (typeof value === 'string') {
             const parsed = Number(value.trim());
+
             if (Number.isFinite(parsed)) {
                 return parsed;
             }
         }
     }
+
     return null;
 }
 
 function pickBoolean(raw: Record<string, unknown>, keys: string[]): boolean | null {
     for (const key of keys) {
         const value = raw[key];
+
         if (typeof value === 'boolean') {
             return value;
         }
+
         if (typeof value === 'string') {
             const normalized = value.trim().toLowerCase();
+
             if (normalized === 'true' || normalized === '1') {
                 return true;
             }
+
             if (normalized === 'false' || normalized === '0') {
                 return false;
             }
         }
     }
+
     return null;
 }
 
@@ -54,7 +63,9 @@ function normalizePositiveInteger(value: number | null, fallback: number): numbe
     if (value === null) {
         return fallback;
     }
+
     const rounded = Math.trunc(value);
+
     return Number.isFinite(rounded) ? rounded : fallback;
 }
 
@@ -83,11 +94,13 @@ export function mapClinicAppointmentSettingsResponse(raw: unknown): ClinicAppoin
     if (isRecord(raw)) {
         for (const key of ['data', 'Data', 'value', 'Value', 'result', 'Result']) {
             const nested = raw[key];
+
             if (nested !== undefined && nested !== null) {
                 return mapClinicAppointmentSettingsRaw(nested);
             }
         }
     }
+
     return mapClinicAppointmentSettingsRaw(raw);
 }
 

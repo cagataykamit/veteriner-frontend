@@ -178,10 +178,12 @@ export class ExaminationProceduresSectionComponent {
     readonly canAddAny = computed(() => this.visibleKinds().length > 0);
     readonly drawerTitle = computed(() => {
         const kind = this.activeKind();
+
         return kind ? `${PROCEDURE_LABEL[kind]} ekle` : '';
     });
     readonly contextParams = computed(() => {
         const e = this.exam();
+
         return convertToParamMap({ clientId: e.clientId ?? '', petId: e.petId ?? '', examinationId: e.id });
     });
     /** Yalnız bağlamı olan (müşteri ve hayvanı bilinen) muayenede ekleme açılır. */
@@ -189,10 +191,12 @@ export class ExaminationProceduresSectionComponent {
 
     readonly lockReasons = computed(() => {
         const reasons = this.visibleKinds().map((k) => this.state(k).reason);
+
         return [...new Set(reasons.filter((r): r is string => !!r))];
     });
     readonly addNotes = computed(() => {
         const notes = this.visibleKinds().map((k) => this.state(k).note);
+
         return [...new Set(notes.filter((n): n is string => !!n))];
     });
 
@@ -203,6 +207,7 @@ export class ExaminationProceduresSectionComponent {
 
     state(kind: ProcedureKind) {
         const base = procedureAddState(kind, { finalized: this.exam().status === 'Finalized', mutationBlocked: this.ro.mutationBlocked() });
+
         return !this.hasContext() && !base.disabled
             ? { disabled: true, reason: 'Muayenede müşteri veya hasta bilgisi yok; işlem eklenemez.', note: null }
             : base;
@@ -212,6 +217,7 @@ export class ExaminationProceduresSectionComponent {
         if (this.state(kind).disabled) {
             return;
         }
+
         this.activeKind.set(kind);
         this.drawerVisible.set(true);
     }
@@ -230,6 +236,7 @@ export class ExaminationProceduresSectionComponent {
     onVaccinationSaved(event: VaccinationSavedEvent): void {
         this.close();
         const notice = event.stockNotice;
+
         this.setNotice(notice ? notice.text : 'Aşı kaydedildi.', notice?.warn ?? false);
         this.changed.emit();
     }

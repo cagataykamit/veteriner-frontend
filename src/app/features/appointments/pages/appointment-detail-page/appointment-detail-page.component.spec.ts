@@ -47,7 +47,9 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
             ]
         });
         const fixture = TestBed.createComponent(AppointmentDetailPageComponent);
+
         fixture.detectChanges();
+
         return fixture;
     };
 
@@ -61,6 +63,7 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
     it('Visits.Create varsa önce geliş açılır ve muayene visitId taşıyarak açılır', () => {
         const fixture = create();
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
         examButton(fixture.nativeElement)!.click();
         expect(createVisit).toHaveBeenCalledWith({ appointmentId: 'a1', responsibleVeterinarianUserId: 'vet1' });
         expect(navigate).toHaveBeenCalledWith(['/panel/examinations/new'], { queryParams: { visitId: 'v1', clientId: 'cl1', petId: 'p1' } });
@@ -70,6 +73,7 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
         createVisit.and.returnValue(of({ created: false, visit: { id: 'v-existing' } }));
         const fixture = create();
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
         examButton(fixture.nativeElement)!.click();
         expect(navigate.calls.mostRecent().args[1]).toEqual({ queryParams: { visitId: 'v-existing', clientId: 'cl1', petId: 'p1' } });
     });
@@ -78,6 +82,7 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
         createVisit.and.returnValue(throwError(() => new Error('Sunucu hatası')));
         const fixture = create();
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
         examButton(fixture.nativeElement)!.click();
         fixture.detectChanges();
         expect(navigate).not.toHaveBeenCalled();
@@ -88,12 +93,14 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
         claims.delete('Visits.Create');
         const fixture = create();
         const link = fixture.nativeElement.querySelector('a[href^="/panel/examinations/new"]') as HTMLAnchorElement;
+
         expect(link.getAttribute('href')).toContain('appointmentId=a1');
         expect(createVisit).not.toHaveBeenCalled();
     });
 
     it('kategori bağlantısı varsayılan olarak randevu listesine gider', () => {
         const back = create().nativeElement.querySelector('[data-testid="page-header-category-link"]') as HTMLAnchorElement;
+
         expect(back.getAttribute('href')).toBe('/panel/appointments');
         expect(back.getAttribute('aria-label') ?? back.textContent).toContain('Randevu listesine dön');
     });
@@ -101,6 +108,7 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
     it('takvimden gelindiyse kategori bağlantısı dönüş adresine gider ve dönüş etiketini taşır', () => {
         const fixture = create({ returnUrl: '/panel/appointments/calendar?view=week', returnLabel: 'Takvime dön' });
         const back = fixture.nativeElement.querySelector('[data-testid="page-header-category-link"]') as HTMLAnchorElement;
+
         expect(back.getAttribute('href')).toBe('/panel/appointments/calendar?view=week');
         expect(back.getAttribute('aria-label') ?? back.textContent).toContain('Takvime dön');
     });

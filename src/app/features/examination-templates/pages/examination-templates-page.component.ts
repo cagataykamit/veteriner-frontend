@@ -209,6 +209,7 @@ export class ExaminationTemplatesPageComponent implements OnInit {
 
     onLazyLoad(event: TableLazyLoadEvent): void {
         const page = Math.floor((event.first ?? 0) / PAGE_SIZE) + 1;
+
         if (page !== this.first() / PAGE_SIZE + 1) {
             this.load(page);
         }
@@ -222,9 +223,11 @@ export class ExaminationTemplatesPageComponent implements OnInit {
 
     openEditor(mode: ExaminationTemplateEditorMode, row: ExaminationTemplateDto | null): void {
         const allowed = mode === 'edit' ? this.canUpdate && !!row && !row.isSystem : this.canCreate;
+
         if (!allowed || this.ro.mutationBlocked()) {
             return;
         }
+
         this.listActionError.set(null);
         this.editorMode.set(mode);
         this.editorSource.set(row);
@@ -254,6 +257,7 @@ export class ExaminationTemplatesPageComponent implements OnInit {
         if (!this.canDeactivate || row.isSystem || this.ro.mutationBlocked() || this.mutatingId() !== null) {
             return;
         }
+
         this.mutatingId.set(row.id);
         this.listActionError.set(null);
         this.templates.setActive(row.id, active).subscribe({

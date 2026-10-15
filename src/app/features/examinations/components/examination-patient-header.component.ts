@@ -89,10 +89,13 @@ export class ExaminationPatientHeaderComponent {
     readonly clientName = computed(() => this.client()?.fullName ?? (this.fallbackClientName()?.trim() || EM));
     readonly speciesBreed = computed(() => {
         const p = this.pet();
+
         if (!p) {
             return EM;
         }
+
         const parts = [p.speciesName, p.breed].filter((x) => x && x !== EM);
+
         return parts.length ? parts.join(' · ') : EM;
     });
     readonly age = computed(() => formatPetAgeTr(this.pet()?.birthDate) ?? EM);
@@ -103,10 +106,13 @@ export class ExaminationPatientHeaderComponent {
         effect(() => {
             const id = this.petId()?.trim() ?? '';
             const seq = ++this.petSeq;
+
             this.pet.set(null);
+
             if (!id) {
                 return;
             }
+
             this.petsService.getPetById(id).subscribe({
                 next: (p) => {
                     if (seq === this.petSeq) {
@@ -123,10 +129,13 @@ export class ExaminationPatientHeaderComponent {
         effect(() => {
             const id = this.clientId()?.trim() ?? '';
             const seq = ++this.clientSeq;
+
             this.client.set(null);
+
             if (!id) {
                 return;
             }
+
             this.clientsService.getClientById(id).subscribe({
                 next: (c) => {
                     if (seq === this.clientSeq) {

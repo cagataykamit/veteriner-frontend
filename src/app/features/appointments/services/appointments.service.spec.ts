@@ -27,12 +27,14 @@ describe('AppointmentsService — durum geçişleri', () => {
     it('gelmedi işaretleme: gerekçe boşsa gövde boş, doluysa kırpılmış gider', () => {
         service.markNoShow('a1').subscribe();
         const first = http.expectOne('http://api.test/api/v1/appointments/a1/no-show');
+
         expect(first.request.method).toBe('POST');
         expect(first.request.body).toEqual({});
         first.flush(null, { status: 204, statusText: 'No Content' });
 
         service.markNoShow('a1', '  Aradık, gelmedi ').subscribe();
         const second = http.expectOne('http://api.test/api/v1/appointments/a1/no-show');
+
         expect(second.request.body).toEqual({ reason: 'Aradık, gelmedi' });
         second.flush(null, { status: 204, statusText: 'No Content' });
     });
@@ -40,6 +42,7 @@ describe('AppointmentsService — durum geçişleri', () => {
     it('geri alma gerekçeyle no-show/revert ucuna gider', () => {
         service.revertNoShow('a1', ' Hasta geldi ').subscribe();
         const req = http.expectOne('http://api.test/api/v1/appointments/a1/no-show/revert');
+
         expect(req.request.body).toEqual({ reason: 'Hasta geldi' });
         req.flush(null, { status: 204, statusText: 'No Content' });
     });
@@ -47,10 +50,12 @@ describe('AppointmentsService — durum geçişleri', () => {
     it('iptal ve tamamlama kendi uçlarına gider', () => {
         service.cancelAppointment('a1').subscribe();
         const cancel = http.expectOne('http://api.test/api/v1/appointments/a1/cancel');
+
         expect(cancel.request.body).toEqual({});
         cancel.flush(null, { status: 204, statusText: 'No Content' });
         service.cancelAppointment('a1', ' Hasta vefat etti ').subscribe();
         const withReason = http.expectOne('http://api.test/api/v1/appointments/a1/cancel');
+
         expect(withReason.request.body).toEqual({ reason: 'Hasta vefat etti' });
         withReason.flush(null, { status: 204, statusText: 'No Content' });
         service.completeAppointment('a1').subscribe();

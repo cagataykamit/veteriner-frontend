@@ -58,6 +58,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
     let pendingChargesSpy: jasmine.Spy;
 
     const el = () => fixture.nativeElement as HTMLElement;
+
     const create = () => {
         TestBed.configureTestingModule({
             imports: [ClientDetailPageComponent],

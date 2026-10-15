@@ -62,6 +62,7 @@ describe('ExaminationPatientContextComponent', () => {
                 .and.returnValue(of([{ id: 'e0', examinedAtUtc: '2026-10-10T08:00:00Z', visitReason: 'Kusma' }]))
         };
         const claims = opts.claims ?? ALL_CLAIMS;
+
         await TestBed.configureTestingModule({
             imports: [ExaminationPatientContextComponent],
             providers: [
@@ -74,11 +75,13 @@ describe('ExaminationPatientContextComponent', () => {
             ]
         }).compileComponents();
         const fixture = TestBed.createComponent(ExaminationPatientContextComponent);
+
         fixture.componentRef.setInput('petId', 'pet-1');
         fixture.componentRef.setInput('excludeExaminationId', 'e1');
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
         const text = (id: string) => el.querySelector(`[data-testid="${id}"]`)?.textContent ?? '';
+
         return { fixture, el, text, vaccinations, related };
     };
 
@@ -91,6 +94,7 @@ describe('ExaminationPatientContextComponent', () => {
         expect(text('ctx-overdue')).toContain('+3 daha');
         expect(text('ctx-hospitalization')).toContain('Sıvı tedavisi');
         const treatments = Array.from(el.querySelectorAll('[data-testid="ctx-treatment"]')).map((a) => a.textContent ?? '');
+
         expect(treatments.length).toBe(1);
         expect(treatments[0]).toContain('Antibiyotik');
         expect(related.loadSiblingExaminationsForPet).toHaveBeenCalledWith('pet-1', 'e1');

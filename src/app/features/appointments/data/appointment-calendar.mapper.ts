@@ -24,25 +24,32 @@ function toText(value: string | null | undefined): string {
 
 function toDateKey(value: string | null): string {
     const d = parseUtcApiInstantIsoString(value);
+
     if (!d) {
         return 'invalid';
     }
+
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
+
     return `${y}-${m}-${day}`;
 }
 
 export function appointmentCalendarQueryToHttpParams(query: AppointmentCalendarQuery): HttpParams {
     let p = new HttpParams();
+
     p = p.set('dateFromUtc', query.dateFromUtc);
     p = p.set('dateToUtc', query.dateToUtc);
+
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
     }
+
     if (query.status?.trim()) {
         p = p.set('status', query.status.trim());
     }
+
     return p;
 }
 
@@ -61,6 +68,7 @@ export function mapAppointmentCalendarItemDtoToVm(dto: AppointmentCalendarItemDt
     const endLabel = formatUtcIsoAsLocalTimeDisplay(scheduledEndUtc);
     const timeRangeLabel =
         scheduledEndUtc && endLabel && startLabel && endLabel !== startLabel ? `${startLabel}–${endLabel}` : startLabel;
+
     return {
         id: dto.id?.trim() ?? '',
         clinicId: dto.clinicId?.trim() ? dto.clinicId.trim() : null,
@@ -89,18 +97,22 @@ export function mapAppointmentCalendarItemsToVm(items: AppointmentCalendarItemDt
         .sort((a, b) => {
             const ta = parseUtcApiInstantIsoString(a.scheduledAtUtc)?.getTime() ?? Number.MAX_SAFE_INTEGER;
             const tb = parseUtcApiInstantIsoString(b.scheduledAtUtc)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+
             return ta - tb;
         });
 }
 
 export function groupCalendarItemsByDay(items: readonly AppointmentCalendarItemVm[]): AppointmentCalendarDayGroupVm[] {
     const map = new Map<string, AppointmentCalendarItemVm[]>();
+
     for (const item of items) {
         const key = toDateKey(item.scheduledAtUtc);
         const bucket = map.get(key) ?? [];
+
         bucket.push(item);
         map.set(key, bucket);
     }
+
     return Array.from(map.entries())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([dateKey, dayItems]) => ({

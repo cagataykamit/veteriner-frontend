@@ -18,6 +18,7 @@ describe('DashboardService — liste fazı istekleri', () => {
         vaccinations = jasmine.createSpyObj<VaccinationsService>('VaccinationsService', ['getVaccinations']);
         examinations = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getExaminations']);
         const appointments = jasmine.createSpyObj<AppointmentsService>('AppointmentsService', ['getAppointments']);
+
         vaccinations.getVaccinations.and.returnValue(of(emptyPage));
         examinations.getExaminations.and.returnValue(of(emptyPage));
         appointments.getAppointments.and.returnValue(of(emptyPage));
@@ -43,6 +44,7 @@ describe('DashboardService — liste fazı istekleri', () => {
             jasmine.objectContaining({ status: '0', fromDate: '2026-10-15', sort: 'dueAtUtc', order: 'asc', pageSize: 8 })
         );
         const q = vaccinations.getVaccinations.calls.mostRecent().args[0];
+
         expect(q.toDate).toBeUndefined();
     });
 

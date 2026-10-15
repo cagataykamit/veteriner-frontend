@@ -21,9 +21,11 @@ describe('ExaminationFinalizeChecklistComponent', () => {
     const render = async (vm: ExaminationDetailVm) => {
         await TestBed.configureTestingModule({ imports: [ExaminationFinalizeChecklistComponent], providers: [provideRouter([])] }).compileComponents();
         const fixture = TestBed.createComponent(ExaminationFinalizeChecklistComponent);
+
         fixture.componentRef.setInput('exam', vm);
         fixture.componentRef.setInput('items', finalizeChecklist(vm, summary));
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     };
 

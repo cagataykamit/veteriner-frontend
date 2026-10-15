@@ -16,6 +16,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ExaminationsListPageComponent
@@ -25,6 +26,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ExaminationWorkspacePageComponent
@@ -34,6 +36,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ExaminationWorkspacePageComponent
@@ -43,6 +46,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ExaminationDetailPageComponent

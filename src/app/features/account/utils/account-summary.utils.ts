@@ -10,11 +10,13 @@ export const ACCOUNT_DISPLAY_NAME_SAVE_ERROR = 'Görünen ad kaydedilemedi.';
 
 export function resolveAccountDisplayName(summary: Pick<AccountSummary, 'displayName' | 'email'>): string {
     const displayName = summary.displayName?.trim();
+
     return displayName || summary.email;
 }
 
 export function resolveAccountOptionalName(value: string | null | undefined): string {
     const trimmed = value?.trim();
+
     return trimmed || ACCOUNT_NOT_SELECTED_LABEL;
 }
 
@@ -31,12 +33,14 @@ export function resolveAccountAvatarInitials(summary: Pick<AccountSummary, 'disp
         const first = parts[0]?.[0] ?? '';
         const second = parts[1]?.[0] ?? '';
         const initials = `${first}${second}`.trim();
+
         if (initials) {
             return initials.toUpperCase();
         }
     }
 
     const single = parts[0] ?? name;
+
     if (single.length >= 2) {
         return single.slice(0, 2).toUpperCase();
     }

@@ -205,6 +205,7 @@ export class ClinicCreatePageComponent {
 
     private readonly createFormLockEffect = effect(() => {
         const lock = this.ro.mutationBlocked() || this.submitting();
+
         if (lock) {
             if (this.form.enabled) {
                 this.form.disable({ emitEvent: false });
@@ -216,6 +217,7 @@ export class ClinicCreatePageComponent {
 
     onClinicPhoneBlur(): void {
         const c = this.form.controls.phone;
+
         c.setValue(formatClinicPhoneForInput(c.value), { emitEvent: false });
     }
 
@@ -227,16 +229,21 @@ export class ClinicCreatePageComponent {
         if (this.ro.mutationBlocked()) {
             return;
         }
+
         this.formError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         this.form.controls.phone.setValue(formatClinicPhoneForInput(this.form.controls.phone.value), {
             emitEvent: false
         });
         const v = this.form.getRawValue() as ClinicUpsertFormValue;
+
         this.submitting.set(true);
         this.clinicsApi.createClinic(v).subscribe({
             next: ({ createdId }) => {
@@ -247,6 +254,7 @@ export class ClinicCreatePageComponent {
                     summary: 'Tamam',
                     detail: createdId ? 'Klinik oluşturuldu.' : 'Klinik oluşturuldu. Listeden açabilirsiniz.'
                 });
+
                 if (createdId) {
                     void this.router.navigate(['/panel/settings/clinics', createdId]);
                 } else {
@@ -263,16 +271,22 @@ export class ClinicCreatePageComponent {
     private handlePostError(e: unknown): void {
         if (!(e instanceof HttpErrorResponse)) {
             this.formError.set('Klinik oluşturulamadı.');
+
             return;
         }
+
         const parsed = parseClinicUpsertHttpError(e, 'Klinik oluşturulamadı.');
+
         if (Object.keys(parsed.fieldErrors).length > 0) {
             this.apiFieldErrors.set(parsed.fieldErrors);
+
             if (parsed.summaryMessage) {
                 this.formError.set(parsed.summaryMessage);
             }
+
             return;
         }
+
         this.formError.set(clinicSettingsMutationMessage(e, 'Klinik oluşturulamadı.'));
     }
 }

@@ -15,6 +15,7 @@ function scaled(value: number, decimals: number): bigint {
 
 export function hasAtMostDecimals(value: number, decimals: number): boolean {
     const s = value * 10 ** decimals;
+
     return Math.abs(s - Math.round(s)) < 1e-6;
 }
 
@@ -26,16 +27,19 @@ export function computeChargeAmount(quantity: number | null, unitPrice: number |
     if (quantity == null || unitPrice == null || !(quantity > 0) || !(unitPrice > 0)) {
         return null;
     }
+
     if (
         !hasAtMostDecimals(quantity, CHARGE_QUANTITY_MAX_DECIMALS) ||
         !hasAtMostDecimals(unitPrice, CHARGE_UNIT_PRICE_MAX_DECIMALS)
     ) {
         return null;
     }
+
     // Tam sayı aritmetiği: ölçek 10^(3+2); sonuç 10^2 ölçeğine yarım-yukarı (pozitif => AwayFromZero) yuvarlanır.
     const product = scaled(quantity, CHARGE_QUANTITY_MAX_DECIMALS) * scaled(unitPrice, CHARGE_UNIT_PRICE_MAX_DECIMALS);
     const divisor = 10n ** BigInt(CHARGE_QUANTITY_MAX_DECIMALS + CHARGE_UNIT_PRICE_MAX_DECIMALS - AMOUNT_DECIMALS);
     const cents = (product + divisor / 2n) / divisor;
+
     return cents > 0n ? Number(cents) / 10 ** AMOUNT_DECIMALS : null;
 }
 
@@ -43,15 +47,19 @@ export function computeChargeAmount(quantity: number | null, unitPrice: number |
 export function chargeNumberValidator(max: number, decimals: number): ValidatorFn {
     return (control): ValidationErrors | null => {
         const v = control.value as number | null;
+
         if (v === null || v === undefined || (v as unknown) === '') {
             return null;
         }
+
         if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) {
             return { chargePositive: true };
         }
+
         if (v > max) {
             return { chargeMax: { max } };
         }
+
         return hasAtMostDecimals(v, decimals) ? null : { chargeDecimals: { decimals } };
     };
 }

@@ -326,6 +326,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     readonly pendingCharges = signal<PetCardSection<ChargeSuggestionsPagedVm>>(null);
     readonly pendingChargeItems = computed<PetCardSection<ChargeSuggestionVm[]>>(() => {
         const s = this.pendingCharges();
+
         return s?.state === 'ok' ? { state: 'ok', data: s.data.items } : s;
     });
 
@@ -352,9 +353,11 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
 
     readonly registrationLine = computed(() => {
         const c = this.client();
+
         if (!c) {
             return '';
         }
+
         return c.updatedAtUtc ? `Kayıt: ${this.formatDt(c.createdAtUtc)} · Güncellenme: ${this.formatDt(c.updatedAtUtc)}` : `Kayıt: ${this.formatDt(c.createdAtUtc)}`;
     });
 
@@ -375,9 +378,11 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
 
     readonly petRows = computed<PetCardSection<ClientPetRow[]>>(() => {
         const p = this.pets();
+
         if (p?.state !== 'ok') {
             return p;
         }
+
         return { state: 'ok', data: buildClientPetRows(p.data, okData(this.balance()), okData(this.pendingChargeItems()), this.apptItems()) };
     });
 
@@ -387,9 +392,11 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     readonly arrivalPet = computed<PetSuggestion | null>(() => {
         const c = this.client();
         const pet = soleActivePet(okData(this.pets()) ?? []);
+
         if (!c || !pet) {
             return null;
         }
+
         return { id: pet.id, label: `${pet.name} — ${pet.speciesName} · Sahip: ${c.fullName}`, clientId: c.id, clientName: c.fullName };
     });
 
@@ -411,15 +418,20 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id');
+
                     this.resetCard();
+
                     if (!id) {
                         this.error.set('Geçersiz client.');
                         this.loading.set(false);
+
                         return EMPTY;
                     }
+
                     this.lastId = id;
                     this.loading.set(true);
                     this.error.set(null);
+
                     return this.clientsService.getClientById(id);
                 })
             )
@@ -440,6 +452,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         if (!this.lastId) {
             return;
         }
+
         this.resetCard();
         this.loading.set(true);
         this.error.set(null);
@@ -455,6 +468,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     /** Rıza yanıtı (durum + yeni `rowVersion`) karta birleştirilir; sonraki yazım yeni sürümle yapılır. */
     onKvkkChanged(result: ClientKvkkConsentUpdateResult): void {
         const c = this.client();
+
         if (c) {
             this.client.set({ ...c, ...result });
         }
@@ -465,6 +479,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         if (!this.lastId) {
             return;
         }
+
         this.clientsService.getClientById(this.lastId).subscribe({
             next: (c) => this.client.set(c),
             error: () => undefined
@@ -475,6 +490,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         if (!this.lastId) {
             return;
         }
+
         this.loadPaymentSummary(this.lastId);
     }
 
@@ -483,9 +499,11 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         if (this.recentSummaryError()) {
             return { state: 'error' };
         }
+
         if (this.recentSummaryLoading()) {
             return { state: 'loading' };
         }
+
         return { state: 'ok', data: pick({ appointments: this.apptItems(), examinations: this.examItems() }) };
     }
 

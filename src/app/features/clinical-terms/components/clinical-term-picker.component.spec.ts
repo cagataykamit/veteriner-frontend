@@ -86,11 +86,14 @@ describe('ClinicalTermPickerComponent', () => {
     it('gerçek input: yazınca debounce sonrası tek arama yapılır', async () => {
         await create();
         const input = root().querySelector('input') as HTMLInputElement;
+
         input.focus();
+
         for (const v of ['i', 'is', 'ish']) {
             input.value = v;
             input.dispatchEvent(new Event('input', { bubbles: true }));
         }
+
         await wait(500);
         expect(terms.list).toHaveBeenCalledTimes(1);
         expect(terms.list.calls.mostRecent().args[0].search).toBe('ish');
@@ -162,6 +165,7 @@ describe('ClinicalTermPickerComponent', () => {
             claims.add('ClinicalTerms.Deactivate');
             await addConflicting();
             const button = notice()?.querySelector('[data-testid="clinical-term-activate"] button') as HTMLButtonElement;
+
             expect(button).not.toBeNull();
             button.click();
             fixture.detectChanges();

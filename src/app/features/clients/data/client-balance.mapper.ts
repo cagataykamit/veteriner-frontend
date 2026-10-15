@@ -3,12 +3,14 @@ import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/features/clients
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
+
     return t ? t : null;
 }
 
 /** Hayvan → ziyaret → ücret ağacını düzleştirir; sıra backend'dedir (hayvan, ziyaret, ücret). */
 export function mapClientBalanceDtoToVm(dto: ClientBalanceDto): ClientBalanceVm {
     const openCharges: ClientOpenChargeVm[] = [];
+
     for (const pet of dto.pets ?? []) {
         for (const visit of pet.visits ?? []) {
             for (const charge of visit.charges ?? []) {
@@ -29,6 +31,7 @@ export function mapClientBalanceDtoToVm(dto: ClientBalanceDto): ClientBalanceVm 
             }
         }
     }
+
     return {
         clientId: dto.clientId,
         clientName: trimmedOrNull(dto.clientName) ?? '—',

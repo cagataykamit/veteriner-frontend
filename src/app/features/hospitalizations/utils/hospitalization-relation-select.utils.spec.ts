@@ -29,20 +29,24 @@ function visit(over: Partial<TodayItemVm>): TodayItemVm {
 describe('hospitalization-relation-select.utils', () => {
     it('kesinleşmiş muayene açıklamayla pasif, taslak seçilebilir', () => {
         const finalized = hospitalizationExaminationOption(exam('Finalized'));
+
         expect(finalized.disabled).toBeTrue();
         expect(finalized.label).toContain(FINALIZED_EXAMINATION_OPTION_HINT);
         const draft = hospitalizationExaminationOption(exam('Draft'));
+
         expect(draft.disabled).toBeUndefined();
         expect(draft.label).not.toContain(FINALIZED_EXAMINATION_OPTION_HINT);
     });
 
     it('geliş seçenekleri yalnız seçili hayvanın yanlış işaretlenmemiş gelişleridir', () => {
         const items = [visit({}), visit({ visitId: 'v2', petId: 'p2' }), visit({ visitId: 'v3', isVoided: true }), visit({ visitId: null })];
+
         expect(hospitalizationVisitOptions(items, 'p1').map((o) => o.value)).toEqual(['v1']);
     });
 
     it('kayıtlı geliş bugünden değilse seçenek olarak korunur', () => {
         const opts = hospitalizationVisitOptions([visit({})], 'p1', 'old');
+
         expect(opts.map((o) => o.value)).toEqual(['old', 'v1']);
         expect(hospitalizationVisitOptions([visit({})], 'p1', 'v1').map((o) => o.value)).toEqual(['v1']);
     });

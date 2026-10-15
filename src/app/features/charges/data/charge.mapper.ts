@@ -17,6 +17,7 @@ import type {
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
+
     return t ? t : null;
 }
 
@@ -57,12 +58,15 @@ export function mapChargeCreateResultDtoToVm(dto: ChargeCreateResultDto): Charge
 /** GET `/api/v1/charges` — `clinicId` zorunlu kapsam olduğundan çağıran sağlar. */
 export function chargesQueryToHttpParams(query: ChargesListQuery): HttpParams {
     let p = new HttpParams().set('page', String(query.page ?? 1)).set('pageSize', String(query.pageSize ?? 20));
+
     for (const key of ['clinicId', 'clientId', 'petId', 'visitId', 'examinationId'] as const) {
         const v = query[key]?.trim();
+
         if (v) {
             p = p.set(key, v);
         }
     }
+
     return p;
 }
 

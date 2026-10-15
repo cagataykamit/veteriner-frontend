@@ -60,11 +60,13 @@ describe('examination mapper — PUT gövdesi', () => {
     it('GET ten gelen rowVersion ı PUT gövdesine aynen taşır', () => {
         const req = mapExaminationFormToUpdateRequest(baseForm(), current())!;
         const body = mapUpdateExaminationToApiBody(req);
+
         expect(body.rowVersion).toBe('AQIDBAUGBwgJCgs=');
     });
 
     it('mevcut randevu bağlantısını aynı değerle gönderir; clinicId/petId kayıttan gelir', () => {
         const body = mapUpdateExaminationToApiBody(mapExaminationFormToUpdateRequest(baseForm(), current())!);
+
         expect(body.appointmentId).toBe('appt-1');
         expect(body.clinicId).toBe('clinic-1');
         expect(body.petId).toBe('pet-1');
@@ -74,6 +76,7 @@ describe('examination mapper — PUT gövdesi', () => {
         const body = mapUpdateExaminationToApiBody(
             mapExaminationFormToUpdateRequest(baseForm(), current({ appointmentId: null }))!
         );
+
         expect('appointmentId' in body).toBeFalse();
     });
 
@@ -84,6 +87,7 @@ describe('examination mapper — PUT gövdesi', () => {
 
     it('boşaltılan metin alanları null değil "" olarak gider (null mevcut değeri korurdu); visitReason kırpılır', () => {
         const body = mapUpdateExaminationToApiBody(mapExaminationFormToUpdateRequest(baseForm({ anamnesis: '   ' }), current())!);
+
         expect(body.anamnesis).toBe('');
         expect(body.findings).toBe('');
         expect(body.assessment).toBe('');
@@ -96,6 +100,7 @@ describe('examination mapper — PUT gövdesi', () => {
         const body = mapUpdateExaminationToApiBody(
             mapExaminationFormToUpdateRequest(baseForm({ plan: '  Sıvı tedavisi ' }), current())!
         );
+
         expect(body.plan).toBe('Sıvı tedavisi');
     });
 
@@ -103,6 +108,7 @@ describe('examination mapper — PUT gövdesi', () => {
         const body = mapUpdateExaminationToApiBody(
             mapExaminationFormToUpdateRequest(baseForm({ vitalsMeasuredAtLocal: '2026-10-08T13:30' }), current())!
         );
+
         for (const k of ['weightKg', 'temperatureC', 'heartRateBpm', 'respiratoryRatePerMin', 'vitalsMeasuredAtUtc', 'clearVitals']) {
             expect(k in body).withContext(k).toBeFalse();
         }
@@ -115,7 +121,9 @@ describe('examination mapper — PUT gövdesi', () => {
                 current({ weightKg: 4.25, temperatureC: 38.6, vitalsMeasuredAtUtc: '2026-10-08T10:30:00Z' })
             )!
         );
+
         expect(body.clearVitals).toBeTrue();
+
         for (const k of ['weightKg', 'temperatureC', 'heartRateBpm', 'respiratoryRatePerMin', 'vitalsMeasuredAtUtc']) {
             expect(k in body).withContext(k).toBeFalse();
         }
@@ -125,6 +133,7 @@ describe('examination mapper — PUT gövdesi', () => {
         const body = mapUpdateExaminationToApiBody(
             mapExaminationFormToUpdateRequest(baseForm({ weightKg: 5 }), current({ weightKg: 4.25 }))!
         );
+
         expect('clearVitals' in body).toBeFalse();
         expect(body.weightKg).toBe(5);
     });
@@ -132,6 +141,7 @@ describe('examination mapper — PUT gövdesi', () => {
     it('clearVitals isteği vital değerler taşısa bile gövdede vital değer bulunmaz', () => {
         const req = mapExaminationFormToUpdateRequest(baseForm({ weightKg: 5 }), current())!;
         const body = mapUpdateExaminationToApiBody({ ...req, clearVitals: true });
+
         expect(body.clearVitals).toBeTrue();
         expect('weightKg' in body).toBeFalse();
         expect('vitalsMeasuredAtUtc' in body).toBeFalse();
@@ -139,6 +149,7 @@ describe('examination mapper — PUT gövdesi', () => {
 
     it('her istekte rowVersion, examinedAtUtc ve visitReason gider', () => {
         const body = mapUpdateExaminationToApiBody(mapExaminationFormToUpdateRequest(baseForm(), current())!);
+
         expect(body.rowVersion).toBeTruthy();
         expect(body.examinedAtUtc).toBe('2026-10-08T10:30:00.000Z');
         expect(body.visitReason).toBeTruthy();
@@ -151,6 +162,7 @@ describe('examination mapper — PUT gövdesi', () => {
                 current({ vitalsMeasuredAtUtc: orig })
             )!
         );
+
         expect(body.vitalsMeasuredAtUtc).toBe(orig);
         expect(body.weightKg).toBe(4.25);
     });
@@ -162,6 +174,7 @@ describe('examination mapper — PUT gövdesi', () => {
                 current({ vitalsMeasuredAtUtc: '2026-10-08T10:30:00Z' })
             )!
         );
+
         expect(body.vitalsMeasuredAtUtc).toBe('2026-10-08T11:00:00.000Z');
     });
 
@@ -175,6 +188,7 @@ describe('examination mapper — POST gövdesi', () => {
             appointmentId: 'appt-9'
         })!;
         const body = mapCreateExaminationToApiBody(req);
+
         expect(body.appointmentId).toBe('appt-9');
         expect('rowVersion' in body).toBeFalse();
         expect(body.visitId).toBeNull();
@@ -188,6 +202,7 @@ describe('examination mapper — POST gövdesi', () => {
             visitId: ' visit-1 '
         })!;
         const body = mapCreateExaminationToApiBody(req);
+
         expect(body.visitId).toBe('visit-1');
         expect(body.clinicId).toBeNull();
         expect(body.petId).toBeNull();
@@ -210,6 +225,7 @@ describe('examination mapper — okuma', () => {
             vitalsMeasuredAtUtc: null,
             rowVersion: 'AAA='
         });
+
         expect(vm.anamnesis).toBe('');
         expect(vm.plan).toBe('');
         expect(vm.findings).toBe('');
@@ -230,6 +246,7 @@ describe('examination mapper — okuma', () => {
 describe('examination mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü [dateFromUtc, dateToUtc) olarak gönderir; bitiş ertesi gün başlangıcıdır', () => {
         const p = examinationsQueryToHttpParams({ fromDate: '2026-10-08', toDate: '2026-10-08' });
+
         expect(p.get('dateFromUtc')).toBe('2026-10-07T21:00:00.000Z');
         expect(p.get('dateToUtc')).toBe('2026-10-08T21:00:00.000Z');
     });
@@ -239,6 +256,7 @@ describe('examination mapper — liste tarih parametreleri', () => {
         const p = examinationsQueryToHttpParams({ fromDate: '2026-10-08', toDate: '2026-10-08' });
         const from = Date.parse(p.get('dateFromUtc')!);
         const to = Date.parse(p.get('dateToUtc')!);
+
         expect(Date.parse('2026-10-08T20:59:00Z')).toBeGreaterThanOrEqual(from);
         expect(Date.parse('2026-10-08T20:59:00Z')).toBeLessThan(to);
         expect(Date.parse('2026-10-08T21:01:00Z')).toBeGreaterThanOrEqual(to);
@@ -246,22 +264,27 @@ describe('examination mapper — liste tarih parametreleri', () => {
 
     it('çoklu gün aralığında bitiş, bitiş gününün ertesi başlangıcıdır', () => {
         const p = examinationsQueryToHttpParams({ fromDate: '2026-10-01', toDate: '2026-10-31' });
+
         expect(p.get('dateFromUtc')).toBe('2026-09-30T21:00:00.000Z');
         expect(p.get('dateToUtc')).toBe('2026-10-31T21:00:00.000Z');
     });
 
     it('FromDate/ToDate ve examinedOnLocalDate hiç gönderilmez; tarih yoksa tarih parametresi yok', () => {
         const withDates = examinationsQueryToHttpParams({ fromDate: '2026-10-08', toDate: '2026-10-09' });
+
         for (const k of ['FromDate', 'ToDate', 'fromDate', 'toDate', 'examinedOnLocalDate']) {
             expect(withDates.has(k)).toBeFalse();
         }
+
         const none = examinationsQueryToHttpParams({});
+
         expect(none.has('dateFromUtc')).toBeFalse();
         expect(none.has('dateToUtc')).toBeFalse();
     });
 
     it('yalnızca başlangıç verilirse yalnızca dateFromUtc gider', () => {
         const p = examinationsQueryToHttpParams({ fromDate: '2026-10-08' });
+
         expect(p.has('dateFromUtc')).toBeTrue();
         expect(p.has('dateToUtc')).toBeFalse();
     });
@@ -298,9 +321,11 @@ describe('examination mapper — durum (kesinleştirme)', () => {
             finalizedByName: 'Dr. Ayşe',
             rowVersion: 'V2'
         });
+
         expect(done).toEqual(jasmine.objectContaining({ status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z', finalizedByName: 'Dr. Ayşe', rowVersion: 'V2' }));
 
         const legacy = mapExaminationDetailDtoToVm({ id: 'e2' });
+
         expect(legacy).toEqual(jasmine.objectContaining({ status: 'Draft', finalizedAtUtc: null, finalizedByName: null }));
     });
 

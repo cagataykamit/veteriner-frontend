@@ -135,6 +135,7 @@ export class ChargeCorrectionDialogComponent {
         this.formValue();
         const { quantity, unitPrice } = this.form.getRawValue();
         const amount = computeChargeAmount(quantity, unitPrice);
+
         return amount === null ? '—' : formatMoney(amount, this.charge()?.currency || 'TRY');
     });
 
@@ -143,6 +144,7 @@ export class ChargeCorrectionDialogComponent {
         this.formValue();
         const c = this.charge();
         const { description, quantity, unitPrice } = this.form.getRawValue();
+
         return !!c && description.trim() === c.description.trim() && quantity === c.quantity && unitPrice === c.unitPrice;
     });
 
@@ -150,6 +152,7 @@ export class ChargeCorrectionDialogComponent {
         this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.submitError.set(null));
         effect(() => {
             const c = this.charge();
+
             if (this.visible() && c) {
                 untracked(() => {
                     this.submitError.set(null);
@@ -165,17 +168,23 @@ export class ChargeCorrectionDialogComponent {
 
     onSubmit(): void {
         const c = this.charge();
+
         if (this.submitting() || !c) {
             return;
         }
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         if (this.unchanged()) {
             return;
         }
+
         const { description, quantity, unitPrice, reason } = this.form.getRawValue();
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.chargesService.correctCharge(c.id, { description, quantity: quantity!, unitPrice: unitPrice!, reason }).subscribe({

@@ -30,26 +30,33 @@ export function appointmentEarliestDateYmd(): string {
 export function appointmentLatestDateYmd(): string {
     const [y, m, d] = istanbulTodayYmd().split('-').map(Number);
     const latest = new Date(Date.UTC(y + APPOINTMENT_MAX_FUTURE_YEARS, m - 1, d));
+
     return latest.toISOString().slice(0, 10);
 }
 
 /** Seçilen İstanbul tarih+saati backend penceresinin (şimdi − 7 gün) dışında mı? Bugünün geçmiş saatleri geçerlidir. */
 export function isIstanbulDateTimeTooFarInPast(dateYmd: string, timeHm: string, nowMs: number = Date.now()): boolean {
     const utc = fromIstanbulDateAndTimeToUtcIso(dateYmd.trim(), timeHm.trim());
+
     if (!utc) {
         return false;
     }
+
     return new Date(utc).getTime() < nowMs - APPOINTMENT_MAX_PAST_DAYS * 24 * 60 * 60 * 1000;
 }
 
 /** Seçilen İstanbul tarih+saati backend penceresinin (şimdi + 2 yıl) ötesinde mi? */
 export function isIstanbulDateTimeTooFarInFuture(dateYmd: string, timeHm: string, nowMs: number = Date.now()): boolean {
     const utc = fromIstanbulDateAndTimeToUtcIso(dateYmd.trim(), timeHm.trim());
+
     if (!utc) {
         return false;
     }
+
     const limit = new Date(nowMs);
+
     limit.setUTCFullYear(limit.getUTCFullYear() + APPOINTMENT_MAX_FUTURE_YEARS);
+
     return new Date(utc).getTime() > limit.getTime();
 }
 
@@ -57,12 +64,15 @@ export function isIstanbulDateTimeTooFarInFuture(dateYmd: string, timeHm: string
 export function appointmentCreateScheduleDateValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const v = typeof control.value === 'string' ? control.value.trim() : '';
+
         if (!v) {
             return null;
         }
+
         if (v < appointmentEarliestDateYmd()) {
             return { tooFarPast: true };
         }
+
         return v > appointmentLatestDateYmd() ? { tooFarFuture: true } : null;
     };
 }
@@ -70,8 +80,10 @@ export function appointmentCreateScheduleDateValidator(): ValidatorFn {
 /** Backend penceresinin (şimdi − 7 gün … şimdi + 2 yıl) dışında kalan saat slotlarını çıkarır (yalnız sınır günleri etkilenir). */
 export function filterAllowedIstanbulTimeOptions(dateYmd: string, options: SelectOption[]): SelectOption[] {
     const date = dateYmd.trim();
+
     if (!date) {
         return options;
     }
+
     return options.filter((o) => !isIstanbulDateTimeTooFarInPast(date, o.value) && !isIstanbulDateTimeTooFarInFuture(date, o.value));
 }

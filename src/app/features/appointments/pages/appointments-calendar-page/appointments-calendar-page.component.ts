@@ -504,11 +504,15 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly dayAfternoonItems = computed(() => this.items().filter((item) => this.getLocalHour(item) >= 13));
     readonly rangeLabel = computed(() => {
         const { start, endExclusive } = this.getDateRange();
+
         if (this.viewMode() === 'day') {
             return formatDateDisplay(start);
         }
+
         const endDisplay = new Date(endExclusive);
+
         endDisplay.setDate(endDisplay.getDate() - 1);
+
         return `${formatDateDisplay(start)} - ${formatDateDisplay(endDisplay)}`;
     });
 
@@ -516,12 +520,16 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         if (this.viewMode() === 'day') {
             return this.groupedByDay();
         }
+
         const { start } = this.getDateRange();
         const groups = new Map(this.groupedByDay().map((g) => [g.dateKey, g]));
+
         return Array.from({ length: 7 }, (_, idx) => {
             const d = new Date(start);
+
             d.setDate(start.getDate() + idx);
             const key = localDateYyyyMmDd(d);
+
             return (
                 groups.get(key) ?? {
                     dateKey: key,
@@ -536,11 +544,14 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.route.queryParamMap.subscribe((params) => {
             const raw = params.get('preset');
             const preset = this.toPreset(raw);
+
             this.activePreset.set(preset);
+
             if (preset) {
                 this.viewMode.set('day');
                 this.selectedDate.set(new Date());
             }
+
             this.reload();
         });
     }
@@ -549,12 +560,14 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         if (this.viewMode() === mode) {
             return;
         }
+
         this.viewMode.set(mode);
         this.reload();
     }
 
     previous(): void {
         const d = new Date(this.selectedDate());
+
         d.setDate(d.getDate() - (this.viewMode() === 'day' ? 1 : 7));
         this.selectedDate.set(d);
         this.reload();
@@ -562,6 +575,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     next(): void {
         const d = new Date(this.selectedDate());
+
         d.setDate(d.getDate() + (this.viewMode() === 'day' ? 1 : 7));
         this.selectedDate.set(d);
         this.reload();
@@ -576,6 +590,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const presetQuery = this.presetQuery();
         const start = presetQuery?.start ?? this.getDateRange().start;
         const endExclusive = presetQuery?.endExclusive ?? this.getDateRange().endExclusive;
+
         this.loading.set(true);
         this.error.set(null);
         this.appointments
@@ -606,6 +621,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         if (!this.canRescheduleAppointment || this.ro.mutationBlocked()) {
             return;
         }
+
         void this.router.navigate(['/panel/appointments', id, 'edit'], {
             queryParams: this.returnContextQueryParams()
         });
@@ -615,6 +631,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         if (!this.canCreateAppointment || this.ro.mutationBlocked()) {
             return;
         }
+
         void this.router.navigate(['/panel/appointments/new']);
     }
 
@@ -625,15 +642,19 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     pageTitle(): string {
         const preset = this.activePreset();
+
         if (preset === 'overdue-appointments') {
             return 'Zamanı Geçmiş Randevular';
         }
+
         if (preset === 'upcoming-24h') {
             return 'Önümüzdeki 24 Saatteki Randevular';
         }
+
         if (preset === 'today-cancelled') {
             return 'Bugün İptal Edilen Randevular';
         }
+
         return 'Randevu Takvimi';
     }
 
@@ -646,12 +667,17 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         if (this.viewMode() === 'day') {
             const start = this.startOfDay(this.selectedDate());
             const end = new Date(start);
+
             end.setDate(end.getDate() + 1);
+
             return { start, endExclusive: end };
         }
+
         const start = this.startOfWeekMonday(this.selectedDate());
         const end = new Date(start);
+
         end.setDate(end.getDate() + 7);
+
         return { start, endExclusive: end };
     }
 
@@ -663,15 +689,19 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const start = this.startOfDay(date);
         const day = start.getDay();
         const diff = day === 0 ? -6 : 1 - day;
+
         start.setDate(start.getDate() + diff);
+
         return start;
     }
 
     private getLocalHour(item: AppointmentCalendarItemVm): number {
         const d = parseUtcApiInstantIsoString(item.scheduledAtUtc);
+
         if (!d) {
             return 99;
         }
+
         return d.getHours();
     }
 
@@ -679,28 +709,39 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         if (value === 'overdue-appointments' || value === 'upcoming-24h' || value === 'today-cancelled') {
             return value;
         }
+
         return null;
     }
 
     private presetQuery(): { start: Date; endExclusive: Date; status?: string } | null {
         const now = new Date();
         const preset = this.activePreset();
+
         if (!preset) {
             return null;
         }
+
         if (preset === 'overdue-appointments') {
             const start = new Date(now);
+
             start.setDate(start.getDate() - 45);
+
             return { start, endExclusive: now, status: 'Scheduled' };
         }
+
         if (preset === 'upcoming-24h') {
             const end = new Date(now);
+
             end.setHours(end.getHours() + 24);
+
             return { start: now, endExclusive: end, status: 'Scheduled' };
         }
+
         const start = this.startOfDay(now);
         const end = new Date(start);
+
         end.setDate(end.getDate() + 1);
+
         return { start, endExclusive: end, status: 'Cancelled' };
     }
 
@@ -708,19 +749,23 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         if (preset === 'overdue-appointments') {
             return 'Zamanı geçmiş randevular filtreleniyor.';
         }
+
         if (preset === 'upcoming-24h') {
             return 'Önümüzdeki 24 saat randevuları filtreleniyor.';
         }
+
         return 'Bugün iptal edilen randevular filtreleniyor.';
     }
 
     isPresetDateGroupedMode(): boolean {
         const preset = this.activePreset();
+
         return preset === 'overdue-appointments' || preset === 'upcoming-24h';
     }
 
     private returnContextQueryParams(): Record<string, string> {
         const returnUrl = this.router.url;
+
         return {
             returnUrl,
             returnLabel: this.returnLabelForContext()
@@ -729,15 +774,19 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     private returnLabelForContext(): string {
         const preset = this.activePreset();
+
         if (preset === 'overdue-appointments') {
             return 'Zamanı geçmiş randevulara dön';
         }
+
         if (preset === 'upcoming-24h') {
             return 'Önümüzdeki 24 saat randevularına dön';
         }
+
         if (preset === 'today-cancelled') {
             return 'Bugün iptal edilen randevulara dön';
         }
+
         return 'Randevu takvimine dön';
     }
 }

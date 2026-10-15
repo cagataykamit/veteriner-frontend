@@ -203,9 +203,11 @@ export class AdministrationsListPageComponent implements OnInit {
     onLazyLoad(event: TableLazyLoadEvent): void {
         const rows = event.rows ?? this.pageSize();
         const page = Math.floor((event.first ?? 0) / rows) + 1;
+
         if (page === Math.floor(this.first() / this.pageSize()) + 1 && rows === this.pageSize()) {
             return;
         }
+
         this.load(page, rows);
     }
 
@@ -224,8 +226,10 @@ export class AdministrationsListPageComponent implements OnInit {
                 next: (r) => {
                     if (r.items.length === 0 && page > 1) {
                         this.load(page - 1, pageSize);
+
                         return;
                     }
+
                     this.rows.set(r.items);
                     this.totalItems.set(r.totalItems);
                     this.pageSize.set(r.pageSize);

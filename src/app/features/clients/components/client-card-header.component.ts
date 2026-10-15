@@ -143,6 +143,7 @@ export class ClientCardHeaderComponent {
     readonly pendingCharges = input<PetCardSection<ChargeSuggestionsPagedVm>>(null);
     readonly pendingSummary = computed(() => {
         const p = this.pendingCharges();
+
         return p?.state === 'ok' ? pendingChargesSummary(p.data) : null;
     });
     readonly money = formatMoney;

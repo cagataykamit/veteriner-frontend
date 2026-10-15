@@ -219,6 +219,7 @@ export class ChargeNewPageComponent implements OnInit {
     /** Alanlar tek tek geçerli ama çarpım sıfıra yuvarlanıyor (ör. 0,001 × 1). */
     readonly amountRoundsToZero = computed(() => {
         const { quantity, unitPrice } = this.formValue(); // önce oku: sinyal bağımlılığı kısa devreyle kaybolmasın
+
         return quantity != null && unitPrice != null && this.form.controls.quantity.valid && this.form.controls.unitPrice.valid && this.amountPreview() === null;
     });
 
@@ -227,6 +228,7 @@ export class ChargeNewPageComponent implements OnInit {
         const { clientId, petId } = this.formValue();
         const cid = trimClientIdControlValue(clientId);
         const pid = trimClientIdControlValue(petId);
+
         return this.todayItems()
             .filter((i) => i.visitId && !i.isVoided && this.arrivedToday(i) && i.clientId === cid && (!pid || i.petId === pid))
             .map((i) => ({
@@ -246,10 +248,12 @@ export class ChargeNewPageComponent implements OnInit {
                 error: () => this.todayItems.set([])
             });
         }
+
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.patchValue({ petId: '', visitId: '', examinationId: '' }, { emitEvent: false });
             this.examinationOptions.set([]);
             const id = trimClientIdControlValue(clientId);
+
             this.form.updateValueAndValidity();
             this.loadExaminations(id);
         });
@@ -261,9 +265,11 @@ export class ChargeNewPageComponent implements OnInit {
         // Abonelikler kurulduktan sonra: query'den gelen müşteri ön seçimi değişiklik akışını tetiklemeli.
         const query = this.route.snapshot.queryParamMap;
         const preset = query.get('clientId')?.trim();
+
         if (!prefillPetFromRoute(query, this.form.controls.clientId, this.form.controls.petId) && preset) {
             this.form.controls.clientId.setValue(preset);
         }
+
         this.applyVisitPreset();
     }
 
@@ -275,9 +281,11 @@ export class ChargeNewPageComponent implements OnInit {
     private applyVisitPreset(): void {
         const visitId = this.visitPresetId;
         const item = visitId ? this.todayItems().find((i) => i.visitId === visitId && this.arrivedToday(i)) : undefined;
+
         if (!item || item.clientId !== trimClientIdControlValue(this.form.controls.clientId.value)) {
             return;
         }
+
         this.visitPresetId = null;
         this.form.controls.petId.setValue(item.petId);
         this.form.controls.visitId.setValue(item.visitId as string, { emitEvent: false });
@@ -285,6 +293,7 @@ export class ChargeNewPageComponent implements OnInit {
 
     goList(): void {
         const clientId = trimClientIdControlValue(this.form.controls.clientId.value);
+
         void this.router.navigate(['/panel/charges'], { queryParams: clientId ? { clientId } : {} });
     }
 
@@ -292,15 +301,21 @@ export class ChargeNewPageComponent implements OnInit {
         if (this.submitting() || this.ro.mutationBlocked()) {
             return;
         }
+
         this.submitError.set(null);
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const v = this.form.getRawValue();
+
         if (v.quantity == null || v.unitPrice == null || this.amountPreview() === null) {
             return;
         }
+
         this.submitting.set(true);
         this.chargesService
             .createCharge({
@@ -317,12 +332,15 @@ export class ChargeNewPageComponent implements OnInit {
                 next: (r) => {
                     // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar kayıt zaten oluşmaz.
                     const { id: chargeId, clientId, visitId, examinationId } = r.charge;
+
                     if (thenCollectPayment) {
                         void this.router.navigate(['/panel/payments/new'], {
                             queryParams: { clientId, chargeId, ...(visitId ? { visitId } : {}), ...(examinationId ? { examinationId } : {}) }
                         });
+
                         return;
                     }
+
                     void this.router.navigate(['/panel/charges'], { queryParams: { clientId } });
                 },
                 error: (e: Error) => {
@@ -336,13 +354,16 @@ export class ChargeNewPageComponent implements OnInit {
         if (!this.canLinkExamination || !clientId) {
             return;
         }
+
         this.loadingExaminations.set(true);
         this.examinationsService.getExaminations({ page: 1, pageSize: 50, clientId, petId: petId || undefined }).subscribe({
             next: (r) => {
                 if (isStalePetListResponse(this.form.controls.clientId.value, clientId)) {
                     this.loadingExaminations.set(false);
+
                     return;
                 }
+
                 this.examinationOptions.set(
                     r.items.map((e) => ({
                         value: e.id,

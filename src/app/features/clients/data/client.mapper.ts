@@ -58,34 +58,46 @@ export function extractCreatedClientIdFromPostResponse(body: unknown): string | 
     if (body == null) {
         return null;
     }
+
     if (typeof body === 'string') {
         const t = body.trim();
+
         return t ? t : null;
     }
+
     if (typeof body !== 'object') {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const idKeys = ['id', 'Id', 'clientId', 'ClientId'];
+
     for (const k of idKeys) {
         const s = pickIdString(o[k]);
+
         if (s) {
             return s;
         }
     }
+
     const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'client', 'Client'];
+
     for (const w of wrappers) {
         const inner = o[w];
+
         if (inner && typeof inner === 'object') {
             const n = inner as Record<string, unknown>;
+
             for (const k of idKeys) {
                 const s = pickIdString(n[k]);
+
                 if (s) {
                     return s;
                 }
             }
         }
     }
+
     return null;
 }
 
@@ -93,9 +105,11 @@ function pickIdString(v: unknown): string | null {
     if (typeof v === 'string' && v.trim()) {
         return v.trim();
     }
+
     if (typeof v === 'number' && !Number.isNaN(v)) {
         return String(v);
     }
+
     return null;
 }
 
@@ -119,6 +133,7 @@ export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsert
     const email = req.email?.trim() ? req.email.trim() : null;
     const address = req.address?.trim() ? req.address.trim() : null;
     const phone = req.phone?.trim() ? req.phone.trim() : null;
+
     return {
         fullName: req.fullName.trim(),
         phone,
@@ -144,6 +159,7 @@ function mapClientRecentAppointmentItemToVm(dto: ClientRecentAppointmentSummaryI
               : null,
         durationMinutes
     );
+
     return {
         id: dto.id,
         scheduledAtUtc,
@@ -190,9 +206,11 @@ function safeNum(v: unknown): number | null {
     if (v == null) {
         return null;
     }
+
     if (typeof v === 'number' && !Number.isNaN(v)) {
         return v;
     }
+
     return null;
 }
 
@@ -201,9 +219,11 @@ export function mapClientPaymentSummaryDtoToVm(dto: ClientPaymentSummaryDto): Cl
     const currencyTotals = (dto.currencyTotals ?? [])
         .map((x) => {
             const c = x.currency?.trim();
+
             if (!c) {
                 return null;
             }
+
             return {
                 currency: c,
                 totalAmount: safeNum(x.totalAmount)
@@ -214,9 +234,11 @@ export function mapClientPaymentSummaryDtoToVm(dto: ClientPaymentSummaryDto): Cl
     const recentPayments = (dto.recentPayments ?? [])
         .map((x) => {
             const id = x.id?.trim();
+
             if (!id) {
                 return null;
             }
+
             return {
                 id,
                 paidAtUtc: x.paidAtUtc?.trim() ? x.paidAtUtc.trim() : null,
@@ -266,6 +288,7 @@ function trimmedOrNull(v: string | null | undefined): string | null {
 export function mapClientKvkkConsentDtoToVm(dto: Omit<ClientKvkkConsentDto, 'id'>): ClientKvkkConsentUpdateResult {
     const status = parseKvkkConsentStatus(dto.kvkkConsentStatus);
     const recorded = status !== 'None';
+
     return {
         kvkkConsent: {
             status,
@@ -278,6 +301,7 @@ export function mapClientKvkkConsentDtoToVm(dto: Omit<ClientKvkkConsentDto, 'id'
 
 export function mapClientKvkkConsentUpdateToApiBody(req: ClientKvkkConsentUpdateRequest): ClientKvkkConsentUpdateRequestDto {
     const recordedOn = req.status === 'None' ? '' : (req.recordedOn?.trim() ?? '');
+
     return { status: req.status, ...(recordedOn ? { recordedOn } : {}), rowVersion: req.rowVersion };
 }
 
@@ -289,6 +313,7 @@ export function mapPagedClientsToVm(result: ClientListItemDtoPagedResult): {
     totalPages: number;
 } {
     const items = (result.items ?? []).map(mapClientListItemDtoToVm);
+
     return {
         items,
         page: result.page,
@@ -306,17 +331,22 @@ export function clientsQueryToHttpParams(query: ClientsListQuery): HttpParams {
     let p = new HttpParams();
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+
     p = p.set('Page', String(page));
     p = p.set('PageSize', String(pageSize));
+
     if (query.search?.trim()) {
         p = p.set('Search', query.search.trim());
     }
+
     if (query.sort?.trim()) {
         p = p.set('Sort', query.sort.trim());
     }
+
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
     }
+
     return p;
 }
 
@@ -344,9 +374,11 @@ export function mapQuickRegisterToApiBody(req: QuickRegisterRequest): QuickRegis
         speciesId: req.speciesId.trim()
     };
     const microchip = req.microchipNumber?.trim();
+
     if (microchip) {
         body.microchipNumber = microchip;
     }
+
     return body;
 }
 
@@ -354,5 +386,6 @@ export function mapQuickRegisterToApiBody(req: QuickRegisterRequest): QuickRegis
 export function mapQuickRegisterResultDtoToVm(dto: QuickRegisterResultDto | null | undefined): QuickRegisterResult | null {
     const clientId = dto?.clientId?.trim();
     const petId = dto?.petId?.trim();
+
     return clientId && petId ? { clientId, petId } : null;
 }

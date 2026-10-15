@@ -53,6 +53,7 @@ export class ClientsService {
 
     getClients(query: ClientsListQuery): Observable<ClientsPagedVm> {
         const params = clientsQueryToHttpParams(query);
+
         return this.api.get<ClientListItemDtoPagedResult>(ApiEndpoints.clients.list(), params).pipe(
             map((res) => mapPagedClientsToVm(res)),
             catchError((err: HttpErrorResponse) =>
@@ -105,18 +106,22 @@ export class ClientsService {
      */
     createClient(payload: CreateClientRequest): Observable<{ id: string }> {
         const body = mapCreateClientToApiBody(payload);
+
         return this.api.post<unknown>(ApiEndpoints.clients.list(), body).pipe(
             map((raw) => {
                 const id = extractCreatedClientIdFromPostResponse(raw);
+
                 if (!id) {
                     throw new Error('CLIENT_CREATE_NO_ID_IN_RESPONSE');
                 }
+
                 return { id };
             }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 if (err instanceof Error && err.message === 'CLIENT_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(
                         () =>
@@ -125,6 +130,7 @@ export class ClientsService {
                             )
                     );
                 }
+
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Müşteri oluşturulamadı.')
                 );
@@ -140,9 +146,11 @@ export class ClientsService {
         return this.api.post<QuickRegisterResultDto>(ApiEndpoints.clients.quickRegister(), mapQuickRegisterToApiBody(payload)).pipe(
             map((dto) => {
                 const result = mapQuickRegisterResultDtoToVm(dto);
+
                 if (!result) {
                     throw new Error('Sunucu yanıtında müşteri/hasta kimliği okunamadı. Kayıt oluşmuş olabilir; müşteri listesini kontrol edin.');
                 }
+
                 return result;
             })
         );
@@ -160,6 +168,7 @@ export class ClientsService {
 
     updateClient(id: string, payload: CreateClientRequest): Observable<void> {
         const body = mapCreateClientToApiBody(payload);
+
         return this.api.put<unknown>(ApiEndpoints.clients.byId(id), body).pipe(
             map(() => void 0),
             catchError((err: HttpErrorResponse) =>

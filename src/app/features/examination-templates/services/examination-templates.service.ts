@@ -44,17 +44,21 @@ export class ExaminationTemplateError extends Error {
     /** Reddedilen satır varsa mesajın başına ürün adını koyar (ad bulunamazsa mesaj aynen kalır). */
     withProductName(nameOf: (productId: string) => string | null | undefined): string {
         const name = this.productId ? nameOf(this.productId) : null;
+
         return name ? `"${name}" satırı: ${this.message}` : this.message;
     }
 }
 
 function problemProductId(err: HttpErrorResponse): string | null {
     const body = err.error as Record<string, unknown> | null;
+
     if (!body || typeof body !== 'object') {
         return null;
     }
+
     const ext = body['extensions'] as Record<string, unknown> | undefined;
     const id = body['productId'] ?? ext?.['productId'];
+
     return typeof id === 'string' && id.trim() ? id.trim() : null;
 }
 
@@ -63,8 +67,10 @@ function toExaminationTemplateError<T>(fallback: string): MonoTypeOperatorFuncti
         if (!(err instanceof HttpErrorResponse)) {
             return throwError(() => err);
         }
+
         const code = problemCodeFromHttpError(err);
         const message = (code && EXAMINATION_TEMPLATE_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
+
         return throwError(() => new ExaminationTemplateError(message, code, problemProductId(err)));
     });
 }
@@ -72,18 +78,23 @@ function toExaminationTemplateError<T>(fallback: string): MonoTypeOperatorFuncti
 function listQueryToHttpParams(q: ExaminationTemplatesListQuery): HttpParams {
     let p = new HttpParams();
     const search = q.search?.trim();
+
     if (search) {
         p = p.set('search', search);
     }
+
     if (q.includeInactive) {
         p = p.set('includeInactive', 'true');
     }
+
     if (q.page) {
         p = p.set('page', String(q.page));
     }
+
     if (q.pageSize) {
         p = p.set('pageSize', String(q.pageSize));
     }
+
     return p;
 }
 
@@ -112,6 +123,7 @@ export class ExaminationTemplatesService {
 
     setActive(id: string, active: boolean): Observable<void> {
         const path = active ? ApiEndpoints.examinationTemplates.activate(id) : ApiEndpoints.examinationTemplates.deactivate(id);
+
         return this.api.post<unknown>(path, {}).pipe(
             map(() => undefined),
             toExaminationTemplateError(active ? 'Şablon etkinleştirilemedi.' : 'Şablon pasifleştirilemedi.')

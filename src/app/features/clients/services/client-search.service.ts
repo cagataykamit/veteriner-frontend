@@ -32,6 +32,7 @@ export class ClientSearchService {
 
     search(term: string): Observable<ClientSearchResultVm[]> {
         const search = term.trim();
+
         return forkJoin({
             clients: this.clients.getClients({ page: 1, pageSize: MAX_RESULTS, search }).pipe(map((r) => r.items)),
             // Hayvan okuma yetkisi yoksa veya arama başarısızsa müşteri sonuçları yine gösterilir.
@@ -53,6 +54,7 @@ export class ClientSearchService {
                           )
                       )
                     : of([]);
+
                 return owners$.pipe(map((owners) => [...clients, ...owners.filter((o): o is ClientListItemVm => o !== null)].slice(0, MAX_RESULTS)));
             }),
             switchMap((candidates) => (candidates.length ? forkJoin(candidates.map((c) => this.withPetNames(c))) : of([])))
@@ -70,6 +72,7 @@ export class ClientSearchService {
         return this.pets.getPets({ page: 1, pageSize: PETS_PER_CLIENT, clientId: client.id }).pipe(
             map((r) => {
                 const hasOwner = r.items.some((p) => (p.clientId ?? '').trim());
+
                 return (hasOwner ? filterPetsByClientId(r.items, client.id) : r.items).map((p) => p.name);
             }),
             catchError(() => of([] as string[])),

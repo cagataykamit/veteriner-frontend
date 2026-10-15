@@ -34,6 +34,7 @@ describe('CareInstructionsSectionComponent', () => {
 
     const root = () => fixture.nativeElement as HTMLElement;
     const has = (testId: string) => !!root().querySelector(`[data-testid="${testId}"]`);
+
     const typeAndSubmit = async (text: string) => {
         fixture.componentInstance.form.controls.text.setValue(text);
         fixture.componentInstance.onSubmit();

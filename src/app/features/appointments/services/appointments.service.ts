@@ -47,6 +47,7 @@ export class AppointmentsService {
             clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
         };
         const params = appointmentsQueryToHttpParams(merged);
+
         return this.api.get<AppointmentListItemDtoPagedResult>(ApiEndpoints.appointments.list(), params).pipe(
             map((res) => mapPagedAppointmentsToVm(res)),
             catchError((err: HttpErrorResponse) =>
@@ -62,6 +63,7 @@ export class AppointmentsService {
             clinicId: query.clinicId?.trim() ? query.clinicId.trim() : clinicFromAuth || undefined
         };
         const params = appointmentCalendarQueryToHttpParams(merged);
+
         return this.api.get<AppointmentCalendarItemDto[]>(ApiEndpoints.appointments.calendar(), params).pipe(
             map((res) => mapAppointmentCalendarItemsToVm(res)),
             catchError((err: HttpErrorResponse) =>
@@ -94,18 +96,22 @@ export class AppointmentsService {
      */
     createAppointment(payload: CreateAppointmentRequest): Observable<{ id: string }> {
         const body = mapCreateAppointmentToApiBody(payload);
+
         return this.api.post<unknown>(ApiEndpoints.appointments.list(), body).pipe(
             map((raw) => {
                 const id = extractCreatedAppointmentIdFromPostResponse(raw);
+
                 if (!id) {
                     throw new Error('APPOINTMENT_CREATE_NO_ID_IN_RESPONSE');
                 }
+
                 return { id };
             }),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 if (err instanceof Error && err.message === 'APPOINTMENT_CREATE_NO_ID_IN_RESPONSE') {
                     return throwError(
                         () =>
@@ -114,6 +120,7 @@ export class AppointmentsService {
                             )
                     );
                 }
+
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Randevu oluşturulamadı.')
                 );
@@ -124,6 +131,7 @@ export class AppointmentsService {
     /** `Appointments.Cancel`. PUT ile durum geçişi kapatıldı; iptal kendi ucuyla yapılır. Gerekçe opsiyonel (en çok 500). */
     cancelAppointment(id: string, reason?: string): Observable<void> {
         const trimmed = reason?.trim();
+
         return this.postTransition(ApiEndpoints.appointments.cancel(id), trimmed ? { reason: trimmed } : {}, 'Randevu iptal edilemedi.');
     }
 
@@ -135,6 +143,7 @@ export class AppointmentsService {
     /** `Appointments.NoShow`; yalnızca saati geçmiş `Scheduled` randevu. Idempotent; gerekçe opsiyonel (en çok 500). */
     markNoShow(id: string, reason?: string): Observable<void> {
         const trimmed = reason?.trim();
+
         return this.postTransition(ApiEndpoints.appointments.noShow(id), trimmed ? { reason: trimmed } : {}, 'Randevu gelmedi olarak işaretlenemedi.');
     }
 
@@ -145,12 +154,14 @@ export class AppointmentsService {
 
     updateAppointment(id: string, payload: UpdateAppointmentRequest): Observable<void> {
         const body = mapUpdateAppointmentToApiBody(payload);
+
         return this.api.put<unknown>(ApiEndpoints.appointments.byId(id), body).pipe(
             map(() => void 0),
             catchError((err: unknown) => {
                 if (err instanceof HttpErrorResponse) {
                     return throwError(() => err);
                 }
+
                 return throwError(() =>
                     err instanceof Error ? err : new Error('Randevu güncellenemedi.')
                 );
@@ -172,38 +183,51 @@ function extractCreatedAppointmentIdFromPostResponse(body: unknown): string | nu
     if (body == null) {
         return null;
     }
+
     if (typeof body === 'string') {
         return body.trim() || null;
     }
+
     if (typeof body !== 'object') {
         return null;
     }
+
     const o = body as Record<string, unknown>;
     const idKeys = ['id', 'Id', 'appointmentId', 'AppointmentId'];
+
     for (const k of idKeys) {
         const v = o[k];
+
         if (typeof v === 'string' && v.trim()) {
             return v.trim();
         }
+
         if (typeof v === 'number' && !Number.isNaN(v)) {
             return String(v);
         }
     }
+
     const wrappers = ['data', 'Data', 'value', 'Value', 'result', 'Result', 'appointment', 'Appointment'];
+
     for (const w of wrappers) {
         const inner = o[w];
+
         if (inner && typeof inner === 'object') {
             const n = inner as Record<string, unknown>;
+
             for (const k of idKeys) {
                 const v = n[k];
+
                 if (typeof v === 'string' && v.trim()) {
                     return v.trim();
                 }
+
                 if (typeof v === 'number' && !Number.isNaN(v)) {
                     return String(v);
                 }
             }
         }
     }
+
     return null;
 }

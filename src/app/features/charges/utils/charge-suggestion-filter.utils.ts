@@ -21,5 +21,6 @@ export interface ChargeSuggestionFilter {
 export function filterChargeSuggestions(items: readonly ChargeSuggestionVm[], filter: ChargeSuggestionFilter, now: Date = new Date()): ChargeSuggestionVm[] {
     const today = toIstanbulDateInputValue(now.toISOString());
     const from = filter.period === 'today' ? today : filter.period === 'week' ? (addGregorianDaysToYmd(today, -6) ?? today) : null;
+
     return items.filter((i) => (!filter.clientId || i.clientId === filter.clientId) && (!from || toIstanbulDateInputValue(i.occurredAtUtc) >= from));
 }

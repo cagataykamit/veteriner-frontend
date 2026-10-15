@@ -15,6 +15,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
 
     beforeEach(async () => {
         const clinics = jasmine.createSpyObj<ClinicsService>('ClinicsService', ['getClinicById', 'getWorkingHours', 'getAppointmentSettings']);
+
         clinics.getClinicById.and.returnValue(
             of({ id: 'c1', name: 'Merkez Pati', city: 'İstanbul', isActive: true, phone: '', email: '', address: '', description: '' })
         );
@@ -54,10 +55,13 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
 
     it('7 gün, gün adları ve saat alanları çizilir; randevu varsayılanları yüklenir', () => {
         const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
         for (const d of DAYS) {
             expect(text).toContain(d);
         }
+
         const times = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('app-date-input input')) as HTMLInputElement[];
+
         expect(times.length).toBe(28);
         expect(times.some((i) => i.value === '09:00')).toBeTrue();
         expect(text).not.toContain('Randevu varsayılanları yükleniyor');

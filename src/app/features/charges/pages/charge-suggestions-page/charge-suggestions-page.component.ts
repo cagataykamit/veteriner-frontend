@@ -235,16 +235,20 @@ export class ChargeSuggestionsPageComponent implements OnInit {
     readonly visibleRows = computed(() => filterChargeSuggestions(this.rows(), { clientId: this.clientId(), period: this.period() }));
     readonly contextLabel = computed(() => {
         const s = this.scope();
+
         if (s.visitId) {
             return 'Seçili ziyaretin kalemleri';
         }
+
         if (s.examinationId) {
             return 'Seçili muayenenin kalemleri';
         }
+
         return s.petId ? 'Seçili hastanın kalemleri' : null;
     });
     readonly waiveSummary = computed(() => {
         const t = this.target();
+
         return t ? `${t.clientName} · ${t.petName} · ${t.description}` : null;
     });
 
@@ -257,6 +261,7 @@ export class ChargeSuggestionsPageComponent implements OnInit {
     ngOnInit(): void {
         this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((q) => {
             const pick = (key: string) => q.get(key)?.trim() || undefined;
+
             this.scope.set({ petId: pick('petId'), examinationId: pick('examinationId'), visitId: pick('visitId') });
             this.reload();
         });
@@ -268,6 +273,7 @@ export class ChargeSuggestionsPageComponent implements OnInit {
 
     rowAmount(row: ChargeSuggestionVm): string {
         const amount = computeChargeAmount(row.quantity, row.suggestedUnitPrice);
+
         return amount === null ? '—' : this.money(amount, row.currency);
     }
 
@@ -304,6 +310,7 @@ export class ChargeSuggestionsPageComponent implements OnInit {
         if (this.busy(row.id)) {
             return;
         }
+
         this.actionError.set(null);
         this.setBusy(row.id, true);
         this.convertRequest(row, {}).subscribe({
@@ -351,22 +358,28 @@ export class ChargeSuggestionsPageComponent implements OnInit {
     private requestIdFor(id: string, overrides: ChargeSuggestionOverrides): string {
         const fields = JSON.stringify(overrides);
         const current = this.attempts.get(id);
+
         if (current?.fields === fields) {
             return current.requestId;
         }
+
         const requestId = crypto.randomUUID();
+
         this.attempts.set(id, { fields, requestId });
+
         return requestId;
     }
 
     private setBusy(id: string, busy: boolean): void {
         this.busyIds.update((ids) => {
             const next = new Set(ids);
+
             if (busy) {
                 next.add(id);
             } else {
                 next.delete(id);
             }
+
             return next;
         });
     }

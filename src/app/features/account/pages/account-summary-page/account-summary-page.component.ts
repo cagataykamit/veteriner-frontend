@@ -204,7 +204,9 @@ export class AccountSummaryPageComponent implements OnInit {
         if (this.displayNameSaving() || this.displayNameControl.invalid) {
             return;
         }
+
         const displayName = this.displayNameControl.value.trim();
+
         this.displayNameError.set(null);
         this.displayNameSaving.set(true);
         this.account.updateDisplayName(displayName).subscribe({

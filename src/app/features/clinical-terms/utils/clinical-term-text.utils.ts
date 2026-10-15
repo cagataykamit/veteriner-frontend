@@ -22,16 +22,22 @@ export function clinicalTermNameKey(name: string): string {
  */
 export function appendClinicalTermToText(text: string, name: string): string {
     const term = name.trim();
+
     if (!term) {
         return text;
     }
+
     const body = text.trimEnd();
+
     if (!body) {
         return term;
     }
+
     const key = term.toLocaleLowerCase('tr');
+
     if (body.split(/[,;\n]/).some((part) => part.trim().toLocaleLowerCase('tr') === key)) {
         return text;
     }
+
     return /[,;]$/.test(body) ? `${body} ${term}` : `${body}${SEPARATOR}${term}`;
 }

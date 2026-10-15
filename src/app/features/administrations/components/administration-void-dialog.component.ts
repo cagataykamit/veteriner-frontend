@@ -52,6 +52,7 @@ export class AdministrationVoidDialogComponent {
 
     readonly summary = computed(() => {
         const a = this.target();
+
         return a ? `${a.productName} · ${a.quantity} ${a.unit}` : null;
     });
     readonly description = computed(() => {
@@ -59,6 +60,7 @@ export class AdministrationVoidDialogComponent {
             this.outcome() === 'WrittenOff'
                 ? 'Uygulama silinmez, iptal edildi olarak işaretlenir. Ürün stoğa geri verilmez; zarar/imha olarak kayıtta kalır. Gerekçede nedenini yazın.'
                 : 'Uygulama silinmez, iptal edildi olarak işaretlenir ve ürün stoğa geri verilir. Yanlış miktar/ürün için iptal edip yeniden kaydedin.';
+
         return this.target()?.vaccinationId ? `${base} Bu uygulama bir aşı kaydına bağlı; iptalde aşı kaydı da iptal edilir.` : base;
     });
 

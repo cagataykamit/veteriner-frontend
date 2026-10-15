@@ -37,6 +37,7 @@ describe('AdministrationVoidDialogComponent', () => {
     let voided: AdministrationStockOutcome[];
 
     const reasonDialog = () => fixture.debugElement.children[0].componentInstance as ReasonConfirmDialogComponent;
+
     const open = () => {
         cmp.visible.set(true);
         fixture.detectChanges();

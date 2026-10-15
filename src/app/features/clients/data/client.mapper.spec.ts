@@ -18,10 +18,12 @@ describe('client.mapper KVKK rıza (ADR-021)', () => {
             kvkkConsentRecordedByName: ' Ayşe Yılmaz ',
             rowVersion: 'AAAAAAAAB9E='
         });
+
         expect(vm.kvkkConsent).toEqual({ status: 'Accepted', recordedOn: '2026-10-15', recordedByName: 'Ayşe Yılmaz' });
         expect(vm.rowVersion).toBe('AAAAAAAAB9E=');
 
         const old = mapClientDetailDtoToVm({ id: 'c2', tenantId: 't1' });
+
         expect(old.kvkkConsent).toEqual({ status: 'None', recordedOn: null, recordedByName: null });
         expect(old.rowVersion).toBeNull();
     });
@@ -52,8 +54,10 @@ describe('client.mapper KVKK rıza (ADR-021)', () => {
 describe('client.mapper iletişim tercihi (ADR-020 S5)', () => {
     it('detay: kanal ve hatırlatma bayrağı okunur; eski yanıtta alan yoksa tercih yok / hatırlatma açık', () => {
         const vm = mapClientDetailDtoToVm({ id: 'c1', tenantId: 't1', preferredContactChannel: 'WhatsApp', remindersOptedOut: true });
+
         expect([vm.preferredContactChannel, vm.remindersOptedOut]).toEqual(['WhatsApp', true]);
         const old = mapClientDetailDtoToVm({ id: 'c2', tenantId: 't1' });
+
         expect([old.preferredContactChannel, old.remindersOptedOut]).toEqual(['None', false]);
     });
 
@@ -72,11 +76,13 @@ describe('client.mapper iletişim tercihi (ADR-020 S5)', () => {
             preferredContactChannel: 'None',
             remindersOptedOut: false
         });
+
         expect(mapCreateClientToApiBody(fromForm)).toEqual(
             jasmine.objectContaining({ fullName: 'Ali Veli', preferredContactChannel: 'None', remindersOptedOut: false })
         );
 
         const body = mapCreateClientToApiBody({ fullName: 'Ali Veli' });
+
         expect('preferredContactChannel' in body).toBeFalse();
         expect('remindersOptedOut' in body).toBeFalse();
     });

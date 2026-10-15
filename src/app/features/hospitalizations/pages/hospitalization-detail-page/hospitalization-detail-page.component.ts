@@ -287,6 +287,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     /** Taburcu yatıştan önce olamaz; yatış bilinmiyorsa yalnız genel alt sınır. */
     protected readonly dischargeMin = computed(() => {
         const admittedUtc = this.row()?.admittedAtUtc;
+
         return (admittedUtc ? toIstanbulDateTimeLocalInputValue(admittedUtc) : '') || DATETIME_LOCAL_INPUT_MIN;
     });
     private readonly route = inject(ActivatedRoute);
@@ -321,11 +322,14 @@ export class HospitalizationDetailPageComponent implements OnInit {
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+
         if (!id) {
             this.error.set('Geçersiz kayıt.');
             this.loading.set(false);
+
             return;
         }
+
         this.hospitalizationId = id;
         this.savedMessage.set(SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null);
         this.reload();
@@ -335,6 +339,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
         if (this.ro.mutationBlocked() || !this.canDischargeHospitalization) {
             return;
         }
+
         this.dischargeForm.reset({ dischargedAtLocal: '', dischargeNote: '' });
         this.dischargeSubmitError.set(null);
         this.dischargeFieldErrors.set({});
@@ -358,17 +363,23 @@ export class HospitalizationDetailPageComponent implements OnInit {
         if (this.ro.mutationBlocked() || !this.canDischargeHospitalization) {
             return;
         }
+
         this.dischargeSubmitError.set(null);
         this.dischargeFieldErrors.set({});
         this.dischargeConflict.set(false);
+
         if (this.dischargeForm.invalid) {
             this.dischargeForm.markAllAsTouched();
+
             return;
         }
+
         const v = this.dischargeForm.getRawValue();
         const dischargedAtUtc = fromIstanbulDateTimeLocalInputToUtcIso(v.dischargedAtLocal);
+
         if (!dischargedAtUtc) {
             this.dischargeSubmitError.set('Geçerli bir taburcu tarihi ve saati seçin.');
+
             return;
         }
 
@@ -388,13 +399,17 @@ export class HospitalizationDetailPageComponent implements OnInit {
                 },
                 error: (e: unknown) => {
                     this.dischargeSubmitting.set(false);
+
                     if (e instanceof HttpErrorResponse) {
                         const parsed = parseHospitalizationDischargeHttpError(e);
+
                         this.dischargeFieldErrors.set(parsed.fieldErrors);
                         this.dischargeConflict.set(parsed.isConcurrencyConflict);
                         this.dischargeSubmitError.set(parsed.summaryMessage);
+
                         return;
                     }
+
                     this.dischargeSubmitError.set(e instanceof Error ? e.message : 'İşlem tamamlanamadı.');
                 }
             });

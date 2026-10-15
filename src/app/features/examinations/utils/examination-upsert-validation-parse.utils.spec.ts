@@ -10,6 +10,7 @@ const problem = (status: number, code: string, extra: Record<string, unknown> = 
 describe('parseExaminationUpsertHttpError', () => {
     it('409 + ConcurrencyConflict çakışma olarak işaretlenir ve code taşınır', () => {
         const r = parseExaminationUpsertHttpError(problem(409, 'Examinations.ConcurrencyConflict', { detail: 'sunucu metni' }));
+
         expect(r.isConcurrencyConflict).toBeTrue();
         expect(r.code).toBe('Examinations.ConcurrencyConflict');
         expect(r.summaryMessage).toBe(EXAMINATION_CONCURRENCY_CONFLICT_MESSAGE);
@@ -19,6 +20,7 @@ describe('parseExaminationUpsertHttpError', () => {
         const r = parseExaminationUpsertHttpError(
             problem(400, 'Examinations.AppointmentChangeNotAllowed', { detail: 'Randevu değiştirilemez.' })
         );
+
         expect(r.isConcurrencyConflict).toBeFalse();
         expect(r.code).toBe('Examinations.AppointmentChangeNotAllowed');
         expect(r.summaryMessage).toBe('Randevu değiştirilemez.');
@@ -38,6 +40,7 @@ describe('parseExaminationUpsertHttpError', () => {
             }
         });
         const r = parseExaminationUpsertHttpError(err);
+
         expect(r.code).toBe('Examinations.Validation');
         expect(r.fieldErrors.weightKg).toBe('Kilo geçersiz');
         expect(r.fieldErrors.respiratoryRatePerMin).toBe('Geçersiz');
@@ -47,6 +50,7 @@ describe('parseExaminationUpsertHttpError', () => {
 
     it('ağ hatasında (status 0) kod yoktur ve mesaj üretilir', () => {
         const r = parseExaminationUpsertHttpError(new HttpErrorResponse({ status: 0 }));
+
         expect(r.code).toBeNull();
         expect(r.isConcurrencyConflict).toBeFalse();
         expect(r.summaryMessage).toBeTruthy();

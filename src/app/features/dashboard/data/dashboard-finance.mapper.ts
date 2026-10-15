@@ -16,17 +16,21 @@ function safeNum(v: unknown): number | null {
     if (v == null) {
         return null;
     }
+
     if (typeof v === 'number' && !Number.isNaN(v)) {
         return v;
     }
+
     return null;
 }
 
 function mapRecentPayment(dto: DashboardFinanceRecentPaymentItemDto): DashboardFinanceRecentPaymentVm | null {
     const id = dto.id?.trim();
+
     if (!id) {
         return null;
     }
+
     return {
         id,
         paidAtUtc: dto.paidAtUtc?.trim() ? dto.paidAtUtc.trim() : null,

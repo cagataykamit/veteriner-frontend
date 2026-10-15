@@ -15,6 +15,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(CLINICS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClinicsListPageComponent
@@ -24,6 +25,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(CLINICS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClinicCreatePageComponent
@@ -33,6 +35,7 @@ export default [
         canActivate: [() => {
             const auth = inject(AuthService);
             const router = inject(Router);
+
             return auth.hasOperationClaim(CLINICS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: ClinicDetailPageComponent

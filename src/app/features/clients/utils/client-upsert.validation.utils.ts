@@ -21,15 +21,18 @@ export const CLIENT_UPSERT_MSG_EMAIL_INVALID = 'Geçerli bir e-posta adresi giri
 
 export function clientUpsertMaxLengthMessage(field: ClientCreateFormFieldKey): string | null {
     const max = CLIENT_UPSERT_FIELD_MAX[field as keyof typeof CLIENT_UPSERT_FIELD_MAX];
+
     return max != null ? `En fazla ${max} karakter olabilir.` : null;
 }
 
 function trimmedRequired(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const v = control.value;
+
         if (typeof v !== 'string' || !v.trim().length) {
             return { required: true };
         }
+
         return null;
     };
 }
@@ -37,16 +40,21 @@ function trimmedRequired(): ValidatorFn {
 function trimmedMinLength(min: number): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const v = control.value;
+
         if (typeof v !== 'string') {
             return null;
         }
+
         const trimmed = v.trim();
+
         if (!trimmed.length) {
             return null;
         }
+
         if (trimmed.length < min) {
             return { trimmedMinLength: { requiredLength: min, actualLength: trimmed.length } };
         }
+
         return null;
     };
 }
@@ -56,9 +64,11 @@ export function clientOptionalEmailValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const raw = control.value;
         const v = typeof raw === 'string' ? raw.trim() : '';
+
         if (!v) {
             return null;
         }
+
         return Validators.email(control);
     };
 }
@@ -89,21 +99,27 @@ export function clientUpsertFieldErrorMessage(
     if (!errors) {
         return null;
     }
+
     if (errors['required']) {
         return CLIENT_UPSERT_MSG_REQUIRED;
     }
+
     if (errors['trimmedMinLength']) {
         return CLIENT_UPSERT_MSG_MIN_LENGTH;
     }
+
     if (errors['maxlength']) {
         return clientUpsertMaxLengthMessage(field);
     }
+
     if (field === 'phone' && (errors['phoneInvalidChars'] || errors['phoneInvalidFormat'])) {
         return CLIENT_UPSERT_MSG_PHONE_INVALID;
     }
+
     if (field === 'email' && errors['email']) {
         return CLIENT_UPSERT_MSG_EMAIL_INVALID;
     }
+
     return null;
 }
 

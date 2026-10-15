@@ -15,7 +15,9 @@ export function parseKvkkConsentStatus(raw: unknown): KvkkConsentStatus {
     if (typeof raw === 'number') {
         return KVKK_CONSENT_STATUS_OPTIONS[raw]?.value ?? 'None';
     }
+
     const key = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+
     return KVKK_CONSENT_STATUS_OPTIONS.find((o) => o.value.toLowerCase() === key)?.value ?? 'None';
 }
 

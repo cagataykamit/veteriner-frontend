@@ -40,12 +40,14 @@ describe('ClientCardHeaderComponent', () => {
     }) => {
         TestBed.configureTestingModule({ imports: [ClientCardHeaderComponent], providers: [provideRouter([])] });
         const fixture = TestBed.createComponent(ClientCardHeaderComponent);
+
         fixture.componentRef.setInput('client', inputs.client ?? client);
         fixture.componentRef.setInput('balance', inputs.balance ?? null);
         fixture.componentRef.setInput('pendingCharges', inputs.pendingCharges ?? null);
         fixture.componentRef.setInput('lastExamination', inputs.lastExamination ?? null);
         fixture.componentRef.setInput('nextAppointment', inputs.nextAppointment ?? null);
         fixture.detectChanges();
+
         return fixture.nativeElement as HTMLElement;
     };
 
@@ -72,6 +74,7 @@ describe('ClientCardHeaderComponent', () => {
 
     it('iletişim tercihi: kanal varsa gösterilir; hatırlatma istemiyorsa belirgin not; varsayılanda ikisi de yok', () => {
         let el = render({});
+
         expect(el.querySelector('[data-testid="client-preferred-channel"]')).toBeNull();
         expect(el.querySelector('[data-testid="client-reminders-opted-out"]')).toBeNull();
 
@@ -83,6 +86,7 @@ describe('ClientCardHeaderComponent', () => {
 
     it('KVKK açık rıza: Yok iken "form alınmadı"; işaretliyken durum, tarih ve işaretleyen', () => {
         let el = render({});
+
         expect(el.querySelector('[data-testid="client-kvkk-status"]')?.textContent).toContain('Yok');
         expect(el.querySelector('[data-testid="client-kvkk"]')?.textContent).toContain('form alınmadı');
         expect(el.querySelector('[data-testid="client-kvkk-date"]')).toBeNull();
@@ -97,6 +101,7 @@ describe('ClientCardHeaderComponent', () => {
 
     it('sayfa tüm kalemleri içermiyorsa sayı totalItems, tutar "en az" ile gösterilir', () => {
         const el = render({ pendingCharges: { state: 'ok', data: pending([{ id: 'x', quantity: 1, suggestedUnitPrice: 40, currency: 'TRY' }], 250) } });
+
         expect(el.querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('250 işlem');
         expect(el.querySelector('[data-testid="pending-amount"]')?.textContent).toContain('en az');
     });

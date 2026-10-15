@@ -41,10 +41,12 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
     if (!(err instanceof HttpErrorResponse)) {
         if (err instanceof Error) {
             const message = err.message?.trim();
+
             if (message) {
                 return message;
             }
         }
+
         return CHANGE_PASSWORD_FALLBACK;
     }
 
@@ -54,15 +56,18 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
 
     for (const key of ['newPassword', 'currentPassword', 'confirmPassword'] as const) {
         const message = fieldErrors[key];
+
         if (message) {
             return message;
         }
     }
 
     const raw = extractRawValidationErrors(err.error);
+
     if (raw) {
         for (const value of Object.values(raw)) {
             const message = firstStringMessage(value);
+
             if (message) {
                 return message;
             }
@@ -186,17 +191,22 @@ export class ChangePasswordPageComponent {
     onSubmit(): void {
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
+
         const value = this.form.getRawValue();
+
         if (value.currentPassword === value.newPassword) {
             this.messages.add({
                 severity: 'error',
                 summary: 'Hata',
                 detail: SAME_PASSWORD_MESSAGE
             });
+
             return;
         }
+
         this.saving.set(true);
         this.account
             .changePassword(value)

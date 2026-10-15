@@ -30,9 +30,11 @@ export function careInstructionsQueryToHttpParams(query: CareInstructionsListQue
         .set('Page', String(query.page ?? 1))
         .set('PageSize', String(query.pageSize ?? 50))
         .set('hospitalizationId', query.hospitalizationId);
+
     if (clinicId) {
         p = p.set('clinicId', clinicId);
     }
+
     return p;
 }
 

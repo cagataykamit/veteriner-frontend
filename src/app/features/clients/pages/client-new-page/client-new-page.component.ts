@@ -117,8 +117,10 @@ export class ClientNewPageComponent {
         for (const f of CLIENT_UPSERT_FORM_FIELDS) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 const cur = this.apiFieldErrors();
+
                 if (cur[f]) {
                     const next = { ...cur };
+
                     delete next[f];
                     this.apiFieldErrors.set(next);
                 }
@@ -128,13 +130,17 @@ export class ClientNewPageComponent {
 
     fieldMessage(field: ClientCreateFormFieldKey): string | null {
         const api = this.apiFieldErrors()[field];
+
         if (api) {
             return api;
         }
+
         const control = this.form.controls[field];
+
         if (!control.invalid || !control.touched) {
             return null;
         }
+
         return clientUpsertFieldErrorMessage(field, control.errors);
     }
 
@@ -145,8 +151,10 @@ export class ClientNewPageComponent {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+
             return;
         }
 
@@ -160,12 +168,16 @@ export class ClientNewPageComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseClientCreateHttpError(e);
+
                     this.apiFieldErrors.set(parsed.fieldErrors);
                     this.submitError.set(parsed.summaryMessage);
+
                     return;
                 }
+
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });

@@ -64,7 +64,9 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
         });
         navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
         const fixture = TestBed.createComponent(ExaminationWorkspacePageComponent);
+
         fixture.detectChanges();
+
         return fixture.componentInstance;
     };
 
@@ -72,6 +74,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
 
     it('açık Visit doğrulanır: hasta seçimi istenmez, müşteri seçimi kilitli, yalnızca visitId ile kaydedilir', () => {
         const cmp = create(ctxQuery, of(visit()));
+
         examinations.createExamination.and.returnValue(of({ id: 'e1', rowVersion: 'A' }));
 
         expect(cmp.visitContextId()).toBe('visit-1');
@@ -84,6 +87,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
 
         expect(examinations.createExamination).toHaveBeenCalledTimes(1);
         const payload = examinations.createExamination.calls.mostRecent().args[0];
+
         expect(payload.visitId).toBe('visit-1');
         expect(payload.petId).toBeUndefined();
         expect(payload.clinicId).toBeUndefined();
@@ -101,6 +105,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
 
     it('yanlış geliş işaretli Visit reddedilir', () => {
         const cmp = create(ctxQuery, of(visit({ isVoided: true })));
+
         expect(cmp.visitContextId()).toBeNull();
     });
 

@@ -28,5 +28,6 @@ export function templateApplySummary(template: ExaminationTemplateDto, result: E
         result.services.length > 0 ? `${result.services.length} hizmet yazıldı` : '',
         charged > 0 ? `${charged} hizmet ücret bekliyor` : ''
     ].filter(Boolean);
+
     return parts.length > 0 ? `"${template.name}" uygulandı: ${parts.join(', ')}.` : `"${template.name}" uygulandı.`;
 }

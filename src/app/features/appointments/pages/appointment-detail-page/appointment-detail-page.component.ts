@@ -320,11 +320,13 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly now = signal(new Date());
     readonly noShowSubject = computed(() => {
         const a = this.appt();
+
         return a ? `${a.petName} · ${a.clientName} · ${formatUtcIsoAsLocalDateTimeDisplay(a.scheduledAtUtc)}` : '';
     });
 
     ngOnInit(): void {
         this.readReturnContext();
+
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
             this.showSavedBanner.set(true);
             void this.router.navigate([], {
@@ -339,14 +341,18 @@ export class AppointmentDetailPageComponent implements OnInit {
             .pipe(
                 switchMap((params) => {
                     const id = params.get('id');
+
                     if (!id) {
                         this.error.set('Geçersiz randevu.');
                         this.loading.set(false);
+
                         return EMPTY;
                     }
+
                     this.lastId = id;
                     this.loading.set(true);
                     this.error.set(null);
+
                     return this.appointmentsService.getAppointmentById(id);
                 })
             )
@@ -366,9 +372,11 @@ export class AppointmentDetailPageComponent implements OnInit {
     /** Randevunun gelişini açar (açık geliş varsa o döner) ve muayeneyi `visitId` ile açar; Bugün'ün "Muayene aç" akışıyla aynı yol. */
     startExamination(): void {
         const a = this.appt();
+
         if (!a || this.startingExam()) {
             return;
         }
+
         this.startExamError.set(null);
         this.startingExam.set(true);
         this.visitsService
@@ -402,6 +410,7 @@ export class AppointmentDetailPageComponent implements OnInit {
         if (!this.lastId) {
             return;
         }
+
         this.loading.set(true);
         this.error.set(null);
         this.appointmentsService.getAppointmentById(this.lastId).subscribe({
@@ -420,9 +429,11 @@ export class AppointmentDetailPageComponent implements OnInit {
 
     returnContextQueryParams(): Record<string, string> | null {
         const url = this.returnUrl();
+
         if (!url) {
             return null;
         }
+
         return { returnUrl: url, returnLabel: this.backLabel() };
     }
 
@@ -444,23 +455,31 @@ export class AppointmentDetailPageComponent implements OnInit {
     private readReturnContext(): void {
         const query = this.route.snapshot.queryParamMap;
         const safeUrl = this.normalizeSafeReturnUrl(query.get('returnUrl'));
+
         this.returnUrl.set(safeUrl);
+
         if (safeUrl) {
             const label = query.get('returnLabel')?.trim();
+
             this.backLabel.set(label || 'Randevu takvimine dön');
+
             return;
         }
+
         this.backLabel.set('Randevu listesine dön');
     }
 
     private normalizeSafeReturnUrl(raw: string | null): string | null {
         const value = raw?.trim();
+
         if (!value) {
             return null;
         }
+
         if (!value.startsWith('/panel/')) {
             return null;
         }
+
         return value;
     }
 }

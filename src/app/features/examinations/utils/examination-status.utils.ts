@@ -25,8 +25,10 @@ export function examinationStatusLabel(status: string | null | undefined): strin
     if (status == null || status === '') {
         return EM;
     }
+
     const k = status.toLowerCase().replace(/\s+/g, '');
     const normalized = k.replace(/-/g, '_');
+
     return LABELS[k] ?? LABELS[normalized] ?? status;
 }
 
@@ -34,42 +36,56 @@ export function examinationStatusSeverity(status: string | null | undefined): St
     if (status == null || status === '') {
         return 'secondary';
     }
+
     const k = status.toLowerCase().replace(/\s+/g, '');
+
     if (k === '0') {
         return 'warn';
     }
+
     if (k === '1') {
         return 'success';
     }
+
     if (k === '2') {
         return 'danger';
     }
+
     if (k === 'completed' || k === 'tamamlandı') {
         return 'success';
     }
+
     if (k === 'cancelled' || k === 'canceled' || k === 'iptal') {
         return 'danger';
     }
+
     if (k === 'finalized') {
         return 'success';
     }
+
     if (k === 'draft' || k === 'taslak') {
         return 'warn';
     }
+
     if (k === 'pending' || k === 'bekliyor') {
         return 'warn';
     }
+
     if (k === 'inprogress' || k === 'in_progress') {
         return 'info';
     }
+
     if (k === 'created' || k === 'active' || k === 'closed') {
         return 'info';
     }
+
     if (k === 'done') {
         return 'success';
     }
+
     if (k === 'failed') {
         return 'danger';
     }
+
     return 'secondary';
 }

@@ -28,6 +28,7 @@ export class CareInstructionsService {
     /** Yeniden eskiye (sunucu sırası); aktif klinik kapsamında. */
     getCareInstructions(query: CareInstructionsListQuery): Observable<CareInstructionVm[]> {
         const clinicId = this.auth.getClinicId()?.trim() || undefined;
+
         return this.api
             .get<CareInstructionPagedResultDto>(ApiEndpoints.careInstructions.list(), careInstructionsQueryToHttpParams(query, clinicId))
             .pipe(map(mapPagedCareInstructionsToVm), toUserError('Bakım talimatları yüklenemedi.'));
@@ -35,9 +36,11 @@ export class CareInstructionsService {
 
     createCareInstruction(req: CreateCareInstructionRequest): Observable<{ id: string }> {
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
         if (!clinicId) {
             return throwError(() => new Error('Aktif klinik bulunamadı. Lütfen yeniden giriş yapın.'));
         }
+
         return this.api
             .post<string>(ApiEndpoints.careInstructions.list(), mapCreateCareInstructionToApiBody(clinicId, req))
             .pipe(

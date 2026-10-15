@@ -59,6 +59,7 @@ describe('mapClientBalanceDtoToVm', () => {
             openChargeCount: 0,
             pets: []
         });
+
         expect(vm.openCharges).toEqual([]);
         expect(vm.clientName).toBe('—');
     });
