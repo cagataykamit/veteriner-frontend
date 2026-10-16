@@ -41,8 +41,8 @@ export interface ClientKvkkConsentUpdateRequest {
     rowVersion: string;
 }
 
-/** Yanıt müşteri detayına birleştirilir; sonraki yazım yeni `rowVersion` ile yapılır. */
-export type ClientKvkkConsentUpdateResult = Pick<ClientDetailVm, 'kvkkConsent' | 'rowVersion'>;
+/** Yanıt müşteri detayına birleştirilir; sonraki yazım yeni `rowVersion` ile yapılır. Ret hatırlatma bayrağını açar (ADR-025). */
+export type ClientKvkkConsentUpdateResult = Pick<ClientDetailVm, 'kvkkConsent' | 'remindersOptedOut' | 'rowVersion'>;
 
 /** `GET .../clients/{id}/recent-summary` eşlemesi. */
 export interface ClientRecentSummaryVm {

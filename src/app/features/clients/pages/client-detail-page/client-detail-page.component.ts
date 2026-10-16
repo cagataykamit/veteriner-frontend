@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentStatusLabel } from '@/app/features/appointments/utils/appointment-status.utils';
 import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
@@ -28,6 +30,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, Subscription, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -45,6 +48,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
         CommonModule,
         RouterLink,
         ButtonModule,
+        ToastModule,
         AppPageHeaderComponent,
         PatientActionBarComponent,
         ClientCardHeaderComponent,
@@ -55,7 +59,9 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
         AppEmptyStateComponent,
         AppErrorStateComponent
     ],
+    providers: [MessageService],
     template: `
+        <p-toast position="bottom-right" />
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Müşteri kaydedildi.</p>
         }
@@ -318,6 +324,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     private readonly clientsService = inject(ClientsService);
     private readonly cardData = inject(PetCardDataService);
     private readonly auth = inject(AuthService);
+    private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
@@ -474,12 +481,19 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         });
     }
 
-    /** Rıza yanıtı (durum + yeni `rowVersion`) karta birleştirilir; sonraki yazım yeni sürümle yapılır. */
+    /**
+     * Rıza yanıtı (durum, hatırlatma bayrağı, yeni `rowVersion`) karta birleştirilir; sonraki yazım yeni sürümle yapılır.
+     * Ret bayrağı sunucuda açar (ADR-025); kart yanıttaki değeri gösterir ve kısa bildirim verir.
+     */
     onKvkkChanged(result: ClientKvkkConsentUpdateResult): void {
         const c = this.client();
 
         if (c) {
             this.client.set({ ...c, ...result });
+        }
+
+        if (result.kvkkConsent.status === 'Declined' && result.remindersOptedOut) {
+            addTracedToast(this.messages, 'ClientDetailPage', this.router.url, { severity: 'info', summary: 'Ret işaretlendi; hatırlatmalar kapatıldı.', life: 5000 });
         }
     }
 

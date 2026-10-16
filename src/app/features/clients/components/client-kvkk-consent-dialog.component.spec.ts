@@ -6,7 +6,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { ClientKvkkConsentDialogComponent } from './client-kvkk-consent-dialog.component';
 
 const client = { id: 'c1', fullName: 'Ali Veli', kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null }, rowVersion: 'rv1' } as ClientDetailVm;
-const result = { kvkkConsent: { status: 'Accepted' as const, recordedOn: '2026-01-02', recordedByName: 'Ayşe' }, rowVersion: 'rv2' };
+const result = { kvkkConsent: { status: 'Accepted' as const, recordedOn: '2026-01-02', recordedByName: 'Ayşe' }, remindersOptedOut: false, rowVersion: 'rv2' };
 
 describe('ClientKvkkConsentDialogComponent', () => {
     let fixture: ComponentFixture<ClientKvkkConsentDialogComponent>;
@@ -46,6 +46,14 @@ describe('ClientKvkkConsentDialogComponent', () => {
         expect(updateKvkkConsent).toHaveBeenCalledWith('c1', { status: 'Declined', recordedOn: '2026-01-02', rowVersion: 'rv1' });
         expect(changed).toHaveBeenCalledWith(result);
         expect(c.visible()).toBeFalse();
+    });
+
+    it('Ret notu hatırlatmaların kapanacağını ve Kabul\'ün açmayacağını söyler (ADR-025)', () => {
+        create(client);
+        const note = (document.querySelector('[data-testid="kvkk-reminder-note"]')?.textContent ?? '').replace(/\s+/g, ' ');
+
+        expect(note).toContain('Ret işaretlenince otomatik hatırlatmalar kapanır');
+        expect(note).toContain('Kabul\'e geçmek hatırlatmaları açmaz');
     });
 
     it('ileri tarih engellenir; işaretli kayıtta mevcut değerler gelir ve Yok\'a geri al tarihsiz gönderilir', () => {

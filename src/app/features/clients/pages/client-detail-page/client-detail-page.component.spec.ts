@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
@@ -136,10 +137,22 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(el().querySelector('[data-testid="kvkk-disclosure-print-action"]')?.getAttribute('href')).toBe('/panel/clients/c1/kvkk-disclosure');
         expect(el().querySelector('[data-testid="kvkk-mark-action"]')).not.toBeNull();
 
-        fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Declined', recordedOn: '2026-10-01', recordedByName: 'Ayşe' }, rowVersion: 'rv2' });
+        const toasts = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
+
+        fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Declined', recordedOn: '2026-10-01', recordedByName: 'Ayşe' }, remindersOptedOut: true, rowVersion: 'rv2' });
         fixture.detectChanges();
         expect(fixture.componentInstance.client()?.rowVersion).toBe('rv2');
         expect(el().querySelector('[data-testid="client-kvkk-status"]')?.textContent).toContain('Ret');
+        // ADR-025: Ret hatırlatmayı sunucuda kapatır; kart yanıttaki bayrağı gösterir ve kısa bildirim verir.
+        expect(fixture.componentInstance.client()?.remindersOptedOut).toBeTrue();
+        expect(el().querySelector('[data-testid="client-reminders-opted-out"]')).not.toBeNull();
+        expect(toasts).toHaveBeenCalledOnceWith(jasmine.objectContaining({ summary: 'Ret işaretlendi; hatırlatmalar kapatıldı.' }));
+
+        toasts.calls.reset();
+        fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-02', recordedByName: 'Ayşe' }, remindersOptedOut: true, rowVersion: 'rv3' });
+        fixture.detectChanges();
+        expect(fixture.componentInstance.client()?.remindersOptedOut).withContext('Kabul bayrağı kendiliğinden kapatmaz').toBeTrue();
+        expect(toasts).not.toHaveBeenCalled();
 
         TestBed.resetTestingModule();
         claims = new Set(['Clients.Read']);

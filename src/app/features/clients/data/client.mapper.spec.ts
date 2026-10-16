@@ -34,6 +34,13 @@ describe('client.mapper KVKK rıza (ADR-021)', () => {
             recordedOn: null,
             recordedByName: null
         });
+        expect(
+            mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Declined', kvkkConsentRecordedOn: '2026-10-15', remindersOptedOut: true, rowVersion: 'rv2' })
+        ).withContext('PUT yanıtı Ret sonrası bayrağı taşır (ADR-025)').toEqual({
+            kvkkConsent: { status: 'Declined', recordedOn: '2026-10-15', recordedByName: null },
+            remindersOptedOut: true,
+            rowVersion: 'rv2'
+        });
         expect(parseKvkkConsentStatus('declined')).toBe('Declined');
         expect(parseKvkkConsentStatus(1)).toBe('Accepted');
         expect(parseKvkkConsentStatus('Maybe')).toBe('None');

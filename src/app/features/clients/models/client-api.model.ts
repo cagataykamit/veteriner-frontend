@@ -53,10 +53,10 @@ export interface ClientKvkkConsentUpdateRequestDto {
     rowVersion: string;
 }
 
-/** `PUT /clients/{id}/kvkk-consent` yanıtı (200). */
+/** `PUT /clients/{id}/kvkk-consent` yanıtı (200); `remindersOptedOut` yazımdan sonraki bayraktır (Ret açar, ADR-025). */
 export type ClientKvkkConsentDto = Pick<
     ClientDetailDto,
-    'id' | 'kvkkConsentStatus' | 'kvkkConsentRecordedOn' | 'kvkkConsentRecordedByUserId' | 'kvkkConsentRecordedByName' | 'rowVersion'
+    'id' | 'kvkkConsentStatus' | 'kvkkConsentRecordedOn' | 'kvkkConsentRecordedByUserId' | 'kvkkConsentRecordedByName' | 'remindersOptedOut' | 'rowVersion'
 >;
 
 /**

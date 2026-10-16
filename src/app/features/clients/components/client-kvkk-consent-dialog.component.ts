@@ -14,7 +14,7 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 /**
  * İmzalı KVKK formunun sonucunu işaretler (`PUT /clients/{id}/kvkk-consent`, sözleşme §1): Kabul / Ret ve formun tarihi
  * (varsayılan bugün, ileri tarih seçilemez; geçmiş serbest: eski kâğıt formlar). "Yok'a geri al" yanlış girişi temizler.
- * Hatırlatma tercihini değiştirmez (K7). Yetki denetimi çağıranda yapılır. 409 `Clients.ConcurrencyConflict` → `stale` yayılır.
+ * Ret hatırlatma istemiyor bayrağını sunucuda açar (K7, ADR-025); yanıt bayrağı taşır. Yetki denetimi çağıranda yapılır. 409 `Clients.ConcurrencyConflict` → `stale` yayılır.
  */
 @Component({
     selector: 'app-client-kvkk-consent-dialog',
@@ -48,7 +48,9 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
                 @if (dateError(); as msg) {
                     <small class="text-red-500" role="alert">{{ msg }}</small>
                 }
-                <p class="text-sm text-muted-color mt-3 mb-0">Ret işaretlemek otomatik hatırlatmaları kapatmaz; gerekiyorsa müşteri formunda "Hatırlatma istemiyor" ayrıca işaretlenir.</p>
+                <p class="text-sm text-muted-color mt-3 mb-0" data-testid="kvkk-reminder-note">
+                    Ret işaretlenince otomatik hatırlatmalar kapanır ("Hatırlatma istemiyor"). Sonradan Kabul'e geçmek hatırlatmaları açmaz; gerekiyorsa müşteri formunda elle açılır.
+                </p>
                 @if (!c.rowVersion) {
                     <p class="text-sm text-muted-color mt-3 mb-0" role="note">Kayıt sürümü okunamadı; sayfayı yenileyip tekrar deneyin.</p>
                 }

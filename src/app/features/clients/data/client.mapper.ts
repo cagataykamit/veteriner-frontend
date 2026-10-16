@@ -275,7 +275,6 @@ export function mapClientDetailDtoToVm(dto: ClientDetailDto): ClientDetailVm {
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null,
         preferredContactChannel: parseClientContactChannel(dto.preferredContactChannel),
-        remindersOptedOut: dto.remindersOptedOut === true,
         ...mapClientKvkkConsentDtoToVm(dto)
     };
 }
@@ -284,7 +283,10 @@ function trimmedOrNull(v: string | null | undefined): string | null {
     return v?.trim() ? v.trim() : null;
 }
 
-/** Detay ve `PUT …/kvkk-consent` yanıtı aynı alan adlarını taşır; `None` iken tarih/işaretleyen gösterilmez. */
+/**
+ * Detay ve `PUT …/kvkk-consent` yanıtı aynı alan adlarını taşır; `None` iken tarih/işaretleyen gösterilmez.
+ * `remindersOptedOut` da ikisinde vardır: Ret bayrağı sunucuda açar (ADR-025), kart yanıttaki değeri gösterir.
+ */
 export function mapClientKvkkConsentDtoToVm(dto: Omit<ClientKvkkConsentDto, 'id'>): ClientKvkkConsentUpdateResult {
     const status = parseKvkkConsentStatus(dto.kvkkConsentStatus);
     const recorded = status !== 'None';
@@ -295,6 +297,7 @@ export function mapClientKvkkConsentDtoToVm(dto: Omit<ClientKvkkConsentDto, 'id'
             recordedOn: recorded ? (trimmedOrNull(dto.kvkkConsentRecordedOn)?.slice(0, 10) ?? null) : null,
             recordedByName: recorded ? trimmedOrNull(dto.kvkkConsentRecordedByName) : null
         },
+        remindersOptedOut: dto.remindersOptedOut === true,
         rowVersion: trimmedOrNull(dto.rowVersion)
     };
 }
