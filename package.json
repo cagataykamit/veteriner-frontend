@@ -5,12 +5,15 @@
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
+        "start:portal": "ng serve portal",
         "build": "ng build",
         "build:staging": "ng build --configuration staging",
+        "build:portal": "ng build portal",
         "watch": "ng build --watch --configuration development",
         "format": "prettier --write \"**/*.{js,mjs,ts,mts,d.ts,html}\" --cache",
         "test": "ng test",
-        "lint": "eslint \"src/**/*.{ts,html}\""
+        "test:portal": "ng test portal",
+        "lint": "eslint \"src/**/*.{ts,html}\" \"projects/**/*.{ts,html}\""
     },
     "private": true,
     "dependencies": {
@@ -21,6 +24,7 @@
         "@angular/platform-browser": "^21",
         "@angular/platform-browser-dynamic": "^21",
         "@angular/router": "^21",
+        "@angular/service-worker": "21.0.6",
         "@fortawesome/fontawesome-free": "^7.3.1",
         "@primeuix/themes": "^2.0.0",
         "@tailwindcss/postcss": "^4.1.11",

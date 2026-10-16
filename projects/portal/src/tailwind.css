@@ -1,0 +1,16 @@
+/* Portal yalnız kendi kaynaklarını tarar; klinik paneli sınıfları bu pakete girmez. */
+@import 'tailwindcss' source('.');
+
+@plugin 'tailwindcss-primeui';
+
+@custom-variant dark (&:where(.portal-dark, .portal-dark *));
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}

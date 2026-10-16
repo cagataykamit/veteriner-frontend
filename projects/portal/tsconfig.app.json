@@ -1,0 +1,16 @@
+/* Hasta sahibi portalı (ADR-031 K5): klinik paneliyle aynı derleyici kuralları, ayrı kaynak kökü.
+   `paths` burada yeniden tanımlanır; panelin `@/*` takma adı portalda çözülmez (panel kodu portal paketine girmez). */
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "outDir": "../../out-tsc/portal",
+        "rootDir": "./src",
+        "types": [],
+        "baseUrl": ".",
+        "paths": {
+            "@portal/*": ["./src/*"]
+        }
+    },
+    "files": ["src/main.ts"],
+    "include": ["src/**/*.d.ts"]
+}

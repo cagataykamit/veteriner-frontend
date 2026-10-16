@@ -52,6 +52,24 @@ export default tseslint.config(
         }
     },
     {
+        // Hasta sahibi portalı (ADR-031 K5) ayrı uygulamadır: kendi seçici öneki var ve klinik paneli kodunu içe aktaramaz.
+        files: ['projects/portal/**/*.ts'],
+        rules: {
+            '@angular-eslint/component-selector': [
+                'warn',
+                [
+                    { type: 'element', prefix: 'portal', style: 'kebab-case' },
+                    { type: 'attribute', prefix: 'portal', style: 'camelCase' }
+                ]
+            ],
+            '@angular-eslint/directive-selector': ['warn', { type: 'attribute', prefix: 'portal', style: 'camelCase' }],
+            'no-restricted-imports': [
+                'error',
+                { patterns: [{ group: ['@/*', '**/src/app/**'], message: 'Portal, klinik paneli kodunu içe aktarmaz (ADR-031 K5).' }] }
+            ]
+        }
+    },
+    {
         files: ['**/*.html'],
         extends: [...angular.configs.templateRecommended, prettier],
         rules: {
