@@ -1,0 +1,169 @@
+<div class="portal-stack">
+    <h1 class="portal-title">{{ greeting() }}</h1>
+
+    @if (session.activeLink(); as link) {
+        <a class="portal-tile" routerLink="/clinic" data-testid="home-clinic">
+            <span class="portal-brand-badge" aria-hidden="true">{{ clinicInitial() }}</span>
+            <span class="portal-tile-body">
+                <span class="portal-tile-label">Kliniğiniz</span>
+                <span class="portal-tile-value">{{ link.clinicName }}</span>
+            </span>
+            <span class="portal-muted">Bilgiler</span>
+            <i class="fa-solid fa-chevron-right portal-tile-chevron" aria-hidden="true"></i>
+        </a>
+
+        <section class="portal-stack" aria-labelledby="home-summary-title">
+            <h2 id="home-summary-title" class="sr-only">Özet</h2>
+
+            <!-- En yakın randevu -->
+            @switch (appointment.state()) {
+                @case ('loading') {
+                    <portal-skeleton [rows]="1" message="Randevunuz yükleniyor…" />
+                }
+                @case ('error') {
+                    <div class="portal-row" role="alert" data-testid="home-appointment-error">
+                        <p class="portal-row-title">Randevu bilgisi alınamadı</p>
+                        <p class="portal-muted">{{ appointment.error() }}</p>
+                        <button type="button" class="portal-link-button" (click)="appointment.retry()">Tekrar dene</button>
+                    </div>
+                }
+                @default {
+                    <a class="portal-tile" routerLink="/appointments" data-testid="home-appointment">
+                        <span class="portal-tile-icon" aria-hidden="true"><i class="fa-solid fa-calendar-days"></i></span>
+                        <span class="portal-tile-body">
+                            <span class="portal-tile-label">Yaklaşan randevu</span>
+                            @if (appointment.data(); as a) {
+                                <span class="portal-tile-value">{{ appointmentWhen(a) }}</span>
+                                <span class="portal-muted">{{ a.petName }} · {{ appointmentType(a) }}</span>
+                            } @else {
+                                <span class="portal-tile-value">Yaklaşan randevunuz yok</span>
+                            }
+                        </span>
+                        <i class="fa-solid fa-chevron-right portal-tile-chevron" aria-hidden="true"></i>
+                    </a>
+                }
+            }
+
+            <!-- Aşı: gecikmiş varsa o, yoksa en yakın planlı aşı (ayrım sunucudan, ADR-028) -->
+            @if (pets.state() === 'loading' || vaccines.state() === 'loading') {
+                <portal-skeleton [rows]="1" message="Aşı bilgileri yükleniyor…" />
+            } @else if (pets.state() === 'error' || vaccines.state() === 'error') {
+                <div class="portal-row" role="alert" data-testid="home-vaccine-error">
+                    <p class="portal-row-title">Aşı bilgisi alınamadı</p>
+                    <p class="portal-muted">{{ vaccines.error() || pets.error() }}</p>
+                    <button type="button" class="portal-link-button" (click)="retryVaccines()">Tekrar dene</button>
+                </div>
+            } @else if (vaccines.data(); as v) {
+                @if (v.overdue.length > 0) {
+                    <a class="portal-tile portal-tile--attention" [routerLink]="vaccineLink()" data-testid="home-vaccine-overdue">
+                        <span class="portal-tile-icon" aria-hidden="true"><i class="fa-solid fa-syringe"></i></span>
+                        <span class="portal-tile-body">
+                            <span class="portal-tile-label">Gecikmiş aşı</span>
+                            <span class="portal-tile-value">{{ v.overdue[0].petName }} · {{ v.overdue[0].vaccineName }}</span>
+                            <span class="portal-muted">
+                                Vadesi {{ day(v.overdue[0].dueAtUtc) }} idi.
+                                @if (v.overdue.length > 1) {
+                                    {{ v.overdue.length - 1 }} gecikmiş aşı daha var.
+                                }
+                                Randevu için kliniğinizi arayabilirsiniz.
+                            </span>
+                        </span>
+                        <i class="fa-solid fa-chevron-right portal-tile-chevron" aria-hidden="true"></i>
+                    </a>
+                } @else {
+                    <a class="portal-tile" [routerLink]="vaccineLink()" data-testid="home-vaccine">
+                        <span class="portal-tile-icon" aria-hidden="true"><i class="fa-solid fa-syringe"></i></span>
+                        <span class="portal-tile-body">
+                            <span class="portal-tile-label">Yaklaşan aşı</span>
+                            @if (v.next; as next) {
+                                <span class="portal-tile-value">{{ next.petName }} · {{ next.vaccineName }}</span>
+                                <span class="portal-muted">{{ day(next.dueAtUtc) }}</span>
+                            } @else {
+                                <span class="portal-tile-value">Planlanmış aşı yok</span>
+                            }
+                        </span>
+                        <i class="fa-solid fa-chevron-right portal-tile-chevron" aria-hidden="true"></i>
+                    </a>
+                }
+            }
+
+            <!-- Bakiye özeti -->
+            @switch (balance.state()) {
+                @case ('loading') {
+                    <portal-skeleton [rows]="1" message="Bakiye yükleniyor…" />
+                }
+                @case ('error') {
+                    <div class="portal-row" role="alert" data-testid="home-balance-error">
+                        <p class="portal-row-title">Bakiye bilgisi alınamadı</p>
+                        <p class="portal-muted">{{ balance.error() }}</p>
+                        <button type="button" class="portal-link-button" (click)="balance.retry()">Tekrar dene</button>
+                    </div>
+                }
+                @default {
+                    @if (balance.data(); as b) {
+                        <a class="portal-tile" routerLink="/balance" data-testid="home-balance">
+                            <span class="portal-tile-icon" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
+                            <span class="portal-tile-body">
+                                <span class="portal-tile-label">Bakiye</span>
+                                @if (hasOutstanding(b)) {
+                                    <span class="portal-tile-value">Kalan tutar {{ money(b.outstanding, b.currency) }}</span>
+                                } @else {
+                                    <span class="portal-tile-value">Borcunuz yok</span>
+                                }
+                            </span>
+                            <i class="fa-solid fa-chevron-right portal-tile-chevron" aria-hidden="true"></i>
+                        </a>
+                    }
+                }
+            }
+        </section>
+
+        <section class="portal-stack" aria-labelledby="home-pets-title">
+            <div class="portal-section-head">
+                <h2 id="home-pets-title" class="portal-subtitle">Hayvanlarınız</h2>
+                <a routerLink="/pets">Tümü</a>
+            </div>
+            @switch (pets.state()) {
+                @case ('loading') {
+                    <portal-skeleton [rows]="2" message="Hayvanlarınız yükleniyor…" />
+                }
+                @case ('error') {
+                    <div class="portal-row" role="alert" data-testid="home-pets-error">
+                        <p class="portal-row-title">Hayvan bilgileri alınamadı</p>
+                        <p class="portal-muted">{{ pets.error() }}</p>
+                        <button type="button" class="portal-link-button" (click)="pets.retry()">Tekrar dene</button>
+                    </div>
+                }
+                @default {
+                    @if (pets.data()?.length) {
+                        <ul class="portal-list" aria-label="Hayvanlarınız">
+                            @for (pet of pets.data(); track pet.petId) {
+                                <li>
+                                    <a class="portal-tile" [routerLink]="['/pets', pet.petId]">
+                                        <span class="portal-tile-icon" aria-hidden="true"><i class="fa-solid fa-paw"></i></span>
+                                        <span class="portal-tile-body">
+                                            <span class="portal-tile-value">{{ pet.name }}</span>
+                                            <span class="portal-muted">{{ pet.speciesName || 'Tür belirtilmemiş' }}</span>
+                                            @if (isDeceased(pet)) {
+                                                <span class="portal-memorial">Vefat etti</span>
+                                            }
+                                        </span>
+                                        <i class="fa-solid fa-chevron-right portal-tile-chevron" aria-hidden="true"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    } @else {
+                        <portal-empty-state title="Kayıtlı hayvanınız yok" message="Kliniğinizde kaydı açıldığında hayvanlarınız burada görünür." />
+                    }
+                }
+            }
+        </section>
+    } @else {
+        <portal-empty-state
+            title="Bağlı klinik yok"
+            message="Hesabınız şu anda hiçbir kliniğe bağlı değil. Kliniğinizden yeni bir portal daveti isteyebilirsiniz."
+            icon="fa-hospital"
+        />
+    }
+</div>

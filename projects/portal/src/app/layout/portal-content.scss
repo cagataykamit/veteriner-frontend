@@ -1,0 +1,134 @@
+/* Oturumlu içerik sayfalarının ortak stilleri (Dilim 2). Kabuk bileşenine `ViewEncapsulation.None` ile bağlıdır:
+   kabuk yüklenince bir kez eklenir, giriş/davet sayfalarının paketine girmez. Kök değişkenler `styles.scss`'tedir. */
+
+.portal-shell-header .portal-brand-name {
+    flex: 1 1 auto;
+}
+
+.portal-header-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: var(--portal-touch);
+    padding: 0 0.5rem;
+    color: var(--p-primary-700, #047857);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Bölüm başlığı: başlık + sağda bağlantı. */
+.portal-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.portal-section-head a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--portal-touch);
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+/* Dokunulabilir kart (bağlantı): tüm kart tek hedef, ≥44 px. */
+.portal-tile {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    min-height: 4rem;
+    padding: 1rem;
+    background: var(--portal-surface);
+    border: 1px solid var(--portal-border);
+    border-radius: var(--portal-radius);
+    color: inherit;
+    text-decoration: none;
+}
+
+.portal-tile:hover {
+    border-color: #cbd5e1;
+}
+
+.portal-tile-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background: var(--vetinity-bg-soft);
+    color: var(--vetinity-navy);
+    font-size: 1.0625rem;
+}
+
+.portal-tile-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.portal-tile-label {
+    color: var(--portal-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.portal-tile-value {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.portal-tile-chevron {
+    flex: 0 0 auto;
+    color: #94a3b8;
+}
+
+/* Gecikmiş aşı: sakin ama net — sıcak kenar, simge ve metin birlikte (renk tek başına anlam taşımaz). */
+.portal-tile--attention {
+    border-color: #f2c48d;
+    background: #fffaf2;
+}
+
+.portal-tile--attention .portal-tile-icon {
+    background: #fdecd3;
+    color: #9a4d0b;
+}
+
+/* Geri bağlantısı. */
+.portal-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    min-height: var(--portal-touch);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+/* Büyük düğme gibi davranan bağlantı (tel:, mailto:). */
+.portal-action-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: var(--portal-touch);
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--vetinity-teal);
+    border-radius: 0.625rem;
+    color: #0b5f5a;
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+/* Koyu ton: beyaz metinle WCAG AA kontrastı (marka turkuazı beyaz metinde yetersiz kalır). */
+.portal-action-link--primary {
+    background: #0b6f69;
+    border-color: #0b6f69;
+    color: #ffffff;
+}

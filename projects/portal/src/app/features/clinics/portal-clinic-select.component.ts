@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component';
@@ -11,7 +11,7 @@ import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component'
 @Component({
     selector: 'portal-clinic-select',
     standalone: true,
-    imports: [PortalBrandHeader, PortalFooter, PortalEmptyState],
+    imports: [RouterLink, PortalBrandHeader, PortalFooter, PortalEmptyState],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <main class="portal-page portal-stack">
@@ -41,6 +41,9 @@ import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component'
                         </li>
                     }
                 </ul>
+                @if (session.activeLink()) {
+                    <a class="portal-link-button" routerLink="/">Vazgeç</a>
+                }
             }
             <portal-footer />
         </main>

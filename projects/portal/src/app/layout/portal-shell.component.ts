@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, ViewEncapsulation } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { PortalBrandHeader, PortalFooter } from './portal-brand.component';
@@ -11,11 +11,14 @@ interface PortalNavItem {
 }
 
 /**
- * Oturumlu kabuk: klinik markalı başlık, içerik, alt gezinme çubuğu.
- * Gezinme öğeleri yalnız var olan sayfalardır; hayvanlarım/randevular/aşılar/bakiye Dilim 2'de eklenir.
+ * Oturumlu kabuk: klinik markalı başlık (çok klinikte "Değiştir"), içerik, alt gezinme çubuğu.
+ * Alt gezinme 375 px'te beş öğeyi taşır; klinik bilgisi ana ekrandaki klinik kartından ve bakiye sayfasından açılır.
  */
 const NAV_ITEMS: readonly PortalNavItem[] = [
     { label: 'Ana sayfa', icon: 'fa-house', path: '/', exact: true },
+    { label: 'Hayvanlarım', icon: 'fa-paw', path: '/pets', exact: false },
+    { label: 'Randevular', icon: 'fa-calendar-days', path: '/appointments', exact: false },
+    { label: 'Bakiye', icon: 'fa-wallet', path: '/balance', exact: false },
     { label: 'Hesabım', icon: 'fa-user', path: '/account', exact: false }
 ];
 
@@ -24,10 +27,20 @@ const NAV_ITEMS: readonly PortalNavItem[] = [
     standalone: true,
     imports: [RouterOutlet, RouterLink, RouterLinkActive, PortalBrandHeader, PortalFooter],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    // İçerik sayfalarının ortak stilleri kabukla bir kez yüklenir (bkz. dosya başı).
+    encapsulation: ViewEncapsulation.None,
+    styleUrls: ['./portal-content.scss', './portal-list.scss'],
     template: `
         <a class="portal-skip-link" href="#portal-main">İçeriğe geç</a>
         <div class="portal-shell-header">
-            <portal-brand-header [clinicName]="session.activeLink()?.clinicName ?? null" />
+            <portal-brand-header [clinicName]="session.activeLink()?.clinicName ?? null">
+                @if (session.links().length > 1) {
+                    <a class="portal-header-action" routerLink="/clinics" aria-label="Klinik değiştir">
+                        <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+                        <span>Değiştir</span>
+                    </a>
+                }
+            </portal-brand-header>
         </div>
         <main id="portal-main" class="portal-page portal-page--with-nav" tabindex="-1">
             <router-outlet />

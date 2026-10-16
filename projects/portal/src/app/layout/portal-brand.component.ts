@@ -19,6 +19,7 @@ import { PORTAL_PRIVACY_PATH, PORTAL_TERMS_PATH } from '@portal/app/features/leg
                 <img class="portal-brand-logo" src="icons/icon-192.png" alt="" width="40" height="40" />
                 <span class="portal-brand-name">Vetinity</span>
             }
+            <ng-content />
         </header>
     `
 })
