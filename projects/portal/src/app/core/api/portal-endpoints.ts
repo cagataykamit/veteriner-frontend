@@ -1,5 +1,7 @@
+const link = (linkId: string) => `links/${encodeURIComponent(linkId)}`;
+
 /**
- * Portal API yolları (`PORTAL_API_CONTRACT.md` §5, §7). Kökten göreli; kök `PORTAL_API_BASE_URL`.
+ * Portal API yolları (`PORTAL_API_CONTRACT.md` §5, §6, §7). Kökten göreli; kök `PORTAL_API_BASE_URL`.
  */
 export const PORTAL_ENDPOINTS = {
     legalDocuments: 'legal-documents',
@@ -15,8 +17,16 @@ export const PORTAL_ENDPOINTS = {
     logoutAll: 'auth/logout-all',
     me: 'me',
     myLegalAcceptances: 'me/legal-acceptances',
-    clinicDisclosure: (linkId: string) => `links/${encodeURIComponent(linkId)}/clinic-disclosure`,
-    acknowledgeClinicDisclosure: (linkId: string) => `links/${encodeURIComponent(linkId)}/clinic-disclosure/acknowledge`
+    clinicDisclosure: (linkId: string) => `${link(linkId)}/clinic-disclosure`,
+    acknowledgeClinicDisclosure: (linkId: string) => `${link(linkId)}/clinic-disclosure/acknowledge`,
+    // Dilim B, salt okunur (§6)
+    clinic: (linkId: string) => `${link(linkId)}/clinic`,
+    pets: (linkId: string) => `${link(linkId)}/pets`,
+    pet: (linkId: string, petId: string) => `${link(linkId)}/pets/${encodeURIComponent(petId)}`,
+    petVaccinations: (linkId: string, petId: string) => `${link(linkId)}/pets/${encodeURIComponent(petId)}/vaccinations`,
+    appointments: (linkId: string) => `${link(linkId)}/appointments`,
+    balance: (linkId: string) => `${link(linkId)}/balance`,
+    payments: (linkId: string) => `${link(linkId)}/payments`
 } as const;
 
 /** Anonim uçlar (sözleşme §7 "Anonim"): Bearer eklenmez, 401'de yenileme denenmez. */
