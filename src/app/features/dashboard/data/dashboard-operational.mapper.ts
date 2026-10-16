@@ -161,7 +161,7 @@ export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm
             'overdueVaccinations',
             alerts.overdueVaccinationsCount,
             'Geciken aşı takipleri',
-            'Zamanı geçmiş aşı takiplerini kontrol edin.',
+            'Planlanan günü geçmiş aşı takiplerini kontrol edin.',
             'danger',
             '/panel/vaccinations',
             { overdue: 'true' }
@@ -170,7 +170,7 @@ export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm
             'upcoming7dVaccinations',
             alerts.upcomingVaccinationsNext7DaysCount,
             'Yaklaşan aşılar',
-            'Önümüzdeki 7 gün içinde zamanı gelen aşılar var.',
+            'Bugün dahil önümüzdeki 7 gün içinde zamanı gelen aşılar var.',
             'info',
             '/panel/vaccinations',
             vaccinationsListLinkQuery(upcomingVaccinationsNext7DaysFilters(now))

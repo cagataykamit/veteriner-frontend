@@ -70,7 +70,7 @@ const RECEIVING_CARE_ONLY = 'true';
                 >
                     <p class="m-0 text-sm text-amber-950 dark:text-amber-100">
                         <span class="font-medium">Geciken aşı takipleri</span> gösteriliyor: durum
-                        <span class="font-medium">Planlandı</span>, planlanan uygulama zamanı geçmiş kayıtlar. Tüm listeyi görmek için
+                        <span class="font-medium">Planlandı</span>, planlanan uygulama günü bugünden önce olan kayıtlar. Tüm listeyi görmek için
                         <span class="font-medium">Temizle</span> kullanın.
                     </p>
                 </div>

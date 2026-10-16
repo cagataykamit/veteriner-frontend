@@ -15,13 +15,22 @@ describe('vaccinations-list-link.utils', () => {
         expect(vaccinationsListLinkQuery(filters)).toEqual({ status: '0', fromDate: '2026-10-16', onlyReceivingCare: 'true' });
     });
 
-    it('7 günlük uyarı aralığı şimdi+7 günün İstanbul gününde biter', () => {
+    it('7 günlük uyarı aralığı bugün dahil 7 İstanbul günüdür: bugün … bugün+6 (ADR-028)', () => {
+        // 21:30Z İstanbul'da 2026-10-16 00:30; bitiş 2026-10-22 (iki uç dahil, 7 gün).
         expect(vaccinationsListLinkQuery(upcomingVaccinationsNext7DaysFilters(new Date('2026-10-15T21:30:00Z')))).toEqual({
             status: '0',
             fromDate: '2026-10-16',
-            toDate: '2026-10-23',
+            toDate: '2026-10-22',
             onlyReceivingCare: 'true'
         });
+    });
+
+    it('7 günlük aralık İstanbul gece yarısından hemen önce hâlâ o günden başlar ve ay sınırını aşar', () => {
+        // 20:59Z İstanbul'da 2026-10-28 23:59.
+        const filters = upcomingVaccinationsNext7DaysFilters(new Date('2026-10-28T20:59:00Z'));
+
+        expect(filters.fromDate).toBe('2026-10-28');
+        expect(filters.toDate).toBe('2026-11-03');
     });
 
     it('okuma: geçerli değerler alınır, geçersizler boş kalır, hiçbiri yoksa null', () => {

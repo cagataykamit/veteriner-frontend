@@ -1,5 +1,5 @@
 import type { ParamMap } from '@angular/router';
-import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
+import { addGregorianDaysToYmd, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 
 /**
  * Aşı listesine giden derin bağlantının süzgeçleri (`/panel/vaccinations?status=0&fromDate=…&onlyReceivingCare=true`).
@@ -21,7 +21,6 @@ export const CLEAR_VACCINATIONS_LIST_LINK_QUERY = { status: null, fromDate: null
 
 const STATUS_VALUES = new Set(['0', '1', '2']);
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
-const DAY_MS = 86_400_000;
 
 /**
  * Yaklaşan aşı tanımı: planlı, vadesi bugünün (İstanbul) başından itibaren, bakım alan (vefat etmemiş) hastalar.
@@ -36,15 +35,17 @@ export function upcomingVaccinationsFilters(now: Date = new Date()): Vaccination
     };
 }
 
+/** Pano uyarısının gün sayısı (bugün dahil); backend `VaccinationDueRule.DashboardUpcomingDays` ile aynı. */
+export const DASHBOARD_UPCOMING_VACCINATION_DAYS = 7;
+
 /**
- * Pano "Yaklaşan aşılar" uyarısı (backend `upcomingVaccinationsNext7DaysCount`: planlı, vade `[şimdi, şimdi+7 gün)`, vefat edenler hariç).
- * Liste gün çözünürlüğünde süzdüğü için aralık bugünden şimdi+7 günün İstanbul gününe kadar alınır (sayının üst kümesi).
+ * Pano "Yaklaşan aşılar" uyarısı (backend `upcomingVaccinationsNext7DaysCount`, ADR-028: planlı, vade bugün dahil 7 İstanbul takvim günü
+ * içinde, vefat edenler hariç). Liste aralığı aynı günlerdir: başlangıç bugün, bitiş bugün + 6 gün (iki uç dahil); sayı ile liste birebir uyuşur.
  */
 export function upcomingVaccinationsNext7DaysFilters(now: Date = new Date()): VaccinationsListLinkFilters {
-    return {
-        ...upcomingVaccinationsFilters(now),
-        toDate: toIstanbulDateInputValue(new Date(now.getTime() + 7 * DAY_MS).toISOString())
-    };
+    const filters = upcomingVaccinationsFilters(now);
+
+    return { ...filters, toDate: addGregorianDaysToYmd(filters.fromDate, DASHBOARD_UPCOMING_VACCINATION_DAYS - 1) ?? '' };
 }
 
 /** Süzgeçleri yönlendirme sorgusuna çevirir; boş alanlar adrese yazılmaz. */
