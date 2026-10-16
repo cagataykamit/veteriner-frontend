@@ -14,7 +14,7 @@ import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pe
 import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
 import { upcomingScheduledAppointmentsLinkQuery } from '@/app/features/appointments/utils/appointments-list-link.utils';
-import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /**
@@ -202,7 +202,7 @@ export function ownerOutstandingSection(openItems: PetCardSection<PetOpenItemsVm
  * Her satırda tek eylem: yazma izni varsa işi yapan form, yoksa kaydın detayı.
  */
 export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: PetTodoContext): PetTodoView {
-    const now = (ctx.now ?? new Date()).getTime();
+    const now = ctx.now ?? new Date();
     const canWrite = (claim: string) => !ctx.mutationBlocked && ctx.hasClaim(claim);
     const sources = {
         vaccinations: openItemsSection(openItems, (o) => o.vaccinations),
@@ -227,16 +227,19 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
             action: {
                 label: 'Randevuları gör',
                 route: ['/panel/appointments'],
-                queryParams: { petId: ctx.petId, ...upcomingScheduledAppointmentsLinkQuery(ctx.now ?? new Date()) }
+                queryParams: { petId: ctx.petId, ...upcomingScheduledAppointmentsLinkQuery(now) }
             }
         });
     }
 
     const canApplyVaccine = canWrite(VACCINATIONS_UPDATE_CLAIM);
 
+    const todayYmd = toIstanbulDateInputValue(now.toISOString());
+
     const vaccineItem = (v: PetOpenVaccinationVm, overdue: boolean): PetTodoItem => {
-        const due = parseUtcApiInstantIsoString(v.dueAtUtc)?.getTime();
-        const lateDays = due === undefined ? 0 : Math.floor((now - due) / DAY_MS);
+        // Gecikmiş olup olmadığı sunucudan gelir (ADR-028); burada yalnız kaç takvim günü geçtiği yazılır (İstanbul günü, saat değil).
+        const dueYmd = toIstanbulDateInputValue(v.dueAtUtc);
+        const lateDays = dueYmd ? Math.round((Date.parse(`${todayYmd}T00:00:00Z`) - Date.parse(`${dueYmd}T00:00:00Z`)) / DAY_MS) : 0;
 
         return {
             key: `vaccine-${v.id}`,

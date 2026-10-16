@@ -183,6 +183,13 @@ describe('buildPetTodo', () => {
         expect(view.items[1].title).toContain('Kuduz');
     });
 
+    it('geçen gün sayısı İstanbul takvim günüdür, saat farkı değil (ADR-028)', () => {
+        // Vade İstanbul 2026-10-13 23:00; şimdi İstanbul 2026-10-14 12:00 → 13 saat ama 1 takvim günü.
+        const view = buildPetTodo(openItems({ vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-13T20:00:00Z' }]) }), ctx([]));
+
+        expect(view.items[0].detail).toContain('1 gün geçti');
+    });
+
     it('yazma izni yoksa veya kiracı salt okunursa eylem kaydın detayını açar', () => {
         const items = openItems({ vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z' }]), labResults: labs(['l1']) });
 
