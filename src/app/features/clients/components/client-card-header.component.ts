@@ -24,8 +24,10 @@ import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/ut
     selector: 'app-client-card-header',
     standalone: true,
     imports: [RouterLink, CardAccountStatusComponent],
+    /** `.card:last-child` alt boşluğu sıfırladığından boşluk ana öğede (bölüm bileşenin tek çocuğu). */
+    host: { class: 'block mb-4' },
     template: `
-        <section class="card mb-4" aria-label="İletişim ve hesap durumu" data-testid="client-card-header">
+        <section class="card mb-0" aria-label="İletişim ve hesap durumu" data-testid="client-card-header">
             <p class="m-0 flex flex-wrap gap-x-6 gap-y-1" aria-label="İletişim">
                 @if (phoneHref(); as href) {
                     <a [href]="href" class="text-primary no-underline whitespace-nowrap" data-testid="client-phone"><i class="pi pi-phone text-sm mr-1" aria-hidden="true"></i>{{ phone() }}</a>
