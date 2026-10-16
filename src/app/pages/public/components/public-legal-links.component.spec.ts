@@ -16,6 +16,6 @@ describe('PublicLegalLinksComponent', () => {
             ['/gizlilik', 'Gizlilik Politikası'],
             ['/kullanim-sartlari', 'Kullanım Şartları']
         ]);
-        expect(nav.textContent?.replace(/\s+/g, ' ').trim()).toBe('Gizlilik Politikası · Kullanım Şartları');
+        expect(Array.from(nav.querySelectorAll('span[aria-hidden="true"]')).map((s) => s.textContent)).toEqual(['·']);
     });
 });
