@@ -21,6 +21,7 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AUTH_LOGIN_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
+import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { parseValidationFieldErrors, type FieldErrors } from '@/app/shared/utils/validation-error-parse.utils';
@@ -47,7 +48,8 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
         PasswordModule,
         FormsModule,
         RippleModule,
-        RouterLink
+        RouterLink,
+        PublicLegalLinksComponent
     ],
     template: `
         <div class="public-page public-auth-page">
@@ -171,6 +173,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                         </form>
                     </div>
                 </div>
+                <app-public-legal-links />
             </div>
         </div>
     `

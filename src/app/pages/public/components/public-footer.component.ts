@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
-import { PRIVACY_POLICY_DOCUMENT, TERMS_OF_USE_DOCUMENT } from '@/app/features/public/utils/legal-documents.utils';
+import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.utils';
 
 @Component({
     selector: 'app-public-footer',
@@ -119,5 +119,5 @@ import { PRIVACY_POLICY_DOCUMENT, TERMS_OF_USE_DOCUMENT } from '@/app/features/p
 export class PublicFooterComponent {
     readonly brand = VETINITY_BRAND_LOGOS;
     readonly year = new Date().getFullYear();
-    readonly legalLinks = [PRIVACY_POLICY_DOCUMENT, TERMS_OF_USE_DOCUMENT];
+    readonly legalLinks = PUBLIC_LEGAL_LINKS;
 }

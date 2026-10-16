@@ -15,6 +15,7 @@ import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/pub
 import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/features/public/utils/pricing-plan.utils';
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
+import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import {
@@ -25,7 +26,7 @@ import {
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent],
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
@@ -172,6 +173,7 @@ import {
                         }
                     </div>
                 </div>
+                <app-public-legal-links />
             </div>
         </div>
     `

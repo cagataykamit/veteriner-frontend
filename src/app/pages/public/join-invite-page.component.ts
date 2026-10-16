@@ -12,6 +12,7 @@ import type { PublicInviteVm } from '@/app/features/public/models/public-invite-
 import { PublicInviteService } from '@/app/features/public/services/public-invite.service';
 import { publicInviteFailureMessage } from '@/app/features/public/utils/public-invite-error.utils';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
+import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import {
@@ -23,7 +24,7 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
 @Component({
     selector: 'app-join-invite-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputTextModule, PasswordModule, AppFloatingConfigurator],
+    imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputTextModule, PasswordModule, AppFloatingConfigurator, PublicLegalLinksComponent],
     template: `
         <app-floating-configurator />
         <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen min-w-screen py-10 px-4">
@@ -155,6 +156,7 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
                         </p>
                     }
                 </div>
+                <app-public-legal-links />
             </div>
         </div>
     `

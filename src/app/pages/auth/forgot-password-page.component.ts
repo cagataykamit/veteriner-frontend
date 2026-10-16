@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { RippleModule } from 'primeng/ripple';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
+import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
 import { setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -29,7 +30,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
 @Component({
     selector: 'app-forgot-password-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, RippleModule, RouterLink],
+    imports: [FormsModule, ButtonModule, InputTextModule, RippleModule, RouterLink, PublicLegalLinksComponent],
     template: `
         <div class="public-page public-auth-page">
             <div class="public-auth-shell">
@@ -135,6 +136,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                         }
                     </div>
                 </div>
+                <app-public-legal-links />
             </div>
         </div>
     `

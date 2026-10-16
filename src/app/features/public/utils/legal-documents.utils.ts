@@ -186,6 +186,9 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
     ]
 };
 
+/** Herkese açık sayfalarda (alt bilgi, giriş/kayıt) gösterilen hukuki bağlantılar — tek liste. */
+export const PUBLIC_LEGAL_LINKS: readonly LegalDocumentDef[] = [PRIVACY_POLICY_DOCUMENT, TERMS_OF_USE_DOCUMENT];
+
 export type LegalDocumentKey = 'privacy' | 'terms';
 
 /** Rota `data.legalDocument` anahtarı → belge. */
