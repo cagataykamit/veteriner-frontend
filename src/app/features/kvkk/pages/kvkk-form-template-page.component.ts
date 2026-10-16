@@ -31,7 +31,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
 
 /**
- * Ayarlar > KVKK form metni (ADR-021 karar 2, ADR-024): aktif kliniğin açık rıza formu ve aydınlatma metni şablonları, aynı düzenleyiciyle.
+ * Ayarlar > KVKK metinleri (ADR-021 karar 2, ADR-024): aktif kliniğin açık rıza formu ve aydınlatma metni şablonları, aynı düzenleyiciyle.
  * Tür `?kind=disclosure` ile seçilir (yoksa açık rıza). Varsayılan metinler hukuki onay bekleyen taslaklardır; klinik onaylanan metni kaydeder.
  * Yer tutucular yazdırırken doldurulur; önizleme müşteri kartından basılan belgenin aynısıdır (örnek müşteriyle).
  * İzin `Clinics.Update` (rota koruması); 409 → güncel metin yeniden yüklenir.
@@ -55,7 +55,7 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
         <p-toast position="bottom-right" />
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
         <app-page-header
-            title="KVKK form metni"
+            title="KVKK metinleri"
             [description]="'Müşteri kartından yazdırılan açık rıza formu ve aydınlatma metni' + (clinicName ? ' · ' + clinicName : '') + '.'"
         />
 

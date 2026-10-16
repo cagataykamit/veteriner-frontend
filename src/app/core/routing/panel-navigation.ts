@@ -364,7 +364,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
         entries: [
             { label: 'Klinikler', icon: 'pi pi-fw pi-building', route: '/panel/settings/clinics', claims: [CLINICS_READ_CLAIM], description: 'Kuruma bağlı klinikler.' },
             {
-                label: 'KVKK form metni',
+                label: 'KVKK metinleri',
                 icon: 'pi pi-fw pi-file-edit',
                 route: '/panel/settings/kvkk-form',
                 claims: [CLINICS_UPDATE_CLAIM],

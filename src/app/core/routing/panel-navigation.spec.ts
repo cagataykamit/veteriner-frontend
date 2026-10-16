@@ -155,11 +155,11 @@ describe('panel-navigation', () => {
         expect(labels(visibleGroups(MENU_GROUPS, only('Imports.Read')))).toEqual(['Ayarlar']);
     });
 
-    it('KVKK form metni kartı Ayarlar altında yalnız Clinics.Update ile görünür; menüye öğe eklenmez', () => {
-        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Read', 'Clients.Read')))).not.toContain('KVKK form metni');
-        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Update')))).toContain('KVKK form metni');
+    it('KVKK metinleri kartı Ayarlar altında yalnız Clinics.Update ile görünür; menüye öğe eklenmez', () => {
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Read', 'Clients.Read')))).not.toContain('KVKK metinleri');
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Update')))).toContain('KVKK metinleri');
         expect(labels(visibleGroups(MENU_GROUPS, only('Clinics.Update')))).toEqual(['Ayarlar']);
-        expect(listLabelForUrl('/panel/settings/kvkk-form')).toBe('KVKK form metni');
+        expect(listLabelForUrl('/panel/settings/kvkk-form')).toBe('KVKK metinleri');
     });
 
     it('menüde tek Raporlar girişi vardır; ayrı rapor öğeleri yoktur', () => {
