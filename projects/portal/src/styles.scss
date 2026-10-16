@@ -63,10 +63,14 @@ a {
     width: 100%;
     max-width: var(--portal-column-max);
     margin: 0 auto;
-    padding: 1.25rem var(--portal-gutter) calc(1.5rem + env(safe-area-inset-bottom));
+    /* Kabuksuz sayfalarda (giriş, davet, onay) üst boşluk durum çubuğu/çentik payını da taşır (mobil paket kenardan kenara). */
+    padding: calc(1.25rem + env(safe-area-inset-top)) calc(var(--portal-gutter) + env(safe-area-inset-right))
+        calc(1.5rem + env(safe-area-inset-bottom)) calc(var(--portal-gutter) + env(safe-area-inset-left));
 }
 
 .portal-page--with-nav {
+    /* Üst güvenli alanı kabuk başlığı karşılar. */
+    padding-top: 1.25rem;
     padding-bottom: calc(var(--portal-bottom-nav-height) + 1.5rem + env(safe-area-inset-bottom));
 }
 
@@ -332,7 +336,7 @@ a {
     justify-content: center;
     gap: 0.5rem;
     min-height: var(--portal-touch);
-    padding: 0.5rem var(--portal-gutter);
+    padding: calc(0.5rem + env(safe-area-inset-top)) var(--portal-gutter) 0.5rem;
     background: var(--vetinity-navy);
     color: #f8fafc;
     font-size: 0.875rem;
@@ -490,6 +494,10 @@ a {
 
 @media (min-width: 768px) {
     .portal-page {
+        padding-top: calc(2rem + env(safe-area-inset-top));
+    }
+
+    .portal-page--with-nav {
         padding-top: 2rem;
     }
 }

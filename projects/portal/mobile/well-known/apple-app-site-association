@@ -1,0 +1,15 @@
+{
+    "applinks": {
+        "details": [
+            {
+                "appIDs": ["YER_TUTUCU_TEAM_ID.com.vetinity.portal"],
+                "components": [
+                    {
+                        "/": "/invite*",
+                        "comment": "Hasta sahibi portali davet baglantisi uygulamada acilir"
+                    }
+                ]
+            }
+        ]
+    }
+}

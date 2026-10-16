@@ -7,6 +7,8 @@ import { providePrimeNG } from 'primeng/config';
 import { environment } from '@portal/environments/environment';
 import { PORTAL_API_BASE_URL } from './core/api/portal-api.client';
 import { portalAuthInterceptor } from './core/api/portal-auth.interceptor';
+import { isPortalNativePlatform, portalServiceWorkerEnabled } from './core/native/portal-native';
+import { providePortalNativeShell } from './core/native/portal-native-shell';
 import { portalRoutes } from './app.routes';
 
 export const portalAppConfig: ApplicationConfig = {
@@ -17,7 +19,11 @@ export const portalAppConfig: ApplicationConfig = {
         provideHttpClient(withFetch(), withInterceptors([portalAuthInterceptor])),
         // Panelle aynı tema (Aura). Koyu tema Dilim 1'de yok: seçici hiç eklenmez, işletim sistemi teması uygulanmaz.
         providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.portal-dark' } } }),
-        // Yalnız statik varlıklar önbelleğe alınır (`ngsw-config.json`); API yanıtları önbelleklenmez.
-        provideServiceWorker('ngsw-worker.js', { enabled: !isDevMode(), registrationStrategy: 'registerWhenStable:30000' })
+        // Yalnız statik varlıklar önbelleğe alınır (`ngsw-config.json`); API yanıtları önbelleklenmez. Mobil pakette kayıtlanmaz.
+        provideServiceWorker('ngsw-worker.js', {
+            enabled: portalServiceWorkerEnabled(isDevMode(), isPortalNativePlatform()),
+            registrationStrategy: 'registerWhenStable:30000'
+        }),
+        providePortalNativeShell()
     ]
 };
