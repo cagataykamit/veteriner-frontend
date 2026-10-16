@@ -38,6 +38,8 @@ import { mapClientBalanceDtoToVm } from '@/app/features/clients/data/client-bala
 import type { ClientBalanceDto } from '@/app/features/clients/models/client-balance-api.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
+import type { ClientPortalAccessDto, ClientPortalInviteDto } from '@/app/features/clients/models/client-portal-access-api.model';
+import { AuthService } from '@/app/core/auth/auth.service';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface ClientsPagedVm {
@@ -51,6 +53,7 @@ export interface ClientsPagedVm {
 @Injectable({ providedIn: 'root' })
 export class ClientsService {
     private readonly api = inject(ApiClient);
+    private readonly auth = inject(AuthService);
 
     getClients(query: ClientsListQuery): Observable<ClientsPagedVm> {
         const params = clientsQueryToHttpParams(query);
@@ -103,6 +106,39 @@ export class ClientsService {
     /** `Clients.Read` — KVKK veri kopyası (salt okunur; sunucu her çağrıyı audit'e yazar). Yanıt "JSON indir" için olduğu gibi döner. */
     getClientDataExport(clientId: string): Observable<ClientDataExportDto> {
         return this.api.get<ClientDataExportDto>(ApiEndpoints.clients.dataExport(clientId)).pipe(toUserError('Veri kopyası hazırlanamadı.'));
+    }
+
+    /** `OwnerPortal.Manage` — müşterinin portal bağ durumu ve son davetleri (`PORTAL_API_CONTRACT.md` §4.1). */
+    getPortalAccess(clientId: string): Observable<ClientPortalAccessDto> {
+        return this.api.get<ClientPortalAccessDto>(ApiEndpoints.clients.portalAccess(clientId)).pipe(toUserError('Portal erişim durumu yüklenemedi.'));
+    }
+
+    /**
+     * Davet e-postası müşteri kaydındaki adrese gider; bekleyen eski davet sunucuda iptal edilir (§4.2).
+     * Klinik context-first: aktif klinik varsa gövdeye aynı `clinicId` yazılır (çok klinikli kullanıcı), yoksa gövde boş.
+     */
+    sendPortalInvite(clientId: string): Observable<ClientPortalInviteDto> {
+        const clinicId = this.auth.getClinicId()?.trim();
+
+        return this.api
+            .post<ClientPortalInviteDto>(ApiEndpoints.clients.portalInvites(clientId), clinicId ? { clinicId } : {})
+            .pipe(toUserError('Portal daveti gönderilemedi.'));
+    }
+
+    /** Bekleyen daveti iptal eder; 204 (§4.3). Abonelik salt okunurken de çalışır. */
+    revokePortalInvite(clientId: string, inviteId: string): Observable<void> {
+        return this.api.post<unknown>(ApiEndpoints.clients.portalInviteRevoke(clientId, inviteId), {}).pipe(
+            map(() => void 0),
+            toUserError('Davet iptal edilemedi.')
+        );
+    }
+
+    /** Bu kliniğin portal bağını kapatır (silinmez); 204 (§4.4). Abonelik salt okunurken de çalışır. */
+    closePortalLink(clientId: string, linkId: string): Observable<void> {
+        return this.api.post<unknown>(ApiEndpoints.clients.portalLinkClose(clientId, linkId), {}).pipe(
+            map(() => void 0),
+            toUserError('Portal erişimi kapatılamadı.')
+        );
     }
 
     /**

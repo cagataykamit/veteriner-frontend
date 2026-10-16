@@ -91,7 +91,15 @@ export const ApiEndpoints = {
         /** PUT; `Clients.Update`, `rowVersion` zorunlu (`KVKK_CONSENT_API_CONTRACT.md` §1). */
         kvkkConsent: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/kvkk-consent`,
         /** GET; `Clients.Read`, salt okunur KVKK veri kopyası; her çağrı audit'e yazılır (`CLIENT_DATA_EXPORT_API_CONTRACT.md`). */
-        dataExport: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/data-export`
+        dataExport: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/data-export`,
+        /** GET; `OwnerPortal.Manage`, bağ durumu + son 20 davet (`PORTAL_API_CONTRACT.md` §4.1). */
+        portalAccess: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/portal-access`,
+        /** POST; gövde opsiyonel `{ clinicId }`, klinik context-first (§4.2). */
+        portalInvites: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/portal-invites`,
+        /** POST; 204, yalnız bekleyen davet (§4.3). */
+        portalInviteRevoke: (id: string, inviteId: string) => `/api/v1/clients/${encodeURIComponent(id)}/portal-invites/${encodeURIComponent(inviteId)}/revoke`,
+        /** POST; 204, bağ `Closed` olur, silinmez (§4.4). */
+        portalLinkClose: (id: string, linkId: string) => `/api/v1/clients/${encodeURIComponent(id)}/portal-links/${encodeURIComponent(linkId)}/close`
     },
     pets: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */

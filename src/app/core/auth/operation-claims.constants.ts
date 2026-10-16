@@ -34,6 +34,9 @@ export const CLIENTS_CREATE_CLAIM = 'Clients.Create' as const;
 /** Müşteri güncelleme */
 export const CLIENTS_UPDATE_CLAIM = 'Clients.Update' as const;
 
+/** Hasta sahibi portalı: müşteri kartında davet gönder/iptal, erişimi kapat (ADR-031, `PORTAL_API_CONTRACT.md` §4) */
+export const OWNER_PORTAL_MANAGE_CLAIM = 'OwnerPortal.Manage' as const;
+
 /** Hayvan modülü okuma/list/detail/history */
 export const PETS_READ_CLAIM = 'Pets.Read' as const;
 
