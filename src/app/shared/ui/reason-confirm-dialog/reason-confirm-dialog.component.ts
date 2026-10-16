@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, effect, inject, input, model, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder,ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -33,10 +33,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             }
             <ng-content />
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                <label for="rc-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
+                <label for="rc-reason" class="block text-sm font-medium text-muted-color mb-2">{{ reasonOptional() ? 'Gerekçe (opsiyonel)' : 'Gerekçe *' }}</label>
                 <textarea id="rc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                 @if (form.controls.reason.invalid && (form.controls.reason.dirty || form.controls.reason.touched)) {
-                    <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                    <small class="text-red-500">
+                        {{ reasonOptional() ? 'Gerekçe en çok ' + reasonMax + ' karakter olabilir.' : 'Gerekçe ' + reasonMin + '–' + reasonMax + ' karakter olmalıdır.' }}
+                    </small>
                 }
                 @if (submitError()) {
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
@@ -66,6 +68,8 @@ export class ReasonConfirmDialogComponent {
     readonly description = input<string | null>(null);
     readonly confirmLabel = input('Onayla');
     readonly failureFallback = input('İşlem kaydedilemedi.');
+    /** Sözleşmede gerekçe opsiyonelse (ör. randevu iptali) yalnız üst sınır uygulanır; aksi halde 5–500 zorunlu. */
+    readonly reasonOptional = input(false);
     /** Gerekçeyle çağrıyı yapar; her seferinde güncel kayıt için çağıran bileşen bağlar. */
     readonly execute = input.required<(reason: string) => Observable<unknown>>();
     readonly confirmed = output<void>();
@@ -86,6 +90,7 @@ export class ReasonConfirmDialogComponent {
             if (this.visible()) {
                 untracked(() => {
                     this.submitError.set(null);
+                    this.form.controls.reason.setValidators(this.reasonOptional() ? Validators.maxLength(REASON_MAX) : reasonLength);
                     this.form.reset({ reason: '' });
                 });
             }

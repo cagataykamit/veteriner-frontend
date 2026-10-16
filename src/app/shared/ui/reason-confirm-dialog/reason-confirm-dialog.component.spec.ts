@@ -65,6 +65,25 @@ describe('ReasonConfirmDialogComponent', () => {
         expect(cmp.submitting()).toBeTrue();
     });
 
+    it('gerekçe opsiyonelse boş gerekçeyle çağrı yapılır; 500 karakteri aşan gerekçe reddedilir', () => {
+        cmp.visible.set(false);
+        fixture.componentRef.setInput('reasonOptional', true);
+        fixture.detectChanges();
+        cmp.visible.set(true);
+        fixture.detectChanges();
+
+        expect(document.body.textContent).toContain('Gerekçe (opsiyonel)');
+
+        cmp.form.controls.reason.setValue('x'.repeat(501));
+        cmp.onSubmit();
+        expect(execute).not.toHaveBeenCalled();
+
+        cmp.form.controls.reason.setValue('');
+        cmp.onSubmit();
+        expect(execute).toHaveBeenCalledOnceWith('');
+        expect(confirmed).toBe(1);
+    });
+
     it('yeniden açılınca gerekçe ve hata temizlenir', () => {
         execute.and.returnValue(throwError(() => new Error('Hata.')));
         cmp.form.controls.reason.setValue('Yanlış tutar girildi');
