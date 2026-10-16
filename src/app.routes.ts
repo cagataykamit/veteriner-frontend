@@ -36,6 +36,11 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./app/pages/public/legal-document-page.component').then((m) => m.LegalDocumentPageComponent)
     },
     {
+        path: 'veri-isleme-sozlesmesi',
+        data: { legalDocument: 'dataProcessing' },
+        loadComponent: () => import('./app/pages/public/legal-document-page.component').then((m) => m.LegalDocumentPageComponent)
+    },
+    {
         path: 'join/:token',
         loadComponent: () => import('./app/pages/public/join-invite-page.component').then((m) => m.JoinInvitePageComponent)
     },

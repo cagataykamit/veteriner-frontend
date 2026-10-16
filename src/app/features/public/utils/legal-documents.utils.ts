@@ -24,13 +24,18 @@ export interface LegalSectionDef {
     readonly items?: readonly string[];
 }
 
+/** Sürümlü kabul gerektiren belge türü; backend `documentType` ile aynı (ADR-029, `LEGAL_ACCEPTANCE_API_CONTRACT.md`). */
+export type LegalDocumentType = 'Terms' | 'Privacy' | 'DataProcessing';
+
 export interface LegalDocumentDef {
+    readonly documentType: LegalDocumentType;
     readonly path: string;
     readonly title: string;
     /** Bağlantı ve sekme başlığı için kısa ad. */
     readonly shortTitle: string;
     readonly subtitle: string;
-    readonly versionLine: string;
+    /** Sürüm satırının sürümden sonraki kısmı; sürüm numarası backend'den gelir (tek kaynak). */
+    readonly statusLine: string;
     readonly description: string;
     readonly intro?: readonly LegalParagraph[];
     readonly sections: readonly LegalSectionDef[];
@@ -38,16 +43,22 @@ export interface LegalDocumentDef {
 
 export const PRIVACY_POLICY_PATH = '/gizlilik';
 export const TERMS_OF_USE_PATH = '/kullanim-sartlari';
+export const DATA_PROCESSING_AGREEMENT_PATH = '/veri-isleme-sozlesmesi';
 
 export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
+    documentType: 'Privacy',
     path: PRIVACY_POLICY_PATH,
     title: 'Vetinity Gizlilik Politikası',
     shortTitle: 'Gizlilik Politikası',
     subtitle: 'kullanıcı / site ziyaretçisi',
-    versionLine: 'Sürüm: 0.1 (taslak) · Taslak tarihi: 2026-10-15 · Durum: hukuki onay bekliyor',
+    statusLine: 'Taslak tarihi: 2026-10-15 · Durum: hukuki onay bekliyor',
     description: "Vetinity'nin kendi kullanıcılarına ve site ziyaretçilerine ilişkin kişisel verilerin işlenmesi.",
     intro: [
-        "Bu politika Vetinity'nin kendi kullanıcılarına (klinik yöneticisi ve çalışanları, site ziyaretçileri, deneme kaydı yapanlar) ilişkindir. Kliniklerin müşterilerinin (hayvan sahipleri) verileri bakımından veri sorumlusu ilgili kliniktir; Vetinity bu verileri klinik adına veri işleyen olarak işler (veri işleme sözleşmesi)."
+        [
+            "Bu politika Vetinity'nin kendi kullanıcılarına (klinik yöneticisi ve çalışanları, site ziyaretçileri, deneme kaydı yapanlar) ilişkindir. Kliniklerin müşterilerinin (hayvan sahipleri) verileri bakımından veri sorumlusu ilgili kliniktir; Vetinity bu verileri klinik adına veri işleyen olarak işler (",
+            { text: 'veri işleme sözleşmesi', routerLink: DATA_PROCESSING_AGREEMENT_PATH },
+            ').'
+        ]
     ],
     sections: [
         {
@@ -102,11 +113,12 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
 };
 
 export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
+    documentType: 'Terms',
     path: TERMS_OF_USE_PATH,
     title: 'Vetinity Kullanım Şartları',
     shortTitle: 'Kullanım Şartları',
     subtitle: 'klinik abonelik sözleşmesi',
-    versionLine: 'Sürüm: 0.1 (taslak) · Taslak tarihi: 2026-10-15 · Durum: hukuki onay bekliyor',
+    statusLine: 'Taslak tarihi: 2026-10-15 · Durum: hukuki onay bekliyor',
     description: "Vetinity ile Vetinity'yi kullanan veteriner kliniği arasındaki abonelik ve kullanım şartları.",
     sections: [
         {
@@ -147,7 +159,9 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
             heading: '6. Veri ve gizlilik',
             paragraphs: [
                 [
-                    "Müşteri/hasta verilerinin sahibi ve veri sorumlusu Kliniktir; Vetinity bu verileri Klinik adına, veri işleme sözleşmesi çerçevesinde işler. Vetinity'nin kendi kullanıcı verileri ",
+                    'Müşteri/hasta verilerinin sahibi ve veri sorumlusu Kliniktir; Vetinity bu verileri Klinik adına, ',
+                    { text: 'veri işleme sözleşmesi', routerLink: DATA_PROCESSING_AGREEMENT_PATH },
+                    " çerçevesinde işler. Vetinity'nin kendi kullanıcı verileri ",
                     { text: 'gizlilik politikası', routerLink: PRIVACY_POLICY_PATH },
                     ' kapsamındadır. Sonlandırmada Klinik verisini dışa aktarabilir; ayrıntı saklama ve imha politikasındadır.'
                 ]
@@ -186,16 +200,99 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
     ]
 };
 
+export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
+    documentType: 'DataProcessing',
+    path: DATA_PROCESSING_AGREEMENT_PATH,
+    title: 'Vetinity Veri İşleme Sözleşmesi',
+    shortTitle: 'Veri İşleme Sözleşmesi',
+    subtitle: 'Klinik = veri sorumlusu, Vetinity = veri işleyen',
+    statusLine: 'Taslak tarihi: 2026-10-15 · Durum: hukuki onay bekliyor',
+    description: "Klinik adına Vetinity'de işlenen müşteri ve hasta verilerine ilişkin veri işleme sözleşmesi.",
+    sections: [
+        {
+            heading: '1. Taraflar ve konu',
+            paragraphs: [
+                'Veri sorumlusu: abonelik kaydındaki Klinik. Veri işleyen: [Şirket unvanı] ("Vetinity"). Konu: Vetinity\'nin, Hizmeti sunarken Klinik adına işlediği kişisel veriler (müşteri ve hasta sahibi kimlik/iletişim/finans verileri, hayvana ilişkin kayıtlar).'
+            ]
+        },
+        {
+            heading: '2. İşlemenin niteliği',
+            paragraphs: [
+                "Süre: abonelik süresi ve dışa aktarma süresi. Amaç: kliniğin kayıt, randevu, muayene, aşı, stok ve ödeme yönetimini barındırmak. Veri kategorileri ve ilgili kişi grupları: Klinik müşterileri ve çalışanları. Özel nitelikli veri bilinçli olarak toplanmaz; Klinik bu tür veriyi serbest metin alanlarına girmemeyi taahhüt eder."
+            ]
+        },
+        {
+            heading: "3. Vetinity'nin yükümlülükleri",
+            items: [
+                "a) Verileri yalnız Klinik'in yazılı (Hizmet kullanımıyla verilen) talimatları doğrultusunda işler.",
+                'b) Verilere erişen personelin gizlilik yükümlülüğü altında olmasını sağlar.',
+                'c) Kanun m.12 uyarınca uygun teknik ve idari tedbirleri alır (rol/izin kontrolü, iletişimde şifreleme, denetim kaydı, yedekleme, erişim kısıtı).',
+                'd) Alt işleyenleri (barındırma, ödeme, bildirim sağlayıcıları) [liste ve güncelleme usulü] hakkında Kliniği bilgilendirir ve alt işleyenlere aynı seviyede yükümlülük getirir.',
+                'e) Veri ihlalini öğrendiğinde gecikmeksizin [48 saat içinde] Kliniğe bildirir.',
+                'f) İlgili kişi taleplerinde Kliniğe makul yardımda bulunur; doğrudan gelen talepleri Kliniğe yönlendirir.',
+                "g) Kanun'a uyumun kanıtlanması için gerekli bilgiyi sağlar ve makul denetime katlanır."
+            ]
+        },
+        {
+            heading: "4. Klinik'in yükümlülükleri",
+            paragraphs: [
+                'Aydınlatma yükümlülüğünü, hukuki sebebin (gerekirse açık rızanın) varlığını, VERBİS ve saklama kararlarını, ilgili kişi taleplerinin yanıtlanmasını üstlenir; kullanıcı hesaplarını yetkili kişilere verir.'
+            ]
+        },
+        {
+            heading: '5. Yurt dışı aktarım',
+            paragraphs: ["Veriler Türkiye'de [barındırma yeri] tutulur. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz [hukuki inceleme: sağlayıcılar]."]
+        },
+        {
+            heading: '6. Süre sonu',
+            paragraphs: [
+                'Sonlandırmada Klinik verisini dışa aktarabilir; [süre] sonunda Vetinity verileri siler/anonimleştirir ve talep halinde yazılı teyit verir. Yasal saklama zorunluluğu bulunanlar o süre kadar ayrı tutulur.'
+            ]
+        },
+        {
+            heading: '7. Sorumluluk ve uygulanacak hukuk',
+            paragraphs: [
+                [
+                    { text: 'Kullanım Şartları', routerLink: TERMS_OF_USE_PATH },
+                    "'ndaki sorumluluk ve uyuşmazlık hükümleri geçerlidir; bu sözleşme KVKK ve ilgili tebliğlere tabidir."
+                ]
+            ]
+        }
+    ]
+};
+
 /** Herkese açık sayfalarda (alt bilgi, giriş/kayıt) gösterilen hukuki bağlantılar — tek liste. */
 export const PUBLIC_LEGAL_LINKS: readonly LegalDocumentDef[] = [PRIVACY_POLICY_DOCUMENT, TERMS_OF_USE_DOCUMENT];
 
-export type LegalDocumentKey = 'privacy' | 'terms';
+export type LegalDocumentKey = 'privacy' | 'terms' | 'dataProcessing';
 
 /** Rota `data.legalDocument` anahtarı → belge. */
 export const LEGAL_DOCUMENTS: Readonly<Record<LegalDocumentKey, LegalDocumentDef>> = {
     privacy: PRIVACY_POLICY_DOCUMENT,
-    terms: TERMS_OF_USE_DOCUMENT
+    terms: TERMS_OF_USE_DOCUMENT,
+    dataProcessing: DATA_PROCESSING_AGREEMENT_DOCUMENT
 };
+
+/** Backend belge türü → belge (kabul kutusu ve kabul penceresi bağlantıları). */
+export const LEGAL_DOCUMENTS_BY_TYPE: Readonly<Record<LegalDocumentType, LegalDocumentDef>> = {
+    Terms: TERMS_OF_USE_DOCUMENT,
+    Privacy: PRIVACY_POLICY_DOCUMENT,
+    DataProcessing: DATA_PROCESSING_AGREEMENT_DOCUMENT
+};
+
+/** "0.x" sürüm taslaktır (ADR-029 madde 2: hukuki onay bekliyor). */
+export function isDraftLegalVersion(version: string): boolean {
+    return version.trim().startsWith('0.');
+}
+
+/** Sayfadaki sürüm satırı; sürüm backend'den gelir, yüklenmediyse yalnız durum kısmı gösterilir. */
+export function legalVersionLine(doc: LegalDocumentDef, version: string | null): string {
+    if (!version) {
+        return doc.statusLine;
+    }
+
+    return `Sürüm: ${version}${isDraftLegalVersion(version) ? ' (taslak)' : ''} · ${doc.statusLine}`;
+}
 
 /** Paragrafı satır içi parçalara çevirir (düz metin tek parça olur). */
 export function legalParagraphParts(paragraph: LegalParagraph): readonly LegalInlinePart[] {

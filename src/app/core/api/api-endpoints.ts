@@ -16,7 +16,9 @@ export const ApiEndpoints = {
         accountSummary: () => `/api/v1/me/account-summary`,
         changePassword: () => `/api/v1/me/change-password`,
         /** PUT; gövde `{ displayName: string | null }`, boş değer adı temizler, `204`. */
-        displayName: () => `/api/v1/me/display-name`
+        displayName: () => `/api/v1/me/display-name`,
+        /** GET bekleyen hukuki kabuller, POST kabul (Veteriner `docs/LEGAL_ACCEPTANCE_API_CONTRACT.md` §4–5). */
+        legalAcceptances: () => `/api/v1/me/legal-acceptances`
     },
     /** Kiracı firma / fatura profili — panel JWT kiracı bağlamında. */
     organization: {
@@ -362,6 +364,8 @@ export const ApiEndpoints = {
     },
     public: {
         ownerSignup: () => `/api/v1/public/owner-signup`,
+        /** Anonim: hukuki belgelerin güncel sürümleri (`LEGAL_ACCEPTANCE_API_CONTRACT.md` §3). */
+        legalDocuments: () => `/api/v1/public/legal-documents`,
         inviteByToken: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}`,
         inviteAccept: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}/accept`,
         inviteSignupAndAccept: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}/signup-and-accept`
