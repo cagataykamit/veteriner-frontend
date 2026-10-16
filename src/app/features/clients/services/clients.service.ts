@@ -37,6 +37,7 @@ import type {
 import { mapClientBalanceDtoToVm } from '@/app/features/clients/data/client-balance.mapper';
 import type { ClientBalanceDto } from '@/app/features/clients/models/client-balance-api.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
+import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface ClientsPagedVm {
@@ -97,6 +98,11 @@ export class ClientsService {
             map(mapClientBalanceDtoToVm),
             toUserError('Müşteri bakiyesi yüklenemedi.')
         );
+    }
+
+    /** `Clients.Read` — KVKK veri kopyası (salt okunur; sunucu her çağrıyı audit'e yazar). Yanıt "JSON indir" için olduğu gibi döner. */
+    getClientDataExport(clientId: string): Observable<ClientDataExportDto> {
+        return this.api.get<ClientDataExportDto>(ApiEndpoints.clients.dataExport(clientId)).pipe(toUserError('Veri kopyası hazırlanamadı.'));
     }
 
     /**

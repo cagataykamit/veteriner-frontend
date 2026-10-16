@@ -89,7 +89,9 @@ export const ApiEndpoints = {
         /** `Charges.Read`; yalnız açık ücretler, hayvan ve ziyaret kırılımıyla (`CLIENT_BALANCE_API_CONTRACT.md`). */
         balance: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/balance`,
         /** PUT; `Clients.Update`, `rowVersion` zorunlu (`KVKK_CONSENT_API_CONTRACT.md` §1). */
-        kvkkConsent: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/kvkk-consent`
+        kvkkConsent: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/kvkk-consent`,
+        /** GET; `Clients.Read`, salt okunur KVKK veri kopyası; her çağrı audit'e yazılır (`CLIENT_DATA_EXPORT_API_CONTRACT.md`). */
+        dataExport: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/data-export`
     },
     pets: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
