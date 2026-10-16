@@ -2,6 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -138,5 +141,53 @@ describe('PetsListPageComponent — durum süzgeci varsayılanı', () => {
         c.resetFilters();
         expect(lastStatus()).toBe('Active');
         expect(c.statusInput).toBe('Active');
+    });
+});
+
+/** ADR-026 madde 6: Düzenle, detay sayfasındaki Düzenle ile aynı yetki ve salt okunur koşuluyla satırda Detay'ın yanındadır. */
+describe('PetsListPageComponent — satırda Düzenle', () => {
+    const pet: PetListItemVm = { id: 'p1', clientId: 'c1', speciesId: 's1', name: 'Pamuk', speciesName: 'Kedi', breed: 'Tekir', colorName: '', weight: '', status: 'Active' };
+
+    function create(claims: string[], mutationBlocked = false): HTMLElement {
+        sessionStorage.clear();
+        TestBed.configureTestingModule({
+            imports: [PetsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: PetsService, useValue: { getPets: () => of({ items: [pet], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }) } },
+                { provide: SpeciesService, useValue: { getSpeciesList: () => of([]) } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
+            ]
+        });
+        const fixture = TestBed.createComponent(PetsListPageComponent);
+
+        fixture.detectChanges();
+
+        return fixture.nativeElement as HTMLElement;
+    }
+
+    afterEach(() => sessionStorage.clear());
+
+    it("Pets.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
+        const edits = rowEditActions(create([PETS_UPDATE_CLAIM]));
+
+        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+
+        for (const edit of edits) {
+            expect(edit.getAttribute('href')).toBe('/panel/pets/p1/edit');
+            expect(isRightAfterDetail(edit)).toBeTrue();
+        }
+    });
+
+    it('yetki yoksa Düzenle görünmez; salt okunur kiracıda pasiftir', () => {
+        expect(rowEditActions(create([])).length).toBe(0);
+
+        TestBed.resetTestingModule();
+        const readOnly = rowEditActions(create([PETS_UPDATE_CLAIM], true));
+
+        expect(readOnly.length).toBe(2);
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
     });
 });

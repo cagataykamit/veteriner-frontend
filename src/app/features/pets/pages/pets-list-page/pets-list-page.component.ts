@@ -25,7 +25,7 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PETS_CREATE_CLAIM, PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type PetsListState = {
@@ -134,7 +134,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                     <th>Cins</th>
                                     <th>Renk</th>
                                     <th>Kilo (kg)</th>
-                                    <th style="width: 6rem">İşlemler</th>
+                                    <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -150,7 +150,14 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                     <td>{{ row.colorName }}</td>
                                     <td>{{ row.weight }}</td>
                                     <td>
-                                        <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
+                                        <div class="flex items-center gap-1">
+                                            <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
+                                            @if (canUpdatePet && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" [link]="['/panel/pets', row.id, 'edit']" />
+                                            } @else if (canUpdatePet && ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -202,8 +209,13 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                         }
                                     </div>
                                 }
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
+                                    @if (canUpdatePet && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" [link]="['/panel/pets', row.id, 'edit']" />
+                                    } @else if (canUpdatePet && ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                    }
                                 </div>
                             </div>
                         }
@@ -261,6 +273,7 @@ export class PetsListPageComponent implements OnInit {
     readonly statusOptions = [...PET_LIFE_STATUS_FILTER_OPTIONS];
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
     readonly canCreatePet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
+    readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
 
     readonly displayedRows = computed(() => this.rawItems());
     private suppressNextLazy = false;
