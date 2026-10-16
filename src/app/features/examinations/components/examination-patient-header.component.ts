@@ -14,14 +14,16 @@ const EM = '—';
 /**
  * Hasta başlığı: hasta, sahip, tür/ırk, yaş, iletişim.
  * Veri `GET /pets/{id}` ve `GET /clients/{id}` ile alınır; yüklenemeyen/olmayan alan `—` gösterilir.
+ * `card` sınıfı host'tadır: iç öğede olsaydı tek çocuk olduğu için `.card:last-child` alt boşluğu sıfırlar,
+ * kart alttaki alana yapışırdı. Host'ta kartlar arası standart `.card` boşluğu sayfadaki kardeşine uygulanır.
  */
 @Component({
     selector: 'app-examination-patient-header',
     standalone: true,
-    host: { class: 'block' },
+    host: { class: 'card block' },
     imports: [RouterLink, PetAlertBadgesComponent],
     template: `
-        <section class="card mb-4" aria-label="Hasta bilgileri">
+        <section aria-label="Hasta bilgileri">
             <dl class="m-0 grid grid-cols-12 gap-x-4 gap-y-3">
                 <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                     <dt class="text-sm text-muted-color">Hasta</dt>

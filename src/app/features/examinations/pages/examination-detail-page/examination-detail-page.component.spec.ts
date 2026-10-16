@@ -239,6 +239,16 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(el.querySelector('app-examination-patient-header')).not.toBeNull();
     });
 
+    it('hasta bandı kartı alttaki çalışma alanından standart kart boşluğuyla ayrılır', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read']);
+        const header = el.querySelector('app-examination-patient-header')!;
+
+        // `.card` host'ta ve kardeşi var: `.card:last-child` alt boşluğu sıfırlamaz.
+        expect(header.classList).toContain('card');
+        expect(header.querySelector('.card')).toBeNull();
+        expect(header.nextElementSibling?.getAttribute('data-testid')).toBe('exam-workspace');
+    });
+
     it('Ödeme Oluştur yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
         const hekim = await setup(detailVm, ['Examinations.Update']);
 
