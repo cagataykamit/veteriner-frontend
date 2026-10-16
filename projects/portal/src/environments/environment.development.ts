@@ -6,5 +6,6 @@
 export const environment = {
     production: false,
     portalApiBaseUrl: '/api/portal/v1',
+    portalBaseUrl: 'http://localhost:4300',
     invitePath: '/invite'
 };

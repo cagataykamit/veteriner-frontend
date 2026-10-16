@@ -175,6 +175,16 @@
                             "outputHashing": "all",
                             "serviceWorker": "projects/portal/ngsw-config.json"
                         },
+                        "staging": {
+                            "outputHashing": "all",
+                            "serviceWorker": "projects/portal/ngsw-config.json",
+                            "fileReplacements": [
+                                {
+                                    "replace": "projects/portal/src/environments/environment.ts",
+                                    "with": "projects/portal/src/environments/environment.staging.ts"
+                                }
+                            ]
+                        },
                         "development": {
                             "optimization": false,
                             "extractLicenses": false,
