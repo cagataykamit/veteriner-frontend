@@ -25,6 +25,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type VaccinationsListState = {
@@ -147,7 +149,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                     <th>Hasta</th>
                                     <th>Müşteri</th>
                                     <th>Durum</th>
-                                    <th>İşlem</th>
+                                    <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -180,7 +182,14 @@ const RECEIVING_CARE_ONLY = 'true';
                                         <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                     </td>
                                     <td>
-                                        <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
+                                        <div class="flex items-center gap-1">
+                                            <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
+                                            @if (canUpdateVaccination && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" [link]="['/panel/vaccinations', row.id, 'edit']" />
+                                            } @else if (canUpdateVaccination && ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -227,8 +236,13 @@ const RECEIVING_CARE_ONLY = 'true';
                                 <div class="mb-3">
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </div>
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
+                                    @if (canUpdateVaccination && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" [link]="['/panel/vaccinations', row.id, 'edit']" />
+                                    } @else if (canUpdateVaccination && ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                    }
                                 </div>
                             </div>
                         }
@@ -254,7 +268,9 @@ const RECEIVING_CARE_ONLY = 'true';
 export class VaccinationsListPageComponent implements OnInit {
     protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
+    readonly canUpdateVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
 

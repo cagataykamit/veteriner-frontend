@@ -2,7 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
+import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { VaccinationsListPageComponent } from './vaccinations-list-page.component';
 
 const STATE_KEY = 'panel:vaccinations:listState';
@@ -19,7 +23,8 @@ describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: VaccinationsService, useValue: { getVaccinations } },
-                { provide: AuthService, useValue: { hasOperationClaim: () => true } }
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
@@ -89,5 +94,64 @@ describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı
         expect(args.onlyOverdue).toBeTrue();
         expect(args.status).toBe('0');
         expect(args.fromDate).toBeUndefined();
+    });
+});
+
+/** ADR-026 madde 6: Düzenle, detay sayfasındaki Düzenle ile aynı yetki ve salt okunur koşuluyla satırda Detay'ın yanındadır. */
+describe('VaccinationsListPageComponent — satırda Düzenle', () => {
+    const vac: VaccinationListItemVm = {
+        id: 'v1',
+        appliedAtUtc: '2026-10-10T07:00:00Z',
+        dueAtUtc: null,
+        vaccineName: 'Kuduz',
+        petId: 'p1',
+        petName: 'Pamuk',
+        clientId: 'c1',
+        clientName: 'Ali Veli',
+        status: 1,
+        notes: '',
+        administrationId: null
+    };
+
+    const create = (claims: string[], mutationBlocked = false): HTMLElement => {
+        TestBed.configureTestingModule({
+            imports: [VaccinationsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: VaccinationsService, useValue: { getVaccinations: () => of({ items: [vac], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }) } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
+            ]
+        });
+        const fixture = TestBed.createComponent(VaccinationsListPageComponent);
+
+        fixture.detectChanges();
+
+        return fixture.nativeElement as HTMLElement;
+    };
+
+    beforeEach(() => sessionStorage.removeItem(STATE_KEY));
+    afterEach(() => sessionStorage.removeItem(STATE_KEY));
+
+    it("Vaccinations.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
+        const edits = rowEditActions(create([VACCINATIONS_UPDATE_CLAIM]));
+
+        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+
+        for (const edit of edits) {
+            expect(edit.getAttribute('href')).toBe('/panel/vaccinations/v1/edit');
+            expect(isRightAfterDetail(edit)).toBeTrue();
+        }
+    });
+
+    it('yetki yoksa Düzenle görünmez; salt okunur kiracıda pasiftir', () => {
+        expect(rowEditActions(create([])).length).toBe(0);
+
+        TestBed.resetTestingModule();
+        const readOnly = rowEditActions(create([VACCINATIONS_UPDATE_CLAIM], true));
+
+        expect(readOnly.length).toBe(2);
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
     });
 });
