@@ -14,6 +14,7 @@ import { ToastModule } from 'primeng/toast';
 import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    APPOINTMENTS_CREATE_CLAIM,
     APPOINTMENTS_NOSHOW_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
     HOSPITALIZATIONS_READ_CLAIM,
@@ -117,6 +118,12 @@ type TodayScope = 'mine' | 'all';
                         [disabled]="ro.mutationBlocked()"
                         (onClick)="openWalkInArrival()"
                     />
+                }
+                @if (canCreateAppointment) {
+                    <a routerLink="/panel/appointments/new" pButton type="button" label="Yeni randevu" icon="pi pi-calendar-plus" class="p-button-secondary" data-testid="today-new-appointment"></a>
+                }
+                @if (canCreateExamination) {
+                    <a routerLink="/panel/examinations/new" pButton type="button" label="Yeni muayene" icon="pi pi-file-edit" class="p-button-secondary" data-testid="today-new-examination"></a>
                 }
                 @if (canQuickSell) {
                     <a routerLink="/panel/sales/new" pButton type="button" label="Hızlı satış" icon="pi pi-shopping-cart" class="p-button-secondary"></a>
@@ -568,6 +575,7 @@ export class TodayPageComponent implements OnInit {
 
     readonly canCreateVisit = this.auth.hasOperationClaim(VISITS_CREATE_CLAIM);
     readonly canQuickSell = this.auth.hasOperationClaim(SALES_CREATE_CLAIM);
+    readonly canCreateAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM);
     readonly canUpdateVisit = this.auth.hasOperationClaim(VISITS_UPDATE_CLAIM);
     readonly canCorrect = this.auth.hasOperationClaim(VISITS_CORRECT_CLAIM);
     readonly canNoShow = this.auth.hasOperationClaim(APPOINTMENTS_NOSHOW_CLAIM);

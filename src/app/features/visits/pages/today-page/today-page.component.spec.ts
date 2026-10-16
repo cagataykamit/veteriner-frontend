@@ -480,6 +480,35 @@ describe('TodayPageComponent', () => {
         expect(link?.textContent).toContain('Hızlı satış');
     });
 
+    it('Yeni randevu ve Yeni muayene kısayolları yetkiyle görünür, mevcut ekranlara gider, ikincil görünümdedir (ADR-030)', async () => {
+        const data = { date: 'd', activeHospitalizations: [], items: [] };
+        const without = await create(['Visits.Read', 'Visits.Create'], data);
+        const none = without.nativeElement as HTMLElement;
+
+        expect(none.querySelector('[data-testid="today-new-appointment"]')).toBeNull();
+        expect(none.querySelector('[data-testid="today-new-examination"]')).toBeNull();
+        TestBed.resetTestingModule();
+
+        const onlyAppointment = await create(['Visits.Read', 'Appointments.Create'], data);
+
+        expect((onlyAppointment.nativeElement as HTMLElement).querySelector('[data-testid="today-new-appointment"]')).not.toBeNull();
+        expect((onlyAppointment.nativeElement as HTMLElement).querySelector('[data-testid="today-new-examination"]')).toBeNull();
+        TestBed.resetTestingModule();
+
+        const full = await create(['Visits.Read', 'Visits.Create', 'Appointments.Create', 'Examinations.Create'], data);
+        const el = full.nativeElement as HTMLElement;
+        const appointment = el.querySelector('[data-testid="today-new-appointment"]');
+        const examination = el.querySelector('[data-testid="today-new-examination"]');
+
+        expect(appointment?.getAttribute('href')).toBe('/panel/appointments/new');
+        expect(appointment?.textContent).toContain('Yeni randevu');
+        expect(appointment?.classList).toContain('p-button-secondary');
+        expect(examination?.getAttribute('href')).toBe('/panel/examinations/new');
+        expect(examination?.textContent).toContain('Yeni muayene');
+        expect(examination?.classList).toContain('p-button-secondary');
+        expect(el.querySelector('app-page-header')?.textContent).toContain('Randevusuz geliş');
+    });
+
     it('muayeneye geçiş: visitId ile hasta bağlamı query olarak taşınır', async () => {
         const f = await create(['Visits.Read', 'Examinations.Create'], { date: 'd', activeHospitalizations: [], items: [item()] });
         const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
