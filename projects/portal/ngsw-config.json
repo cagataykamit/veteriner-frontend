@@ -16,14 +16,6 @@
             "resources": {
                 "files": ["/icons/**", "/brand/**", "/media/**", "/**/*.(svg|png|webp|woff|woff2|ttf)"]
             }
-        },
-        {
-            "name": "fonts",
-            "installMode": "lazy",
-            "updateMode": "lazy",
-            "resources": {
-                "urls": ["https://fonts.googleapis.com/**", "https://fonts.gstatic.com/**"]
-            }
         }
     ],
     "dataGroups": []

@@ -1,6 +1,8 @@
 /* Hasta sahibi portalı kök stili (ADR-031 K5). Panelle aynı tasarım dili (Aura teması, Inter, Font Awesome, Vetinity
    marka renkleri), ayrı dosya: panel stilleri bu pakete girmez. Mobil öncelikli: 375 px ana hedef, masaüstünde dar sütun. */
 
+@use './fonts';
+
 :root {
     --vetinity-navy: #0b1d3a;
     --vetinity-teal: #0fa39a;
