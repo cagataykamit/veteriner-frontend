@@ -1,7 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
-import { Observable, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -14,7 +13,6 @@ import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import { mapAppointmentUpsertFormToUpdateRequest } from '@/app/features/appointments/data/appointment.mapper';
-import type { AppointmentEditVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import {
     type AppointmentUpsertFieldErrors,
@@ -266,7 +264,6 @@ export class AppointmentEditPageComponent implements OnInit {
 
 
     private appointmentId = '';
-    private editVmCache: AppointmentEditVm | null = null;
     private workingHours: ClinicWorkingHourVm[] = [];
     private legacyInitialTime: string | null = null;
 
@@ -375,7 +372,6 @@ export class AppointmentEditPageComponent implements OnInit {
         this.loadError.set(null);
         this.appointmentsService.getAppointmentForEditById(this.appointmentId).subscribe({
             next: (x) => {
-                this.editVmCache = x;
                 this.statusOptions = x.status === 3 ? [...this.writableStatusOptions, { label: 'Gelmedi', value: 3 }] : [...this.writableStatusOptions];
                 this.form.patchValue(
                     {
@@ -507,22 +503,6 @@ export class AppointmentEditPageComponent implements OnInit {
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt sırasında hata oluştu.');
             }
         });
-    }
-
-    private applyStatusChange(target: number): Observable<void> {
-        if (target === this.editVmCache?.status) {
-            return of(void 0);
-        }
-
-        if (target === 1) {
-            return this.appointmentsService.completeAppointment(this.appointmentId);
-        }
-
-        if (target === 2) {
-            return this.appointmentsService.cancelAppointment(this.appointmentId);
-        }
-
-        return of(void 0);
     }
 
     goDetail(): void {
