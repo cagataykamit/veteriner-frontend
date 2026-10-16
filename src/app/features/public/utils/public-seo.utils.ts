@@ -9,16 +9,16 @@ export interface PublicPageMetaOptions {
 }
 
 export const PUBLIC_HOME_PAGE_META: PublicPageMetaOptions = {
-    title: 'Vetinity — Klinik yönetim platformu',
+    title: 'Vetinity — Veteriner klinik programı: günün akışı, kayıt defterleri, KVKK',
     description:
-        'Veteriner klinikleri için randevu, hasta kayıtları, muayene, aşı, ödeme ve stok süreçlerini tek panelden yönetin. Çok klinikli yapı ve rol bazlı erişim.',
+        'Veteriner kliniğinizin gününü tek ekranda yönetin: geliş, muayene, tahsilat, aşı ve ilaç kayıt defterleri, KVKK formları. 14 gün ücretsiz, kart gerekmez.',
     canonicalPath: '/'
 };
 
 export const PUBLIC_PRICING_PAGE_META: PublicPageMetaOptions = {
-    title: 'Paketler — Vetinity',
+    title: 'Paketler ve fiyat — Vetinity',
     description:
-        'Kliniğinizin büyüklüğüne göre Temel, Pro veya Premium paket seçin. Ücretsiz deneme ile başlayın; fiyat bilgisi yakında paylaşılacaktır.',
+        'Veteriner kliniğiniz için Vetinity paketleri. 14 gün ücretsiz deneyin; pilot dönemi fiyatı için yazın.',
     canonicalPath: '/pricing'
 };
 

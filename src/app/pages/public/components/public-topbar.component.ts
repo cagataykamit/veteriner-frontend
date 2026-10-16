@@ -96,7 +96,6 @@ export class PublicTopbarComponent {
 
     readonly navLinks = [
         { label: 'Özellikler', routerLink: ['/'], fragment: 'features' },
-        { label: 'Modüller', routerLink: ['/'], fragment: 'modules' },
         { label: 'SSS', routerLink: ['/'], fragment: 'faq' },
         { label: 'Paketler', routerLink: ['/pricing'] }
     ];

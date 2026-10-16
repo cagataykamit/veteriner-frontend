@@ -9,7 +9,7 @@ export interface PricingPlanDef {
     readonly apiCode: PricingPlanApiCode;
     readonly title: string;
     readonly description: string;
-    /** Fiyat etiketi — henüz belli değilse "Fiyat yakında". */
+    /** Fiyat etiketi — pilot fiyatı belirlenene kadar "Pilot dönemi fiyatı için yazın" (ADR-034 karar 4). */
     readonly priceLabel: string;
     /** Fatura dönemi — örn. "/ ay". Boş bırakılabilir. */
     readonly billingPeriodLabel: string;
@@ -30,7 +30,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         apiCode: 'Basic',
         title: 'Temel',
         description: 'Tek klinik ve küçük ekip için temel veteriner operasyon yönetimi.',
-        priceLabel: 'Fiyat yakında',
+        priceLabel: 'Pilot dönemi fiyatı için yazın',
         billingPeriodLabel: '',
         trialLabel: '14 gün · ödeme alınmaz',
         userLimitLabel: '1 kullanıcı',
@@ -40,9 +40,9 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         trialDays: 14,
         features: [
             'Randevu ve takvim yönetimi',
-            'Hasta ve pet kayıtları',
+            'Müşteri ve hasta kayıtları',
             'Muayene ve aşı takibi',
-            'Temel raporlama'
+            'Raporlar ve kayıt defterleri'
         ]
     },
     {
@@ -50,7 +50,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         apiCode: 'Pro',
         title: 'Pro',
         description: 'Büyüyen klinikler için çok kullanıcılı ve çok klinikli operasyon.',
-        priceLabel: 'Fiyat yakında',
+        priceLabel: 'Pilot dönemi fiyatı için yazın',
         billingPeriodLabel: '',
         trialLabel: '14 gün · ödeme alınmaz',
         userLimitLabel: '5 kullanıcı',
@@ -72,7 +72,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         apiCode: 'Premium',
         title: 'Premium',
         description: 'Geniş ölçekli işletmeler için sınırsız kullanıcı ve klinik kapasitesi.',
-        priceLabel: 'Fiyat yakında',
+        priceLabel: 'Pilot dönemi fiyatı için yazın',
         billingPeriodLabel: '',
         trialLabel: '14 gün · ödeme alınmaz',
         userLimitLabel: 'Sınırsız kullanıcı',
@@ -82,10 +82,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         trialDays: 14,
         features: [
             'Pro paketteki tüm modüller',
-            'Sınırsız kullanıcı ve klinik',
-            'Kurumsal ölçekte operasyon',
-            'Öncelikli kullanım kapasitesi',
-            'Genişletilebilir modül vitrini'
+            'Sınırsız kullanıcı ve klinik'
         ]
     }
 ] as const;

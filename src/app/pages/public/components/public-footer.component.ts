@@ -29,8 +29,8 @@ import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.
                                 />
                             </div>
                             <p class="public-on-brand-muted text-sm m-0 max-w-sm leading-relaxed">
-                                Veteriner klinikleri için randevu, hasta kayıtları, klinik operasyonları ve raporlama
-                                platformu. Çok klinikli yapı ve rol bazlı erişim ile güvenli panel deneyimi.
+                                Veteriner klinikleri için randevu, hasta kayıtları, muayene, tahsilat ve kayıt defterleri;
+                                tarayıcıdan her cihazda.
                             </p>
                         </div>
 
@@ -46,14 +46,6 @@ import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.
                                             fragment="features"
                                             class="public-on-brand-muted no-underline hover:text-[var(--public-on-brand)] transition-colors"
                                             >Özellikler</a
-                                        >
-                                    </li>
-                                    <li>
-                                        <a
-                                            routerLink="/"
-                                            fragment="modules"
-                                            class="public-on-brand-muted no-underline hover:text-[var(--public-on-brand)] transition-colors"
-                                            >Modüller</a
                                         >
                                     </li>
                                     <li>
