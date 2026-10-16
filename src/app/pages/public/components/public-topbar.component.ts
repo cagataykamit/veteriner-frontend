@@ -23,8 +23,8 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
         <a [href]="'#' + mainContentId" class="public-skip-link" (click)="skipToContent($event)">İçeriğe atla</a>
 
         <header class="public-topbar sticky top-0 z-40 w-full">
-            <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:px-6">
-                <a routerLink="/" class="public-topbar-logo-link flex h-11 shrink-0 items-center no-underline" aria-label="Vetinity ana sayfa">
+            <div class="mx-auto flex h-[64px] max-w-6xl items-center justify-between gap-3 px-4 md:px-6">
+                <a routerLink="/" class="public-topbar-logo-link flex h-[44px] shrink-0 items-center no-underline" aria-label="Vetinity ana sayfa">
                     <img
                         [src]="brand.compactLockup"
                         alt="Vetinity"
@@ -46,7 +46,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                         <a
                             [routerLink]="link.routerLink"
                             routerLinkActive="router-link-active"
-                            class="public-topbar-nav-link inline-flex min-h-11 items-center px-3 text-sm font-medium text-surface-700 no-underline dark:text-surface-300"
+                            class="public-topbar-nav-link inline-flex min-h-[44px] items-center px-3 text-sm font-medium text-surface-700 no-underline dark:text-surface-300"
                         >
                             {{ link.label }}
                         </a>
@@ -84,7 +84,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                     <button
                         #menuButton
                         type="button"
-                        class="public-topbar-menu-button inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-surface-900 dark:text-surface-0"
+                        class="public-topbar-menu-button inline-flex h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-surface-900 dark:text-surface-0"
                         aria-controls="public-mobile-menu"
                         [attr.aria-expanded]="menuOpen()"
                         [attr.aria-label]="menuOpen() ? 'Menüyü kapat' : 'Menüyü aç'"
@@ -106,15 +106,15 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                 aria-label="Menü"
                 (keydown)="onMenuKeydown($event)"
             >
-                <div class="flex h-16 items-center justify-between px-4">
-                    <a routerLink="/" class="flex h-11 items-center no-underline" aria-label="Vetinity ana sayfa" (click)="closeMenu()">
+                <div class="flex h-[64px] items-center justify-between px-4">
+                    <a routerLink="/" class="flex h-[44px] items-center no-underline" aria-label="Vetinity ana sayfa" (click)="closeMenu()">
                         <img [src]="brand.compactLockup" alt="" class="block h-[38px] w-auto dark:hidden" width="168" height="42" />
                         <img [src]="brand.compactLockupDark" alt="" class="hidden h-[38px] w-auto dark:block" width="168" height="42" />
                     </a>
                     <button
                         #closeButton
                         type="button"
-                        class="public-topbar-menu-button inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-surface-900 dark:text-surface-0"
+                        class="public-topbar-menu-button inline-flex h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-surface-900 dark:text-surface-0"
                         aria-label="Menüyü kapat"
                         (click)="closeMenu()"
                     >
@@ -128,7 +128,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                             <li>
                                 <a
                                     [routerLink]="link.routerLink"
-                                    class="public-mobile-menu-link flex min-h-12 items-center border-b border-surface-200 text-lg font-semibold text-surface-900 no-underline dark:border-surface-800 dark:text-surface-0"
+                                    class="public-mobile-menu-link flex min-h-[48px] items-center border-b border-surface-200 text-lg font-semibold text-surface-900 no-underline dark:border-surface-800 dark:text-surface-0"
                                     (click)="closeMenu()"
                                 >
                                     {{ link.label }}
@@ -139,8 +139,8 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                 </nav>
 
                 <div class="flex flex-col gap-3 px-4 pb-6 pt-4">
-                    <a routerLink="/auth/login" class="public-btn public-btn-secondary w-full !min-h-12" (click)="closeMenu()">Giriş yap</a>
-                    <a routerLink="/auth/signup" class="public-btn public-btn-primary w-full !min-h-12" (click)="closeMenu()">Ücretsiz dene</a>
+                    <a routerLink="/auth/login" class="public-btn public-btn-secondary w-full !min-h-[48px]" (click)="closeMenu()">Giriş yap</a>
+                    <a routerLink="/auth/signup" class="public-btn public-btn-primary w-full !min-h-[48px]" (click)="closeMenu()">Ücretsiz dene</a>
                 </div>
             </div>
         }

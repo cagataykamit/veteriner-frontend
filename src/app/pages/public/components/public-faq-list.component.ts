@@ -12,7 +12,7 @@ import type { PublicFaqDef } from '@/app/features/public/utils/public-faq-conten
                     <h3 class="m-0">
                         <button
                             type="button"
-                            class="flex min-h-14 w-full cursor-pointer items-center justify-between gap-4 border-0 bg-transparent px-5 py-3 text-left md:px-6"
+                            class="flex min-h-[56px] w-full cursor-pointer items-center justify-between gap-4 border-0 bg-transparent px-5 py-3 text-left md:px-6"
                             [attr.aria-expanded]="isOpen(i)"
                             [attr.aria-controls]="idPrefix() + '-answer-' + i"
                             (click)="toggle(i)"

@@ -97,7 +97,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
                 <app-public-screenshot-placeholder [label]="activeFlow().screenshot" />
             </div>
             <p class="m-0 mt-6 text-center">
-                <a [routerLink]="paths.features" class="public-brand-link">Tüm akışı görün</a>
+                <a [routerLink]="paths.features" class="public-brand-link inline-flex min-h-[44px] items-center">Tüm akışı görün</a>
             </p>
         </section>
 
@@ -138,7 +138,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
                 </div>
                 <p class="public-note m-0 mt-8">{{ kvkkNote }}</p>
                 <p class="m-0 mt-3">
-                    <a [routerLink]="paths.registersAndKvkk" class="public-brand-link">Defterler ve KVKK sayfası</a>
+                    <a [routerLink]="paths.registersAndKvkk" class="public-brand-link inline-flex min-h-[44px] items-center">Defterler ve KVKK sayfası</a>
                 </p>
             </div>
         </section>
@@ -195,7 +195,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
                             }
                         </ul>
                     </div>
-                    <a [routerLink]="paths.migration" class="public-brand-link text-sm">Geçiş adımlarının tamamı</a>
+                    <a [routerLink]="paths.migration" class="public-brand-link inline-flex min-h-[44px] items-center text-sm">Geçiş adımlarının tamamı</a>
                 </div>
             </div>
         </section>
@@ -220,7 +220,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
                 <app-public-faq-list [items]="faqs" idPrefix="home-faq" />
             </div>
             <p class="m-0 mt-6 text-center">
-                <a [routerLink]="paths.faq" class="public-brand-link">Tüm sorular</a>
+                <a [routerLink]="paths.faq" class="public-brand-link inline-flex min-h-[44px] items-center">Tüm sorular</a>
             </p>
         </section>
 
