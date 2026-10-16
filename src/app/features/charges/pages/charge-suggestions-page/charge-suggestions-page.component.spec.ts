@@ -120,7 +120,8 @@ describe('ChargeSuggestionsPageComponent', () => {
         const button = (harness.routeNativeElement as HTMLElement).querySelector('button[aria-label="Ücretsiz say"]') as HTMLButtonElement;
 
         expect(button.textContent!.trim()).toBe('');
-        expect(button.closest('[title]')?.getAttribute('title')).toBe('Ücretsiz say');
+        expect(button.closest('app-row-action-button')).not.toBeNull();
+        expect(button.querySelector('i')!.classList).toContain('fa-ban');
     });
 
     it('uzun müşteri, hayvan ve kalem adı tek satırda kesilir; tam metin ipucunda kalır', async () => {

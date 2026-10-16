@@ -30,7 +30,14 @@ describe('ExaminationTemplatesPageComponent', () => {
     let blocked: boolean;
 
     const root = () => fixture.nativeElement as HTMLElement;
-    const rowTexts = () => Array.from(root().querySelectorAll('[data-testid="template-row"]')).map((r) => (r.textContent ?? '').replace(/\s+/g, ' ').trim());
+    /** Satır metni ve simge düğmelerinin erişilebilir adları (Düzenle simge düğmesidir, ADR-026). */
+    const rowTexts = () =>
+        Array.from(root().querySelectorAll('[data-testid="template-row"]')).map((r) =>
+            [r.textContent ?? '', ...Array.from(r.querySelectorAll('app-row-action-button [aria-label]')).map((b) => b.getAttribute('aria-label'))]
+                .join(' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+        );
 
     async function create(): Promise<void> {
         await TestBed.configureTestingModule({

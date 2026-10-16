@@ -135,3 +135,45 @@ describe('ClientsListPageComponent — tek başlık', () => {
         expect(el.querySelector('a[href="/panel/clients/new"]')).not.toBeNull();
     });
 });
+
+/** Satır eylemi (ADR-026): "Detay" yazısı yerine göz simgesi; masaüstü tablo ve mobil kartta aynı ortak bileşen. */
+describe('ClientsListPageComponent — satır eylemleri', () => {
+    let fixture: ComponentFixture<ClientsListPageComponent>;
+
+    beforeEach(async () => {
+        sessionStorage.clear();
+        const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClients']);
+
+        clients.getClients.and.returnValue(
+            of({ items: [{ id: 'c1', fullName: 'Ali Veli', phone: '5551112233', email: 'ali@example.com', createdAtUtc: '2026-10-10T07:00:00Z' }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 })
+        );
+        await TestBed.configureTestingModule({
+            imports: [ClientsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ClientsService, useValue: clients },
+                { provide: AuthService, useValue: { hasOperationClaim: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        }).compileComponents();
+        fixture = TestBed.createComponent(ClientsListPageComponent);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+    });
+
+    afterEach(() => sessionStorage.clear());
+
+    it('"Detay" yazısı yoktur; satırda müşteri kartına giden göz simgesi bağlantısı vardır', () => {
+        const el = fixture.nativeElement as HTMLElement;
+        const details = Array.from(el.querySelectorAll<HTMLAnchorElement>('app-row-action-button a[aria-label="Detay"]'));
+
+        expect(el.textContent).not.toContain('Detay');
+        expect(details.length).withContext('tablo + mobil kart').toBe(2);
+        for (const link of details) {
+            expect(link.getAttribute('href')).toBe('/panel/clients/c1');
+            expect(link.querySelector('i')!.classList).toContain('fa-eye');
+            expect(link.textContent!.trim()).toBe('');
+        }
+    });
+});

@@ -129,17 +129,32 @@ describe('ChargesListPageComponent', () => {
         expect(actionButton('İptal et')).toBeNull();
     });
 
-    it('Charges.Correct varsa Düzelt ve İptal et yalnız simge olarak görünür; erişilebilir ad ve ipucu korunur', async () => {
+    it('Charges.Correct varsa Düzelt ve İptal et ortak satır eylemi simgesi olarak görünür (ADR-026)', async () => {
         claims.add('Charges.Correct');
         await setup();
 
-        for (const label of ['Düzelt', 'İptal et']) {
+        for (const [label, icon, danger] of [
+            ['Düzelt', 'fa-pen-to-square', false],
+            ['İptal et', 'fa-ban', true]
+        ] as const) {
             const button = actionButton(label);
 
-            expect(button).not.toBeNull();
+            expect(button).withContext(label).not.toBeNull();
             expect(button!.textContent!.trim()).toBe('');
-            expect(button!.closest('[title]')?.getAttribute('title')).toBe(label);
+            expect(button!.closest('app-row-action-button')).withContext(label).not.toBeNull();
+            expect(button!.querySelector('i')!.classList).toContain('fa-solid');
+            expect(button!.querySelector('i')!.classList).toContain(icon);
+            expect(button!.classList.contains('row-action-button--danger')).withContext(label).toBe(danger);
         }
+    });
+
+    it('"Ödeme al" metinli birincil düğme olarak kalır, simge düğmesine dönmez', async () => {
+        claims.add('Payments.Create');
+        await setup();
+        const pay = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).find((a) => a.textContent?.includes('Ödeme al'));
+
+        expect(pay).withContext('Ödeme al').toBeDefined();
+        expect(pay!.closest('app-row-action-button')).toBeNull();
     });
 
     it('Düzelt ve İptal et ilgili diyaloğu satırla açar', async () => {

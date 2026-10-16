@@ -49,20 +49,32 @@ describe('PaymentsListPageComponent — iptal', () => {
         mutationBlocked = false;
     });
 
+    /** İptal et satır eylemi simge düğmesidir (ADR-026); erişilebilir adıyla aranır. */
+    const voidButtons = () => fixture.nativeElement.querySelectorAll('app-row-action-button [aria-label="İptal et"]') as NodeListOf<HTMLElement>;
+
     it('Payments.Correct yoksa İptal et görünmez', async () => {
         await setup();
-        expect(fixture.nativeElement.textContent).not.toContain('İptal et');
+        expect(voidButtons().length).toBe(0);
     });
 
-    it('Payments.Correct varsa İptal et görünür; salt okunur kiracıda gizlenir', async () => {
+    it('Payments.Correct varsa İptal et görünür (tablo + mobil kart); salt okunur kiracıda gizlenir', async () => {
         claims.add('Payments.Correct');
         await setup();
-        expect(fixture.nativeElement.textContent).toContain('İptal et');
+        expect(voidButtons().length).toBe(2);
         mutationBlocked = true;
         fixture.destroy();
         TestBed.resetTestingModule();
         await setup();
-        expect(fixture.nativeElement.textContent).not.toContain('İptal et');
+        expect(voidButtons().length).toBe(0);
+    });
+
+    it('satırda Detay göz simgesi bağlantısıdır; "Detay" yazısı çizilmez', async () => {
+        await setup();
+        const details = fixture.nativeElement.querySelectorAll('app-row-action-button a[aria-label="Detay"]') as NodeListOf<HTMLAnchorElement>;
+
+        expect(details.length).toBe(2);
+        expect(details[0].querySelector('i')!.classList).toContain('fa-eye');
+        expect(fixture.nativeElement.textContent).not.toContain('Detay');
     });
 
     it('tablo satırında İptal et yalnız simgeyle yer tutar; erişilebilir ad ve ipucu korunur', async () => {
@@ -75,7 +87,8 @@ describe('PaymentsListPageComponent — iptal', () => {
         claims.add('Payments.Correct');
         await setup();
         expect(iconButton()!.textContent!.trim()).toBe('');
-        expect(iconButton()!.closest('[title]')?.getAttribute('title')).toBe('İptal et');
+        expect(iconButton()!.closest('app-row-action-button')).not.toBeNull();
+        expect(iconButton()!.querySelector('i')!.classList).toContain('fa-ban');
         iconButton()!.click();
         expect(fixture.componentInstance.voidSummary()).toContain('Ali Veli');
     });

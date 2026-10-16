@@ -69,6 +69,8 @@ describe('AdministrationsSectionComponent', () => {
     };
 
     const text = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
+    /** İptal et satır eylemi simge düğmesidir (ADR-026); erişilebilir adıyla aranır. */
+    const voidButton = () => (fixture.nativeElement as HTMLElement).querySelector('app-row-action-button [aria-label="İptal et"]');
     const has = (testId: string) => !!(fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${testId}"]`);
 
     beforeEach(() => {
@@ -89,7 +91,7 @@ describe('AdministrationsSectionComponent', () => {
         await setup();
         expect(text()).toContain('Serum');
         expect(has('administration-add')).toBeFalse();
-        expect(text()).not.toContain('İptal et');
+        expect(voidButton()).toBeNull();
     });
 
     it('muayene bağlamında muayeneye göre süzer; tedavi bağlamında tedaviye göre', async () => {
@@ -129,7 +131,7 @@ describe('AdministrationsSectionComponent', () => {
         claims.add('Administrations.Create').add('Administrations.Correct');
         await setup();
         expect(has('administration-add')).toBeTrue();
-        expect(text()).toContain('İptal et');
+        expect(voidButton()).not.toBeNull();
     });
 
     it('kesinleşmiş muayenede ekleme görünür (sonradan ekleme), açıklama görünür, iptal sürer', async () => {
@@ -138,7 +140,7 @@ describe('AdministrationsSectionComponent', () => {
         expect(has('administration-add')).toBeTrue();
         expect(has('administrations-locked')).toBeTrue();
         expect(text()).toContain('gerekçe yazılarak sonradan eklenebilir');
-        expect(text()).toContain('İptal et');
+        expect(voidButton()).not.toBeNull();
     });
 
     it('kesinleşmiş muayenede Create izni yoksa ekleme gizli', async () => {
@@ -178,7 +180,7 @@ describe('AdministrationsSectionComponent', () => {
         mutationBlocked = true;
         await setup();
         expect(has('administration-add')).toBeFalse();
-        expect(text()).not.toContain('İptal et');
+        expect(voidButton()).toBeNull();
     });
 
     it('iptal edilmiş satırda İptal rozeti ve gerekçe görünür, İptal et düğmesi görünmez', async () => {
@@ -186,7 +188,7 @@ describe('AdministrationsSectionComponent', () => {
         service.getAdministrations.and.returnValue(of(page([{ ...row, isVoided: true, voidReason: 'Yanlış ürün' }])));
         await setup();
         expect(text()).toContain('Yanlış ürün');
-        expect(text()).not.toContain('İptal et');
+        expect(voidButton()).toBeNull();
     });
 
     it('düşük stok uyarısı bilgi olarak gösterilir', async () => {
