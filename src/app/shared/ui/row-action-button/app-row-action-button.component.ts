@@ -61,8 +61,8 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 2.2857rem; // 32 px (kök 14 px)
-            height: 2.2857rem;
+            width: 32px; // ADR-026: en az 32 px; rem ile 14 px kökte 31,98 px oluyordu
+            height: 32px;
             padding: 0;
             border: 0;
             border-radius: var(--content-border-radius);
@@ -92,8 +92,8 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
             }
 
             @media (pointer: coarse) {
-                width: 2.8571rem; // 40 px
-                height: 2.8571rem;
+                width: 40px; // dokunmatik
+                height: 40px;
             }
         }
 
