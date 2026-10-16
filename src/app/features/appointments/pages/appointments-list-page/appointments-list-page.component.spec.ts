@@ -2,9 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_CANCEL_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
+import { isLastRowAction, isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppointmentsListPageComponent } from './appointments-list-page.component';
@@ -138,5 +139,118 @@ describe('AppointmentsListPageComponent — satırda Düzenle', () => {
 
         expect(readOnly.length).toBe(2);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+    });
+});
+
+/** ADR-026 madde 7: İptal simgesi `Appointments.Cancel` ile yalnız Planlandı randevuda; salt okunur kiracıda yok. */
+describe('AppointmentsListPageComponent — satırda İptal', () => {
+    const appt = (status: number): AppointmentListItemVm => ({
+        id: 'a1',
+        scheduledAtUtc: '2026-10-16T07:00:00Z',
+        scheduledEndUtc: '2026-10-16T07:30:00Z',
+        durationMinutes: 30,
+        durationLabel: '30 dk',
+        clientId: 'c1',
+        clientName: 'Ali Veli',
+        petId: 'p1',
+        petName: 'Pamuk',
+        speciesName: 'Kedi',
+        appointmentType: 0,
+        appointmentTypeName: null,
+        status,
+        lifecycleStatus: null
+    });
+
+    let getAppointments: jasmine.Spy;
+    let cancelAppointment: jasmine.Spy;
+
+    const create = (claims: string[], opts: { status?: number; mutationBlocked?: boolean } = {}) => {
+        getAppointments = jasmine.createSpy('getAppointments').and.returnValue(of({ items: [appt(opts.status ?? 0)], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
+        cancelAppointment = jasmine.createSpy('cancelAppointment').and.returnValue(of(void 0));
+        TestBed.configureTestingModule({
+            imports: [AppointmentsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: AppointmentsService, useValue: { getAppointments, cancelAppointment } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => !!opts.mutationBlocked } }
+            ]
+        });
+        const fixture = TestBed.createComponent(AppointmentsListPageComponent);
+
+        fixture.detectChanges();
+
+        return { fixture, el: fixture.nativeElement as HTMLElement };
+    };
+
+    const dialogOf = (fixture: ReturnType<typeof create>['fixture']) =>
+        fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
+
+    beforeEach(() => sessionStorage.removeItem(STATE_KEY));
+    afterEach(() => sessionStorage.removeItem(STATE_KEY));
+
+    it("Appointments.Cancel ile Planlandı randevuda tablo ve mobil kartta Detay, Düzenle'den sonra son eylemdir", () => {
+        const voids = rowDangerActions(create([APPOINTMENTS_RESCHEDULE_CLAIM, APPOINTMENTS_CANCEL_CLAIM]).el);
+
+        expect(voids.length).withContext('tablo + mobil kart').toBe(2);
+
+        for (const v of voids) {
+            expect(v.getAttribute('aria-label')).toBe('İptal et');
+            expect(isLastRowAction(v)).toBeTrue();
+            expect(v.closest('app-row-action-button')?.previousElementSibling?.querySelector('.fa-pen-to-square')).not.toBeNull();
+        }
+    });
+
+    it('yetki yoksa, salt okunur kiracıda ve Planlandı dışındaki durumlarda İptal görünmez', () => {
+        expect(rowDangerActions(create([]).el).length).toBe(0);
+
+        TestBed.resetTestingModule();
+        expect(rowDangerActions(create([APPOINTMENTS_CANCEL_CLAIM], { mutationBlocked: true }).el).length).toBe(0);
+
+        for (const status of [1, 2, 3]) {
+            TestBed.resetTestingModule();
+            expect(rowDangerActions(create([APPOINTMENTS_CANCEL_CLAIM], { status }).el).length).withContext(`durum ${status}`).toBe(0);
+        }
+    });
+
+    it('İptal tıklanınca diyalog açılır, onaylanmadan servis çağrılmaz; onayda cancelAppointment çağrılır ve liste yenilenir', () => {
+        const { fixture, el } = create([APPOINTMENTS_CANCEL_CLAIM]);
+
+        rowDangerActions(el)[0].click();
+        fixture.detectChanges();
+
+        expect(fixture.debugElement.query((d) => d.name === 'app-appointment-cancel-dialog')).not.toBeNull();
+        const dialog = dialogOf(fixture);
+
+        expect(dialog.visible()).toBeTrue();
+        expect(dialog.reasonOptional()).toBeTrue();
+        expect(dialog.summary()).toContain('Pamuk · Ali Veli · 16.10.2026');
+        expect(dialog.description()).toContain('geri alınamaz');
+        expect(cancelAppointment).not.toHaveBeenCalled();
+
+        getAppointments.calls.reset();
+        dialog.form.controls.reason.setValue('Sahibi aradı');
+        dialog.onSubmit();
+
+        expect(cancelAppointment).toHaveBeenCalledOnceWith('a1', 'Sahibi aradı');
+        expect(getAppointments).toHaveBeenCalledTimes(1);
+        expect(dialog.visible()).toBeFalse();
+    });
+
+    it('mobil karttan açılıp vazgeçilirse servis çağrılmaz ve liste yenilenmez', () => {
+        const { fixture, el } = create([APPOINTMENTS_CANCEL_CLAIM]);
+
+        rowDangerActions(el)[1].click();
+        fixture.detectChanges();
+        const dialog = dialogOf(fixture);
+
+        expect(dialog.visible()).toBeTrue();
+        getAppointments.calls.reset();
+        dialog.close();
+        fixture.detectChanges();
+
+        expect(cancelAppointment).not.toHaveBeenCalled();
+        expect(getAppointments).not.toHaveBeenCalled();
     });
 });

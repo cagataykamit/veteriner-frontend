@@ -1,6 +1,7 @@
 import {
     appointmentStatusLabel,
     appointmentStatusSeverity,
+    canCancelAppointment,
     canMarkAppointmentNoShow,
     canRevertAppointmentNoShow,
     isAppointmentNoShowStatus,
@@ -41,5 +42,16 @@ describe('appointment status — Gelmedi (NoShow)', () => {
             expect(canMarkAppointmentNoShow(0, null, now)).toBeFalse();
             expect(canMarkAppointmentNoShow(0, 'geçersiz', now)).toBeFalse();
         });
+    });
+});
+
+describe('appointment status — İptal', () => {
+    it('canCancelAppointment yalnızca Planlandı randevuda (sunucu geçişi Scheduled → Cancelled)', () => {
+        expect(canCancelAppointment(0)).toBeTrue();
+        expect(canCancelAppointment('Scheduled')).toBeTrue();
+
+        for (const s of [1, 2, 3, null, undefined, 'x']) {
+            expect(canCancelAppointment(s)).toBeFalse();
+        }
     });
 });

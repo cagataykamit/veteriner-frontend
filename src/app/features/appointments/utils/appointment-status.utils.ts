@@ -169,6 +169,11 @@ export function canMarkAppointmentNoShow(status: number | string | null | undefi
     return !Number.isNaN(at) && at <= now.getTime();
 }
 
+/** "İptal et": yalnızca `Scheduled` randevu (sunucu `Appointment.Cancel` ile aynı; iptalden geri dönüş ucu yoktur). */
+export function canCancelAppointment(status: number | string | null | undefined): boolean {
+    return parseAppointmentStatusRawToEnum(status) === 0;
+}
+
 export function canRevertAppointmentNoShow(status: number | string | null | undefined): boolean {
     return isAppointmentNoShowStatus(status);
 }

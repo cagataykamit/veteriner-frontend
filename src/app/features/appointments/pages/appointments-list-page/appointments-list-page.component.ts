@@ -17,7 +17,8 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
-import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
+import { AppointmentCancelDialogComponent } from '@/app/features/appointments/components/appointment-cancel-dialog.component';
+import { appointmentStatusLabel, appointmentStatusSeverity, canCancelAppointment } from '@/app/features/appointments/utils/appointment-status.utils';
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import { CLEAR_APPOINTMENTS_LIST_LINK_QUERY, readAppointmentsListLinkFilters } from '@/app/features/appointments/utils/appointments-list-link.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -29,7 +30,7 @@ import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_CANCEL_CLAIM, APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type AppointmentListState = {
@@ -61,7 +62,8 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         AppContextFilterChipComponent, AppErrorStateComponent,
         AppStatusTagComponent, DateInputComponent, FilterFieldComponent,
         SearchInputComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        AppointmentCancelDialogComponent
     ],
     template: `
         @if (contextPetId() || contextClientId()) {
@@ -169,6 +171,9 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                             } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
                                                 <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
                                             }
+                                            @if (canCancelAppointment && isCancellable(row.status) && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="void" (pressed)="openCancel(row)" />
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -220,6 +225,9 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                     } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
                                         <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
                                     }
+                                    @if (canCancelAppointment && isCancellable(row.status) && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="void" (pressed)="openCancel(row)" />
+                                    }
                                 </div>
                             </div>
                         }
@@ -240,6 +248,10 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
             }
                 </div>
         </div>
+
+        @if (cancelTarget(); as target) {
+            <app-appointment-cancel-dialog [(visible)]="cancelVisible" [target]="target" (cancelled)="reload()" />
+        }
     `
 })
 export class AppointmentsListPageComponent implements OnInit {
@@ -305,6 +317,12 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly canCreateAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM);
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
+    /** İptal simgesi: `Appointments.Cancel`, yalnız Planlandı randevu, salt okunur değil (ADR-026 madde 7). */
+    readonly canCancelAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CANCEL_CLAIM);
+    readonly isCancellable = canCancelAppointment;
+    /** İptal diyaloğunun açık olduğu satır. */
+    readonly cancelTarget = signal<AppointmentListItemVm | null>(null);
+    readonly cancelVisible = signal(false);
     readonly hasActiveFilters = computed(
         () => !!this.activeSearch().trim() || !!this.statusFilter.trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim()
     );
@@ -379,6 +397,11 @@ export class AppointmentsListPageComponent implements OnInit {
             this.statusFilter,
             true
         );
+    }
+
+    openCancel(row: AppointmentListItemVm): void {
+        this.cancelTarget.set(row);
+        this.cancelVisible.set(true);
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
