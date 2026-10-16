@@ -19,12 +19,12 @@ describe('client.mapper KVKK rıza (ADR-021)', () => {
             rowVersion: 'AAAAAAAAB9E='
         });
 
-        expect(vm.kvkkConsent).toEqual({ status: 'Accepted', recordedOn: '2026-10-15', recordedByName: 'Ayşe Yılmaz' });
+        expect(vm.kvkkConsent).toEqual({ status: 'Accepted', recordedOn: '2026-10-15', recordedByName: 'Ayşe Yılmaz', templateVersion: null, templateHash: null });
         expect(vm.rowVersion).toBe('AAAAAAAAB9E=');
 
         const old = mapClientDetailDtoToVm({ id: 'c2', tenantId: 't1' });
 
-        expect(old.kvkkConsent).toEqual({ status: 'None', recordedOn: null, recordedByName: null });
+        expect(old.kvkkConsent).toEqual({ status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null });
         expect(old.rowVersion).toBeNull();
     });
 
@@ -32,12 +32,14 @@ describe('client.mapper KVKK rıza (ADR-021)', () => {
         expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'None', kvkkConsentRecordedOn: '2026-10-15', kvkkConsentRecordedByName: 'X' }).kvkkConsent).toEqual({
             status: 'None',
             recordedOn: null,
-            recordedByName: null
+            recordedByName: null,
+            templateVersion: null,
+            templateHash: null
         });
         expect(
             mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Declined', kvkkConsentRecordedOn: '2026-10-15', remindersOptedOut: true, rowVersion: 'rv2' })
         ).withContext('PUT yanıtı Ret sonrası bayrağı taşır (ADR-025)').toEqual({
-            kvkkConsent: { status: 'Declined', recordedOn: '2026-10-15', recordedByName: null },
+            kvkkConsent: { status: 'Declined', recordedOn: '2026-10-15', recordedByName: null, templateVersion: null, templateHash: null },
             remindersOptedOut: true,
             rowVersion: 'rv2'
         });
@@ -45,6 +47,21 @@ describe('client.mapper KVKK rıza (ADR-021)', () => {
         expect(parseKvkkConsentStatus(1)).toBe('Accepted');
         expect(parseKvkkConsentStatus('Maybe')).toBe('None');
         expect([kvkkConsentStatusLabel('None'), kvkkConsentStatusLabel('Accepted'), kvkkConsentStatusLabel('Declined')]).toEqual(['Yok', 'Kabul', 'Ret']);
+    });
+
+    it('metin sürümü (ADR-032): Kabul/Ret iken sürüm ve tam özet okunur; Yok iken ve geçersiz sürümde boş', () => {
+        const hash = 'a'.repeat(64);
+
+        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Accepted', kvkkConsentTemplateVersion: 3, kvkkConsentTemplateHash: hash }).kvkkConsent).toEqual(
+            jasmine.objectContaining({ templateVersion: 3, templateHash: hash })
+        );
+        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Declined', kvkkConsentTemplateVersion: 0, kvkkConsentTemplateHash: hash }).kvkkConsent.templateVersion)
+            .withContext('varsayılan metin 0 korunur')
+            .toBe(0);
+        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'None', kvkkConsentTemplateVersion: 3, kvkkConsentTemplateHash: hash }).kvkkConsent).toEqual(
+            jasmine.objectContaining({ templateVersion: null, templateHash: null })
+        );
+        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Accepted', kvkkConsentTemplateVersion: -1 }).kvkkConsent.templateVersion).toBeNull();
     });
 
     it('gövde: tarih varsa gönderilir, boşsa sunucu bugünü kullanır; Yok iken tarih gönderilmez', () => {

@@ -8,6 +8,7 @@ import { pendingChargesSummary } from '@/app/features/clients/utils/client-card.
 import { clientContactChannelLabel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import { kvkkConsentStatusLabel } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import { kvkkTextVersionLabel } from '@/app/features/kvkk/utils/kvkk-form.utils';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { formatDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -17,7 +18,7 @@ import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/ut
 /**
  * Müşteri kartı başlığı (ADR-020 karar 6): iletişim (aranabilir telefon, e-posta, adres, tercih edilen kanal; hatırlatma istemiyorsa belirgin not)
  * ve hesap durumu (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu). Ad ve "Düzenle" sayfa başlığındadır.
- * KVKK açık rıza satırı (ADR-021): durum, form tarihi ve işaretleyen; işaretleme eylemi `[kvkkAction]` ile sayfadan yansıtılır (yetki sayfada).
+ * KVKK açık rıza satırı (ADR-021): durum, form tarihi, işaretleyen ve işaretleme anındaki metin sürümü (ADR-032); işaretleme eylemi `[kvkkAction]` ile sayfadan yansıtılır (yetki sayfada).
  */
 @Component({
     selector: 'app-client-card-header',
@@ -71,6 +72,9 @@ import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/ut
                 }
                 @if (client().kvkkConsent.recordedByName; as by) {
                     <span class="text-muted-color" data-testid="client-kvkk-by">· işaretleyen: {{ by }}</span>
+                }
+                @if (client().kvkkConsent.status !== 'None') {
+                    <span class="text-muted-color" data-testid="client-kvkk-text-version" [attr.title]="kvkkTextHashTitle()">· metin sürümü: {{ kvkkTextVersion() }}</span>
                 }
                 <ng-content select="[kvkkAction]" />
             </p>
@@ -158,5 +162,12 @@ export class ClientCardHeaderComponent {
     readonly phoneHref = computed(() => clientPhoneTelHref(this.client().phone));
     readonly channelLabel = computed(() => clientContactChannelLabel(this.client().preferredContactChannel));
     readonly kvkkLabel = computed(() => kvkkConsentStatusLabel(this.client().kvkkConsent.status));
+    readonly kvkkTextVersion = computed(() => kvkkTextVersionLabel(this.client().kvkkConsent.templateVersion));
+    /** Tam özet ipucu olarak (ispat için karşılaştırılır); bilinmiyorsa ipucu yok. */
+    readonly kvkkTextHashTitle = computed(() => {
+        const hash = this.client().kvkkConsent.templateHash;
+
+        return hash ? `Metin özeti (SHA-256): ${hash}` : null;
+    });
     readonly formatDate = (v: string) => formatDateDisplay(v);
 }

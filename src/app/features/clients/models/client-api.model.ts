@@ -42,6 +42,10 @@ export interface ClientDetailDto {
     kvkkConsentRecordedOn?: string | null;
     kvkkConsentRecordedByUserId?: string | null;
     kvkkConsentRecordedByName?: string | null;
+    /** İşaretleme anındaki açık rıza metni sürümü (ADR-032): `0` varsayılan metin, `null` bilinmiyor. */
+    kvkkConsentTemplateVersion?: number | null;
+    /** O metnin SHA-256 özeti (64 karakter hex, tam değer). */
+    kvkkConsentTemplateHash?: string | null;
     /** Base64; `PUT /clients/{id}/kvkk-consent` için zorunlu. */
     rowVersion?: string | null;
 }
@@ -56,7 +60,15 @@ export interface ClientKvkkConsentUpdateRequestDto {
 /** `PUT /clients/{id}/kvkk-consent` yanıtı (200); `remindersOptedOut` yazımdan sonraki bayraktır (Ret açar, ADR-025). */
 export type ClientKvkkConsentDto = Pick<
     ClientDetailDto,
-    'id' | 'kvkkConsentStatus' | 'kvkkConsentRecordedOn' | 'kvkkConsentRecordedByUserId' | 'kvkkConsentRecordedByName' | 'remindersOptedOut' | 'rowVersion'
+    | 'id'
+    | 'kvkkConsentStatus'
+    | 'kvkkConsentRecordedOn'
+    | 'kvkkConsentRecordedByUserId'
+    | 'kvkkConsentRecordedByName'
+    | 'kvkkConsentTemplateVersion'
+    | 'kvkkConsentTemplateHash'
+    | 'remindersOptedOut'
+    | 'rowVersion'
 >;
 
 /**

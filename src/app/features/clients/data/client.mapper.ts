@@ -33,6 +33,7 @@ import type { ExaminationListItemVm } from '@/app/features/examinations/models/e
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import { parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
+import { parseKvkkTextVersion } from '@/app/features/kvkk/utils/kvkk-form.utils';
 
 const EM = '—';
 
@@ -295,7 +296,9 @@ export function mapClientKvkkConsentDtoToVm(dto: Omit<ClientKvkkConsentDto, 'id'
         kvkkConsent: {
             status,
             recordedOn: recorded ? (trimmedOrNull(dto.kvkkConsentRecordedOn)?.slice(0, 10) ?? null) : null,
-            recordedByName: recorded ? trimmedOrNull(dto.kvkkConsentRecordedByName) : null
+            recordedByName: recorded ? trimmedOrNull(dto.kvkkConsentRecordedByName) : null,
+            templateVersion: recorded ? parseKvkkTextVersion(dto.kvkkConsentTemplateVersion) : null,
+            templateHash: recorded ? trimmedOrNull(dto.kvkkConsentTemplateHash) : null
         },
         remindersOptedOut: dto.remindersOptedOut === true,
         rowVersion: trimmedOrNull(dto.rowVersion)

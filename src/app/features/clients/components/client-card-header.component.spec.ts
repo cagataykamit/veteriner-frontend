@@ -18,7 +18,7 @@ const client: ClientDetailVm = {
     updatedAtUtc: null,
     preferredContactChannel: 'None',
     remindersOptedOut: false,
-    kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null },
+    kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
     rowVersion: 'rv1'
 };
 
@@ -92,11 +92,39 @@ describe('ClientCardHeaderComponent', () => {
         expect(el.querySelector('[data-testid="client-kvkk-date"]')).toBeNull();
 
         TestBed.resetTestingModule();
-        el = render({ client: { ...client, kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-15', recordedByName: 'Ayşe Yılmaz' } } });
+        el = render({ client: { ...client, kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-15', recordedByName: 'Ayşe Yılmaz', templateVersion: null, templateHash: null } } });
         expect(el.querySelector('[data-testid="client-kvkk-status"]')?.textContent).toContain('Kabul');
         expect(el.querySelector('[data-testid="client-kvkk-date"]')?.textContent).toContain('15.10.2026');
         expect(el.querySelector('[data-testid="client-kvkk-by"]')?.textContent).toContain('Ayşe Yılmaz');
         expect(el.querySelector('[data-testid="client-kvkk"]')?.textContent).not.toContain('form alınmadı');
+    });
+
+    it('KVKK metin sürümü (ADR-032): numara, varsayılan metin 0, bilinmeyen null; Yok iken gösterilmez', () => {
+        const consent = (templateVersion: number | null, templateHash: string | null) =>
+            ({ ...client, kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-15', recordedByName: null, templateVersion, templateHash } }) as ClientDetailVm;
+        const hash = 'b'.repeat(64);
+
+        let el = render({});
+
+        expect(el.querySelector('[data-testid="client-kvkk-text-version"]')).toBeNull();
+
+        TestBed.resetTestingModule();
+        el = render({ client: consent(3, hash) });
+        const version = el.querySelector('[data-testid="client-kvkk-text-version"]');
+
+        expect(version?.textContent).toContain('metin sürümü: 3');
+        expect(version?.getAttribute('title')).toBe(`Metin özeti (SHA-256): ${hash}`);
+
+        TestBed.resetTestingModule();
+        el = render({ client: consent(0, hash) });
+        expect(el.querySelector('[data-testid="client-kvkk-text-version"]')?.textContent).toContain('metin sürümü: Varsayılan metin');
+
+        TestBed.resetTestingModule();
+        el = render({ client: consent(null, null) });
+        const unknown = el.querySelector('[data-testid="client-kvkk-text-version"]');
+
+        expect(unknown?.textContent).toContain('metin sürümü: Bilinmiyor');
+        expect(unknown?.hasAttribute('title')).toBeFalse();
     });
 
     it('sayfa tüm kalemleri içermiyorsa sayı totalItems, tutar "en az" ile gösterilir', () => {

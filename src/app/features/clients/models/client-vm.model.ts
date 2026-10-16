@@ -26,12 +26,16 @@ export interface ClientDetailVm {
     rowVersion: string | null;
 }
 
-/** İmzalı KVKK formunun sonucu; `None` iken tarih ve işaretleyen boş. */
+/** İmzalı KVKK formunun sonucu; `None` iken tarih, işaretleyen ve metin sürümü boş. */
 export interface ClientKvkkConsentVm {
     status: KvkkConsentStatus;
     /** `yyyy-MM-dd` */
     recordedOn: string | null;
     recordedByName: string | null;
+    /** İşaretleme anındaki açık rıza metni sürümü (ADR-032): `0` varsayılan metin, `null` bilinmiyor. */
+    templateVersion: number | null;
+    /** O metnin SHA-256 özeti (tam değer) veya `null`. */
+    templateHash: string | null;
 }
 
 export interface ClientKvkkConsentUpdateRequest {

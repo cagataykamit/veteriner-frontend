@@ -5,8 +5,8 @@ import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.mod
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ClientKvkkConsentDialogComponent } from './client-kvkk-consent-dialog.component';
 
-const client = { id: 'c1', fullName: 'Ali Veli', kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null }, rowVersion: 'rv1' } as ClientDetailVm;
-const result = { kvkkConsent: { status: 'Accepted' as const, recordedOn: '2026-01-02', recordedByName: 'Ayşe' }, remindersOptedOut: false, rowVersion: 'rv2' };
+const client = { id: 'c1', fullName: 'Ali Veli', kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null }, rowVersion: 'rv1' } as ClientDetailVm;
+const result = { kvkkConsent: { status: 'Accepted' as const, recordedOn: '2026-01-02', recordedByName: 'Ayşe', templateVersion: null, templateHash: null }, remindersOptedOut: false, rowVersion: 'rv2' };
 
 describe('ClientKvkkConsentDialogComponent', () => {
     let fixture: ComponentFixture<ClientKvkkConsentDialogComponent>;
@@ -57,7 +57,7 @@ describe('ClientKvkkConsentDialogComponent', () => {
     });
 
     it('ileri tarih engellenir; işaretli kayıtta mevcut değerler gelir ve Yok\'a geri al tarihsiz gönderilir', () => {
-        const c = create({ ...client, kvkkConsent: { status: 'Declined', recordedOn: '2025-05-05', recordedByName: 'Ayşe' } });
+        const c = create({ ...client, kvkkConsent: { status: 'Declined', recordedOn: '2025-05-05', recordedByName: 'Ayşe', templateVersion: null, templateHash: null } });
 
         expect([c.status.value, c.recordedOn.value]).toEqual(['Declined', '2025-05-05']);
         expect(c.canRevert()).toBeTrue();

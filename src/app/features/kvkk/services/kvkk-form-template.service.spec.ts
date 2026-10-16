@@ -69,6 +69,6 @@ describe('KvkkFormTemplateService ve müşteri rıza ucu', () => {
         expect(put.request.method).toBe('PUT');
         expect(put.request.body).toEqual({ status: 'Accepted', recordedOn: '2026-10-15', rowVersion: 'rv1' });
         put.flush({ id: 'c1', kvkkConsentStatus: 'Accepted', kvkkConsentRecordedOn: '2026-10-15', kvkkConsentRecordedByName: 'Ayşe', remindersOptedOut: false, rowVersion: 'rv2' });
-        expect(result).toEqual({ kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-15', recordedByName: 'Ayşe' }, remindersOptedOut: false, rowVersion: 'rv2' });
+        expect(result).toEqual({ kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-15', recordedByName: 'Ayşe', templateVersion: null, templateHash: null }, remindersOptedOut: false, rowVersion: 'rv2' });
     });
 });

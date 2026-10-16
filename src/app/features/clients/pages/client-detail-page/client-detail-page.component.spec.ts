@@ -26,7 +26,7 @@ const client: ClientDetailVm = {
     updatedAtUtc: null,
     preferredContactChannel: 'None',
     remindersOptedOut: false,
-    kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null },
+    kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
     rowVersion: 'rv1'
 };
 
@@ -139,7 +139,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
 
         const toasts = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
 
-        fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Declined', recordedOn: '2026-10-01', recordedByName: 'Ayşe' }, remindersOptedOut: true, rowVersion: 'rv2' });
+        fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Declined', recordedOn: '2026-10-01', recordedByName: 'Ayşe', templateVersion: null, templateHash: null }, remindersOptedOut: true, rowVersion: 'rv2' });
         fixture.detectChanges();
         expect(fixture.componentInstance.client()?.rowVersion).toBe('rv2');
         expect(el().querySelector('[data-testid="client-kvkk-status"]')?.textContent).toContain('Ret');
@@ -149,7 +149,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(toasts).toHaveBeenCalledOnceWith(jasmine.objectContaining({ summary: 'Ret işaretlendi; hatırlatmalar kapatıldı.' }));
 
         toasts.calls.reset();
-        fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-02', recordedByName: 'Ayşe' }, remindersOptedOut: true, rowVersion: 'rv3' });
+        fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-02', recordedByName: 'Ayşe', templateVersion: null, templateHash: null }, remindersOptedOut: true, rowVersion: 'rv3' });
         fixture.detectChanges();
         expect(fixture.componentInstance.client()?.remindersOptedOut).withContext('Kabul bayrağı kendiliğinden kapatmaz').toBeTrue();
         expect(toasts).not.toHaveBeenCalled();
