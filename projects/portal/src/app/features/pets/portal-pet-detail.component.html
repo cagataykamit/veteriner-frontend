@@ -1,0 +1,109 @@
+<div class="portal-stack">
+    <a class="portal-back" routerLink="/pets"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Hayvanlarım</a>
+
+    @switch (pet.state()) {
+        @case ('loading') {
+            <h1 class="sr-only">Hayvan bilgileri</h1>
+            <portal-skeleton [rows]="2" message="Hayvanınızın bilgileri yükleniyor…" />
+        }
+        @case ('error') {
+            <h1 class="portal-title">Hayvan bilgileri</h1>
+            <portal-error-state [message]="pet.error()" (retry)="pet.retry()" />
+        }
+        @default {
+            @if (pet.data(); as p) {
+                <div>
+                    <h1 class="portal-title">{{ p.name }}</h1>
+                    @if (deceased()) {
+                        <p class="portal-memorial" data-testid="pet-memorial">Vefat etti.</p>
+                    }
+                </div>
+
+                <section class="portal-card" aria-labelledby="pet-info-title">
+                    <h2 id="pet-info-title" class="portal-subtitle">Temel bilgiler</h2>
+                    <dl class="portal-dl">
+                        @for (row of infoRows(); track row.label) {
+                            <div>
+                                <dt>{{ row.label }}</dt>
+                                <dd>{{ row.value }}</dd>
+                            </div>
+                        }
+                    </dl>
+                </section>
+            }
+        }
+    }
+
+    <!-- Aşılar hayvan bilgisi gelince gösterilir: vefat durumu bilinmeden yaklaşan aşı bölümü açılmaz. -->
+    @if (pet.state() === 'ready') {
+        @switch (vaccinations.state()) {
+            @case ('loading') {
+                <portal-skeleton [rows]="2" message="Aşı bilgileri yükleniyor…" />
+            }
+            @case ('error') {
+                <section class="portal-stack" aria-label="Aşılar">
+                    <portal-error-state [message]="vaccinations.error()" (retry)="vaccinations.retry()" />
+                </section>
+            }
+            @default {
+                @if (vaccinations.data(); as v) {
+                    @if (!deceased()) {
+                        <section class="portal-stack" aria-labelledby="pet-upcoming-title">
+                            <h2 id="pet-upcoming-title" class="portal-subtitle">Yaklaşan aşılar</h2>
+                            @if (v.upcoming.length) {
+                                <ul class="portal-list" data-testid="pet-upcoming">
+                                    @for (item of v.upcoming; track item.vaccinationId) {
+                                        <li class="portal-row" [class.portal-row--attention]="item.isOverdue">
+                                            <div class="portal-row-head">
+                                                <p class="portal-row-title">{{ item.vaccineName }}</p>
+                                                @if (item.isOverdue) {
+                                                    <span class="portal-badge portal-badge--warning" data-testid="overdue-badge">
+                                                        <i class="fa-solid fa-clock" aria-hidden="true"></i> Gecikmiş
+                                                    </span>
+                                                }
+                                            </div>
+                                            <p class="portal-muted">
+                                                @if (item.dueAtUtc) {
+                                                    {{ item.isOverdue ? 'Vadesi geçti:' : 'Vade:' }} {{ day(item.dueAtUtc) }}
+                                                } @else {
+                                                    Tarihi henüz belirlenmedi
+                                                }
+                                            </p>
+                                        </li>
+                                    }
+                                </ul>
+                            } @else {
+                                <p class="portal-muted">Planlanmış aşı yok.</p>
+                            }
+                        </section>
+                    }
+
+                    <section class="portal-stack" aria-labelledby="pet-history-title">
+                        <h2 id="pet-history-title" class="portal-subtitle">Aşı geçmişi</h2>
+                        @if (v.history.length) {
+                            <ul class="portal-list" data-testid="pet-history">
+                                @for (item of v.history; track item.vaccinationId) {
+                                    <li class="portal-row">
+                                        <div class="portal-row-head">
+                                            <p class="portal-row-title">{{ item.vaccineName }}</p>
+                                            @if (item.status === 'Applied') {
+                                                <span class="portal-badge portal-badge--success">Uygulandı</span>
+                                            } @else {
+                                                <span class="portal-badge">İptal edildi</span>
+                                            }
+                                        </div>
+                                        @if (historyDate(item); as date) {
+                                            <p class="portal-muted">{{ item.status === 'Applied' ? 'Uygulama:' : 'Planlanan tarih:' }} {{ date }}</p>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        } @else {
+                            <p class="portal-muted">Henüz aşı kaydı yok.</p>
+                        }
+                    </section>
+                }
+            }
+        }
+    }
+</div>
