@@ -93,6 +93,15 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
                         class="p-button-text p-button-secondary"
                         data-testid="kvkk-disclosure-print-action"
                     ></a>
+                    <a
+                        [routerLink]="['/panel/clients', c.id, 'data-export']"
+                        pButton
+                        type="button"
+                        label="Veri kopyası"
+                        icon="pi pi-file-export"
+                        class="p-button-text p-button-secondary"
+                        data-testid="client-data-export-action"
+                    ></a>
                     @if (canUpdateClient && !ro.mutationBlocked()) {
                         <a [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                     } @else if (canUpdateClient && ro.mutationBlocked()) {

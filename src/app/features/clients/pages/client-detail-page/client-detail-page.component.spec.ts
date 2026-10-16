@@ -135,6 +135,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         create();
         expect(el().querySelector('[data-testid="kvkk-print-action"]')?.getAttribute('href')).toBe('/panel/clients/c1/kvkk-form');
         expect(el().querySelector('[data-testid="kvkk-disclosure-print-action"]')?.getAttribute('href')).toBe('/panel/clients/c1/kvkk-disclosure');
+        expect(el().querySelector('[data-testid="client-data-export-action"]')?.getAttribute('href')).toBe('/panel/clients/c1/data-export');
         expect(el().querySelector('[data-testid="kvkk-mark-action"]')).not.toBeNull();
 
         const toasts = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
@@ -159,6 +160,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         create();
         expect(el().querySelector('[data-testid="kvkk-print-action"]')).not.toBeNull();
         expect(el().querySelector('[data-testid="kvkk-disclosure-print-action"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="client-data-export-action"]')).withContext('veri kopyası Clients.Read ile').not.toBeNull();
         expect(el().querySelector('[data-testid="kvkk-mark-action"]')).toBeNull();
     });
 
