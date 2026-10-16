@@ -174,7 +174,7 @@ describe('panel-navigation', () => {
         expect(labels(visibleGroups(MENU_GROUPS, () => false))).not.toContain('Raporlar');
     });
 
-    it('giriş sonrası açılış ilk erişilebilir öğedir: Bugün izni varsa Bugün', () => {
+    it('firstAccessibleRoute menü sırasıyla ilk yetkili öğenin yolunu verir', () => {
         expect(firstAccessibleRoute(MENU_GROUPS, () => true)).toBe('/panel/today');
         expect(firstAccessibleRoute(MENU_GROUPS, only('Clients.Read', 'Pets.Read'))).toBe('/panel/patients');
         expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM, 'Pets.Read'))).toBe('/panel/patients');

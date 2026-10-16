@@ -96,6 +96,8 @@ export interface CardSection {
     readonly entries: readonly CardEntry[];
 }
 
+export const TODAY_ROUTE = '/panel/today';
+export const DASHBOARD_ROUTE = '/panel/dashboard';
 export const SETTINGS_ROUTE = '/panel/settings';
 export const DEFINITIONS_ROUTE = '/panel/settings/definitions';
 export const SPECIES_ROUTE = `${DEFINITIONS_ROUTE}/species`;
@@ -216,7 +218,7 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
     }
 ];
 
-/** "Yönetici düzeyi": Admin, Owner ve ClinicAdmin'in birlikte sahip olduğu düzeltme izni; Özet bu izne bağlıdır (ADR-017 K5). */
+/** "Yönetici düzeyi": Admin, Owner ve ClinicAdmin'in birlikte sahip olduğu düzeltme izni; Özet ve yöneticinin Özet açılışı bu izne bağlıdır (ADR-030). */
 export const MANAGER_LEVEL_CLAIM = VISITS_CORRECT_CLAIM;
 
 /** Birleşik menü öğesi: yol ilk sekmeye açılır, izin sekme izinlerinin birleşimidir, sayfa başlığı kategorisi öğenin adıdır. */
@@ -233,7 +235,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
         heading: 'Günlük iş',
         category: 'Panel',
         entries: [
-            { label: 'Bugün', icon: 'fa-solid fa-fw fa-calendar-day', route: '/panel/today', claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
+            { label: 'Bugün', icon: 'fa-solid fa-fw fa-calendar-day', route: TODAY_ROUTE, claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
             tabbedEntry('Randevular', 'fa-solid fa-fw fa-calendar-check', [
                 { label: 'Liste', listLabel: 'Randevular', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
                 { label: 'Takvim', listLabel: 'Randevu takvimi', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] }
@@ -299,7 +301,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                 route: REPORTS_ROUTE,
                 claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
             },
-            { label: 'Özet', category: 'Panel', icon: 'fa-solid fa-fw fa-gauge', route: '/panel/dashboard', claims: [MANAGER_LEVEL_CLAIM] },
+            { label: 'Özet', category: 'Panel', icon: 'fa-solid fa-fw fa-gauge', route: DASHBOARD_ROUTE, claims: [MANAGER_LEVEL_CLAIM] },
             { label: 'Ayarlar', icon: 'fa-solid fa-fw fa-gear', route: SETTINGS_ROUTE }
         ]
     }
@@ -490,7 +492,7 @@ export function menuLinkRoute(entry: MenuEntry, hasClaim: HasClaim): string {
     return (entry.tabs && visibleEntries(entry.tabs, hasClaim)[0]?.route) || entry.route;
 }
 
-/** Giriş sonrası açılış sayfası: menüdeki ilk erişilebilir öğe (Bugün izni varsa Bugün). */
+/** Menüdeki ilk erişilebilir öğenin yolu; açılış kuralı `panelHomeRoute` içindedir, bu onun son seçeneğidir. */
 export function firstAccessibleRoute(groups: readonly MenuGroup[], hasClaim: HasClaim): string | undefined {
     const first = visibleGroups(groups, hasClaim)[0]?.entries[0];
 

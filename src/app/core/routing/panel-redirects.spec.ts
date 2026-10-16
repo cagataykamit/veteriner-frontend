@@ -29,11 +29,14 @@ describe('panel yönlendirmeleri', () => {
         expect(await go('/panel')).toBe('/panel/today');
     });
 
-    it('Visits.Read yoksa /panel menüdeki ilk erişilebilir öğeye gider; Özet yönetici düzeyi içindir', async () => {
-        claims.delete('visits.read');
-        expect(await go('/panel')).toBe('/panel/settings');
+    it('yönetici düzeyi (Visits.Correct) /panel açınca Özet sayfasına gider', async () => {
         claims.add('visits.correct');
         expect(await go('/panel')).toBe('/panel/dashboard');
+    });
+
+    it('Bugün ve Özet yetkisi yoksa /panel menüdeki ilk erişilebilir öğeye, o da yoksa Ayarlar’a gider', async () => {
+        claims.delete('visits.read');
+        expect(await go('/panel')).toBe('/panel/settings');
         claims.add('clients.read');
         expect(await go('/panel')).toBe('/panel/patients');
     });
