@@ -2,8 +2,7 @@ import {
     CHARGES_CREATE_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
     LAB_RESULTS_UPDATE_CLAIM,
-    PAYMENTS_CREATE_CLAIM,
-    VACCINATIONS_UPDATE_CLAIM
+    PAYMENTS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
@@ -14,6 +13,7 @@ import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pe
 import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
 import { upcomingScheduledAppointmentsLinkQuery } from '@/app/features/appointments/utils/appointments-list-link.utils';
+import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -232,7 +232,8 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
         });
     }
 
-    const canApplyVaccine = canWrite(VACCINATIONS_UPDATE_CLAIM);
+    // "Uygula" aşı düzenleme rotasına gider; o rotanın yetki koşulu (aşı kataloğu okuma dahil) aynen uygulanır.
+    const canApplyVaccine = !ctx.mutationBlocked && canOpenVaccinationEdit(ctx.hasClaim);
 
     const todayYmd = toIstanbulDateInputValue(now.toISOString());
 

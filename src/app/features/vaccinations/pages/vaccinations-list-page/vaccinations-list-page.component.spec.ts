@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { VACCINE_DEFINITIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
@@ -134,8 +134,11 @@ describe('VaccinationsListPageComponent — satırda Düzenle', () => {
     beforeEach(() => sessionStorage.removeItem(STATE_KEY));
     afterEach(() => sessionStorage.removeItem(STATE_KEY));
 
-    it("Vaccinations.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
-        const edits = rowEditActions(create([VACCINATIONS_UPDATE_CLAIM]));
+    /** Düzenleme rotası aşı kataloğunu da okur; rota koruması VaccineDefinitions.Read ister. */
+    const EDIT_CLAIMS = [VACCINATIONS_UPDATE_CLAIM, VACCINE_DEFINITIONS_READ_CLAIM];
+
+    it("Vaccinations.Update ve VaccineDefinitions.Read varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
+        const edits = rowEditActions(create(EDIT_CLAIMS));
 
         expect(edits.length).withContext('tablo + mobil kart').toBe(2);
 
@@ -145,11 +148,14 @@ describe('VaccinationsListPageComponent — satırda Düzenle', () => {
         }
     });
 
-    it('yetki yoksa Düzenle görünmez; salt okunur kiracıda pasiftir', () => {
+    it('yetki yoksa ya da yalnız Vaccinations.Update varsa (rota /notfound verir) Düzenle görünmez; salt okunur kiracıda pasiftir', () => {
         expect(rowEditActions(create([])).length).toBe(0);
 
         TestBed.resetTestingModule();
-        const readOnly = rowEditActions(create([VACCINATIONS_UPDATE_CLAIM], true));
+        expect(rowEditActions(create([VACCINATIONS_UPDATE_CLAIM])).length).toBe(0);
+
+        TestBed.resetTestingModule();
+        const readOnly = rowEditActions(create(EDIT_CLAIMS, true));
 
         expect(readOnly.length).toBe(2);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();

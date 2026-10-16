@@ -174,7 +174,7 @@ describe('buildPetTodo', () => {
     it('gecikmiş (gün sayısıyla) ve yaklaşan aşılar sunucunun ayırdığı gibi listelenir; istemci pencere süzgeci uygulamaz', () => {
         const view = buildPetTodo(
             openItems({ vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z' }], [{ id: 'v2', dueAtUtc: '2027-03-01T09:00:00Z' }]) }),
-            ctx(['Vaccinations.Update'])
+            ctx(['Vaccinations.Update', 'VaccineDefinitions.Read'])
         );
 
         expect(view.items.map((i) => i.kind)).toEqual(['overdueVaccine', 'upcomingVaccine']);
@@ -197,9 +197,15 @@ describe('buildPetTodo', () => {
             { label: 'Aç', route: ['/panel/vaccinations', 'v1'] },
             { label: 'Aç', route: ['/panel/lab-results', 'l1'] }
         ]);
-        const blocked = buildPetTodo(items, ctx(['Vaccinations.Update', 'LabResults.Update'], { mutationBlocked: true }));
+        const blocked = buildPetTodo(items, ctx(['Vaccinations.Update', 'VaccineDefinitions.Read', 'LabResults.Update'], { mutationBlocked: true }));
 
         expect(blocked.items.every((i) => i.action.label === 'Aç')).toBeTrue();
+    });
+
+    it('aşı kataloğu okuma izni yoksa Uygula gösterilmez (düzenleme rotası /notfound verirdi), kayıt açılır', () => {
+        const items = openItems({ vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z' }]) });
+
+        expect(buildPetTodo(items, ctx(['Vaccinations.Update'])).items[0].action).toEqual({ label: 'Aç', route: ['/panel/vaccinations', 'v1'] });
     });
 
     it('sonucu bekleyen lab "Sonuç gir", yorumu bekleyen lab "Yorum yaz" ile gelir (sunucu listesi, sınır yok)', () => {

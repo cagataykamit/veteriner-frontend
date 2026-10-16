@@ -17,6 +17,7 @@ import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/v
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 import { CLEAR_VACCINATIONS_LIST_LINK_QUERY, readVaccinationsListLinkFilters } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
+import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -25,7 +26,6 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
@@ -270,7 +270,8 @@ export class VaccinationsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
-    readonly canUpdateVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
+    /** Düzenleme rotasının yetki koşuluyla aynı (aşı kataloğu okuma dahil). */
+    readonly canUpdateVaccination = canOpenVaccinationEdit((c) => this.auth.hasOperationClaim(c));
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
 

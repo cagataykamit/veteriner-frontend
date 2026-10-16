@@ -16,7 +16,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ADMINISTRATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
 
 @Component({
     selector: 'app-vaccination-detail-page',
@@ -222,7 +223,8 @@ export class VaccinationDetailPageComponent implements OnInit {
     private lastId: string | null = null;
 
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly canUpdateVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
+    /** Düzenleme rotasının yetki koşuluyla aynı (aşı kataloğu okuma dahil). */
+    readonly canUpdateVaccination = canOpenVaccinationEdit((c) => this.auth.hasOperationClaim(c));
     readonly statusLabel = vaccinationStatusLabel;
     readonly statusSeverity = vaccinationStatusSeverity;
 

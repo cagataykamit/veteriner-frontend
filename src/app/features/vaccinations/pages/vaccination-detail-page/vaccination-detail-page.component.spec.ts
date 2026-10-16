@@ -3,6 +3,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { VACCINE_DEFINITIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { VaccinationDetailVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -76,5 +77,35 @@ describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
 
     it('ürünsüz (yalnız aşı kaydı) kayıtta uygulama kartı yok', () => {
         expect(render(null).querySelector('[data-testid="linked-administration"]')).toBeNull();
+    });
+});
+
+/** Düzenle, düzenleme rotasının yetki koşuluyla gösterilir (rota `VaccineDefinitions.Read` da ister). */
+describe('VaccinationDetailPageComponent — Düzenle', () => {
+    const editLink = (claims: string[]): HTMLElement | null => {
+        TestBed.configureTestingModule({
+            imports: [VaccinationDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
+                { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm(null)) } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(VaccinationDetailPageComponent);
+
+        fixture.detectChanges();
+
+        return (fixture.nativeElement as HTMLElement).querySelector('a[href="/panel/vaccinations/v1/edit"]');
+    };
+
+    it('Vaccinations.Update ve VaccineDefinitions.Read varsa görünür', () => {
+        expect(editLink([VACCINATIONS_UPDATE_CLAIM, VACCINE_DEFINITIONS_READ_CLAIM])).not.toBeNull();
+    });
+
+    it('yalnız Vaccinations.Update varsa görünmez (rota /notfound verirdi)', () => {
+        expect(editLink([VACCINATIONS_UPDATE_CLAIM])).toBeNull();
     });
 });

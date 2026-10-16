@@ -4,13 +4,13 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     VACCINE_DEFINITIONS_READ_CLAIM,
     VACCINATIONS_CREATE_CLAIM,
-    VACCINATIONS_READ_CLAIM,
-    VACCINATIONS_UPDATE_CLAIM
+    VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { VaccinationDetailPageComponent } from '@/app/features/vaccinations/pages/vaccination-detail-page/vaccination-detail-page.component';
 import { VaccinationEditPageComponent } from '@/app/features/vaccinations/pages/vaccination-edit-page/vaccination-edit-page.component';
 import { VaccinationNewPageComponent } from '@/app/features/vaccinations/pages/vaccination-new-page/vaccination-new-page.component';
 import { VaccinationsListPageComponent } from '@/app/features/vaccinations/pages/vaccinations-list-page/vaccinations-list-page.component';
+import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
 
 export default [
     {
@@ -41,9 +41,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM) && auth.hasOperationClaim(VACCINE_DEFINITIONS_READ_CLAIM)
-                ? true
-                : router.createUrlTree(['/notfound']);
+            return canOpenVaccinationEdit((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree(['/notfound']);
         }],
         component: VaccinationEditPageComponent
     },
