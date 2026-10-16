@@ -115,7 +115,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                     <th>Müşteri</th>
                                     <th>Hasta</th>
                                     <th>Test</th>
-                                    <th style="width: 6rem">İşlemler</th>
+                                    <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -141,10 +141,12 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                     </td>
                                     <td>{{ row.testName }}</td>
                                     <td>
-                                        <div class="flex flex-wrap gap-x-3 gap-y-1">
+                                        <div class="flex items-center gap-1">
                                             <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
-                                            @if (canEditRow(row)) {
-                                                <a [routerLink]="['/panel/lab-results', row.id, 'edit']" class="text-primary font-medium no-underline">{{ editLabel(row.status) }}</a>
+                                            @if (canEditRow(row) && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" [label]="editLabel(row.status)" [link]="['/panel/lab-results', row.id, 'edit']" />
+                                            } @else if (canEditRow(row) && ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" [label]="editLabel(row.status) + ' (salt okunur)'" [disabled]="true" />
                                             }
                                         </div>
                                     </td>
@@ -188,11 +190,13 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                     </div>
                                 </div>
                                 <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-3 min-w-0 break-words">{{ row.testName }}</div>
-                                <div class="flex justify-end gap-4 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    @if (canEditRow(row)) {
-                                        <a [routerLink]="['/panel/lab-results', row.id, 'edit']" class="text-primary font-medium no-underline">{{ editLabel(row.status) }}</a>
-                                    }
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
+                                    @if (canEditRow(row) && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" [label]="editLabel(row.status)" [link]="['/panel/lab-results', row.id, 'edit']" />
+                                    } @else if (canEditRow(row) && ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" [label]="editLabel(row.status) + ' (salt okunur)'" [disabled]="true" />
+                                    }
                                 </div>
                             </div>
                         }
@@ -251,8 +255,9 @@ export class LabResultsListPageComponent implements OnInit {
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
     readonly editLabel = labResultEditLabel;
 
+    /** Detay sayfasındaki Düzenle koşuluyla aynı; salt okunur durumda düğme pasif gösterilir. */
     canEditRow(row: { status: LabResultStatus | null }): boolean {
-        return this.canUpdateLabResult && !this.ro.mutationBlocked() && isLabResultEditable(row.status);
+        return this.canUpdateLabResult && isLabResultEditable(row.status);
     }
 
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
