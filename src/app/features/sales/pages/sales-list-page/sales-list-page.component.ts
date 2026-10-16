@@ -6,7 +6,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { TableModule } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { SALES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { SALES_CORRECT_CLAIM, SALES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { SaleVoidDialogComponent } from '@/app/features/sales/components/sale-void-dialog.component';
 import type { SaleListItemVm } from '@/app/features/sales/models/sale-vm.model';
 import { SalesService } from '@/app/features/sales/services/sales.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -39,7 +40,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppErrorStateComponent,
         AppEmptyStateComponent,
         AppStatusTagComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        SaleVoidDialogComponent
     ],
     template: `
         <div class="card">
@@ -94,7 +96,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                 <th class="text-right">Toplam</th>
                                 <th class="text-right">Ödenen</th>
                                 <th>Durum</th>
-                                <th style="width: 6rem"></th>
+                                <th style="width: 6rem">İşlemler</th>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
@@ -110,13 +112,24 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                     }
                                 </td>
                                 <td><app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" /></td>
-                                <td><app-row-action-button action="detail" [link]="['/panel/sales', row.id]" /></td>
+                                <td>
+                                    <div class="flex items-center gap-1">
+                                        <app-row-action-button action="detail" [link]="['/panel/sales', row.id]" />
+                                        @if (canVoid && !row.isVoided && !ro.mutationBlocked()) {
+                                            <app-row-action-button action="void" (pressed)="openVoid(row)" />
+                                        }
+                                    </div>
+                                </td>
                             </tr>
                         </ng-template>
                     </p-table>
                 </div>
             }
         </div>
+
+        @if (voidTarget(); as target) {
+            <app-sale-void-dialog [(visible)]="voidVisible" [sale]="target" (voided)="load()" />
+        }
     `
 })
 export class SalesListPageComponent implements OnInit {
@@ -124,7 +137,14 @@ export class SalesListPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly salesService = inject(SalesService);
 
-    readonly canCreate = inject(AuthService).hasOperationClaim(SALES_CREATE_CLAIM);
+    private readonly auth = inject(AuthService);
+    readonly canCreate = this.auth.hasOperationClaim(SALES_CREATE_CLAIM);
+    /** Detaydaki "İptal et" ile aynı yetki ve koşul (iptal edilmemiş satış, salt okunur değil). */
+    readonly canVoid = this.auth.hasOperationClaim(SALES_CORRECT_CLAIM);
+
+    /** İptal diyaloğunun açık olduğu satır. */
+    readonly voidTarget = signal<SaleListItemVm | null>(null);
+    readonly voidVisible = signal(false);
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -189,6 +209,11 @@ export class SalesListPageComponent implements OnInit {
                     this.loading.set(false);
                 }
             });
+    }
+
+    openVoid(row: SaleListItemVm): void {
+        this.voidTarget.set(row);
+        this.voidVisible.set(true);
     }
 
     soldAt(row: SaleListItemVm): string {

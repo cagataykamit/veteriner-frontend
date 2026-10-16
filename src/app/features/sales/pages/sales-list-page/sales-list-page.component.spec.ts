@@ -5,6 +5,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { mapPagedSalesToVm } from '@/app/features/sales/data/sale.mapper';
 import { SalesService } from '@/app/features/sales/services/sales.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
+import { isLastRowAction, rowDangerActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { SalesListPageComponent } from './sales-list-page.component';
 
 const paged = (over: { voided?: boolean } = {}) =>
@@ -33,6 +35,7 @@ const paged = (over: { voided?: boolean } = {}) =>
 describe('SalesListPageComponent', () => {
     let fixture: ComponentFixture<SalesListPageComponent>;
     let getSales: jasmine.Spy;
+    let voidSale: jasmine.Spy;
     let claims: Set<string>;
 
     const el = () => fixture.nativeElement as HTMLElement;
@@ -42,7 +45,7 @@ describe('SalesListPageComponent', () => {
             imports: [SalesListPageComponent],
             providers: [
                 provideRouter([]),
-                { provide: SalesService, useValue: { getSales } },
+                { provide: SalesService, useValue: { getSales, voidSale } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
@@ -56,6 +59,7 @@ describe('SalesListPageComponent', () => {
     beforeEach(() => {
         claims = new Set(['Sales.Read', 'Sales.Create']);
         getSales = jasmine.createSpy('getSales').and.returnValue(of(paged()));
+        voidSale = jasmine.createSpy('voidSale').and.returnValue(of({}));
     });
 
     it('satırı müşteri, ürün özeti ve toplamla listeler; iptaller varsayılan olarak istenmez', async () => {
@@ -82,6 +86,52 @@ describe('SalesListPageComponent', () => {
         claims = new Set(['Sales.Read']);
         await setup();
         expect(el().textContent).not.toContain('Hızlı satış');
+    });
+
+    /** ADR-026 madde 7: detaydaki "İptal et" ile aynı yetki, koşul ve diyalog. */
+    it('İptal simgesi Sales.Correct ile geçerli satışta Detay’dan sonra görünür; iptal edilmişte ve yetkisizken yoktur', async () => {
+        claims = new Set(['Sales.Read', 'Sales.Correct']);
+        await setup();
+        const voids = rowDangerActions(el());
+
+        expect(voids.length).toBe(1);
+        expect(voids[0].getAttribute('aria-label')).toBe('İptal et');
+        expect(isLastRowAction(voids[0])).toBeTrue();
+        expect(voids[0].closest('app-row-action-button')?.previousElementSibling?.querySelector('.fa-eye')).not.toBeNull();
+
+        TestBed.resetTestingModule();
+        getSales = jasmine.createSpy('getSales').and.returnValue(of(paged({ voided: true })));
+        await setup();
+        expect(rowDangerActions(el()).length).toBe(0);
+
+        TestBed.resetTestingModule();
+        claims = new Set(['Sales.Read']);
+        getSales = jasmine.createSpy('getSales').and.returnValue(of(paged()));
+        await setup();
+        expect(rowDangerActions(el()).length).toBe(0);
+    });
+
+    it('İptal tıklanınca satış iptal diyaloğu açılır, onaylanmadan servis çağrılmaz; onayda voidSale çağrılır ve liste yenilenir', async () => {
+        claims = new Set(['Sales.Read', 'Sales.Correct']);
+        await setup();
+        rowDangerActions(el())[0].click();
+        fixture.detectChanges();
+
+        const voidDialog = fixture.debugElement.query((d) => d.name === 'app-sale-void-dialog');
+
+        expect(voidDialog).not.toBeNull();
+        const dialog = fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
+
+        expect(dialog.visible()).toBeTrue();
+        expect(dialog.summary()).toBe('Peşin müşteri · ' + paged().items[0].totalText);
+        expect(voidSale).not.toHaveBeenCalled();
+
+        getSales.calls.reset();
+        dialog.form.controls.reason.setValue('Yanlış ürün okutuldu');
+        dialog.onSubmit();
+
+        expect(voidSale).toHaveBeenCalledOnceWith('s1', { reason: 'Yanlış ürün okutuldu', stockOutcome: 'StockReturned' });
+        expect(getSales).toHaveBeenCalledTimes(1);
     });
 
     it('boş sonuçta boş durum, hatada hata durumu gösterilir', async () => {
