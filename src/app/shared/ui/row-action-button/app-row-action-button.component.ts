@@ -15,15 +15,16 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
 /**
  * Liste satırı eylem simge düğmesi (ADR-026): metin yerine dolu simge, `aria-label` ve ipucu taşır.
  * `link` verilirse bağlantı, verilmezse `pressed` yayan düğmedir. Sil/İptal tehlike rengindedir.
+ * Devre dışı düğme `aria-disabled` ile işaretlenir; böylece ipucu (örn. "salt okunur") yine görünür.
  */
 @Component({
     selector: 'app-row-action-button',
     standalone: true,
     imports: [RouterLink, TooltipModule],
     template: `
-        @if (link(); as commands) {
+        @if (link() && !inactive()) {
             <a
-                [routerLink]="commands"
+                [routerLink]="link()"
                 [queryParams]="queryParams()"
                 class="row-action-button"
                 [class.row-action-button--danger]="danger()"
@@ -39,12 +40,13 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
                 type="button"
                 class="row-action-button"
                 [class.row-action-button--danger]="danger()"
-                [disabled]="disabled()"
+                [attr.aria-disabled]="inactive() || null"
+                [attr.aria-busy]="loading() || null"
                 [attr.aria-label]="text()"
                 [pTooltip]="text()"
                 tooltipPosition="top"
                 [attr.data-testid]="testId()"
-                (click)="pressed.emit()"
+                (click)="press()"
             >
                 <i [class]="iconClass()" aria-hidden="true"></i>
             </button>
@@ -74,7 +76,7 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
                 background-color var(--element-transition-duration),
                 color var(--element-transition-duration);
 
-            &:hover:not(:disabled) {
+            &:hover:not([aria-disabled='true']) {
                 background-color: var(--surface-hover);
                 color: var(--text-color);
             }
@@ -84,7 +86,7 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
                 outline-offset: -2px;
             }
 
-            &:disabled {
+            &[aria-disabled='true'] {
                 opacity: 0.5;
                 cursor: default;
             }
@@ -98,7 +100,7 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
         .row-action-button--danger {
             color: var(--p-red-600);
 
-            &:hover:not(:disabled) {
+            &:hover:not([aria-disabled='true']) {
                 background-color: color-mix(in srgb, var(--p-red-500) 12%, transparent);
                 color: var(--p-red-700);
             }
@@ -106,7 +108,7 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
             :host-context(.app-dark) & {
                 color: var(--p-red-400);
 
-                &:hover:not(:disabled) {
+                &:hover:not([aria-disabled='true']) {
                     background-color: color-mix(in srgb, var(--p-red-400) 16%, transparent);
                     color: var(--p-red-300);
                 }
@@ -120,12 +122,22 @@ export class AppRowActionButtonComponent {
     readonly label = input<string>();
     readonly link = input<string | readonly unknown[]>();
     readonly queryParams = input<Params>();
+    /** Bağlantı da devre dışıyken düğme olarak çizilir ve yönlendirmez. */
     readonly disabled = input(false);
+    /** Satır işlemi sürerken simge döner ve düğme basılamaz. */
+    readonly loading = input(false);
     readonly testId = input<string>();
     readonly pressed = output<void>();
 
     private readonly spec = computed(() => ROW_ACTIONS[this.action()]);
     protected readonly text = computed(() => this.label() ?? this.spec().label);
-    protected readonly iconClass = computed(() => `fa-solid fa-fw ${this.spec().icon}`);
+    protected readonly iconClass = computed(() => `fa-solid fa-fw ${this.loading() ? 'fa-spinner fa-spin' : this.spec().icon}`);
+    protected readonly inactive = computed(() => this.disabled() || this.loading());
     protected readonly danger = computed(() => this.spec().danger);
+
+    protected press(): void {
+        if (!this.inactive()) {
+            this.pressed.emit();
+        }
+    }
 }
