@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { PublicTopbarComponent, PUBLIC_NAV_LINKS } from './public-topbar.component';
+import { PUBLIC_NAV_LINKS } from '@/app/features/public/utils/public-navigation.utils';
+import { PublicTopbarComponent } from './public-topbar.component';
 
 describe('PublicTopbarComponent', () => {
     const setup = () => {

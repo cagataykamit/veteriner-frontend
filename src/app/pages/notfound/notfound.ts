@@ -30,7 +30,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                         <span class="public-notfound-code font-bold text-3xl">404</span>
                         <h1 class="text-surface-900 dark:text-surface-0 font-bold text-3xl lg:text-5xl mb-2">Sayfa bulunamadı</h1>
                         <div class="text-surface-600 dark:text-surface-200 mb-8">Aradığınız sayfa mevcut değil veya taşınmış olabilir.</div>
-                        <a [routerLink]="['/']" fragment="faq" class="w-full flex items-center py-8 border-surface-300 dark:border-surface-500 border-b">
+                        <a routerLink="/sss" class="w-full flex items-center py-8 border-surface-300 dark:border-surface-500 border-b">
                             <span class="public-notfound-icon-box flex justify-center items-center rounded-border" style="height: 3.5rem; width: 3.5rem">
                                 <i class="pi pi-fw pi-table text-2xl!"></i>
                             </span>
@@ -39,7 +39,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                                 <span class="text-surface-600 dark:text-surface-200 lg:text-xl">Merak edilen cevaplara göz atın.</span>
                             </span>
                         </a>
-                        <a routerLink="/pricing" class="w-full flex items-center py-8 border-surface-300 dark:border-surface-500 border-b">
+                        <a routerLink="/paketler" class="w-full flex items-center py-8 border-surface-300 dark:border-surface-500 border-b">
                             <span class="public-notfound-icon-box flex justify-center items-center rounded-border" style="height: 3.5rem; width: 3.5rem">
                                 <i class="pi pi-fw pi-question-circle text-2xl!"></i>
                             </span>

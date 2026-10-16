@@ -4,11 +4,9 @@ import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
-import { PUBLIC_HOME_FAQS, PUBLIC_HOME_FEATURES } from '@/app/features/public/utils/public-home-content.utils';
-import { PublicFooterComponent } from './components/public-footer.component';
-import { PublicTopbarComponent } from './components/public-topbar.component';
+import { PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
+import { PUBLIC_HOME_FEATURES } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_HOME_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
-import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
 @Component({
     selector: 'app-public-home-page',
@@ -16,15 +14,10 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
     imports: [
         RouterLink,
         ButtonModule,
-        RippleModule,
-        PublicTopbarComponent,
-        PublicFooterComponent
+        RippleModule
     ],
     template: `
-        <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen overflow-x-hidden">
-            <app-public-topbar />
-
-            <main id="icerik" class="relative">
+        <div class="relative">
                 <!-- Hero — Genesis SaaS gradient container -->
                 <section class="pt-3 md:pt-6" aria-labelledby="public-home-hero-title">
                     <div class="max-w-6xl mx-auto px-4">
@@ -167,7 +160,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                                 </div>
                                 <div class="public-hero-cta-secondary public-home-cta-secondary w-full sm:w-auto">
                                     <a
-                                        routerLink="/pricing"
+                                        routerLink="/paketler"
                                         pButton
                                         pRipple
                                         label="Paketleri gör"
@@ -258,9 +251,6 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                         </div>
                     </div>
                 </section>
-            </main>
-
-            <app-public-footer />
         </div>
     `,
 })
@@ -276,7 +266,6 @@ export class PublicHomePageComponent implements OnInit {
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, PUBLIC_HOME_PAGE_META, this.document);
-        removeOrphanedPrimeMenuPopupsFromBody(this.document);
     }
 
     toggleFaq(index: number): void {

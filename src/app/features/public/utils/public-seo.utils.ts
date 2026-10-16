@@ -1,25 +1,63 @@
 import { Meta, Title } from '@angular/platform-browser';
+import { PUBLIC_PATHS } from './public-navigation.utils';
 
 export interface PublicPageMetaOptions {
     readonly title: string;
     readonly description: string;
-    /** Örn. `/` veya `/pricing` — verilirse `link[rel=canonical]` güncellenir. */
+    /** Örn. `/` veya `/paketler` — verilirse `link[rel=canonical]` güncellenir. */
     readonly canonicalPath?: string;
     readonly noindex?: boolean;
 }
 
+/** Sayfa başına başlık ve açıklama (öneri belgesi 6.2). */
 export const PUBLIC_HOME_PAGE_META: PublicPageMetaOptions = {
     title: 'Vetinity — Veteriner klinik programı: günün akışı, kayıt defterleri, KVKK',
     description:
         'Veteriner kliniğinizin gününü tek ekranda yönetin: geliş, muayene, tahsilat, aşı ve ilaç kayıt defterleri, KVKK formları. 14 gün ücretsiz, kart gerekmez.',
-    canonicalPath: '/'
+    canonicalPath: PUBLIC_PATHS.home
 };
 
-export const PUBLIC_PRICING_PAGE_META: PublicPageMetaOptions = {
-    title: 'Paketler ve fiyat — Vetinity',
+export const PUBLIC_FEATURES_PAGE_META: PublicPageMetaOptions = {
+    title: 'Özellikler — Gelişten tahsilata bir günün akışı · Vetinity',
+    description: "Randevu ve randevusuz geliş, bekleme sırası, muayene, reçete, stok, tahsilat ve gün sonu: Vetinity'de bir ziyaretin yolculuğu.",
+    canonicalPath: PUBLIC_PATHS.features
+};
+
+export const PUBLIC_REGISTERS_PAGE_META: PublicPageMetaOptions = {
+    title: 'Kayıt defterleri ve KVKK — Vetinity',
     description:
-        'Veteriner kliniğiniz için Vetinity paketleri. 14 gün ücretsiz deneyin; pilot dönemi fiyatı için yazın.',
-    canonicalPath: '/pricing'
+        'Aşı, ilaç, narkotik/psikotropik, muayene ve reçete defterleri otomatik; KVKK aydınlatma ve açık rıza formları, rıza kaydı ve veri kopyası.',
+    canonicalPath: PUBLIC_PATHS.registersAndKvkk
+};
+
+export const PUBLIC_MIGRATION_PAGE_META: PublicPageMetaOptions = {
+    title: 'Eski programdan geçiş — Vetinity',
+    description: 'Excel veya CSV ile müşteri, hasta ve aşı geçmişinizi aktarın: sütun eşleme, kontrol, geri alma.',
+    canonicalPath: PUBLIC_PATHS.migration
+};
+
+export const PUBLIC_PACKAGES_PAGE_META: PublicPageMetaOptions = {
+    title: 'Paketler ve fiyat — Vetinity',
+    description: 'Veteriner kliniğiniz için Vetinity pilot dönemi paketi: tüm özellikler dahil, 14 gün ücretsiz deneme; pilot dönemi fiyatı için yazın.',
+    canonicalPath: PUBLIC_PATHS.packages
+};
+
+export const PUBLIC_FAQ_PAGE_META: PublicPageMetaOptions = {
+    title: 'Sık sorulan sorular — Vetinity',
+    description: 'Fiyat, veri güvenliği, geçiş, destek, sözleşme ve deneme hakkında yanıtlar.',
+    canonicalPath: PUBLIC_PATHS.faq
+};
+
+export const PUBLIC_CONTACT_PAGE_META: PublicPageMetaOptions = {
+    title: 'İletişim ve demo talebi — Vetinity',
+    description: 'Demo isteyin, pilot dönemi fiyatını sorun ya da geçiş dosyanıza birlikte bakalım.',
+    canonicalPath: PUBLIC_PATHS.contact
+};
+
+export const PUBLIC_ABOUT_PAGE_META: PublicPageMetaOptions = {
+    title: 'Hakkımızda ve destek — Vetinity',
+    description: "Vetinity'yi kim yapıyor, destek kanalı ve hukuki metinler.",
+    canonicalPath: PUBLIC_PATHS.about
 };
 
 export const AUTH_LOGIN_PAGE_META: PublicPageMetaOptions = {

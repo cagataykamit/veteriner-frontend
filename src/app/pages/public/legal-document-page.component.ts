@@ -3,8 +3,6 @@ import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { PublicTopbarComponent } from '@/app/pages/public/components/public-topbar.component';
-import { PublicFooterComponent } from '@/app/pages/public/components/public-footer.component';
 import { LegalDraftNoticeComponent } from '@/app/pages/public/components/legal-draft-notice.component';
 import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
 import {
@@ -16,7 +14,6 @@ import {
     type LegalSectionDef
 } from '@/app/features/public/utils/legal-documents.utils';
 import { setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
-import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 
 /**
  * Gizlilik politikası / kullanım şartları / veri işleme sözleşmesi; belge rota `data.legalDocument` ile seçilir.
@@ -25,13 +22,10 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 @Component({
     selector: 'app-legal-document-page',
     standalone: true,
-    imports: [RouterLink, PublicTopbarComponent, PublicFooterComponent, LegalDraftNoticeComponent],
+    imports: [RouterLink, LegalDraftNoticeComponent],
     template: `
-        <div class="public-page min-h-screen overflow-x-hidden bg-surface-50 dark:bg-surface-950">
-            <app-public-topbar />
-
-            <main id="icerik" class="mx-auto max-w-3xl px-4 pb-10 pt-2 md:px-6 md:pb-14 md:pt-3">
-                <article class="rounded-3xl border border-surface-200 bg-surface-0 p-5 md:p-8 dark:border-surface-700 dark:bg-surface-900">
+        <div class="mx-auto max-w-3xl px-4 pb-10 pt-8 md:px-6 md:pb-14 md:pt-12">
+                <article class="public-card p-5 md:p-8">
                     <app-legal-draft-notice />
 
                     <header class="mb-6 border-b border-surface-200 pb-4 dark:border-surface-700">
@@ -68,9 +62,6 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
                         </section>
                     }
                 </article>
-            </main>
-
-            <app-public-footer />
         </div>
     `
 })
@@ -109,7 +100,6 @@ export class LegalDocumentPageComponent implements OnInit {
             },
             this.document
         );
-        removeOrphanedPrimeMenuPopupsFromBody(this.document);
         this.legal
             .getCurrentVersions()
             .pipe(takeUntilDestroyed(this.destroyRef))

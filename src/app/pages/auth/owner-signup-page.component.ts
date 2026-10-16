@@ -74,7 +74,7 @@ import {
                             </div>
                             <p-button label="Giriş yap" styleClass="w-full mb-4 public-auth-submit" (onClick)="goToLogin()" />
                             <div class="text-center">
-                                <a routerLink="/pricing" class="public-brand-link no-underline text-sm">Paketlere dön</a>
+                                <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketlere dön</a>
                             </div>
                         } @else {
                             <div class="text-center mb-8">
@@ -106,7 +106,7 @@ import {
                                     <p class="text-sm text-muted-color m-0 mb-3">
                                         Deneme paketiyle başlayın. İsterseniz paketleri inceleyerek farklı bir planla devam edebilirsiniz.
                                     </p>
-                                    <a routerLink="/pricing" class="public-brand-link no-underline text-sm">Paketleri inceleyin</a>
+                                    <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketleri inceleyin</a>
                                 </div>
 
                                 <div>
@@ -174,7 +174,7 @@ import {
 
                                 <div class="text-center flex flex-col gap-2">
                                     <a routerLink="/auth/login" class="public-brand-link no-underline">Zaten hesabınız var mı? Giriş yapın</a>
-                                    <a routerLink="/pricing" class="text-muted-color font-medium no-underline text-sm">Paketlere dön</a>
+                                    <a routerLink="/paketler" class="text-muted-color font-medium no-underline text-sm">Paketlere dön</a>
                                 </div>
                             </div>
                         }

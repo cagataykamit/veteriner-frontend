@@ -168,7 +168,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                 </div>
                             }
                             <div class="public-auth-footer-link">
-                                <a routerLink="/pricing" class="public-brand-link no-underline text-sm">Hesap oluştur</a>
+                                <a routerLink="/auth/signup" class="public-brand-link no-underline text-sm">Hesap oluştur</a>
                             </div>
                         </form>
                     </div>

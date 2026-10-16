@@ -6,23 +6,8 @@ import { filter } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
+import { PUBLIC_MAIN_CONTENT_ID, PUBLIC_NAV_LINKS } from '@/app/features/public/utils/public-navigation.utils';
 import { LayoutService } from '@/app/layout/service/layout.service';
-
-export interface PublicNavLinkDef {
-    readonly label: string;
-    readonly routerLink: string;
-    readonly fragment?: string;
-}
-
-/** Üst menü bağlantıları (tasarım belgesi bölüm 4). Alt bilgi aynı listeyi kullanır. */
-export const PUBLIC_NAV_LINKS: readonly PublicNavLinkDef[] = [
-    { label: 'Özellikler', routerLink: '/', fragment: 'features' },
-    { label: 'SSS', routerLink: '/', fragment: 'faq' },
-    { label: 'Paketler', routerLink: '/pricing' }
-];
-
-/** Ana içeriğin kimliği; "İçeriğe atla" bağlantısı buraya odaklanır. */
-export const PUBLIC_MAIN_CONTENT_ID = 'icerik';
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -60,9 +45,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                     @for (link of navLinks; track link.label) {
                         <a
                             [routerLink]="link.routerLink"
-                            [fragment]="link.fragment"
                             routerLinkActive="router-link-active"
-                            [routerLinkActiveOptions]="{ exact: true }"
                             class="public-topbar-nav-link inline-flex min-h-11 items-center px-3 text-sm font-medium text-surface-700 no-underline dark:text-surface-300"
                         >
                             {{ link.label }}
@@ -71,8 +54,8 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                 </nav>
 
                 <div class="hidden items-center gap-2 lg:flex">
-                    <a routerLink="/auth/login" class="public-topbar-login-outline">Giriş yap</a>
-                    <a routerLink="/auth/signup" pButton pRipple label="Ücretsiz dene" class="public-topbar-cta !font-semibold"></a>
+                    <a routerLink="/auth/login" class="public-btn public-btn-ghost">Giriş yap</a>
+                    <a routerLink="/auth/signup" class="public-btn public-btn-primary">Ücretsiz dene</a>
                     <button
                         pButton
                         pRipple
@@ -145,7 +128,6 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                             <li>
                                 <a
                                     [routerLink]="link.routerLink"
-                                    [fragment]="link.fragment"
                                     class="public-mobile-menu-link flex min-h-12 items-center border-b border-surface-200 text-lg font-semibold text-surface-900 no-underline dark:border-surface-800 dark:text-surface-0"
                                     (click)="closeMenu()"
                                 >
@@ -157,21 +139,8 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                 </nav>
 
                 <div class="flex flex-col gap-3 px-4 pb-6 pt-4">
-                    <a
-                        routerLink="/auth/login"
-                        class="public-topbar-login-outline !min-h-12 w-full"
-                        (click)="closeMenu()"
-                    >
-                        Giriş yap
-                    </a>
-                    <a
-                        routerLink="/auth/signup"
-                        pButton
-                        pRipple
-                        label="Ücretsiz dene"
-                        class="public-topbar-cta w-full !min-h-12 !justify-center !font-semibold"
-                        (click)="closeMenu()"
-                    ></a>
+                    <a routerLink="/auth/login" class="public-btn public-btn-secondary w-full !min-h-12" (click)="closeMenu()">Giriş yap</a>
+                    <a routerLink="/auth/signup" class="public-btn public-btn-primary w-full !min-h-12" (click)="closeMenu()">Ücretsiz dene</a>
                 </div>
             </div>
         }
