@@ -39,12 +39,12 @@ import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.
                         >
                             <div class="md:col-span-3">
                                 <p class="public-on-brand-text font-semibold text-sm m-0 mb-4">Keşfet</p>
-                                <ul class="list-none p-0 m-0 space-y-2.5 text-sm">
+                                <ul class="m-0 list-none p-0 text-sm md:space-y-2.5">
                                     <li>
                                         <a
                                             routerLink="/"
                                             fragment="features"
-                                            class="public-on-brand-muted no-underline hover:text-[var(--public-on-brand)] transition-colors"
+                                            class="public-on-brand-muted inline-flex min-h-11 items-center no-underline transition-colors hover:text-[var(--public-on-brand)] md:min-h-0"
                                             >Özellikler</a
                                         >
                                     </li>
@@ -52,7 +52,7 @@ import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.
                                         <a
                                             routerLink="/"
                                             fragment="faq"
-                                            class="public-on-brand-muted no-underline hover:text-[var(--public-on-brand)] transition-colors"
+                                            class="public-on-brand-muted inline-flex min-h-11 items-center no-underline transition-colors hover:text-[var(--public-on-brand)] md:min-h-0"
                                             >SSS</a
                                         >
                                     </li>
@@ -61,25 +61,25 @@ import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.
 
                             <div class="md:col-span-4">
                                 <p class="public-on-brand-text font-semibold text-sm m-0 mb-4">Hesap</p>
-                                <ul class="list-none p-0 m-0 space-y-2.5 text-sm">
+                                <ul class="m-0 list-none p-0 text-sm md:space-y-2.5">
                                     <li>
                                         <a
                                             routerLink="/pricing"
-                                            class="public-on-brand-muted no-underline hover:text-[var(--public-on-brand)] transition-colors"
+                                            class="public-on-brand-muted inline-flex min-h-11 items-center no-underline transition-colors hover:text-[var(--public-on-brand)] md:min-h-0"
                                             >Paketler</a
                                         >
                                     </li>
                                     <li>
                                         <a
                                             routerLink="/auth/login"
-                                            class="public-on-brand-muted no-underline hover:text-[var(--public-on-brand)] transition-colors"
+                                            class="public-on-brand-muted inline-flex min-h-11 items-center no-underline transition-colors hover:text-[var(--public-on-brand)] md:min-h-0"
                                             >Giriş yap</a
                                         >
                                     </li>
                                     <li>
                                         <a
                                             routerLink="/auth/signup"
-                                            class="public-on-brand-muted no-underline hover:text-[var(--public-on-brand)] transition-colors"
+                                            class="public-on-brand-muted inline-flex min-h-11 items-center no-underline transition-colors hover:text-[var(--public-on-brand)] md:min-h-0"
                                             >Ücretsiz kayıt</a
                                         >
                                     </li>
@@ -96,7 +96,7 @@ import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.
                             @for (link of legalLinks; track link.path) {
                                 <a
                                     [routerLink]="link.path"
-                                    class="public-on-brand-subtle no-underline hover:text-[var(--public-on-brand)] transition-colors"
+                                    class="public-on-brand-subtle inline-flex min-h-11 items-center no-underline transition-colors hover:text-[var(--public-on-brand)] md:min-h-0"
                                     >{{ link.shortTitle }}</a
                                 >
                             }

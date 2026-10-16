@@ -339,9 +339,46 @@
 
 /* —— Topbar —— */
 
-.public-topbar-logo {
-    background: linear-gradient(145deg, var(--public-accent-strong), var(--public-accent));
-    color: var(--public-accent-contrast);
+/* Yapışkan üst çubuk: yarı saydam zemin + 1 px alt çizgi (tasarım belgesi bölüm 4) */
+.public-page .public-topbar {
+    background: color-mix(in srgb, var(--p-surface-0) 88%, transparent);
+    border-bottom: 1px solid var(--public-border);
+    backdrop-filter: blur(8px);
+}
+
+.app-dark .public-page .public-topbar {
+    background: color-mix(in srgb, var(--p-surface-950) 88%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--vetinity-soft-teal) 16%, var(--p-surface-800));
+}
+
+/* "İçeriğe atla": yalnız klavye odağında görünür */
+.public-page .public-skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -100%;
+    z-index: 60;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--vetinity-navy);
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.public-page .public-skip-link:focus-visible {
+    top: 0.75rem;
+    outline: 2px solid var(--vetinity-teal);
+    outline-offset: 2px;
+}
+
+.public-page .public-topbar-menu-button:focus-visible,
+.public-page .public-mobile-menu-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--public-topbar-nav-focus-ring);
+}
+
+.public-page .public-mobile-menu-link:hover {
+    color: var(--public-topbar-nav-hover-color);
 }
 
 .public-page .public-topbar-nav-link {
@@ -379,9 +416,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.25rem;
-    padding: 0.5rem 0.95rem;
-    border-radius: 0.625rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
     border: 1px solid rgba(15, 23, 42, 0.35);
     background: rgba(255, 255, 255, 0.72);
     color: #0f172a;
@@ -476,20 +513,10 @@
     color: #ffffff !important;
 }
 
-@media (min-width: 768px) {
-    .public-page .public-topbar-theme-toggle.p-button.p-button-rounded {
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        min-width: 2.5rem !important;
-    }
-}
-
-@media (max-width: 767.98px) {
-    .public-page .public-topbar-theme-toggle-mobile.p-button.p-button-rounded {
-        width: 2.375rem !important;
-        height: 2.375rem !important;
-        min-width: 2.375rem !important;
-    }
+.public-page .public-topbar-theme-toggle.p-button.p-button-rounded {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-width: 2.75rem !important;
 }
 
 /* —— Public home section headers (Özellikler, Modül vitrini) —— */
@@ -744,6 +771,13 @@
     background: var(--public-accent) !important;
     border-color: var(--public-accent) !important;
     color: var(--public-accent-contrast) !important;
+}
+
+/* Dokunma hedefi ≥ 44 px (WEB-002): tanıtım sayfalarındaki tüm düğme bağlantıları */
+.public-page a.public-topbar-cta.p-button,
+.public-page .public-hero-cta-primary > a.p-button,
+.public-page .public-hero-cta-secondary > a.p-button {
+    min-height: 2.75rem;
 }
 
 .public-page a.public-topbar-cta.p-button:hover,

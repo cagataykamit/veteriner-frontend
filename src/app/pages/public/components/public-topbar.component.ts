@@ -1,66 +1,166 @@
-import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { DOCUMENT } from '@angular/common';
+import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { filter } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
+export interface PublicNavLinkDef {
+    readonly label: string;
+    readonly routerLink: string;
+    readonly fragment?: string;
+}
+
+/** Üst menü bağlantıları (tasarım belgesi bölüm 4). Alt bilgi aynı listeyi kullanır. */
+export const PUBLIC_NAV_LINKS: readonly PublicNavLinkDef[] = [
+    { label: 'Özellikler', routerLink: '/', fragment: 'features' },
+    { label: 'SSS', routerLink: '/', fragment: 'faq' },
+    { label: 'Paketler', routerLink: '/pricing' }
+];
+
+/** Ana içeriğin kimliği; "İçeriğe atla" bağlantısı buraya odaklanır. */
+export const PUBLIC_MAIN_CONTENT_ID = 'icerik';
+
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Herkese açık üst çubuk: masaüstünde (≥992 px) bağlantılar ve düğmeler, altında logo + hamburger.
+ * Mobil menü tam ekran açılır; odak içeride kalır, Escape ile kapanır, rota değişince kapanır.
+ */
 @Component({
     selector: 'app-public-topbar',
     standalone: true,
-    imports: [RouterLink, ButtonModule, RippleModule],
+    imports: [RouterLink, RouterLinkActive, ButtonModule, RippleModule],
     template: `
-        <header class="w-full overflow-x-hidden">
-            <div
-                class="mx-auto flex max-w-6xl min-w-0 flex-col gap-2 px-4 py-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-4 md:gap-y-2 md:px-6 md:py-4"
-            >
-                <div class="flex w-full min-h-[2.5rem] items-center md:w-auto md:min-h-0 md:justify-start">
-                    <a routerLink="/" class="public-topbar-logo-link group flex shrink-0 items-center gap-3 no-underline">
-                        <img
-                            [src]="brand.compactLockup"
-                            alt="Vetinity"
-                            class="public-topbar-logo-img block h-[38px] w-auto shrink-0 object-contain dark:hidden md:h-[42px]"
-                            width="168"
-                            height="42"
-                        />
-                        <img
-                            [src]="brand.compactLockupDark"
-                            alt="Vetinity"
-                            class="public-topbar-logo-img hidden h-[38px] w-auto shrink-0 object-contain dark:block md:h-[42px]"
-                            width="168"
-                            height="42"
-                        />
-                    </a>
-                    <p-button
-                        type="button"
-                        (onClick)="toggleDarkMode()"
-                        [rounded]="true"
-                        [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
-                        severity="secondary"
-                        class="public-topbar-theme-toggle public-topbar-theme-toggle-mobile ml-auto mr-3 shrink-0 md:!hidden"
-                        [ariaLabel]="themeToggleLabel()"
-                    />
-                </div>
+        <a [href]="'#' + mainContentId" class="public-skip-link" (click)="skipToContent($event)">İçeriğe atla</a>
 
-                <nav
-                    class="hidden w-full min-w-0 flex-wrap items-center justify-center gap-x-0.5 gap-y-1 text-xs md:flex md:flex-1 md:justify-center md:gap-x-1 md:text-sm"
-                    aria-label="Ana navigasyon"
-                >
+        <header class="public-topbar sticky top-0 z-40 w-full">
+            <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:px-6">
+                <a routerLink="/" class="public-topbar-logo-link flex h-11 shrink-0 items-center no-underline" aria-label="Vetinity ana sayfa">
+                    <img
+                        [src]="brand.compactLockup"
+                        alt="Vetinity"
+                        class="block h-[38px] w-auto object-contain dark:hidden md:h-[42px]"
+                        width="168"
+                        height="42"
+                    />
+                    <img
+                        [src]="brand.compactLockupDark"
+                        alt="Vetinity"
+                        class="hidden h-[38px] w-auto object-contain dark:block md:h-[42px]"
+                        width="168"
+                        height="42"
+                    />
+                </a>
+
+                <nav class="hidden min-w-0 flex-1 items-center justify-center gap-x-1 lg:flex" aria-label="Ana navigasyon">
                     @for (link of navLinks; track link.label) {
                         <a
                             [routerLink]="link.routerLink"
                             [fragment]="link.fragment"
-                            class="public-topbar-nav-link shrink-0 px-2 py-1.5 font-medium text-surface-700 no-underline md:px-3 dark:text-surface-300"
+                            routerLinkActive="router-link-active"
+                            [routerLinkActiveOptions]="{ exact: true }"
+                            class="public-topbar-nav-link inline-flex min-h-11 items-center px-3 text-sm font-medium text-surface-700 no-underline dark:text-surface-300"
                         >
                             {{ link.label }}
                         </a>
                     }
                 </nav>
 
-                <div class="hidden w-full min-w-0 items-stretch gap-1.5 md:flex md:w-auto md:items-center md:gap-2 md:pr-2">
+                <div class="hidden items-center gap-2 lg:flex">
+                    <a routerLink="/auth/login" class="public-topbar-login-outline">Giriş yap</a>
+                    <a routerLink="/auth/signup" pButton pRipple label="Ücretsiz dene" class="public-topbar-cta !font-semibold"></a>
+                    <button
+                        pButton
+                        pRipple
+                        type="button"
+                        [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
+                        [rounded]="true"
+                        severity="secondary"
+                        class="public-topbar-theme-toggle ml-1"
+                        [attr.aria-label]="themeToggleLabel()"
+                        (click)="toggleDarkMode()"
+                    ></button>
+                </div>
+
+                <div class="flex items-center gap-1 lg:hidden">
+                    <button
+                        pButton
+                        pRipple
+                        type="button"
+                        [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
+                        [rounded]="true"
+                        severity="secondary"
+                        class="public-topbar-theme-toggle"
+                        [attr.aria-label]="themeToggleLabel()"
+                        (click)="toggleDarkMode()"
+                    ></button>
+                    <button
+                        #menuButton
+                        type="button"
+                        class="public-topbar-menu-button inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-surface-900 dark:text-surface-0"
+                        aria-controls="public-mobile-menu"
+                        [attr.aria-expanded]="menuOpen()"
+                        [attr.aria-label]="menuOpen() ? 'Menüyü kapat' : 'Menüyü aç'"
+                        (click)="toggleMenu()"
+                    >
+                        <i [class]="menuOpen() ? 'pi pi-times text-xl' : 'pi pi-bars text-xl'" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        @if (menuOpen()) {
+            <div
+                #mobileMenu
+                id="public-mobile-menu"
+                class="public-mobile-menu fixed inset-0 z-50 flex flex-col bg-surface-0 dark:bg-surface-950 lg:hidden"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Menü"
+                (keydown)="onMenuKeydown($event)"
+            >
+                <div class="flex h-16 items-center justify-between px-4">
+                    <a routerLink="/" class="flex h-11 items-center no-underline" aria-label="Vetinity ana sayfa" (click)="closeMenu()">
+                        <img [src]="brand.compactLockup" alt="" class="block h-[38px] w-auto dark:hidden" width="168" height="42" />
+                        <img [src]="brand.compactLockupDark" alt="" class="hidden h-[38px] w-auto dark:block" width="168" height="42" />
+                    </a>
+                    <button
+                        #closeButton
+                        type="button"
+                        class="public-topbar-menu-button inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-surface-900 dark:text-surface-0"
+                        aria-label="Menüyü kapat"
+                        (click)="closeMenu()"
+                    >
+                        <i class="pi pi-times text-xl" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <nav class="flex-1 overflow-y-auto px-4 pt-2" aria-label="Ana navigasyon">
+                    <ul class="m-0 list-none p-0">
+                        @for (link of navLinks; track link.label) {
+                            <li>
+                                <a
+                                    [routerLink]="link.routerLink"
+                                    [fragment]="link.fragment"
+                                    class="public-mobile-menu-link flex min-h-12 items-center border-b border-surface-200 text-lg font-semibold text-surface-900 no-underline dark:border-surface-800 dark:text-surface-0"
+                                    (click)="closeMenu()"
+                                >
+                                    {{ link.label }}
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+
+                <div class="flex flex-col gap-3 px-4 pb-6 pt-4">
                     <a
                         routerLink="/auth/login"
-                        class="public-topbar-login-outline flex-1 md:flex-none"
+                        class="public-topbar-login-outline !min-h-12 w-full"
+                        (click)="closeMenu()"
                     >
                         Giriş yap
                     </a>
@@ -68,39 +168,127 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                         routerLink="/auth/signup"
                         pButton
                         pRipple
-                        label="Ücretsiz başla"
-                        class="public-topbar-cta p-button-sm !flex-1 !justify-center !font-semibold md:!flex-none"
+                        label="Ücretsiz dene"
+                        class="public-topbar-cta w-full !min-h-12 !justify-center !font-semibold"
+                        (click)="closeMenu()"
                     ></a>
-                    <p-button
-                        type="button"
-                        (onClick)="toggleDarkMode()"
-                        [rounded]="true"
-                        [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
-                        severity="secondary"
-                        class="public-topbar-theme-toggle !hidden shrink-0 md:!inline-flex md:ml-3"
-                        [ariaLabel]="themeToggleLabel()"
-                    />
                 </div>
             </div>
-        </header>
+        }
     `
 })
 export class PublicTopbarComponent {
     private readonly layoutService = inject(LayoutService);
+    private readonly document = inject(DOCUMENT);
+    private readonly destroyRef = inject(DestroyRef);
+
+    private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
+    private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
+    private readonly mobileMenu = viewChild<ElementRef<HTMLElement>>('mobileMenu');
 
     readonly brand = VETINITY_BRAND_LOGOS;
+    readonly navLinks = PUBLIC_NAV_LINKS;
+    readonly mainContentId = PUBLIC_MAIN_CONTENT_ID;
 
     readonly isDarkTheme = computed(() => this.layoutService.layoutConfig().darkTheme);
-
     readonly themeToggleLabel = this.layoutService.themeToggleLabel;
 
-    readonly navLinks = [
-        { label: 'Özellikler', routerLink: ['/'], fragment: 'features' },
-        { label: 'SSS', routerLink: ['/'], fragment: 'faq' },
-        { label: 'Paketler', routerLink: ['/pricing'] }
-    ];
+    readonly menuOpen = signal(false);
+
+    constructor() {
+        inject(Router)
+            .events.pipe(
+                filter((e) => e instanceof NavigationStart),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe(() => this.closeMenu());
+        this.destroyRef.onDestroy(() => this.setBodyScrollLocked(false));
+    }
 
     toggleDarkMode(): void {
         this.layoutService.toggleDarkMode();
+    }
+
+    toggleMenu(): void {
+        if (this.menuOpen()) {
+            this.closeMenu();
+
+            return;
+        }
+
+        this.menuOpen.set(true);
+        this.setBodyScrollLocked(true);
+        // Panel bir sonraki render'da oluşur; odak kapatma düğmesine taşınır.
+        setTimeout(() => this.closeButton()?.nativeElement.focus(), 0);
+    }
+
+    closeMenu(): void {
+        if (!this.menuOpen()) {
+            return;
+        }
+
+        this.menuOpen.set(false);
+        this.setBodyScrollLocked(false);
+        this.menuButton()?.nativeElement.focus();
+    }
+
+    /** Escape kapatır; Tab/Shift+Tab odağı panel içinde döndürür. */
+    onMenuKeydown(event: KeyboardEvent): void {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            this.closeMenu();
+
+            return;
+        }
+
+        if (event.key !== 'Tab') {
+            return;
+        }
+
+        const panel = this.mobileMenu()?.nativeElement;
+
+        if (!panel) {
+            return;
+        }
+
+        const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+
+        if (focusable.length === 0) {
+            return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = this.document.activeElement;
+
+        if (event.shiftKey && (active === first || !panel.contains(active))) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && active === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+
+    /** "İçeriğe atla": ana içeriğe odaklanır (tarayıcı hash gezinmesi Angular rotasına düşmesin). */
+    skipToContent(event: Event): void {
+        const main = this.document.getElementById(this.mainContentId);
+
+        if (!main) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (!main.hasAttribute('tabindex')) {
+            main.setAttribute('tabindex', '-1');
+        }
+
+        main.focus();
+        main.scrollIntoView();
+    }
+
+    private setBodyScrollLocked(locked: boolean): void {
+        this.document.body.style.overflow = locked ? 'hidden' : '';
     }
 }

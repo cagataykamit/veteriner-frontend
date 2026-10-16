@@ -24,7 +24,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
         <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen overflow-x-hidden">
             <app-public-topbar />
 
-            <main class="relative">
+            <main id="icerik" class="relative">
                 <!-- Hero — Genesis SaaS gradient container -->
                 <section class="pt-3 md:pt-6" aria-labelledby="public-home-hero-title">
                     <div class="max-w-6xl mx-auto px-4">

@@ -30,7 +30,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
         <div class="public-page min-h-screen overflow-x-hidden bg-surface-50 dark:bg-surface-950">
             <app-public-topbar />
 
-            <main class="mx-auto max-w-3xl px-4 pb-10 pt-2 md:px-6 md:pb-14 md:pt-3">
+            <main id="icerik" class="mx-auto max-w-3xl px-4 pb-10 pt-2 md:px-6 md:pb-14 md:pt-3">
                 <article class="rounded-3xl border border-surface-200 bg-surface-0 p-5 md:p-8 dark:border-surface-700 dark:bg-surface-900">
                     <app-legal-draft-notice />
 

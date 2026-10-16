@@ -22,7 +22,7 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
         <div class="public-page min-h-screen overflow-x-hidden bg-surface-50 dark:bg-surface-950">
             <app-public-topbar />
 
-            <main class="mx-auto max-w-6xl px-4 pb-10 pt-2 md:px-6 md:pb-14 md:pt-3">
+            <main id="icerik" class="mx-auto max-w-6xl px-4 pb-10 pt-2 md:px-6 md:pb-14 md:pt-3">
                 <header class="pricing-header mx-auto mb-6 max-w-2xl rounded-3xl px-4 pb-6 pt-5 text-center md:mb-8 md:pb-8 md:pt-6">
                     <h1 class="m-0 text-3xl font-bold leading-tight text-surface-900 dark:text-surface-0 md:text-4xl">Paketler</h1>
                     <p class="mt-3 text-base text-muted-color md:text-lg">Kliniğinizin büyüklüğüne göre uygun planı seçin.</p>
