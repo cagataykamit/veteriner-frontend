@@ -28,7 +28,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_CREATE_CLAIM, PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type PaymentsListState = {
@@ -133,7 +133,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                     <th>Para birimi</th>
                                     <th>Yöntem</th>
                                     <th>Ödeme tarihi</th>
-                                    <th>İşlemler</th>
+                                    <th style="width: 10rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -161,6 +161,11 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                     <td class="whitespace-nowrap">
                                         <div class="flex items-center gap-1">
                                             <app-row-action-button action="detail" [link]="['/panel/payments', row.id]" />
+                                            @if (canUpdatePayment && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" [link]="['/panel/payments', row.id, 'edit']" />
+                                            } @else if (canUpdatePayment && ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                            }
                                             @if (canVoid && !ro.mutationBlocked()) {
                                                 <app-row-action-button action="void" (pressed)="openVoid(row)" />
                                             }
@@ -210,6 +215,11 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 </div>
                                 <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/payments', row.id]" />
+                                    @if (canUpdatePayment && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" [link]="['/panel/payments', row.id, 'edit']" />
+                                    } @else if (canUpdatePayment && ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                    }
                                     @if (canVoid && !ro.mutationBlocked()) {
                                         <app-row-action-button action="void" (pressed)="openVoid(row)" />
                                     }
@@ -287,6 +297,7 @@ export class PaymentsListPageComponent implements OnInit {
         { label: 'Havale / EFT', value: 'transfer' }
     ];
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
+    readonly canUpdatePayment = this.auth.hasOperationClaim(PAYMENTS_UPDATE_CLAIM);
     readonly canVoid = this.auth.hasOperationClaim(PAYMENTS_CORRECT_CLAIM);
 
     /** İptal diyaloğunun açık olduğu satır. */

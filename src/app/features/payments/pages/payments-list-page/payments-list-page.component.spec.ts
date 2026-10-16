@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -114,6 +116,36 @@ describe('PaymentsListPageComponent — iptal', () => {
         expect(cmp.voidSummary()).toContain('Ali Veli');
         await firstValueFrom(cmp.voidPayment('Yanlış tutar girildi'));
         expect(payments.voidPayment).toHaveBeenCalledOnceWith('p1', 'Yanlış tutar girildi');
+    });
+
+    /** ADR-026 madde 6: Düzenle, detay sayfasındaki Düzenle ile aynı yetki ve salt okunur koşuluyla; sıra Detay, Düzenle, İptal et. */
+    it("Payments.Update varsa Düzenle Detay'dan hemen sonra, İptal et'ten önce gelir ve düzenleme sayfasına gider", async () => {
+        claims.add(PAYMENTS_UPDATE_CLAIM);
+        claims.add('Payments.Correct');
+        await setup();
+        const edits = rowEditActions(fixture.nativeElement);
+
+        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+
+        for (const edit of edits) {
+            expect(edit.getAttribute('href')).toBe('/panel/payments/p1/edit');
+            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(edit.closest('app-row-action-button')!.nextElementSibling!.querySelector('.fa-ban')).not.toBeNull();
+        }
+    });
+
+    it('Payments.Update yoksa Düzenle görünmez; salt okunur kiracıda pasiftir', async () => {
+        await setup();
+        expect(rowEditActions(fixture.nativeElement).length).toBe(0);
+        fixture.destroy();
+        TestBed.resetTestingModule();
+        claims.add(PAYMENTS_UPDATE_CLAIM);
+        mutationBlocked = true;
+        await setup();
+        const edits = rowEditActions(fixture.nativeElement);
+
+        expect(edits.length).toBe(2);
+        expect(edits.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
     });
 
     it('iptal sonrası liste yeniden okunur', async () => {
