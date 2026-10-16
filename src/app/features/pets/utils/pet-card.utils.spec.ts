@@ -283,7 +283,7 @@ describe('buildPetTodo', () => {
         expect(buildPetTodo(openItems({ outstanding: forbidden }), ctx([])).forbidden).toBeFalse();
     });
 
-    it('vefat eden hastanın açık randevusu bilgi satırıdır: en yakın tarih, randevu listesine (hasta süzgeçli) tek eylem; sayı verilmez', () => {
+    it('vefat eden hastanın açık randevusu bilgi satırıdır: en yakın tarih, randevu listesine (hasta + planlı + bugünden itibaren süzgeçli) tek eylem; sayı verilmez', () => {
         const nextAppointment = { state: 'Ok', data: { id: 'a1', scheduledAtUtc: '2026-10-20T09:00:00Z', durationMinutes: 30 } };
         const view = buildPetTodo(openItems({ status: 'Deceased', nextAppointment, outstanding: outstanding(100, 0) }), ctx(['Payments.Create'], { emphasis: 'frontDesk' }));
 
@@ -293,7 +293,7 @@ describe('buildPetTodo', () => {
         expect(item.tone).toBe('info');
         expect(item.title).toBe('Vefat eden hastanın açık randevusu var');
         expect(item.detail).toContain('En yakını: 20.10.2026');
-        expect(item.action).toEqual({ label: 'Randevuları gör', route: ['/panel/appointments'], queryParams: { petId: 'p1' } });
+        expect(item.action).toEqual({ label: 'Randevuları gör', route: ['/panel/appointments'], queryParams: { petId: 'p1', status: '0', fromDate: '2026-10-14' } });
 
         expect(buildPetTodo(openItems({ nextAppointment }), ctx([])).items).withContext('aktif hastada randevu başlıktadır').toEqual([]);
         expect(buildPetTodo(openItems({ status: 'Deceased' }), ctx([])).items).withContext('açık randevu yok').toEqual([]);

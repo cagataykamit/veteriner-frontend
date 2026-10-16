@@ -14,6 +14,7 @@ import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pe
 import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
+import { upcomingScheduledAppointmentsLinkQuery } from '@/app/features/appointments/utils/appointments-list-link.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -231,7 +232,12 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
             icon: 'pi pi-calendar',
             title: 'Vefat eden hastanın açık randevusu var',
             detail: `En yakını: ${formatUtcIsoAsLocalDateTimeDisplay(nextAppointment.scheduledAtUtc)}`,
-            action: { label: 'Randevuları gör', route: ['/panel/appointments'], queryParams: { petId: ctx.petId } }
+            // Liste, satırın tanımıyla aynı kümeyi gösterir: bu hastanın bugünden itibaren planlı randevuları.
+            action: {
+                label: 'Randevuları gör',
+                route: ['/panel/appointments'],
+                queryParams: { petId: ctx.petId, ...upcomingScheduledAppointmentsLinkQuery(ctx.now ?? new Date()) }
+            }
         });
     }
 

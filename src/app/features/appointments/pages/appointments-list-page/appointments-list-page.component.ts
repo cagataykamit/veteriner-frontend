@@ -19,6 +19,7 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import { CLEAR_APPOINTMENTS_LIST_LINK_QUERY, readAppointmentsListLinkFilters } from '@/app/features/appointments/utils/appointments-list-link.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -297,8 +298,9 @@ export class AppointmentsListPageComponent implements OnInit {
 
     ngOnInit(): void {
         const restored = this.restoreStateFromSessionStorage();
+        const linked = this.applyLinkFiltersFromQuery();
 
-        if (!restored) {
+        if (!restored || linked) {
             this.currentPage.set(1);
             this.first.set(0);
         }
@@ -474,6 +476,30 @@ export class AppointmentsListPageComponent implements OnInit {
 
     isToDateActive(): boolean {
         return !!this.activeToDate().trim();
+    }
+
+    /**
+     * Karttan gelen derin bağlantı (`status`, `fromDate`, `toDate`) oturumdaki süzgeçlerin yerine geçer; böylece liste kartın gösterdiği kümeyle aynıdır.
+     * Uygulanınca adres çubuğundan kaldırılır, sonraki süzgeç değişikliklerini ezmesin.
+     */
+    private applyLinkFiltersFromQuery(): boolean {
+        const filters = readAppointmentsListLinkFilters(this.route.snapshot.queryParamMap);
+
+        if (!filters) {
+            return false;
+        }
+
+        this.searchInput = '';
+        this.statusFilter = filters.status;
+        this.fromDateInput = filters.fromDate;
+        this.toDateInput = filters.toDate;
+        this.activeSearch.set('');
+        this.activeFromDate.set(filters.fromDate);
+        this.activeToDate.set(filters.toDate);
+        this.persistStateToSessionStorage(1, this.pageSize());
+        void this.router.navigate([], { queryParams: CLEAR_APPOINTMENTS_LIST_LINK_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
+
+        return true;
     }
 
     private restoreStateFromSessionStorage(): boolean {
