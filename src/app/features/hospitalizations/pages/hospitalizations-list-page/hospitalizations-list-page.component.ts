@@ -24,6 +24,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { HOSPITALIZATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type ActiveFilterUi = 'all' | 'active' | 'discharged';
@@ -123,7 +125,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                     <th>Müşteri</th>
                                     <th>Hasta</th>
                                     <th>Neden</th>
-                                    <th style="width: 6rem">İşlemler</th>
+                                    <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -156,7 +158,16 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                     </td>
                                     <td>{{ row.reason }}</td>
                                     <td>
-                                        <app-row-action-button action="detail" [link]="['/panel/hospitalizations', row.id]" />
+                                        <div class="flex items-center gap-1">
+                                            <app-row-action-button action="detail" [link]="['/panel/hospitalizations', row.id]" />
+                                            @if (canUpdateHospitalization && row.isActive) {
+                                                @if (ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                                } @else {
+                                                    <app-row-action-button action="edit" [link]="['/panel/hospitalizations', row.id, 'edit']" />
+                                                }
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -203,8 +214,15 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                         <span class="text-muted-color">Taburcu</span>
                                     }
                                 </div>
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/hospitalizations', row.id]" />
+                                    @if (canUpdateHospitalization && row.isActive) {
+                                        @if (ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                        } @else {
+                                            <app-row-action-button action="edit" [link]="['/panel/hospitalizations', row.id, 'edit']" />
+                                        }
+                                    }
                                 </div>
                             </div>
                         }
@@ -230,7 +248,10 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
 export class HospitalizationsListPageComponent implements OnInit {
     protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
+    /** Detay sayfasıyla aynı: yalnız aktif (taburcu edilmemiş) yatış düzenlenir. */
+    readonly canUpdateHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM);
 
     private readonly hospitalizationsService = inject(HospitalizationsService);
     private readonly route = inject(ActivatedRoute);
