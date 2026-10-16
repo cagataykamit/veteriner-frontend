@@ -66,6 +66,19 @@ describe('PetSummaryCardComponent', () => {
         expect(section(el, 'assessment').textContent).toContain('Otitis externa');
     });
 
+    it('vadesi geçmiş aşı sunucu isOverdue=false gönderdiğinde (vefat eden hasta) "Gecikmiş" işareti çıkmaz, vade görünür', () => {
+        const el = render({
+            ...ok,
+            vaccinations: {
+                state: 'Ok',
+                data: { lastApplied: null, nextDue: { id: 'v2', vaccineName: 'Karma', dueAtUtc: '2026-09-01T00:00:00Z', isOverdue: false } }
+            }
+        });
+
+        expect(section(el, 'vaccinations').textContent).toContain('Karma');
+        expect(section(el, 'vaccinations').querySelector('[data-testid="vaccine-overdue"]')).toBeNull();
+    });
+
     it('vital ve değerlendirme yoksa değer uydurulmaz, boş durum gösterilir; muayene yoksa "Kayıt yok"', () => {
         let el = render(ok, { lastExamination: exam({ temperatureC: null, heartRateBpm: null, respiratoryRatePerMin: null, assessment: '—' }) });
 
