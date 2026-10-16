@@ -29,7 +29,7 @@ import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type AppointmentListState = {
@@ -134,7 +134,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                     <th>Hasta</th>
                                     <th>Randevu Türü</th>
                                     <th>Durum</th>
-                                    <th>İşlem</th>
+                                    <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -162,7 +162,14 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                         <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                     </td>
                                     <td>
-                                        <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
+                                        <div class="flex items-center gap-1">
+                                            <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
+                                            @if (canRescheduleAppointment && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" [link]="['/panel/appointments', row.id, 'edit']" />
+                                            } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -206,8 +213,13 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                 <div class="text-sm text-muted-color mb-3 min-w-0 break-words">
                                     <span class="font-medium">Tür: </span>{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}
                                 </div>
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
+                                    @if (canRescheduleAppointment && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" [link]="['/panel/appointments', row.id, 'edit']" />
+                                    } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                    }
                                 </div>
                             </div>
                         }
@@ -292,6 +304,7 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly canCreateAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM);
+    readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly hasActiveFilters = computed(
         () => !!this.activeSearch().trim() || !!this.statusFilter.trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim()
     );
