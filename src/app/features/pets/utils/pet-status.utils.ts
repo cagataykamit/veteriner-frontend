@@ -21,11 +21,31 @@ export function petLifeStatusLabel(status: PetLifeStatus): string {
     return status === 'Deceased' ? 'Vefat' : 'Aktif';
 }
 
-/** Hayvan listesi durum süzgeci: değer verilmezse sunucu tümünü döndürür (önceki davranış). */
-export const PET_LIFE_STATUS_FILTER_OPTIONS: ReadonlyArray<{ label: string; value: PetLifeStatus }> = [
-    { label: 'Aktif', value: 'Active' },
-    { label: 'Vefat', value: 'Deceased' }
+/** Hasta listesi durum süzgeci: `All` sunucuya `status` göndermez (sunucu varsayılanı tümü). */
+export type PetListStatusFilter = PetLifeStatus | 'All';
+
+/** Hasta listesi ilk açılışta yaşayanları gösterir (ADR-025 madde 1). */
+export const PET_LIST_DEFAULT_STATUS: PetListStatusFilter = 'Active';
+
+export const PET_LIFE_STATUS_FILTER_OPTIONS: ReadonlyArray<{ label: string; value: PetListStatusFilter }> = [
+    { label: 'Yaşayanlar', value: 'Active' },
+    { label: 'Vefat edenler', value: 'Deceased' },
+    { label: 'Tümü', value: 'All' }
 ];
+
+/** Sorgu parametresi / saklanan değer (`all`, `active`, `deceased`; büyük-küçük harf duyarsız) → süzgeç; tanınmayan → `null`. */
+export function parsePetListStatusFilter(raw: unknown): PetListStatusFilter | null {
+    switch (typeof raw === 'string' ? normalizeLookupKey(raw) : '') {
+        case 'all':
+            return 'All';
+        case 'active':
+            return 'Active';
+        case 'deceased':
+            return 'Deceased';
+        default:
+            return null;
+    }
+}
 
 export type PetCanonicalGender = 'male' | 'female';
 

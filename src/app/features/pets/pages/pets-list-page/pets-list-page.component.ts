@@ -15,7 +15,7 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { PET_LIFE_STATUS_FILTER_OPTIONS, type PetLifeStatus } from '@/app/features/pets/utils/pet-status.utils';
+import { PET_LIFE_STATUS_FILTER_OPTIONS, PET_LIST_DEFAULT_STATUS, parsePetListStatusFilter, type PetListStatusFilter } from '@/app/features/pets/utils/pet-status.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -30,7 +30,7 @@ import { PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 type PetsListState = {
     search: string;
     speciesId: string;
-    /** Boş = tümü (önceki davranış; vefat edenler rozetle ayrışır). */
+    /** Yoksa varsayılan (Yaşayanlar, ADR-025); `All` = tümü, vefat edenler rozetle ayrışır. */
     status?: string;
     page: number;
     pageSize: number;
@@ -97,9 +97,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                     [(ngModel)]="statusInput"
                                     optionLabel="label"
                                     optionValue="value"
-                                    [placeholder]="copy.filterPlaceholderAll"
                                     styleClass="w-full"
-                                    [showClear]="true"
                                     (ngModelChange)="scheduleApply()" />
                             </app-filter-field>
                         </div>
@@ -253,11 +251,11 @@ export class PetsListPageComponent implements OnInit {
     readonly activeSpeciesId = signal('');
     /** Yalnız müşteri kartındaki "Tümü →" bağlantısından (`?clientId=`) gelir; sahip araması "Arama" kutusundadır. */
     readonly activeClientId = signal('');
-    readonly activeStatus = signal<PetLifeStatus | ''>('');
+    readonly activeStatus = signal<PetListStatusFilter>(PET_LIST_DEFAULT_STATUS);
 
     searchInput = '';
     speciesIdInput = '';
-    statusInput: PetLifeStatus | '' = '';
+    statusInput: PetListStatusFilter = PET_LIST_DEFAULT_STATUS;
     readonly statusOptions = [...PET_LIFE_STATUS_FILTER_OPTIONS];
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
     readonly canCreatePet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
@@ -282,6 +280,14 @@ export class PetsListPageComponent implements OnInit {
             this.first.set(0);
         }
 
+        // Bağlantıyla gelen `?status=all|active|deceased` seçilir; müşteri kartının "Tümü →" bağlantısı (`?clientId`) önceki davranışı korur: o müşterinin tüm hastaları.
+        const linkedStatus = parsePetListStatusFilter(this.route.snapshot.queryParamMap.get('status')) ?? (contextClientId ? 'All' : null);
+
+        if (linkedStatus) {
+            this.statusInput = linkedStatus;
+            this.activeStatus.set(linkedStatus);
+        }
+
         this.loadSpeciesOptions();
         this.suppressNextLazy = true;
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
@@ -290,7 +296,7 @@ export class PetsListPageComponent implements OnInit {
     applyFilters(): void {
         this.activeSearch.set(this.searchInput.trim());
         this.activeSpeciesId.set(this.speciesIdInput.trim());
-        this.activeStatus.set(this.statusInput ?? '');
+        this.activeStatus.set(this.statusInput ?? PET_LIST_DEFAULT_STATUS);
         this.first.set(0);
         this.currentPage.set(1);
         this.persistStateToSessionStorage(1, this.pageSize());
@@ -300,11 +306,11 @@ export class PetsListPageComponent implements OnInit {
     resetFilters(): void {
         this.searchInput = '';
         this.speciesIdInput = '';
-        this.statusInput = '';
+        this.statusInput = PET_LIST_DEFAULT_STATUS;
         this.activeSearch.set('');
         this.activeSpeciesId.set('');
         this.activeClientId.set('');
-        this.activeStatus.set('');
+        this.activeStatus.set(PET_LIST_DEFAULT_STATUS);
         this.first.set(0);
         this.currentPage.set(1);
         this.clearStateFromSessionStorage();
@@ -403,7 +409,7 @@ export class PetsListPageComponent implements OnInit {
                 search: search || undefined,
                 speciesId: speciesId || undefined,
                 clientId: clientId || undefined,
-                status: status || undefined
+                status: status === 'All' ? undefined : status
             })
             .subscribe({
                 next: (r) => {
@@ -450,7 +456,7 @@ export class PetsListPageComponent implements OnInit {
     }
 
     isStatusActive(): boolean {
-        return !!this.activeStatus();
+        return this.activeStatus() !== PET_LIST_DEFAULT_STATUS;
     }
 
     private restoreStateFromSessionStorage(): boolean {
@@ -473,7 +479,7 @@ export class PetsListPageComponent implements OnInit {
 
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.speciesIdInput = typeof parsed.speciesId === 'string' ? parsed.speciesId : '';
-            this.statusInput = parsed.status === 'Active' || parsed.status === 'Deceased' ? parsed.status : '';
+            this.statusInput = parsePetListStatusFilter(parsed.status) ?? PET_LIST_DEFAULT_STATUS;
             this.activeSearch.set(this.searchInput.trim());
             this.activeSpeciesId.set(this.speciesIdInput.trim());
             this.activeStatus.set(this.statusInput);
