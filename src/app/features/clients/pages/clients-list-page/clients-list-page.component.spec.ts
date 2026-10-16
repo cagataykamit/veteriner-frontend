@@ -170,6 +170,7 @@ describe('ClientsListPageComponent — satır eylemleri', () => {
 
         expect(el.textContent).not.toContain('Detay');
         expect(details.length).withContext('tablo + mobil kart').toBe(2);
+
         for (const link of details) {
             expect(link.getAttribute('href')).toBe('/panel/clients/c1');
             expect(link.querySelector('i')!.classList).toContain('fa-eye');
