@@ -1,0 +1,71 @@
+<div class="portal-stack">
+    <h1 class="portal-title">Randevularım</h1>
+
+    @if (session.activeLink()) {
+        <div class="portal-segmented" role="tablist" aria-label="Randevu dönemi">
+            @for (tab of tabs; track tab.scope) {
+                <button
+                    type="button"
+                    role="tab"
+                    [id]="'appointments-tab-' + tab.scope"
+                    [class.is-active]="activeScope() === tab.scope"
+                    [attr.aria-selected]="activeScope() === tab.scope"
+                    aria-controls="appointments-panel"
+                    (click)="selectTab(tab.scope)"
+                >
+                    {{ tab.label }}
+                </button>
+            }
+        </div>
+
+        <div id="appointments-panel" role="tabpanel" class="portal-stack" [attr.aria-labelledby]="'appointments-tab-' + activeScope()">
+            @switch (list.state()) {
+                @case ('loading') {
+                    <portal-skeleton [rows]="3" message="Randevularınız yükleniyor…" />
+                }
+                @case ('error') {
+                    <portal-error-state [message]="list.error()" (retry)="list.retry()" />
+                }
+                @default {
+                    @if (list.items().length) {
+                        <ul class="portal-list" data-testid="appointment-list">
+                            @for (a of list.items(); track a.appointmentId) {
+                                <li class="portal-row">
+                                    <div class="portal-row-head">
+                                        <p class="portal-row-title">{{ when(a) }}</p>
+                                        <span class="portal-badge" [class]="'portal-badge--' + status(a).tone">{{ status(a).label }}</span>
+                                    </div>
+                                    <p class="portal-muted">{{ detail(a) }}</p>
+                                    @if (showClinic()) {
+                                        <p class="portal-muted"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> {{ a.clinicName }}</p>
+                                    }
+                                </li>
+                            }
+                        </ul>
+
+                        @if (list.lastPage(); as page) {
+                            <p class="portal-muted portal-center">{{ page.totalItems }} randevudan {{ list.items().length }} tanesi gösteriliyor</p>
+                        }
+                        @if (list.moreState() === 'error') {
+                            <p class="portal-field-error portal-center" role="alert">{{ list.error() }}</p>
+                        }
+                        @if (list.hasMore()) {
+                            <p-button
+                                [label]="list.moreState() === 'error' ? 'Tekrar dene' : 'Daha fazla göster'"
+                                severity="secondary"
+                                [outlined]="true"
+                                styleClass="portal-button-block"
+                                [loading]="list.moreState() === 'loading'"
+                                (onClick)="list.moreState() === 'error' ? list.retry() : list.loadMore()"
+                            />
+                        }
+                    } @else {
+                        <portal-empty-state title="Randevu yok" [message]="emptyMessage()" icon="fa-calendar-days" />
+                    }
+                }
+            }
+        </div>
+    } @else {
+        <portal-empty-state title="Bağlı klinik yok" message="Kliniğinizden yeni bir portal daveti isteyebilirsiniz." icon="fa-hospital" />
+    }
+</div>
