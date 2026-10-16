@@ -16,6 +16,7 @@ const template = (over: Partial<KvkkFormTemplateVm> = {}): KvkkFormTemplateVm =>
     updatedAtUtc: null,
     maxLength: 20000,
     placeholders: [],
+    textVersion: 2,
     ...over
 });
 
@@ -57,6 +58,18 @@ describe('ClientKvkkFormPageComponent', () => {
         expect(el().querySelector('[data-testid="kvkk-form-signature"]')?.textContent).toContain('Ali Veli');
         expect(el().querySelector('[data-testid="kvkk-default-warning"]')).toBeNull();
         expect(el().querySelector('[data-testid="kvkk-print"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="kvkk-form-text-version"]')?.textContent).toContain('Metin sürümü: 2');
+    });
+
+    it('metin sürümü (ADR-032): varsayılan metin 0 "Varsayılan metin" basılır; sürüm gelmezse satır yok', () => {
+        getTemplate.and.returnValue(of(template({ isDefault: true, textVersion: 0 })));
+        create();
+        expect(el().querySelector('[data-testid="kvkk-form-text-version"]')?.textContent).toContain('Metin sürümü: Varsayılan metin');
+
+        TestBed.resetTestingModule();
+        getTemplate.and.returnValue(of(template({ textVersion: null })));
+        create();
+        expect(el().querySelector('[data-testid="kvkk-form-text-version"]')).toBeNull();
     });
 
     it('varsayılan taslak metinde yazdırmadan önce uyarı; düzenleme bağlantısı yalnız Clinics.Update ile', () => {

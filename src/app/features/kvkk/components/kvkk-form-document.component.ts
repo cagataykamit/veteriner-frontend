@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { fillKvkkFormTemplate, KVKK_TEMPLATE_KINDS, type KvkkTemplateKind } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { fillKvkkFormTemplate, KVKK_TEMPLATE_KINDS, kvkkTextVersionLabel, type KvkkTemplateKind } from '@/app/features/kvkk/utils/kvkk-form.utils';
 
 /**
  * Yazdırılan KVKK belgesi: başlıkta klinik adı ve şablon metni (yer tutucular doldurulmuş, düz metin; HTML yorumlanmaz).
@@ -38,6 +38,10 @@ import { fillKvkkFormTemplate, KVKK_TEMPLATE_KINDS, type KvkkTemplateKind } from
                     </dl>
                 </section>
             }
+
+            @if (textVersion() !== null) {
+                <p class="m-0 mt-8 text-xs text-muted-color" data-testid="kvkk-form-text-version">Metin sürümü: {{ textVersionLabel() }}</p>
+            }
         </article>
     `
 })
@@ -49,7 +53,10 @@ export class KvkkFormDocumentComponent {
     readonly clientName = input('');
     /** `dd.MM.yyyy` */
     readonly date = input('');
+    /** Basılan şablonun sürümü (ADR-032); müşteri kartındaki rıza kaydı sürümüyle aynı etiket. `null` = gösterilmez (ör. Ayarlar önizlemesi). */
+    readonly textVersion = input<number | null>(null);
 
     readonly info = computed(() => KVKK_TEMPLATE_KINDS[this.kind()]);
+    readonly textVersionLabel = computed(() => kvkkTextVersionLabel(this.textVersion()));
     readonly filledText = computed(() => fillKvkkFormTemplate(this.template(), { clinicName: this.clinicName(), clientName: this.clientName(), date: this.date() }));
 }

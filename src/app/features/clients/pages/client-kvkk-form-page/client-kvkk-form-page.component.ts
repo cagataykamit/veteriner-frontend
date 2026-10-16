@@ -54,7 +54,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                     </p>
                 }
             </div>
-            <app-kvkk-form-document [template]="t.text" [kind]="kind" [clinicName]="clinicName" [clientName]="clientName()" [date]="date" />
+            <app-kvkk-form-document [template]="t.text" [kind]="kind" [clinicName]="clinicName" [clientName]="clientName()" [date]="date" [textVersion]="t.textVersion" />
         }
     `
 })

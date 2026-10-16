@@ -17,6 +17,7 @@ const vm = (over: Partial<KvkkFormTemplateVm> = {}): KvkkFormTemplateVm => ({
     updatedAtUtc: null,
     maxLength: 50,
     placeholders: ['{{clinicName}}', '{{clientName}}', '{{date}}'],
+    textVersion: 0,
     ...over
 });
 

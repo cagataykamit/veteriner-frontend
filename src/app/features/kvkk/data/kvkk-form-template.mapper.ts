@@ -1,5 +1,5 @@
 import type { KvkkFormTemplateDto, KvkkFormTemplateUpdateRequestDto, KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
-import { KVKK_FORM_MAX_LENGTH, KVKK_FORM_PLACEHOLDERS } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { KVKK_FORM_MAX_LENGTH, KVKK_FORM_PLACEHOLDERS, parseKvkkTextVersion } from '@/app/features/kvkk/utils/kvkk-form.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     return v?.trim() ? v.trim() : null;
@@ -16,7 +16,8 @@ export function mapKvkkFormTemplateDtoToVm(dto: KvkkFormTemplateDto): KvkkFormTe
         rowVersion: trimmedOrNull(dto.rowVersion),
         updatedAtUtc: trimmedOrNull(dto.updatedAtUtc),
         maxLength: typeof dto.maxLength === 'number' && dto.maxLength > 0 ? dto.maxLength : KVKK_FORM_MAX_LENGTH,
-        placeholders: placeholders.length > 0 ? placeholders : [...KVKK_FORM_PLACEHOLDERS]
+        placeholders: placeholders.length > 0 ? placeholders : [...KVKK_FORM_PLACEHOLDERS],
+        textVersion: parseKvkkTextVersion(dto.textVersion)
     };
 }
 

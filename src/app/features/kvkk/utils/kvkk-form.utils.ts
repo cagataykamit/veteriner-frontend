@@ -65,6 +65,23 @@ export function fillKvkkFormTemplate(text: string, values: KvkkFormValues): stri
     return text.replace(PLACEHOLDER_PATTERN, (_match, key: keyof KvkkFormValues) => values[key]);
 }
 
+/**
+ * Açık rıza metni sürümünün görünen değeri (ADR-032, sözleşme §4 madde 7): `0` taslak varsayılan metin, `null` bilinmiyor
+ * (sürüm kaydından önceki rıza kayıtları). Müşteri kartı ve yazdırılan form aynı etiketi kullanır.
+ */
+export function kvkkTextVersionLabel(version: number | null): string {
+    if (version === null) {
+        return 'Bilinmiyor';
+    }
+
+    return version === 0 ? 'Varsayılan metin' : String(version);
+}
+
+/** API değeri → sürüm; negatif olmayan tam sayı değilse `null` (bilinmiyor). Şablon ve müşteri rıza kaydı aynı kuralı kullanır. */
+export function parseKvkkTextVersion(raw: unknown): number | null {
+    return typeof raw === 'number' && Number.isInteger(raw) && raw >= 0 ? raw : null;
+}
+
 /** Form tarihi: İstanbul takvim günü, `dd.MM.yyyy`. */
 export function kvkkFormDate(at: Date = new Date()): string {
     return formatDateDisplay(at);
