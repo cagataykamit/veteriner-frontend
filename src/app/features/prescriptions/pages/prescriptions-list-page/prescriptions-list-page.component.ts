@@ -23,6 +23,8 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type PrescriptionsListState = {
@@ -106,7 +108,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                     <th>Hasta</th>
                                     <th>Başlık</th>
                                     <th>Takip</th>
-                                    <th style="width: 6rem">İşlemler</th>
+                                    <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -131,7 +133,14 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                     <td>{{ row.title }}</td>
                                     <td>{{ formatDate(row.followUpDateUtc) }}</td>
                                     <td>
-                                        <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
+                                        <div class="flex items-center gap-1">
+                                            <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
+                                            @if (canUpdatePrescription && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" [link]="['/panel/prescriptions', row.id, 'edit']" />
+                                            } @else if (canUpdatePrescription && ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -174,8 +183,13 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                         <div class="text-xs text-muted-color mt-1 line-clamp-2">Takip: {{ formatDate(row.followUpDateUtc) }}</div>
                                     }
                                 </div>
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
+                                    @if (canUpdatePrescription && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" [link]="['/panel/prescriptions', row.id, 'edit']" />
+                                    } @else if (canUpdatePrescription && ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                    }
                                 </div>
                             </div>
                         }
@@ -201,7 +215,9 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
 export class PrescriptionsListPageComponent implements OnInit {
     protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
+    readonly canUpdatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM);
 
     private readonly prescriptionsService = inject(PrescriptionsService);
     private readonly route = inject(ActivatedRoute);
