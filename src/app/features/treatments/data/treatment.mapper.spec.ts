@@ -49,3 +49,11 @@ describe('treatment mapper — liste tarih parametreleri', () => {
         expect(invalid.has('dateToUtc')).toBeFalse();
     });
 });
+
+describe('treatment mapper — aktif tedavi süzgeci (ADR-025)', () => {
+    it('active=true yalnız istenince gider; verilmezse parametre yok (tümü)', () => {
+        expect(treatmentsQueryToHttpParams({ petId: 'p1', active: true }).get('active')).toBe('true');
+        expect(treatmentsQueryToHttpParams({ petId: 'p1' }).has('active')).toBeFalse();
+        expect(treatmentsQueryToHttpParams({ active: false }).has('active')).toBeFalse();
+    });
+});

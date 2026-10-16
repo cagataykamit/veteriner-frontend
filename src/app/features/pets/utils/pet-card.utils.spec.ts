@@ -2,10 +2,8 @@ import { mapPetOpenItemsDtoToVm } from '@/app/features/pets/data/pet-open-items.
 import type { PetOpenItemsDto } from '@/app/features/pets/models/pet-open-items-api.model';
 import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
 import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import {
-    activeFollowUpTreatments,
     buildPetTodo,
     examinationAssessmentText,
     examinationVitalsLine,
@@ -128,17 +126,6 @@ describe('nextScheduledAppointment', () => {
 
         expect(nextScheduledAppointment(rows, NOW)?.id).toBe('a3');
         expect(nextScheduledAppointment([rows[1], rows[3]], NOW)).toBeNull();
-    });
-});
-
-describe('activeFollowUpTreatments', () => {
-    const t = (id: string, followUpDateUtc: string | null) => ({ id, followUpDateUtc }) as TreatmentListItemVm;
-
-    it('takip tarihi bugün veya ileride olanları en yakın önce döndürür', () => {
-        const now = new Date(2026, 9, 14, 15, 0);
-        const result = activeFollowUpTreatments([t('t1', '2026-10-20T00:00:00Z'), t('t2', null), t('t3', '2026-10-01T00:00:00Z'), t('t4', '2026-10-15T00:00:00Z')], now);
-
-        expect(result.map((x) => x.id)).toEqual(['t4', 't1']);
     });
 });
 

@@ -216,6 +216,10 @@ export function treatmentsQueryToHttpParams(query: TreatmentsListQuery): HttpPar
         p = p.set('Order', query.order.trim());
     }
 
+    if (query.active) {
+        p = p.set('active', 'true');
+    }
+
     return p;
 }
 

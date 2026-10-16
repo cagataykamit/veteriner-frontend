@@ -12,7 +12,6 @@ import type { PetOpenItemsVm, PetOpenVaccinationVm } from '@/app/features/pets/m
 import type { PetSummarySectionVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
 import { upcomingScheduledAppointmentsLinkQuery } from '@/app/features/appointments/utils/appointments-list-link.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
@@ -91,14 +90,6 @@ export function upcomingScheduledAppointments<T extends Pick<PetHistoryAppointme
 /** Müşteri son özetindeki (en yeni 10) randevulardan ileri tarihli en yakın `Planlandı` randevu (hasta kartı sonraki randevuyu açık işler ucundan okur). */
 export function nextScheduledAppointment<T extends Pick<PetHistoryAppointmentItemVm, 'scheduledAtUtc' | 'status'>>(rows: readonly T[], now: Date = new Date()): T | null {
     return upcomingScheduledAppointments(rows, now)[0] ?? null;
-}
-
-/** Tedavide durum alanı yok: "aktif tedavi" = takip tarihi bugün veya ileride olan tedavi; en yakın takip önce. */
-export function activeFollowUpTreatments(items: readonly TreatmentListItemVm[], now: Date = new Date()): TreatmentListItemVm[] {
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const at = (t: TreatmentListItemVm) => parseUtcApiInstantIsoString(t.followUpDateUtc)?.getTime() ?? NaN;
-
-    return items.filter((t) => at(t) >= startOfToday).sort((a, b) => at(a) - at(b));
 }
 
 /** Son muayenenin vital satırı (kilo ayrı gösterilir); hiç ölçüm yoksa `null`. Birimler muayene detayıyla aynı. */

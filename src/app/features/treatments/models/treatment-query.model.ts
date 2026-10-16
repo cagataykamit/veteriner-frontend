@@ -18,4 +18,9 @@ export interface TreatmentsListQuery {
     toDate?: string;
     sort?: string;
     order?: string;
+    /**
+     * `true`: yalnız aktif tedaviler (backend `active=true`; ADR-025: takip tarihi İstanbul günüyle bugün veya sonrası),
+     * sort verilmezse en yakın takip önce. Aktiflik istemcide yeniden hesaplanmaz.
+     */
+    active?: boolean;
 }

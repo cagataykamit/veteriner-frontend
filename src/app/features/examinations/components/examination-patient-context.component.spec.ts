@@ -47,7 +47,7 @@ describe('ExaminationPatientContextComponent', () => {
                 of({
                     items: [
                         { id: 't1', title: 'Antibiyotik', followUpDateUtc: future },
-                        { id: 't2', title: 'Eski pansuman', followUpDateUtc: '2026-01-01T00:00:00Z' }
+                        { id: 't3', title: 'Kontrol', followUpDateUtc: future }
                     ],
                     page: 1,
                     pageSize: 20,
@@ -82,11 +82,11 @@ describe('ExaminationPatientContextComponent', () => {
         const el = fixture.nativeElement as HTMLElement;
         const text = (id: string) => el.querySelector(`[data-testid="${id}"]`)?.textContent ?? '';
 
-        return { fixture, el, text, vaccinations, related };
+        return { fixture, el, text, vaccinations, treatments, related };
     };
 
     it('kilo, gecikmiş aşı, aktif tedavi/yatış ve son muayeneleri tek panelde gösterir', async () => {
-        const { el, text, vaccinations, related } = await setup();
+        const { el, text, vaccinations, treatments: treatmentsService, related } = await setup();
 
         expect(text('ctx-weight')).toContain('4.4 kg');
         expect(vaccinations.getVaccinations).toHaveBeenCalledWith(jasmine.objectContaining({ petId: 'pet-1', onlyOverdue: true }));
@@ -95,7 +95,9 @@ describe('ExaminationPatientContextComponent', () => {
         expect(text('ctx-hospitalization')).toContain('Sıvı tedavisi');
         const treatments = Array.from(el.querySelectorAll('[data-testid="ctx-treatment"]')).map((a) => a.textContent ?? '');
 
-        expect(treatments.length).toBe(1);
+        // Aktif tedavi kuralı (ADR-025) sunucudadır: istemci `active=true` ister ve dönen satırları süzmeden gösterir.
+        expect(treatmentsService.getTreatments).toHaveBeenCalledWith(jasmine.objectContaining({ petId: 'pet-1', active: true }));
+        expect(treatments.length).toBe(2);
         expect(treatments[0]).toContain('Antibiyotik');
         expect(related.loadSiblingExaminationsForPet).toHaveBeenCalledWith('pet-1', 'e1');
         expect(text('ctx-recent-exams')).toContain('Kusma');

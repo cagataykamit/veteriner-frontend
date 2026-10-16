@@ -16,7 +16,7 @@ import { ExaminationsService } from '@/app/features/examinations/services/examin
 import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { activeFollowUpTreatments, type PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 
@@ -54,9 +54,10 @@ export class PetCardDataService {
         return examinationId ? this.section(EXAMINATIONS_READ_CLAIM, () => this.examinations.getExaminationById(examinationId)) : of(null);
     }
 
+    /** Aktif tedaviler (ADR-025: takip tarihi bugün veya sonrası); kural sunucuda (`active=true`), en yakın takip önce gelir. */
     followUpTreatments(petId: string): Observable<PetCardSection<TreatmentListItemVm[]>> {
         return this.section(TREATMENTS_READ_CLAIM, () =>
-            this.treatments.getTreatments({ page: 1, pageSize: FETCH_SIZE, petId }).pipe(map((r) => activeFollowUpTreatments(r.items.filter((t) => t.petId === petId))))
+            this.treatments.getTreatments({ page: 1, pageSize: FETCH_SIZE, petId, active: true }).pipe(map((r) => r.items.filter((t) => t.petId === petId)))
         );
     }
 

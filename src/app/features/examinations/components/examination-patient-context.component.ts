@@ -7,7 +7,6 @@ import type { ExaminationListItemVm } from '@/app/features/examinations/models/e
 import { contextWeight } from '@/app/features/examinations/utils/examination-patient-context.utils';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { activeFollowUpTreatments } from '@/app/features/pets/utils/pet-card.utils';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
@@ -204,7 +203,8 @@ export class ExaminationPatientContextComponent {
     readonly weight = computed(() => contextWeight(okData(this.summary())));
     readonly activeHospitalization = computed(() => okData(this.summary())?.activeHospitalization.data ?? null);
     readonly overdueData = computed(() => okData(this.overdue()));
-    readonly activeTreatments = computed(() => activeFollowUpTreatments(okData(this.treatments()) ?? []));
+    /** Aktif tedavi kuralı (ADR-025) sunucudadır (`active=true`, en yakın takip önce); burada süzülmez. */
+    readonly activeTreatments = computed(() => okData(this.treatments()) ?? []);
     readonly recentExamItems = computed(() => (okData(this.recentExams()) ?? []).slice(0, RECENT_EXAM_LIMIT));
     readonly noActiveCare = computed(
         () => !this.activeHospitalization() && this.treatments()?.state !== 'error' && this.activeTreatments().length === 0 && this.summary()?.state !== 'loading'
@@ -239,7 +239,7 @@ export class ExaminationPatientContextComponent {
             }
 
             if (this.canReadTreatments) {
-                this.load(seq, this.treatments, this.treatmentsService.getTreatments({ petId, page: 1, pageSize: TREATMENT_FETCH_SIZE }), (r) => r.items);
+                this.load(seq, this.treatments, this.treatmentsService.getTreatments({ petId, active: true, page: 1, pageSize: TREATMENT_FETCH_SIZE }), (r) => r.items);
             }
 
             if (this.canReadExaminations) {

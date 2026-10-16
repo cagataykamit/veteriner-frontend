@@ -16,6 +16,7 @@ describe('PetCardDataService', () => {
     const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClientBalance']);
     const chargeSuggestions = jasmine.createSpyObj<ChargeSuggestionsService>('ChargeSuggestionsService', ['getPending']);
     const pets = jasmine.createSpyObj<PetsService>('PetsService', ['getPets', 'getPetOpenItems']);
+    const treatments = jasmine.createSpyObj<TreatmentsService>('TreatmentsService', ['getTreatments']);
 
     const collect = <T>(source: { subscribe(fn: (v: PetCardSection<T>) => void): unknown }) => {
         const values: PetCardSection<T>[] = [];
@@ -36,7 +37,7 @@ describe('PetCardDataService', () => {
                 { provide: ClientsService, useValue: clients },
                 { provide: ChargeSuggestionsService, useValue: chargeSuggestions },
                 { provide: ExaminationsService, useValue: {} },
-                { provide: TreatmentsService, useValue: {} },
+                { provide: TreatmentsService, useValue: treatments },
                 { provide: PetsService, useValue: pets }
             ]
         });
@@ -100,5 +101,21 @@ describe('PetCardDataService', () => {
 
         expect(chargeSuggestions.getPending).toHaveBeenCalledOnceWith({ page: 1, pageSize: 200, clientId: 'c1' });
         expect(values[1]).toEqual({ state: 'ok', data: page } as never);
+    });
+
+    it('hasta kartı aktif tedavileri sunucu süzgeciyle (active=true) ister; aktiflik istemcide yeniden hesaplanmaz', () => {
+        claims.add('Treatments.Read');
+        const items = [
+            { id: 't1', petId: 'p1', followUpDateUtc: '2026-10-20T00:00:00Z' },
+            { id: 't9', petId: 'p9', followUpDateUtc: '2026-10-21T00:00:00Z' }
+        ];
+
+        treatments.getTreatments.and.returnValue(of({ items, page: 1, pageSize: 50, totalItems: 2, totalPages: 1 }) as never);
+        const values = collect(service.followUpTreatments('p1'));
+
+        expect(treatments.getTreatments).toHaveBeenCalledWith(jasmine.objectContaining({ petId: 'p1', active: true }));
+        const last = values[1];
+
+        expect(last?.state === 'ok' ? last.data.map((t) => t.id) : null).toEqual(['t1']);
     });
 });
