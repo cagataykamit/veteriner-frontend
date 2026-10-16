@@ -1,0 +1,49 @@
+<main class="portal-page portal-stack">
+    <portal-brand-header [clinicName]="disclosure()?.clinicName ?? null" />
+
+    @switch (step()) {
+        @case ('loading') {
+            <portal-loading-state />
+        }
+        @case ('error') {
+            <portal-error-state [message]="loadError()" (retry)="reload()" />
+        }
+        @case ('documents') {
+            <section class="portal-card portal-stack" aria-labelledby="acceptance-documents-title">
+                <h1 id="acceptance-documents-title" class="portal-title">Devam etmeden önce</h1>
+                <p class="portal-muted">Portalı kullanmak için güncel kullanım şartlarını ve gizlilik politikasını onaylamanız gerekiyor.</p>
+                <portal-legal-consent [documents]="pendingDocuments()" [control]="consent" [showError]="submitted() && consent.invalid" />
+                @if (actionError(); as message) {
+                    <p-message severity="error" [text]="message" role="alert" />
+                }
+                <div class="portal-actions">
+                    <p-button label="Onayla ve devam et" [loading]="busy()" (onClick)="acceptDocuments()" />
+                    <button type="button" class="portal-link-button" (click)="logout()">Çıkış yap</button>
+                </div>
+            </section>
+        }
+        @case ('disclosure') {
+            @if (disclosure(); as d) {
+                <section class="portal-card portal-stack" aria-labelledby="acceptance-disclosure-title">
+                    <h1 id="acceptance-disclosure-title" class="portal-title">{{ d.clinicName }} aydınlatma metni</h1>
+                    <p class="portal-muted">
+                        Kişisel verilerinizin klinik tarafından nasıl işlendiğini okuyun. Bu bir bilgilendirmedir, rıza beyanı değildir.
+                        @if (remainingDisclosures() > 1) {
+                            ({{ remainingDisclosures() }} klinikten ilki)
+                        }
+                    </p>
+                    <div class="portal-scroll-box portal-prewrap" tabindex="0" aria-label="Aydınlatma metni" data-testid="disclosure-text">{{ d.text }}</div>
+                    @if (actionError(); as message) {
+                        <p-message severity="error" [text]="message" role="alert" />
+                    }
+                    <div class="portal-actions">
+                        <p-button label="Okudum, bilgilendirildim" [loading]="busy()" (onClick)="acknowledgeDisclosure()" />
+                        <button type="button" class="portal-link-button" (click)="logout()">Çıkış yap</button>
+                    </div>
+                </section>
+            }
+        }
+    }
+
+    <portal-footer />
+</main>

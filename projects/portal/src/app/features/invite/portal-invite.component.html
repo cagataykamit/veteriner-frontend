@@ -1,0 +1,127 @@
+<main class="portal-page portal-stack">
+    <portal-brand-header [clinicName]="preview()?.clinicName ?? null" />
+
+    @switch (state()) {
+        @case ('loading') {
+            <portal-loading-state message="Davetiniz kontrol ediliyor…" />
+        }
+        @case ('invalid') {
+            <section class="portal-card portal-stack" aria-labelledby="invite-invalid-title">
+                <h1 id="invite-invalid-title" class="portal-title">Davet geçersiz</h1>
+                <p>{{ invalidMessage }}</p>
+                <p class="portal-muted">Hesabınız varsa giriş yapabilirsiniz.</p>
+                <a class="portal-link-button" routerLink="/login">Giriş sayfasına git</a>
+            </section>
+        }
+        @case ('error') {
+            <portal-error-state [message]="loadError()" (retry)="load()" />
+        }
+        @case ('ready') {
+            @if (preview(); as invite) {
+                <section class="portal-card portal-stack" aria-labelledby="invite-title">
+                    <h1 id="invite-title" class="portal-title">Portala hoş geldiniz</h1>
+                    <p>
+                        <strong>{{ invite.clinicName }}</strong> sizi hayvanlarınızın aşı, randevu ve hesap bilgilerini görebileceğiniz portala
+                        davet etti.
+                    </p>
+                    <p class="portal-muted">
+                        Davet {{ invite.emailMasked }} adresine gönderildi.
+                        @if (expiresText()) {
+                            Son geçerlilik: {{ expiresText() }}.
+                        }
+                    </p>
+                </section>
+
+                <form class="portal-card portal-stack" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="invite-form-title">
+                    <h2 id="invite-form-title" class="portal-subtitle">{{ invite.hasAccount ? 'Daveti hesabınıza ekleyin' : 'Hesabınızı oluşturun' }}</h2>
+
+                    @if (invite.hasAccount) {
+                        <p class="portal-muted">
+                            Bu e-posta adresiyle zaten bir portal hesabınız var. Daveti kabul ettiğinizde {{ invite.clinicName }} hesabınıza eklenir.
+                        </p>
+                    } @else {
+                        <div class="portal-field">
+                            <label for="invite-display-name">Adınız (isteğe bağlı)</label>
+                            <input
+                                pInputText
+                                id="invite-display-name"
+                                type="text"
+                                formControlName="displayName"
+                                autocomplete="name"
+                                [attr.maxlength]="displayNameMax"
+                                aria-describedby="invite-display-name-hint"
+                                [attr.aria-invalid]="!!fieldError('displayName')"
+                            />
+                            <p id="invite-display-name-hint" class="portal-field-hint">Boş bırakırsanız klinikteki kayıtlı adınız kullanılır.</p>
+                            @if (fieldError('displayName'); as message) {
+                                <p class="portal-field-error">{{ message }}</p>
+                            }
+                        </div>
+
+                        <fieldset class="portal-choice">
+                            <legend class="portal-field-label">Nasıl giriş yapmak istersiniz?</legend>
+                            <label class="portal-check">
+                                <input type="radio" formControlName="method" value="code" />
+                                <span>
+                                    E-postama gelen kodla
+                                    <span class="portal-field-hint">Her girişte e-postanıza 6 haneli kod gönderilir.</span>
+                                </span>
+                            </label>
+                            <label class="portal-check">
+                                <input type="radio" formControlName="method" value="password" />
+                                <span>Parola belirleyerek</span>
+                            </label>
+                        </fieldset>
+
+                        @if (form.controls.method.value === 'password') {
+                            <div class="portal-field">
+                                <label for="invite-password">Parola</label>
+                                <input
+                                    pInputText
+                                    id="invite-password"
+                                    type="password"
+                                    formControlName="password"
+                                    autocomplete="new-password"
+                                    aria-describedby="invite-password-hint"
+                                    [attr.aria-invalid]="!!fieldError('password')"
+                                />
+                                <p id="invite-password-hint" class="portal-field-hint">{{ passwordHint }}</p>
+                                @if (fieldError('password'); as message) {
+                                    <p class="portal-field-error">{{ message }}</p>
+                                }
+                            </div>
+                            <div class="portal-field">
+                                <label for="invite-password-confirm">Parola (tekrar)</label>
+                                <input
+                                    pInputText
+                                    id="invite-password-confirm"
+                                    type="password"
+                                    formControlName="confirmPassword"
+                                    autocomplete="new-password"
+                                    [attr.aria-invalid]="showMismatch()"
+                                />
+                                @if (showMismatch()) {
+                                    <p class="portal-field-error">{{ mismatchMessage }}</p>
+                                }
+                            </div>
+                        }
+                    }
+
+                    @if (requiredDocuments().length > 0) {
+                        <portal-legal-consent [documents]="requiredDocuments()" [control]="form.controls.legalAccepted" [showError]="showLegalError()" />
+                    }
+
+                    @if (submitError(); as message) {
+                        <p-message severity="error" [text]="message" role="alert" />
+                    }
+
+                    <div class="portal-actions">
+                        <p-button type="submit" label="Daveti kabul et" [loading]="submitting()" />
+                    </div>
+                </form>
+            }
+        }
+    }
+
+    <portal-footer />
+</main>
