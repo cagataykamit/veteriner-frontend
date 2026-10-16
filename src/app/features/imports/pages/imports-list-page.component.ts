@@ -26,6 +26,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 /** Parti geçmişi: durum, tarih, sayılar; taslaklar sürdürülür veya silinir. */
 @Component({
@@ -42,7 +43,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <app-page-header title="Veri içe aktarma" description="Eski sistemdeki müşteri, hasta ve aşı geçmişini Excel veya CSV dosyasıyla aktarın. Her adım onayınızla ilerler; aktarmadan önce sonucu görürsünüz.">
@@ -112,7 +114,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                             <p-button size="small" severity="danger" [outlined]="true" icon="pi pi-undo" [label]="b.status === 'RollingBack' ? 'Geri alma durumu' : 'Geri al'" [routerLink]="[b.id, 'rollback']" />
                                         }
                                         @if (canManage && isDraft(b)) {
-                                            <p-button size="small" severity="secondary" icon="pi pi-trash" ariaLabel="Taslağı sil" (onClick)="discardingId.set(b.id)" />
+                                            <app-row-action-button action="delete" label="Taslağı sil" (pressed)="discardingId.set(b.id)" />
                                         }
                                     }
                                 </div>

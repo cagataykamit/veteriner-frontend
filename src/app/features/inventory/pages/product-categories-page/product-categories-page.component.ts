@@ -41,6 +41,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type CategoriesListState = {
     search: string;
@@ -73,7 +74,8 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         AppErrorStateComponent,
         AppStatusTagComponent,
         FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -199,14 +201,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                         <td>
                                             <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
                                                 @if (canUpdateCategories && !ro.mutationBlocked()) {
-                                                    <button
-                                                        type="button"
-                                                        class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
-                                                        [disabled]="rowMutatingId() !== null"
-                                                        (click)="openEditDialog(row)"
-                                                    >
-                                                        Düzenle
-                                                    </button>
+                                                    <app-row-action-button action="edit" [disabled]="rowMutatingId() !== null" (pressed)="openEditDialog(row)" />
                                                 }
                                                 @if (canDeactivateCategories && !ro.mutationBlocked() && row.isActive) {
                                                     <button
@@ -247,14 +242,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                     </div>
                                     <div class="flex flex-wrap justify-end gap-x-3 gap-y-2 pt-2 border-t border-surface-200 dark:border-surface-700">
                                         @if (canUpdateCategories && !ro.mutationBlocked()) {
-                                            <button
-                                                type="button"
-                                                class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
-                                                [disabled]="rowMutatingId() !== null"
-                                                (click)="openEditDialog(row)"
-                                            >
-                                                Düzenle
-                                            </button>
+                                            <app-row-action-button action="edit" [disabled]="rowMutatingId() !== null" (pressed)="openEditDialog(row)" />
                                         }
                                         @if (canDeactivateCategories && !ro.mutationBlocked() && row.isActive) {
                                             <button

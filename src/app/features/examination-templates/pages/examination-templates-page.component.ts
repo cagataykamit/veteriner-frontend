@@ -26,6 +26,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 const PAGE_SIZE = 50;
 
@@ -47,7 +48,8 @@ const PAGE_SIZE = 50;
         AppErrorStateComponent,
         AppStatusTagComponent,
         SearchInputComponent,
-        ExaminationTemplateEditorDialogComponent
+        ExaminationTemplateEditorDialogComponent,
+        AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -125,9 +127,7 @@ const PAGE_SIZE = 50;
                                         }
                                         @if (!ro.mutationBlocked()) {
                                             @if (canUpdate && !row.isSystem) {
-                                                <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="openEditor('edit', row)">
-                                                    Düzenle
-                                                </button>
+                                                <app-row-action-button action="edit" [disabled]="mutatingId() !== null" (pressed)="openEditor('edit', row)" />
                                             }
                                             @if (canCreate) {
                                                 <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="openEditor('copy', row)">

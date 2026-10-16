@@ -18,6 +18,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 
@@ -28,7 +29,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 @Component({
     selector: 'app-care-instructions-section',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent],
     template: `
         @if (canRead) {
             <div class="card" data-testid="care-instructions-section">
@@ -59,7 +60,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                                         }
                                     </span>
                                     @if (canEdit()) {
-                                        <p-button label="Düzenle" icon="pi pi-pencil" size="small" severity="secondary" [text]="true" data-testid="care-instruction-edit" (onClick)="openEdit(row)" />
+                                        <app-row-action-button action="edit" testId="care-instruction-edit" (pressed)="openEdit(row)" />
                                     }
                                 </div>
                             </li>

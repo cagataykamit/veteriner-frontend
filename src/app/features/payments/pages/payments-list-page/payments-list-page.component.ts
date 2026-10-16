@@ -29,6 +29,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type PaymentsListState = {
     search: string;
@@ -58,7 +59,8 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         AppEmptyStateComponent,
         AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
         SearchInputComponent,
-        ReasonConfirmDialogComponent
+        ReasonConfirmDialogComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         @if (contextPetId() || contextClientId()) {
@@ -157,10 +159,12 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                     <td class="whitespace-nowrap">{{ methodLabel(row.method) }}</td>
                                     <td class="whitespace-nowrap">{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
                                     <td class="whitespace-nowrap">
-                                        <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay</a>
-                                        @if (canVoid && !ro.mutationBlocked()) {
-                                            <p-button icon="pi pi-ban" size="small" severity="danger" [text]="true" ariaLabel="İptal et" [attr.title]="'İptal et'" (onClick)="openVoid(row)" />
-                                        }
+                                        <div class="flex items-center gap-1">
+                                            <app-row-action-button action="detail" [link]="['/panel/payments', row.id]" />
+                                            @if (canVoid && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="void" (pressed)="openVoid(row)" />
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -204,11 +208,11 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 <div class="text-sm text-muted-color mb-3 min-w-0">
                                     <span class="font-medium">Yöntem: </span>{{ methodLabel(row.method) }}
                                 </div>
-                                <div class="flex justify-end items-center gap-3 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                    <app-row-action-button action="detail" [link]="['/panel/payments', row.id]" />
                                     @if (canVoid && !ro.mutationBlocked()) {
-                                        <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                        <app-row-action-button action="void" (pressed)="openVoid(row)" />
                                     }
-                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline">Detay →</a>
                                 </div>
                             </div>
                         }

@@ -21,6 +21,7 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
     selector: 'app-charges-list-page',
@@ -39,7 +40,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <div class="card">
@@ -121,7 +123,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 </td>
                                 @if (hasRowActions) {
                                     <td class="whitespace-nowrap">
-                                        <div class="flex items-center justify-end">
+                                        <div class="flex items-center justify-end gap-1">
                                         @if (ro.mutationBlocked()) {
                                             <span class="text-muted-color text-sm">Salt okunur</span>
                                         } @else {
@@ -137,8 +139,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                                 ></a>
                                             }
                                             @if (canCorrect) {
-                                                <p-button icon="pi pi-pencil" size="small" [text]="true" ariaLabel="Düzelt" [attr.title]="'Düzelt'" (onClick)="openCorrection(row)" />
-                                                <p-button icon="pi pi-ban" size="small" severity="danger" [text]="true" ariaLabel="İptal et" [attr.title]="'İptal et'" (onClick)="openVoid(row)" />
+                                                <app-row-action-button action="edit" label="Düzelt" (pressed)="openCorrection(row)" />
+                                                <app-row-action-button action="void" (pressed)="openVoid(row)" />
                                             }
                                         }
                                         </div>

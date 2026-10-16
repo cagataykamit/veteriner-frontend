@@ -30,6 +30,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 /** Sözleşme en çok 200 kalem döner; bekleyen liste bundan küçük beklenir, aşılırsa kullanıcıya söylenir. */
 const PAGE_SIZE = 200;
@@ -63,7 +64,8 @@ interface ConvertedRow {
         FilterFieldComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         @if (hasCreateClaim && ro.mutationBlocked()) {
@@ -171,13 +173,15 @@ interface ConvertedRow {
                                 <td class="text-right whitespace-nowrap font-medium">{{ rowAmount(row) }}</td>
                                 @if (canConvert()) {
                                     <td class="whitespace-nowrap">
-                                        @if (row.suggestedUnitPrice === null) {
-                                            <p-button label="Fiyat gir ve çevir" icon="pi pi-pencil" size="small" class="mr-1" [disabled]="busy(row.id)" (onClick)="openEdit(row)" />
-                                        } @else {
-                                            <p-button label="Ücrete çevir" icon="pi pi-check" size="small" class="mr-1" [loading]="busy(row.id)" (onClick)="convertQuick(row)" />
-                                            <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" ariaLabel="Düzenleyerek çevir" [attr.title]="'Düzenleyerek çevir'" [disabled]="busy(row.id)" (onClick)="openEdit(row)" />
-                                        }
-                                        <p-button icon="pi pi-ban" size="small" severity="secondary" [text]="true" ariaLabel="Ücretsiz say" [attr.title]="'Ücretsiz say'" [disabled]="busy(row.id)" (onClick)="openWaive(row)" />
+                                        <div class="flex items-center gap-1">
+                                            @if (row.suggestedUnitPrice === null) {
+                                                <p-button label="Fiyat gir ve çevir" icon="pi pi-pencil" size="small" class="mr-1" [disabled]="busy(row.id)" (onClick)="openEdit(row)" />
+                                            } @else {
+                                                <p-button label="Ücrete çevir" icon="pi pi-check" size="small" class="mr-1" [loading]="busy(row.id)" (onClick)="convertQuick(row)" />
+                                                <app-row-action-button action="edit" label="Düzenleyerek çevir" [disabled]="busy(row.id)" (pressed)="openEdit(row)" />
+                                            }
+                                            <app-row-action-button action="void" label="Ücretsiz say" [disabled]="busy(row.id)" (pressed)="openWaive(row)" />
+                                        </div>
                                     </td>
                                 }
                             </tr>

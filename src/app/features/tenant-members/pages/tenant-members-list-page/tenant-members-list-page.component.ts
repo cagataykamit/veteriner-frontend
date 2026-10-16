@@ -20,6 +20,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
     selector: 'app-tenant-members-list-page',
@@ -35,7 +36,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, SearchInputComponent
+        AppErrorStateComponent, SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <app-page-header
@@ -110,7 +112,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         <th>E-posta</th>
                                         <th>E-posta onayı</th>
                                         <th>Oluşturulma</th>
-                                        <th style="width: 8rem">İşlemler</th>
+                                        <th style="width: 6rem">İşlemler</th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
@@ -119,14 +121,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         <td>{{ formatConfirmed(row.emailConfirmed) }}</td>
                                         <td>{{ formatDate(row.createdAtUtc) }}</td>
                                         <td>
-                                            <a
-                                                [routerLink]="['/panel/settings/members', row.id]"
-                                                pButton
-                                                type="button"
-                                                class="p-button-text p-button-sm"
-                                                label="Detay"
-                                                icon="pi pi-eye"
-                                            ></a>
+                                            <app-row-action-button action="detail" [link]="['/panel/settings/members', row.id]" />
                                         </td>
                                     </tr>
                                 </ng-template>
@@ -151,14 +146,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                         }
                                     </div>
                                     <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
-                                        <a
-                                            [routerLink]="['/panel/settings/members', row.id]"
-                                            pButton
-                                            type="button"
-                                            class="p-button-text p-button-sm"
-                                            label="Detay →"
-                                            icon="pi pi-eye"
-                                        ></a>
+                                        <app-row-action-button action="detail" [link]="['/panel/settings/members', row.id]" />
                                     </div>
                                 </div>
                             }

@@ -22,6 +22,7 @@ import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
     selector: 'app-tenant-invite-list-page',
@@ -38,7 +39,8 @@ import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, SearchInputComponent
+        AppStatusTagComponent, SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <app-page-header title="Davetler" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
@@ -120,26 +122,10 @@ import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites
                                         <td class="break-words">{{ row.clinicSummary }}</td>
                                         <td class="break-words">{{ row.roleSummary }}</td>
                                         <td>
-                                            <div class="flex flex-wrap gap-2 align-items-center">
-                                                <a
-                                                    [routerLink]="['/panel/settings/invites', row.id]"
-                                                    pButton
-                                                    type="button"
-                                                    class="p-button-text p-button-sm"
-                                                    label="Detay"
-                                                    icon="pi pi-eye"
-                                                ></a>
+                                            <div class="flex flex-wrap gap-1 items-center">
+                                                <app-row-action-button action="detail" [link]="['/panel/settings/invites', row.id]" />
                                                 @if (row.canCancel && canManageTenantAccess()) {
-                                                    <p-button
-                                                        type="button"
-                                                        label="İptal"
-                                                        icon="pi pi-times"
-                                                        severity="danger"
-                                                        styleClass="p-button-sm p-button-text"
-                                                        [loading]="isRowBusy(row.id, 'cancel')"
-                                                        [disabled]="anyRowBusy() && !isRowBusy(row.id, 'cancel')"
-                                                        (onClick)="onCancelInvite(row.id)"
-                                                    />
+                                                    <app-row-action-button action="void" [loading]="isRowBusy(row.id, 'cancel')" [disabled]="anyRowBusy() && !isRowBusy(row.id, 'cancel')" (pressed)="onCancelInvite(row.id)" />
                                                 }
                                                 @if (row.canResend && canManageTenantAccess()) {
                                                     <p-button
@@ -178,26 +164,10 @@ import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites
                                             <div class="text-xs text-muted-color">Son geçerlilik: {{ formatDate(row.expiresAtUtc) }}</div>
                                         }
                                     </div>
-                                    <div class="flex flex-wrap gap-2 justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
-                                        <a
-                                            [routerLink]="['/panel/settings/invites', row.id]"
-                                            pButton
-                                            type="button"
-                                            class="p-button-text p-button-sm"
-                                            label="Detay"
-                                            icon="pi pi-eye"
-                                        ></a>
+                                    <div class="flex flex-wrap gap-1 items-center justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                                        <app-row-action-button action="detail" [link]="['/panel/settings/invites', row.id]" />
                                         @if (row.canCancel && canManageTenantAccess()) {
-                                            <p-button
-                                                type="button"
-                                                label="İptal"
-                                                icon="pi pi-times"
-                                                severity="danger"
-                                                styleClass="p-button-sm p-button-text"
-                                                [loading]="isRowBusy(row.id, 'cancel')"
-                                                [disabled]="anyRowBusy() && !isRowBusy(row.id, 'cancel')"
-                                                (onClick)="onCancelInvite(row.id)"
-                                            />
+                                            <app-row-action-button action="void" [loading]="isRowBusy(row.id, 'cancel')" [disabled]="anyRowBusy() && !isRowBusy(row.id, 'cancel')" (pressed)="onCancelInvite(row.id)" />
                                         }
                                         @if (row.canResend && canManageTenantAccess()) {
                                             <p-button

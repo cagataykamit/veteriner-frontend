@@ -25,6 +25,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type VaccinationsListState = {
     search: string;
@@ -57,7 +58,8 @@ const RECEIVING_CARE_ONLY = 'true';
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent, DateInputComponent, FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <div class="card">
@@ -178,7 +180,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                         <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                     </td>
                                     <td>
-                                        <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
                                     </td>
                                 </tr>
                             </ng-template>
@@ -226,7 +228,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                 </div>
                                 <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                    <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
                                 </div>
                             </div>
                         }

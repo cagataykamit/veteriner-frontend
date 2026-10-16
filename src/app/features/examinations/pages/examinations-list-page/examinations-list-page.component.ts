@@ -25,6 +25,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type ExaminationsListState = {
     search: string;
@@ -54,7 +55,8 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         AppStatusTagComponent,
         DateInputComponent,
         FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         @if (contextPetId() || contextClientId()) {
@@ -109,7 +111,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                     <th>Hasta</th>
                                     <th>Ziyaret sebebi</th>
                                     <th>Durum</th>
-                                    <th style="width: 8rem">İşlemler</th>
+                                    <th style="width: 6rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -138,7 +140,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         }
                                     </td>
                                     <td>
-                                        <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        <app-row-action-button action="detail" [link]="['/panel/examinations', row.id]" />
                                     </td>
                                 </tr>
                             </ng-template>
@@ -182,7 +184,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                     }
                                 </div>
                                 <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                    <app-row-action-button action="detail" [link]="['/panel/examinations', row.id]" />
                                 </div>
                             </div>
                         }

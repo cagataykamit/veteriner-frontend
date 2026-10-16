@@ -21,6 +21,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 /**
  * Muayene veya tedavi bağlamında uygulama kayıtları: liste, "Uygulama ekle" ve gerekçeli iptal.
@@ -40,7 +41,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         AdministrationRowMarksComponent,
         AdministrationVoidDialogComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         @if (canRead) {
@@ -101,7 +103,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                     @if (canCorrect) {
                                         <td class="whitespace-nowrap">
                                             @if (!row.isVoided && !ro.mutationBlocked()) {
-                                                <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                                <app-row-action-button action="void" (pressed)="openVoid(row)" />
                                             }
                                         </td>
                                     }

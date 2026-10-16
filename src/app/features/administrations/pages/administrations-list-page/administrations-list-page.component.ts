@@ -22,6 +22,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
     selector: 'app-administrations-list-page',
@@ -41,7 +42,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <div class="card">
@@ -133,7 +135,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                 @if (canCorrect) {
                                     <td class="whitespace-nowrap">
                                         @if (!row.isVoided && !ro.mutationBlocked()) {
-                                            <p-button label="İptal et" icon="pi pi-ban" size="small" severity="danger" [text]="true" (onClick)="openVoid(row)" />
+                                            <app-row-action-button action="void" (pressed)="openVoid(row)" />
                                         }
                                     </td>
                                 }

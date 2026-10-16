@@ -15,6 +15,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
     selector: 'app-species-list-page',
@@ -28,7 +29,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <app-page-header title="Türler" description="Tür kayıtlarını yönetin.">
@@ -81,7 +83,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         <th>Kod</th>
                                         <th>Durum</th>
                                         <th>Sıra</th>
-                                        <th style="width: 8rem">İşlemler</th>
+                                        <th style="width: 6rem">İşlemler</th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
@@ -94,9 +96,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         <td>{{ row.displayOrder }}</td>
                                         <td>
                                             @if (canUpdateSpecies() && !ro.mutationBlocked()) {
-                                                <a [routerLink]="[speciesRoute, row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                                <app-row-action-button action="edit" [link]="[speciesRoute, row.id, 'edit']" />
                                             } @else if (canUpdateSpecies() && ro.mutationBlocked()) {
-                                                <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
                                             } @else {
                                                 <span class="text-muted-color">—</span>
                                             }
@@ -121,9 +123,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     </div>
                                     <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                         @if (canUpdateSpecies() && !ro.mutationBlocked()) {
-                                            <a [routerLink]="[speciesRoute, row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
+                                            <app-row-action-button action="edit" [link]="[speciesRoute, row.id, 'edit']" />
                                         } @else if (canUpdateSpecies() && ro.mutationBlocked()) {
-                                            <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
                                         } @else {
                                             <span class="text-muted-color">—</span>
                                         }

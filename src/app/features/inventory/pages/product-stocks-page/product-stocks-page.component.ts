@@ -34,6 +34,7 @@ import {
     InventoryCsvExportRowLimitError
 } from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
 import type { Observable } from 'rxjs';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type StocksListState = {
     search: string;
@@ -74,7 +75,8 @@ const PRODUCT_STOCK_CSV_HEADERS = [
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent, FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <div class="card">
@@ -193,11 +195,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                         <td class="text-muted-color text-sm whitespace-nowrap">{{ row.updatedAtText }}</td>
                                         <td>
                                             @if (row.productId) {
-                                                <a
-                                                    [routerLink]="['/panel/products', row.productId]"
-                                                    class="text-primary font-medium no-underline text-sm"
-                                                    >Detay</a
-                                                >
+                                                <app-row-action-button action="detail" [link]="['/panel/products', row.productId]" />
                                             }
                                             @if (canReceiveGoods && row.isBelowMinimum && row.productId) {
                                                 <a

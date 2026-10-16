@@ -19,6 +19,7 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay, istanbulDateRangeToUtcIso } from '@/app/shared/utils/date.utils';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 /** Satış listesi (`Sales.Read`): tarih aralığı, iptal edilenleri dahil etme; satır detaya gider. */
 @Component({
@@ -37,7 +38,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay, istanbulDateRangeToUtcIso } from '@
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <div class="card">
@@ -108,7 +110,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay, istanbulDateRangeToUtcIso } from '@
                                     }
                                 </td>
                                 <td><app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" /></td>
-                                <td><a [routerLink]="['/panel/sales', row.id]" class="text-primary font-medium no-underline">Detay</a></td>
+                                <td><app-row-action-button action="detail" [link]="['/panel/sales', row.id]" /></td>
                             </tr>
                         </ng-template>
                     </p-table>

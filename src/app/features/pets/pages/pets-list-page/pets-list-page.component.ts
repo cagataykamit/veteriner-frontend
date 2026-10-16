@@ -26,6 +26,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type PetsListState = {
     search: string;
@@ -54,7 +55,8 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent, AppContextFilterChipComponent, FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         @if (activeClientId()) {
@@ -132,7 +134,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                     <th>Cins</th>
                                     <th>Renk</th>
                                     <th>Kilo (kg)</th>
-                                    <th style="width: 8rem">İşlemler</th>
+                                    <th style="width: 6rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -148,7 +150,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                     <td>{{ row.colorName }}</td>
                                     <td>{{ row.weight }}</td>
                                     <td>
-                                        <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
                                     </td>
                                 </tr>
                             </ng-template>
@@ -201,7 +203,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                     </div>
                                 }
                                 <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                    <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
                                 </div>
                             </div>
                         }

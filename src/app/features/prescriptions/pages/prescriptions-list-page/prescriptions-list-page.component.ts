@@ -23,6 +23,7 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type PrescriptionsListState = {
     search: string;
@@ -49,7 +50,8 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         @if (contextPetId()) {
@@ -104,7 +106,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                     <th>Hasta</th>
                                     <th>Başlık</th>
                                     <th>Takip</th>
-                                    <th style="width: 8rem">İşlemler</th>
+                                    <th style="width: 6rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -129,7 +131,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                     <td>{{ row.title }}</td>
                                     <td>{{ formatDate(row.followUpDateUtc) }}</td>
                                     <td>
-                                        <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
                                     </td>
                                 </tr>
                             </ng-template>
@@ -173,7 +175,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                     }
                                 </div>
                                 <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/prescriptions', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                    <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
                                 </div>
                             </div>
                         }

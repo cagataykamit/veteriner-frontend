@@ -18,6 +18,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
     selector: 'app-breeds-list-page',
@@ -33,7 +34,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, SearchInputComponent
+        AppStatusTagComponent, SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <app-page-header title="Irklar" description="Irk kayıtlarını yönetin.">
@@ -100,7 +102,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         <th>Ad</th>
                                         <th>Tür</th>
                                         <th>Durum</th>
-                                        <th style="width: 8rem">İşlemler</th>
+                                        <th style="width: 6rem">İşlemler</th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
@@ -112,9 +114,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                         </td>
                                         <td>
                                             @if (canUpdateBreed() && !ro.mutationBlocked()) {
-                                                <a [routerLink]="[breedsRoute, row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                                <app-row-action-button action="edit" [link]="[breedsRoute, row.id, 'edit']" />
                                             } @else if (canUpdateBreed() && ro.mutationBlocked()) {
-                                                <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
                                             } @else {
                                                 <span class="text-muted-color">—</span>
                                             }
@@ -138,9 +140,9 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     </div>
                                     <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                         @if (canUpdateBreed() && !ro.mutationBlocked()) {
-                                            <a [routerLink]="[breedsRoute, row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle →</a>
+                                            <app-row-action-button action="edit" [link]="[breedsRoute, row.id, 'edit']" />
                                         } @else if (canUpdateBreed() && ro.mutationBlocked()) {
-                                            <span class="text-muted-color">Düzenle (salt okunur)</span>
+                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
                                         } @else {
                                             <span class="text-muted-color">—</span>
                                         }

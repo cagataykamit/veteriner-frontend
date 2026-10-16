@@ -27,6 +27,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
     selector: 'app-lab-results-list-page',
@@ -42,7 +43,8 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
         AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent
+        AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         @if (contextPetId()) {
@@ -113,7 +115,7 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                                     <th>Müşteri</th>
                                     <th>Hasta</th>
                                     <th>Test</th>
-                                    <th style="width: 8rem">İşlemler</th>
+                                    <th style="width: 6rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -140,7 +142,7 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                                     <td>{{ row.testName }}</td>
                                     <td>
                                         <div class="flex flex-wrap gap-x-3 gap-y-1">
-                                            <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                            <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
                                             @if (canEditRow(row)) {
                                                 <a [routerLink]="['/panel/lab-results', row.id, 'edit']" class="text-primary font-medium no-underline">{{ editLabel(row.status) }}</a>
                                             }
@@ -190,7 +192,7 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                                     @if (canEditRow(row)) {
                                         <a [routerLink]="['/panel/lab-results', row.id, 'edit']" class="text-primary font-medium no-underline">{{ editLabel(row.status) }}</a>
                                     }
-                                    <a [routerLink]="['/panel/lab-results', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                    <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
                                 </div>
                             </div>
                         }

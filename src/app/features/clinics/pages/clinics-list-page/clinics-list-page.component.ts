@@ -14,6 +14,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatClinicPhoneForDisplay } from '@/app/features/clinics/utils/clinic-phone-format.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
     selector: 'app-clinics-list-page',
@@ -26,7 +27,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <app-page-header
@@ -73,7 +75,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                 <th class="max-w-[10rem]">Telefon</th>
                                 <th class="max-w-[12rem]">E-posta</th>
                                 <th>Durum</th>
-                                <th style="width: 10rem">İşlemler</th>
+                                <th style="width: 6rem">İşlemler</th>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
@@ -92,14 +94,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     }
                                 </td>
                                 <td>
-                                    <a
-                                        [routerLink]="['/panel/settings/clinics', row.id]"
-                                        pButton
-                                        type="button"
-                                        class="p-button-text p-button-sm"
-                                        label="Detay / Düzenle"
-                                        icon="pi pi-pencil"
-                                    ></a>
+                                    <app-row-action-button action="edit" label="Detay / Düzenle" [link]="['/panel/settings/clinics', row.id]" />
                                 </td>
                             </tr>
                         </ng-template>
@@ -124,14 +119,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                                     <span class="text-muted-color">—</span>
                                 }
                             </div>
-                            <a
-                                [routerLink]="['/panel/settings/clinics', row.id]"
-                                pButton
-                                type="button"
-                                class="p-button-text p-button-sm"
-                                label="Detay / Düzenle"
-                                icon="pi pi-pencil"
-                            ></a>
+                            <app-row-action-button action="edit" label="Detay / Düzenle" [link]="['/panel/settings/clinics', row.id]" />
                         </div>
                     }
                 </div>

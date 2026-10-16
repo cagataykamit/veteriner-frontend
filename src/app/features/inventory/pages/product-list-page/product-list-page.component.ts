@@ -29,6 +29,7 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ConfirmationService } from 'primeng/api';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type ProductsListState = {
     search: string;
@@ -58,7 +59,8 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         AppErrorStateComponent,
         AppStatusTagComponent,
         FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -140,10 +142,9 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                         </td>
                                         <td>
                                             <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
-                                                <a [routerLink]="['/panel/products', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                                <app-row-action-button action="detail" [link]="['/panel/products', row.id]" />
                                                 @if (canUpdateProduct && !ro.mutationBlocked()) {
-                                                    <a [routerLink]="['/panel/products', row.id, 'edit']" class="text-primary font-medium no-underline"
-                                                        >Düzenle</a>
+                                                    <app-row-action-button action="edit" [link]="['/panel/products', row.id, 'edit']" />
                                                 }
                                                 @if (canDeactivateProduct && !ro.mutationBlocked() && row.isActive) {
                                                     <button
@@ -199,9 +200,9 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                         </div>
                                     </div>
                                     <div class="flex flex-wrap justify-end gap-x-3 gap-y-2 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        <a [routerLink]="['/panel/products', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        <app-row-action-button action="detail" [link]="['/panel/products', row.id]" />
                                         @if (canUpdateProduct && !ro.mutationBlocked()) {
-                                            <a [routerLink]="['/panel/products', row.id, 'edit']" class="text-primary font-medium no-underline">Düzenle</a>
+                                            <app-row-action-button action="edit" [link]="['/panel/products', row.id, 'edit']" />
                                         }
                                         @if (canDeactivateProduct && !ro.mutationBlocked() && row.isActive) {
                                             <button

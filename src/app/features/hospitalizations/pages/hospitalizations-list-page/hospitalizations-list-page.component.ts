@@ -24,6 +24,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type ActiveFilterUi = 'all' | 'active' | 'discharged';
 type HospitalizationsListState = {
@@ -53,7 +54,8 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         @if (contextPetId()) {
@@ -121,7 +123,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                     <th>Müşteri</th>
                                     <th>Hasta</th>
                                     <th>Neden</th>
-                                    <th style="width: 8rem">İşlemler</th>
+                                    <th style="width: 6rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -154,7 +156,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                     </td>
                                     <td>{{ row.reason }}</td>
                                     <td>
-                                        <a [routerLink]="['/panel/hospitalizations', row.id]" class="text-primary font-medium no-underline">Detay</a>
+                                        <app-row-action-button action="detail" [link]="['/panel/hospitalizations', row.id]" />
                                     </td>
                                 </tr>
                             </ng-template>
@@ -202,7 +204,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                     }
                                 </div>
                                 <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/hospitalizations', row.id]" class="text-primary font-medium no-underline">Detay →</a>
+                                    <app-row-action-button action="detail" [link]="['/panel/hospitalizations', row.id]" />
                                 </div>
                             </div>
                         }

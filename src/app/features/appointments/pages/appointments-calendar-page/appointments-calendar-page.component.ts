@@ -19,6 +19,7 @@ import {
     APPOINTMENTS_CREATE_CLAIM,
     APPOINTMENTS_RESCHEDULE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type CalendarViewMode = 'day' | 'week';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
@@ -33,7 +34,8 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppRowActionButtonComponent
     ],
     template: `
         <div class="card">
@@ -123,33 +125,10 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                 <app-status-tag [label]="item.appointmentTypeLabel" severity="secondary" />
                                             </div>
                                             <div class="flex items-center justify-center shrink-0">
-                                                <button
-                                                    pButton
-                                                    type="button"
-                                                    size="small"
-                                                    text="true"
-                                                    rounded="true"
-                                                    icon="pi pi-eye"
-                                                    class="h-7 w-7 p-0"
-                                                    [attr.aria-label]="'Randevu detayını görüntüle'"
-                                                    title="Detay"
-                                                    (click)="openDetail(item.id)"
-                                                ></button>
+                                                <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
                                             </div>
                                             <div class="flex items-center justify-center shrink-0">
-                                                <button
-                                                    pButton
-                                                    type="button"
-                                                    size="small"
-                                                    text="true"
-                                                    rounded="true"
-                                                    icon="pi pi-pencil"
-                                                    class="h-7 w-7 p-0"
-                                                    [attr.aria-label]="'Randevuyu düzenle'"
-                                                    title="Düzenle"
-                                                    [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
-                                                    (click)="openEdit(item.id)"
-                                                ></button>
+                                                <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                             </div>
                                         </div>
                                     </article>
@@ -195,33 +174,10 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     <app-status-tag [label]="item.appointmentTypeLabel" severity="secondary" />
                                                 </div>
                                                 <div class="flex items-center justify-center shrink-0">
-                                                    <button
-                                                        pButton
-                                                        type="button"
-                                                        size="small"
-                                                        text="true"
-                                                        rounded="true"
-                                                        icon="pi pi-eye"
-                                                        class="h-7 w-7 p-0"
-                                                        [attr.aria-label]="'Randevu detayını görüntüle'"
-                                                        title="Detay"
-                                                        (click)="openDetail(item.id)"
-                                                    ></button>
+                                                    <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
                                                 </div>
                                                 <div class="flex items-center justify-center shrink-0">
-                                                    <button
-                                                        pButton
-                                                        type="button"
-                                                        size="small"
-                                                        text="true"
-                                                        rounded="true"
-                                                        icon="pi pi-pencil"
-                                                        class="h-7 w-7 p-0"
-                                                        [attr.aria-label]="'Randevuyu düzenle'"
-                                                        title="Düzenle"
-                                                        [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
-                                                        (click)="openEdit(item.id)"
-                                                    ></button>
+                                                    <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                                 </div>
                                             </div>
                                         </article>
@@ -263,33 +219,10 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     <app-status-tag [label]="item.appointmentTypeLabel" severity="secondary" />
                                                 </div>
                                                 <div class="flex items-center justify-center shrink-0">
-                                                    <button
-                                                        pButton
-                                                        type="button"
-                                                        size="small"
-                                                        text="true"
-                                                        rounded="true"
-                                                        icon="pi pi-eye"
-                                                        class="h-7 w-7 p-0"
-                                                        [attr.aria-label]="'Randevu detayını görüntüle'"
-                                                        title="Detay"
-                                                        (click)="openDetail(item.id)"
-                                                    ></button>
+                                                    <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
                                                 </div>
                                                 <div class="flex items-center justify-center shrink-0">
-                                                    <button
-                                                        pButton
-                                                        type="button"
-                                                        size="small"
-                                                        text="true"
-                                                        rounded="true"
-                                                        icon="pi pi-pencil"
-                                                        class="h-7 w-7 p-0"
-                                                        [attr.aria-label]="'Randevuyu düzenle'"
-                                                        title="Düzenle"
-                                                        [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
-                                                        (click)="openEdit(item.id)"
-                                                    ></button>
+                                                    <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                                 </div>
                                             </div>
                                         </article>
@@ -321,8 +254,8 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     <app-status-tag class="shrink-0" [label]="item.appointmentTypeLabel" severity="secondary" />
                                                 </div>
                                                 <div class="mt-2 flex gap-2">
-                                                    <button pButton type="button" size="small" text="true" label="Detay" (click)="openDetail(item.id)"></button>
-                                                    <button pButton type="button" size="small" text="true" label="Düzenle" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (click)="openEdit(item.id)"></button>
+                                                    <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
+                                                    <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                                 </div>
                                             </article>
                                         }
@@ -360,29 +293,8 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     <app-status-tag class="shrink-0" [label]="item.appointmentTypeLabel" severity="secondary" />
                                                 </div>
                                                     <div class="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
-                                                        <button
-                                                            pButton
-                                                            type="button"
-                                                            size="small"
-                                                            text="true"
-                                                            rounded="true"
-                                                            icon="pi pi-eye"
-                                                            [attr.aria-label]="'Randevu detayını görüntüle'"
-                                                            title="Detay"
-                                                            (click)="openDetail(item.id)"
-                                                        ></button>
-                                                        <button
-                                                            pButton
-                                                            type="button"
-                                                            size="small"
-                                                            text="true"
-                                                            rounded="true"
-                                                            icon="pi pi-pencil"
-                                                            [attr.aria-label]="'Randevuyu düzenle'"
-                                                            title="Düzenle"
-                                                            [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
-                                                            (click)="openEdit(item.id)"
-                                                        ></button>
+                                                        <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
+                                                        <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                                 </div>
                                             </div>
                                         </article>
@@ -415,29 +327,8 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     <app-status-tag class="shrink-0" [label]="item.appointmentTypeLabel" severity="secondary" />
                                                 </div>
                                                     <div class="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
-                                                        <button
-                                                            pButton
-                                                            type="button"
-                                                            size="small"
-                                                            text="true"
-                                                            rounded="true"
-                                                            icon="pi pi-eye"
-                                                            [attr.aria-label]="'Randevu detayını görüntüle'"
-                                                            title="Detay"
-                                                            (click)="openDetail(item.id)"
-                                                        ></button>
-                                                        <button
-                                                            pButton
-                                                            type="button"
-                                                            size="small"
-                                                            text="true"
-                                                            rounded="true"
-                                                            icon="pi pi-pencil"
-                                                            [attr.aria-label]="'Randevuyu düzenle'"
-                                                            title="Düzenle"
-                                                            [disabled]="!canRescheduleAppointment || ro.mutationBlocked()"
-                                                            (click)="openEdit(item.id)"
-                                                        ></button>
+                                                        <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
+                                                        <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                                 </div>
                                             </div>
                                         </article>
@@ -467,8 +358,8 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     <app-status-tag class="shrink-0" [label]="item.appointmentTypeLabel" severity="secondary" />
                                                 </div>
                                                 <div class="mt-2 flex gap-2">
-                                                    <button pButton type="button" size="small" text="true" label="Detay" (click)="openDetail(item.id)"></button>
-                                                    <button pButton type="button" size="small" text="true" label="Düzenle" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (click)="openEdit(item.id)"></button>
+                                                    <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
+                                                    <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                                 </div>
                                             </article>
                                         }
