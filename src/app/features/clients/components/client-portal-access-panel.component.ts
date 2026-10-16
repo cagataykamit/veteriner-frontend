@@ -25,9 +25,11 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     standalone: true,
     imports: [ButtonModule, ConfirmDialogModule, AppErrorStateComponent],
     providers: [ConfirmationService],
+    /** `.card:last-child` alt boşluğu sıfırladığından boşluk ana öğede (bölüm bileşenin son çocuğu). */
+    host: { class: 'block mb-4' },
     template: `
         <p-confirmdialog key="client-portal" [style]="{ width: 'min(450px, 95vw)' }" />
-        <section class="card mb-4" aria-labelledby="client-portal-title" data-testid="client-portal">
+        <section class="card mb-0" aria-labelledby="client-portal-title" data-testid="client-portal">
             <h5 id="client-portal-title" class="mt-0 mb-3 text-base">Portal erişimi</h5>
             @if (loadError(); as err) {
                 <app-error-state [detail]="err" (retry)="load()" />
