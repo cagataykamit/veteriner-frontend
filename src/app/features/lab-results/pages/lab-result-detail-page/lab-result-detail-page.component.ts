@@ -6,7 +6,7 @@ import type { LabResultDetailVm } from '@/app/features/lab-results/models/lab-re
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
 import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
 import { isLabResultEditable, labResultEditLabel } from '@/app/features/lab-results/utils/lab-result-status.utils';
-import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
+import { LabResultCancelDialogComponent } from '@/app/features/lab-results/components/lab-result-cancel-dialog.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -31,7 +31,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         AppLoadingStateComponent,
         AppErrorStateComponent,
         LabResultStatusBadgesComponent,
-        ReasonConfirmDialogComponent
+        LabResultCancelDialogComponent
     ],
     template: `
         @if (savedMessage(); as message) {
@@ -157,16 +157,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             </div>
         }
 
-        <app-reason-confirm-dialog
-            [(visible)]="cancelVisible"
-            header="Lab kaydını iptal et"
-            [summary]="row() ? row()!.testName + ' · ' + row()!.petName : null"
-            description="İptal edilen kayıt silinmez; listelerde varsayılan olarak gizlenir. Geri alınamaz."
-            confirmLabel="Kaydı iptal et"
-            failureFallback="Lab kaydı iptal edilemedi."
-            [execute]="cancelLabResult"
-            (confirmed)="reload()"
-        />
+        <app-lab-result-cancel-dialog [(visible)]="cancelVisible" [target]="row()" (cancelled)="reload()" />
     `
 })
 export class LabResultDetailPageComponent implements OnInit {
@@ -185,8 +176,6 @@ export class LabResultDetailPageComponent implements OnInit {
     readonly isEditable = isLabResultEditable;
     readonly editLabel = labResultEditLabel;
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-
-    readonly cancelLabResult = (reason: string) => this.labResultsService.cancelLabResult(this.labResultId, reason, this.row()!.rowVersion);
 
     private labResultId = '';
 

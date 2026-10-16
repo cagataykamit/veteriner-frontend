@@ -3,7 +3,8 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
+import { isLastRowAction, isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import type { LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -112,5 +113,68 @@ describe('LabResultsListPageComponent — satırda Düzenle', () => {
         expect(readOnly.length).toBe(2);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
         expect(readOnly[0].getAttribute('aria-label')).toBe('Sonuç gir (salt okunur)');
+    });
+});
+
+/** ADR-026 madde 7: detaydaki "İptal et" ile aynı yetki, durum ve diyalog; onaylanmadan servis çağrılmaz. */
+describe('LabResultsListPageComponent — satırda İptal', () => {
+    const create = (items: LabResultListItemVm[], claims: string[], mutationBlocked = false) => {
+        const service = {
+            getLabResults: jasmine.createSpy('getLabResults').and.returnValue(of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 })),
+            getLabResultById: jasmine.createSpy('getLabResultById').and.returnValue(of({ rowVersion: 'V7' })),
+            cancelLabResult: jasmine.createSpy('cancelLabResult').and.returnValue(of(void 0))
+        };
+
+        TestBed.configureTestingModule({
+            imports: [LabResultsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: LabResultsService, useValue: service },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
+            ]
+        });
+        const fixture = TestBed.createComponent(LabResultsListPageComponent);
+
+        fixture.detectChanges();
+
+        return { fixture, service, el: fixture.nativeElement as HTMLElement };
+    };
+
+    it('istem ve sonuçta, yetkiyle satırın son eylemidir; iptal edilmişte, yetkisizken ve salt okunurda yoktur', () => {
+        const { el } = create([row({}), row({ id: 'l2', status: 'Resulted' }), row({ id: 'l3', status: 'Cancelled' })], [LAB_RESULTS_UPDATE_CLAIM]);
+        const voids = rowDangerActions(el);
+
+        expect(voids.length).withContext('2 iptal edilebilir satır × tablo + mobil kart').toBe(4);
+        expect(voids.every((v) => v.querySelector('.fa-ban') && v.getAttribute('aria-label') === 'İptal et' && isLastRowAction(v))).toBeTrue();
+
+        TestBed.resetTestingModule();
+        expect(rowDangerActions(create([row({})], []).el).length).toBe(0);
+
+        TestBed.resetTestingModule();
+        expect(rowDangerActions(create([row({})], [LAB_RESULTS_UPDATE_CLAIM], true).el).length).toBe(0);
+    });
+
+    it('tıklamada detaydaki iptal diyaloğu açılır, onaylanmadan servis çağrılmaz; onayda güncel sürümle iptal edilir ve liste yenilenir', () => {
+        const { fixture, service, el } = create([row({})], [LAB_RESULTS_UPDATE_CLAIM]);
+
+        rowDangerActions(el)[0].click();
+        fixture.detectChanges();
+
+        const dialog = fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
+
+        expect(dialog.visible()).toBeTrue();
+        expect(dialog.header()).toBe('Lab kaydını iptal et');
+        expect(dialog.summary()).toBe('Hemogram · Pamuk');
+        expect(service.cancelLabResult).not.toHaveBeenCalled();
+
+        service.getLabResults.calls.reset();
+        dialog.form.controls.reason.setValue('Yanlış hastaya istendi');
+        dialog.onSubmit();
+
+        expect(service.getLabResultById).toHaveBeenCalledWith('l1');
+        expect(service.cancelLabResult).toHaveBeenCalledOnceWith('l1', 'Yanlış hastaya istendi', 'V7');
+        expect(service.getLabResults).toHaveBeenCalledTimes(1);
     });
 });

@@ -15,6 +15,7 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { LabResultListItemVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
+import { LabResultCancelDialogComponent } from '@/app/features/lab-results/components/lab-result-cancel-dialog.component';
 import { isLabResultEditable, LAB_RESULT_STATUS_FILTER_OPTIONS, labResultEditLabel } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import { SelectModule } from 'primeng/select';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
@@ -44,7 +45,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        LabResultCancelDialogComponent
     ],
     template: `
         @if (contextPetId()) {
@@ -148,6 +150,9 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                             } @else if (canEditRow(row) && ro.mutationBlocked()) {
                                                 <app-row-action-button action="edit" [label]="editLabel(row.status) + ' (salt okunur)'" [disabled]="true" />
                                             }
+                                            @if (canEditRow(row) && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="void" (pressed)="openCancel(row)" />
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -197,6 +202,9 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                     } @else if (canEditRow(row) && ro.mutationBlocked()) {
                                         <app-row-action-button action="edit" [label]="editLabel(row.status) + ' (salt okunur)'" [disabled]="true" />
                                     }
+                                    @if (canEditRow(row) && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="void" (pressed)="openCancel(row)" />
+                                    }
                                 </div>
                             </div>
                         }
@@ -217,6 +225,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
             }
                 </div>
         </div>
+
+        <app-lab-result-cancel-dialog [(visible)]="cancelVisible" [target]="cancelTarget()" (cancelled)="reload()" />
     `
 })
 export class LabResultsListPageComponent implements OnInit {
@@ -255,9 +265,18 @@ export class LabResultsListPageComponent implements OnInit {
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
     readonly editLabel = labResultEditLabel;
 
-    /** Detay sayfasındaki Düzenle koşuluyla aynı; salt okunur durumda düğme pasif gösterilir. */
+    /** Detay sayfasındaki Düzenle ve İptal et koşuluyla aynı; salt okunur durumda Düzenle pasif, İptal gizlidir (detaydaki gibi). */
     canEditRow(row: { status: LabResultStatus | null }): boolean {
         return this.canUpdateLabResult && isLabResultEditable(row.status);
+    }
+
+    /** İptal diyaloğunun açık olduğu satır. */
+    readonly cancelTarget = signal<LabResultListItemVm | null>(null);
+    cancelVisible = false;
+
+    openCancel(row: LabResultListItemVm): void {
+        this.cancelTarget.set(row);
+        this.cancelVisible = true;
     }
 
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);

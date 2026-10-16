@@ -6,6 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { LabResultDetailVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { LabResultDetailPageComponent } from './lab-result-detail-page.component';
 
 const vm = (status: LabResultStatus): LabResultDetailVm => ({
@@ -70,6 +71,47 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
 
     it('salt okunur kiracıda yalnız kilitli düğme', () => {
         expect(render('Requested', true, true)).toEqual(['Düzenle (salt okunur)']);
+    });
+});
+
+describe('LabResultDetailPageComponent — İptal et', () => {
+    it('liste satırıyla ortak iptal diyaloğunu açar; onayda ekranın açıldığı sürümle iptal eder ve kaydı yeniler', () => {
+        const service = {
+            getLabResultById: jasmine.createSpy('getLabResultById').and.returnValue(of(vm('Requested'))),
+            cancelLabResult: jasmine.createSpy('cancelLabResult').and.returnValue(of(void 0))
+        };
+
+        TestBed.configureTestingModule({
+            imports: [LabResultDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap({}) } } },
+                { provide: LabResultsService, useValue: service },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(LabResultDetailPageComponent);
+
+        fixture.detectChanges();
+        const cancelButton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[actions] button')).find((b) => b.textContent?.trim() === 'İptal et') as HTMLElement;
+
+        cancelButton.click();
+        fixture.detectChanges();
+
+        expect(fixture.debugElement.query((d) => d.name === 'app-lab-result-cancel-dialog')).not.toBeNull();
+        const dialog = fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
+
+        expect(dialog.visible()).toBeTrue();
+        expect(service.cancelLabResult).not.toHaveBeenCalled();
+
+        service.getLabResultById.calls.reset();
+        dialog.form.controls.reason.setValue('Yanlış hastaya istendi');
+        dialog.onSubmit();
+
+        expect(service.cancelLabResult).toHaveBeenCalledOnceWith('l1', 'Yanlış hastaya istendi', 'V1');
+        expect(service.getLabResultById).withContext('yalnız yenileme; sürüm zaten ekrandan gelir').toHaveBeenCalledTimes(1);
     });
 });
 
