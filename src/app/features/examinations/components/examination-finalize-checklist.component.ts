@@ -1,5 +1,6 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
 import { FINALIZED_LOCK_MESSAGE, type FinalizeCheckItem } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -7,11 +8,12 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 /**
  * Muayene çalışma alanının sağ paneli: kesinleştirme kontrol listesi (ADR-020 karar 4). Maddeler uyarıdır, engel değildir;
  * kesinleştirme onayı aynı kuralı (`finalizeChecklist`) kullanır. Kesinleşmiş muayenede kilit nedeni gösterilir (ADR-013).
+ * "Kesinleştir" düğmesi listenin altındadır: karar uyarıların okunduğu yerde verilir (ADR-027).
  */
 @Component({
     selector: 'app-examination-finalize-checklist',
     standalone: true,
-    imports: [RouterLink],
+    imports: [RouterLink, ButtonModule],
     template: `
         <section class="card mb-0 p-4" aria-label="Kesinleştirme kontrolü" data-testid="finalize-checklist">
             @if (exam().status === 'Finalized') {
@@ -52,12 +54,26 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     }
                 </ul>
             }
+            @if (canFinalize()) {
+                <button
+                    pButton
+                    type="button"
+                    label="Kesinleştir"
+                    icon="pi pi-lock"
+                    class="w-full mt-3"
+                    data-testid="finalize-open"
+                    (click)="finalizeRequested.emit()"
+                ></button>
+            }
         </section>
     `
 })
 export class ExaminationFinalizeChecklistComponent {
     readonly exam = input.required<ExaminationDetailVm>();
     readonly items = input<readonly FinalizeCheckItem[]>([]);
+    /** Görünürlük kuralı sayfadadır (yetki, taslak, salt okunur kurum); kart yalnız düğmeyi gösterir (ADR-027). */
+    readonly canFinalize = input(false);
+    readonly finalizeRequested = output<void>();
 
     /** Kesinleşince yalnız hâlâ iş doğuran madde (ücret bekleyen) kalır; diğerleri artık değiştirilemez. */
     readonly visibleItems = computed(() =>

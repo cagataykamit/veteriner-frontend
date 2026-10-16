@@ -132,16 +132,6 @@ const RECORD_TEXT_SECTIONS: readonly {
                             (click)="templateDialogVisible.set(true)"
                         ></button>
                     }
-                    @if (canFinalizeNow()) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Kesinleştir"
-                            icon="pi pi-lock"
-                            data-testid="finalize-open"
-                            (click)="finalizeDialogVisible.set(true)"
-                        ></button>
-                    }
                     @if (canUpdateExamination && !ro.mutationBlocked()) {
                         @if (exam()!.status === 'Draft') {
                             <a
@@ -275,8 +265,14 @@ const RECORD_TEXT_SECTIONS: readonly {
                     }
                 </div>
 
-                <aside class="col-span-12 xl:col-span-3">
-                    <app-examination-finalize-checklist [exam]="exam()!" [items]="finalizeChecklist()" />
+                <!-- Geniş ekranda sabit: üst çubuk (4rem) + 1rem, soldaki menünün üst hizası (_menu.scss top: 5rem). -->
+                <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-20" data-testid="finalize-aside">
+                    <app-examination-finalize-checklist
+                        [exam]="exam()!"
+                        [items]="finalizeChecklist()"
+                        [canFinalize]="canFinalizeNow()"
+                        (finalizeRequested)="finalizeDialogVisible.set(true)"
+                    />
                 </aside>
             </div>
 

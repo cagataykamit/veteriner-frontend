@@ -18,16 +18,37 @@ const exam = (over: Partial<ExaminationDetailVm> = {}): ExaminationDetailVm =>
 const summary = { examinationId: 'e1', pendingChargeCount: 1 } as never;
 
 describe('ExaminationFinalizeChecklistComponent', () => {
-    const render = async (vm: ExaminationDetailVm) => {
+    const setup = async (vm: ExaminationDetailVm, canFinalize = false) => {
         await TestBed.configureTestingModule({ imports: [ExaminationFinalizeChecklistComponent], providers: [provideRouter([])] }).compileComponents();
         const fixture = TestBed.createComponent(ExaminationFinalizeChecklistComponent);
 
         fixture.componentRef.setInput('exam', vm);
         fixture.componentRef.setInput('items', finalizeChecklist(vm, summary));
+        fixture.componentRef.setInput('canFinalize', canFinalize);
         fixture.detectChanges();
 
-        return fixture.nativeElement as HTMLElement;
+        return fixture;
     };
+
+    const render = async (vm: ExaminationDetailVm, canFinalize = false) => (await setup(vm, canFinalize)).nativeElement as HTMLElement;
+
+    it('canFinalize ile Kesinleştir listenin altında görünür ve tıklanınca istek yayar', async () => {
+        const fixture = await setup(exam(), true);
+        const el = fixture.nativeElement as HTMLElement;
+        const button = el.querySelector('[data-testid="finalize-open"]') as HTMLButtonElement;
+        let requested = 0;
+
+        fixture.componentInstance.finalizeRequested.subscribe(() => requested++);
+        button.click();
+
+        expect(button.textContent).toContain('Kesinleştir');
+        expect(button.previousElementSibling?.tagName).toBe('UL');
+        expect(requested).toBe(1);
+    });
+
+    it('canFinalize yoksa (yetkisiz, salt okunur ya da kesinleşmiş) düğme gösterilmez', async () => {
+        expect((await render(exam())).querySelector('[data-testid="finalize-open"]')).toBeNull();
+    });
 
     it('taslakta tüm maddeler ve "engel değil" notu görünür', async () => {
         const el = await render(exam({ assessment: 'Gastrit' }));

@@ -123,7 +123,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         rowVersion: 'V2'
     };
 
-    const setup = async (vm: ExaminationDetailVm, claims: string[], relatedSummary: object = { examinationId: 'e1' }) => {
+    const setup = async (vm: ExaminationDetailVm, claims: string[], relatedSummary: object = { examinationId: 'e1' }, readOnly = false) => {
         const service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', [
             'getExaminationById',
             'getExaminationRelatedSummary',
@@ -159,7 +159,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
                 { provide: VaccinationsService, useValue: { getVaccinations: () => EMPTY } },
                 { provide: TreatmentsService, useValue: { getTreatments: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => readOnly } }
             ]
         }).compileComponents();
         const fixture = TestBed.createComponent(ExaminationDetailPageComponent);
@@ -179,6 +179,44 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(label(el)).toContain('Düzenle');
         expect(has(el, 'addenda-section')).toBeFalse();
         expect(label(el)).toContain('Taslak');
+    });
+
+    it('Kesinleştir yalnız kontrol listesi kartında, listenin altındadır; üst eylem çubuğunda yoktur (ADR-027)', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize']);
+        const card = el.querySelector('[data-testid="finalize-checklist"]')!;
+        const button = card.querySelector('[data-testid="finalize-open"]')!;
+
+        expect(el.querySelectorAll('[data-testid="finalize-open"]').length).toBe(1);
+        expect(el.querySelector('app-page-header [data-testid="finalize-open"]')).toBeNull();
+        expect(button).not.toBeNull();
+        expect(card.lastElementChild).toBe(button);
+        expect(button.previousElementSibling?.tagName).toBe('UL');
+        expect(el.querySelector('app-page-header')?.textContent).toContain('Düzenle');
+    });
+
+    it('kart içindeki Kesinleştir onay diyaloğunu açar', async () => {
+        const { fixture, el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize']);
+
+        (el.querySelector('[data-testid="finalize-checklist"] [data-testid="finalize-open"]') as HTMLButtonElement).click();
+
+        expect(fixture.componentInstance.finalizeDialogVisible()).toBeTrue();
+    });
+
+    it('kurum salt okunurken kartta Kesinleştir görünmez', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize'], { examinationId: 'e1' }, true);
+
+        expect(has(el, 'finalize-checklist')).toBeTrue();
+        expect(has(el, 'finalize-open')).toBeFalse();
+    });
+
+    it('kontrol listesi sütunu geniş ekranda üst çubuğun altında sabit, dar ekranda akışta kalır', async () => {
+        const { el } = await setup(detailVm, ['Examinations.Read']);
+        const aside = el.querySelector('[data-testid="finalize-aside"]')!;
+
+        expect(aside.classList).toContain('xl:sticky');
+        expect(aside.classList).toContain('xl:top-20');
+        expect(aside.classList).not.toContain('sticky');
+        expect(aside.querySelector('[data-testid="finalize-checklist"]')).not.toBeNull();
     });
 
     it('Sekreter (izinsiz) taslakta Kesinleştir görmez', async () => {
