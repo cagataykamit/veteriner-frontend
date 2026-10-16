@@ -9,5 +9,7 @@ export const environment = {
      * Swagger `LoginCommand.tenantId` — backend çok kiracılı ise ve zorunlu tutuyorsa tenant GUID.
      * Örnek: '3fa85f64-5717-4562-b3fc-2c963f66afa6'
      */
-    authTenantId: null as string | null
+    authTenantId: null as string | null,
+    /** Tanıtım sayfalarını arama motorlarına kapat (yalnız staging). */
+    siteNoindex: false
 };

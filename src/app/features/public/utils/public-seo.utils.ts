@@ -1,5 +1,13 @@
 import { Meta, Title } from '@angular/platform-browser';
+import { environment } from '@/environments/environment';
+import type { PublicFaqDef } from './public-faq-content.utils';
 import { PUBLIC_PATHS } from './public-navigation.utils';
+
+/** Canlı tanıtım sitesi kökü; canonical ve OG adresleri buradan türetilir (origin'den değil: staging kendini asıl saymaz). */
+export const PUBLIC_SITE_ORIGIN = 'https://www.vetinity.com';
+
+/** OG/Twitter görseli (1200×630). WEB-005 ile gerçek Bugün ekranı PNG'si gelene kadar yer tutucu SVG. */
+export const PUBLIC_OG_IMAGE_PATH = '/marketing/og-image.svg';
 
 export interface PublicPageMetaOptions {
     readonly title: string;
@@ -72,9 +80,14 @@ export const AUTH_SIGNUP_PAGE_META: PublicPageMetaOptions = {
     noindex: true
 };
 
+/** Mutlak site adresi: `publicSiteUrl('/paketler')` → `https://www.vetinity.com/paketler`. */
+export function publicSiteUrl(path: string): string {
+    return `${PUBLIC_SITE_ORIGIN}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 /**
- * Public sayfa title + temel meta/OG tag'lerini günceller.
- * Panel route'larında kullanılmaz.
+ * Public sayfa title + temel meta/OG/Twitter tag'lerini günceller; canonical sabit canlı köke işaret eder.
+ * Staging derlemesi (`environment.siteNoindex`) her sayfayı `noindex` yapar. Panel route'larında kullanılmaz.
  */
 export function setPublicPageMeta(
     title: Title,
@@ -88,8 +101,16 @@ export function setPublicPageMeta(
     meta.updateTag({ property: 'og:title', content: options.title });
     meta.updateTag({ property: 'og:description', content: options.description });
     meta.updateTag({ property: 'og:type', content: 'website' });
+    meta.updateTag({ property: 'og:site_name', content: 'Vetinity' });
+    meta.updateTag({ property: 'og:locale', content: 'tr_TR' });
+    meta.updateTag({ property: 'og:image', content: publicSiteUrl(PUBLIC_OG_IMAGE_PATH) });
+    meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
 
-    if (options.noindex) {
+    if (options.canonicalPath) {
+        meta.updateTag({ property: 'og:url', content: publicSiteUrl(options.canonicalPath) });
+    }
+
+    if (options.noindex || environment.siteNoindex) {
         meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
     } else {
         meta.removeTag('name="robots"');
@@ -101,7 +122,6 @@ export function setPublicPageMeta(
 }
 
 function updateCanonicalLink(document: Document, path: string): void {
-    const href = `${document.location.origin}${path.startsWith('/') ? path : `/${path}`}`;
     let link = document.querySelector('link[rel="canonical"]');
 
     if (!link) {
@@ -110,5 +130,38 @@ function updateCanonicalLink(document: Document, path: string): void {
         document.head.appendChild(link);
     }
 
-    link.setAttribute('href', href);
+    link.setAttribute('href', publicSiteUrl(path));
+}
+
+const JSON_LD_ATTR = 'data-public-json-ld';
+
+/** `<head>` içine kimlikli JSON-LD betiği yazar (aynı kimlik varsa değiştirir). Sayfa ayrılırken `removePublicJsonLd` çağrılır. */
+export function setPublicJsonLd(document: Document, id: string, data: Record<string, unknown>): void {
+    let script = document.head.querySelector<HTMLScriptElement>(`script[${JSON_LD_ATTR}="${id}"]`);
+
+    if (!script) {
+        script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.setAttribute(JSON_LD_ATTR, id);
+        document.head.appendChild(script);
+    }
+
+    script.textContent = JSON.stringify(data);
+}
+
+export function removePublicJsonLd(document: Document, id: string): void {
+    document.head.querySelector(`script[${JSON_LD_ATTR}="${id}"]`)?.remove();
+}
+
+/** schema.org `FAQPage` — ana sayfa SSS'si (öneri belgesi 6.3). */
+export function publicFaqPageJsonLd(faqs: readonly PublicFaqDef[]): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((faq) => ({
+            '@type': 'Question',
+            name: faq.question,
+            acceptedAnswer: { '@type': 'Answer', text: faq.answer }
+        }))
+    };
 }

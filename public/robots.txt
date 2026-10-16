@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /panel
+Disallow: /auth
+Disallow: /join
+Allow: /
+
+Sitemap: https://www.vetinity.com/sitemap.xml

@@ -9,5 +9,7 @@ export const environment = {
      * Giriş 401 dönüyorsa: backend tenant bekliyor olabilir — kendi tenant GUID’inizi yazın.
      * Swagger: LoginCommand.tenantId
      */
-    authTenantId: null as string | null
+    authTenantId: null as string | null,
+    /** Tanıtım sayfalarını arama motorlarına kapat (yalnız staging). */
+    siteNoindex: false
 };

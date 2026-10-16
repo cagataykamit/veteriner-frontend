@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
@@ -21,10 +21,12 @@ import {
     PUBLIC_RECORD_SAFETY_ITEMS,
     PUBLIC_REGISTERS
 } from '@/app/features/public/utils/public-registers-content.utils';
-import { PUBLIC_HOME_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
+import { PUBLIC_HOME_PAGE_META, publicFaqPageJsonLd, removePublicJsonLd, setPublicJsonLd, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicScreenshotPlaceholderComponent } from './components/public-screenshot-placeholder.component';
+
+const HOME_FAQ_JSON_LD_ID = 'home-faq';
 
 /** Ana sayfa omurgası (tasarım belgesi 5.1): kahraman, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt güvenliği, geçiş, yol haritası, SSS, çağrı. */
 @Component({
@@ -232,6 +234,7 @@ export class PublicHomePageComponent implements OnInit {
     private readonly title = inject(Title);
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
+    private readonly destroyRef = inject(DestroyRef);
 
     readonly paths = PUBLIC_PATHS;
     readonly trialLine = PUBLIC_HOME_TRIAL_LINE;
@@ -252,5 +255,7 @@ export class PublicHomePageComponent implements OnInit {
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, PUBLIC_HOME_PAGE_META, this.document);
+        setPublicJsonLd(this.document, HOME_FAQ_JSON_LD_ID, publicFaqPageJsonLd(this.faqs));
+        this.destroyRef.onDestroy(() => removePublicJsonLd(this.document, HOME_FAQ_JSON_LD_ID));
     }
 }

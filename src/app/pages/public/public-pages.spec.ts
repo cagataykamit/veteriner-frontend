@@ -18,8 +18,10 @@ import {
     PUBLIC_FEATURES_PAGE_META,
     PUBLIC_HOME_PAGE_META,
     PUBLIC_MIGRATION_PAGE_META,
+    PUBLIC_OG_IMAGE_PATH,
     PUBLIC_PACKAGES_PAGE_META,
-    PUBLIC_REGISTERS_PAGE_META
+    PUBLIC_REGISTERS_PAGE_META,
+    PUBLIC_SITE_ORIGIN
 } from '@/app/features/public/utils/public-seo.utils';
 
 /** Tanıtım sayfaları: ortak iskelet, rota, başlık ve içerik sabitleri. */
@@ -206,5 +208,56 @@ describe('Ana sayfa (PublicHomePage)', () => {
 
         expect(questions).toEqual(PUBLIC_HOME_FAQS.map((f) => f.question));
         expect(PUBLIC_HOME_FAQS.find((f) => f.question === 'Fiyat ne kadar?')?.answer).toContain('pilot dönemi fiyatı için');
+    });
+});
+
+/** WEB-003: sabit canonical, OG/Twitter, FAQPage JSON-LD. */
+describe('Tanıtım SEO (WEB-003)', () => {
+    let harness: RouterTestingHarness;
+
+    beforeEach(async () => {
+        TestBed.configureTestingModule({
+            providers: [provideRouter(appRoutes), provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+        });
+        harness = await RouterTestingHarness.create();
+    });
+
+    const head = (): HTMLHeadElement => document.head;
+
+    it('canonical sabit https://www.vetinity.com + yol (origin değil); og:url aynı', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.packages);
+
+        expect(head().querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(`${PUBLIC_SITE_ORIGIN}${PUBLIC_PATHS.packages}`);
+        expect(head().querySelector('meta[property="og:url"]')?.getAttribute('content')).toBe(`${PUBLIC_SITE_ORIGIN}${PUBLIC_PATHS.packages}`);
+        expect(head().querySelector('link[rel="canonical"]')?.getAttribute('href')).not.toContain(window.location.origin);
+    });
+
+    it('og:image mutlak adres ve twitter kartı summary_large_image', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.home);
+
+        expect(head().querySelector('meta[property="og:image"]')?.getAttribute('content')).toBe(`${PUBLIC_SITE_ORIGIN}${PUBLIC_OG_IMAGE_PATH}`);
+        expect(head().querySelector('meta[name="twitter:card"]')?.getAttribute('content')).toBe('summary_large_image');
+    });
+
+    it('ana sayfa FAQPage JSON-LD yazar (SSS ile aynı sorular), sayfadan ayrılınca kaldırır', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.home);
+
+        const script = head().querySelector('script[type="application/ld+json"][data-public-json-ld="home-faq"]');
+
+        expect(script).not.toBeNull();
+        const data = JSON.parse(script!.textContent ?? '{}');
+
+        expect(data['@type']).toBe('FAQPage');
+        expect(data.mainEntity.map((q: { name: string }) => q.name)).toEqual(PUBLIC_HOME_FAQS.map((f) => f.question));
+
+        await harness.navigateByUrl(PUBLIC_PATHS.about);
+
+        expect(head().querySelector('script[data-public-json-ld="home-faq"]')).toBeNull();
+    });
+
+    it('tanıtım sayfaları robots noindex taşımaz (staging bayrağı kapalı)', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.features);
+
+        expect(head().querySelector('meta[name="robots"]')).toBeNull();
     });
 });

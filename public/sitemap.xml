@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Yalnız tanıtım sayfaları (WEB-003). Hukuki metinler taslak bandı (noindex) kalkınca eklenir. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url><loc>https://www.vetinity.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+    <url><loc>https://www.vetinity.com/ozellikler</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+    <url><loc>https://www.vetinity.com/kayit-defterleri-ve-kvkk</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+    <url><loc>https://www.vetinity.com/gecis</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+    <url><loc>https://www.vetinity.com/paketler</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+    <url><loc>https://www.vetinity.com/sss</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+    <url><loc>https://www.vetinity.com/iletisim</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+    <url><loc>https://www.vetinity.com/hakkimizda</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+</urlset>
