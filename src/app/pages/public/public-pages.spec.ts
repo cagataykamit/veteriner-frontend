@@ -8,6 +8,7 @@ import { appRoutes } from '@/app.routes';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
+import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW, PUBLIC_HOME_ROADMAP } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_NAV_LINKS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import {
@@ -128,5 +129,82 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(root().querySelector('a[href^="mailto:"]')).toBeNull();
         expect(root().querySelectorAll('.public-pending-placeholder').length).toBeGreaterThan(0);
         expect(root().querySelector('form')).toBeNull();
+    });
+});
+
+/** Ana sayfa omurgası (tasarım belgesi 5.1). */
+describe('Ana sayfa (PublicHomePage)', () => {
+    let harness: RouterTestingHarness;
+
+    beforeEach(async () => {
+        TestBed.configureTestingModule({
+            providers: [provideRouter(appRoutes), provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+        });
+        harness = await RouterTestingHarness.create();
+        await harness.navigateByUrl(PUBLIC_PATHS.home);
+        harness.detectChanges();
+    });
+
+    const root = (): HTMLElement => harness.fixture.nativeElement as HTMLElement;
+    const texts = (selector: string): string[] => Array.from(root().querySelectorAll(selector)).map((el) => (el.textContent ?? '').trim());
+
+    it('bölümler sırayla: kime göre, akış, Türkiye, güvenlik, geçiş, yol haritası, SSS, çağrı', () => {
+        expect(texts('main section h2')).toEqual([
+            'Kime göre?',
+            'Bir günün akışı',
+            "Türkiye'ye özgü",
+            'Kayıtlarınız güvende ve dürüst',
+            'Eski programdan geçiş yarım gün',
+            'Yol haritasında',
+            'Sık sorulan sorular',
+            '14 gün ücretsiz deneyin'
+        ]);
+    });
+
+    it('kahraman: iki düğme (deneme ve demo) ve deneme satırı; sahte önizleme yok', () => {
+        const hero = root().querySelector('section[aria-labelledby="public-home-hero-title"]')!;
+
+        expect(hero.querySelector('a[href="/auth/signup"]')?.textContent?.trim()).toBe('Ücretsiz dene');
+        expect(hero.querySelector(`a[href="${PUBLIC_PATHS.contact}"]`)?.textContent?.trim()).toBe('Demo iste');
+        expect(hero.textContent).toContain('14 gün ücretsiz · kart gerekmez · satış görüşmesi yok');
+        expect(root().textContent).not.toContain('Panel önizleme');
+        expect(hero.querySelector('figure[role="img"]')).not.toBeNull();
+    });
+
+    it('kime göre: üç kart, hastane yok', () => {
+        expect(texts('section[aria-labelledby="public-home-audience-title"] h3')).toEqual(PUBLIC_HOME_AUDIENCE.map((a) => a.title));
+        expect(root().textContent).not.toMatch(/hastane/i);
+    });
+
+    it('günün akışı: dört sekme; sekme değişince ekran etiketi değişir', () => {
+        const tabs = root().querySelectorAll<HTMLButtonElement>('[aria-label="Günün adımları"] [role="tab"]');
+
+        expect(Array.from(tabs).map((t) => t.querySelectorAll('span')[1].textContent?.trim())).toEqual(PUBLIC_HOME_DAY_FLOW.map((s) => s.title));
+        expect(root().querySelector('[id^="flow-panel-"] figure')?.getAttribute('aria-label')).toContain(PUBLIC_HOME_DAY_FLOW[0].screenshot);
+
+        tabs[2].click();
+        harness.detectChanges();
+
+        expect(tabs[2].getAttribute('aria-selected')).toBe('true');
+        expect(root().querySelector('[id^="flow-panel-"] figure')?.getAttribute('aria-label')).toContain(PUBLIC_HOME_DAY_FLOW[2].screenshot);
+    });
+
+    it('yol haritası: dört "yakında" çipi; SMS, e-Fatura, mobil uygulama yalnız yakında olarak geçer', () => {
+        const chips = texts('.public-chip-soon');
+
+        expect(chips.length).toBe(PUBLIC_HOME_ROADMAP.length);
+        chips.forEach((c) => expect(c).toContain('Yakında'));
+        const body = root().textContent ?? '';
+
+        expect(body).not.toContain('mevzuata uygun');
+        expect(body).not.toContain('KVKK uyumlu');
+        expect(body).not.toContain('Türkiye veri merkezi');
+    });
+
+    it('SSS: 6–8 soru, tek kaynaktan; fiyat yanıtı "pilot dönemi fiyatı için yazın"', () => {
+        const questions = texts('section[aria-labelledby="public-home-faq-title"] h3');
+
+        expect(questions).toEqual(PUBLIC_HOME_FAQS.map((f) => f.question));
+        expect(PUBLIC_HOME_FAQS.find((f) => f.question === 'Fiyat ne kadar?')?.answer).toContain('pilot dönemi fiyatı için');
     });
 });

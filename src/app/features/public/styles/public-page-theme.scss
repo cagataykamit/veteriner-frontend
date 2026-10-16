@@ -1508,3 +1508,53 @@
     background: #0b1220;
     color: var(--p-surface-200);
 }
+
+/* —— Ana sayfa (5.1): kahraman gradienti kenardan kenara, akış sekmeleri —— */
+
+/* Tek gradient: lacivert → teal; yalnız kahraman (bölüm 3). Üstündeki metin beyaz, lacivert ağırlıklı zemin ≥ 4.5:1. */
+.public-page .public-hero-gradient {
+    background: linear-gradient(135deg, #061224 0%, var(--vetinity-navy) 45%, color-mix(in srgb, var(--vetinity-navy) 55%, var(--vetinity-teal)) 100%);
+}
+
+.public-page .public-flow-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    min-height: 2.75rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--public-border);
+    border-radius: var(--public-radius-card);
+    background: var(--p-surface-0);
+    color: var(--p-surface-900);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.public-page .public-flow-tab:hover {
+    border-color: var(--public-border-emphasis);
+}
+
+.public-page .public-flow-tab:focus-visible {
+    outline: 2px solid var(--vetinity-teal);
+    outline-offset: 2px;
+}
+
+.public-page .public-flow-tab--active {
+    border-color: var(--vetinity-teal);
+    background: var(--vetinity-bg-soft);
+}
+
+.app-dark .public-page .public-flow-tab {
+    background: #111a2e;
+    color: #e5e7eb;
+    border-color: color-mix(in srgb, var(--vetinity-soft-teal) 16%, var(--p-surface-800));
+}
+
+.app-dark .public-page .public-flow-tab--active {
+    border-color: var(--vetinity-teal);
+    background: color-mix(in srgb, var(--vetinity-teal) 14%, #111a2e);
+}

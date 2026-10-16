@@ -1,278 +1,256 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { RippleModule } from 'primeng/ripple';
 import { PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
-import { PUBLIC_HOME_FEATURES } from '@/app/features/public/utils/public-home-content.utils';
+import {
+    PUBLIC_HOME_AUDIENCE,
+    PUBLIC_HOME_DAY_FLOW,
+    PUBLIC_HOME_ROADMAP,
+    PUBLIC_HOME_TRIAL_LINE
+} from '@/app/features/public/utils/public-home-content.utils';
+import {
+    PUBLIC_MIGRATION_EXCLUDED,
+    PUBLIC_MIGRATION_HOME_STEPS,
+    PUBLIC_MIGRATION_INCLUDED
+} from '@/app/features/public/utils/public-migration-content.utils';
+import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
+import {
+    PUBLIC_KVKK_NOTE,
+    PUBLIC_KVKK_STEPS,
+    PUBLIC_RECORD_SAFETY_ITEMS,
+    PUBLIC_REGISTERS
+} from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_HOME_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
+import { PublicCtaComponent } from './components/public-cta.component';
+import { PublicFaqListComponent } from './components/public-faq-list.component';
+import { PublicScreenshotPlaceholderComponent } from './components/public-screenshot-placeholder.component';
 
+/** Ana sayfa omurgası (tasarım belgesi 5.1): kahraman, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt güvenliği, geçiş, yol haritası, SSS, çağrı. */
 @Component({
     selector: 'app-public-home-page',
     standalone: true,
-    imports: [
-        RouterLink,
-        ButtonModule,
-        RippleModule
-    ],
+    imports: [RouterLink, PublicScreenshotPlaceholderComponent, PublicFaqListComponent, PublicCtaComponent],
     template: `
-        <div class="relative">
-                <!-- Hero — Genesis SaaS gradient container -->
-                <section class="pt-3 md:pt-6" aria-labelledby="public-home-hero-title">
-                    <div class="max-w-6xl mx-auto px-4">
-                        <div
-                            class="relative overflow-hidden rounded-3xl lg:rounded-[2rem] public-theme-gradient-hero dark:shadow-black/40"
-                        >
-                            <div
-                                class="pointer-events-none absolute inset-0 overflow-hidden"
-                                aria-hidden="true"
-                            >
-                                <div
-                                    class="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[min(720px,130%)] h-72 rounded-full border border-cyan-200/50 dark:border-white/10 opacity-40"
-                                ></div>
-                                <div
-                                    class="absolute top-8 right-8 w-40 h-40 rounded-full public-hero-glow-spot blur-2xl"
-                                ></div>
-                                <div
-                                    class="absolute -top-12 -left-12 w-56 h-56 rounded-full public-hero-glow-spot-soft blur-3xl"
-                                ></div>
-                            </div>
-
-                            <div class="relative px-5 md:px-6 lg:px-12 pt-8 pb-8 lg:pt-14 lg:pb-12">
-                                <div class="grid grid-cols-1 items-center">
-                                    <div class="public-hero mx-auto max-w-3xl text-center">
-                                        <span
-                                            class="public-hero-badge inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mb-4 md:mb-6"
-                                        >
-                                            <i class="pi pi-star-fill text-[10px]" aria-hidden="true"></i>
-                                            Veteriner klinikleri için
-                                        </span>
-                                        <h1
-                                            id="public-home-hero-title"
-                                            class="public-hero-title text-[1.625rem] md:text-4xl lg:text-5xl xl:text-[3.25rem] font-bold m-0 mb-4 md:mb-5 leading-[1.14] md:leading-[1.12] tracking-tight"
-                                        >
-                                            Veteriner kliniğinizin günü tek ekranda
-                                        </h1>
-                                        <p class="public-hero-lead text-[0.9375rem] md:text-lg m-0 mb-6 md:mb-8 max-w-xl mx-auto leading-relaxed">
-                                            Geliş, bekleme, muayene, tahsilat ve kayıt defterleri aynı yerde. 14 gün ücretsiz, kart
-                                            gerekmez.
-                                        </p>
-                                        <div
-                                            class="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 sm:gap-3"
-                                        >
-                                            <div class="public-hero-cta-primary w-full sm:w-auto">
-                                                <a
-                                                    routerLink="/auth/signup"
-                                                    pButton
-                                                    pRipple
-                                                    label="Ücretsiz başla"
-                                                    class="w-full"
-                                                ></a>
-                                            </div>
-                                            <div class="public-hero-cta-secondary w-full sm:w-auto">
-                                                <a
-                                                    routerLink="/auth/login"
-                                                    pButton
-                                                    pRipple
-                                                    label="Giriş yap"
-                                                    class="w-full"
-                                                ></a>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
+        <!-- 1 Kahraman: gradient kenardan kenara, sol metin, sağ ekran -->
+        <section class="public-hero-gradient" aria-labelledby="public-home-hero-title">
+            <div class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-12 md:px-6 md:pt-16 lg:grid-cols-[45fr_55fr] lg:gap-14 lg:pb-0">
+                <div>
+                    <p class="public-eyebrow m-0 mb-4 !text-[var(--vetinity-soft-teal)]">Veteriner klinikleri için</p>
+                    <h1 id="public-home-hero-title" class="public-h1 m-0 !text-white">Veteriner kliniğinizin günü tek ekranda</h1>
+                    <p class="m-0 mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg">
+                        Geliş, bekleme, muayene, tahsilat ve kayıt defterleri aynı yerde. Kâğıt, Excel ya da eski programdan yarım günde geçin.
+                    </p>
+                    <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+                        <a routerLink="/auth/signup" class="public-btn public-btn-on-dark w-full sm:w-auto">Ücretsiz dene</a>
+                        <a [routerLink]="paths.contact" class="public-btn public-btn-outline-on-dark w-full sm:w-auto">Demo iste</a>
                     </div>
-                </section>
+                    <p class="m-0 mt-4 text-sm text-white/70">{{ trialLine }}</p>
+                </div>
+                <div class="lg:translate-y-12">
+                    <app-public-screenshot-placeholder label="Bugün ekranı: bekleyen hastalar, biri acil, biri uyarı rozetli, ücreti yazılmamış işlem çipi" />
+                </div>
+            </div>
+        </section>
 
-                <!-- Özellikler -->
-                <section
-                    id="features"
-                    class="max-w-6xl mx-auto px-4 mb-20 md:mb-28 scroll-mt-24"
-                    aria-labelledby="public-home-features-title"
-                >
-                    <div class="public-home-section-header mb-12 md:mb-14">
-                        <span
-                            class="public-home-section-header-icon inline-flex items-center justify-center w-14 h-14 lg:w-16 lg:h-16 rounded-2xl lg:rounded-3xl public-theme-icon-box public-theme-icon-shadow"
-                            aria-hidden="true"
-                        >
-                            <i class="pi pi-th-large text-xl lg:text-2xl"></i>
-                        </span>
-                        <h2
-                            id="public-home-features-title"
-                            class="text-surface-900 dark:text-surface-0 text-2xl md:text-4xl font-bold text-center max-w-lg"
-                        >
-                            Özellikler
-                        </h2>
-                        <p class="text-muted-color max-w-xl text-center text-base md:text-lg">
-                            Kliniğinizin günlük işleri için hazır olanlar.
-                        </p>
-                    </div>
-                    <div class="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-                        @for (feature of features; track feature.title) {
-                            <article
-                                class="group public-theme-feature-card flex h-full min-h-[220px] flex-col rounded-3xl border border-surface-200 bg-surface-0 p-6 transition-all duration-200 md:min-h-[240px] md:p-7 lg:min-h-[260px] dark:border-surface-700 dark:bg-surface-900 dark:hover:shadow-black/25"
-                            >
-                                <span
-                                    class="inline-flex items-center justify-center w-12 h-12 rounded-2xl public-theme-soft-gradient mb-5 transition-transform group-hover:scale-105"
-                                    aria-hidden="true"
-                                >
-                                    <i [class]="feature.icon + ' text-xl'"></i>
-                                </span>
-                                <h3 class="text-surface-900 dark:text-surface-0 text-lg font-semibold m-0 mb-2">{{ feature.title }}</h3>
-                                <p class="text-muted-color text-sm m-0 leading-relaxed">{{ feature.description }}</p>
-                            </article>
-                        }
-                    </div>
-                </section>
+        <!-- 2 Kime göre -->
+        <section class="mx-auto max-w-6xl px-4 pt-16 md:px-6 lg:pt-28" aria-labelledby="public-home-audience-title">
+            <h2 id="public-home-audience-title" class="public-h2 m-0 text-center">Kime göre?</h2>
+            <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">Türkiye'deki küçük klinik için; büyüyünce şube eklersiniz.</p>
+            <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+                @for (item of audience; track item.title) {
+                    <article class="public-card p-6">
+                        <span class="public-step-badge" aria-hidden="true"><i [class]="item.icon"></i></span>
+                        <h3 class="m-0 mt-4 text-lg font-semibold text-surface-900 dark:text-surface-0">{{ item.title }}</h3>
+                        <p class="m-0 mt-2 text-sm leading-relaxed text-surface-600 dark:text-surface-300">{{ item.description }}</p>
+                    </article>
+                }
+            </div>
+        </section>
 
-                <!-- CTA — Genesis gradient kart -->
-                <section class="max-w-6xl mx-auto px-4 mb-12 md:mb-16" aria-labelledby="public-home-cta-title">
-                    <div
-                        class="public-final-cta-card relative overflow-hidden rounded-3xl lg:rounded-[2rem] public-theme-gradient-cta p-8 md:p-14 text-center"
+        <!-- 3 Bir günün akışı: 4 sekme, seçili adımın ekranı altta -->
+        <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-flow-title">
+            <h2 id="public-home-flow-title" class="public-h2 m-0 text-center">Bir günün akışı</h2>
+            <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">Gelişten gün sonuna dört adım; her adımda tek ekran.</p>
+            <div class="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4" role="tablist" aria-label="Günün adımları">
+                @for (step of dayFlow; track step.id; let i = $index) {
+                    <button
+                        type="button"
+                        role="tab"
+                        [id]="'flow-tab-' + step.id"
+                        [attr.aria-selected]="activeFlowId() === step.id"
+                        [attr.aria-controls]="'flow-panel-' + step.id"
+                        class="public-flow-tab"
+                        [class.public-flow-tab--active]="activeFlowId() === step.id"
+                        (click)="activeFlowId.set(step.id)"
                     >
-                        <div
-                            class="public-final-cta-card-glow pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_55%)]"
-                            aria-hidden="true"
-                        ></div>
-                        <div class="relative max-w-2xl mx-auto">
-                            <h2
-                                id="public-home-cta-title"
-                                class="public-cta-title text-2xl md:text-4xl font-bold m-0 mb-4 leading-tight"
-                            >
-                                14 gün ücretsiz deneyin
-                            </h2>
-                            <p class="public-cta-lead m-0 mb-8 text-base md:text-lg">
-                                Kart bilgisi istenmez. Paketleri inceleyebilir veya hemen başlayabilirsiniz.
-                            </p>
-                            <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3">
-                                <div class="public-hero-cta-primary w-full sm:w-auto">
-                                    <a
-                                        routerLink="/auth/signup"
-                                        pButton
-                                        pRipple
-                                        label="Hemen başla"
-                                        class="w-full"
-                                    ></a>
-                                </div>
-                                <div class="public-hero-cta-secondary public-home-cta-secondary w-full sm:w-auto">
-                                    <a
-                                        routerLink="/paketler"
-                                        pButton
-                                        pRipple
-                                        label="Paketleri gör"
-                                        class="w-full"
-                                    ></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                        <span class="text-xs font-semibold text-muted-color">{{ i + 1 }}</span>
+                        <span class="text-base font-semibold">{{ step.title }}</span>
+                        <span class="hidden text-sm text-surface-600 dark:text-surface-300 md:block">{{ step.description }}</span>
+                    </button>
+                }
+            </div>
+            <div role="tabpanel" [id]="'flow-panel-' + activeFlow().id" [attr.aria-labelledby]="'flow-tab-' + activeFlow().id" class="mt-6">
+                <p class="m-0 mb-4 text-center text-sm text-surface-600 dark:text-surface-300 md:hidden">{{ activeFlow().description }}</p>
+                <app-public-screenshot-placeholder [label]="activeFlow().screenshot" />
+            </div>
+            <p class="m-0 mt-6 text-center">
+                <a [routerLink]="paths.features" class="public-brand-link">Tüm akışı görün</a>
+            </p>
+        </section>
 
-                <!-- SSS — Genesis ölçü: 784×66.5px kart -->
-                <section id="faq" class="scroll-mt-24">
-                    <div class="mx-auto w-full max-w-[784px] px-4 md:px-0 mt-14 lg:mt-36 pb-16 lg:pb-24">
-                        <div
-                            class="w-14 h-14 lg:w-20 lg:h-20 flex items-center justify-center mx-auto rounded-2xl lg:rounded-3xl public-theme-icon-box public-theme-icon-shadow"
-                            aria-hidden="true"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 40 40"
-                                fill="none"
-                                class="w-9 h-9 lg:w-11 lg:h-11"
-                            >
-                                <path
-                                    d="M1.6975 25.8594H11.7969C18.2582 25.8594 23.5156 20.602 23.5156 14.1406C23.5156 7.6793 18.2582 2.42188 11.7969 2.42188C5.33555 2.42188 0 7.6793 0 14.1406C0 17.2294 1.29578 20.1774 3.44609 22.362L1.6975 25.8594ZM12.9688 21.1719H10.625V18.8281H12.9688V21.1719ZM11.7969 7.10938C14.3821 7.10938 16.4844 9.21164 16.4844 11.7969C16.4844 13.5478 15.5196 15.1409 13.9666 15.9522C13.351 16.2749 12.9688 16.9627 12.9688 17.6562H10.625C10.625 16.0289 11.4891 14.603 12.8795 13.8762C13.6577 13.4688 14.1406 12.6723 14.1406 11.7969C14.1406 10.5048 13.0889 9.45312 11.7969 9.45312C10.5048 9.45312 9.45312 10.5048 9.45312 11.7969H7.10938C7.10938 9.21164 9.21164 7.10938 11.7969 7.10938Z"
-                                    fill="url(#public-home-faq-icon-a)"
-                                />
-                                <path
-                                    d="M25.8469 14.3862C25.7433 20.3324 21.9345 25.3776 16.6328 27.3284C17.3649 33.0912 22.2447 37.5781 28.203 37.5781H38.3024L36.5538 34.0808C38.7041 31.8962 39.9999 28.9481 39.9999 25.8594C39.9999 19.3873 34.6751 14.1406 28.203 14.1406C27.3966 14.1406 26.6088 14.2257 25.8469 14.3862ZM34.0624 29.375H24.6874V27.0312H34.0624V29.375ZM34.0624 24.6875H24.6874V22.3438H34.0624V24.6875Z"
-                                    fill="url(#public-home-faq-icon-b)"
-                                />
-                                <defs>
-                                    <linearGradient id="public-home-faq-icon-a" x1="11.7578" y1="2.71499" x2="11.7578" y2="25.8594" gradientUnits="userSpaceOnUse">
-                                        <stop stop-color="white" />
-                                        <stop offset="1" stop-color="white" stop-opacity="0" />
-                                    </linearGradient>
-                                    <linearGradient id="public-home-faq-icon-b" x1="28.3164" y1="14.4337" x2="28.3164" y2="37.5781" gradientUnits="userSpaceOnUse">
-                                        <stop stop-color="white" />
-                                        <stop offset="1" stop-color="white" stop-opacity="0" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
-                        </div>
-                        <h2
-                            id="public-home-faq-title"
-                            class="mt-8 text-center text-xl lg:text-3xl font-semibold text-surface-950 dark:text-surface-0 leading-tight m-0"
-                        >
-                            Sık sorulan<br />sorular
-                        </h2>
-                        <p class="mx-auto mt-4 max-w-[640px] text-center text-base text-surface-500 dark:text-white/64 m-0">
-                            Vetinity hakkında merak edilenlere kısa yanıtlar.
-                        </p>
-
-                        <div class="mt-12 flex w-full flex-col gap-3">
-                            @for (faq of faqs; track faq.question; let i = $index) {
-                                <article
-                                    class="w-full overflow-hidden rounded-[22px] border border-surface-200 bg-surface-0 shadow-none dark:border-surface-700 dark:bg-surface-900"
-                                >
-                                    <button
-                                        type="button"
-                                        class="flex h-[66px] w-full items-center justify-between border-0 bg-surface-0 px-8 md:px-10 text-left cursor-pointer dark:bg-surface-900"
-                                        [attr.aria-expanded]="isFaqOpen(i)"
-                                        [attr.aria-controls]="'faq-answer-' + i"
-                                        (click)="toggleFaq(i)"
-                                    >
-                                        <span
-                                            class="text-[15px] md:text-[17px] font-semibold leading-[1.2] text-surface-950 dark:text-surface-0"
-                                        >
-                                            {{ faq.question }}
-                                        </span>
-                                        <i
-                                            class="pi ml-6 shrink-0 text-[22px] text-surface-500"
-                                            [class.pi-plus]="!isFaqOpen(i)"
-                                            [class.pi-minus]="isFaqOpen(i)"
-                                            aria-hidden="true"
-                                        ></i>
-                                    </button>
-                                    @if (isFaqOpen(i)) {
-                                        <div [id]="'faq-answer-' + i" class="px-8 md:px-10 pb-5">
-                                            <p class="m-0 text-base font-medium text-surface-500 dark:text-white/64">
-                                                {{ faq.answer }}
-                                            </p>
-                                        </div>
-                                    }
-                                </article>
+        <!-- 4 Türkiye'ye özgü: açık teal yüzey, iki sütun -->
+        <section class="public-soft-surface mt-20 lg:mt-28" aria-labelledby="public-home-tr-title">
+            <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 lg:py-24">
+                <h2 id="public-home-tr-title" class="public-h2 m-0">Türkiye'ye özgü</h2>
+                <p class="public-lead m-0 mt-3 max-w-2xl">Kayıt defterleri her kayıtla kendiliğinden dolar; KVKK evrakı hazır.</p>
+                <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
+                    <div>
+                        <h3 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Kayıt defterleri</h3>
+                        <ul class="m-0 mt-4 list-none space-y-2 p-0">
+                            @for (register of registers; track register.name) {
+                                <li class="flex items-center gap-2.5 text-base text-surface-700 dark:text-surface-200">
+                                    <i class="pi pi-book text-[var(--public-accent)]" aria-hidden="true"></i>{{ register.name }}
+                                </li>
                             }
+                        </ul>
+                        <p class="m-0 mt-3 text-sm text-surface-600 dark:text-surface-300">Yazdırın, Excel'e alın.</p>
+                        <div class="mt-5">
+                            <app-public-screenshot-placeholder label="Aşı Kayıt Defteri ekranı" />
                         </div>
                     </div>
-                </section>
+                    <div>
+                        <h3 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">KVKK evrakı</h3>
+                        <ul class="m-0 mt-4 list-none space-y-2 p-0">
+                            @for (step of kvkkSteps; track step.title) {
+                                <li class="flex items-center gap-2.5 text-base text-surface-700 dark:text-surface-200">
+                                    <i [class]="step.icon + ' text-[var(--public-accent)]'" aria-hidden="true"></i>{{ step.title }}
+                                </li>
+                            }
+                        </ul>
+                        <p class="m-0 mt-3 text-sm text-surface-600 dark:text-surface-300">Rıza kaydı ve metin sürümü müşteri kartında.</p>
+                        <div class="mt-5">
+                            <app-public-screenshot-placeholder label="KVKK açık rıza formu yazdırma görünümü" />
+                        </div>
+                    </div>
+                </div>
+                <p class="public-note m-0 mt-8">{{ kvkkNote }}</p>
+                <p class="m-0 mt-3">
+                    <a [routerLink]="paths.registersAndKvkk" class="public-brand-link">Defterler ve KVKK sayfası</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- 5 Kayıt güvenliği: sol ekran, sağ 4 madde -->
+        <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-safety-title">
+            <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
+                <app-public-screenshot-placeholder label="Muayene kesinleştirme kontrol listesi" />
+                <div>
+                    <h2 id="public-home-safety-title" class="public-h2 m-0">Kayıtlarınız güvende ve dürüst</h2>
+                    <ul class="m-0 mt-6 list-none space-y-4 p-0">
+                        @for (item of safetyItems; track item.title) {
+                            <li class="flex items-start gap-3">
+                                <i class="pi pi-check-circle mt-1 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i>
+                                <div>
+                                    <p class="m-0 text-base font-semibold text-surface-900 dark:text-surface-0">{{ item.title }}</p>
+                                    <p class="m-0 mt-0.5 text-sm text-surface-600 dark:text-surface-300">{{ item.description }}</p>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6 Geçiş: 3 adım + sihirbaz ekranı + aktarılır/aktarılmaz -->
+        <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-migration-title">
+            <h2 id="public-home-migration-title" class="public-h2 m-0">Eski programdan geçiş yarım gün</h2>
+            <ol class="m-0 mt-8 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
+                @for (step of migrationSteps; track step.title; let i = $index) {
+                    <li class="public-card p-5">
+                        <span class="public-timeline-marker" aria-hidden="true">{{ i + 1 }}</span>
+                        <h3 class="m-0 mt-3 text-base font-semibold text-surface-900 dark:text-surface-0">{{ step.title }}</h3>
+                        <p class="m-0 mt-1.5 text-sm text-surface-600 dark:text-surface-300">{{ step.description }}</p>
+                    </li>
+                }
+            </ol>
+            <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px] lg:gap-14">
+                <app-public-screenshot-placeholder label="Veri aktarma sihirbazı: sütun eşleme adımı" />
+                <div class="flex flex-col gap-4">
+                    <div class="public-card p-5">
+                        <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Aktarılır</h3>
+                        <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
+                            @for (item of migrationIncluded; track item) {
+                                <li class="flex items-center gap-2"><i class="pi pi-check text-[var(--public-accent)]" aria-hidden="true"></i>{{ item }}</li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="public-card p-5">
+                        <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Şimdilik aktarılmaz</h3>
+                        <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
+                            @for (item of migrationExcluded; track item) {
+                                <li class="flex items-center gap-2"><i class="pi pi-minus text-surface-400" aria-hidden="true"></i>{{ item }}</li>
+                            }
+                        </ul>
+                    </div>
+                    <a [routerLink]="paths.migration" class="public-brand-link text-sm">Geçiş adımlarının tamamı</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7 Yol haritasında: açık gri yüzey, amber çipler -->
+        <section class="mt-20 bg-surface-50 lg:mt-28 dark:bg-surface-900/60" aria-labelledby="public-home-roadmap-title">
+            <div class="mx-auto max-w-6xl px-4 py-12 md:px-6">
+                <h2 id="public-home-roadmap-title" class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Yol haritasında</h2>
+                <ul class="m-0 mt-4 flex list-none flex-wrap gap-2.5 p-0">
+                    @for (item of roadmap; track item.label) {
+                        <li class="public-chip-soon"><span aria-hidden="true">●</span> Yakında: {{ item.label }}</li>
+                    }
+                </ul>
+                <p class="public-note m-0 mt-4">Tarih vermiyoruz; çıkınca burada yazar. Hatırlatmalar bugün yalnız e-posta ile gider.</p>
+            </div>
+        </section>
+
+        <!-- 8 SSS -->
+        <section class="mx-auto max-w-[720px] px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-faq-title">
+            <h2 id="public-home-faq-title" class="public-h2 m-0 text-center">Sık sorulan sorular</h2>
+            <div class="mt-8">
+                <app-public-faq-list [items]="faqs" idPrefix="home-faq" />
+            </div>
+            <p class="m-0 mt-6 text-center">
+                <a [routerLink]="paths.faq" class="public-brand-link">Tüm sorular</a>
+            </p>
+        </section>
+
+        <!-- 9 Çağrı -->
+        <div class="pt-20 lg:pt-28">
+            <app-public-cta />
         </div>
-    `,
+    `
 })
 export class PublicHomePageComponent implements OnInit {
     private readonly title = inject(Title);
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
 
-    readonly features = PUBLIC_HOME_FEATURES;
+    readonly paths = PUBLIC_PATHS;
+    readonly trialLine = PUBLIC_HOME_TRIAL_LINE;
+    readonly audience = PUBLIC_HOME_AUDIENCE;
+    readonly dayFlow = PUBLIC_HOME_DAY_FLOW;
+    readonly registers = PUBLIC_REGISTERS;
+    readonly kvkkSteps = PUBLIC_KVKK_STEPS;
+    readonly kvkkNote = PUBLIC_KVKK_NOTE;
+    readonly safetyItems = PUBLIC_RECORD_SAFETY_ITEMS;
+    readonly migrationSteps = PUBLIC_MIGRATION_HOME_STEPS;
+    readonly migrationIncluded = PUBLIC_MIGRATION_INCLUDED;
+    readonly migrationExcluded = PUBLIC_MIGRATION_EXCLUDED;
+    readonly roadmap = PUBLIC_HOME_ROADMAP;
     readonly faqs = PUBLIC_HOME_FAQS;
 
-    openFaqIndex: number | null = null;
+    readonly activeFlowId = signal(PUBLIC_HOME_DAY_FLOW[0].id);
+    readonly activeFlow = computed(() => this.dayFlow.find((s) => s.id === this.activeFlowId()) ?? this.dayFlow[0]);
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, PUBLIC_HOME_PAGE_META, this.document);
-    }
-
-    toggleFaq(index: number): void {
-        this.openFaqIndex = this.openFaqIndex === index ? null : index;
-    }
-
-    isFaqOpen(index: number): boolean {
-        return this.openFaqIndex === index;
     }
 }
