@@ -9,11 +9,12 @@ import { AppFooter } from './app.footer';
 import { AppReadOnlyBannerComponent } from './app-read-only-banner.component';
 import { AppSectionTabsComponent } from './app-section-tabs.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
+import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/components/legal-acceptance-gate.component';
 
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent],
+    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent],
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <div #primePanelOverlayHost class="layout-prime-panel-overlay-host"></div>
         <app-topbar></app-topbar>
@@ -27,6 +28,10 @@ import { LayoutService } from '@/app/layout/service/layout.service';
             <app-footer></app-footer>
         </div>
         <div class="layout-mask"></div>
+        <!-- Bekleyen hukuki kabul penceresi (ADR-029); ilk paketi büyütmemek için ayrı parça. -->
+        @defer {
+            <app-legal-acceptance-gate />
+        }
     </div> `
 })
 export class AppLayout {
