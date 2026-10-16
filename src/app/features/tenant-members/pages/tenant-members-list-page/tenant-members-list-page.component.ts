@@ -2,17 +2,20 @@ import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { TenantMemberListItemVm } from '@/app/features/tenant-members/models/tenant-members-vm.model';
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
+import { TenantMemberRemoveDialogComponent } from '@/app/features/tenant-members/components/tenant-member-remove-dialog.component';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -20,6 +23,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 @Component({
@@ -37,9 +41,13 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent, SearchInputComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        ToastModule,
+        TenantMemberRemoveDialogComponent
     ],
+    providers: [MessageService],
     template: `
+        <p-toast position="bottom-right" />
         <app-page-header
             title="Kurum üyeleri"
             description="Bu kuruma bağlı kullanıcıların salt okunur listesi."
@@ -121,7 +129,12 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                         <td>{{ formatConfirmed(row.emailConfirmed) }}</td>
                                         <td>{{ formatDate(row.createdAtUtc) }}</td>
                                         <td>
-                                            <app-row-action-button action="detail" [link]="['/panel/settings/members', row.id]" />
+                                            <div class="flex items-center gap-1">
+                                                <app-row-action-button action="detail" [link]="['/panel/settings/members', row.id]" />
+                                                @if (canRemoveRow(row)) {
+                                                    <app-row-action-button action="delete" label="Kurumdan çıkar" (pressed)="openRemove(row)" />
+                                                }
+                                            </div>
                                         </td>
                                     </tr>
                                 </ng-template>
@@ -145,8 +158,11 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                             <div class="text-xs text-muted-color">Oluşturulma: {{ formatDate(row.createdAtUtc) }}</div>
                                         }
                                     </div>
-                                    <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                                    <div class="flex justify-end items-center gap-1 pt-2 border-t border-surface-200 dark:border-surface-700">
                                         <app-row-action-button action="detail" [link]="['/panel/settings/members', row.id]" />
+                                        @if (canRemoveRow(row)) {
+                                            <app-row-action-button action="delete" label="Kurumdan çıkar" (pressed)="openRemove(row)" />
+                                        }
                                     </div>
                                 </div>
                             }
@@ -167,6 +183,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                 </div>
             }
         </div>
+
+        <app-tenant-member-remove-dialog [(visible)]="removeOpen" [member]="removeTarget()" (removed)="onMemberRemoved()" />
     `
 })
 export class TenantMembersListPageComponent implements OnInit {
@@ -175,11 +193,36 @@ export class TenantMembersListPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     private readonly ro = inject(TenantReadOnlyContextService);
     private readonly tenantMembers = inject(TenantMembersService);
+    private readonly messages = inject(MessageService);
+    private readonly router = inject(Router);
 
     /** Davet/üye yönetimi: `Tenants.InviteCreate` ve salt okunur değil. */
     readonly canManageTenantAccess = computed(
         () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
     );
+
+    /** Üye detayındaki "Üyeyi kurumdan çıkar" koşulu: yönetim yetkisi, salt okunur değil, kendi hesabı değil. */
+    canRemoveRow(row: TenantMemberListItemVm): boolean {
+        return this.canManageTenantAccess() && row.id.toLowerCase() !== this.auth.getUserId()?.toLowerCase();
+    }
+
+    /** Çıkarma diyaloğunun açık olduğu satır. */
+    readonly removeTarget = signal<TenantMemberListItemVm | null>(null);
+    readonly removeOpen = signal(false);
+
+    openRemove(row: TenantMemberListItemVm): void {
+        this.removeTarget.set(row);
+        this.removeOpen.set(true);
+    }
+
+    onMemberRemoved(): void {
+        addTracedToast(this.messages, 'TenantMembersListPage', this.router.url, {
+            severity: 'success',
+            summary: 'Tamam',
+            detail: 'Üye kurumdan çıkarıldı.'
+        });
+        this.reload();
+    }
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
