@@ -10,6 +10,7 @@ import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/feature
 import { ClientCardHeaderComponent } from '@/app/features/clients/components/client-card-header.component';
 import { ClientKvkkConsentDialogComponent } from '@/app/features/clients/components/client-kvkk-consent-dialog.component';
 import { ClientPetsPanelComponent } from '@/app/features/clients/components/client-pets-panel.component';
+import { ClientPortalAccessPanelComponent } from '@/app/features/clients/components/client-portal-access-panel.component';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientDetailVm, ClientKvkkConsentUpdateResult, ClientPaymentSummaryVm } from '@/app/features/clients/models/client-vm.model';
@@ -34,7 +35,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, Subscription, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 /**
  * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): iletişim ve hesap durumu,
@@ -54,6 +55,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
         ClientCardHeaderComponent,
         ClientKvkkConsentDialogComponent,
         ClientPetsPanelComponent,
+        ClientPortalAccessPanelComponent,
         PetTodoPanelComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -135,6 +137,9 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operat
             </app-client-card-header>
             @if (canUpdateClient && !ro.mutationBlocked()) {
                 <app-client-kvkk-consent-dialog [(visible)]="kvkkDialogOpen" [client]="c" (changed)="onKvkkChanged($event)" (stale)="refreshClient()" />
+            }
+            @if (canManagePortal) {
+                <app-client-portal-access-panel [client]="c" />
             }
 
             <div class="grid grid-cols-12 gap-4 mb-4">
@@ -374,6 +379,8 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     readonly payMethodLabel = paymentMethodLabel;
     readonly canUpdateClient = this.auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM);
     readonly canReadCharges = this.auth.hasOperationClaim(CHARGES_READ_CLAIM);
+    /** Portal erişimi bölümü (ADR-031): izin yoksa bölüm hiç çizilmez. */
+    readonly canManagePortal = this.auth.hasOperationClaim(OWNER_PORTAL_MANAGE_CLAIM);
     readonly emphasis = petCardEmphasis((claim) => this.auth.hasOperationClaim(claim));
 
     readonly registrationLine = computed(() => {

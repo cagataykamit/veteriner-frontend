@@ -73,6 +73,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
                     useValue: {
                         getClientById: () => of(client),
                         getClientPaymentSummary: () => of(paymentSummary),
+                        getPortalAccess: () => of({ clientId: 'c1', canInvite: true, inviteBlockedCode: null, links: [], invites: [] }),
                         getClientRecentSummary: () =>
                             of({
                                 clientId: 'c1',
@@ -213,5 +214,16 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         create();
         expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('alınamadı');
         expect(el().querySelector('[data-testid="todo-failed"]')?.textContent).toContain('Ücret bekleyen işlem');
+    });
+
+    it('Portal erişimi bölümü yalnız OwnerPortal.Manage ile çizilir (ADR-031)', () => {
+        create();
+        expect(el().querySelector('[data-testid="client-portal"]')).toBeNull();
+
+        TestBed.resetTestingModule();
+        claims.add('OwnerPortal.Manage');
+        create();
+        expect(el().querySelector('[data-testid="client-portal"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="client-portal-invite"]')).not.toBeNull();
     });
 });
