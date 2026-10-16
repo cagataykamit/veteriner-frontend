@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
+import { isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ClientsListPageComponent } from './clients-list-page.component';
@@ -236,5 +236,11 @@ describe('ClientsListPageComponent — satırda Düzenle', () => {
             expect(edit.getAttribute('aria-disabled')).toBe('true');
             expect(edit.getAttribute('aria-label')).toBe('Düzenle (salt okunur)');
         }
+    });
+
+
+    /** ADR-026 madde 7: müşterinin silme akışı yok (KVKK ayrı süreç); tüm yetkilerle bile Sil/İptal simgesi konmaz. */
+    it('silme akışı olmadığı için satırda Sil/İptal simgesi yoktur', async () => {
+        expect(rowDangerActions(await create([CLIENTS_UPDATE_CLAIM, 'Clients.Delete', 'Clients.Create'])).length).toBe(0);
     });
 });
