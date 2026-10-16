@@ -1,8 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
 
 const INVITE_CODE_MESSAGES: Record<string, string> = {
+    ...LEGAL_ACCEPTANCE_CODE_MESSAGES,
     'Subscriptions.UserLimitExceeded': 'Bu işletme için kullanıcı kotası doldu. Yöneticinizle iletişime geçin.',
     'Invites.DuplicatePending': 'Bu e-posta için zaten bekleyen bir davet var.',
     'Invites.RequiresLogin': 'Bu daveti kabul etmek için önce giriş yapmalısınız.',

@@ -20,11 +20,23 @@ import {
     validateStrongPasswordValue
 } from '@/app/core/validation/password-policy.util';
 import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils';
+import { LegalConsentCheckboxComponent } from '@/app/features/legal-acceptance/components/legal-consent-checkbox.component';
+import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
 
 @Component({
     selector: 'app-join-invite-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputTextModule, PasswordModule, AppFloatingConfigurator, PublicLegalLinksComponent],
+    imports: [
+        CommonModule,
+        FormsModule,
+        RouterLink,
+        ButtonModule,
+        InputTextModule,
+        PasswordModule,
+        AppFloatingConfigurator,
+        PublicLegalLinksComponent,
+        LegalConsentCheckboxComponent
+    ],
     template: `
         <app-floating-configurator />
         <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen min-w-screen py-10 px-4">
@@ -128,11 +140,21 @@ import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils'
                             @if (passwordFieldError()) {
                                 <p class="text-red-500 text-sm m-0 mb-3" role="alert">{{ passwordFieldError() }}</p>
                             }
+                            @if (inv.requiredLegalDocuments.length) {
+                                <div class="mb-3">
+                                    <app-legal-consent-checkbox
+                                        inputId="joinLegalConsent"
+                                        [documents]="legalDocumentTypes(inv)"
+                                        [disabled]="actionLoading()"
+                                        [(checked)]="legalConsent"
+                                    />
+                                </div>
+                            }
                             <p-button
                                 label="Hesap oluştur ve katıl"
                                 styleClass="w-full"
                                 [loading]="actionLoading()"
-                                [disabled]="actionLoading()"
+                                [disabled]="actionLoading() || (inv.requiredLegalDocuments.length > 0 && !legalConsent())"
                                 (onClick)="onSignupAndAccept(inv)"
                             />
                         }
@@ -176,8 +198,14 @@ export class JoinInvitePageComponent implements OnInit {
     readonly successMode = signal<'accept' | 'signup' | null>(null);
     readonly passwordFieldError = signal<string | null>(null);
     readonly passwordPolicyHint = PASSWORD_POLICY_HINT;
+    /** Davetteki role gereken hukuki metinlerin onayı (ADR-029); sunucu da doğrular. */
+    readonly legalConsent = signal(false);
 
     invitePassword = '';
+
+    legalDocumentTypes(inv: PublicInviteVm) {
+        return inv.requiredLegalDocuments.map((d) => d.documentType);
+    }
 
     readonly formatExpiry = (v: string | null) => formatDateTimeDisplay(v);
 
@@ -263,14 +291,35 @@ export class JoinInvitePageComponent implements OnInit {
             return;
         }
 
+        if (inv.requiredLegalDocuments.length > 0 && !this.legalConsent()) {
+            this.actionError.set(LEGAL_ACCEPTANCE_CODE_MESSAGES['LegalAcceptances.Required']);
+
+            return;
+        }
+
         this.actionLoading.set(true);
         this.invites
-            .signupAndAccept(inv.inviteToken, { password: pw })
+            .signupAndAccept(inv.inviteToken, { password: pw, acceptedLegalDocuments: inv.requiredLegalDocuments })
             .pipe(finalize(() => this.actionLoading.set(false)))
             .subscribe({
                 next: () => this.successMode.set('signup'),
-                error: (err: unknown) => this.actionError.set(publicInviteFailureMessage(err, 'Kayıt tamamlanamadı.'))
+                error: (err: unknown) => {
+                    this.actionError.set(publicInviteFailureMessage(err, 'Kayıt tamamlanamadı.'));
+
+                    if (isLegalVersionOutdatedError(err)) {
+                        this.refreshLegalDocuments(inv.inviteToken);
+                    }
+                }
             });
+    }
+
+    /** 409 sonrası güncel sürümleri davet detayından yeniden okur; girilen şifre korunur, onay yeniden istenir. */
+    private refreshLegalDocuments(token: string): void {
+        this.legalConsent.set(false);
+        this.invites.getInviteByToken(token).subscribe({
+            next: (v) => this.vm.set(v),
+            error: () => undefined
+        });
     }
 
     private reloadInvite(token: string): void {
@@ -280,6 +329,7 @@ export class JoinInvitePageComponent implements OnInit {
         this.successMode.set(null);
         this.actionError.set(null);
         this.passwordFieldError.set(null);
+        this.legalConsent.set(false);
         this.invitePassword = '';
         this.invites.getInviteByToken(token).subscribe({
             next: (v) => {

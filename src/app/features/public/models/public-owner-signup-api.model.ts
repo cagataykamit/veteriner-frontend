@@ -1,3 +1,5 @@
+import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
+
 export interface PublicOwnerSignupRequestDto {
     planCode: string;
     tenantName: string;
@@ -5,6 +7,8 @@ export interface PublicOwnerSignupRequestDto {
     clinicCity: string;
     email: string;
     password: string;
+    /** Onay kutusuyla kabul edilen belgeler ve gösterilen sürümler; sunucu güncel sürümü doğrular (ADR-029). */
+    acceptedLegalDocuments: LegalDocumentVersionDto[];
 }
 
 export interface PublicOwnerSignupResultDto {

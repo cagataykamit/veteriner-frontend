@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,11 @@ import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/feat
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
+import { LegalConsentCheckboxComponent } from '@/app/features/legal-acceptance/components/legal-consent-checkbox.component';
+import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
+import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
+import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
+import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/features/public/utils/legal-documents.utils';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import {
@@ -26,7 +31,7 @@ import {
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent],
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
@@ -147,11 +152,13 @@ import {
                                     eklenecektir.
                                 </p>
 
+                                <app-legal-consent-checkbox inputId="signupLegalConsent" [documents]="legalDocumentTypes()" [disabled]="submitting()" [(checked)]="legalConsent" />
+
                                 <p-button
                                     label="Hesabı oluştur"
                                     styleClass="w-full public-auth-submit"
                                     [loading]="submitting()"
-                                    [disabled]="submitting()"
+                                    [disabled]="submitting() || !legalConsent()"
                                     (onClick)="submit()"
                                 />
 
@@ -188,6 +195,14 @@ export class OwnerSignupPageComponent implements OnInit {
     private readonly title = inject(Title);
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
+    private readonly legal = inject(LegalAcceptanceService);
+
+    /** Kayıt olan klinik yöneticisidir: sunucunun yayımladığı tüm belgeler (ADR-029 madde 4). */
+    private readonly legalVersions = signal<LegalDocumentVersionDto[] | null>(null);
+    readonly legalDocumentTypes = computed<readonly LegalDocumentType[]>(
+        () => this.legalVersions()?.map((v) => v.documentType) ?? (Object.keys(LEGAL_DOCUMENTS_BY_TYPE) as LegalDocumentType[])
+    );
+    readonly legalConsent = signal(false);
 
     readonly selectedPlan = signal<PricingPlanDef>(resolveSignupPlan(null));
     readonly successResult = signal<PublicOwnerSignupResultDto | null>(null);
@@ -210,6 +225,7 @@ export class OwnerSignupPageComponent implements OnInit {
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, AUTH_SIGNUP_PAGE_META);
         removeOrphanedPrimeMenuPopupsFromBody(this.document);
+        this.loadLegalVersions(false);
         this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((q) => {
             if (this.successResult()) {
                 return;
@@ -253,13 +269,29 @@ export class OwnerSignupPageComponent implements OnInit {
             return;
         }
 
+        const legalVersions = this.legalVersions();
+
+        if (!this.legalConsent()) {
+            this.formError.set(LEGAL_ACCEPTANCE_CODE_MESSAGES['LegalAcceptances.Required']);
+
+            return;
+        }
+
+        if (!legalVersions) {
+            this.formError.set('Hukuki metin sürümleri yüklenemedi. Sayfayı yenileyip tekrar deneyin.');
+            this.loadLegalVersions(true);
+
+            return;
+        }
+
         const body: PublicOwnerSignupRequestDto = {
             planCode: plan.apiCode,
             tenantName,
             clinicName,
             clinicCity,
             email,
-            password
+            password,
+            acceptedLegalDocuments: legalVersions
         };
 
         this.submitting.set(true);
@@ -273,7 +305,22 @@ export class OwnerSignupPageComponent implements OnInit {
                 },
                 error: (err: unknown) => {
                     this.formError.set(publicOwnerSignupFailureMessage(err));
+
+                    if (isLegalVersionOutdatedError(err)) {
+                        this.legalConsent.set(false);
+                        this.loadLegalVersions(true);
+                    }
                 }
+            });
+    }
+
+    /** Görünen ve gönderilen sürüm backend'den (tek kaynak); 409 sonrası yenilenir. */
+    private loadLegalVersions(refresh: boolean): void {
+        (refresh ? this.legal.refreshCurrentVersions() : this.legal.getCurrentVersions())
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (versions) => this.legalVersions.set(versions),
+                error: () => this.legalVersions.set(null)
             });
     }
 
