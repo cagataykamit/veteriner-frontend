@@ -16,6 +16,7 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { CLEAR_VACCINATIONS_LIST_LINK_QUERY, readVaccinationsListLinkFilters } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -33,9 +34,11 @@ type VaccinationsListState = {
     page: number;
     pageSize: number;
     overdueOnly?: boolean;
+    onlyReceivingCare?: boolean;
 };
 
 const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
+const RECEIVING_CARE_ONLY = 'true';
 
 @Component({
     selector: 'app-vaccinations-list-page',
@@ -85,6 +88,18 @@ const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
                                     inputId="vacStatus"
                                     [options]="statusOptions"
                                     [(ngModel)]="statusFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    styleClass="w-full"
+                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Hasta" labelId="lblVacReceivingCare" [active]="isReceivingCareActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblVacReceivingCare"
+                                    inputId="vacReceivingCare"
+                                    [options]="receivingCareOptions"
+                                    [(ngModel)]="receivingCareFilter"
                                     optionLabel="label"
                                     optionValue="value"
                                     [placeholder]="copy.filterPlaceholderAll"
@@ -262,6 +277,8 @@ export class VaccinationsListPageComponent implements OnInit {
     fromDateInput = '';
     toDateInput = '';
     statusFilter = '';
+    /** `RECEIVING_CARE_ONLY` → API `onlyReceivingCare` (vefat eden hastaların aşıları dışlanır); boş = tüm hastalar. */
+    receivingCareFilter = '';
 
     /** Dashboard derin bağlantısı + API `OnlyOverdue`; durum her zaman Planlandı (0) ile birlikte kullanılır. */
     readonly activeOverdueOnly = signal(false);
@@ -271,6 +288,11 @@ export class VaccinationsListPageComponent implements OnInit {
         { label: 'Planlandı', value: '0' },
         { label: 'Uygulandı', value: '1' },
         { label: 'İptal', value: '2' }
+    ];
+
+    readonly receivingCareOptions = [
+        { label: 'Tümü', value: '' },
+        { label: 'Yaşayanlar', value: RECEIVING_CARE_ONLY }
     ];
 
     readonly displayedRows = computed(() => this.rawItems());
@@ -283,6 +305,7 @@ export class VaccinationsListPageComponent implements OnInit {
             this.activeOverdueOnly() ||
             !!this.activeSearch().trim() ||
             !!this.statusFilter.trim() ||
+            !!this.receivingCareFilter ||
             !!this.activeFromDate().trim() ||
             !!this.activeToDate().trim()
     );
@@ -295,9 +318,14 @@ export class VaccinationsListPageComponent implements OnInit {
         if (overdueFromUrl) {
             this.clearStateFromSessionStorage();
             this.applyOverdueDashboardDeepLink();
-        } else if (!this.restoreStateFromSessionStorage()) {
-            this.currentPage.set(1);
-            this.first.set(0);
+        } else {
+            const restored = this.restoreStateFromSessionStorage();
+            const linked = this.applyLinkFiltersFromQuery();
+
+            if (!restored || linked) {
+                this.currentPage.set(1);
+                this.first.set(0);
+            }
         }
 
         this.suppressNextLazy = true;
@@ -305,9 +333,35 @@ export class VaccinationsListPageComponent implements OnInit {
         this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
 
+    /**
+     * Karttan gelen derin bağlantı (`status`, `fromDate`, `toDate`, `onlyReceivingCare`) oturumdaki süzgeçlerin yerine geçer;
+     * böylece liste kartın gösterdiği kümeyle aynıdır. Adres çubuğundan `syncVaccinationsListQueryParams` kaldırır.
+     */
+    private applyLinkFiltersFromQuery(): boolean {
+        const filters = readVaccinationsListLinkFilters(this.route.snapshot.queryParamMap);
+
+        if (!filters) {
+            return false;
+        }
+
+        this.activeOverdueOnly.set(false);
+        this.searchInput = '';
+        this.statusFilter = filters.status;
+        this.fromDateInput = filters.fromDate;
+        this.toDateInput = filters.toDate;
+        this.receivingCareFilter = filters.onlyReceivingCare ? RECEIVING_CARE_ONLY : '';
+        this.activeSearch.set('');
+        this.activeFromDate.set(filters.fromDate);
+        this.activeToDate.set(filters.toDate);
+        this.persistStateToSessionStorage(1, this.pageSize());
+
+        return true;
+    }
+
     private applyOverdueDashboardDeepLink(): void {
         this.activeOverdueOnly.set(true);
         this.statusFilter = '0';
+        this.receivingCareFilter = '';
         this.searchInput = '';
         this.fromDateInput = '';
         this.toDateInput = '';
@@ -355,6 +409,7 @@ export class VaccinationsListPageComponent implements OnInit {
         this.activeFromDate.set('');
         this.activeToDate.set('');
         this.statusFilter = '';
+        this.receivingCareFilter = '';
         this.first.set(0);
         this.currentPage.set(1);
         this.clearStateFromSessionStorage();
@@ -433,7 +488,8 @@ export class VaccinationsListPageComponent implements OnInit {
     ): void {
         const overdue = this.activeOverdueOnly();
         const effectiveStatus = overdue ? '0' : status.trim();
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${effectiveStatus}|${overdue}`;
+        const onlyReceivingCare = this.receivingCareFilter === RECEIVING_CARE_ONLY;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${effectiveStatus}|${overdue}|${onlyReceivingCare}`;
 
         if (!force && key === this.lastLoadKey) {
             return;
@@ -450,7 +506,8 @@ export class VaccinationsListPageComponent implements OnInit {
                 fromDate: fromDate || undefined,
                 toDate: toDate || undefined,
                 status: effectiveStatus || undefined,
-                onlyOverdue: overdue ? true : undefined
+                onlyOverdue: overdue ? true : undefined,
+                onlyReceivingCare: onlyReceivingCare ? true : undefined
             })
             .subscribe({
                 next: (r) => {
@@ -475,6 +532,10 @@ export class VaccinationsListPageComponent implements OnInit {
 
     isStatusActive(): boolean {
         return !!this.statusFilter.trim();
+    }
+
+    isReceivingCareActive(): boolean {
+        return !!this.receivingCareFilter;
     }
 
     isFromDateActive(): boolean {
@@ -507,6 +568,7 @@ export class VaccinationsListPageComponent implements OnInit {
             this.statusFilter = typeof parsed.status === 'string' ? parsed.status : '';
             this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
             this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+            this.receivingCareFilter = parsed.onlyReceivingCare === true ? RECEIVING_CARE_ONLY : '';
             this.activeSearch.set(this.searchInput.trim());
             this.activeFromDate.set(this.fromDateInput.trim());
             this.activeToDate.set(this.toDateInput.trim());
@@ -531,7 +593,8 @@ export class VaccinationsListPageComponent implements OnInit {
             toDate: this.toDateInput.trim(),
             page,
             pageSize,
-            overdueOnly: this.activeOverdueOnly()
+            overdueOnly: this.activeOverdueOnly(),
+            onlyReceivingCare: this.receivingCareFilter === RECEIVING_CARE_ONLY
         };
 
         sessionStorage.setItem(VACCINATIONS_LIST_STATE_KEY, JSON.stringify(state));
@@ -541,13 +604,13 @@ export class VaccinationsListPageComponent implements OnInit {
         sessionStorage.removeItem(VACCINATIONS_LIST_STATE_KEY);
     }
 
-    /** URL’yi filtreyle hizala; sayfa yenilemede `?overdue=true` korunur. */
+    /** URL’yi filtreyle hizala; sayfa yenilemede `?overdue=true` korunur, uygulanmış kart bağlantısı süzgeçleri kaldırılır. */
     private syncVaccinationsListQueryParams(): void {
         const showOverdue = this.activeOverdueOnly() && this.statusFilter.trim() === '0';
 
         void this.router.navigate([], {
             relativeTo: this.route,
-            queryParams: { overdue: showOverdue ? 'true' : null },
+            queryParams: { ...CLEAR_VACCINATIONS_LIST_LINK_QUERY, overdue: showOverdue ? 'true' : null },
             queryParamsHandling: 'merge',
             replaceUrl: true
         });
