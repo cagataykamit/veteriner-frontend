@@ -36,8 +36,8 @@ export interface LegalDocumentDef {
     readonly sections: readonly LegalSectionDef[];
 }
 
-export const PRIVACY_POLICY_PATH = '/privacy';
-export const TERMS_OF_USE_PATH = '/terms';
+export const PRIVACY_POLICY_PATH = '/gizlilik';
+export const TERMS_OF_USE_PATH = '/kullanim-sartlari';
 
 export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
     path: PRIVACY_POLICY_PATH,

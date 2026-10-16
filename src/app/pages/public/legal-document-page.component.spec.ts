@@ -58,7 +58,7 @@ describe('LegalDocumentPageComponent', () => {
     it('kullanım şartları gizlilik politikasına bağlantı verir', async () => {
         await harness.navigateByUrl(TERMS_OF_USE_DOCUMENT.path, LegalDocumentPageComponent);
 
-        const link = harness.routeNativeElement?.querySelector('main a[href="/privacy"]');
+        const link = harness.routeNativeElement?.querySelector('main a[href="/gizlilik"]');
 
         expect(link?.textContent?.trim()).toBe('gizlilik politikası');
     });
@@ -68,7 +68,7 @@ describe('LegalDocumentPageComponent', () => {
 
         const footer = harness.routeNativeElement?.querySelector('footer');
 
-        expect(footer?.querySelector('a[href="/privacy"]')?.textContent?.trim()).toBe('Gizlilik Politikası');
-        expect(footer?.querySelector('a[href="/terms"]')?.textContent?.trim()).toBe('Kullanım Şartları');
+        expect(footer?.querySelector('a[href="/gizlilik"]')?.textContent?.trim()).toBe('Gizlilik Politikası');
+        expect(footer?.querySelector('a[href="/kullanim-sartlari"]')?.textContent?.trim()).toBe('Kullanım Şartları');
     });
 });
