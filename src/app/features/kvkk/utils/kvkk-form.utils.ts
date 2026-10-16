@@ -87,7 +87,7 @@ export function kvkkFormDate(at: Date = new Date()): string {
     return formatDateDisplay(at);
 }
 
-/** Açık rıza formunu veya aydınlatma metnini A4 dikey yazdırır; yerleşim ve ekran öğeleri `_print.scss` `kvkk-form-print-active` kuralıyla gizlenir. */
+/** Açık rıza formunu, aydınlatma metnini veya müşteri veri kopyasını A4 dikey yazdırır; yerleşim ve ekran öğeleri `_print.scss` `kvkk-form-print-active` kuralıyla gizlenir. */
 export function printKvkkForm(doc: Document = document, win: Window = window): void {
     printWithPageStyle('kvkk-form-print-active', '@page { size: A4 portrait; margin: 18mm 16mm; @bottom-right { content: none; } }', doc, win);
 }
