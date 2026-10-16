@@ -61,11 +61,11 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                         </app-list-header>
                         <div class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-12 md:col-span-4">
-                                <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">Başlangıç</label>
+                                <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">İstem tarihi (başlangıç)</label>
                                 <app-date-input inputId="lrFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div class="col-span-12 md:col-span-4">
-                                <label for="lrTo" class="block text-xs font-medium text-muted-color mb-1">Bitiş</label>
+                                <label for="lrTo" class="block text-xs font-medium text-muted-color mb-1">İstem tarihi (bitiş)</label>
                                 <app-date-input inputId="lrTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </div>
                             <div class="col-span-12 md:col-span-4">
@@ -107,7 +107,8 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                         >
                             <ng-template #header>
                                 <tr>
-                                    <th>Tarih</th>
+                                    <th>İstem tarihi</th>
+                                    <th>Sonuç tarihi</th>
                                     <th>Durum</th>
                                     <th>Müşteri</th>
                                     <th>Hasta</th>
@@ -117,7 +118,8 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr>
-                                    <td>{{ formatDateTime(row.resultDateUtc ?? row.requestedAtUtc) }}</td>
+                                    <td data-testid="lr-requested-at">{{ formatDateTime(row.requestedAtUtc) }}</td>
+                                    <td data-testid="lr-result-date">{{ formatDateTime(row.resultDateUtc) }}</td>
                                     <td><app-lab-result-status-badges [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" /></td>
                                     <td>
                                         @if (row.clientId) {
@@ -155,10 +157,13 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
                                 class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
                             >
                                 <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                    {{ formatDateTime(row.resultDateUtc ?? row.requestedAtUtc) }}
+                                    <span class="text-muted-color">İstem: </span>{{ formatDateTime(row.requestedAtUtc) }}
                                     <app-lab-result-status-badges class="ml-2" [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" />
                                 </div>
                                 <div class="space-y-2 mb-3 min-w-0">
+                                    <div class="text-sm">
+                                        <span class="text-muted-color font-medium">Sonuç tarihi: </span>{{ formatDateTime(row.resultDateUtc) }}
+                                    </div>
                                     <div class="text-sm">
                                         <span class="text-muted-color font-medium">Müşteri: </span>
                                         @if (row.clientId) {
