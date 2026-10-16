@@ -1,0 +1,121 @@
+<div class="portal-stack">
+    <h1 class="portal-title">Bakiye ve ödemeler</h1>
+
+    @if (session.activeLink(); as link) {
+        @switch (balance.state()) {
+            @case ('loading') {
+                <portal-skeleton [rows]="1" message="Bakiyeniz yükleniyor…" />
+            }
+            @case ('error') {
+                <portal-error-state [message]="balance.error()" (retry)="balance.retry()" />
+            }
+            @default {
+                @if (balance.data(); as b) {
+                    <section class="portal-card portal-stack" aria-labelledby="balance-title" data-testid="balance-summary">
+                        <div>
+                            <h2 id="balance-title" class="portal-muted">{{ link.clinicName }} · kalan tutar</h2>
+                            @if (hasOutstanding(b)) {
+                                <p class="portal-amount">{{ money(b.outstanding, b.currency) }}</p>
+                            } @else {
+                                <p class="portal-amount">Borcunuz yok</p>
+                            }
+                        </div>
+                        <dl class="portal-dl">
+                            <div>
+                                <dt>Toplam ücret</dt>
+                                <dd>{{ money(b.totalCharged, b.currency) }}</dd>
+                            </div>
+                            <div>
+                                <dt>Ödenen</dt>
+                                <dd>{{ money(b.totalPaid, b.currency) }}</dd>
+                            </div>
+                            <div>
+                                <dt>Kalan</dt>
+                                <dd>{{ money(b.outstanding, b.currency) }}</dd>
+                            </div>
+                            @if (b.lastPaymentAtUtc) {
+                                <div>
+                                    <dt>Son ödeme</dt>
+                                    <dd>{{ day(b.lastPaymentAtUtc) }}</dd>
+                                </div>
+                            }
+                        </dl>
+                        @if (b.unallocatedPaymentsAmount > 0) {
+                            <div class="portal-note" data-testid="balance-unallocated">
+                                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                                <div>
+                                    <p>
+                                        <strong>Henüz bir ücrete bağlanmamış ödemeleriniz: {{ money(b.unallocatedPaymentsAmount, b.currency) }}</strong>
+                                    </p>
+                                    <p>Bu tutar yukarıdaki kalan tutardan düşülmemiştir. Ayrıntı için kliniğinizle görüşebilirsiniz.</p>
+                                </div>
+                            </div>
+                        }
+                    </section>
+                }
+            }
+        }
+
+        <!-- AK-9: online ödeme yok; ödeme klinikte -->
+        <section class="portal-card portal-stack" aria-labelledby="balance-pay-title" data-testid="balance-pay">
+            <h2 id="balance-pay-title" class="portal-subtitle">Ödeme</h2>
+            <p class="portal-muted">Portal üzerinden ödeme yapılamaz. Ödeme için kliniği arayın.</p>
+            @if (phoneHref(); as href) {
+                <a class="portal-action-link portal-action-link--primary" [href]="href">
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i> {{ clinic.data()?.phone }}
+                </a>
+            } @else if (clinic.state() === 'loading') {
+                <portal-skeleton [rows]="1" message="Klinik telefonu yükleniyor…" />
+            } @else {
+                <a class="portal-action-link" routerLink="/clinic">Klinik iletişim bilgileri</a>
+            }
+        </section>
+
+        <section class="portal-stack" aria-labelledby="payments-title">
+            <h2 id="payments-title" class="portal-subtitle">Ödeme geçmişi</h2>
+            @switch (payments.state()) {
+                @case ('loading') {
+                    <portal-skeleton [rows]="2" message="Ödemeleriniz yükleniyor…" />
+                }
+                @case ('error') {
+                    <portal-error-state [message]="payments.error()" (retry)="payments.retry()" />
+                }
+                @default {
+                    @if (payments.items().length) {
+                        <ul class="portal-list" data-testid="payment-list">
+                            @for (p of payments.items(); track $index) {
+                                <li class="portal-row">
+                                    <div class="portal-row-head">
+                                        <p class="portal-row-title">{{ money(p.amount, p.currency) }}</p>
+                                        <span class="portal-badge">{{ method(p) }}</span>
+                                    </div>
+                                    <p class="portal-muted">{{ day(p.paidAtUtc) }}</p>
+                                </li>
+                            }
+                        </ul>
+                        @if (payments.lastPage(); as page) {
+                            <p class="portal-muted portal-center">{{ page.totalItems }} ödemeden {{ payments.items().length }} tanesi gösteriliyor</p>
+                        }
+                        @if (payments.moreState() === 'error') {
+                            <p class="portal-field-error portal-center" role="alert">{{ payments.error() }}</p>
+                        }
+                        @if (payments.hasMore()) {
+                            <p-button
+                                [label]="payments.moreState() === 'error' ? 'Tekrar dene' : 'Daha fazla göster'"
+                                severity="secondary"
+                                [outlined]="true"
+                                styleClass="portal-button-block"
+                                [loading]="payments.moreState() === 'loading'"
+                                (onClick)="payments.moreState() === 'error' ? payments.retry() : payments.loadMore()"
+                            />
+                        }
+                    } @else {
+                        <portal-empty-state title="Ödeme kaydı yok" message="Bu klinikte kayıtlı ödemeniz bulunmuyor." icon="fa-receipt" />
+                    }
+                }
+            }
+        </section>
+    } @else {
+        <portal-empty-state title="Bağlı klinik yok" message="Kliniğinizden yeni bir portal daveti isteyebilirsiniz." icon="fa-hospital" />
+    }
+</div>

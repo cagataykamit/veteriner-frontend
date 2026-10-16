@@ -1,0 +1,77 @@
+<div class="portal-stack">
+    <a class="portal-back" routerLink="/"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Ana sayfa</a>
+
+    @switch (clinic.state()) {
+        @case ('loading') {
+            <h1 class="sr-only">Klinik bilgileri</h1>
+            <portal-skeleton [rows]="2" message="Klinik bilgileri yükleniyor…" />
+        }
+        @case ('error') {
+            <h1 class="portal-title">Klinik bilgileri</h1>
+            <portal-error-state [message]="clinic.error()" (retry)="clinic.retry()" />
+        }
+        @default {
+            @if (clinic.data(); as c) {
+                <div class="portal-brand">
+                    <span class="portal-brand-badge" aria-hidden="true">{{ initial() }}</span>
+                    <h1 class="portal-title">{{ c.name }}</h1>
+                </div>
+
+                <section class="portal-card portal-stack" aria-labelledby="clinic-contact-title">
+                    <h2 id="clinic-contact-title" class="portal-subtitle">İletişim</h2>
+                    @if (hasContact()) {
+                        @if (phoneHref(); as href) {
+                            <a class="portal-action-link portal-action-link--primary" [href]="href" data-testid="clinic-phone">
+                                <i class="fa-solid fa-phone" aria-hidden="true"></i> {{ c.phone }}
+                            </a>
+                        }
+                        @if (c.email) {
+                            <a class="portal-action-link" [href]="mailHref(c.email)">
+                                <i class="fa-solid fa-envelope" aria-hidden="true"></i> {{ c.email }}
+                            </a>
+                        }
+                        @if (c.address || c.city) {
+                            <div class="portal-note">
+                                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                <div>
+                                    @if (c.address) {
+                                        <p class="portal-prewrap">{{ c.address }}</p>
+                                    }
+                                    @if (c.city) {
+                                        <p>{{ c.city }}</p>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    } @else {
+                        <p class="portal-muted">Klinik iletişim bilgilerini henüz eklememiş.</p>
+                    }
+                </section>
+
+                <section class="portal-card portal-stack" aria-labelledby="clinic-hours-title">
+                    <h2 id="clinic-hours-title" class="portal-subtitle">Çalışma saatleri</h2>
+                    @if (hours().length) {
+                        <table class="portal-hours" data-testid="clinic-hours">
+                            <caption class="sr-only">Haftalık çalışma saatleri</caption>
+                            <tbody>
+                                @for (row of hours(); track row.label) {
+                                    <tr>
+                                        <th scope="row">{{ row.label }}</th>
+                                        <td>
+                                            {{ row.hours }}
+                                            @if (row.breakText) {
+                                                <span class="portal-muted">{{ row.breakText }}</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    } @else {
+                        <p class="portal-muted">Çalışma saatleri henüz eklenmemiş. Bilgi için kliniği arayabilirsiniz.</p>
+                    }
+                </section>
+            }
+        }
+    }
+</div>

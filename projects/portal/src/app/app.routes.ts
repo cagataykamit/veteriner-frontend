@@ -66,6 +66,31 @@ export const portalRoutes: Routes = [
                 loadComponent: () => import('./features/home/portal-home.component').then((m) => m.PortalHomeComponent)
             },
             {
+                path: 'pets',
+                title: title('Hayvanlarım'),
+                loadComponent: () => import('./features/pets/portal-pets.component').then((m) => m.PortalPetsComponent)
+            },
+            {
+                path: 'pets/:petId',
+                title: title('Hayvan bilgileri'),
+                loadComponent: () => import('./features/pets/portal-pet-detail.component').then((m) => m.PortalPetDetailComponent)
+            },
+            {
+                path: 'appointments',
+                title: title('Randevularım'),
+                loadComponent: () => import('./features/appointments/portal-appointments.component').then((m) => m.PortalAppointmentsComponent)
+            },
+            {
+                path: 'balance',
+                title: title('Bakiye ve ödemeler'),
+                loadComponent: () => import('./features/balance/portal-balance.component').then((m) => m.PortalBalanceComponent)
+            },
+            {
+                path: 'clinic',
+                title: title('Klinik bilgileri'),
+                loadComponent: () => import('./features/clinic/portal-clinic.component').then((m) => m.PortalClinicComponent)
+            },
+            {
                 path: 'account',
                 title: title('Hesabım'),
                 loadComponent: () => import('./features/account/portal-account.component').then((m) => m.PortalAccountComponent)
