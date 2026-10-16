@@ -1,0 +1,114 @@
+<main class="portal-page portal-stack">
+    <portal-brand-header />
+
+    <section class="portal-card portal-stack" aria-labelledby="login-title">
+        <h1 id="login-title" class="portal-title">Giriş yap</h1>
+
+        @if (expiredMessage(); as message) {
+            <p-message severity="warn" [text]="message" />
+        }
+
+        <div class="portal-segmented" role="group" aria-label="Giriş yöntemi">
+            <button type="button" [class.is-active]="method() === 'code'" [attr.aria-pressed]="method() === 'code'" (click)="selectMethod('code')">
+                E-posta kodu
+            </button>
+            <button
+                type="button"
+                [class.is-active]="method() === 'password'"
+                [attr.aria-pressed]="method() === 'password'"
+                (click)="selectMethod('password')"
+            >
+                Parola
+            </button>
+        </div>
+
+        <form class="portal-stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="portal-field">
+                <label for="login-email">E-posta</label>
+                <input
+                    pInputText
+                    id="login-email"
+                    type="email"
+                    formControlName="email"
+                    autocomplete="email"
+                    inputmode="email"
+                    [readonly]="codeSent()"
+                    [attr.aria-invalid]="!!fieldError('email')"
+                    [attr.aria-describedby]="fieldError('email') ? 'login-email-error' : null"
+                />
+                @if (fieldError('email'); as message) {
+                    <p id="login-email-error" class="portal-field-error">{{ message }}</p>
+                }
+            </div>
+
+            @if (method() === 'code' && codeSent()) {
+                @if (info(); as message) {
+                    <p-message severity="info" [text]="message" role="status" />
+                }
+                <div class="portal-field">
+                    <label for="login-code">Giriş kodu</label>
+                    <input
+                        pInputText
+                        id="login-code"
+                        type="text"
+                        formControlName="code"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        maxlength="7"
+                        [attr.aria-invalid]="!!fieldError('code')"
+                        [attr.aria-describedby]="fieldError('code') ? 'login-code-error' : 'login-code-hint'"
+                    />
+                    <p id="login-code-hint" class="portal-field-hint">E-postanıza gelen 6 haneli kod.</p>
+                    @if (fieldError('code'); as message) {
+                        <p id="login-code-error" class="portal-field-error">{{ message }}</p>
+                    }
+                </div>
+            }
+
+            @if (method() === 'password') {
+                <div class="portal-field">
+                    <label for="login-password">Parola</label>
+                    <input
+                        pInputText
+                        id="login-password"
+                        type="password"
+                        formControlName="password"
+                        autocomplete="current-password"
+                        [attr.aria-invalid]="!!fieldError('password')"
+                        [attr.aria-describedby]="fieldError('password') ? 'login-password-error' : null"
+                    />
+                    @if (fieldError('password'); as message) {
+                        <p id="login-password-error" class="portal-field-error">{{ message }}</p>
+                    }
+                </div>
+            }
+
+            @if (error(); as message) {
+                <p-message severity="error" [text]="message" role="alert" />
+            }
+
+            <div class="portal-actions">
+                @if (method() === 'password') {
+                    <p-button type="submit" label="Giriş yap" [loading]="busy()" />
+                    <a class="portal-link-button" routerLink="/password-reset">Parolamı unuttum</a>
+                } @else if (codeSent()) {
+                    <p-button type="submit" label="Doğrula ve giriş yap" [loading]="busy()" />
+                    <button type="button" class="portal-link-button" [disabled]="!resend.canSend() || busy()" (click)="requestCode()">
+                        @if (resend.canSend()) {
+                            Kodu tekrar gönder
+                        } @else {
+                            Kodu tekrar gönder ({{ resend.remaining() }} sn)
+                        }
+                    </button>
+                    <button type="button" class="portal-link-button" (click)="changeEmail()">E-postayı değiştir</button>
+                } @else {
+                    <p-button type="submit" label="Kod gönder" [loading]="busy()" />
+                }
+            </div>
+        </form>
+    </section>
+
+    <p class="portal-muted portal-center">Hesabınız yoksa kliniğinizden portal daveti isteyin.</p>
+
+    <portal-footer />
+</main>
