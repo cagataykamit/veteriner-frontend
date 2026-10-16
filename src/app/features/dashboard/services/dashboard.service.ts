@@ -31,7 +31,8 @@ import { AppointmentsService } from '@/app/features/appointments/services/appoin
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { localDateYyyyMmDd, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
+import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
+import { upcomingVaccinationsFilters } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
@@ -51,9 +52,6 @@ export interface DashboardSummariesPhaseResult {
 
 /** "Yaklaşan aşılar" kartındaki en fazla satır. */
 const DASHBOARD_UPCOMING_VACCINATIONS_MAX = 8;
-
-/** Planlı aşı durumu (`VaccinationStatus.Scheduled`); liste süzgecinde backend'e giden değer. */
-const VACCINATION_STATUS_SCHEDULED = '0';
 
 interface DashboardListsPhaseResult {
     readonly todayAppointments: DashboardSection<AppointmentListItemVm[]>;
@@ -212,7 +210,7 @@ export class DashboardService {
      */
     loadDashboardListsPhase(): Observable<DashboardListsPhaseResult> {
         const today = localDateYyyyMmDd();
-        const istanbulToday = toIstanbulDateInputValue(new Date().toISOString());
+        const upcoming = upcomingVaccinationsFilters();
 
         const section = <T,>(source: Observable<T>, fallback: T, errMsg: string): Observable<DashboardSection<T>> =>
             source.pipe(
@@ -233,10 +231,10 @@ export class DashboardService {
                     .getVaccinations({
                         page: 1,
                         pageSize: DASHBOARD_UPCOMING_VACCINATIONS_MAX,
-                        status: VACCINATION_STATUS_SCHEDULED,
-                        fromDate: istanbulToday,
-                        // Vefat eden hastanın planlı aşısı yaklaşan iş değildir (uyarı sayımıyla aynı kural, backend Pet.ReceivesCare).
-                        onlyReceivingCare: true,
+                        // Kartın "Tümü →" bağlantısıyla aynı tanım (vefat edenler hariç; uyarı sayımıyla aynı kural, backend Pet.ReceivesCare).
+                        status: upcoming.status,
+                        fromDate: upcoming.fromDate,
+                        onlyReceivingCare: upcoming.onlyReceivingCare,
                         sort: 'dueAtUtc',
                         order: 'asc'
                     })

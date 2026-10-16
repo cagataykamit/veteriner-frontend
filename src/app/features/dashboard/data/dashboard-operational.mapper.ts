@@ -13,6 +13,7 @@ import type {
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { buildSevenDayTrendPoints, parseLastSevenDayAppointmentCounts } from '@/app/features/dashboard/utils/dashboard-trend.utils';
+import { upcomingVaccinationsNext7DaysFilters, vaccinationsListLinkQuery } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
 
 /**
  * Summary DTO’da liste alanları null olabilir — tabloya güvenli varsayılan.
@@ -127,7 +128,7 @@ function severityRank(severity: DashboardActionSeverity): number {
     return 2;
 }
 
-export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm): DashboardActionItemVm[] {
+export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm, now: Date = new Date()): DashboardActionItemVm[] {
     const items = [
         item(
             'overdueAppointments',
@@ -171,7 +172,8 @@ export function buildOperationalActionItems(alerts: DashboardOperationalAlertsVm
             'Yaklaşan aşılar',
             'Önümüzdeki 7 gün içinde zamanı gelen aşılar var.',
             'info',
-            '/panel/vaccinations'
+            '/panel/vaccinations',
+            vaccinationsListLinkQuery(upcomingVaccinationsNext7DaysFilters(now))
         )
     ].filter((x): x is DashboardActionItemVm => x != null);
 

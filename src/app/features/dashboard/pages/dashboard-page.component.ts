@@ -28,6 +28,7 @@ import {
     localDateYyyyMmDd
 } from '@/app/shared/utils/date.utils';
 import { singleDayAppointmentsLinkQuery } from '@/app/features/appointments/utils/appointments-list-link.utils';
+import { upcomingVaccinationsFilters, vaccinationsListLinkQuery } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -579,7 +580,7 @@ import { ProductStockService } from '@/app/features/inventory/services/product-s
                     <div class="card h-full">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
                             <h5 class="mt-0 mb-0">Yaklaşan aşılar</h5>
-                            <a routerLink="/panel/vaccinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            <a routerLink="/panel/vaccinations" [queryParams]="upcomingVaccinationsLinkQuery" class="text-primary font-medium no-underline text-sm" data-testid="upcoming-vaccinations-all-link">Tümü →</a>
                         </div>
                         @if (listsLoading()) {
                             <app-loading-state message="Aşı listesi yükleniyor…" />
@@ -896,6 +897,8 @@ export class DashboardPageComponent implements OnInit, AfterViewInit {
     readonly copy = PANEL_COPY;
     /** "Bugünkü randevular" kartıyla aynı küme: bugünün (kartın sorgusuyla aynı gün) bütün durumları. */
     readonly todayAppointmentsLinkQuery = singleDayAppointmentsLinkQuery(localDateYyyyMmDd());
+    /** "Yaklaşan aşılar" kartının sorgusuyla aynı tanım: planlı, bugünden itibaren, vefat edenler hariç. */
+    readonly upcomingVaccinationsLinkQuery = vaccinationsListLinkQuery(upcomingVaccinationsFilters());
     readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
 
     readonly loading = signal(true);

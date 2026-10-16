@@ -6,6 +6,7 @@ import { AppointmentsService } from '@/app/features/appointments/services/appoin
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { upcomingVaccinationsFilters, vaccinationsListLinkQuery } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
 
 describe('DashboardService — liste fazı istekleri', () => {
     const emptyPage = { items: [], page: 1, pageSize: 8, totalItems: 0, totalPages: 0 };
@@ -46,6 +47,18 @@ describe('DashboardService — liste fazı istekleri', () => {
         const q = vaccinations.getVaccinations.calls.mostRecent().args[0];
 
         expect(q.toDate).toBeUndefined();
+    });
+
+    it('kartın "Tümü →" bağlantısı kartın API sorgusuyla aynı süzgeci taşır', () => {
+        jasmine.clock().mockDate(new Date('2026-10-14T22:30:00Z'));
+        service.loadDashboardListsPhase().subscribe();
+        const q = vaccinations.getVaccinations.calls.mostRecent().args[0];
+
+        expect(vaccinationsListLinkQuery(upcomingVaccinationsFilters())).toEqual({
+            status: q.status!,
+            fromDate: q.fromDate!,
+            onlyReceivingCare: String(q.onlyReceivingCare)
+        });
     });
 
     it('son muayeneler kanonik examinedAtUtc ile azalan istenir', () => {
