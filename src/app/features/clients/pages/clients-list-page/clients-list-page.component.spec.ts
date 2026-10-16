@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ClientsListPageComponent } from './clients-list-page.component';
@@ -175,6 +177,64 @@ describe('ClientsListPageComponent — satır eylemleri', () => {
             expect(link.getAttribute('href')).toBe('/panel/clients/c1');
             expect(link.querySelector('i')!.classList).toContain('fa-eye');
             expect(link.textContent!.trim()).toBe('');
+        }
+    });
+});
+
+/** ADR-026 madde 6: Düzenle, detay sayfasındaki Düzenle ile aynı yetki ve salt okunur koşuluyla satırda Detay'ın yanındadır. */
+describe('ClientsListPageComponent — satırda Düzenle', () => {
+    const create = async (claims: string[], mutationBlocked = false): Promise<HTMLElement> => {
+        sessionStorage.clear();
+        const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClients']);
+
+        clients.getClients.and.returnValue(
+            of({ items: [{ id: 'c1', fullName: 'Ali Veli', phone: '5551112233', email: 'ali@example.com', createdAtUtc: '2026-10-10T07:00:00Z' }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 })
+        );
+        TestBed.configureTestingModule({
+            imports: [ClientsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ClientsService, useValue: clients },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
+            ]
+        });
+        const fixture = TestBed.createComponent(ClientsListPageComponent);
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        return fixture.nativeElement as HTMLElement;
+    };
+
+    afterEach(() => sessionStorage.clear());
+
+    it("Clients.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", async () => {
+        const edits = rowEditActions(await create([CLIENTS_UPDATE_CLAIM]));
+
+        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+
+        for (const edit of edits) {
+            expect(edit.getAttribute('href')).toBe('/panel/clients/c1/edit');
+            expect(edit.getAttribute('aria-label')).toBe('Düzenle');
+            expect(isRightAfterDetail(edit)).toBeTrue();
+        }
+    });
+
+    it('yetki yoksa Düzenle görünmez', async () => {
+        expect(rowEditActions(await create([])).length).toBe(0);
+    });
+
+    it('salt okunur kiracıda Düzenle pasif düğmedir, bağlantı değildir', async () => {
+        const edits = rowEditActions(await create([CLIENTS_UPDATE_CLAIM], true));
+
+        expect(edits.length).toBe(2);
+
+        for (const edit of edits) {
+            expect(edit.tagName).toBe('BUTTON');
+            expect(edit.getAttribute('aria-disabled')).toBe('true');
+            expect(edit.getAttribute('aria-label')).toBe('Düzenle (salt okunur)');
         }
     });
 });

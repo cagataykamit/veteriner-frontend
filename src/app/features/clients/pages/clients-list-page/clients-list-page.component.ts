@@ -21,7 +21,7 @@ import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.ut
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CLIENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CLIENTS_CREATE_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type ClientsListState = {
@@ -94,7 +94,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                     <th>Telefon</th>
                                     <th>E-posta</th>
                                     <th>Kayıt Tarihi</th>
-                                    <th style="width: 6rem">İşlemler</th>
+                                    <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -104,7 +104,14 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                     <td>{{ row.email }}</td>
                                     <td>{{ formatDate(row.createdAtUtc) }}</td>
                                     <td>
-                                        <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
+                                        <div class="flex items-center gap-1">
+                                            <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
+                                            @if (canUpdateClient && !ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" [link]="['/panel/clients', row.id, 'edit']" />
+                                            } @else if (canUpdateClient && ro.mutationBlocked()) {
+                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -132,8 +139,13 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                 @if (row.createdAtUtc) {
                                     <div class="text-xs text-muted-color mb-3 min-w-0">Kayıt: {{ formatDate(row.createdAtUtc) }}</div>
                                 }
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
+                                    @if (canUpdateClient && !ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" [link]="['/panel/clients', row.id, 'edit']" />
+                                    } @else if (canUpdateClient && ro.mutationBlocked()) {
+                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                    }
                                 </div>
                             </div>
                         }
@@ -182,6 +194,7 @@ export class ClientsListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
     readonly canCreateClient = this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM);
+    readonly canUpdateClient = this.auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM);
 
     readonly formatDate = (v: string | null) => formatDateDisplay(v);
     private suppressNextLazy = false;
