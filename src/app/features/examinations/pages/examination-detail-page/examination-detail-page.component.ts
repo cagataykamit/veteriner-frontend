@@ -20,7 +20,7 @@ import { finalizeChecklist, finalizeWarnings } from '@/app/features/examinations
 import { ExaminationFinalizeChecklistComponent } from '@/app/features/examinations/components/examination-finalize-checklist.component';
 import { ExaminationFinalizeDialogComponent } from '@/app/features/examinations/components/examination-finalize-dialog.component';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
+import { examinationStatusLabel, examinationStatusSeverity, isExaminationEditable } from '@/app/features/examinations/utils/examination-status.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
@@ -133,7 +133,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                         ></button>
                     }
                     @if (canUpdateExamination && !ro.mutationBlocked()) {
-                        @if (exam()!.status === 'Draft') {
+                        @if (isEditable(exam()!.status)) {
                             <a
                                 [routerLink]="['/panel/examinations', exam()!.id, 'edit']"
                                 pButton
@@ -161,7 +161,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                             }
                         }
                     } @else if (canUpdateExamination && ro.mutationBlocked()) {
-                        @if (exam()!.status === 'Draft') {
+                        @if (isEditable(exam()!.status)) {
                             <button
                                 pButton
                                 type="button"
@@ -396,6 +396,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly relatedSummaryError = signal<string | null>(null);
     readonly relatedSummary = signal<ExaminationRelatedSummaryVm | null>(null);
     readonly canUpdateExamination = this.auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM);
+    readonly isEditable = isExaminationEditable;
     readonly canFinalizeExamination = this.auth.hasOperationClaim(EXAMINATIONS_FINALIZE_CLAIM);
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
     readonly canAddendumExamination =this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);

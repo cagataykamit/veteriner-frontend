@@ -22,9 +22,11 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { examinationStatusLabel, examinationStatusSeverity } from '@/app/features/examinations/utils/examination-status.utils';
+import { examinationStatusLabel, examinationStatusSeverity, isExaminationEditable } from '@/app/features/examinations/utils/examination-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { EXAMINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type ExaminationsListState = {
@@ -111,7 +113,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                     <th>Hasta</th>
                                     <th>Ziyaret sebebi</th>
                                     <th>Durum</th>
-                                    <th style="width: 6rem">İşlemler</th>
+                                    <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
@@ -140,7 +142,16 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         }
                                     </td>
                                     <td>
-                                        <app-row-action-button action="detail" [link]="['/panel/examinations', row.id]" />
+                                        <div class="flex items-center gap-1">
+                                            <app-row-action-button action="detail" [link]="['/panel/examinations', row.id]" />
+                                            @if (canUpdateExamination && isEditable(row.status)) {
+                                                @if (ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                                } @else {
+                                                    <app-row-action-button action="edit" [link]="['/panel/examinations', row.id, 'edit']" />
+                                                }
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             </ng-template>
@@ -183,8 +194,15 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         <app-status-tag class="ml-2" [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                     }
                                 </div>
-                                <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
+                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/examinations', row.id]" />
+                                    @if (canUpdateExamination && isEditable(row.status)) {
+                                        @if (ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                        } @else {
+                                            <app-row-action-button action="edit" [link]="['/panel/examinations', row.id, 'edit']" />
+                                        }
+                                    }
                                 </div>
                             </div>
                         }
@@ -210,7 +228,10 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
 export class ExaminationsListPageComponent implements OnInit {
     protected readonly scheduleApply = debouncedAction(() => this.applyFilters());
     readonly copy = PANEL_COPY;
+    readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
+    readonly canUpdateExamination = this.auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM);
+    readonly isEditable = isExaminationEditable;
 
     private readonly examinationsService = inject(ExaminationsService);
     private readonly route = inject(ActivatedRoute);

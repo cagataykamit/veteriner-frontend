@@ -1,6 +1,12 @@
+import type { ExaminationStatus } from '@/app/features/examinations/models/examination-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 const EM = '—';
+
+/** Yalnız taslak muayene düzenlenir; kesinleşmiş (ya da durumu bilinmeyen) kayıtta Düzenle gösterilmez. */
+export function isExaminationEditable(status: ExaminationStatus | null | undefined): boolean {
+    return status === 'Draft';
+}
 
 const LABELS: Record<string, string> = {
     '0': 'Taslak',
