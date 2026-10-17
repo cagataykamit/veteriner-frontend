@@ -39,15 +39,15 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
             <div class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-12 md:px-6 md:pt-16 lg:grid-cols-[45fr_55fr] lg:gap-14 lg:pb-0">
                 <div>
                     <p class="public-eyebrow m-0 mb-4 !text-[var(--vetinity-soft-teal)]">Veteriner klinikleri için</p>
-                    <h1 id="public-home-hero-title" class="public-h1 m-0 !text-white">Veteriner kliniğinizin günü tek ekranda</h1>
-                    <p class="m-0 mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg">
+                    <h1 id="public-home-hero-title" class="public-h1 public-on-brand-text m-0">Veteriner kliniğinizin günü tek ekranda</h1>
+                    <p class="m-0 mt-5 max-w-xl text-base leading-relaxed public-on-brand-muted md:text-lg">
                         Geliş, bekleme, muayene, tahsilat ve kayıt defterleri aynı yerde. Kâğıt, Excel ya da eski programdan yarım günde geçin.
                     </p>
                     <div class="mt-7 flex flex-col gap-3 sm:flex-row">
                         <a routerLink="/auth/signup" class="public-btn public-btn-on-dark w-full sm:w-auto">Ücretsiz dene</a>
                         <a [routerLink]="paths.contact" class="public-btn public-btn-outline-on-dark w-full sm:w-auto">Demo iste</a>
                     </div>
-                    <p class="m-0 mt-4 text-sm text-white/70">{{ trialLine }}</p>
+                    <p class="m-0 mt-4 text-sm public-on-brand-subtle">{{ trialLine }}</p>
                 </div>
                 <div class="lg:translate-y-12">
                     <app-public-screenshot-placeholder label="Bugün ekranı: bekleyen hastalar, biri acil, biri uyarı rozetli, ücreti yazılmamış işlem çipi" />

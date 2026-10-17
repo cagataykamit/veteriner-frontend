@@ -7,7 +7,7 @@ import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
 
-/** SSS (tasarım belgesi 5.6): masaüstünde sol dikey kategori sekmeleri, mobilde yatay kaydırmalı çipler. */
+/** SSS (tasarım belgesi 5.6): masaüstünde sol dikey kategori sekmeleri, mobilde alt alta sarılan çipler (hepsi görünür). */
 @Component({
     selector: 'app-public-faq-page',
     standalone: true,
@@ -17,7 +17,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
 
         <div class="mx-auto max-w-6xl px-4 md:px-6">
             <div class="public-section grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr] lg:gap-14">
-                <div role="tablist" aria-label="SSS kategorileri" class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:sticky lg:top-24 lg:flex-col lg:self-start lg:overflow-visible lg:px-0">
+                <div role="tablist" aria-label="SSS kategorileri" class="flex flex-wrap gap-2 lg:sticky lg:top-24 lg:flex-col lg:flex-nowrap lg:self-start">
                     @for (category of categories; track category.id) {
                         <button
                             type="button"

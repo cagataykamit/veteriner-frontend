@@ -46,7 +46,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                         <a
                             [routerLink]="link.routerLink"
                             routerLinkActive="router-link-active"
-                            class="public-topbar-nav-link inline-flex min-h-[44px] items-center px-3 text-sm font-medium text-surface-700 no-underline dark:text-surface-300"
+                            class="public-topbar-nav-link inline-flex min-h-[44px] items-center whitespace-nowrap px-2 text-sm xl:px-3 font-medium text-surface-700 no-underline dark:text-surface-300"
                         >
                             {{ link.label }}
                         </a>

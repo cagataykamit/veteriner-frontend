@@ -11,13 +11,18 @@
     --vetinity-bg-soft: #e6f6f5;
     --vetinity-neutral: #d9dee5;
 
-    /* Vurgu: bağlantı, simge, küçük etiket, çizgi */
-    --public-accent: var(--vetinity-teal);
-    --public-accent-hover: color-mix(in srgb, var(--vetinity-teal) 82%, #000000);
+    /* Vurgu: bağlantı, simge, küçük etiket, çizgi. Açık zeminde marka teali (#0fa39a) metin için 3.1:1 kalır;
+       metin ve simge rengi koyulaştırılmış teal (beyazda 5.2:1, açık teal yüzeyde 4.7:1) */
+    --public-accent-text: #0a7a72;
+    --public-accent: var(--public-accent-text);
+    --public-accent-hover: color-mix(in srgb, var(--public-accent-text) 80%, #000000);
+
+    /* Yardımcı metin (ikincil açıklama, not): açık zeminde surface-500 4.3:1 kalıyordu */
+    --p-text-muted-color: var(--p-surface-600);
 
     /* Çerçeve */
-    --public-border: color-mix(in srgb, var(--vetinity-teal) 20%, var(--vetinity-neutral));
-    --public-border-emphasis: color-mix(in srgb, var(--vetinity-teal) 38%, var(--vetinity-neutral));
+    --public-border: color-mix(in srgb, var(--vetinity-teal) 18%, #c5ced8);
+    --public-border-emphasis: color-mix(in srgb, var(--vetinity-teal) 40%, #aab6c3);
 
     /* Köşe ve tek gölge */
     --public-radius-card: 12px;
@@ -32,7 +37,7 @@
     /* Koyu (lacivert) zemin üstü metin */
     --public-on-brand: #f8fafc;
     --public-on-brand-muted: color-mix(in srgb, white 82%, transparent);
-    --public-on-brand-subtle: color-mix(in srgb, white 66%, transparent);
+    --public-on-brand-subtle: color-mix(in srgb, white 72%, transparent);
 
     /* Topbar nav — hover/focus/active kontrastı */
     --public-topbar-nav-hover-color: var(--vetinity-navy);
@@ -44,8 +49,19 @@
     @include public-brand-vars;
 }
 
+/*
+ * Tanıtım sitesinde kök yazı boyutu 16 px (panel 14 px, `_core.scss`). Tasarım ölçeği (gövde 16, küçük 14, h1 48 px)
+ * rem ile 16 px köke göre; 14 px kökte `text-xs` 10.5 px, `text-sm` 12.25 px kalıyordu. Sınıfı PublicLayout ekler/kaldırır.
+ */
+html.public-site-root {
+    font-size: 16px;
+}
+
 /* Koyu tema: zemin #0b1220, kart #111a2e, metin #e5e7eb, teal aynı */
 .app-dark .public-page {
+    --public-accent-text: var(--vetinity-teal);
+    --public-accent-hover: var(--vetinity-soft-teal);
+    --p-text-muted-color: var(--p-surface-400);
     --public-topbar-nav-hover-color: var(--vetinity-soft-teal);
     --public-topbar-nav-hover-bg: color-mix(in srgb, var(--vetinity-teal) 14%, transparent);
     --public-topbar-nav-focus-ring: color-mix(in srgb, var(--vetinity-soft-teal) 42%, transparent);
@@ -197,13 +213,13 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--vetinity-teal);
+    color: var(--public-accent-text);
 }
 
 .public-page .public-note {
     font-size: 0.875rem;
     line-height: 1.55;
-    color: var(--p-surface-500);
+    color: var(--p-surface-600);
 }
 
 @media (min-width: 768px) {
@@ -223,6 +239,12 @@
 .app-dark .public-page .public-h1,
 .app-dark .public-page .public-h2 {
     color: #e5e7eb;
+}
+
+/* Lacivert zemin (kahraman, çağrı kartı) üstündeki başlık; tema rengini ezer */
+.public-page .public-h1.public-on-brand-text,
+.public-page .public-h2.public-on-brand-text {
+    color: var(--public-on-brand);
 }
 
 .app-dark .public-page .public-lead {
@@ -330,7 +352,7 @@
 
 .public-page .public-btn-secondary {
     background: #ffffff;
-    border-color: color-mix(in srgb, var(--vetinity-navy) 45%, transparent);
+    border-color: color-mix(in srgb, var(--vetinity-navy) 55%, transparent);
     color: var(--vetinity-navy);
 }
 
@@ -845,7 +867,7 @@
 }
 
 .public-brand-link {
-    color: var(--vetinity-teal);
+    color: var(--public-accent-text, var(--vetinity-teal));
     font-weight: 500;
     text-decoration: none;
 }
