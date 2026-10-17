@@ -200,13 +200,13 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
             </div>
         </section>
 
-        <!-- 7 Yol haritasında: açık gri yüzey, amber çipler -->
+        <!-- 7 Yol haritasında: açık gri yüzey, amber çipler (tarih yok) -->
         <section class="mt-20 bg-surface-50 lg:mt-28 dark:bg-surface-900/60" aria-labelledby="public-home-roadmap-title">
             <div class="mx-auto max-w-6xl px-4 py-12 md:px-6">
                 <h2 id="public-home-roadmap-title" class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Yol haritasında</h2>
                 <ul class="m-0 mt-4 flex list-none flex-wrap gap-2.5 p-0">
                     @for (item of roadmap; track item.label) {
-                        <li class="public-chip-soon"><span aria-hidden="true">●</span> Yakında: {{ item.label }}</li>
+                        <li class="public-chip-roadmap"><span aria-hidden="true">●</span> {{ item.label }}</li>
                     }
                 </ul>
                 <p class="public-note m-0 mt-4">Tarih vermiyoruz; çıkınca burada yazar. Hatırlatmalar bugün yalnız e-posta ile gider.</p>

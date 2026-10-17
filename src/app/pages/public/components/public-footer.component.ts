@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { DATA_PROCESSING_AGREEMENT_DOCUMENT, PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.utils';
-import { PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PENDING_LABEL, PUBLIC_LEGAL_ENTITY_NAME } from '@/app/features/public/utils/public-contact-content.utils';
+import { PUBLIC_CONTACT_EMAIL, PUBLIC_LEGAL_ENTITY_NAME } from '@/app/features/public/utils/public-contact-content.utils';
 import { PUBLIC_FOOTER_PRODUCT_LINKS, PUBLIC_FOOTER_SUPPORT_LINKS } from '@/app/features/public/utils/public-navigation.utils';
 
 /** Alt bilgi (tasarım belgesi bölüm 4): lacivert zemin, 4 sütun; altta © yıl, tüzel kişi adı (AK-6) ve e-posta. */
@@ -51,19 +51,12 @@ import { PUBLIC_FOOTER_PRODUCT_LINKS, PUBLIC_FOOTER_SUPPORT_LINKS } from '@/app/
                 </div>
 
                 <div class="mt-10 flex flex-col gap-2 border-t border-white/15 pt-6 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                    <p class="public-on-brand-subtle m-0">
-                        © {{ year }} {{ legalEntityName ?? 'Vetinity' }}.
-                        @if (!legalEntityName) {
-                            <span class="public-pending-placeholder">Tüzel kişi adı: {{ pendingLabel }}</span>
-                        }
-                    </p>
-                    <p class="public-on-brand-subtle m-0">
-                        @if (contactEmail) {
+                    <p class="public-on-brand-subtle m-0">© {{ year }} {{ legalEntityName ?? 'Vetinity' }}.</p>
+                    @if (contactEmail) {
+                        <p class="public-on-brand-subtle m-0">
                             <a [href]="'mailto:' + contactEmail" class="public-footer-link">{{ contactEmail }}</a>
-                        } @else {
-                            <span class="public-pending-placeholder">E-posta: {{ pendingLabel }}</span>
-                        }
-                    </p>
+                        </p>
+                    }
                 </div>
             </div>
         </footer>
@@ -78,5 +71,4 @@ export class PublicFooterComponent {
     readonly legalLinks = [...PUBLIC_LEGAL_LINKS, DATA_PROCESSING_AGREEMENT_DOCUMENT];
     readonly legalEntityName = PUBLIC_LEGAL_ENTITY_NAME;
     readonly contactEmail = PUBLIC_CONTACT_EMAIL;
-    readonly pendingLabel = PUBLIC_CONTACT_PENDING_LABEL;
 }

@@ -68,7 +68,7 @@ export interface PublicHomeRoadmapItemDef {
     readonly label: string;
 }
 
-/** "Yol haritasında" — amber "yakında" çipleri; tarih verilmez (ADR-034 karar 6, AK-9). */
+/** "Yol haritasında" — amber çipler; tarih verilmez (ADR-034 karar 6, AK-9). */
 export const PUBLIC_HOME_ROADMAP: readonly PublicHomeRoadmapItemDef[] = [
     { label: 'Hasta sahibi portalı ve mobil uygulaması' },
     { label: 'SMS hatırlatma' },

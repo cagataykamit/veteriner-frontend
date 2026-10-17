@@ -1,8 +1,15 @@
 /**
  * Sık sorulan sorular — tek kaynak. `/sss` sayfası kategorilere göre gösterir; ana sayfa `homepage: true`
- * olanları (6–8 soru) listeler. Yalnız doğrulanmış yetenekler; fiyat için "pilot dönemi fiyatı için yazın",
- * hatırlatma yalnız e-posta, deneme sonu kuralı yazılmaz (ADR-034).
+ * olanları (6–8 soru) listeler. Yalnız doğrulanmış yetenekler; tutar ve paket sınırı paket verisinden gelir
+ * (`pricing-plan.utils.ts`), burada yazılmaz; hatırlatma yalnız e-posta, deneme sonu kuralı yazılmaz (ADR-034).
  */
+
+import { PRICING_PLAN_DEFS } from './pricing-plan.utils';
+
+/** "Temel, Pro ve Premium" — paket adları tek kaynaktan. */
+const PLAN_NAMES_TEXT = PRICING_PLAN_DEFS.map((d) => d.title)
+    .join(', ')
+    .replace(/, ([^,]*)$/, ' ve $1');
 
 export interface PublicFaqDef {
     readonly question: string;
@@ -49,7 +56,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
         items: [
             {
                 question: 'Fiyat ne kadar?',
-                answer: 'Pilot dönemindeyiz; pilot dönemi fiyatı için bize yazın. Fiyat belirlenince paket başına aylık tutar bu sayfada açıkça yazılacak.',
+                answer: `${PLAN_NAMES_TEXT} olmak üzere ${PRICING_PLAN_DEFS.length} paket var; Paketler sayfasında karşılaştırabilirsiniz. Her paketi 14 gün ücretsiz, kart bilgisi vermeden deneyebilirsiniz.`,
                 homepage: true
             },
             {
@@ -111,12 +118,8 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
         items: [
             {
                 question: 'Destek nasıl alırım?',
-                answer: 'İletişim sayfasındaki e-posta ve telefon üzerinden. Çalışma saatleri ve yanıt süresi iletişim sayfasında yazar.',
+                answer: 'İletişim sayfasından bize ulaşın; demo, geçiş ve kullanım sorularınızı yanıtlarız.',
                 homepage: true
-            },
-            {
-                question: 'Kullanıcı kılavuzu var mı?',
-                answer: 'Rol bazlı kullanıcı kılavuzu hazırlanıyor; yayımlanınca alt bilgiden ulaşılır.'
             }
         ]
     }

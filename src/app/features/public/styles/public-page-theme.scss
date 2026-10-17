@@ -25,9 +25,9 @@
     --public-radius-shot: 16px;
     --public-shadow-shot: 0 24px 48px -24px color-mix(in srgb, var(--vetinity-navy) 35%, transparent);
 
-    /* "Yakında" etiketi — amber, klinik uyarı rengi değil */
-    --public-soon-bg: #fef3c7;
-    --public-soon-text: #b45309;
+    /* Yol haritası etiketi — amber, klinik uyarı rengi değil */
+    --public-roadmap-bg: #fef3c7;
+    --public-roadmap-text: #b45309;
 
     /* Koyu (lacivert) zemin üstü metin */
     --public-on-brand: #f8fafc;
@@ -429,16 +429,6 @@
     }
 }
 
-/* AK-6 bekleyen alanlar: açıkça işaretli yer tutucu */
-.public-page .public-pending-placeholder {
-    display: inline-block;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.375rem;
-    border: 1px dashed currentColor;
-    font-style: italic;
-    opacity: 0.85;
-}
-
 /* Numaralı/ikonlu adım rozeti */
 .public-page .public-step-badge {
     display: inline-flex;
@@ -456,16 +446,16 @@
     color: var(--vetinity-soft-teal);
 }
 
-/* "Yakında" çipi — amber, klinik uyarı rengi değil */
-.public-page .public-chip-soon {
+/* Yol haritası çipi — amber, klinik uyarı rengi değil */
+.public-page .public-chip-roadmap {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     min-height: 2.25rem;
     padding: 0.375rem 0.875rem;
     border-radius: 999px;
-    background: var(--public-soon-bg);
-    color: var(--public-soon-text);
+    background: var(--public-roadmap-bg);
+    color: var(--public-roadmap-text);
     font-size: 0.875rem;
     font-weight: 600;
 }

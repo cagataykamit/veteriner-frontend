@@ -46,7 +46,7 @@ export const PUBLIC_MIGRATION_PAGE_META: PublicPageMetaOptions = {
 
 export const PUBLIC_PACKAGES_PAGE_META: PublicPageMetaOptions = {
     title: 'Paketler ve fiyat — Vetinity',
-    description: 'Veteriner kliniğiniz için Vetinity pilot dönemi paketi: tüm özellikler dahil, 14 gün ücretsiz deneme; pilot dönemi fiyatı için yazın.',
+    description: 'Veteriner kliniğiniz için Vetinity paketlerini karşılaştırın; her paketi 14 gün ücretsiz, kart bilgisi vermeden deneyin.',
     canonicalPath: PUBLIC_PATHS.packages
 };
 
@@ -58,7 +58,7 @@ export const PUBLIC_FAQ_PAGE_META: PublicPageMetaOptions = {
 
 export const PUBLIC_CONTACT_PAGE_META: PublicPageMetaOptions = {
     title: 'İletişim ve demo talebi — Vetinity',
-    description: 'Demo isteyin, pilot dönemi fiyatını sorun ya da geçiş dosyanıza birlikte bakalım.',
+    description: 'Demo isteyin, paketleri sorun ya da geçiş dosyanıza birlikte bakalım.',
     canonicalPath: PUBLIC_PATHS.contact
 };
 
