@@ -69,6 +69,25 @@ html.public-site-root {
     --public-border-emphasis: color-mix(in srgb, var(--vetinity-soft-teal) 30%, var(--p-surface-700));
 }
 
+/*
+ * Panelin katmansız `h1…h6` kuralları (`assets/layout/_typography.scss`: boyut, kalınlık, renk, kenar boşluğu) katmanlı
+ * Tailwind sınıflarını eziyordu: `text-sm`/`m-0`/`text-surface-900` yazılmış başlık 28 px, kalın ve boşluklu çıkıyordu.
+ * Tanıtımda bu özellikler katmana geri bırakılır; başlığın görünüşünü kendi sınıfı (`public-h2`, `text-lg` …) belirler.
+ */
+.public-page :where(h1, h2, h3, h4, h5, h6) {
+    margin: revert-layer;
+    font-size: revert-layer;
+    font-weight: revert-layer;
+    line-height: revert-layer;
+    color: revert-layer;
+}
+
+/* Aynı nedenle paragraf: katmansız `p { margin: 0 0 1rem }` `mt-*`/`m-0` sınıflarını eziyordu */
+.public-page :where(p) {
+    margin: revert-layer;
+    line-height: revert-layer;
+}
+
 /* —— Koyu zemin metin —— */
 
 .public-on-brand-text {
