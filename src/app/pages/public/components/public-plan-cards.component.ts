@@ -1,25 +1,30 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import {
     formatPlanLimit,
-    formatPlanPrice,
     planHighlights,
+    planPriceView,
     PRICING_FEATURE_ROWS,
     PRICING_PLAN_DEFS,
+    PRICING_VAT_NOTE,
+    yearlyOfferText,
+    type PricingBillingPeriod,
     type PricingFeatureRowDef,
-    type PricingPlanDef
+    type PricingPlanDef,
+    type PricingPriceView
 } from '@/app/features/public/utils/pricing-plan.utils';
 
 interface PlanCardVm {
     readonly def: PricingPlanDef;
-    readonly price: string | null;
-    readonly limits: readonly string[];
+    readonly price: PricingPriceView | null;
+    readonly limits: readonly { readonly label: string; readonly icon: string }[];
     readonly highlights: readonly string[];
 }
 
 /**
- * Paket kartları (tasarım belgesi 5.5): yan yana üç kart, önerilen kart teal çerçeve + etiket (gölge yok).
- * Fiyat, sınır ve öne çıkanlar `pricing-plan.utils.ts` verisinden; girilmemiş alan kartta hiç çıkmaz.
+ * Paket kartları (tasarım belgesi 5.5, ADR-035): yan yana üç kart, önerilen kart teal çerçeve + etiket (gölge yok).
+ * Fiyat, sınır ve öne çıkanlar `pricing-plan.utils.ts` verisinden; teklifli pakette düğme iletişime gider.
  */
 @Component({
     selector: 'app-public-plan-cards',
@@ -39,20 +44,28 @@ interface PlanCardVm {
 
                     @if (card.price) {
                         <p class="m-0 mt-5 flex items-baseline gap-1.5">
-                            <span class="text-4xl font-bold tracking-tight text-surface-900 dark:text-surface-0">{{ card.price }}</span>
-                            <span class="text-base text-surface-600 dark:text-surface-300">/ ay</span>
+                            <span class="public-plan-price text-surface-900 dark:text-surface-0" [class.public-plan-price--text]="!card.price.unit">{{ card.price.amount }}</span>
+                            @if (card.price.unit) {
+                                <span class="text-base text-surface-600 dark:text-surface-300">{{ card.price.unit }}</span>
+                            }
                         </p>
-                        @if (card.def.priceNote) {
-                            <p class="m-0 mt-1 text-sm text-muted-color">{{ card.def.priceNote }}</p>
-                        }
+                        <p class="m-0 mt-1 min-h-5 text-sm text-muted-color">
+                            @if (card.price.unit) {
+                                {{ vatNote }}@if (period() === 'yearly' && yearlyOffer) {
+                                    · {{ yearlyOffer }}
+                                }
+                            } @else {
+                                Kliniğinize göre teklif
+                            }
+                        </p>
                     }
 
                     @if (card.limits.length > 0 || card.highlights.length > 0) {
                         <ul class="m-0 mt-5 list-none space-y-2.5 border-t border-[var(--public-border)] p-0 pt-5">
-                            @for (item of card.limits; track item) {
+                            @for (item of card.limits; track item.label) {
                                 <li class="flex items-start gap-2.5 text-sm font-semibold text-surface-800 dark:text-surface-100">
-                                    <i class="pi pi-users mt-0.5 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i>
-                                    <span>{{ item }}</span>
+                                    <i [class]="item.icon + ' mt-0.5 shrink-0 text-[var(--public-accent)]'" aria-hidden="true"></i>
+                                    <span>{{ item.label }}</span>
                                 </li>
                             }
                             @for (item of card.highlights; track item) {
@@ -65,16 +78,31 @@ interface PlanCardVm {
                     }
 
                     <div class="mt-auto pt-6">
-                        <a
-                            routerLink="/auth/signup"
-                            [queryParams]="{ plan: card.def.slug }"
-                            class="public-btn w-full"
-                            [class.public-btn-primary]="card.def.recommended"
-                            [class.public-btn-secondary]="!card.def.recommended"
-                            [attr.aria-label]="card.def.title + ' paketini ücretsiz deneyin'"
-                            >Ücretsiz dene</a
-                        >
-                        <p class="m-0 mt-3 text-center text-sm text-muted-color">{{ card.def.trialDays }} gün ücretsiz · kart gerekmez</p>
+                        @if (card.def.priceOnRequest) {
+                            <a
+                                [routerLink]="paths.contact"
+                                class="public-btn w-full"
+                                [class.public-btn-primary]="card.def.recommended"
+                                [class.public-btn-secondary]="!card.def.recommended"
+                                [attr.aria-label]="card.def.title + ' paketi için iletişime geçin'"
+                                >İletişime geçin</a
+                            >
+                            <p class="m-0 mt-3 text-center text-sm text-muted-color">
+                                ya da
+                                <a routerLink="/auth/signup" [queryParams]="{ plan: card.def.slug }" class="public-brand-link">{{ card.def.trialDays }} gün ücretsiz deneyin</a>
+                            </p>
+                        } @else {
+                            <a
+                                routerLink="/auth/signup"
+                                [queryParams]="{ plan: card.def.slug }"
+                                class="public-btn w-full"
+                                [class.public-btn-primary]="card.def.recommended"
+                                [class.public-btn-secondary]="!card.def.recommended"
+                                [attr.aria-label]="card.def.title + ' paketini ücretsiz deneyin'"
+                                >Ücretsiz dene</a
+                            >
+                            <p class="m-0 mt-3 text-center text-sm text-muted-color">{{ card.def.trialDays }} gün ücretsiz · kart gerekmez</p>
+                        }
                     </div>
                 </li>
             }
@@ -84,12 +112,20 @@ interface PlanCardVm {
 export class PublicPlanCardsComponent {
     readonly plans = input<readonly PricingPlanDef[]>(PRICING_PLAN_DEFS);
     readonly featureRows = input<readonly PricingFeatureRowDef[]>(PRICING_FEATURE_ROWS);
+    readonly period = input<PricingBillingPeriod>('monthly');
+
+    readonly paths = PUBLIC_PATHS;
+    readonly vatNote = PRICING_VAT_NOTE;
+    readonly yearlyOffer = yearlyOfferText();
 
     readonly cards = computed<readonly PlanCardVm[]>(() =>
         this.plans().map((def) => ({
             def,
-            price: formatPlanPrice(def.monthlyPriceTry),
-            limits: [formatPlanLimit(def.maxUsers, 'kullanıcı'), formatPlanLimit(def.maxClinics, 'klinik')].filter((l): l is string => l !== null),
+            price: planPriceView(def, this.period()),
+            limits: [
+                { label: formatPlanLimit(def.maxClinics, 'klinik'), icon: 'pi pi-building' },
+                { label: formatPlanLimit(def.maxUsers, 'kullanıcı'), icon: 'pi pi-users' }
+            ].filter((l): l is { label: string; icon: string } => l.label !== null),
             highlights: planHighlights(def.slug, this.featureRows())
         }))
     );

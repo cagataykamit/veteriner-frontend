@@ -6,7 +6,6 @@ import { PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content
 import {
     PUBLIC_HOME_AUDIENCE,
     PUBLIC_HOME_DAY_FLOW,
-    PUBLIC_HOME_ROADMAP,
     PUBLIC_HOME_TRIAL_LINE
 } from '@/app/features/public/utils/public-home-content.utils';
 import {
@@ -22,17 +21,19 @@ import {
     PUBLIC_REGISTERS
 } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_HOME_PAGE_META, publicFaqPageJsonLd, removePublicJsonLd, setPublicJsonLd, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
+import { pricingTermsText } from '@/app/features/public/utils/pricing-plan.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
+import { PublicPlanCardsComponent } from './components/public-plan-cards.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicScreenshotComponent } from './components/public-screenshot.component';
 
 const HOME_FAQ_JSON_LD_ID = 'home-faq';
 
-/** Ana sayfa omurgası (tasarım belgesi 5.1): kahraman, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt güvenliği, geçiş, yol haritası, SSS, çağrı. */
+/** Ana sayfa omurgası (tasarım belgesi 5.1, ADR-035): kahraman, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt güvenliği, geçiş, paketler, SSS, çağrı. */
 @Component({
     selector: 'app-public-home-page',
     standalone: true,
-    imports: [RouterLink, PublicScreenshotComponent, PublicFaqListComponent, PublicCtaComponent],
+    imports: [RouterLink, PublicScreenshotComponent, PublicPlanCardsComponent, PublicFaqListComponent, PublicCtaComponent],
     template: `
         <!-- 1 Kahraman: gradient kenardan kenara, sol metin, sağ ekran -->
         <section class="public-hero-gradient" aria-labelledby="public-home-hero-title">
@@ -199,16 +200,19 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
             </p>
         </section>
 
-        <!-- 7 Yol haritasında: açık gri yüzey, amber çipler (tarih yok) -->
-        <section class="mt-20 bg-surface-50 lg:mt-28 dark:bg-surface-900/60" aria-labelledby="public-home-roadmap-title">
-            <div class="mx-auto max-w-6xl px-4 py-12 md:px-6">
-                <h2 id="public-home-roadmap-title" class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Yol haritasında</h2>
-                <ul class="m-0 mt-4 flex list-none flex-wrap gap-2.5 p-0">
-                    @for (item of roadmap; track item.label) {
-                        <li class="public-chip-roadmap"><span aria-hidden="true">●</span> {{ item.label }}</li>
-                    }
-                </ul>
-                <p class="public-note m-0 mt-4">Tarih vermiyoruz; çıkınca burada yazar. Hatırlatmalar bugün yalnız e-posta ile gider.</p>
+        <!-- 7 Paketler: kartlar paket verisinden (ADR-035) -->
+        <section class="public-soft-surface mt-20 lg:mt-28" aria-labelledby="public-home-packages-title">
+            <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 lg:py-20">
+                <h2 id="public-home-packages-title" class="public-h2 m-0 text-center">Paketler</h2>
+                <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">
+                    Kayıt defterleri ve KVKK araçları her pakette. {{ pricingTerms }}.
+                </p>
+                <div class="mt-10">
+                    <app-public-plan-cards />
+                </div>
+                <p class="m-0 mt-6 text-center">
+                    <a [routerLink]="paths.packages" class="public-brand-link inline-flex min-h-[44px] items-center">Paketleri karşılaştırın</a>
+                </p>
             </div>
         </section>
 
@@ -246,7 +250,7 @@ export class PublicHomePageComponent implements OnInit {
     readonly migrationSteps = PUBLIC_MIGRATION_HOME_STEPS;
     readonly migrationIncluded = PUBLIC_MIGRATION_INCLUDED;
     readonly migrationExcluded = PUBLIC_MIGRATION_EXCLUDED;
-    readonly roadmap = PUBLIC_HOME_ROADMAP;
+    readonly pricingTerms = pricingTermsText();
     readonly faqs = PUBLIC_HOME_FAQS;
 
     readonly activeFlowId = signal(PUBLIC_HOME_DAY_FLOW[0].id);

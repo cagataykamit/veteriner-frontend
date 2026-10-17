@@ -2,6 +2,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { environment } from '@/environments/environment';
 import type { PublicFaqDef } from './public-faq-content.utils';
 import { PUBLIC_PATHS } from './public-navigation.utils';
+import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, yearlyOfferText, type PricingPlanDef } from './pricing-plan.utils';
 
 /** Canlı tanıtım sitesi kökü; canonical ve OG adresleri buradan türetilir (origin'den değil: staging kendini asıl saymaz). */
 export const PUBLIC_SITE_ORIGIN = 'https://www.vetinity.com';
@@ -46,7 +47,7 @@ export const PUBLIC_MIGRATION_PAGE_META: PublicPageMetaOptions = {
 
 export const PUBLIC_PACKAGES_PAGE_META: PublicPageMetaOptions = {
     title: 'Paketler ve fiyat — Vetinity',
-    description: 'Veteriner kliniğiniz için Vetinity paketlerini karşılaştırın; her paketi 14 gün ücretsiz, kart bilgisi vermeden deneyin.',
+    description: [`Vetinity paketleri: ${pricingSummaryText()} (${PRICING_VAT_NOTE}).`, yearlyOfferText() ? `${yearlyOfferText()}.` : '', 'Her paketi 14 gün ücretsiz deneyin.'].filter(Boolean).join(' '),
     canonicalPath: PUBLIC_PATHS.packages
 };
 
@@ -163,5 +164,32 @@ export function publicFaqPageJsonLd(faqs: readonly PublicFaqDef[]): Record<strin
             name: faq.question,
             acceptedAnswer: { '@type': 'Answer', text: faq.answer }
         }))
+    };
+}
+
+/** schema.org `SoftwareApplication` + paket teklifleri (ADR-035) — paketler sayfası; fiyatlar paket verisinden. */
+export function publicPricingJsonLd(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'Vetinity',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        url: publicSiteUrl(PUBLIC_PATHS.packages),
+        offers: plans
+            .filter((p) => p.monthlyPriceTry != null)
+            .map((p) => ({
+                '@type': 'Offer',
+                name: p.title,
+                price: p.monthlyPriceTry,
+                priceCurrency: 'TRY',
+                priceSpecification: {
+                    '@type': 'UnitPriceSpecification',
+                    price: p.monthlyPriceTry,
+                    priceCurrency: 'TRY',
+                    unitCode: 'MON',
+                    valueAddedTaxIncluded: false
+                }
+            }))
     };
 }

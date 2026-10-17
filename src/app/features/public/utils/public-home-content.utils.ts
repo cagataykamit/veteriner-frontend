@@ -65,17 +65,5 @@ export const PUBLIC_HOME_DAY_FLOW: readonly PublicHomeFlowStepDef[] = [
     }
 ];
 
-export interface PublicHomeRoadmapItemDef {
-    readonly label: string;
-}
-
-/** "Yol haritasında" — amber çipler; tarih verilmez (ADR-034 karar 6, AK-9). */
-export const PUBLIC_HOME_ROADMAP: readonly PublicHomeRoadmapItemDef[] = [
-    { label: 'Hasta sahibi portalı ve mobil uygulaması' },
-    { label: 'SMS hatırlatma' },
-    { label: 'e-Fatura' },
-    { label: 'Online randevu' }
-];
-
 /** Kahraman alt satırı. */
 export const PUBLIC_HOME_TRIAL_LINE = '14 gün ücretsiz · kart gerekmez · satış görüşmesi yok';

@@ -1,10 +1,7 @@
-import { defByPlanKey, formatPlanLimit } from '@/app/features/public/utils/pricing-plan.utils';
+import { defByPlanKey, formatPlanLimit, PRICING_PLAN_DEFS } from '@/app/features/public/utils/pricing-plan.utils';
 
-const PLAN_LABELS: Record<string, string> = {
-    basic: 'Temel',
-    pro: 'Pro',
-    premium: 'Premium'
-};
+/** Paket adları tek kaynaktan (ADR-035): `basic` → "Temel", `pro` → "Profesyonel", `premium` → "Kurumsal". */
+const PLAN_LABELS: Record<string, string> = Object.fromEntries(PRICING_PLAN_DEFS.map((d) => [d.slug, d.title]));
 
 /** Backend plan sırası: Basic = 0, Pro = 1, Premium = 2 */
 const PLAN_RANK: Record<string, number> = {

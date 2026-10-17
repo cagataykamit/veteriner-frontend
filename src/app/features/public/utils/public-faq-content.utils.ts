@@ -1,15 +1,18 @@
 /**
  * Sık sorulan sorular — tek kaynak. `/sss` sayfası kategorilere göre gösterir; ana sayfa `homepage: true`
- * olanları (6–8 soru) listeler. Yalnız doğrulanmış yetenekler; tutar ve paket sınırı paket verisinden gelir
- * (`pricing-plan.utils.ts`), burada yazılmaz; hatırlatma yalnız e-posta, deneme sonu kuralı yazılmaz (ADR-034).
+ * olanları (6–8 soru) listeler. Yalnız doğrulanmış yetenekler; tutar, sınır ve paket adı paket verisinden gelir
+ * (`pricing-plan.utils.ts`, ADR-035), burada sayı yazılmaz; hatırlatma yalnız e-posta, deneme sonu kuralı yazılmaz.
  */
 
-import { PRICING_PLAN_DEFS } from './pricing-plan.utils';
+import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, pricingTermsText, yearlyOfferText, yearlyPricingText } from './pricing-plan.utils';
 
-/** "Temel, Pro ve Premium" — paket adları tek kaynaktan. */
-const PLAN_NAMES_TEXT = PRICING_PLAN_DEFS.map((d) => d.title)
-    .join(', ')
-    .replace(/, ([^,]*)$/, ' ve $1');
+/** Çok klinik sunan paketlerin adları ("Kurumsal"). */
+const MULTI_CLINIC_PLANS = PRICING_PLAN_DEFS.filter((d) => d.maxClinics === 'coklu')
+    .map((d) => d.title)
+    .join(', ');
+
+/** "Yıllık ödemede iki ay hediye" (veriden). */
+const YEARLY_OFFER = yearlyOfferText();
 
 export interface PublicFaqDef {
     readonly question: string;
@@ -40,12 +43,12 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Birden fazla klinik destekleniyor mu?',
-                answer: 'Evet. Tek kurum altında birden fazla klinik tanımlayıp panelde aktif kliniği seçerek çalışırsınız.',
+                answer: `Evet, ${MULTI_CLINIC_PLANS} pakette. Tek kurum altında birden fazla klinik tanımlayıp panelde aktif kliniği seçerek çalışırsınız; klinikler arası yetkiyi siz verirsiniz.`,
                 homepage: true
             },
             {
                 question: 'Hatırlatmalar nasıl gider?',
-                answer: 'Aşı ve randevu hatırlatmaları e-posta ile gönderilir. SMS gönderimi bugün yoktur; yol haritasındadır.',
+                answer: 'Aşı ve randevu hatırlatmaları e-posta ile gönderilir. SMS gönderimi şu an yoktur.',
                 homepage: true
             }
         ]
@@ -56,13 +59,25 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
         items: [
             {
                 question: 'Fiyat ne kadar?',
-                answer: `${PLAN_NAMES_TEXT} olmak üzere ${PRICING_PLAN_DEFS.length} paket var; Paketler sayfasında karşılaştırabilirsiniz. Her paketi 14 gün ücretsiz, kart bilgisi vermeden deneyebilirsiniz.`,
+                answer: `${pricingSummaryText()}. ${pricingTermsText()}. Her paketi 14 gün ücretsiz, kart bilgisi vermeden deneyebilirsiniz.`,
                 homepage: true
+            },
+            {
+                question: 'Fiyatlara KDV dahil mi?',
+                answer: `Hayır. Paket fiyatları ${PRICING_VAT_NOTE}; KDV ayrıca eklenir.`
+            },
+            {
+                question: 'Yıllık ödeme var mı?',
+                answer: `Evet: ${yearlyPricingText()}.${YEARLY_OFFER ? ` ${YEARLY_OFFER}.` : ''}`
             },
             {
                 question: 'Deneme nasıl işliyor?',
                 answer: '14 gün ücretsiz; kart bilgisi istenmez, satış görüşmesi gerekmez. Dilerseniz demo isteyip birlikte bakarız.',
                 homepage: true
+            },
+            {
+                question: 'Paketimi sonradan değiştirebilir miyim?',
+                answer: 'Evet. Panelde Ayarlar > Abonelik ekranından daha büyük pakete hemen geçersiniz; daha küçük pakete geçiş dönem sonunda uygulanır. Verileriniz aynen kalır.'
             },
             {
                 question: 'Sözleşme ve iptal nasıl?',
