@@ -1,64 +1,75 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
 import { publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
-import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
-import { PUBLIC_PILOT_PACKAGE } from '@/app/features/public/utils/public-packages-content.utils';
+import { hasPlanComparison, PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS } from '@/app/features/public/utils/pricing-plan.utils';
 import { PUBLIC_PACKAGES_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
+import { PublicPlanCardsComponent } from './components/public-plan-cards.component';
+import { PublicPlanComparisonComponent } from './components/public-plan-comparison.component';
 
-/** Paketler (ADR-034 karar 4 (c)): tek kart "Pilot dönemi" + "Teklif al"; kullanıcı/klinik sınırı yazılmaz (WEB-007). */
+/**
+ * Paketler (tasarım belgesi 5.5, ADR-034 karar 4): üç paket kartı, karşılaştırma tablosu, "bugün yok" listesi, SSS.
+ * Tüm değerler `pricing-plan.utils.ts`'ten; karşılaştırma verisi girilmemişse tablo yerine paketten bağımsız yetenek listesi.
+ */
 @Component({
     selector: 'app-public-packages-page',
     standalone: true,
-    imports: [RouterLink, PublicPageHeaderComponent, PublicFaqListComponent, PublicCtaComponent],
+    imports: [PublicPageHeaderComponent, PublicPlanCardsComponent, PublicPlanComparisonComponent, PublicFaqListComponent, PublicCtaComponent],
     template: `
-        <app-public-page-header eyebrow="Paketler" title="Pilot dönemi: tüm özellikler, tek paket" [lead]="pkg.lead" />
+        <app-public-page-header
+            eyebrow="Paketler"
+            title="Kliniğinize uygun paketi seçin"
+            lead="Her paketi 14 gün ücretsiz deneyin; kart bilgisi istenmez, satış görüşmesi gerekmez."
+        />
 
         <div class="mx-auto max-w-6xl px-4 md:px-6">
-            <section class="public-section" aria-labelledby="pilot-package-title">
-                <article class="public-card mx-auto max-w-3xl p-6 md:p-10">
-                    <div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                        <div>
-                            <h2 id="pilot-package-title" class="public-h2 m-0">{{ pkg.title }}</h2>
-                            <p class="m-0 mt-2 text-xl font-semibold text-[var(--vetinity-navy)] dark:text-[var(--vetinity-soft-teal)]">{{ pkg.priceLabel }}</p>
-                            <p class="m-0 mt-1 text-sm text-muted-color">{{ pkg.trialLabel }}</p>
-                        </div>
-                        <div class="flex flex-col gap-3 md:w-56">
-                            <a [routerLink]="paths.contact" class="public-btn public-btn-primary w-full">Teklif al / yazın</a>
-                            <a routerLink="/auth/signup" class="public-btn public-btn-secondary w-full">Ücretsiz dene</a>
-                        </div>
-                    </div>
+            <section class="public-section" aria-labelledby="packages-plans-title">
+                <h2 id="packages-plans-title" class="sr-only">Paketler</h2>
+                <app-public-plan-cards [plans]="plans" />
+            </section>
 
-                    <div class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
-                        <div>
-                            <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Dahil</h3>
-                            <ul class="m-0 mt-3 list-none space-y-2.5 p-0">
-                                @for (item of pkg.includes; track item) {
-                                    <li class="flex items-start gap-2.5 text-sm text-surface-700 dark:text-surface-200">
-                                        <i class="pi pi-check mt-0.5 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i>
-                                        <span>{{ item }}</span>
-                                    </li>
-                                }
-                            </ul>
-                        </div>
-                        <div>
-                            <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Bugün yok</h3>
-                            <ul class="m-0 mt-3 list-none space-y-2.5 p-0">
-                                @for (item of pkg.notIncluded; track item) {
-                                    <li class="flex items-start gap-2.5 text-sm text-surface-600 dark:text-surface-300">
-                                        <i class="pi pi-minus mt-0.5 shrink-0 text-surface-400" aria-hidden="true"></i>
-                                        <span>{{ item }}</span>
-                                    </li>
-                                }
-                            </ul>
-                            <p class="public-note m-0 mt-4">Tarih vermiyoruz; çıkınca burada yazar.</p>
-                        </div>
+            @if (hasComparison) {
+                <section class="public-section" aria-labelledby="packages-compare-title">
+                    <h2 id="packages-compare-title" class="public-h2 m-0 mb-6">Paketleri karşılaştırın</h2>
+                    <app-public-plan-comparison [plans]="plans" />
+                </section>
+            } @else {
+                <section class="public-section" aria-labelledby="packages-capabilities-title">
+                    <h2 id="packages-capabilities-title" class="public-h2 m-0">Vetinity ile neler yapabilirsiniz</h2>
+                    <div class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+                        @for (group of capabilityGroups; track group.group) {
+                            <div>
+                                <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">{{ group.group }}</h3>
+                                <ul class="m-0 mt-3 list-none space-y-2.5 p-0">
+                                    @for (label of group.labels; track label) {
+                                        <li class="flex items-start gap-2.5 text-sm text-surface-700 dark:text-surface-200">
+                                            <i class="pi pi-check mt-0.5 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i>
+                                            <span>{{ label }}</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
                     </div>
-                </article>
+                </section>
+            }
+
+            <section class="public-section" aria-labelledby="packages-not-title">
+                <div class="public-card p-6 md:p-8">
+                    <h2 id="packages-not-title" class="m-0 text-lg font-semibold text-surface-900 dark:text-surface-0">Bugün yok</h2>
+                    <ul class="m-0 mt-4 grid list-none grid-cols-1 gap-x-8 gap-y-2.5 p-0 sm:grid-cols-2">
+                        @for (item of notAvailable; track item) {
+                            <li class="flex items-start gap-2.5 text-sm text-surface-700 dark:text-surface-200">
+                                <i class="pi pi-minus mt-0.5 shrink-0 text-surface-500 dark:text-surface-400" aria-hidden="true"></i>
+                                <span>{{ item }}</span>
+                            </li>
+                        }
+                    </ul>
+                    <p class="public-note m-0 mt-4">Yol haritasındadır; tarih vermiyoruz.</p>
+                </div>
             </section>
 
             <section class="public-section mx-auto max-w-3xl" aria-labelledby="packages-faq-title">
@@ -67,7 +78,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
             </section>
         </div>
 
-        <app-public-cta secondaryLabel="Teklif al" />
+        <app-public-cta />
     `
 })
 export class PublicPackagesPageComponent implements OnInit {
@@ -75,8 +86,13 @@ export class PublicPackagesPageComponent implements OnInit {
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
 
-    readonly paths = PUBLIC_PATHS;
-    readonly pkg = PUBLIC_PILOT_PACKAGE;
+    readonly plans = PRICING_PLAN_DEFS;
+    readonly hasComparison = hasPlanComparison();
+    readonly capabilityGroups = [...new Set(PRICING_FEATURE_ROWS.map((r) => r.group))].map((group) => ({
+        group,
+        labels: PRICING_FEATURE_ROWS.filter((r) => r.group === group).map((r) => r.label)
+    }));
+    readonly notAvailable = PRICING_NOT_AVAILABLE;
     readonly faqs = publicFaqsOf('fiyat');
 
     ngOnInit(): void {

@@ -1,4 +1,4 @@
-import { defByPlanKey } from '@/app/features/public/utils/pricing-plan.utils';
+import { defByPlanKey, formatPlanLimit } from '@/app/features/public/utils/pricing-plan.utils';
 
 const PLAN_LABELS: Record<string, string> = {
     basic: 'Temel',
@@ -65,16 +65,15 @@ export interface SubscriptionPlanLimitLabels {
     readonly clinicLimitLabel: string;
 }
 
-/** Public paket tanımıyla hizalı kullanıcı / klinik limit etiketleri. */
+/** Public paket tanımıyla hizalı kullanıcı / klinik limit etiketleri; sınırlar girilmemişse `null` (gösterilmez). */
 export function subscriptionPlanLimitLabels(code: string | null | undefined): SubscriptionPlanLimitLabels | null {
     const def = defByPlanKey(code);
+    const userLimitLabel = def ? formatPlanLimit(def.maxUsers, 'kullanıcı') : null;
+    const clinicLimitLabel = def ? formatPlanLimit(def.maxClinics, 'klinik') : null;
 
-    if (!def) {
+    if (!userLimitLabel || !clinicLimitLabel) {
         return null;
     }
 
-    return {
-        userLimitLabel: def.userLimitLabel,
-        clinicLimitLabel: def.clinicLimitLabel
-    };
+    return { userLimitLabel, clinicLimitLabel };
 }

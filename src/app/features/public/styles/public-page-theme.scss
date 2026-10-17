@@ -552,6 +552,39 @@ html.public-site-root {
     }
 }
 
+/* Paketler: önerilen kart 1 px teal çerçeve + etiket (gölge yok); karşılaştırma tablosu satır çizgileri */
+.public-page .public-plan-card--recommended {
+    border-color: var(--vetinity-teal);
+}
+
+.public-page .public-plan-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    background: var(--vetinity-bg-soft);
+    color: var(--public-accent-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.app-dark .public-page .public-plan-badge {
+    background: color-mix(in srgb, var(--vetinity-teal) 18%, transparent);
+    color: var(--vetinity-soft-teal);
+}
+
+.public-page .public-plan-table thead tr {
+    border-bottom: 1px solid var(--public-border);
+}
+
+.public-page .public-plan-table tbody tr:not(:first-child) {
+    border-top: 1px solid var(--public-border);
+}
+
+.public-page .public-plan-table-group {
+    color: var(--public-accent-text);
+}
+
 /* Özellikler bölüm dizini */
 .public-page .public-index-link:hover,
 .public-page .public-index-link:focus-visible {
