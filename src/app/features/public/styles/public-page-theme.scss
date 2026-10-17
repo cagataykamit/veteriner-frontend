@@ -305,17 +305,35 @@ html.public-site-root {
     background: color-mix(in srgb, var(--vetinity-teal) 8%, #0b1220);
 }
 
-/* Ekran görüntüsü çerçevesi: 16 px köşe, tek gölge; yer tutucu kesikli çerçeve */
-.public-page .public-screenshot-frame {
-    border: 1px dashed var(--public-border-emphasis);
+/* Ekran görüntüsü çerçevesi: 1 px çerçeve, 16 px köşe, tek gölge; tarayıcı çubuğu çizilmez (tasarım belgesi bölüm 2) */
+.public-page .public-shot {
+    overflow: hidden;
+    border: 1px solid var(--public-border-emphasis);
     border-radius: var(--public-radius-shot);
-    background: color-mix(in srgb, var(--vetinity-bg-soft) 60%, var(--p-surface-0));
+    background: var(--p-surface-0);
     box-shadow: var(--public-shadow-shot);
 }
 
-.app-dark .public-page .public-screenshot-frame {
-    background: color-mix(in srgb, var(--vetinity-teal) 6%, #111a2e);
-    border-color: color-mix(in srgb, var(--vetinity-soft-teal) 30%, transparent);
+.app-dark .public-page .public-shot {
+    background: #111a2e;
+    border-color: color-mix(in srgb, var(--vetinity-soft-teal) 22%, transparent);
+    box-shadow: 0 24px 48px -24px rgb(0 0 0 / 60%);
+}
+
+.public-page .public-shot-img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Etkin temanın görseli; diğeri gizli kalır ve tembel yüklendiği için indirilmez */
+.public-page .public-shot-img--dark,
+.app-dark .public-page .public-shot-img--light {
+    display: none;
+}
+
+.app-dark .public-page .public-shot-img--dark {
+    display: block;
 }
 
 /* Düğmeler: birincil lacivert zemin + beyaz metin; ikincil beyaz zemin + lacivert çerçeve (teal üstünde beyaz metin yok) */

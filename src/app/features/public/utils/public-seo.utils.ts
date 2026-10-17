@@ -6,8 +6,8 @@ import { PUBLIC_PATHS } from './public-navigation.utils';
 /** Canlı tanıtım sitesi kökü; canonical ve OG adresleri buradan türetilir (origin'den değil: staging kendini asıl saymaz). */
 export const PUBLIC_SITE_ORIGIN = 'https://www.vetinity.com';
 
-/** OG/Twitter görseli (1200×630). WEB-005 ile gerçek Bugün ekranı PNG'si gelene kadar yer tutucu SVG. */
-export const PUBLIC_OG_IMAGE_PATH = '/marketing/og-image.svg';
+/** OG/Twitter görseli (1200×630, JPEG): gerçek Bugün ekranıyla marka kartı (WEB-005). */
+export const PUBLIC_OG_IMAGE_PATH = '/marketing/og-image.jpg';
 
 export interface PublicPageMetaOptions {
     readonly title: string;

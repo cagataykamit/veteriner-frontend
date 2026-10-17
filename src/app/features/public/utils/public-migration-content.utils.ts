@@ -6,26 +6,21 @@
 export interface PublicMigrationStepDef {
     readonly title: string;
     readonly description: string;
-    /** Ekran görüntüsü yer tutucu etiketi (WEB-005). */
-    readonly screenshot?: string;
 }
 
 /** Geçiş sayfası dikey zaman çizgisi (5 adım). */
 export const PUBLIC_MIGRATION_STEPS: readonly PublicMigrationStepDef[] = [
     {
         title: 'Şablonu indirin ya da kendi Excel dosyanızı yükleyin',
-        description: 'Excel veya CSV; eski programınızın dışa aktarımı da olur.',
-        screenshot: 'Veri aktarma: dosya yükleme adımı'
+        description: 'Excel veya CSV; eski programınızın dışa aktarımı da olur.'
     },
     {
         title: 'Sütunları eşleyin',
-        description: 'Dosyanızdaki sütunları Vetinity alanlarıyla eşlersiniz; benzer adlar kendiliğinden önerilir.',
-        screenshot: 'Veri aktarma: sütun eşleme adımı'
+        description: 'Dosyanızdaki sütunları Vetinity alanlarıyla eşlersiniz; benzer adlar kendiliğinden önerilir.'
     },
     {
         title: 'Kontrol raporunu görün',
-        description: 'Eksik telefon, yinelenen müşteri, tanınmayan tür gibi sorunlar aktarımdan önce listelenir.',
-        screenshot: 'Veri aktarma: kontrol raporu'
+        description: 'Eksik telefon, yinelenen müşteri, tanınmayan tür gibi sorunlar aktarımdan önce listelenir.'
     },
     {
         title: 'Aktarın',

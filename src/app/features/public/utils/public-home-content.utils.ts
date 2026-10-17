@@ -3,6 +3,8 @@
  * Defterler, KVKK, kayıt güvenliği ve geçiş bölümleri ilgili sayfalarla aynı sabitleri kullanır (tek kaynak).
  */
 
+import type { PublicScreenshotKey } from './public-screenshots.utils';
+
 export interface PublicHomeAudienceDef {
     readonly title: string;
     readonly description: string;
@@ -32,8 +34,7 @@ export interface PublicHomeFlowStepDef {
     readonly id: string;
     readonly title: string;
     readonly description: string;
-    /** Ekran görüntüsü yer tutucu etiketi (WEB-005). */
-    readonly screenshot: string;
+    readonly screenshot: PublicScreenshotKey;
 }
 
 /** "Bir günün akışı" — Geliş → Muayene → Tahsilat → Gün sonu. */
@@ -42,25 +43,25 @@ export const PUBLIC_HOME_DAY_FLOW: readonly PublicHomeFlowStepDef[] = [
         id: 'gelis',
         title: 'Geliş',
         description: 'Randevulu ya da randevusuz; bekleme sırası, uzun bekleme uyarısı ve acil işareti tek listede.',
-        screenshot: 'Bugün ekranı: bekleyen hastalar, biri acil, biri uzun bekleme uyarılı'
+        screenshot: 'bugun'
     },
     {
         id: 'muayene',
         title: 'Muayene',
         description: 'Sıradan tek tıkla muayeneye; bölümler, şablon ve sözlük; kesinleşince kilit.',
-        screenshot: 'Muayene çalışma alanı ve kesinleştirme kontrol listesi'
+        screenshot: 'muayene'
     },
     {
         id: 'tahsilat',
         title: 'Tahsilat',
         description: 'Ücret muayeneden doğar; kısmi ödeme, kalan bakiye ve müşteri borcu görünür.',
-        screenshot: 'Ödeme al paneli ve bakiye'
+        screenshot: 'musteriBakiye'
     },
     {
         id: 'gun-sonu',
         title: 'Gün sonu',
         description: 'Kasa özeti ve ücretlenmemiş işlemler; gün bitmeden kapanır.',
-        screenshot: 'Gün sonu raporu'
+        screenshot: 'gunSonu'
     }
 ];
 

@@ -24,7 +24,7 @@ import {
 import { PUBLIC_HOME_PAGE_META, publicFaqPageJsonLd, removePublicJsonLd, setPublicJsonLd, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
-import { PublicScreenshotPlaceholderComponent } from './components/public-screenshot-placeholder.component';
+import { PublicScreenshotComponent } from './components/public-screenshot.component';
 
 const HOME_FAQ_JSON_LD_ID = 'home-faq';
 
@@ -32,11 +32,11 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
 @Component({
     selector: 'app-public-home-page',
     standalone: true,
-    imports: [RouterLink, PublicScreenshotPlaceholderComponent, PublicFaqListComponent, PublicCtaComponent],
+    imports: [RouterLink, PublicScreenshotComponent, PublicFaqListComponent, PublicCtaComponent],
     template: `
         <!-- 1 Kahraman: gradient kenardan kenara, sol metin, sağ ekran -->
         <section class="public-hero-gradient" aria-labelledby="public-home-hero-title">
-            <div class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-12 md:px-6 md:pt-16 lg:grid-cols-[45fr_55fr] lg:gap-14 lg:pb-0">
+            <div class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-12 md:px-6 md:pt-16 lg:grid-cols-[45fr_55fr] lg:gap-14 lg:pb-16">
                 <div>
                     <p class="public-eyebrow m-0 mb-4 !text-[var(--vetinity-soft-teal)]">Veteriner klinikleri için</p>
                     <h1 id="public-home-hero-title" class="public-h1 public-on-brand-text m-0">Veteriner kliniğinizin günü tek ekranda</h1>
@@ -50,7 +50,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
                     <p class="m-0 mt-4 text-sm public-on-brand-subtle">{{ trialLine }}</p>
                 </div>
                 <div class="lg:translate-y-12">
-                    <app-public-screenshot-placeholder label="Bugün ekranı: bekleyen hastalar, biri acil, biri uyarı rozetli, ücreti yazılmamış işlem çipi" />
+                    <app-public-screenshot shot="bugun" [eager]="true" />
                 </div>
             </div>
         </section>
@@ -94,7 +94,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
             </div>
             <div role="tabpanel" [id]="'flow-panel-' + activeFlow().id" [attr.aria-labelledby]="'flow-tab-' + activeFlow().id" class="mt-6">
                 <p class="m-0 mb-4 text-center text-sm text-surface-600 dark:text-surface-300 md:hidden">{{ activeFlow().description }}</p>
-                <app-public-screenshot-placeholder [label]="activeFlow().screenshot" />
+                <app-public-screenshot [shot]="activeFlow().screenshot" />
             </div>
             <p class="m-0 mt-6 text-center">
                 <a [routerLink]="paths.features" class="public-brand-link inline-flex min-h-[44px] items-center">Tüm akışı görün</a>
@@ -118,7 +118,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
                         </ul>
                         <p class="m-0 mt-3 text-sm text-surface-600 dark:text-surface-300">Yazdırın, Excel'e alın.</p>
                         <div class="mt-5">
-                            <app-public-screenshot-placeholder label="Aşı Kayıt Defteri ekranı" />
+                            <app-public-screenshot shot="asiDefteri" />
                         </div>
                     </div>
                     <div>
@@ -132,7 +132,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
                         </ul>
                         <p class="m-0 mt-3 text-sm text-surface-600 dark:text-surface-300">Rıza kaydı ve metin sürümü müşteri kartında.</p>
                         <div class="mt-5">
-                            <app-public-screenshot-placeholder label="KVKK açık rıza formu yazdırma görünümü" />
+                            <app-public-screenshot shot="kvkkFormu" />
                         </div>
                     </div>
                 </div>
@@ -146,7 +146,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
         <!-- 5 Kayıt güvenliği: sol ekran, sağ 4 madde -->
         <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-safety-title">
             <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
-                <app-public-screenshot-placeholder label="Muayene kesinleştirme kontrol listesi" />
+                <app-public-screenshot shot="kesinlestirme" />
                 <div>
                     <h2 id="public-home-safety-title" class="public-h2 m-0">Kayıtlarınız güvende ve dürüst</h2>
                     <ul class="m-0 mt-6 list-none space-y-4 p-0">
@@ -164,7 +164,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
             </div>
         </section>
 
-        <!-- 6 Geçiş: 3 adım + sihirbaz ekranı + aktarılır/aktarılmaz -->
+        <!-- 6 Geçiş: 3 adım + aktarılır/aktarılmaz -->
         <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-migration-title">
             <h2 id="public-home-migration-title" class="public-h2 m-0">Eski programdan geçiş yarım gün</h2>
             <ol class="m-0 mt-8 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
@@ -176,28 +176,27 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
                     </li>
                 }
             </ol>
-            <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px] lg:gap-14">
-                <app-public-screenshot-placeholder label="Veri aktarma sihirbazı: sütun eşleme adımı" />
-                <div class="flex flex-col gap-4">
-                    <div class="public-card p-5">
-                        <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Aktarılır</h3>
-                        <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
-                            @for (item of migrationIncluded; track item) {
-                                <li class="flex items-center gap-2"><i class="pi pi-check text-[var(--public-accent)]" aria-hidden="true"></i>{{ item }}</li>
-                            }
-                        </ul>
-                    </div>
-                    <div class="public-card p-5">
-                        <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Şimdilik aktarılmaz</h3>
-                        <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
-                            @for (item of migrationExcluded; track item) {
-                                <li class="flex items-center gap-2"><i class="pi pi-minus text-surface-400" aria-hidden="true"></i>{{ item }}</li>
-                            }
-                        </ul>
-                    </div>
-                    <a [routerLink]="paths.migration" class="public-brand-link inline-flex min-h-[44px] items-center text-sm">Geçiş adımlarının tamamı</a>
+            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="public-card p-5">
+                    <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Aktarılır</h3>
+                    <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
+                        @for (item of migrationIncluded; track item) {
+                            <li class="flex items-center gap-2"><i class="pi pi-check text-[var(--public-accent)]" aria-hidden="true"></i>{{ item }}</li>
+                        }
+                    </ul>
+                </div>
+                <div class="public-card p-5">
+                    <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Şimdilik aktarılmaz</h3>
+                    <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
+                        @for (item of migrationExcluded; track item) {
+                            <li class="flex items-center gap-2"><i class="pi pi-minus text-surface-400" aria-hidden="true"></i>{{ item }}</li>
+                        }
+                    </ul>
                 </div>
             </div>
+            <p class="m-0 mt-4">
+                <a [routerLink]="paths.migration" class="public-brand-link inline-flex min-h-[44px] items-center">Geçiş adımlarının tamamı</a>
+            </p>
         </section>
 
         <!-- 7 Yol haritasında: açık gri yüzey, amber çipler (tarih yok) -->

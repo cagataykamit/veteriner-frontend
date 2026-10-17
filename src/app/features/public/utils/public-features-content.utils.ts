@@ -1,7 +1,9 @@
 /**
  * Özellikler sayfası (`/ozellikler`, tasarım belgesi 5.2): bir ziyaretin yolculuğu, modül listesi değil.
- * Her bölüm = bir problem + bir ekran. Ekran görüntüleri WEB-005'te gelir; `screenshot` yer tutucu etiketidir.
+ * Her bölüm = bir problem + bir ekran (gerçek ekran görüntüsü, `public-screenshots.utils.ts`).
  */
+
+import type { PublicScreenshotKey } from './public-screenshots.utils';
 
 export interface PublicFeatureSectionDef {
     /** Sayfa içi bağlantı kimliği (bölüm dizini). */
@@ -9,8 +11,7 @@ export interface PublicFeatureSectionDef {
     readonly title: string;
     readonly lead: string;
     readonly bullets: readonly string[];
-    /** Ekran görüntüsü yer tutucu etiketi; görsel gelince `alt` metni olur. */
-    readonly screenshot: string;
+    readonly screenshot: PublicScreenshotKey;
 }
 
 export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
@@ -23,7 +24,7 @@ export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
             'Acil işareti ve hasta uyarı rozetleri satırda görünür',
             'Ücreti yazılmamış işlemler gün bitmeden fark edilir'
         ],
-        screenshot: 'Bugün ekranı: bekleyen hastalar, biri acil, biri uzun bekleme uyarılı'
+        screenshot: 'bugun'
     },
     {
         id: 'muayene',
@@ -34,7 +35,7 @@ export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
             'Kesinleştirince kayıt kilitlenir; düzeltme gerekçeli ek notla, izli',
             'İki kullanıcı aynı kaydı aynı anda değiştiremez; kimse kimseyi ezmez'
         ],
-        screenshot: 'Muayene çalışma alanı: dolu bir muayene ve kesinleştirme kontrol listesi'
+        screenshot: 'muayene'
     },
     {
         id: 'hasta-karti',
@@ -45,7 +46,7 @@ export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
             'Kilo geçmişi muayene vitallerinden kendiliğinden oluşur',
             'Mikroçip, telefon ya da adla arama; Türkçe harf fark etmez'
         ],
-        screenshot: 'Hasta kartı ve zaman çizelgesi'
+        screenshot: 'hastaKarti'
     },
     {
         id: 'tahsilat',
@@ -56,7 +57,7 @@ export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
             'Borç raporu: kimin ne kadar borcu var',
             'Düzeltme ve iptal yalnız yetkiyle, gerekçeli ve izli'
         ],
-        screenshot: 'Ödeme al paneli ve bakiye'
+        screenshot: 'musteriBakiye'
     },
     {
         id: 'stok',
@@ -67,7 +68,7 @@ export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
             'Düşük ve süresi geçmiş stok uyarısı',
             'Muayenesiz doğrudan satış; stok yine düşer'
         ],
-        screenshot: 'Stok > Mal kabul ve düşük stok uyarısı'
+        screenshot: 'stok'
     },
     {
         id: 'raporlar',
@@ -78,6 +79,6 @@ export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
             'Ödeme, randevu, muayene, aşı ve borç raporları; Excel ve yazdırma',
             'Kayıt defterleri aynı merkezden'
         ],
-        screenshot: 'Rapor merkezi ve gün sonu raporu'
+        screenshot: 'gunSonu'
     }
 ];

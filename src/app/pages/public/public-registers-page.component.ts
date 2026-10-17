@@ -11,13 +11,13 @@ import {
 import { PUBLIC_REGISTERS_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
-import { PublicScreenshotPlaceholderComponent } from './components/public-screenshot-placeholder.component';
+import { PublicScreenshotComponent } from './components/public-screenshot.component';
 
 /** Defterler ve KVKK (tasarım belgesi 5.3): A defterler tablosu, B KVKK 4 adım, C erişim ve iz. */
 @Component({
     selector: 'app-public-registers-page',
     standalone: true,
-    imports: [PublicPageHeaderComponent, PublicScreenshotPlaceholderComponent, PublicCtaComponent],
+    imports: [PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
     template: `
         <app-public-page-header
             eyebrow="Defterler ve KVKK"
@@ -50,10 +50,7 @@ import { PublicScreenshotPlaceholderComponent } from './components/public-screen
                             </tbody>
                         </table>
                     </div>
-                    <div class="flex flex-col gap-4">
-                        <app-public-screenshot-placeholder label="Aşı Kayıt Defteri ekranı" />
-                        <app-public-screenshot-placeholder label="Defter yazdırma önizlemesi" ratio="16 / 6" />
-                    </div>
+                    <app-public-screenshot shot="asiDefteri" />
                 </div>
                 <p class="public-note m-0 mt-6">{{ registersNote }}</p>
             </section>
@@ -71,7 +68,7 @@ import { PublicScreenshotPlaceholderComponent } from './components/public-screen
                             </li>
                         }
                     </ol>
-                    <app-public-screenshot-placeholder label="KVKK açık rıza formu yazdırma görünümü ve müşteri kartında rıza durumu" />
+                    <app-public-screenshot shot="kvkkFormu" />
                 </div>
                 <p class="public-note m-0 mt-6">{{ kvkkNote }}</p>
             </section>

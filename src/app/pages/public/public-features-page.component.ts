@@ -5,13 +5,13 @@ import { PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-feat
 import { PUBLIC_FEATURES_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
-import { PublicScreenshotPlaceholderComponent } from './components/public-screenshot-placeholder.component';
+import { PublicScreenshotComponent } from './components/public-screenshot.component';
 
 /** Özellikler (tasarım belgesi 5.2): 6 bölüm, metin + ekran dönüşümlü; masaüstünde yapışkan bölüm dizini. */
 @Component({
     selector: 'app-public-features-page',
     standalone: true,
-    imports: [PublicPageHeaderComponent, PublicScreenshotPlaceholderComponent, PublicCtaComponent],
+    imports: [PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
     template: `
         <app-public-page-header
             eyebrow="Özellikler"
@@ -48,7 +48,7 @@ import { PublicScreenshotPlaceholderComponent } from './components/public-screen
                                     }
                                 </ul>
                             </div>
-                            <app-public-screenshot-placeholder [label]="section.screenshot" />
+                            <app-public-screenshot [shot]="section.screenshot" />
                         </div>
                     </section>
                 }

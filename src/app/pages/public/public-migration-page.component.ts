@@ -11,13 +11,12 @@ import { PUBLIC_MIGRATION_PAGE_META, setPublicPageMeta } from '@/app/features/pu
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
-import { PublicScreenshotPlaceholderComponent } from './components/public-screenshot-placeholder.component';
 
 /** Geçiş (tasarım belgesi 5.4): dikey zaman çizgisi, aktarılır/aktarılmaz kutuları, 3 soru, çağrı. */
 @Component({
     selector: 'app-public-migration-page',
     standalone: true,
-    imports: [PublicPageHeaderComponent, PublicScreenshotPlaceholderComponent, PublicFaqListComponent, PublicCtaComponent],
+    imports: [PublicPageHeaderComponent, PublicFaqListComponent, PublicCtaComponent],
     template: `
         <app-public-page-header
             eyebrow="Geçiş"
@@ -34,11 +33,6 @@ import { PublicScreenshotPlaceholderComponent } from './components/public-screen
                             <div class="pb-10">
                                 <h2 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">{{ step.title }}</h2>
                                 <p class="m-0 mt-1.5 text-base text-surface-600 dark:text-surface-300">{{ step.description }}</p>
-                                @if (step.screenshot) {
-                                    <div class="mt-4 max-w-md">
-                                        <app-public-screenshot-placeholder [label]="step.screenshot" />
-                                    </div>
-                                }
                             </div>
                         </li>
                     }
