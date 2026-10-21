@@ -57,7 +57,19 @@ describe('client-invoicing (ADR-036)', () => {
         expect(form.valid).toBeTrue();
 
         form.controls.taxNumber.setValue('1234567891');
-        expect(clientInvoicingFieldErrorMessage('taxNumber', form.controls.taxNumber.errors)).toBe('VKN 10 haneli ve geçerli olmalıdır.');
+        expect(clientInvoicingFieldErrorMessage('taxNumber', form.controls.taxNumber.errors)).toBe('Geçerli bir VKN (10 hane) veya TCKN (11 hane) girin.');
+
+        // Şahıs şirketi: vergi numarası olarak TCKN.
+        form.controls.taxNumber.setValue('10000000146');
+        expect(form.controls.taxNumber.valid).toBeTrue();
+        form.controls.taxNumber.setValue('12345678901');
+        expect(form.controls.taxNumber.valid).toBeFalse();
+    });
+
+    it('kart satırı: kurumsal vergi numarası 11 haneliyse TCKN etiketiyle maskeli gösterilir', () => {
+        const vm = mapClientInvoicingSummaryDtoToVm({ personType: 'Corporate', taxNumberMasked: '100******46', legalName: 'Ayşe Yılmaz' })!;
+
+        expect(formatClientInvoicingSummary(vm)).toBe('Kurumsal · Ayşe Yılmaz · TCKN 100******46');
     });
 
     it('detay: maskeli özet; boşsa null', () => {

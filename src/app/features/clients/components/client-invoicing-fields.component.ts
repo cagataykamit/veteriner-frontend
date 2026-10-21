@@ -8,7 +8,7 @@ import { CLIENT_PERSON_TYPE_OPTIONS, clientInvoicingFieldErrorMessage } from '@/
 
 /**
  * Müşteri yeni/düzenle formunun açılır "Fatura bilgileri" bölümü (ADR-036 Dilim 1). Tüm alanlar isteğe bağlıdır;
- * kişi türüne göre TCKN ya da VKN, vergi dairesi ve unvan gösterilir. Gizlenen alanlar gövdeye girmez (form eşlemesi).
+ * kişi türüne göre TCKN ya da vergi no (VKN veya şahıs şirketi TCKN'si), vergi dairesi ve unvan gösterilir. Gizlenen alanlar gövdeye girmez (form eşlemesi).
  */
 @Component({
     selector: 'app-client-invoicing-fields',
@@ -43,8 +43,9 @@ import { CLIENT_PERSON_TYPE_OPTIONS, clientInvoicingFieldErrorMessage } from '@/
                 }
                 @if (personType() === 'Corporate') {
                     <div class="col-span-12 md:col-span-6">
-                        <label for="invoicingTaxNumber" class="block text-sm font-medium text-muted-color mb-2">Vergi kimlik no (VKN)</label>
-                        <input id="invoicingTaxNumber" pInputText class="w-full" formControlName="taxNumber" inputmode="numeric" maxlength="10" autocomplete="off" />
+                        <label for="invoicingTaxNumber" class="block text-sm font-medium text-muted-color mb-2">Vergi no (VKN veya TCKN)</label>
+                        <input id="invoicingTaxNumber" pInputText class="w-full" formControlName="taxNumber" inputmode="numeric" maxlength="11" autocomplete="off" />
+                        <small class="block text-muted-color">Şahıs şirketinde sahibinin TCKN'si girilir.</small>
                         @if (fieldMessage('taxNumber'); as msg) {
                             <small class="text-red-500" data-testid="invoicing-error-taxNumber">{{ msg }}</small>
                         }

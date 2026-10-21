@@ -45,4 +45,21 @@ describe('ClientInvoicingFieldsComponent', () => {
 
         expect(el.querySelector('[data-testid="invoicing-error-nationalId"]')?.textContent).toContain('TCKN 11 haneli ve geçerli olmalıdır.');
     });
+
+    it('kurumsal vergi no alanı 11 haneye kadar alır; şahıs şirketi TCKN geçerli, hatalısı uyarılır', () => {
+        const { fixture, form, el } = render();
+
+        form.controls.personType.setValue('Corporate');
+        fixture.detectChanges();
+        expect(el.querySelector('#invoicingTaxNumber')?.getAttribute('maxlength')).toBe('11');
+
+        form.controls.taxNumber.setValue('10000000146');
+        form.controls.taxNumber.markAsTouched();
+        fixture.detectChanges();
+        expect(el.querySelector('[data-testid="invoicing-error-taxNumber"]')).toBeNull();
+
+        form.controls.taxNumber.setValue('10000000147');
+        fixture.detectChanges();
+        expect(el.querySelector('[data-testid="invoicing-error-taxNumber"]')?.textContent).toContain('VKN (10 hane) veya TCKN (11 hane)');
+    });
 });

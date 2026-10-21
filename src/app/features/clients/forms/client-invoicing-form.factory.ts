@@ -1,7 +1,7 @@
 import { FormBuilder, Validators } from '@angular/forms';
 import type { FormControl, FormGroup } from '@angular/forms';
 import type { ClientInvoicingIdentityDto, ClientPersonType } from '@/app/features/clients/models/client-api.model';
-import { nationalIdValidator, taxNumberValidator } from '@/app/shared/utils/turkish-tax-identity.utils';
+import { nationalIdValidator, taxpayerIdentityValidator } from '@/app/shared/utils/turkish-tax-identity.utils';
 
 /** Sözleşme üst sınırları (`INVOICING_IDENTITY_API_CONTRACT.md` §2). */
 export const CLIENT_INVOICING_MAX = {
@@ -34,7 +34,8 @@ export function createClientInvoicingFormGroup(fb: FormBuilder): ClientInvoicing
     const form = fb.nonNullable.group({
         personType: fb.control<ClientPersonType | null>(null),
         nationalId: fb.nonNullable.control('', [nationalIdValidator()]),
-        taxNumber: fb.nonNullable.control('', [taxNumberValidator()]),
+        // Kurumsal vergi numarası: 10 haneli VKN ya da şahıs şirketinde 11 haneli TCKN.
+        taxNumber: fb.nonNullable.control('', [taxpayerIdentityValidator()]),
         taxOffice: fb.nonNullable.control('', [Validators.maxLength(CLIENT_INVOICING_MAX.taxOffice)]),
         legalName: fb.nonNullable.control('', [Validators.maxLength(CLIENT_INVOICING_MAX.legalName)]),
         billingProvince: fb.nonNullable.control('', [Validators.maxLength(CLIENT_INVOICING_MAX.billingProvince)]),

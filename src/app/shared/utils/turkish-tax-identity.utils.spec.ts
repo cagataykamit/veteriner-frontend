@@ -5,7 +5,7 @@ import {
     isValidTaxpayerIdentity,
     isValidTaxRatePercent,
     nationalIdValidator,
-    taxNumberValidator,
+    taxpayerIdentityValidator,
     taxRateValidator
 } from '@/app/shared/utils/turkish-tax-identity.utils';
 
@@ -36,7 +36,9 @@ describe('turkish-tax-identity.utils', () => {
     it('mükellef kimliği uzunluğa göre kural seçer', () => {
         expect(isValidTaxpayerIdentity('1234567890')).toBeTrue();
         expect(isValidTaxpayerIdentity('10000000146')).toBeTrue();
+        expect(isValidTaxpayerIdentity('1234567891')).toBeFalse();
         expect(isValidTaxpayerIdentity('10000000147')).toBeFalse();
+        expect(isValidTaxpayerIdentity('123456789012')).toBeFalse();
     });
 
     it('oran kuralı', () => {
@@ -52,8 +54,9 @@ describe('turkish-tax-identity.utils', () => {
     it('doğrulayıcılar boşu geçerli sayar, hatalıyı işaretler', () => {
         expect(nationalIdValidator()(new FormControl(''))).toBeNull();
         expect(nationalIdValidator()(new FormControl('12345678901'))).toEqual({ nationalId: true });
-        expect(taxNumberValidator()(new FormControl('1234567890'))).toBeNull();
-        expect(taxNumberValidator()(new FormControl('1234567891'))).toEqual({ taxNumber: true });
+        expect(taxpayerIdentityValidator()(new FormControl('1234567890'))).toBeNull();
+        expect(taxpayerIdentityValidator()(new FormControl('10000000146'))).toBeNull();
+        expect(taxpayerIdentityValidator()(new FormControl('1234567891'))).toEqual({ taxpayerIdentity: true });
         expect(taxRateValidator()(new FormControl<number | null>(150))).toEqual({ taxRate: true });
     });
 });

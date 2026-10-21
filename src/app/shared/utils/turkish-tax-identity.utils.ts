@@ -5,8 +5,10 @@ import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/fo
  * (`docs/INVOICING_IDENTITY_API_CONTRACT.md` §1). Arayüz anında uyarı içindir; doğruluk kaynağı backend'dir.
  */
 
+export const NATIONAL_ID_LENGTH = 11;
+export const TAX_NUMBER_LENGTH = 10;
+
 export const TAX_IDENTITY_MSG_NATIONAL_ID = 'TCKN 11 haneli ve geçerli olmalıdır.';
-export const TAX_IDENTITY_MSG_TAX_NUMBER = 'VKN 10 haneli ve geçerli olmalıdır.';
 export const TAX_IDENTITY_MSG_TAXPAYER = 'Geçerli bir VKN (10 hane) veya TCKN (11 hane) girin.';
 export const TAX_RATE_MSG_INVALID = 'Oran 0 ile 100 arasında ve en çok 2 ondalıklı olmalıdır.';
 
@@ -22,7 +24,7 @@ function digits(value: string | null | undefined, length: number): number[] | nu
 
 /** TCKN: 11 rakam, ilk hane 0 değil; 10. ve 11. hane sağlaması. */
 export function isValidNationalId(value: string | null | undefined): boolean {
-    const d = digits(value, 11);
+    const d = digits(value, NATIONAL_ID_LENGTH);
 
     if (!d || d[0] === 0) {
         return false;
@@ -38,7 +40,7 @@ export function isValidNationalId(value: string | null | undefined): boolean {
 
 /** VKN: 10 rakam; i = 1..9 için t = (dᵢ + 10 − i) mod 10, t = 9 ise 9 değilse (t × 2^(10 − i)) mod 9; kontrol (10 − toplam mod 10) mod 10. */
 export function isValidTaxNumber(value: string | null | undefined): boolean {
-    const d = digits(value, 10);
+    const d = digits(value, TAX_NUMBER_LENGTH);
 
     if (!d) {
         return false;
@@ -75,10 +77,7 @@ function optionalRule(rule: (v: string) => boolean, key: string): ValidatorFn {
 /** Boş geçerli; doluysa TCKN sağlaması (`nationalId` hatası). */
 export const nationalIdValidator = (): ValidatorFn => optionalRule(isValidNationalId, 'nationalId');
 
-/** Boş geçerli; doluysa VKN sağlaması (`taxNumber` hatası). */
-export const taxNumberValidator = (): ValidatorFn => optionalRule(isValidTaxNumber, 'taxNumber');
-
-/** Boş geçerli; doluysa VKN veya TCKN (`taxpayerIdentity` hatası). */
+/** Boş geçerli; doluysa VKN veya TCKN (`taxpayerIdentity` hatası): klinik mükellef kimliği ve kurumsal müşteri vergi numarası. */
 export const taxpayerIdentityValidator = (): ValidatorFn => optionalRule(isValidTaxpayerIdentity, 'taxpayerIdentity');
 
 /** Boş geçerli; doluysa 0–100, en çok 2 ondalık (`taxRate` hatası). */
