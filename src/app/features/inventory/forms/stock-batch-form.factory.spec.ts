@@ -34,7 +34,8 @@ describe('stock batch form', () => {
         applyStockBatchRequirement(g, true);
         expect(g.controls.lotNumber.hasError('required')).toBeTrue();
         expect(g.controls.expiryDate.hasError('required')).toBeTrue();
-        g.patchValue({ lotNumber: 'L', expiryDate: '2027-01-01' });
+        // SKT geçmişse onay istenir (ayrı test); bu test yalnız zorunluluğu sınar, bu yüzden uzak gelecek tarih.
+        g.patchValue({ lotNumber: 'L', expiryDate: '2999-01-01' });
         expect(g.valid).toBeTrue();
         applyStockBatchRequirement(g, false);
         g.patchValue({ lotNumber: '', expiryDate: '' });
