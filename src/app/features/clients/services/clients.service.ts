@@ -18,6 +18,7 @@ import {
 } from '@/app/features/clients/data/client.mapper';
 import type {
     ClientDetailDto,
+    ClientInvoicingIdentityDto,
     ClientKvkkConsentDto,
     ClientListItemDtoPagedResult,
     ClientPaymentSummaryDto,
@@ -208,14 +209,20 @@ export class ClientsService {
             .pipe(map(mapClientKvkkConsentDtoToVm));
     }
 
+    /** HTTP hataları (400 alan doğrulama, 409) bileşende `parseClientCreateHttpError` için olduğu gibi iletilir (`createClient` ile aynı). */
     updateClient(id: string, payload: CreateClientRequest): Observable<void> {
         const body = mapCreateClientToApiBody(payload);
 
-        return this.api.put<unknown>(ApiEndpoints.clients.byId(id), body).pipe(
-            map(() => void 0),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Müşteri güncellenemedi.')))
-            )
-        );
+        return this.api.put<unknown>(ApiEndpoints.clients.byId(id), body).pipe(map(() => void 0));
+    }
+
+    /**
+     * `Clients.Update` — düzenleme formu için tam TCKN/VKN (`INVOICING_IDENTITY_API_CONTRACT.md` §2). Diğer yüzeyler maskeli
+     * değer taşır; sunucu her çağrıyı audit'e yazar. Yetki yoksa hata döner (bölüm dokunulmadan gönderilir).
+     */
+    getInvoicingIdentity(id: string): Observable<ClientInvoicingIdentityDto> {
+        return this.api
+            .get<ClientInvoicingIdentityDto>(ApiEndpoints.clients.invoicingIdentity(id))
+            .pipe(toUserError('Fatura bilgileri yüklenemedi.'));
     }
 }

@@ -48,6 +48,38 @@ export interface ClientDetailDto {
     kvkkConsentTemplateHash?: string | null;
     /** Base64; `PUT /clients/{id}/kvkk-consent` için zorunlu. */
     rowVersion?: string | null;
+    /** Fatura kimliği, TCKN/VKN maskeli (`INVOICING_IDENTITY_API_CONTRACT.md` §2); eski yanıtta yok. */
+    invoicing?: ClientInvoicingSummaryDto | null;
+}
+
+/** Fatura alıcısı türü; `null` = belirtilmemiş. */
+export type ClientPersonType = 'Individual' | 'Corporate';
+
+/** Okuma görünümü (detay, veri kopyası): numaralar yalnız maskeli. */
+export interface ClientInvoicingSummaryDto {
+    personType?: ClientPersonType | null;
+    nationalIdMasked?: string | null;
+    taxNumberMasked?: string | null;
+    taxOffice?: string | null;
+    legalName?: string | null;
+    billingProvince?: string | null;
+    billingDistrict?: string | null;
+    billingAddressLine?: string | null;
+}
+
+/**
+ * Tam değerli fatura kimliği: `GET /clients/{id}/invoicing-identity` yanıtı (`Clients.Update`) ve
+ * POST/PUT gövdesindeki `invoicingIdentity` (PUT'ta alan yok = dokunma; verilirse tam değiştirme).
+ */
+export interface ClientInvoicingIdentityDto {
+    personType: ClientPersonType | null;
+    nationalId: string | null;
+    taxNumber: string | null;
+    taxOffice: string | null;
+    legalName: string | null;
+    billingProvince: string | null;
+    billingDistrict: string | null;
+    billingAddressLine: string | null;
 }
 
 /** `PUT /clients/{id}/kvkk-consent` gövdesi; `None` iken `recordedOn` gönderilmez. */
@@ -84,6 +116,8 @@ export interface ClientUpsertRequestDto {
     preferredContactChannel?: ClientContactChannel;
     /** PUT'ta alan yok = dokunma; kaldırmak için `false`. */
     remindersOptedOut?: boolean;
+    /** Alan yok = dokunma (PUT) / boş (POST); verilirse nesnenin tamamı yazılır. */
+    invoicingIdentity?: ClientInvoicingIdentityDto;
 }
 
 /** GET /clients/{id}/recent-summary — panel müşteri detay özeti. */

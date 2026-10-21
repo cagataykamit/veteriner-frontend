@@ -1,3 +1,4 @@
+import type { ClientInvoicingIdentityDto } from '@/app/features/clients/models/client-api.model';
 import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 
 /**
@@ -12,6 +13,8 @@ export interface CreateClientRequest {
     /** Verilmezse gövdeye girmez (PUT'ta değer korunur). */
     preferredContactChannel?: ClientContactChannel;
     remindersOptedOut?: boolean;
+    /** Fatura kimliği (ADR-036); verilmezse gövdeye girmez (PUT'ta değer korunur). */
+    invoicingIdentity?: ClientInvoicingIdentityDto;
 }
 
 /**

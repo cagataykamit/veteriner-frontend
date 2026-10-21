@@ -1,3 +1,5 @@
+import type { ClientInvoicingSummaryDto } from '@/app/features/clients/models/client-api.model';
+
 /**
  * `GET /api/v1/clients/{id}/data-export` yanıtı (`CLIENT_DATA_EXPORT_API_CONTRACT.md`, ADR-032 madde 2).
  * Enum alanları metin döner. Yanıt olduğu gibi "JSON indir" ile verilir; ekranda yalnız etiketlenir (VM'e çevrilmez).
@@ -17,6 +19,8 @@ export interface ClientDataExportClientDto {
     createdAtUtc: string;
     preferredContactChannel: string;
     remindersOptedOut: boolean;
+    /** Fatura kimliği, TCKN/VKN maskeli (ADR-036); eski yanıtta yok. */
+    invoicing?: ClientInvoicingSummaryDto | null;
 }
 
 export interface ClientDataExportKvkkConsentDto {
@@ -37,6 +41,8 @@ export interface ClientDataExportPetDto {
     passportOrTagNumber: string | null;
     status: string;
     deceasedOn: string | null;
+    /** HBS hayvan kimlik no (ADR-036); eski yanıtta yok. */
+    hbsAnimalId?: string | null;
 }
 
 export interface ClientDataExportAppointmentDto {

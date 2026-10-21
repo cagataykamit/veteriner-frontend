@@ -2,6 +2,7 @@ import { appointmentStatusLabel } from '@/app/features/appointments/utils/appoin
 import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
 import type { ClientDataExportDto, ClientDataExportSectionDto } from '@/app/features/clients/models/client-data-export-api.model';
 import { clientContactChannelLabel, parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
+import { formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm } from '@/app/features/clients/utils/client-invoicing.utils';
 import { kvkkConsentStatusLabel, parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 import { examinationStatusLabel } from '@/app/features/examinations/utils/examination-status.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
@@ -47,8 +48,16 @@ export function clientDataExportClientFacts(dto: ClientDataExportDto): DataExpor
         { label: 'Adres', value: text(c.address) },
         { label: 'Kayıt tarihi', value: utcDate(c.createdAtUtc) },
         { label: 'Tercih edilen iletişim kanalı', value: clientContactChannelLabel(parseClientContactChannel(c.preferredContactChannel)) },
-        { label: 'Otomatik hatırlatma', value: c.remindersOptedOut ? 'İstemiyor' : 'Alıyor' }
+        { label: 'Otomatik hatırlatma', value: c.remindersOptedOut ? 'İstemiyor' : 'Alıyor' },
+        { label: 'Fatura bilgileri', value: invoicingText(c.invoicing) }
     ];
+}
+
+/** Sunucu TCKN/VKN'yi yalnız maskeli verir (ADR-036); kart satırıyla aynı biçim. */
+function invoicingText(dto: ClientDataExportDto['client']['invoicing']): string {
+    const vm = mapClientInvoicingSummaryDtoToVm(dto);
+
+    return vm ? formatClientInvoicingSummary(vm) : EM;
 }
 
 export function clientDataExportKvkkFacts(dto: ClientDataExportDto): DataExportFact[] {
@@ -79,7 +88,7 @@ function table<T>(key: string, title: string, columns: readonly string[], sectio
 /** Bölüm tabloları sözleşmedeki sırayla; iptal edilmiş kayıtlar durum sütununda işaretlidir. */
 export function clientDataExportTables(dto: ClientDataExportDto): DataExportTable[] {
     return [
-        table('pets', 'Hastalar', ['Ad', 'Tür', 'Irk', 'Cinsiyet', 'Doğum tarihi', 'Kısırlaştırılmış', 'Mikroçip', 'Karne / küpe no', 'Durum'], dto.pets, (p) => {
+        table('pets', 'Hastalar', ['Ad', 'Tür', 'Irk', 'Cinsiyet', 'Doğum tarihi', 'Kısırlaştırılmış', 'Mikroçip', 'Karne / küpe no', 'HBS kimlik no', 'Durum'], dto.pets, (p) => {
             const status = parsePetLifeStatus(p.status);
 
             return [
@@ -91,6 +100,7 @@ export function clientDataExportTables(dto: ClientDataExportDto): DataExportTabl
                 p.isNeutered ? 'Evet' : 'Hayır',
                 text(p.microchipNumber),
                 text(p.passportOrTagNumber),
+                text(p.hbsAnimalId),
                 status === 'Deceased' && p.deceasedOn ? `${petLifeStatusLabel(status)} · ${date(p.deceasedOn)}` : petLifeStatusLabel(status)
             ];
         }),

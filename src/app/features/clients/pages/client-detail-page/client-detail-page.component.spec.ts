@@ -27,6 +27,7 @@ const client: ClientDetailVm = {
     preferredContactChannel: 'None',
     remindersOptedOut: false,
     kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
+    invoicing: null,
     rowVersion: 'rv1'
 };
 

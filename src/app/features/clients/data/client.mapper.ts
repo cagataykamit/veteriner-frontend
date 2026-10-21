@@ -32,6 +32,7 @@ import type {
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
+import { mapClientInvoicingSummaryDtoToVm } from '@/app/features/clients/utils/client-invoicing.utils';
 import { parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 import { parseKvkkTextVersion } from '@/app/features/kvkk/utils/kvkk-form.utils';
 
@@ -141,7 +142,8 @@ export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsert
         email,
         address,
         ...(req.preferredContactChannel !== undefined ? { preferredContactChannel: req.preferredContactChannel } : {}),
-        ...(req.remindersOptedOut !== undefined ? { remindersOptedOut: req.remindersOptedOut } : {})
+        ...(req.remindersOptedOut !== undefined ? { remindersOptedOut: req.remindersOptedOut } : {}),
+        ...(req.invoicingIdentity !== undefined ? { invoicingIdentity: req.invoicingIdentity } : {})
     };
 }
 
@@ -276,6 +278,7 @@ export function mapClientDetailDtoToVm(dto: ClientDetailDto): ClientDetailVm {
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null,
         preferredContactChannel: parseClientContactChannel(dto.preferredContactChannel),
+        invoicing: mapClientInvoicingSummaryDtoToVm(dto.invoicing),
         ...mapClientKvkkConsentDtoToVm(dto)
     };
 }

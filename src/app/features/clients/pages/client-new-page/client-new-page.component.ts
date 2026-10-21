@@ -7,7 +7,15 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ClientContactPreferenceFieldsComponent } from '@/app/features/clients/components/client-contact-preference-fields.component';
+import { ClientInvoicingFieldsComponent } from '@/app/features/clients/components/client-invoicing-fields.component';
 import { mapClientUpsertFormValueToCreateRequest } from '@/app/features/clients/data/client.mapper';
+import {
+    type ClientInvoicingFieldKey,
+    createClientInvoicingFormGroup,
+    isClientInvoicingDtoEmpty,
+    mapClientInvoicingFormToDto
+} from '@/app/features/clients/forms/client-invoicing-form.factory';
+import { parseClientInvoicingFieldErrors } from '@/app/features/clients/utils/client-invoicing.utils';
 import {
     createClientUpsertFormGroup,
     getClientUpsertFormValue
@@ -32,6 +40,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
         ButtonModule,
         InputTextModule,
         ClientContactPreferenceFieldsComponent,
+        ClientInvoicingFieldsComponent,
         AppPageHeaderComponent
     ],
     template: `
@@ -71,6 +80,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     <div class="col-span-12">
                         <app-client-contact-preference-fields [form]="form" />
                     </div>
+                    <div class="col-span-12">
+                        <app-client-invoicing-fields [form]="invoicingForm" [open]="invoicingOpen()" [apiErrors]="invoicingApiErrors()" />
+                    </div>
                 </div>
 
                 @if (submitError()) {
@@ -83,7 +95,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="submitting()"
-                        [disabled]="form.invalid || submitting()"
+                        [disabled]="form.invalid || invoicingForm.invalid || submitting()"
                     />
                     <p-button
                         type="button"
@@ -112,6 +124,9 @@ export class ClientNewPageComponent {
     readonly apiFieldErrors = signal<ClientCreateFieldErrors>({});
 
     readonly form = createClientUpsertFormGroup(this.fb);
+    readonly invoicingForm = createClientInvoicingFormGroup(this.fb);
+    readonly invoicingOpen = signal(false);
+    readonly invoicingApiErrors = signal<Partial<Record<ClientInvoicingFieldKey, string>>>({});
 
     constructor() {
         for (const f of CLIENT_UPSERT_FORM_FIELDS) {
@@ -151,14 +166,21 @@ export class ClientNewPageComponent {
     onSubmit(): void {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+        this.invoicingApiErrors.set({});
 
-        if (this.form.invalid) {
+        if (this.form.invalid || this.invoicingForm.invalid) {
             this.form.markAllAsTouched();
+            this.invoicingForm.markAllAsTouched();
 
             return;
         }
 
-        const payload = mapClientUpsertFormValueToCreateRequest(getClientUpsertFormValue(this.form));
+        // Fatura bölümü hiç doldurulmadıysa gövdeye girmez (isteğe bağlı, ADR-036).
+        const invoicing = mapClientInvoicingFormToDto(this.invoicingForm.getRawValue());
+        const payload = {
+            ...mapClientUpsertFormValueToCreateRequest(getClientUpsertFormValue(this.form)),
+            ...(isClientInvoicingDtoEmpty(invoicing) ? {} : { invoicingIdentity: invoicing })
+        };
 
         this.submitting.set(true);
         this.clientsService.createClient(payload).subscribe({
@@ -171,8 +193,11 @@ export class ClientNewPageComponent {
 
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseClientCreateHttpError(e);
+                    const invoicingErrors = parseClientInvoicingFieldErrors(e);
 
                     this.apiFieldErrors.set(parsed.fieldErrors);
+                    this.invoicingApiErrors.set(invoicingErrors);
+                    this.invoicingOpen.set(this.invoicingOpen() || Object.keys(invoicingErrors).length > 0);
                     this.submitError.set(parsed.summaryMessage);
 
                     return;

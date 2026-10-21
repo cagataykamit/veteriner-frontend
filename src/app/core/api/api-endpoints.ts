@@ -40,6 +40,8 @@ export const ApiEndpoints = {
         kvkkFormTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-form-template`,
         /** KVKK aydınlatma metni şablonu; açık rıza şablonuyla aynı sözleşme ve izinler (`KVKK_CONSENT_API_CONTRACT.md` §2b). */
         kvkkDisclosureTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-disclosure-template`,
+        /** Mükellef ayarları; GET `Clinics.Read`, PUT `Clinics.Update` (`INVOICING_IDENTITY_API_CONTRACT.md` §3). */
+        taxpayerSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/taxpayer-settings`,
         /** Geliş formundaki sorumlu hekim seçimi (`Visits.Create`). */
         veterinarians: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/veterinarians`
     },
@@ -92,6 +94,8 @@ export const ApiEndpoints = {
         kvkkConsent: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/kvkk-consent`,
         /** GET; `Clients.Read`, salt okunur KVKK veri kopyası; her çağrı audit'e yazılır (`CLIENT_DATA_EXPORT_API_CONTRACT.md`). */
         dataExport: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/data-export`,
+        /** GET; `Clients.Update`, düzenleme formu için tam TCKN/VKN (`INVOICING_IDENTITY_API_CONTRACT.md` §2); audit'e yazılır. */
+        invoicingIdentity: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/invoicing-identity`,
         /** GET; `OwnerPortal.Manage`, bağ durumu + son 20 davet (`PORTAL_API_CONTRACT.md` §4.1). */
         portalAccess: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/portal-access`,
         /** POST; gövde opsiyonel `{ clinicId }`, klinik context-first (§4.2). */

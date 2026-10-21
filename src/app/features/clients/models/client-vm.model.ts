@@ -1,4 +1,5 @@
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { ClientPersonType } from '@/app/features/clients/models/client-api.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import type { KvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
@@ -22,8 +23,22 @@ export interface ClientDetailVm {
     preferredContactChannel: ClientContactChannel;
     remindersOptedOut: boolean;
     kvkkConsent: ClientKvkkConsentVm;
+    /** Fatura kimliği (ADR-036), numaralar maskeli; hiç bilgi yoksa `null`. */
+    invoicing: ClientInvoicingSummaryVm | null;
     /** Rıza işareti için kayıt sürümü; okunamazsa `null` (işaretleme kapalı). */
     rowVersion: string | null;
+}
+
+/** Müşteri kartındaki "Fatura bilgileri" satırı; TCKN/VKN yalnız maskeli gelir. */
+export interface ClientInvoicingSummaryVm {
+    personType: ClientPersonType | null;
+    nationalIdMasked: string | null;
+    taxNumberMasked: string | null;
+    taxOffice: string | null;
+    legalName: string | null;
+    billingProvince: string | null;
+    billingDistrict: string | null;
+    billingAddressLine: string | null;
 }
 
 /** İmzalı KVKK formunun sonucu; `None` iken tarih, işaretleyen ve metin sürümü boş. */

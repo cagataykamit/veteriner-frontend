@@ -6,6 +6,7 @@ import type { ClientBalanceVm } from '@/app/features/clients/models/client-balan
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { pendingChargesSummary } from '@/app/features/clients/utils/client-card.utils';
 import { clientContactChannelLabel } from '@/app/features/clients/utils/client-contact-preference.utils';
+import { formatClientInvoicingSummary } from '@/app/features/clients/utils/client-invoicing.utils';
 import { kvkkConsentStatusLabel } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { kvkkTextVersionLabel } from '@/app/features/kvkk/utils/kvkk-form.utils';
@@ -19,6 +20,7 @@ import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/ut
  * Müşteri kartı başlığı (ADR-020 karar 6): iletişim (aranabilir telefon, e-posta, adres, tercih edilen kanal; hatırlatma istemiyorsa belirgin not)
  * ve hesap durumu (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu). Ad ve "Düzenle" sayfa başlığındadır.
  * KVKK açık rıza satırı (ADR-021): durum, form tarihi, işaretleyen ve işaretleme anındaki metin sürümü (ADR-032); işaretleme eylemi `[kvkkAction]` ile sayfadan yansıtılır (yetki sayfada).
+ * "Fatura bilgileri" satırı (ADR-036): kişi türü, unvan, TCKN/VKN yalnız maskeli, vergi dairesi ve fatura adresi.
  */
 @Component({
     selector: 'app-client-card-header',
@@ -80,6 +82,12 @@ import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/ut
                 }
                 <ng-content select="[kvkkAction]" />
             </p>
+            @if (invoicingSummary(); as summary) {
+                <p class="m-0 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label="Fatura bilgileri" data-testid="client-invoicing">
+                    <span class="text-muted-color"><i class="pi pi-id-card mr-1" aria-hidden="true"></i>Fatura bilgileri:</span>
+                    <span class="font-medium break-words" data-testid="client-invoicing-summary">{{ summary }}</span>
+                </p>
+            }
 
             <app-card-account-status [balance]="balance()" [nextAppointment]="nextAppointment()">
                 @if (pendingCharges(); as p) {
@@ -172,4 +180,10 @@ export class ClientCardHeaderComponent {
         return hash ? `Metin özeti (SHA-256): ${hash}` : null;
     });
     readonly formatDate = (v: string) => formatDateDisplay(v);
+    /** Maskeli fatura kimliği (ADR-036); bilgi yoksa satır yok. */
+    readonly invoicingSummary = computed(() => {
+        const invoicing = this.client().invoicing;
+
+        return invoicing ? formatClientInvoicingSummary(invoicing) : null;
+    });
 }

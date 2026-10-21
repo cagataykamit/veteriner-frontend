@@ -7,7 +7,16 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ClientContactPreferenceFieldsComponent } from '@/app/features/clients/components/client-contact-preference-fields.component';
+import { ClientInvoicingFieldsComponent } from '@/app/features/clients/components/client-invoicing-fields.component';
 import { mapClientUpsertFormValueToCreateRequest } from '@/app/features/clients/data/client.mapper';
+import {
+    type ClientInvoicingFieldKey,
+    createClientInvoicingFormGroup,
+    isClientInvoicingDtoEmpty,
+    mapClientInvoicingDtoToFormValue,
+    mapClientInvoicingFormToDto
+} from '@/app/features/clients/forms/client-invoicing-form.factory';
+import { parseClientInvoicingFieldErrors } from '@/app/features/clients/utils/client-invoicing.utils';
 import {
     createClientUpsertFormGroup,
     getClientUpsertFormValue
@@ -36,6 +45,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         ButtonModule,
         InputTextModule,
         ClientContactPreferenceFieldsComponent,
+        ClientInvoicingFieldsComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent
@@ -89,6 +99,11 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                         <div class="col-span-12">
                             <app-client-contact-preference-fields [form]="form" />
                         </div>
+                        @if (invoicingLoaded()) {
+                            <div class="col-span-12">
+                                <app-client-invoicing-fields [form]="invoicingForm" [open]="invoicingOpen()" [apiErrors]="invoicingApiErrors()" />
+                            </div>
+                        }
                     </div>
 
                     @if (submitError()) {
@@ -101,7 +116,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             label="Güncelle"
                             icon="pi pi-check"
                             [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
+                            [disabled]="form.invalid || invoicingForm.invalid || submitting() || ro.mutationBlocked()"
                         />
                         <p-button
                             type="button"
@@ -135,6 +150,11 @@ export class ClientEditPageComponent implements OnInit {
     readonly currentId = signal<string | null>(null);
 
     readonly form = createClientUpsertFormGroup(this.fb);
+    readonly invoicingForm = createClientInvoicingFormGroup(this.fb);
+    /** Tam değerler (`Clients.Update`) yüklendiyse bölüm gösterilir ve gövdeye girer; yüklenmezse sunucudaki değere dokunulmaz. */
+    readonly invoicingLoaded = signal(false);
+    readonly invoicingOpen = signal(false);
+    readonly invoicingApiErrors = signal<Partial<Record<ClientInvoicingFieldKey, string>>>({});
 
     constructor() {
         for (const f of CLIENT_UPSERT_FORM_FIELDS) {
@@ -200,11 +220,24 @@ export class ClientEditPageComponent implements OnInit {
                     remindersOptedOut: client.remindersOptedOut
                 });
                 this.loading.set(false);
+                this.loadInvoicing(id);
             },
             error: (e: unknown) => {
                 this.loadError.set(panelHttpFailureMessage(e, 'Müşteri bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
+        });
+    }
+
+    private loadInvoicing(id: string): void {
+        this.invoicingLoaded.set(false);
+        this.clientsService.getInvoicingIdentity(id).subscribe({
+            next: (dto) => {
+                this.invoicingForm.reset(mapClientInvoicingDtoToFormValue(dto), { emitEvent: false });
+                this.invoicingOpen.set(!isClientInvoicingDtoEmpty(dto));
+                this.invoicingLoaded.set(true);
+            },
+            error: () => this.invoicingLoaded.set(false)
         });
     }
 
@@ -215,14 +248,19 @@ export class ClientEditPageComponent implements OnInit {
 
         this.submitError.set(null);
         this.apiFieldErrors.set({});
+        this.invoicingApiErrors.set({});
 
-        if (this.form.invalid || !this.currentId()) {
+        if (this.form.invalid || this.invoicingForm.invalid || !this.currentId()) {
             this.form.markAllAsTouched();
+            this.invoicingForm.markAllAsTouched();
 
             return;
         }
 
-        const payload = mapClientUpsertFormValueToCreateRequest(getClientUpsertFormValue(this.form));
+        const payload = {
+            ...mapClientUpsertFormValueToCreateRequest(getClientUpsertFormValue(this.form)),
+            ...(this.invoicingLoaded() ? { invoicingIdentity: mapClientInvoicingFormToDto(this.invoicingForm.getRawValue()) } : {})
+        };
 
         this.submitting.set(true);
         this.clientsService.updateClient(this.currentId()!, payload).subscribe({
@@ -235,8 +273,11 @@ export class ClientEditPageComponent implements OnInit {
 
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseClientCreateHttpError(e);
+                    const invoicingErrors = parseClientInvoicingFieldErrors(e);
 
                     this.apiFieldErrors.set(parsed.fieldErrors);
+                    this.invoicingApiErrors.set(invoicingErrors);
+                    this.invoicingOpen.set(this.invoicingOpen() || Object.keys(invoicingErrors).length > 0);
                     this.submitError.set(parsed.summaryMessage);
 
                     return;

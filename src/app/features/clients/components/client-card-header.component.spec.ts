@@ -19,6 +19,7 @@ const client: ClientDetailVm = {
     preferredContactChannel: 'None',
     remindersOptedOut: false,
     kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
+    invoicing: null,
     rowVersion: 'rv1'
 };
 
@@ -31,6 +32,31 @@ const pending = (items: Partial<ChargeSuggestionVm>[], totalItems = items.length
 });
 
 describe('ClientCardHeaderComponent', () => {
+    it('fatura bilgileri: yalnız maskeli numara ve özet; bilgi yoksa satır yok', () => {
+        expect(render({}).querySelector('[data-testid="client-invoicing"]')).toBeNull();
+        TestBed.resetTestingModule();
+
+        const el = render({
+            client: {
+                ...client,
+                invoicing: {
+                    personType: 'Corporate',
+                    nationalIdMasked: null,
+                    taxNumberMasked: '123*****90',
+                    taxOffice: 'Kadıköy',
+                    legalName: 'Örnek Ltd.',
+                    billingProvince: 'İstanbul',
+                    billingDistrict: 'Kadıköy',
+                    billingAddressLine: null
+                }
+            }
+        });
+
+        expect(el.querySelector('[data-testid="client-invoicing-summary"]')?.textContent?.trim()).toBe(
+            'Kurumsal · Örnek Ltd. · VKN 123*****90 · Kadıköy VD · Kadıköy / İstanbul'
+        );
+    });
+
     const render = (inputs: {
         client?: ClientDetailVm;
         balance?: PetCardSection<ClientBalanceVm>;
