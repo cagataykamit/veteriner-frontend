@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { of } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { ClinicTaxpayerSettingsService } from '@/app/features/clinics/services/clinic-taxpayer-settings.service';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ClinicDetailPageComponent } from './clinic-detail-page.component';
@@ -41,6 +42,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
                 { provide: ClinicsService, useValue: clinics },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getAccessToken: () => 't' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: ClinicTaxpayerSettingsService, useValue: { get: () => NEVER, update: () => NEVER } },
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ clinicId: 'c1' })), snapshot: { paramMap: convertToParamMap({ clinicId: 'c1' }) } } }
             ]
         }).compileComponents();

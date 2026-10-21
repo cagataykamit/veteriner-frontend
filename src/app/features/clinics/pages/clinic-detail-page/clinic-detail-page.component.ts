@@ -32,6 +32,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
+import { ClinicTaxpayerSettingsSectionComponent } from '@/app/features/clinics/components/clinic-taxpayer-settings-section.component';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import {
     clinicSettingsMutationMessage,
@@ -66,7 +67,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         ToastModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        ClinicTaxpayerSettingsSectionComponent
     ],
     providers: [MessageService],
     template: `
@@ -382,6 +384,10 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
                 }
             </div>
+            }
+
+            @if (canUpdateClinic) {
+                <app-clinic-taxpayer-settings-section [clinicId]="d.id" />
             }
 
             @if (canUpdateClinic) {
