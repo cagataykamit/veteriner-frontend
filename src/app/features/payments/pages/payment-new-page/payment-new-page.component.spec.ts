@@ -8,6 +8,7 @@ import { ClientSearchService } from '@/app/features/clients/services/client-sear
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { PaymentNewPageComponent } from './payment-new-page.component';
 
 const openCharge = (chargeId: string, over: Partial<ClientOpenChargeVm> = {}): ClientOpenChargeVm => ({
@@ -35,6 +36,9 @@ const balance = (openCharges: ClientOpenChargeVm[]): ClientBalanceVm => ({
     outstandingAmount: 600,
     openCharges
 });
+
+/** Ödeme zamanı en çok 7 gün geriye girilebilir; sabit tarih zamanla pencereden çıkar, bu yüzden "1 saat önce" kullanılır. */
+const recentPaidAtLocal = () => toIstanbulDateTimeLocalInputValue(new Date(Date.now() - 60 * 60 * 1000).toISOString());
 
 const problem = (status: number, code: string) =>
     new HttpErrorResponse({ status, error: { title: 'x', detail: 'Sunucu mesajı', extensions: { code } } });
@@ -69,7 +73,7 @@ describe('PaymentNewPageComponent', () => {
     };
 
     const selectClient = () => {
-        cmp.form.patchValue({ clientId: 'cl1', paidAtLocal: '2026-10-12T10:00' });
+        cmp.form.patchValue({ clientId: 'cl1', paidAtLocal: recentPaidAtLocal() });
         fixture.detectChanges();
     };
 
@@ -229,7 +233,7 @@ describe('PaymentNewPageComponent', () => {
         );
         payments.createPayment.and.returnValue(of({ id: 'pay1' }));
         await setup();
-        cmp.form.patchValue({ paidAtLocal: '2026-10-12T10:00' });
+        cmp.form.patchValue({ paidAtLocal: recentPaidAtLocal() });
         fixture.detectChanges();
         expect(cmp.form.controls.clientId.value).toBe('cl1');
         expect(cmp.allocations()).toEqual([{ chargeId: 'ch1', amount: 600 }]);
@@ -256,7 +260,7 @@ describe('PaymentNewPageComponent', () => {
         clients.getClientBalance.and.returnValue(of(balance([openCharge('ch1', { examinationId: 'ex1' })])));
         payments.createPayment.and.returnValue(of({ id: 'pay1' }));
         await setup();
-        cmp.form.patchValue({ clientId: 'cl2', paidAtLocal: '2026-10-12T10:00' });
+        cmp.form.patchValue({ clientId: 'cl2', paidAtLocal: recentPaidAtLocal() });
         cmp.fillOutstanding(cmp.openCharges()[0]);
         cmp.onSubmit();
         expect(payments.createPayment.calls.mostRecent().args[0].examinationId).toBeNull();
