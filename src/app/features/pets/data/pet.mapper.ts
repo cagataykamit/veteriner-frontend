@@ -284,6 +284,8 @@ export function mapPetUpsertFormToCreateRequest(
         microchipNumber: microchipRaw || undefined,
         passportOrTagNumber: passportRaw || undefined,
         specialProtocolNumber: protocolRaw || undefined,
+        // Form her zaman gönderir: boş değer düzenlemede temizler (sunucuda null = dokunma).
+        hbsAnimalId: trimFormText(v.hbsAnimalId),
         isNeutered: v.isNeutered,
         notes: notesRaw || undefined,
         ...petAlertsFormToWrite(v.alertFlags, v.alertNote)
@@ -375,6 +377,10 @@ export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDt
 
     if (protocol) {
         body.specialProtocolNumber = protocol;
+    }
+
+    if (req.hbsAnimalId !== undefined) {
+        body.hbsAnimalId = trimFormText(req.hbsAnimalId);
     }
 
     if (req.alertFlags !== undefined) {
@@ -471,6 +477,7 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
         microchipNumber: str(canonicalPetIdentityString(dto, 'microchipNumber', 'MicrochipNumber')),
         passportOrTagNumber: str(canonicalPetIdentityString(dto, 'passportOrTagNumber', 'PassportOrTagNumber')),
         specialProtocolNumber: str(canonicalPetIdentityString(dto, 'specialProtocolNumber', 'SpecialProtocolNumber')),
+        hbsAnimalId: str(dto.hbsAnimalId),
         isNeutered: formatBooleanYesNo(canonicalPetIsNeutered(dto)),
         notes: dto.notes != null && dto.notes.trim().length > 0 ? dto.notes : EM,
         ownerId: canonicalPetDetailOwnerNavId(dto),
@@ -544,6 +551,7 @@ export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
         microchipNumber: canonicalPetIdentityString(dto, 'microchipNumber', 'MicrochipNumber'),
         passportOrTagNumber: canonicalPetIdentityString(dto, 'passportOrTagNumber', 'PassportOrTagNumber'),
         specialProtocolNumber: canonicalPetIdentityString(dto, 'specialProtocolNumber', 'SpecialProtocolNumber'),
+        hbsAnimalId: dto.hbsAnimalId?.trim() ?? '',
         isNeutered: canonicalPetIsNeutered(dto) ?? false,
         notes: dto.notes?.trim() ?? '',
         petAlerts: dto.petAlerts ? mapPetAlertsDtoToVm(dto.petAlerts) : null

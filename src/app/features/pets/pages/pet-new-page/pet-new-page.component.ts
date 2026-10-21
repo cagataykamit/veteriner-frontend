@@ -24,6 +24,7 @@ import {
     type PetCreateFormFieldKey,
     parsePetCreateHttpError
 } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
+import { petMicrochipFormatWarning } from '@/app/features/pets/utils/pet-microchip.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
@@ -204,6 +205,8 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <small class="text-red-500">{{ apiFieldErrors().microchipNumber }}</small>
                         } @else if (form.controls.microchipNumber.invalid && form.controls.microchipNumber.touched) {
                             <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                        } @else if (microchipWarning(); as warning) {
+                            <small class="text-amber-700 dark:text-amber-300" data-testid="microchip-warning">{{ warning }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -222,6 +225,17 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             <small class="text-red-500">{{ apiFieldErrors().specialProtocolNumber }}</small>
                         } @else if (form.controls.specialProtocolNumber.invalid && form.controls.specialProtocolNumber.touched) {
                             <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="hbsAnimalId" class="block text-sm font-medium text-muted-color mb-2">HBS hayvan kimlik no</label>
+                        <input id="hbsAnimalId" pInputText class="w-full" formControlName="hbsAnimalId" maxlength="50" autocomplete="off" />
+                        @if (apiFieldErrors().hbsAnimalId) {
+                            <small class="text-red-500">{{ apiFieldErrors().hbsAnimalId }}</small>
+                        } @else if (form.controls.hbsAnimalId.invalid && form.controls.hbsAnimalId.touched) {
+                            <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                        } @else {
+                            <small class="text-muted-color">Hayvan Bilgi Sistemi'ndeki kimlik numarası (isteğe bağlı).</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6 flex items-end">
@@ -318,6 +332,11 @@ export class PetNewPageComponent implements OnInit {
 
     readonly form: PetUpsertFormGroup = createPetUpsertFormGroup(this.fb);
 
+    /** 15 hane dışı çip no için engellemeyen uyarı (ADR-036). */
+    microchipWarning(): string | null {
+        return petMicrochipFormatWarning(this.form.controls.microchipNumber.value);
+    }
+
     constructor() {
         const fields: PetCreateFormFieldKey[] = [
             'clientId',
@@ -331,6 +350,7 @@ export class PetNewPageComponent implements OnInit {
             'microchipNumber',
             'passportOrTagNumber',
             'specialProtocolNumber',
+            'hbsAnimalId',
             'isNeutered',
             'notes'
         ];

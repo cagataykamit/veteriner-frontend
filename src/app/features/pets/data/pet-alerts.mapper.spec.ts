@@ -13,6 +13,7 @@ const form = (over: Partial<PetUpsertFormValue> = {}): PetUpsertFormValue => ({
     microchipNumber: '',
     passportOrTagNumber: '',
     specialProtocolNumber: '',
+    hbsAnimalId: '',
     isNeutered: false,
     notes: '',
     alertFlags: [],
@@ -54,5 +55,21 @@ describe('pet uyarıları — mapper', () => {
 
         expect('alertFlags' in body).toBeFalse();
         expect('alertNote' in body).toBeFalse();
+    });
+});
+
+describe('pet HBS kimlik no — mapper (ADR-036)', () => {
+    it('form değeri kırpılarak gönderilir; boş değer temizler, alan bilinmiyorsa gövdeye girmez', () => {
+        expect(mapCreatePetToApiBody(mapPetUpsertFormToCreateRequest(form({ hbsAnimalId: ' TR-1 ' }), [])).hbsAnimalId).toBe('TR-1');
+        expect(mapCreatePetToApiBody(mapPetUpsertFormToCreateRequest(form(), [])).hbsAnimalId).toBe('');
+
+        const req = { ...mapPetUpsertFormToCreateRequest(form(), []), hbsAnimalId: undefined };
+
+        expect('hbsAnimalId' in mapCreatePetToApiBody(req)).toBeFalse();
+    });
+
+    it('detay ve düzenleme VM eşlenir', () => {
+        expect(mapPetDetailDtoToVm({ id: 'p1', hbsAnimalId: 'TR-1' }).hbsAnimalId).toBe('TR-1');
+        expect(mapPetDetailDtoToEditVm({ id: 'p1', hbsAnimalId: null }).hbsAnimalId).toBe('');
     });
 });

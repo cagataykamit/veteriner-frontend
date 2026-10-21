@@ -20,6 +20,7 @@ export type PetCreateFormFieldKey =
     | 'microchipNumber'
     | 'passportOrTagNumber'
     | 'specialProtocolNumber'
+    | 'hbsAnimalId'
     | 'isNeutered'
     | 'notes';
 
@@ -52,6 +53,7 @@ const FIELD_MAP: Record<string, PetCreateFormFieldKey> = {
     microchipnumber: 'microchipNumber',
     passportortagnumber: 'passportOrTagNumber',
     specialprotocolnumber: 'specialProtocolNumber',
+    hbsanimalid: 'hbsAnimalId',
     isneutered: 'isNeutered',
     notes: 'notes',
     not: 'notes',

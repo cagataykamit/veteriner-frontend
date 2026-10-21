@@ -23,6 +23,8 @@ export interface CreatePetRequest {
     microchipNumber?: string;
     passportOrTagNumber?: string;
     specialProtocolNumber?: string;
+    /** HBS hayvan kimlik no (ADR-036): verilmezse gövdeye girmez (PUT'ta değer korunur); `''` temizler. */
+    hbsAnimalId?: string;
     isNeutered?: boolean;
     notes?: string;
     /** Uyarılar: form her zaman ikisini de doldurur; düzenlemede uyarı bilinmiyorsa (eski yanıt) gönderilmez. */

@@ -52,6 +52,8 @@ export interface PetDetailDto {
     microchipNumber?: string | null;
     passportOrTagNumber?: string | null;
     specialProtocolNumber?: string | null;
+    /** HBS hayvan kimlik no (ADR-036); eski yanıtta yok. */
+    hbsAnimalId?: string | null;
     isNeutered?: boolean | null;
     notes?: string | null;
     ownerId?: string | null;
@@ -205,6 +207,8 @@ export interface PetCreateRequestDto {
     microchipNumber?: string | null;
     passportOrTagNumber?: string | null;
     specialProtocolNumber?: string | null;
+    /** PUT'ta alan yok = dokunma, `''` = temizle (`INVOICING_IDENTITY_API_CONTRACT.md` §4). */
+    hbsAnimalId?: string | null;
     isNeutered?: boolean | null;
     notes?: string | null;
 }

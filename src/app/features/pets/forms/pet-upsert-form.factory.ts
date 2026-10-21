@@ -25,6 +25,7 @@ export function createPetUpsertFormGroup(fb: FormBuilder): PetUpsertFormGroup {
         microchipNumber: fb.nonNullable.control('', Validators.maxLength(50)),
         passportOrTagNumber: fb.nonNullable.control('', Validators.maxLength(50)),
         specialProtocolNumber: fb.nonNullable.control('', Validators.maxLength(50)),
+        hbsAnimalId: fb.nonNullable.control('', Validators.maxLength(50)),
         isNeutered: fb.nonNullable.control(false),
         notes: fb.nonNullable.control(''),
         alertFlags: fb.nonNullable.control<PetAlertFlag[]>([]),

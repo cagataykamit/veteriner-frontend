@@ -24,6 +24,7 @@ export function buildPetGeneralFields(pet: PetDetailVm): PetGeneralFields {
         { label: 'Çip numarası', value: pet.microchipNumber },
         { label: 'Karne / Küpe no', value: pet.passportOrTagNumber },
         { label: 'Özel protokol no', value: pet.specialProtocolNumber },
+        { label: 'HBS kimlik no', value: pet.hbsAnimalId },
         { label: 'Kısırlaştırılmış mı?', value: pet.isNeutered }
     ];
     const isEmpty = (v: string | null | undefined): boolean => !v || !v.trim() || v.trim() === EMPTY;

@@ -30,6 +30,8 @@ export interface PetDetailVm {
     microchipNumber: string;
     passportOrTagNumber: string;
     specialProtocolNumber: string;
+    /** HBS hayvan kimlik no (ADR-036). */
+    hbsAnimalId: string;
     isNeutered: string;
     notes: string;
     /** Müteri detay rotası — `ownerId` veya `clientId`. */
@@ -174,6 +176,8 @@ export interface PetEditVm {
     microchipNumber: string;
     passportOrTagNumber: string;
     specialProtocolNumber: string;
+    /** HBS hayvan kimlik no (ADR-036). */
+    hbsAnimalId: string;
     isNeutered: boolean;
     notes: string;
 }

@@ -29,6 +29,7 @@ const pet: PetDetailVm = {
     microchipNumber: '—',
     passportOrTagNumber: '—',
     specialProtocolNumber: '—',
+    hbsAnimalId: '—',
     isNeutered: '—',
     notes: 'Mama alerjisi var',
     ownerId: 'c1',

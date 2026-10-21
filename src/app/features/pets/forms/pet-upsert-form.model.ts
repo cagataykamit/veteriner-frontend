@@ -16,6 +16,8 @@ export interface PetUpsertFormValue {
     microchipNumber: string;
     passportOrTagNumber: string;
     specialProtocolNumber: string;
+    /** HBS hayvan kimlik no (ADR-036); boş = temizle. */
+    hbsAnimalId: string;
     isNeutered: boolean;
     notes: string;
     alertFlags: PetAlertFlag[];
