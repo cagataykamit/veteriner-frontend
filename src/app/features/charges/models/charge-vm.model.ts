@@ -1,3 +1,5 @@
+import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
+
 export interface ChargeVm {
     id: string;
     clientId: string;
@@ -15,6 +17,9 @@ export interface ChargeVm {
     outstandingAmount: number | null;
     currency: string;
     createdAtUtc: string;
+    lineKind: ChargeLineKind;
+    /** `null` = klinik varsayılanı. */
+    vatRate: number | null;
 }
 
 export interface ChargesPagedVm {
@@ -46,6 +51,9 @@ export interface CreateChargeRequest {
     unitPrice: number;
     /** Form başına bir kez üretilen anahtar; aynı anahtarla tekrar istek ikinci ücret üretmez. */
     requestId: string;
+    /** Verilmezse sunucu hizmet + klinik varsayılanı KDV yazar. */
+    lineKind?: ChargeLineKind;
+    vatRate?: number | null;
 }
 
 export interface CorrectChargeRequest {
@@ -54,6 +62,9 @@ export interface CorrectChargeRequest {
     unitPrice: number;
     /** Zorunlu gerekçe (5–500 karakter, sunucuda audit'e yazılır). */
     reason: string;
+    /** Verilirse satır türü ve KDV oranı birlikte yazılır; verilmezse dokunulmaz. */
+    lineKind?: ChargeLineKind;
+    vatRate?: number | null;
 }
 
 export interface ChargeCreateResultVm {

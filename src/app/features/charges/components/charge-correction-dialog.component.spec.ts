@@ -19,7 +19,9 @@ const charge: ChargeVm = {
     allocatedAmount: 400,
     outstandingAmount: 350,
     currency: 'TRY',
-    createdAtUtc: '2026-10-10T07:00:00Z'
+    createdAtUtc: '2026-10-10T07:00:00Z',
+    lineKind: 'Service',
+    vatRate: null
 };
 
 describe('ChargeCorrectionDialogComponent', () => {
@@ -44,7 +46,7 @@ describe('ChargeCorrectionDialogComponent', () => {
     });
 
     it('formu mevcut ücretle doldurur; değişiklik yokken kaydedilemez', () => {
-        expect(cmp.form.getRawValue()).toEqual({ description: 'Genel muayene', quantity: 1, unitPrice: 750, reason: '' });
+        expect(cmp.form.getRawValue()).toEqual({ description: 'Genel muayene', quantity: 1, unitPrice: 750, lineKind: 'Service', vatRate: null, reason: '' });
         cmp.form.controls.reason.setValue('Fiyat yanlış okundu');
         cmp.onSubmit();
         expect(charges.correctCharge).not.toHaveBeenCalled();
@@ -66,9 +68,16 @@ describe('ChargeCorrectionDialogComponent', () => {
         charges.correctCharge.and.returnValue(of(updated));
         cmp.form.patchValue({ unitPrice: 600, reason: 'Fiyat yanlış okundu' });
         cmp.onSubmit();
-        expect(charges.correctCharge).toHaveBeenCalledOnceWith('ch1', { description: 'Genel muayene', quantity: 1, unitPrice: 600, reason: 'Fiyat yanlış okundu' });
+        expect(charges.correctCharge).toHaveBeenCalledOnceWith('ch1', { description: 'Genel muayene', quantity: 1, unitPrice: 600, reason: 'Fiyat yanlış okundu', lineKind: 'Service', vatRate: null });
         expect(cmp.visible()).toBeFalse();
         expect(corrected).toEqual([updated]);
+    });
+
+    it('yalnız KDV oranı / satır türü değişikliği de düzeltme sayılır (ADR-036)', () => {
+        charges.correctCharge.and.returnValue(of({ ...charge, lineKind: 'Product', vatRate: 10 }));
+        cmp.form.patchValue({ lineKind: 'Product', vatRate: 10, reason: 'Ürün satışıydı' });
+        cmp.onSubmit();
+        expect(charges.correctCharge).toHaveBeenCalledOnceWith('ch1', jasmine.objectContaining({ lineKind: 'Product', vatRate: 10, unitPrice: 750 }));
     });
 
     it('409 tahsis altı hatası diyalogda gösterilir, diyalog açık kalır', () => {

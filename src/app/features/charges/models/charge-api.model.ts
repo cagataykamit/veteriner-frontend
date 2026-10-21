@@ -1,3 +1,5 @@
+import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
+
 /**
  * Ücret (Charge) API DTO'ları — `docs/CHARGES_API_CONTRACT.md`.
  * Yalnızca mapper ve servis kullanır.
@@ -23,6 +25,16 @@ export interface ChargeDto {
     currency: string;
     createdByUserId: string;
     createdAtUtc: string;
+    /** Satır türü (ADR-036); eski yanıtta yok → `Service`. */
+    lineKind?: string | null;
+    /** KDV oranı (%); `null` = klinik varsayılanı. */
+    vatRate?: number | null;
+}
+
+/** `POST/PUT /charges` isteğe bağlı `tax` nesnesi (`INVOICING_IDENTITY_API_CONTRACT.md` §5). */
+export interface ChargeTaxDto {
+    lineKind: ChargeLineKind;
+    vatRate: number | null;
 }
 
 export interface ChargePagedResultDto {
@@ -44,6 +56,8 @@ export interface ChargeCorrectionRequestDto {
     quantity: number;
     unitPrice: number;
     reason: string;
+    /** Verilmezse satır türü ve KDV oranına dokunulmaz. */
+    tax?: ChargeTaxDto;
 }
 
 /** POST /charges gövdesi; tutar ve para birimi istemciden gönderilmez. */
@@ -57,4 +71,5 @@ export interface ChargeCreateRequestDto {
     quantity: number;
     unitPrice: number;
     requestId: string | null;
+    tax?: ChargeTaxDto;
 }

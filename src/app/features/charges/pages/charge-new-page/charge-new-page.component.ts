@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { EXAMINATIONS_READ_CLAIM, PAYMENTS_CREATE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ChargeTaxFieldsComponent } from '@/app/features/charges/components/charge-tax-fields.component';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import {
     CHARGE_DESCRIPTION_MAX_LENGTH,
@@ -18,6 +19,7 @@ import {
     chargeNumberValidator,
     computeChargeAmount
 } from '@/app/features/charges/utils/charge-amount.utils';
+import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -34,7 +36,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent],
     template: `
         <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni Ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
 
@@ -127,6 +129,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                             <small class="text-red-500">Tutar sıfıra yuvarlanıyor; miktar veya birim fiyatı artırın.</small>
                         }
                     </div>
+                    <app-charge-tax-fields [lineKind]="form.controls.lineKind" [vatRate]="form.controls.vatRate" idPrefix="charge" />
                 </div>
 
                 @if (submitError()) {
@@ -204,7 +207,9 @@ export class ChargeNewPageComponent implements OnInit {
         unitPrice: [
             null as number | null,
             [Validators.required, chargeNumberValidator(CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS)]
-        ]
+        ],
+        lineKind: ['Service' as ChargeLineKind],
+        vatRate: [null as number | null]
     });
 
     private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())), {
@@ -323,7 +328,9 @@ export class ChargeNewPageComponent implements OnInit {
                 description: v.description,
                 quantity: v.quantity,
                 unitPrice: v.unitPrice,
-                requestId: this.requestId
+                requestId: this.requestId,
+                lineKind: v.lineKind,
+                vatRate: v.vatRate
             })
             .subscribe({
                 next: (r) => {

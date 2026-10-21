@@ -29,7 +29,9 @@ const created: ChargeVm = {
     allocatedAmount: 0,
     outstandingAmount: 750,
     currency: 'TRY',
-    createdAtUtc: '2026-10-10T07:00:00Z'
+    createdAtUtc: '2026-10-10T07:00:00Z',
+    lineKind: 'Service',
+    vatRate: null
 };
 
 const todayItem = (over: Partial<TodayItemVm>): TodayItemVm =>

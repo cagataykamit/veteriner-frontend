@@ -62,7 +62,9 @@ const convertedResult = (): ChargeCreateResultVm => ({
         allocatedAmount: 0,
         outstandingAmount: 250,
         currency: 'TRY',
-        createdAtUtc: '2026-10-14T08:00:00Z'
+        createdAtUtc: '2026-10-14T08:00:00Z',
+        lineKind: 'Product',
+        vatRate: null
     }
 });
 

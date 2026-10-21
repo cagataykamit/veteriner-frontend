@@ -6,6 +6,7 @@ import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
+import { ChargeTaxFieldsComponent } from '@/app/features/charges/components/charge-tax-fields.component';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import {
     CHARGE_DESCRIPTION_MAX_LENGTH,
@@ -16,18 +17,19 @@ import {
     chargeNumberValidator,
     computeChargeAmount
 } from '@/app/features/charges/utils/charge-amount.utils';
+import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /**
- * Ücret düzeltmesi (`Charges.Correct`): açıklama, miktar, birim fiyat. Gerekçe zorunlu; yeni tutar tahsis edilen tutarın altına inemez (sunucu 409 verir).
+ * Ücret düzeltmesi (`Charges.Correct`): açıklama, miktar, birim fiyat, satır türü ve KDV oranı (ADR-036). Gerekçe zorunlu; yeni tutar tahsis edilen tutarın altına inemez (sunucu 409 verir).
  * Yetki denetimi çağıran bileşende yapılır; bu diyalog yalnızca yetkili kullanıcıya açılır.
  */
 @Component({
     selector: 'app-charge-correction-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, ChargeTaxFieldsComponent],
     template: `
         <p-dialog
             header="Ücreti düzelt"
@@ -72,6 +74,13 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         <span class="block text-sm font-medium text-muted-color mb-2">Yeni tutar</span>
                         <div class="p-inputtext p-component w-full font-semibold" aria-live="polite">{{ amountDisplay() }}</div>
                     </div>
+                    <app-charge-tax-fields
+                        [lineKind]="form.controls.lineKind"
+                        [vatRate]="form.controls.vatRate"
+                        [currentVatRate]="charge()?.vatRate ?? null"
+                        idPrefix="cc"
+                        cellClass="col-span-12 sm:col-span-6"
+                    />
                     <div class="col-span-12">
                         <label for="cc-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
                         <textarea id="cc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
@@ -81,7 +90,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                     </div>
                 </div>
                 @if (unchanged()) {
-                    <p class="text-sm text-muted-color mt-3 mb-0" role="note">Açıklama, miktar veya birim fiyattan en az biri değişmelidir.</p>
+                    <p class="text-sm text-muted-color mt-3 mb-0" role="note">Açıklama, miktar, birim fiyat, satır türü veya KDV oranından en az biri değişmelidir.</p>
                 }
                 @if (submitError()) {
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
@@ -126,6 +135,8 @@ export class ChargeCorrectionDialogComponent {
         description: this.fb.nonNullable.control('', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(CHARGE_DESCRIPTION_MAX_LENGTH)]),
         quantity: this.fb.control<number | null>(null, [Validators.required, chargeNumberValidator(CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS)]),
         unitPrice: this.fb.control<number | null>(null, [Validators.required, chargeNumberValidator(CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS)]),
+        lineKind: this.fb.nonNullable.control<ChargeLineKind>('Service'),
+        vatRate: this.fb.control<number | null>(null),
         reason: this.fb.nonNullable.control('', reasonLength)
     });
 
@@ -143,9 +154,16 @@ export class ChargeCorrectionDialogComponent {
     protected readonly unchanged = computed(() => {
         this.formValue();
         const c = this.charge();
-        const { description, quantity, unitPrice } = this.form.getRawValue();
+        const { description, quantity, unitPrice, lineKind, vatRate } = this.form.getRawValue();
 
-        return !!c && description.trim() === c.description.trim() && quantity === c.quantity && unitPrice === c.unitPrice;
+        return (
+            !!c &&
+            description.trim() === c.description.trim() &&
+            quantity === c.quantity &&
+            unitPrice === c.unitPrice &&
+            lineKind === c.lineKind &&
+            vatRate === c.vatRate
+        );
     });
 
     constructor() {
@@ -156,7 +174,7 @@ export class ChargeCorrectionDialogComponent {
             if (this.visible() && c) {
                 untracked(() => {
                     this.submitError.set(null);
-                    this.form.reset({ description: c.description, quantity: c.quantity, unitPrice: c.unitPrice, reason: '' });
+                    this.form.reset({ description: c.description, quantity: c.quantity, unitPrice: c.unitPrice, lineKind: c.lineKind, vatRate: c.vatRate, reason: '' });
                 });
             }
         });
@@ -183,11 +201,11 @@ export class ChargeCorrectionDialogComponent {
             return;
         }
 
-        const { description, quantity, unitPrice, reason } = this.form.getRawValue();
+        const { description, quantity, unitPrice, lineKind, vatRate, reason } = this.form.getRawValue();
 
         this.submitError.set(null);
         this.submitting.set(true);
-        this.chargesService.correctCharge(c.id, { description, quantity: quantity!, unitPrice: unitPrice!, reason }).subscribe({
+        this.chargesService.correctCharge(c.id, { description, quantity: quantity!, unitPrice: unitPrice!, reason, lineKind, vatRate }).subscribe({
             next: (charge) => {
                 this.submitting.set(false);
                 this.visible.set(false);

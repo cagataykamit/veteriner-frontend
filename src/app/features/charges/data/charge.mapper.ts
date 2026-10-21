@@ -4,7 +4,8 @@ import type {
     ChargeCreateRequestDto,
     ChargeCreateResultDto,
     ChargeDto,
-    ChargePagedResultDto
+    ChargePagedResultDto,
+    ChargeTaxDto
 } from '@/app/features/charges/models/charge-api.model';
 import type {
     ChargeCreateResultVm,
@@ -14,6 +15,7 @@ import type {
     CorrectChargeRequest,
     CreateChargeRequest
 } from '@/app/features/charges/models/charge-vm.model';
+import { parseChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();
@@ -37,7 +39,9 @@ export function mapChargeDtoToVm(dto: ChargeDto): ChargeVm {
         allocatedAmount: dto.allocatedAmount ?? null,
         outstandingAmount: dto.outstandingAmount ?? null,
         currency: dto.currency?.trim() || 'TRY',
-        createdAtUtc: dto.createdAtUtc
+        createdAtUtc: dto.createdAtUtc,
+        lineKind: parseChargeLineKind(dto.lineKind),
+        vatRate: dto.vatRate ?? null
     };
 }
 
@@ -81,11 +85,17 @@ export function mapCreateChargeToApiBody(clinicId: string, req: CreateChargeRequ
         description: req.description.trim(),
         quantity: req.quantity,
         unitPrice: req.unitPrice,
-        requestId: trimmedOrNull(req.requestId)
+        requestId: trimmedOrNull(req.requestId),
+        ...chargeTaxBody(req)
     };
 }
 
 /** Gerekçe sunucuda kırpılarak doğrulanır; istemci de kırpıp gönderir. */
 export function mapCorrectChargeToApiBody(req: CorrectChargeRequest): ChargeCorrectionRequestDto {
-    return { description: req.description.trim(), quantity: req.quantity, unitPrice: req.unitPrice, reason: req.reason.trim() };
+    return { description: req.description.trim(), quantity: req.quantity, unitPrice: req.unitPrice, reason: req.reason.trim(), ...chargeTaxBody(req) };
+}
+
+/** Satır türü seçildiyse `tax` nesnesi (tür + oran birlikte); seçilmediyse alan gönderilmez (sunucu varsayılanı / dokunma). */
+function chargeTaxBody(req: Pick<CreateChargeRequest, 'lineKind' | 'vatRate'>): { tax?: ChargeTaxDto } {
+    return req.lineKind ? { tax: { lineKind: req.lineKind, vatRate: req.vatRate ?? null } } : {};
 }

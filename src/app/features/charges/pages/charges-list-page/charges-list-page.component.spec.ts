@@ -23,7 +23,9 @@ const row: ChargeVm = {
     allocatedAmount: 200,
     outstandingAmount: 551,
     currency: 'TRY',
-    createdAtUtc: '2026-10-10T07:00:00Z'
+    createdAtUtc: '2026-10-10T07:00:00Z',
+    lineKind: 'Service',
+    vatRate: null
 };
 
 const page = (items: ChargeVm[]): ChargesPagedVm => ({ items, page: 1, pageSize: 20, totalItems: items.length, totalPages: 1 });
