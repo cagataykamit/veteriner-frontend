@@ -7,6 +7,7 @@ import type { LabResultDetailVm, LabResultStatus } from '@/app/features/lab-resu
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
+import { StoredFilesService } from '@/app/shared/files/stored-files.service';
 import { LabResultDetailPageComponent } from './lab-result-detail-page.component';
 
 const vm = (status: LabResultStatus): LabResultDetailVm => ({
@@ -39,6 +40,7 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
             providers: [
                 provideRouter([]),
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: StoredFilesService, useValue: { list: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap({}) } } },
                 { provide: LabResultsService, useValue: { getLabResultById: () => of(vm(status)) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => canUpdate } },
@@ -86,6 +88,7 @@ describe('LabResultDetailPageComponent — İptal et', () => {
             providers: [
                 provideRouter([]),
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: StoredFilesService, useValue: { list: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap({}) } } },
                 { provide: LabResultsService, useValue: service },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
@@ -115,6 +118,46 @@ describe('LabResultDetailPageComponent — İptal et', () => {
     });
 });
 
+describe('LabResultDetailPageComponent — dosyalar', () => {
+    const render = (status: LabResultStatus, canUpdate: boolean) => {
+        const list = jasmine.createSpy('list').and.returnValue(
+            of([{ id: 'f1', fileName: 'sonuc.pdf', contentType: 'application/pdf', kind: 'Pdf', sizeBytes: 10, uploadedAtUtc: '' }])
+        );
+
+        TestBed.configureTestingModule({
+            imports: [LabResultDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: StoredFilesService, useValue: { list } },
+                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap({}) } } },
+                { provide: LabResultsService, useValue: { getLabResultById: () => of(vm(status)) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => canUpdate } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(LabResultDetailPageComponent);
+
+        fixture.detectChanges();
+
+        return { el: fixture.nativeElement as HTMLElement, list };
+    };
+
+    it('dosyalar ayrı uçtan listelenir; güncelleme yetkisiyle yükleme alanı görünür', () => {
+        const { el, list } = render('Resulted', true);
+
+        expect(list).toHaveBeenCalledWith('/api/v1/lab-results/l1');
+        expect(el.querySelector('[data-testid="file-pdf"]')).not.toBeNull();
+        expect(el.querySelector('[data-testid="file-dropzone"]')).not.toBeNull();
+    });
+
+    it('yetki yoksa veya kayıt iptalse yükleme alanı yok', () => {
+        expect(render('Resulted', false).el.querySelector('[data-testid="file-dropzone"]')).toBeNull();
+        TestBed.resetTestingModule();
+        expect(render('Cancelled', true).el.querySelector('[data-testid="file-dropzone"]')).toBeNull();
+    });
+});
+
 describe('LabResultDetailPageComponent — kayıt sonrası onay', () => {
     const bannerFor = (saved: string | null): string | null => {
         TestBed.configureTestingModule({
@@ -122,6 +165,7 @@ describe('LabResultDetailPageComponent — kayıt sonrası onay', () => {
             providers: [
                 provideRouter([]),
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: StoredFilesService, useValue: { list: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap(saved ? { saved } : {}) } } },
                 { provide: LabResultsService, useValue: { getLabResultById: () => of(vm('Requested')) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },

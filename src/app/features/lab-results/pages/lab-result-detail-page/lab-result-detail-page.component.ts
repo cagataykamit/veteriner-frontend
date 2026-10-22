@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { LabResultDetailVm } from '@/app/features/lab-results/models/lab-result-vm.model';
@@ -15,6 +15,11 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ApiEndpoints } from '@/app/core/api/api-endpoints';
+import type { StoredFileVm } from '@/app/shared/files/stored-file.model';
+import { StoredFileGalleryComponent } from '@/app/shared/files/stored-file-gallery.component';
+import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
+import { StoredFilesService } from '@/app/shared/files/stored-files.service';
 
 /** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
 const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
@@ -31,7 +36,9 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         AppLoadingStateComponent,
         AppErrorStateComponent,
         LabResultStatusBadgesComponent,
-        LabResultCancelDialogComponent
+        LabResultCancelDialogComponent,
+        StoredFileGalleryComponent,
+        StoredFileUploadComponent
     ],
     template: `
         @if (savedMessage(); as message) {
@@ -154,6 +161,26 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         <p class="mt-0 mb-0 whitespace-pre-wrap">{{ row()!.notes }}</p>
                     </div>
                 </div>
+                <div class="col-span-12">
+                    <section class="card" aria-labelledby="lab-files-title" data-testid="lab-files">
+                        <h5 id="lab-files-title" class="mt-0 mb-4">Dosyalar</h5>
+                        @if (filesError()) {
+                            <p class="text-red-500 text-sm m-0" role="alert">{{ filesError() }}</p>
+                        } @else {
+                            <app-stored-file-gallery
+                                [ownerPath]="filesOwner()"
+                                [files]="files()"
+                                [altBase]="'Lab sonucu: ' + row()!.testName"
+                                [emptyText]="row()!.status === 'Cancelled' ? 'Kayıt iptal edildi; dosyalara erişim kapalı.' : 'Henüz dosya yok (sonuç PDF’i veya fotoğrafı eklenebilir).'"
+                            />
+                        }
+                        @if (canAddFiles()) {
+                            <div class="mt-4">
+                                <app-stored-file-upload [ownerPath]="filesOwner()" [autoUpload]="true" (uploaded)="onFileUploaded($event)" />
+                            </div>
+                        }
+                    </section>
+                </div>
             </div>
         }
 
@@ -172,6 +199,12 @@ export class LabResultDetailPageComponent implements OnInit {
     readonly savedMessage = signal<string | null>(null);
     cancelVisible = false;
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
+    private readonly filesService = inject(StoredFilesService);
+    readonly files = signal<StoredFileVm[]>([]);
+    readonly filesError = signal<string | null>(null);
+    readonly filesOwner = computed(() => ApiEndpoints.labResults.filesOwner(this.row()?.id ?? this.labResultId));
+    /** Dosya ekleme `LabResults.Update` ister; iptal edilmiş kayda eklenmez (kesinleşmiş muayene engel değildir). */
+    readonly canAddFiles = computed(() => this.canUpdateLabResult && this.row()?.status !== 'Cancelled' && !this.ro.mutationBlocked());
 
     readonly isEditable = isLabResultEditable;
     readonly editLabel = labResultEditLabel;
@@ -201,11 +234,25 @@ export class LabResultDetailPageComponent implements OnInit {
             next: (x) => {
                 this.row.set(x);
                 this.loading.set(false);
+                this.loadFiles();
             },
             error: (e: unknown) => {
                 this.error.set(e instanceof Error ? e.message : 'Kayıt yüklenemedi.');
                 this.loading.set(false);
             }
+        });
+    }
+
+    onFileUploaded(file: StoredFileVm): void {
+        this.files.update((list) => [...list, file]);
+    }
+
+    /** Lab dosyaları ayrı uçtan (sözleşme §5); lab detay gövdesi değişmez. */
+    private loadFiles(): void {
+        this.filesError.set(null);
+        this.filesService.list(this.filesOwner()).subscribe({
+            next: (files) => this.files.set(files),
+            error: (e: Error) => this.filesError.set(e.message)
         });
     }
 }
