@@ -39,7 +39,11 @@ export interface RegisterDefinition<T> {
         readonly includeVoidedLabel?: string;
         readonly product?: boolean;
         readonly veterinarian?: boolean;
+        /** HBS durumu seçimi (`hbsStatus`); boşsa sunucu "HBS'e girilmedi" listesini döner. */
+        readonly hbsStatus?: boolean;
     };
+    /** Resmî defter değil (ör. HBS takibi): "resmî biçime uygunluk doğrulanmadı" notu ve imza alanı gösterilmez. */
+    readonly notOfficialRegister?: boolean;
     /** Ekranda süzgeç çubuğunun altında gösterilen kısa ipucu (ör. fiyatın kaynağı). */
     readonly screenHint?: string;
     /** Çıktı sütunları: yazdırma görünümü ve dışa aktarma ile aynı tam, ayrı sütun listesi. */

@@ -215,6 +215,25 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 description: 'Uygulanan aşılar: hasta, ürün, seri no ve tutar; yazdırma ve dışa aktarma.'
             }
         ]
+    },
+    {
+        label: 'HBS takibi',
+        entries: [
+            {
+                label: 'HBS takibi — reçeteler',
+                icon: 'pi pi-fw pi-file-edit',
+                route: `${REPORTS_ROUTE}/registers/hbs-prescriptions`,
+                claims: [PRESCRIPTIONS_READ_CLAIM],
+                description: "HBS'e (e-Reçete) girilmemiş reçeteler ve girilen numaralar; CSV ve Excel dışa aktarma."
+            },
+            {
+                label: 'HBS takibi — aşılar',
+                icon: 'pi pi-fw pi-shield',
+                route: `${REPORTS_ROUTE}/registers/hbs-vaccinations`,
+                claims: [VACCINATIONS_READ_CLAIM],
+                description: "HBS'e (ATS) girilmemiş aşılar ve belge seri numaraları; CSV ve Excel dışa aktarma."
+            }
+        ]
     }
 ];
 

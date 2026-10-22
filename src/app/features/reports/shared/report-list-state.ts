@@ -31,6 +31,8 @@ export interface ReportListQueryBase {
     includeVoided?: string;
     productId?: string;
     veterinarianId?: string;
+    /** HBS takip listelerine özgü (`NotEntered` | `Entered` | `NotRequired`; boş = Girilmedi). */
+    hbsStatus?: string;
     /** Gün sonu dökümüne özgü süzgeçler (`extraKeys`). */
     kind?: string;
     paymentMethod?: string;
@@ -38,7 +40,7 @@ export interface ReportListQueryBase {
 }
 
 /** `ReportListConfig.extraKeys` ile yönetilen rapora özgü ek süzgeçlerin adları (kayıt defterleri, gün sonu dökümü). */
-export type ReportExtraKey = 'includeVoided' | 'productId' | 'veterinarianId' | 'kind' | 'paymentMethod' | 'performedByUserId';
+export type ReportExtraKey = 'includeVoided' | 'productId' | 'veterinarianId' | 'hbsStatus' | 'kind' | 'paymentMethod' | 'performedByUserId';
 
 export interface ReportListResultBase {
     readonly page: number;

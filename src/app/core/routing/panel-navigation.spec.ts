@@ -312,7 +312,7 @@ describe('panel-navigation', () => {
     it('Rapor Merkezi kartları izne göre süzülür ve gruplanır', () => {
         const all = visibleGroups(REPORT_SECTIONS, () => true);
 
-        expect(all.map((g) => g.label)).toEqual(['Randevu ve ziyaret', 'Klinik', 'Para', 'Kayıt defterleri']);
+        expect(all.map((g) => g.label)).toEqual(['Randevu ve ziyaret', 'Klinik', 'Para', 'Kayıt defterleri', 'HBS takibi']);
         expect(labels(all)).toEqual([
             'Randevu Raporu',
             'Muayene Raporu',
@@ -325,14 +325,17 @@ describe('panel-navigation', () => {
             'Aşı Kayıt Defteri',
             'İlaç Kayıt Defteri',
             'Narkotik ve Psikotropik Defteri',
-            'Aşı Bilgi Raporu'
+            'Aşı Bilgi Raporu',
+            'HBS takibi — reçeteler',
+            'HBS takibi — aşılar'
         ]);
         const some = visibleGroups(REPORT_SECTIONS, (c) => c === 'Payments.Read' || c === 'Examinations.Read');
 
         expect(labels(some)).toEqual(['Muayene Raporu', 'Gün sonu', 'Ödeme Raporu', 'Muayene Kayıt Defteri']);
         expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Visits.Read'))).toEqual(['Gün sonu']);
         expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Charges.Read'))).toEqual(['Borç Raporu']);
-        expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Prescriptions.Read'))).toEqual(['Reçete Kayıt Defteri']);
+        expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Prescriptions.Read'))).toEqual(['Reçete Kayıt Defteri', 'HBS takibi — reçeteler']);
+        expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Vaccinations.Read'))).toEqual(['Aşı Raporu', 'HBS takibi — aşılar']);
         expect(visibleGroups(REPORT_SECTIONS, () => false)).toEqual([]);
     });
 });

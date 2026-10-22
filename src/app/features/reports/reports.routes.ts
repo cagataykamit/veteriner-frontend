@@ -120,6 +120,18 @@ export default [
         loadComponent: registerPage
     },
     {
+        path: 'registers/hbs-prescriptions',
+        canActivate: [requireAnyClaim([PRESCRIPTIONS_READ_CLAIM])],
+        data: { register: 'hbs-prescriptions' },
+        loadComponent: registerPage
+    },
+    {
+        path: 'registers/hbs-vaccinations',
+        canActivate: [requireAnyClaim([VACCINATIONS_READ_CLAIM])],
+        data: { register: 'hbs-vaccinations' },
+        loadComponent: registerPage
+    },
+    {
         path: 'outstanding-balances',
         canActivate: [requireAnyClaim([CHARGES_READ_CLAIM])],
         loadComponent: () =>

@@ -6,10 +6,13 @@ import {
     STOCK_MOVEMENTS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
+import { HBS_STATUS_SHORT_LABEL } from '@/app/features/hbs/utils/hbs-status.utils';
 import { dayText, type RegisterCellLine, type RegisterDefinition } from '@/app/features/reports/registers/data/register-definition';
 import type {
     ControlledSubstanceRegisterRowDto,
     ExaminationRegisterRowDto,
+    HbsPrescriptionRegisterRowDto,
+    HbsVaccinationRegisterRowDto,
     MedicationRegisterRowDto,
     PrescriptionRegisterItemDto,
     PrescriptionRegisterRowDto,
@@ -334,6 +337,104 @@ export const VACCINE_INFO_REGISTER: RegisterDefinition<VaccineInfoRegisterRowDto
     ]
 };
 
+const hbsMarked = (r: { readonly markedAtUtc?: string | null }) => (r.markedAtUtc ? formatDateDisplay(r.markedAtUtc) : '');
+
+/** HBS takibi (ADR-036 Dilim 2): resmî defter değildir; varsayılan görünüm "HBS'e girilmedi" iş listesidir. */
+export const HBS_PRESCRIPTION_REGISTER: RegisterDefinition<HbsPrescriptionRegisterRowDto> = {
+    book: 'hbs-prescriptions',
+    title: 'HBS takibi — reçeteler',
+    description: "Seçilen tarih aralığındaki reçetelerin HBS (e-Reçete) durumu; varsayılan olarak HBS'e girilmemiş olanlar.",
+    readClaims: [PRESCRIPTIONS_READ_CLAIM],
+    exportFilePrefix: 'hbs-receteler',
+    stateKey: 'panel:reports:registers:hbs-prescriptions:listState',
+    extraFilters: { hbsStatus: true, veterinarian: true },
+    notOfficialRegister: true,
+    screenHint: "HBS'e girdiğiniz reçeteyi reçete detayındaki HBS bölümünden işaretleyin; gerekmeyen reçeteyi gerekçeyle \"Gerekmiyor\" olarak işaretleyebilirsiniz.",
+    columns: [
+        { header: 'Sıra No', cell: (r) => String(r.rowNumber) },
+        { header: 'Reçete Tarihi', cell: (r) => formatDateDisplay(r.prescribedAtUtc) },
+        { header: 'Hasta Sahibi', cell: (r) => r.ownerName },
+        { header: 'Telefon', cell: (r) => phoneText(r.ownerPhone) },
+        { header: 'Hasta', cell: (r) => r.petName },
+        { header: 'Tür', cell: (r) => r.species },
+        { header: 'Çip No', cell: (r) => r.microchipNumber ?? '' },
+        { header: 'HBS Hayvan Kimlik No', cell: (r) => r.hbsAnimalId ?? '' },
+        { header: 'Reçete', cell: (r) => r.title },
+        { header: 'İlaçlar', cell: (r) => r.medications },
+        { header: 'Veteriner Hekim', cell: (r) => r.veterinarianName ?? '' },
+        { header: 'HBS Durumu', cell: (r) => HBS_STATUS_SHORT_LABEL[r.hbsStatus] ?? '' },
+        { header: 'e-Reçete No', cell: (r) => r.referenceNumber ?? '' },
+        { header: 'HBS İşaret Tarihi', cell: hbsMarked }
+    ],
+    screenColumns: [
+        { header: 'Sıra No', minWidth: '4.5rem', nowrap: true, lines: (r) => [plain(String(r.rowNumber))] },
+        { header: 'Tarih', minWidth: '6.5rem', nowrap: true, lines: (r) => [plain(formatDateDisplay(r.prescribedAtUtc))] },
+        { header: 'Hasta Sahibi', minWidth: '11rem', lines: (r) => [strong(r.ownerName), muted(phoneText(r.ownerPhone))] },
+        {
+            header: 'Hasta',
+            minWidth: '11rem',
+            lines: (r) => [strong(r.petName), items([r.species, r.microchipNumber && `Çip: ${r.microchipNumber}`, r.hbsAnimalId && `HBS: ${r.hbsAnimalId}`], 'muted')]
+        },
+        { header: 'Reçete', minWidth: '14rem', lines: (r) => [strong(r.title), muted(r.medications)] },
+        { header: 'Veteriner Hekim', minWidth: '8rem', clip: true, lines: (r) => [plain(r.veterinarianName)] },
+        {
+            header: 'HBS',
+            minWidth: '9rem',
+            lines: (r) => [strong(HBS_STATUS_SHORT_LABEL[r.hbsStatus] ?? ''), items([r.referenceNumber && `No: ${r.referenceNumber}`, hbsMarked(r)], 'muted')]
+        }
+    ]
+};
+
+export const HBS_VACCINATION_REGISTER: RegisterDefinition<HbsVaccinationRegisterRowDto> = {
+    book: 'hbs-vaccinations',
+    title: 'HBS takibi — aşılar',
+    description: "Seçilen tarih aralığında uygulanan aşıların HBS (ATS) durumu; varsayılan olarak HBS'e girilmemiş olanlar.",
+    readClaims: [VACCINATIONS_READ_CLAIM],
+    exportFilePrefix: 'hbs-asilar',
+    stateKey: 'panel:reports:registers:hbs-vaccinations:listState',
+    extraFilters: { hbsStatus: true, veterinarian: true },
+    notOfficialRegister: true,
+    screenHint: "HBS'e girdiğiniz aşıyı aşı detayındaki HBS bölümünden işaretleyin. Eski sistemden aktarılan geçmiş aşılar bu listede yer almaz.",
+    columns: [
+        { header: 'Sıra No', cell: (r) => String(r.rowNumber) },
+        { header: 'Uygulama Tarihi', cell: (r) => formatDateDisplay(r.appliedAtUtc) },
+        { header: 'Hasta Sahibi', cell: (r) => r.ownerName },
+        { header: 'Telefon', cell: (r) => phoneText(r.ownerPhone) },
+        { header: 'Hasta', cell: (r) => r.petName },
+        { header: 'Tür', cell: (r) => r.species },
+        { header: 'Çip No', cell: (r) => r.microchipNumber ?? '' },
+        { header: 'HBS Hayvan Kimlik No', cell: (r) => r.hbsAnimalId ?? '' },
+        { header: 'Aşı', cell: (r) => r.vaccineName },
+        { header: 'Seri No', cell: (r) => r.lotNumber ?? '' },
+        { header: 'S.K.T', cell: (r) => dayText(r.expiryDate) },
+        { header: 'Veteriner Hekim', cell: (r) => r.veterinarianName ?? '' },
+        { header: 'HBS Durumu', cell: (r) => HBS_STATUS_SHORT_LABEL[r.hbsStatus] ?? '' },
+        { header: 'ATS Belge Seri No', cell: (r) => r.referenceNumber ?? '' },
+        { header: 'HBS İşaret Tarihi', cell: hbsMarked }
+    ],
+    screenColumns: [
+        { header: 'Sıra No', minWidth: '4.5rem', nowrap: true, lines: (r) => [plain(String(r.rowNumber))] },
+        { header: 'Tarih', minWidth: '6.5rem', nowrap: true, lines: (r) => [plain(formatDateDisplay(r.appliedAtUtc))] },
+        { header: 'Hasta Sahibi', minWidth: '11rem', lines: (r) => [strong(r.ownerName), muted(phoneText(r.ownerPhone))] },
+        {
+            header: 'Hasta',
+            minWidth: '11rem',
+            lines: (r) => [strong(r.petName), items([r.species, r.microchipNumber && `Çip: ${r.microchipNumber}`, r.hbsAnimalId && `HBS: ${r.hbsAnimalId}`], 'muted')]
+        },
+        {
+            header: 'Aşı',
+            minWidth: '13rem',
+            lines: (r) => [strong(r.vaccineName), items([r.lotNumber && `Seri No: ${r.lotNumber}`, r.expiryDate && `SKT: ${dayText(r.expiryDate)}`], 'muted')]
+        },
+        { header: 'Veteriner Hekim', minWidth: '8rem', clip: true, lines: (r) => [plain(r.veterinarianName)] },
+        {
+            header: 'HBS',
+            minWidth: '9rem',
+            lines: (r) => [strong(HBS_STATUS_SHORT_LABEL[r.hbsStatus] ?? ''), items([r.referenceNumber && `No: ${r.referenceNumber}`, hbsMarked(r)], 'muted')]
+        }
+    ]
+};
+
 /** Sayfa bileşeni satır tipini bilmez; rota verisindeki `register` anahtarı → defter tanımı. */
 export type AnyRegisterDefinition = RegisterDefinition<any>;
 
@@ -343,5 +444,7 @@ export const REGISTER_DEFINITIONS: Readonly<Record<string, AnyRegisterDefinition
     vaccines: VACCINE_REGISTER,
     medications: MEDICATION_REGISTER,
     'controlled-substances': CONTROLLED_SUBSTANCE_REGISTER,
-    'vaccine-info': VACCINE_INFO_REGISTER
+    'vaccine-info': VACCINE_INFO_REGISTER,
+    'hbs-prescriptions': HBS_PRESCRIPTION_REGISTER,
+    'hbs-vaccinations': HBS_VACCINATION_REGISTER
 };

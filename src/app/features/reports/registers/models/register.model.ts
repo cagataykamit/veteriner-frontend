@@ -1,3 +1,5 @@
+import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+
 /** Kayıt defteri JSON yanıtı: `{ totalCount, items }`; sayfa bilgisi isteğin kendisinden eklenir. */
 export interface RegisterDto<T> {
     readonly totalCount: number;
@@ -154,4 +156,43 @@ export interface VaccineInfoRegisterRowDto {
     readonly currency: string;
     readonly addedAfterFinalization: boolean;
     readonly isVoided: boolean;
+}
+
+/** GET `/api/v1/reports/registers/hbs-prescriptions` satırı (`HBS_ASSISTANT_API_CONTRACT.md` §6). */
+export interface HbsPrescriptionRegisterRowDto {
+    readonly rowNumber: number;
+    readonly prescriptionId: string;
+    readonly prescribedAtUtc: string;
+    readonly ownerName: string;
+    readonly ownerPhone?: string | null;
+    readonly petName: string;
+    readonly species: string;
+    readonly microchipNumber?: string | null;
+    readonly hbsAnimalId?: string | null;
+    readonly title: string;
+    readonly medications: string;
+    readonly veterinarianName?: string | null;
+    readonly hbsStatus: HbsEntryStatus;
+    readonly referenceNumber?: string | null;
+    readonly markedAtUtc?: string | null;
+}
+
+/** GET `/api/v1/reports/registers/hbs-vaccinations` satırı (`HBS_ASSISTANT_API_CONTRACT.md` §6). `expiryDate` takvim günüdür. */
+export interface HbsVaccinationRegisterRowDto {
+    readonly rowNumber: number;
+    readonly vaccinationId: string;
+    readonly appliedAtUtc: string;
+    readonly ownerName: string;
+    readonly ownerPhone?: string | null;
+    readonly petName: string;
+    readonly species: string;
+    readonly microchipNumber?: string | null;
+    readonly hbsAnimalId?: string | null;
+    readonly vaccineName: string;
+    readonly lotNumber?: string | null;
+    readonly expiryDate?: string | null;
+    readonly veterinarianName?: string | null;
+    readonly hbsStatus: HbsEntryStatus;
+    readonly referenceNumber?: string | null;
+    readonly markedAtUtc?: string | null;
 }

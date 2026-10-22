@@ -17,6 +17,7 @@ import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-f
 import { ReportListState, type ReportExtraKey, type ReportListQueryBase } from '@/app/features/reports/shared/report-list-state';
 import { ReportResultsComponent } from '@/app/features/reports/shared/report-results.component';
 import { ProductService } from '@/app/features/inventory/services/product.service';
+import { HBS_STATUS_FILTER_OPTIONS, HBS_STATUS_LABEL } from '@/app/features/hbs/utils/hbs-status.utils';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
@@ -41,7 +42,9 @@ type RegisterRow = { readonly rowNumber: number };
     template: `
         <div class="register-page">
             <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="register-screen-only" [title]="definition.title" [description]="definition.description" />
-            <p class="register-screen-only text-sm text-muted-color mt-0 mb-4" role="note">{{ copy.registerFormatUnverified }}</p>
+            @if (!definition.notOfficialRegister) {
+                <p class="register-screen-only text-sm text-muted-color mt-0 mb-4" role="note">{{ copy.registerFormatUnverified }}</p>
+            }
             @if (definition.screenHint) {
                 <p class="register-screen-only text-sm text-muted-color mt-0 mb-4" role="note">{{ definition.screenHint }}</p>
             }
@@ -90,6 +93,22 @@ type RegisterRow = { readonly rowNumber: number };
                                 />
                             </app-filter-field>
                         }
+                        @if (extra.hbsStatus) {
+                            <app-filter-field label="HBS durumu" labelId="registerRepHbsLabel" [active]="false" width="select">
+                                <p-select
+                                    ariaLabelledBy="registerRepHbsLabel"
+                                    inputId="registerRepHbs"
+                                    [options]="hbsOptions"
+                                    [ngModel]="state.extraInputs['hbsStatus'] || null"
+                                    (ngModelChange)="setExtra('hbsStatus', $event)"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="hbsDefaultLabel"
+                                    styleClass="w-full"
+                                    [showClear]="true"
+                                />
+                            </app-filter-field>
+                        }
                         @if (extra.includeVoidedLabel) {
                             <div class="flex items-center gap-2 pb-2">
                                 <p-checkbox inputId="registerRepVoided" [binary]="true" [ngModel]="state.extraInputs['includeVoided'] === 'true'" (ngModelChange)="setExtra('includeVoided', $event ? 'true' : '')" />
@@ -108,10 +127,12 @@ type RegisterRow = { readonly rowNumber: number };
                         <p class="register-meta text-sm text-muted-color">{{ meta() }}</p>
                     </div>
                     <app-register-table [definition]="definition" [rows]="rowsOnPage()" />
-                    <div class="register-signature">
-                        <div class="register-signature-box">{{ copy.registerSignature }}</div>
-                        <p class="register-signature-note">{{ copy.registerFormatUnverified }}</p>
-                    </div>
+                    @if (!definition.notOfficialRegister) {
+                        <div class="register-signature">
+                            <div class="register-signature-box">{{ copy.registerSignature }}</div>
+                            <p class="register-signature-note">{{ copy.registerFormatUnverified }}</p>
+                        </div>
+                    }
                 </ng-template>
             </app-report-results>
         </div>
@@ -138,6 +159,9 @@ export class RegisterPageComponent implements OnInit, OnDestroy {
 
     /** Süzgeç seçenekleri: aşı ürünleri ve kliniğin hekimleri; yalnız tanım isterse yüklenir. */
     readonly productOptions = signal<{ label: string; value: string }[]>([]);
+    /** HBS takip listeleri: boş seçim sunucuda "HBS'e girilmedi" demektir (iş listesi). */
+    readonly hbsOptions = HBS_STATUS_FILTER_OPTIONS;
+    readonly hbsDefaultLabel = HBS_STATUS_LABEL.NotEntered;
     readonly veterinarianOptions = signal<{ label: string; value: string }[]>([]);
     private readonly products = inject(ProductService);
     private readonly visits = inject(VisitsService);
@@ -164,7 +188,7 @@ export class RegisterPageComponent implements OnInit, OnDestroy {
     private extraKeys(): ReportExtraKey[] {
         const f = this.definition.extraFilters;
 
-        return [f?.includeVoidedLabel && 'includeVoided', f?.product && 'productId', f?.veterinarian && 'veterinarianId'].filter(Boolean) as ReportExtraKey[];
+        return [f?.includeVoidedLabel && 'includeVoided', f?.product && 'productId', f?.veterinarian && 'veterinarianId', f?.hbsStatus && 'hbsStatus'].filter(Boolean) as ReportExtraKey[];
     }
 
     /** Tablo üstbilgisi: kayıt sayısı, tarih aralığı, klinik ve yazdırma zamanı. */

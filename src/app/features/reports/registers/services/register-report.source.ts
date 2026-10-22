@@ -28,7 +28,7 @@ export function registerQueryToHttpParams(query: ReportListQueryBase, opts?: { o
         p = p.set('clinicId', query.clinicId.trim());
     }
 
-    for (const key of ['includeVoided', 'productId', 'veterinarianId'] as const) {
+    for (const key of ['includeVoided', 'productId', 'veterinarianId', 'hbsStatus'] as const) {
         if (query[key]?.trim()) {
             p = p.set(key, query[key].trim());
         }
