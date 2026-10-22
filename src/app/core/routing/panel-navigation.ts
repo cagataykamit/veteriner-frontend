@@ -20,6 +20,7 @@ import {
     LAB_RESULTS_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
     PETS_READ_CLAIM,
+    PLATFORM_ADMIN_CLAIM,
     PRESCRIPTIONS_READ_CLAIM,
     PRODUCT_CATEGORIES_READ_CLAIM,
     PRODUCTS_READ_CLAIM,
@@ -108,6 +109,7 @@ export const CLINICAL_TERMS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-terms`;
 export const EXAMINATION_TEMPLATES_ROUTE = `${DEFINITIONS_ROUTE}/examination-templates`;
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const REPORTS_ROUTE = '/panel/reports';
+export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
 
 /** Rapor Merkezi kartları; menüde tek "Raporlar" girişi vardır (ADR-003). Yeni rapor buraya kart olarak eklenir. */
 export const REPORT_SECTIONS: readonly CardSection[] = [
@@ -323,6 +325,8 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                 claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
             },
             { label: 'Özet', category: 'Panel', icon: 'fa-solid fa-fw fa-gauge', route: DASHBOARD_ROUTE, claims: [MANAGER_LEVEL_CLAIM] },
+            // Yalnız Vetinity platform yöneticisi (ADR-037); klinik kullanıcılarında hiç görünmez.
+            { label: 'Satış ortakları', icon: 'fa-solid fa-fw fa-handshake', route: SALES_PARTNERS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Ayarlar', icon: 'fa-solid fa-fw fa-gear', route: SETTINGS_ROUTE }
         ]
     }

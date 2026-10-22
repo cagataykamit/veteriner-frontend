@@ -24,6 +24,7 @@ export default [
     { path: 'stock-movements', loadChildren: () => import('../inventory/routes/stock-movements.routes') },
     { path: 'goods-receipts', loadChildren: () => import('../inventory/routes/goods-receipts.routes') },
     { path: 'reports', loadChildren: () => import('../reports/reports.routes') },
+    { path: 'sales-partners', loadChildren: () => import('../sales-partners/routes/sales-partners.routes') },
     {
         path: 'settings',
         pathMatch: 'full',

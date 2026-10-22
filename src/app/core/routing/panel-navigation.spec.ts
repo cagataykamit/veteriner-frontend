@@ -15,8 +15,12 @@ import {
     visibleEntries,
     visibleGroups
 } from './panel-navigation';
+import { PLATFORM_ADMIN_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
-const allClaims = new Set<string>([...MENU_GROUPS, ...SETTINGS_SECTIONS].flatMap((g) => g.entries.flatMap((e) => e.claims ?? [])));
+/** Klinik kullanıcısının alabileceği en geniş izin kümesi; platform yöneticisi claim'i izin değildir (ADR-037). */
+const allClaims = new Set<string>(
+    [...MENU_GROUPS, ...SETTINGS_SECTIONS].flatMap((g) => g.entries.flatMap((e) => e.claims ?? [])).filter((c) => c !== PLATFORM_ADMIN_CLAIM)
+);
 const labels = (groups: { entries: readonly { label: string }[] }[]) => groups.flatMap((g) => g.entries.map((e) => e.label));
 const only = (...claims: string[]) => (c: string) => claims.includes(c);
 const entry = (label: string) => MENU_GROUPS.flatMap((g) => g.entries).find((e) => e.label === label)!;
@@ -104,6 +108,15 @@ describe('panel-navigation', () => {
         expect(labels(groups)).not.toContain('Türler');
         expect(labels(groups)).not.toContain('Irklar');
         expect(labels(groups)).not.toContain('Kategoriler');
+    });
+
+    it('Satış ortakları yalnız platform yöneticisine, Yönetim bölümünde görünür (ADR-037)', () => {
+        const clinic = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
+        const platform = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c) || c === PLATFORM_ADMIN_CLAIM);
+
+        expect(labels(clinic)).not.toContain('Satış ortakları');
+        expect(platform.find((g) => g.heading === 'Yönetim')!.entries.map((e) => e.label)).toEqual(['Raporlar', 'Özet', 'Satış ortakları', 'Ayarlar']);
+        expect(entryForUrl(MENU_GROUPS, '/panel/sales-partners/p1')?.label).toBe('Satış ortakları');
     });
 
     it('izin yoksa yalnız Ayarlar kalır; Özet yalnız yönetici düzeyi izniyle görünür', () => {

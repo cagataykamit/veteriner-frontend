@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PLATFORM_ADMIN_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { MenuBadgeService } from '@/app/layout/service/menu-badge.service';
 import { MENU_FLYOUT_CLOSE_DELAY_MS } from '@/app/layout/service/menu-flyout.service';
@@ -11,7 +12,8 @@ describe('AppMenu', () => {
     const rail = signal(false);
     let counts: Record<string, number | null>;
 
-    const create = (hasClaim: (claim: string) => boolean = () => true): ComponentFixture<AppMenu> => {
+    // Varsayılan: tüm izinleri olan klinik kullanıcısı; platform yöneticisi claim'i izin değildir (ADR-037).
+    const create = (hasClaim: (claim: string) => boolean = (c) => c !== PLATFORM_ADMIN_CLAIM): ComponentFixture<AppMenu> => {
         TestBed.configureTestingModule({
             imports: [AppMenu],
             providers: [
