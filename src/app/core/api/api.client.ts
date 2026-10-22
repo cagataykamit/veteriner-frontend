@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from './api-base-url.token';
@@ -39,6 +39,16 @@ export class ApiClient {
 
     delete<T>(path: string): Observable<T> {
         return this.http.delete<T>(this.url(path));
+    }
+
+    /** Çok parçalı yükleme; ilerleme olayları (`UploadProgress`) ve yanıt (`Response`) akışı. */
+    upload<T>(path: string, body: FormData): Observable<HttpEvent<T>> {
+        return this.http.post<T>(this.url(path), body, { reportProgress: true, observe: 'events' });
+    }
+
+    /** API köküne göre yol → tarayıcının doğrudan açabileceği adres (ör. `<img src>` için imzalı URL). */
+    absoluteUrl(path: string): string {
+        return this.url(path);
     }
 
     private url(path: string): string {

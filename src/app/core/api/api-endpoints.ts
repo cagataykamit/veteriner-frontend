@@ -267,7 +267,24 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil, istem zamanı), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/lab-results`,
         byId: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}`,
-        cancel: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}/cancel`
+        cancel: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}/cancel`,
+        /** Dosya uçlarının sahip kökü (`/files`, `/files/{fileId}/content`, `/files/{fileId}/access-url`; IMAGING_API_CONTRACT.md §5). */
+        filesOwner: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}`
+    },
+    imagingRecords: {
+        /** Query: `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `ExaminationId`, `Modality`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil, görüntüleme zamanı), `Sort`, `Order`. */
+        list: () => `/api/v1/imaging-records`,
+        byId: (id: string) => `/api/v1/imaging-records/${encodeURIComponent(id)}`,
+        cancel: (id: string) => `/api/v1/imaging-records/${encodeURIComponent(id)}/cancel`,
+        /** Dosya uçlarının sahip kökü (IMAGING_API_CONTRACT.md §5). */
+        filesOwner: (id: string) => `/api/v1/imaging-records/${encodeURIComponent(id)}`
+    },
+    /** Sahip köküne göre dosya uçları (görüntüleme ve lab aynı biçim). */
+    storedFiles: {
+        list: (ownerPath: string) => `${ownerPath}/files`,
+        upload: (ownerPath: string) => `${ownerPath}/files`,
+        content: (ownerPath: string, fileId: string) => `${ownerPath}/files/${encodeURIComponent(fileId)}/content`,
+        accessUrl: (ownerPath: string, fileId: string) => `${ownerPath}/files/${encodeURIComponent(fileId)}/access-url`
     },
     hospitalizations: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil, yatış zamanı), `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`). */
