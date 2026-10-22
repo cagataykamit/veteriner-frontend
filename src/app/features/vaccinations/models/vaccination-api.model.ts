@@ -3,6 +3,8 @@
  * Şema farklıysa bu dosya ve mapper ince ayarlanır.
  */
 
+import type { HbsEntryDto, HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+
 export interface VaccinationListItemDto {
     id: string;
     /** Reports endpointleri bu alias ile dönebilir. */
@@ -26,6 +28,8 @@ export interface VaccinationListItemDto {
     notes?: string | null;
     /** Stoktan düşen bağlı uygulama; bağlı değilse `null` (`ADMINISTRATIONS_API_CONTRACT.md` §9). */
     administrationId?: string | null;
+    /** HBS (ATS) durumu; takip dışı aşıda (planlı, iptal, içe aktarılmış) `null`. */
+    hbsStatus?: HbsEntryStatus | null;
 }
 
 export interface VaccinationListItemDtoPagedResult {
@@ -67,6 +71,8 @@ export interface VaccinationDetailDto {
     batchId?: string | null;
     lotNumber?: string | null;
     expiryDate?: string | null;
+    /** ATS geri kaydı (ADR-036 Dilim 2). */
+    hbs?: HbsEntryDto | null;
 }
 
 /**

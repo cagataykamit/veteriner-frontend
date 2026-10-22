@@ -16,8 +16,10 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ADMINISTRATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
+import { HbsSectionComponent } from '@/app/features/hbs/components/hbs-section.component';
+import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
 
 @Component({
     selector: 'app-vaccination-detail-page',
@@ -31,7 +33,8 @@ import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccin
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        HbsSectionComponent
     ],
     template: `
         @if (showSavedBanner()) {
@@ -187,6 +190,15 @@ import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccin
                     </div>
                 </div>
                 <div class="col-span-12">
+                    <app-hbs-section
+                        kind="vaccination"
+                        [recordId]="vac()!.id"
+                        [entry]="vac()!.hbs"
+                        [canEdit]="canUpdateHbs && !ro.mutationBlocked()"
+                        (entryChange)="onHbsChange($event)"
+                    />
+                </div>
+                <div class="col-span-12">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Notlar</h5>
                         @if (vac()!.notes === emptyMark) {
@@ -227,6 +239,13 @@ export class VaccinationDetailPageComponent implements OnInit {
     readonly canUpdateVaccination = canOpenVaccinationEdit((c) => this.auth.hasOperationClaim(c));
     readonly statusLabel = vaccinationStatusLabel;
     readonly statusSeverity = vaccinationStatusSeverity;
+    /** HBS (ATS) geri kaydı yalnız `Vaccinations.Update` ister; kesinleşmiş muayeneye bağlı aşıda da açıktır. */
+    readonly canUpdateHbs = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
+
+    /** HBS geri kaydı klinik içeriği değiştirmez; yalnız HBS alanı güncellenir. */
+    onHbsChange(hbs: HbsEntryVm): void {
+        this.vac.update((v) => (v ? { ...v, hbs } : v));
+    }
 
     headerDescription(v: VaccinationDetailVm): string {
         const st = v.status;

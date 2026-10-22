@@ -1,4 +1,5 @@
 import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
+import type { HbsEntryStatus, HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
 
 /**
  * Aşı listesi — UI view model.
@@ -17,6 +18,8 @@ export interface VaccinationListItemVm {
     notes: string;
     /** Stoktan düşen bağlı uygulama; `null` = yalnız aşı kaydı. */
     administrationId: string | null;
+    /** HBS (ATS) durumu; takip dışı aşıda `null` (rozet yok). */
+    hbsStatus: HbsEntryStatus | null;
 }
 
 /** Aşıya bağlı uygulamanın detayda gösterilen özeti. */
@@ -46,6 +49,7 @@ export interface VaccinationDetailVm {
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
     linkedAdministration: VaccinationLinkedAdministrationVm | null;
+    hbs: HbsEntryVm | null;
 }
 
 /** POST /vaccinations sonucu: ürünlü kayıtta uygulama ve kalan stok da döner (`stockResult`), ürünsüzde `null`. */

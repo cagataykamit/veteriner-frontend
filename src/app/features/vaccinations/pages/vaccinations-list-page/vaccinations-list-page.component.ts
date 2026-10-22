@@ -28,6 +28,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { HbsStatusBadgeComponent } from '@/app/features/hbs/components/hbs-status-badge.component';
+import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+import { HBS_STATUS_FILTER_OPTIONS, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
 
 type VaccinationsListState = {
     search: string;
@@ -38,6 +41,7 @@ type VaccinationsListState = {
     pageSize: number;
     overdueOnly?: boolean;
     onlyReceivingCare?: boolean;
+    hbsStatus?: string;
 };
 
 const VACCINATIONS_LIST_STATE_KEY = 'panel:vaccinations:listState';
@@ -61,7 +65,8 @@ const RECEIVING_CARE_ONLY = 'true';
         AppErrorStateComponent,
         AppStatusTagComponent, DateInputComponent, FilterFieldComponent,
         SearchInputComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        HbsStatusBadgeComponent
     ],
     template: `
         <div class="card">
@@ -110,6 +115,19 @@ const RECEIVING_CARE_ONLY = 'true';
                                     styleClass="w-full"
                                     [showClear]="true" (ngModelChange)="scheduleApply()" />
                             </app-filter-field>
+                            <app-filter-field label="HBS durumu" labelId="lblVacHbs" [active]="!!hbsStatusFilter" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblVacHbs"
+                                    inputId="vacHbs"
+                                    [options]="hbsOptions"
+                                    [(ngModel)]="hbsStatusFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    styleClass="w-full"
+                                    data-testid="vac-hbs-filter"
+                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
                             <app-filter-field label="Başlangıç" labelFor="vacFrom" [active]="isFromDateActive()" width="date">
                                 <app-date-input inputId="vacFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
                             </app-filter-field>
@@ -149,6 +167,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                     <th>Hasta</th>
                                     <th>Müşteri</th>
                                     <th>Durum</th>
+                                    <th>HBS</th>
                                     <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
@@ -181,6 +200,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                     <td>
                                         <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                     </td>
+                                    <td><app-hbs-status-badge [status]="row.hbsStatus" /></td>
                                     <td>
                                         <div class="flex items-center gap-1">
                                             <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
@@ -233,8 +253,9 @@ const RECEIVING_CARE_ONLY = 'true';
                                         <span class="text-xs text-muted-color font-normal"> · Stoktan düştü</span>
                                     }
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-3 flex flex-wrap gap-2">
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
+                                    <app-hbs-status-badge [status]="row.hbsStatus" />
                                 </div>
                                 <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                     <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
@@ -298,6 +319,10 @@ export class VaccinationsListPageComponent implements OnInit {
     statusFilter = '';
     /** `RECEIVING_CARE_ONLY` → API `onlyReceivingCare` (vefat eden hastaların aşıları dışlanır); boş = tüm hastalar. */
     receivingCareFilter = '';
+    /** HBS (ATS) durumu süzgeci; Bugün "HBS'e girilmedi" bağlantısı `?hbsStatus=NotEntered` ile gelir. */
+    hbsStatusFilter: HbsEntryStatus | null = null;
+
+    readonly hbsOptions = HBS_STATUS_FILTER_OPTIONS;
 
     /** Dashboard derin bağlantısı + API `OnlyOverdue`; durum her zaman Planlandı (0) ile birlikte kullanılır. */
     readonly activeOverdueOnly = signal(false);
@@ -325,6 +350,7 @@ export class VaccinationsListPageComponent implements OnInit {
             !!this.activeSearch().trim() ||
             !!this.statusFilter.trim() ||
             !!this.receivingCareFilter ||
+            !!this.hbsStatusFilter ||
             !!this.activeFromDate().trim() ||
             !!this.activeToDate().trim()
     );
@@ -345,6 +371,14 @@ export class VaccinationsListPageComponent implements OnInit {
                 this.currentPage.set(1);
                 this.first.set(0);
             }
+        }
+
+        const hbsFromLink = parseHbsStatus(this.route.snapshot.queryParamMap.get('hbsStatus'));
+
+        if (hbsFromLink) {
+            this.hbsStatusFilter = hbsFromLink;
+            this.currentPage.set(1);
+            this.first.set(0);
         }
 
         this.suppressNextLazy = true;
@@ -429,6 +463,7 @@ export class VaccinationsListPageComponent implements OnInit {
         this.activeToDate.set('');
         this.statusFilter = '';
         this.receivingCareFilter = '';
+        this.hbsStatusFilter = null;
         this.first.set(0);
         this.currentPage.set(1);
         this.clearStateFromSessionStorage();
@@ -508,7 +543,7 @@ export class VaccinationsListPageComponent implements OnInit {
         const overdue = this.activeOverdueOnly();
         const effectiveStatus = overdue ? '0' : status.trim();
         const onlyReceivingCare = this.receivingCareFilter === RECEIVING_CARE_ONLY;
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${effectiveStatus}|${overdue}|${onlyReceivingCare}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${effectiveStatus}|${overdue}|${onlyReceivingCare}|${this.hbsStatusFilter ?? ''}`;
 
         if (!force && key === this.lastLoadKey) {
             return;
@@ -526,7 +561,8 @@ export class VaccinationsListPageComponent implements OnInit {
                 toDate: toDate || undefined,
                 status: effectiveStatus || undefined,
                 onlyOverdue: overdue ? true : undefined,
-                onlyReceivingCare: onlyReceivingCare ? true : undefined
+                onlyReceivingCare: onlyReceivingCare ? true : undefined,
+                hbsStatus: this.hbsStatusFilter ?? undefined
             })
             .subscribe({
                 next: (r) => {
@@ -588,6 +624,7 @@ export class VaccinationsListPageComponent implements OnInit {
             this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
             this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
             this.receivingCareFilter = parsed.onlyReceivingCare === true ? RECEIVING_CARE_ONLY : '';
+            this.hbsStatusFilter = parseHbsStatus(parsed.hbsStatus);
             this.activeSearch.set(this.searchInput.trim());
             this.activeFromDate.set(this.fromDateInput.trim());
             this.activeToDate.set(this.toDateInput.trim());
@@ -613,7 +650,8 @@ export class VaccinationsListPageComponent implements OnInit {
             page,
             pageSize,
             overdueOnly: this.activeOverdueOnly(),
-            onlyReceivingCare: this.receivingCareFilter === RECEIVING_CARE_ONLY
+            onlyReceivingCare: this.receivingCareFilter === RECEIVING_CARE_ONLY,
+            hbsStatus: this.hbsStatusFilter ?? undefined
         };
 
         sessionStorage.setItem(VACCINATIONS_LIST_STATE_KEY, JSON.stringify(state));
@@ -629,7 +667,7 @@ export class VaccinationsListPageComponent implements OnInit {
 
         void this.router.navigate([], {
             relativeTo: this.route,
-            queryParams: { ...CLEAR_VACCINATIONS_LIST_LINK_QUERY, overdue: showOverdue ? 'true' : null },
+            queryParams: { ...CLEAR_VACCINATIONS_LIST_LINK_QUERY, hbsStatus: null, overdue: showOverdue ? 'true' : null },
             queryParamsHandling: 'merge',
             replaceUrl: true
         });

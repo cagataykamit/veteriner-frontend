@@ -54,7 +54,7 @@ describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı
         expect(navigate).toHaveBeenCalledWith(
             [],
             jasmine.objectContaining({
-                queryParams: { status: null, fromDate: null, toDate: null, onlyReceivingCare: null, overdue: null },
+                queryParams: { status: null, fromDate: null, toDate: null, onlyReceivingCare: null, hbsStatus: null, overdue: null },
                 replaceUrl: true
             })
         );
@@ -110,7 +110,8 @@ describe('VaccinationsListPageComponent — satırda Düzenle', () => {
         clientName: 'Ali Veli',
         status: 1,
         notes: '',
-        administrationId: null
+        administrationId: null,
+        hbsStatus: 'Entered'
     };
 
     const create = (claims: string[], mutationBlocked = false): HTMLElement => {

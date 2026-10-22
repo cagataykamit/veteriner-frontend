@@ -1,6 +1,7 @@
 import { HttpParams } from '@angular/common/http';
 import { mapAdministrationCreateResultDtoToVm } from '@/app/features/administrations/data/administration.mapper';
 import type { AdministrationCreateResultDto } from '@/app/features/administrations/models/administration-api.model';
+import { mapHbsEntryDtoToVm, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
 import { toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.utils';
 import type {
     VaccinationCreateRequestDto,
@@ -123,7 +124,8 @@ export function mapVaccinationListItemDtoToVm(dto: VaccinationListItemDto): Vacc
         clientName: canonicalClientName(dto),
         status: canonicalStatus(dto),
         notes: canonicalNotes(dto),
-        administrationId: firstTrimmed(dto.administrationId)
+        administrationId: firstTrimmed(dto.administrationId),
+        hbsStatus: parseHbsStatus(dto.hbsStatus)
     };
 }
 
@@ -167,7 +169,8 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
         examinationId: dto.examinationId?.trim() ? dto.examinationId.trim() : null,
         createdAtUtc: canonicalCreatedAt(dto),
         updatedAtUtc: canonicalUpdatedAt(dto),
-        linkedAdministration: mapLinkedAdministration(dto)
+        linkedAdministration: mapLinkedAdministration(dto),
+        hbs: mapHbsEntryDtoToVm(dto.hbs)
     };
 }
 
@@ -351,6 +354,10 @@ export function vaccinationsQueryToHttpParams(query: VaccinationsListQuery): Htt
 
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
+    }
+
+    if (query.hbsStatus) {
+        p = p.set('hbsStatus', query.hbsStatus);
     }
 
     return p;

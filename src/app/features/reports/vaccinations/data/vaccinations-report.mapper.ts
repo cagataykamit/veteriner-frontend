@@ -75,7 +75,8 @@ export function mapVaccinationListItemDtoToReportRow(dto: VaccinationsReportItem
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['notes', 'Notes'])) ?? EM,
         clinicLabel: clinicName ?? EM,
         effectiveReportDateUtc,
-        administrationId: null
+        administrationId: null,
+        hbsStatus: null
     };
 }
 

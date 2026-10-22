@@ -5,6 +5,8 @@
  * `Search`: VaccineName, Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
  */
 
+import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+
 export interface VaccinationsListQuery {
     page?: number;
     pageSize?: number;
@@ -29,4 +31,6 @@ export interface VaccinationsListQuery {
     sort?: string;
     /** `asc` | `desc` */
     order?: string;
+    /** HBS (ATS) durumu süzgeci (`hbsStatus`); yalnız takipteki (uygulanmış, içe aktarılmamış) aşılar eşleşir. */
+    hbsStatus?: HbsEntryStatus;
 }

@@ -7,7 +7,10 @@ import { VACCINE_DEFINITIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app
 import type { VaccinationDetailVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { HbsService } from '@/app/features/hbs/services/hbs.service';
 import { VaccinationDetailPageComponent } from './vaccination-detail-page.component';
+
+const hbsMock = { getHbsData: () => of(null), updateHbsEntry: () => of(null) };
 
 const linked = {
     id: 'a1',
@@ -32,7 +35,8 @@ const vm = (examinationId: string | null, linkedAdministration: VaccinationDetai
     examinationId,
     createdAtUtc: null,
     updatedAtUtc: null,
-    linkedAdministration
+    linkedAdministration,
+    hbs: { status: 'NotEntered', referenceNumber: null, notRequiredReason: null, markedAtUtc: null, markedByName: null, isTracked: true }
 });
 
 describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
@@ -45,7 +49,8 @@ describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
                 { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm(examinationId, linkedAdministration)) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: HbsService, useValue: hbsMock }
             ]
         });
         const fixture = TestBed.createComponent(VaccinationDetailPageComponent);
@@ -91,7 +96,8 @@ describe('VaccinationDetailPageComponent — Düzenle', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
                 { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm(null)) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: HbsService, useValue: hbsMock }
             ]
         });
         const fixture = TestBed.createComponent(VaccinationDetailPageComponent);
@@ -107,5 +113,53 @@ describe('VaccinationDetailPageComponent — Düzenle', () => {
 
     it('yalnız Vaccinations.Update varsa görünmez (rota /notfound verirdi)', () => {
         expect(editLink([VACCINATIONS_UPDATE_CLAIM])).toBeNull();
+    });
+});
+
+/**
+ * ADR-036 Dilim 2: HBS bölümü — kesinleşmiş muayeneye bağlı (kilitli) aşıda da açıktır; geri kayıt yalnız `Vaccinations.Update` ister,
+ * kaydedilen durum sayfayı yeniden yüklemeden rozete yansır.
+ */
+describe('VaccinationDetailPageComponent — HBS', () => {
+    const create = (claims: string[]) => {
+        TestBed.configureTestingModule({
+            imports: [VaccinationDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
+                { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm('finalized-exam')) } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: HbsService, useValue: hbsMock }
+            ]
+        });
+        const fixture = TestBed.createComponent(VaccinationDetailPageComponent);
+
+        fixture.detectChanges();
+
+        return fixture;
+    };
+
+    it('kilitli muayeneye bağlı aşıda HBS kartı ve "HBS verisi" düğmesi görünür; geri kayıt Vaccinations.Update ile açılır', () => {
+        const fixture = create([VACCINATIONS_UPDATE_CLAIM]);
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('[data-testid="hbs-section"]')?.textContent).toContain("HBS'e girilmedi");
+        expect(el.querySelector('[data-testid="hbs-open-dialog"]')).not.toBeNull();
+        expect(fixture.componentInstance.canUpdateHbs).toBeTrue();
+    });
+
+    it('kaydedilen HBS durumu rozete yansır', () => {
+        const fixture = create([VACCINATIONS_UPDATE_CLAIM]);
+
+        fixture.componentInstance.onHbsChange({ status: 'Entered', referenceNumber: 'ATS-1', notRequiredReason: null, markedAtUtc: null, markedByName: null, isTracked: true });
+        fixture.detectChanges();
+
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="hbs-section"]')?.textContent).toContain('ATS-1');
+    });
+
+    it('Vaccinations.Update yoksa geri kayıt yetkisi yoktur', () => {
+        expect(create([]).componentInstance.canUpdateHbs).toBeFalse();
     });
 });
