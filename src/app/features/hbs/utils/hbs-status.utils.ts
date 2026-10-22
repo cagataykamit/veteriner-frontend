@@ -31,7 +31,8 @@ export const HBS_REFERENCE_LABEL: Readonly<Record<HbsRecordKind, string>> = {
     vaccination: 'ATS belge seri no'
 };
 
-export const HBS_STATUS_FILTER_OPTIONS: readonly { label: string; value: HbsEntryStatus }[] = STATUSES.map((s) => ({ label: HBS_STATUS_LABEL[s], value: s }));
+/** PrimeNG `p-select [options]` değiştirilebilir dizi bekler. */
+export const HBS_STATUS_FILTER_OPTIONS: { label: string; value: HbsEntryStatus }[] =STATUSES.map((s) => ({ label: HBS_STATUS_LABEL[s], value: s }));
 
 export function isHbsEntryStatus(value: unknown): value is HbsEntryStatus {
     return typeof value === 'string' && (STATUSES as readonly string[]).includes(value);
