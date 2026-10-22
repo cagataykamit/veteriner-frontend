@@ -134,9 +134,17 @@ describe('visit mapper — okuma', () => {
         expect(
             mapTodayDtoToVm({
                 ...base,
-                openItems: { unchargedVisitCount: 3, outstandingVisitCount: 2, outstandingAmount: 750.5, awaitingLabCount: null, incompleteVisitCount: 1 }
+                openItems: { unchargedVisitCount: 3, outstandingVisitCount: 2, outstandingAmount: 750.5, awaitingLabCount: null, incompleteVisitCount: 1, hbsNotEnteredVaccinationCount: 2 }
             }).openItems
-        ).toEqual({ unchargedVisitCount: 3, outstandingVisitCount: 2, outstandingAmount: 750.5, awaitingLabCount: null, incompleteVisitCount: 1 });
+        ).toEqual({
+            unchargedVisitCount: 3,
+            outstandingVisitCount: 2,
+            outstandingAmount: 750.5,
+            awaitingLabCount: null,
+            incompleteVisitCount: 1,
+            hbsNotEnteredPrescriptionCount: null,
+            hbsNotEnteredVaccinationCount: 2
+        });
     });
 
     it('aktif yatışlar eşlenir; alan yoksa boş liste, boş ad — olur, planlı taburcu yoksa null', () => {

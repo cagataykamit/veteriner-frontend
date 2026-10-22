@@ -10,6 +10,7 @@ interface OpenItemEntry {
     title: string;
     /** Yalnızca mevcut bir liste sayfası varsa; süzgeçli liste ucu yoktur (`OPEN_ITEMS_API_CONTRACT.md` §7.7). */
     link: string | null;
+    queryParams?: Record<string, string>;
     tone: string;
 }
 
@@ -31,7 +32,7 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
             <span class="text-sm font-medium">Açık işler</span>
             @for (e of entries(); track e.key) {
                 @if (e.link; as link) {
-                    <a [routerLink]="link" [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm no-underline" [class]="e.tone">
+                    <a [routerLink]="link" [queryParams]="e.queryParams ?? null" [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm no-underline" [class]="e.tone">
                         <i [class]="e.icon" aria-hidden="true"></i>{{ e.text }}
                     </a>
                 } @else {
@@ -83,6 +84,31 @@ export class TodayOpenItemsComponent {
                 text: `Ödeme bekliyor: ${s.outstandingVisitCount} ziyaret${amount}`,
                 title: 'Tamamlanmış ama ödemesi açık ziyaretler (Borçlu müşteriler raporu)',
                 link: '/panel/reports/outstanding-balances',
+                tone: TONE_WARN
+            });
+        }
+
+        // HBS (ADR-036 Dilim 2): nötr dil; süzgeçli listeye gider (Kayıtlar > Reçeteler / Aşılar, yeni menü öğesi yok).
+        if ((s.hbsNotEnteredPrescriptionCount ?? 0) > 0) {
+            out.push({
+                key: 'hbsPrescriptions',
+                icon: 'pi pi-file-edit',
+                text: `HBS'e girilmedi: ${s.hbsNotEnteredPrescriptionCount} reçete`,
+                title: "Son 30 günde HBS'e girildi veya gerekmiyor olarak işaretlenmemiş reçeteler",
+                link: '/panel/prescriptions',
+                queryParams: { hbsStatus: 'NotEntered' },
+                tone: TONE_WARN
+            });
+        }
+
+        if ((s.hbsNotEnteredVaccinationCount ?? 0) > 0) {
+            out.push({
+                key: 'hbsVaccinations',
+                icon: 'pi pi-shield',
+                text: `HBS'e girilmedi: ${s.hbsNotEnteredVaccinationCount} aşı`,
+                title: "Son 30 günde uygulanan ve HBS'e girildi veya gerekmiyor olarak işaretlenmemiş aşılar",
+                link: '/panel/vaccinations',
+                queryParams: { hbsStatus: 'NotEntered' },
                 tone: TONE_WARN
             });
         }

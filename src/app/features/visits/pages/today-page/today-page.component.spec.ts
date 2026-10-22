@@ -329,6 +329,28 @@ describe('TodayPageComponent', () => {
             expect(a?.textContent).toContain('Lab bekliyor: 4');
             expect(a?.getAttribute('href')).toBe('/panel/lab-results');
         });
+
+        it("HBS'e girilmedi satırları süzgeçli Reçeteler/Aşılar listesine bağlanır; sıfır veya null görünmez", async () => {
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [item()],
+                openItems: {
+                    unchargedVisitCount: null,
+                    outstandingVisitCount: null,
+                    outstandingAmount: null,
+                    awaitingLabCount: null,
+                    incompleteVisitCount: 0,
+                    hbsNotEnteredPrescriptionCount: 2,
+                    hbsNotEnteredVaccinationCount: 0
+                }
+            });
+            const links = Array.from((f.nativeElement as HTMLElement).querySelectorAll('[data-testid="open-items-strip"] a'));
+
+            expect(links.map((a) => a.textContent?.trim())).toEqual(["HBS'e girilmedi: 2 reçete"]);
+            expect(links[0].getAttribute('href')).toBe('/panel/prescriptions?hbsStatus=NotEntered');
+            expect(((f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')?.textContent ?? '').toLowerCase()).not.toContain('zorunlu');
+        });
     });
 
     it('telefon okunabilir biçimde, hekim yoksa Atanmadı gösterilir', async () => {

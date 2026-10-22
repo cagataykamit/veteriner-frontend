@@ -84,6 +84,10 @@ export interface TodayOpenItemsVm {
     outstandingAmount: number | null;
     awaitingLabCount: number | null;
     incompleteVisitCount: number;
+    /** "HBS'e girilmedi" reçete sayısı (son 30 gün); `Prescriptions.Read` yoksa veya gün sonunda `null`. */
+    hbsNotEnteredPrescriptionCount?: number | null;
+    /** "HBS'e girilmedi" aşı sayısı (son 30 gün); `Vaccinations.Read` yoksa veya gün sonunda `null`. */
+    hbsNotEnteredVaccinationCount?: number | null;
 }
 
 export interface TodayVm {

@@ -85,6 +85,9 @@ export interface TodayOpenItemsDto {
     outstandingAmount?: number | null;
     awaitingLabCount?: number | null;
     incompleteVisitCount: number;
+    /** `HBS_ASSISTANT_API_CONTRACT.md` §7: son 30 İstanbul günü; izin yoksa `null`. */
+    hbsNotEnteredPrescriptionCount?: number | null;
+    hbsNotEnteredVaccinationCount?: number | null;
 }
 
 export interface TodayDto {
