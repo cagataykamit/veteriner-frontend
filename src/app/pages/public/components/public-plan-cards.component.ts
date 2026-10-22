@@ -8,8 +8,6 @@ import {
     PRICING_FEATURE_ROWS,
     PRICING_PLAN_DEFS,
     PRICING_VAT_NOTE,
-    yearlyOfferText,
-    type PricingBillingPeriod,
     type PricingFeatureRowDef,
     type PricingPlanDef,
     type PricingPriceView
@@ -51,9 +49,7 @@ interface PlanCardVm {
                         </p>
                         <p class="m-0 mt-1 min-h-5 text-sm text-muted-color">
                             @if (card.price.unit) {
-                                {{ vatNote }}@if (period() === 'yearly' && yearlyOffer) {
-                                    · {{ yearlyOffer }}
-                                }
+                                {{ vatNote }}
                             } @else {
                                 Kliniğinize göre teklif
                             }
@@ -112,16 +108,14 @@ interface PlanCardVm {
 export class PublicPlanCardsComponent {
     readonly plans = input<readonly PricingPlanDef[]>(PRICING_PLAN_DEFS);
     readonly featureRows = input<readonly PricingFeatureRowDef[]>(PRICING_FEATURE_ROWS);
-    readonly period = input<PricingBillingPeriod>('monthly');
 
     readonly paths = PUBLIC_PATHS;
     readonly vatNote = PRICING_VAT_NOTE;
-    readonly yearlyOffer = yearlyOfferText();
 
     readonly cards = computed<readonly PlanCardVm[]>(() =>
         this.plans().map((def) => ({
             def,
-            price: planPriceView(def, this.period()),
+            price: planPriceView(def),
             limits: [
                 { label: formatPlanLimit(def.maxClinics, 'klinik'), icon: 'pi pi-building' },
                 { label: formatPlanLimit(def.maxUsers, 'kullanıcı'), icon: 'pi pi-users' }

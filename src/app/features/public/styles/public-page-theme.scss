@@ -585,51 +585,7 @@ html.public-site-root {
     color: var(--public-accent-text);
 }
 
-/* Paketler: aylık/yıllık seçici (iki parçalı düğme) ve fiyat */
-.public-page .public-period-toggle {
-    display: inline-flex;
-    padding: 4px;
-    border: 1px solid var(--public-border-emphasis);
-    border-radius: 999px;
-    background: var(--p-surface-0);
-}
-
-.public-page .public-period-option {
-    min-height: 44px;
-    min-width: 96px;
-    padding: 0.5rem 1.25rem;
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--p-surface-700);
-    font-size: 0.9375rem;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.public-page .public-period-option:focus-visible {
-    outline: 2px solid var(--vetinity-teal);
-    outline-offset: 2px;
-}
-
-.public-page .public-period-option--active {
-    background: var(--vetinity-navy);
-    color: #ffffff;
-}
-
-.app-dark .public-page .public-period-toggle {
-    background: #111a2e;
-}
-
-.app-dark .public-page .public-period-option {
-    color: var(--p-surface-200);
-}
-
-.app-dark .public-page .public-period-option--active {
-    background: #ffffff;
-    color: var(--vetinity-navy);
-}
-
+/* Paketler: fiyat */
 .public-page .public-plan-price {
     font-size: 2.25rem;
     font-weight: 700;

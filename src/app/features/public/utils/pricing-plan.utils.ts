@@ -13,9 +13,6 @@ export type PricingPlanApiCode = 'Basic' | 'Pro' | 'Premium';
 /** Kullanıcı/klinik sınırı: sayı, `'sinirsiz'`, `'coklu'` (çok klinik) ya da `null` (gösterilmez). */
 export type PricingPlanLimit = number | 'sinirsiz' | 'coklu' | null;
 
-/** Ödeme dönemi (paketler sayfasındaki aylık/yıllık seçici). */
-export type PricingBillingPeriod = 'monthly' | 'yearly';
-
 export interface PricingPlanDef {
     readonly slug: PricingPlanSlug;
     readonly apiCode: PricingPlanApiCode;
@@ -24,8 +21,6 @@ export interface PricingPlanDef {
     readonly description: string;
     /** Aylık tutar, TL, KDV hariç. `null` ve `priceOnRequest` ise "İletişime geçin". */
     readonly monthlyPriceTry: number | null;
-    /** Yıllık peşin tutar, TL, KDV hariç. */
-    readonly yearlyPriceTry: number | null;
     /** Fiyat teklifle belirlenir (kartta "İletişime geçin", düğme iletişim sayfasına). */
     readonly priceOnRequest: boolean;
     readonly maxUsers: PricingPlanLimit;
@@ -49,7 +44,6 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Temel',
         description: 'Tek klinik ve küçük ekip için.',
         monthlyPriceTry: 999,
-        yearlyPriceTry: 9990,
         priceOnRequest: false,
         maxUsers: 3,
         maxClinics: 1,
@@ -62,7 +56,6 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Profesyonel',
         description: 'Birkaç kullanıcıyla çalışan ve hasta sahiplerine portal sunan klinikler için.',
         monthlyPriceTry: 1990,
-        yearlyPriceTry: 19900,
         priceOnRequest: false,
         maxUsers: 10,
         maxClinics: 1,
@@ -75,7 +68,6 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Kurumsal',
         description: 'Birden fazla şubesi olan işletmeler için.',
         monthlyPriceTry: null,
-        yearlyPriceTry: null,
         priceOnRequest: true,
         maxUsers: 'sinirsiz',
         maxClinics: 'coklu',
@@ -153,42 +145,22 @@ export function formatPlanLimit(limit: PricingPlanLimit, unit: string): string |
 export interface PricingPriceView {
     /** "₺999" ya da "İletişime geçin". */
     readonly amount: string;
-    /** "/ ay", "/ yıl"; teklifli pakette `null`. */
+    /** "/ ay"; teklifli pakette `null`. */
     readonly unit: string | null;
 }
 
-/** Kart ve tablo için fiyat görünümü; tutar ve teklif bilgisi yoksa `null`. */
-export function planPriceView(def: PricingPlanDef, period: PricingBillingPeriod): PricingPriceView | null {
+/** Kart ve tablo için aylık fiyat görünümü; tutar ve teklif bilgisi yoksa `null`. */
+export function planPriceView(def: PricingPlanDef): PricingPriceView | null {
     if (def.priceOnRequest) {
         return { amount: 'İletişime geçin', unit: null };
     }
 
-    const amount = period === 'yearly' ? def.yearlyPriceTry : def.monthlyPriceTry;
-
-    return amount == null ? null : { amount: formatTry(amount), unit: period === 'yearly' ? '/ yıl' : '/ ay' };
+    return def.monthlyPriceTry == null ? null : { amount: formatTry(def.monthlyPriceTry), unit: '/ ay' };
 }
 
-const MONTH_WORDS: Readonly<Record<number, string>> = { 1: 'bir', 2: 'iki', 3: 'üç', 4: 'dört' };
-
-/** Yıllık ödemede hediye ay sayısı (12 × aylık − yıllık) / aylık; fiyatı olan paketlerden. `9.990 / 999` → 2. */
-export function yearlyFreeMonths(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): number | null {
-    const priced = plans.find((p) => p.monthlyPriceTry && p.yearlyPriceTry);
-
-    return priced ? Math.round(12 - priced.yearlyPriceTry! / priced.monthlyPriceTry!) : null;
-}
-
-/** "Yıllık ödemede iki ay hediye" — sayı veriden. */
-export function yearlyOfferText(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): string | null {
-    const months = yearlyFreeMonths(plans);
-
-    return months && months > 0 ? `Yıllık ödemede ${MONTH_WORDS[months] ?? months} ay hediye` : null;
-}
-
-/** "Fiyatlar KDV hariç; yıllık ödemede iki ay hediye" — veriden. */
-export function pricingTermsText(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): string {
-    const offer = yearlyOfferText(plans);
-
-    return `Fiyatlar ${PRICING_VAT_NOTE}${offer ? `; ${offer.toLocaleLowerCase('tr-TR')}` : ''}`;
+/** "Fiyatlar KDV hariç" — fiyat koşulu notu (aylık faturalandırma; yıllık ödeme ve indirim yok, ADR-035). */
+export function pricingTermsText(): string {
+    return `Fiyatlar ${PRICING_VAT_NOTE}`;
 }
 
 /** "Temel aylık ₺999, Profesyonel aylık ₺1.990; Kurumsal için bize ulaşın" — SSS ve ana sayfa için, veriden. */
@@ -197,14 +169,6 @@ export function pricingSummaryText(plans: readonly PricingPlanDef[] = PRICING_PL
     const onRequest = plans.filter((p) => p.priceOnRequest).map((p) => p.title);
 
     return [priced.join(', '), onRequest.length ? `${onRequest.join(', ')} için bize ulaşın` : ''].filter(Boolean).join('; ');
-}
-
-/** "Temel yıllık ₺9.990, Profesyonel yıllık ₺19.900" — veriden. */
-export function yearlyPricingText(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): string {
-    return plans
-        .filter((p) => p.yearlyPriceTry != null)
-        .map((p) => `${p.title} yıllık ${formatTry(p.yearlyPriceTry!)}`)
-        .join(', ');
 }
 
 /** Karşılaştırma tablosuna girecek satırlar: en az bir hücresi dolu olanlar. */

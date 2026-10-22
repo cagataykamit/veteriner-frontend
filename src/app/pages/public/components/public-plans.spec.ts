@@ -10,7 +10,6 @@ import {
     pricingSummaryText,
     pricingTermsText,
     PRICING_PLAN_DEFS,
-    yearlyFreeMonths,
     type PricingFeatureRowDef,
     type PricingPlanDef
 } from '@/app/features/public/utils/pricing-plan.utils';
@@ -22,7 +21,6 @@ import { PublicPlanComparisonComponent } from './public-plan-comparison.componen
 const SAMPLE_PLANS: readonly PricingPlanDef[] = PRICING_PLAN_DEFS.map((def, i) => ({
     ...def,
     monthlyPriceTry: [500, 1000, null][i],
-    yearlyPriceTry: [5000, 10000, null][i],
     priceOnRequest: i === 2,
     maxUsers: [2, 8, 'sinirsiz' as const][i],
     maxClinics: [1, 2, 'coklu' as const][i],
@@ -33,7 +31,6 @@ const SAMPLE_PLANS: readonly PricingPlanDef[] = PRICING_PLAN_DEFS.map((def, i) =
 const EMPTY_PLANS: readonly PricingPlanDef[] = PRICING_PLAN_DEFS.map((def) => ({
     ...def,
     monthlyPriceTry: null,
-    yearlyPriceTry: null,
     priceOnRequest: false,
     maxUsers: null,
     maxClinics: null,
@@ -48,15 +45,14 @@ const SAMPLE_ROWS: readonly PricingFeatureRowDef[] = [
 ];
 
 describe('Paket verisi (pricing-plan.utils)', () => {
-    it('ADR-035 tablosu: fiyat (KDV hariç), yıllık iki ay hediye, sınırlar ve kademe farkları', () => {
+    it('ADR-035 tablosu: aylık fiyat (KDV hariç, yıllık ödeme ve indirim yok), sınırlar ve kademe farkları', () => {
         const [temel, profesyonel, kurumsal] = PRICING_PLAN_DEFS;
 
         expect(PRICING_PLAN_DEFS.map((p) => p.title)).toEqual(['Temel', 'Profesyonel', 'Kurumsal']);
-        expect([temel.monthlyPriceTry, temel.yearlyPriceTry, temel.maxClinics, temel.maxUsers]).toEqual([999, 9990, 1, 3]);
-        expect([profesyonel.monthlyPriceTry, profesyonel.yearlyPriceTry, profesyonel.maxClinics, profesyonel.maxUsers]).toEqual([1990, 19900, 1, 10]);
-        expect([kurumsal.priceOnRequest, kurumsal.maxClinics, kurumsal.maxUsers]).toEqual([true, 'coklu', 'sinirsiz']);
-        expect(yearlyFreeMonths()).toBe(2);
-        expect(pricingTermsText()).toBe('Fiyatlar KDV hariç; yıllık ödemede iki ay hediye');
+        expect([temel.monthlyPriceTry, temel.maxClinics, temel.maxUsers]).toEqual([999, 1, 3]);
+        expect([profesyonel.monthlyPriceTry, profesyonel.maxClinics, profesyonel.maxUsers]).toEqual([1990, 1, 10]);
+        expect([kurumsal.priceOnRequest, kurumsal.monthlyPriceTry, kurumsal.maxClinics, kurumsal.maxUsers]).toEqual([true, null, 'coklu', 'sinirsiz']);
+        expect(pricingTermsText()).toBe('Fiyatlar KDV hariç');
         expect(pricingSummaryText()).toBe('Temel aylık ₺999, Profesyonel aylık ₺1.990; Kurumsal için bize ulaşın');
         expect(planHighlights('basic')).toEqual(['Destek: E-posta']);
         expect(planHighlights('pro')).toContain('Hasta sahibi portalı');
@@ -65,11 +61,11 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(hasPlanComparison()).toBeTrue();
     });
 
-    it('fiyat görünümü: aylık/yıllık birimi; teklifli pakette "İletişime geçin"', () => {
-        expect(planPriceView(PRICING_PLAN_DEFS[0], 'monthly')).toEqual({ amount: '₺999', unit: '/ ay' });
-        expect(planPriceView(PRICING_PLAN_DEFS[0], 'yearly')).toEqual({ amount: '₺9.990', unit: '/ yıl' });
-        expect(planPriceView(PRICING_PLAN_DEFS[2], 'monthly')).toEqual({ amount: 'İletişime geçin', unit: null });
-        expect(planPriceView(EMPTY_PLANS[0], 'monthly')).toBeNull();
+    it('fiyat görünümü: aylık birim; teklifli pakette "İletişime geçin"', () => {
+        expect(planPriceView(PRICING_PLAN_DEFS[0])).toEqual({ amount: '₺999', unit: '/ ay' });
+        expect(planPriceView(PRICING_PLAN_DEFS[1])).toEqual({ amount: '₺1.990', unit: '/ ay' });
+        expect(planPriceView(PRICING_PLAN_DEFS[2])).toEqual({ amount: 'İletişime geçin', unit: null });
+        expect(planPriceView(EMPTY_PLANS[0])).toBeNull();
         expect(hasPlanComparison(EMPTY_PLANS, [])).toBeFalse();
     });
 
@@ -130,13 +126,7 @@ describe('PublicPlanCardsComponent', () => {
         expect(pro.textContent).toContain('Yatış takibi');
         expect(pro.querySelector('.public-plan-badge')?.textContent?.trim()).toBe('Önerilen');
         expect(pro.querySelector('a.public-btn-primary')).not.toBeNull();
-
-        fixture.componentRef.setInput('period', 'yearly');
-        fixture.detectChanges();
-
-        expect(pro.textContent).toContain('₺10.000');
-        expect(pro.textContent).toContain('/ yıl');
-        expect(pro.textContent).toContain('iki ay hediye');
+        expect(pro.textContent).not.toMatch(/\/ yıl|hediye/);
         const premium = (fixture.nativeElement as HTMLElement).querySelector('[data-plan="premium"]')!;
 
         expect(premium.textContent).toContain('İletişime geçin');
@@ -172,6 +162,7 @@ describe('PublicPlanComparisonComponent', () => {
         expect(Array.from(el.querySelectorAll('thead th')).map((th) => th.textContent?.trim())).toEqual(['Özellik', ...PRICING_PLAN_DEFS.map((p) => p.title)]);
         expect(Array.from(el.querySelectorAll('th[scope="colgroup"]')).map((th) => th.textContent?.trim())).toEqual(['Fiyat', 'Sınırlar', 'Günlük iş', 'Yönetim']);
         expect(cells('Aylık (KDV hariç)')).toEqual(['₺500', '₺1.000', 'İletişime geçin']);
+        expect(el.textContent).not.toContain('Yıllık');
         expect(cells('Kullanıcı')).toEqual(['2 kullanıcı', '8 kullanıcı', 'Sınırsız kullanıcı']);
         expect(cells('Klinik')).toEqual(['1 klinik', '2 klinik', 'Çok klinik']);
         expect(cells('Yatış takibi')).toEqual(['Yok', 'Var', 'Var']);

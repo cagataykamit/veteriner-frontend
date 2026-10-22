@@ -84,11 +84,8 @@ export class PublicPlanComparisonComponent {
 
     readonly groups = computed<readonly ComparisonGroupVm[]>(() => {
         const plans = this.plans();
-        const priceCell = (p: PricingPlanDef, amount: number | null): PricingFeatureCell => (p.priceOnRequest ? 'İletişime geçin' : formatPlanPrice(amount));
-        const priceRows: ComparisonRowVm[] = [
-            { label: `Aylık (${PRICING_VAT_NOTE})`, cells: plans.map((p) => priceCell(p, p.monthlyPriceTry)) },
-            { label: `Yıllık ödeme (${PRICING_VAT_NOTE})`, cells: plans.map((p) => (p.priceOnRequest ? 'Teklifle' : formatPlanPrice(p.yearlyPriceTry))) }
-        ].filter((row) => row.cells.some((cell) => cell !== null));
+        const priceCell = (p: PricingPlanDef): PricingFeatureCell => (p.priceOnRequest ? 'İletişime geçin' : formatPlanPrice(p.monthlyPriceTry));
+        const priceRows: ComparisonRowVm[] = [{ label: `Aylık (${PRICING_VAT_NOTE})`, cells: plans.map(priceCell) }].filter((row) => row.cells.some((cell) => cell !== null));
         const limitRows: ComparisonRowVm[] = [
             { label: 'Klinik', cells: plans.map((p) => formatPlanLimit(p.maxClinics, 'klinik')) },
             { label: 'Kullanıcı', cells: plans.map((p) => formatPlanLimit(p.maxUsers, 'kullanıcı')) }

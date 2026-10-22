@@ -2,7 +2,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { environment } from '@/environments/environment';
 import type { PublicFaqDef } from './public-faq-content.utils';
 import { PUBLIC_PATHS } from './public-navigation.utils';
-import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, yearlyOfferText, type PricingPlanDef } from './pricing-plan.utils';
+import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, type PricingPlanDef } from './pricing-plan.utils';
 
 /** Canlı tanıtım sitesi kökü; canonical ve OG adresleri buradan türetilir (origin'den değil: staging kendini asıl saymaz). */
 export const PUBLIC_SITE_ORIGIN = 'https://www.vetinity.com';
@@ -47,7 +47,7 @@ export const PUBLIC_MIGRATION_PAGE_META: PublicPageMetaOptions = {
 
 export const PUBLIC_PACKAGES_PAGE_META: PublicPageMetaOptions = {
     title: 'Paketler ve fiyat — Vetinity',
-    description: [`Vetinity paketleri: ${pricingSummaryText()} (${PRICING_VAT_NOTE}).`, yearlyOfferText() ? `${yearlyOfferText()}.` : '', 'Her paketi 14 gün ücretsiz deneyin.'].filter(Boolean).join(' '),
+    description: `Vetinity paketleri: ${pricingSummaryText()} (${PRICING_VAT_NOTE}). Her paketi 14 gün ücretsiz deneyin.`,
     canonicalPath: PUBLIC_PATHS.packages
 };
 

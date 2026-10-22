@@ -146,20 +146,16 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(root().textContent).not.toContain('Fiyat yakında');
     });
 
-    it('paketler: yıllık seçilince yıllık tutar ve hediye notu; karşılaştırma tablosu tüm özellik satırlarını gösterir', async () => {
+    it('paketler: yalnız aylık fiyat (dönem seçici, yıllık tutar ve indirim yok); karşılaştırma tablosu tüm özellik satırlarını gösterir', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.packages);
         harness.detectChanges();
 
-        const yearly = Array.from(root().querySelectorAll<HTMLButtonElement>('.public-period-option')).find((b) => b.textContent?.trim() === 'Yıllık')!;
+        const prices = texts('[data-plan], table.public-plan-table').join(' ');
 
-        yearly.click();
-        harness.detectChanges();
-
-        const priced = PRICING_PLAN_DEFS.find((p) => p.yearlyPriceTry != null)!;
-
-        expect(yearly.getAttribute('aria-pressed')).toBe('true');
-        expect(root().querySelector(`[data-plan="${priced.slug}"]`)?.textContent).toContain(formatPlanPrice(priced.yearlyPriceTry)!);
-        expect(root().querySelector(`[data-plan="${priced.slug}"]`)?.textContent).toContain('/ yıl');
+        expect(root().querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
+        expect(prices).not.toMatch(/yıllık|\/ yıl|hediye/i);
+        expect(prices).toContain('/ ay');
+        expect(root().textContent).not.toMatch(/hediye|indirim/i);
         const rowHeaders = texts('table.public-plan-table tbody th[scope="row"]');
 
         PRICING_FEATURE_ROWS.forEach((r) => expect(rowHeaders.some((t) => t.startsWith(r.label))).withContext(r.label).toBeTrue());
