@@ -268,7 +268,7 @@ export class SalesPartnerDetailPageComponent implements OnInit {
     private readonly partnerId = this.route.snapshot.paramMap.get('id') ?? '';
 
     readonly partner = signal<SalesPartnerDto | null>(null);
-    readonly codes = signal<readonly DiscountCodeDto[]>([]);
+    readonly codes = signal<DiscountCodeDto[]>([]);
     readonly redemptions = signal<DiscountRedemptionRowDto[]>([]);
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);

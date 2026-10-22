@@ -57,7 +57,7 @@ export interface DiscountCodeDto {
 
 export interface SalesPartnerDetailDto {
     readonly partner: SalesPartnerDto;
-    readonly codes: readonly DiscountCodeDto[];
+    readonly codes: DiscountCodeDto[];
 }
 
 export type CommissionStatus = 'Accrued' | 'Cancelled' | 'Paid';
@@ -89,7 +89,7 @@ export interface DiscountRedemptionRowDto {
     readonly windowStartsAtUtc: string | null;
     readonly windowEndsAtUtc: string | null;
     readonly customerStatus: 'Trial' | 'Paid';
-    readonly collections: readonly DiscountCollectionDto[];
+    readonly collections: DiscountCollectionDto[];
 }
 
 export interface SalesPartnerInput {
