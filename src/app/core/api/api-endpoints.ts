@@ -160,7 +160,11 @@ export const ApiEndpoints = {
     vaccinations: {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `OnlyOverdue`, `Sort` (`dueAtUtc` | `appliedAtUtc`), `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/vaccinations`,
-        byId: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}`,
+        /** GET HBS ATS hazır verisi (`Vaccinations.Read`; `HBS_ASSISTANT_API_CONTRACT.md` §4). */
+        hbsData: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs-data`,
+        /** PATCH ATS geri kaydı `{ status, referenceNumber, notRequiredReason }` (`Vaccinations.Update`; §5). */
+        hbs: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs`
     },
     /** FAZ 14C — aşı kataloğu; query: `Page`, `PageSize`, `search`, `speciesId`, `includeInactive`. */
     /** Veri içe aktarma (ADR-019); sözleşme: Veteriner `docs/IMPORT_API_CONTRACT.md`. */
@@ -246,7 +250,11 @@ export const ApiEndpoints = {
     prescriptions: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/prescriptions`,
-        byId: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}`,
+        /** GET HBS e-Reçete hazır verisi (`Prescriptions.Read`; `HBS_ASSISTANT_API_CONTRACT.md` §4). */
+        hbsData: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}/hbs-data`,
+        /** PATCH e-Reçete geri kaydı `{ status, referenceNumber, notRequiredReason }` (`Prescriptions.Update`; §5). */
+        hbs: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}/hbs`
     },
     administrations: {
         /** GET (`Administrations.Read`; query: `Page`, `PageSize`, `clinicId`, `petId`, `examinationId`, `treatmentId`, `productId`, `includeVoided`), POST (`Administrations.Create`). */
