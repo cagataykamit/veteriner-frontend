@@ -1,15 +1,16 @@
 import type { ExaminationDetailVm, ExaminationRelatedSummaryVm } from '@/app/features/examinations/models/examination-vm.model';
 
 /** Ziyaret çalışma alanında muayeneye eklenen işlem türleri (uygulama kendi bölümünde, gerekçeli ekleme kuralı orada). */
-export type ProcedureKind = 'treatment' | 'prescription' | 'vaccination' | 'lab' | 'hospitalization';
+export type ProcedureKind = 'treatment' | 'prescription' | 'vaccination' | 'lab' | 'imaging' | 'hospitalization';
 
-export const PROCEDURE_KINDS: readonly ProcedureKind[] = ['treatment', 'prescription', 'vaccination', 'lab', 'hospitalization'];
+export const PROCEDURE_KINDS: readonly ProcedureKind[] = ['treatment', 'prescription', 'vaccination', 'lab', 'imaging', 'hospitalization'];
 
 export const PROCEDURE_LABEL: Record<ProcedureKind, string> = {
     treatment: 'Tedavi',
     prescription: 'Reçete',
     vaccination: 'Aşı',
     lab: 'Lab istemi',
+    imaging: 'Görüntüleme',
     hospitalization: 'Yatış'
 };
 
@@ -19,6 +20,7 @@ export const PROCEDURE_ROUTE_SEGMENT: Record<ProcedureKind, string> = {
     prescription: 'prescriptions',
     vaccination: 'vaccinations',
     lab: 'lab-results',
+    imaging: 'imaging',
     hospitalization: 'hospitalizations'
 };
 
@@ -29,6 +31,9 @@ export const FINALIZED_LOCK_MESSAGE =
 export const READ_ONLY_TENANT_MESSAGE = 'İşletme salt okunur modda; kayıt oluşturulamaz.';
 
 export const FINALIZED_HOSPITALIZATION_NOTE = 'Kesinleşmiş muayeneye bağlanmaz; yatış muayenesiz başlatılır.';
+
+/** Kesinleşmiş muayeneye görüntüleme bağlamak yeni (ek) kayıt sayılır (ADR-013 uyumu; IMAGING_API_CONTRACT.md §1). */
+export const FINALIZED_IMAGING_NOTE = 'Kesinleşmiş muayeneye görüntüleme yeni (ek) kayıt olarak eklenir.';
 
 /** Kesinleşmiş muayeneye eklenemeyen türler. Lab sonucu serbest, yatış muayeneye bağlanmadan başlar. */
 const LOCKED_WHEN_FINALIZED: readonly ProcedureKind[] = ['treatment', 'prescription', 'vaccination'];
@@ -48,6 +53,10 @@ export function procedureAddState(kind: ProcedureKind, ctx: { finalized: boolean
 
     if (ctx.finalized && LOCKED_WHEN_FINALIZED.includes(kind)) {
         return { disabled: true, reason: FINALIZED_LOCK_MESSAGE, note: null };
+    }
+
+    if (ctx.finalized && kind === 'imaging') {
+        return { disabled: false, reason: null, note: FINALIZED_IMAGING_NOTE };
     }
 
     if (ctx.finalized && kind === 'hospitalization') {

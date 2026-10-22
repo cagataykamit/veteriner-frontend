@@ -3,6 +3,7 @@ import {
     CHARGES_CREATE_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
     HOSPITALIZATIONS_CREATE_CLAIM,
+    IMAGING_CREATE_CLAIM,
     LAB_RESULTS_CREATE_CLAIM,
     PAYMENTS_CREATE_CLAIM,
     PETS_CREATE_CLAIM,
@@ -16,6 +17,7 @@ export type PatientActionKey =
     | 'appointment'
     | 'vaccination'
     | 'labResult'
+    | 'imaging'
     | 'hospitalization'
     | 'charge'
     | 'payment'
@@ -51,6 +53,7 @@ const ACTIONS: readonly PatientActionDefinition[] = [
     { key: 'appointment', label: 'Randevu al', icon: 'pi pi-calendar-plus', route: '/panel/appointments/new', claim: APPOINTMENTS_CREATE_CLAIM, carriesPet: true },
     { key: 'vaccination', label: 'Aşı', icon: 'pi pi-shield', route: '/panel/vaccinations/new', claim: VACCINATIONS_CREATE_CLAIM, carriesPet: true },
     { key: 'labResult', label: 'Lab', icon: 'pi pi-chart-bar', route: '/panel/lab-results/new', claim: LAB_RESULTS_CREATE_CLAIM, carriesPet: true },
+    { key: 'imaging', label: 'Görüntüleme', icon: 'pi pi-image', route: '/panel/imaging/new', claim: IMAGING_CREATE_CLAIM, carriesPet: true },
     { key: 'hospitalization', label: 'Yatış', icon: 'pi pi-building', route: '/panel/hospitalizations/new', claim: HOSPITALIZATIONS_CREATE_CLAIM, carriesPet: true },
     { key: 'newPet', label: 'Yeni hasta', icon: 'pi pi-plus', route: '/panel/pets/new', claim: PETS_CREATE_CLAIM, carriesPet: false },
     { key: 'charge', label: 'Ücret ekle', icon: 'pi pi-receipt', route: '/panel/charges/new', claim: CHARGES_CREATE_CLAIM, carriesPet: true },

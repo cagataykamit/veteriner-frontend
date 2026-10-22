@@ -5,6 +5,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     HOSPITALIZATIONS_CREATE_CLAIM,
+    IMAGING_CREATE_CLAIM,
     LAB_RESULTS_CREATE_CLAIM,
     PRESCRIPTIONS_CREATE_CLAIM,
     TREATMENTS_CREATE_CLAIM,
@@ -20,6 +21,7 @@ import {
     type ProcedureKind
 } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { HospitalizationFormComponent } from '@/app/features/hospitalizations/components/hospitalization-form.component';
+import { ImagingRecordFormComponent } from '@/app/features/imaging/components/imaging-record-form.component';
 import { LabResultFormComponent } from '@/app/features/lab-results/components/lab-result-form.component';
 import { PrescriptionFormComponent } from '@/app/features/prescriptions/components/prescription-form.component';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -34,6 +36,7 @@ const CREATE_CLAIM: Record<ProcedureKind, string> = {
     prescription: PRESCRIPTIONS_CREATE_CLAIM,
     vaccination: VACCINATIONS_CREATE_CLAIM,
     lab: LAB_RESULTS_CREATE_CLAIM,
+    imaging: IMAGING_CREATE_CLAIM,
     hospitalization: HOSPITALIZATIONS_CREATE_CLAIM
 };
 
@@ -42,6 +45,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
     prescription: 'pi pi-file-edit',
     vaccination: 'pi pi-shield',
     lab: 'pi pi-chart-bar',
+    imaging: 'pi pi-image',
     hospitalization: 'pi pi-building'
 };
 
@@ -49,6 +53,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
  * Ziyaret çalışma alanının "İşlemler" bölümü: muayeneye bağlı tedavi, reçete, aşı, lab istemi ve yatış tek listede.
  * "Ekle" yan panelde mevcut form bileşenini açar (müşteri, hayvan, muayene dolu ve kilitli); kayıttan sonra aynı
  * muayenede kalınır, liste `changed` ile yenilenir. Kilitli düğme nedenini görünür söyler (ADR-013).
+ * Görüntüleme yalnız ekleme kısayoludur (ilgili özet ucunda yok); kayıtlar görüntüleme sayfasında ve hasta zaman çizelgesindedir.
  */
 @Component({
     selector: 'app-examination-procedures-section',
@@ -63,6 +68,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
         PrescriptionFormComponent,
         VaccinationFormComponent,
         LabResultFormComponent,
+        ImagingRecordFormComponent,
         HospitalizationFormComponent
     ],
     template: `
@@ -148,6 +154,9 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                     }
                     @case ('lab') {
                         <app-lab-result-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="close()" />
+                    }
+                    @case ('imaging') {
+                        <app-imaging-record-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="close()" />
                     }
                     @case ('hospitalization') {
                         <app-hospitalization-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="close()" />

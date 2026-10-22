@@ -4,9 +4,35 @@ import {
     paymentToPetTimelineItem,
     petTimelineEventLink,
     petTimelineOmittedTypesLabel,
+    petTimelineStatusLabel,
     petTimelineTypeIcon,
     petTimelineTypeLabel
 } from './pet-timeline.utils';
+
+describe('pet-timeline.utils görüntüleme', () => {
+    it('Görüntüleme türü kendi adı, simgesi ve detay bağlantısıyla; "Active" yatış etiketiyle karışmaz', () => {
+        const item: PetTimelineItemVm = {
+            key: 'Imaging:i1',
+            type: 'Imaging',
+            sourceId: 'i1',
+            eventAtUtc: '2026-10-22T07:30:00Z',
+            clinicName: null,
+            title: 'Röntgen',
+            summary: 'Toraks LL',
+            status: 'Active',
+            isVoided: false,
+            linkType: 'Imaging',
+            linkId: 'i1',
+            relatedExaminationId: 'e1',
+            addedAfterFinalization: true
+        };
+
+        expect(petTimelineTypeLabel('Imaging')).toBe('Görüntüleme');
+        expect(petTimelineTypeIcon('Imaging')).toBe('pi-image');
+        expect(petTimelineEventLink(item)).toEqual(['/panel/imaging', 'i1']);
+        expect(petTimelineStatusLabel(item)).toBeNull();
+    });
+});
 
 const event = (id: string, eventAtUtc: string): PetTimelineItemVm => ({
     key: `Examination:${id}`,

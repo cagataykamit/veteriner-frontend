@@ -20,7 +20,8 @@ export const PET_TIMELINE_TYPES: ReadonlyArray<PetTimelineTypeDefinition> = [
     { value: 'LabResult', label: 'Laboratuvar', icon: 'pi-chart-bar', detailPath: '/panel/lab-results' },
     { value: 'Vaccination', label: 'Aşı', icon: 'pi-shield', detailPath: '/panel/vaccinations' },
     { value: 'Hospitalization', label: 'Yatış', icon: 'pi-building', detailPath: '/panel/hospitalizations' },
-    { value: 'Administration', label: 'Uygulama', icon: 'pi-box', detailPath: null }
+    { value: 'Administration', label: 'Uygulama', icon: 'pi-box', detailPath: null },
+    { value: 'Imaging', label: 'Görüntüleme', icon: 'pi-image', detailPath: '/panel/imaging' }
 ];
 
 /** Timeline ucu ödemeyi henüz döndürmez (`types=Payment` → 400); hasta kartında geçmiş özetindeki ödemeler bu türle aynı listeye karışır. */
@@ -72,7 +73,7 @@ const CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress', 'Co
 /** Bilinmeyen durum ham metin gösterilmez (null) — yanlış etiket yerine etiketsiz bırakılır. */
 export function petTimelineStatusLabel(item: PetTimelineItemVm): string | null {
     // Uygulamanın Active/Voided durumu yatışınkiyle karışmasın; iptal ortak "iptal" etiketiyle gösterilir.
-    if (!item.status || item.type === 'Administration') {
+    if (!item.status || item.type === 'Administration' || item.type === 'Imaging') {
         return null;
     }
 
@@ -86,7 +87,7 @@ export function petTimelineStatusLabel(item: PetTimelineItemVm): string | null {
 /** İptal edilmiş aşı ve yanlış işaretli geliş ortak etiketi. */
 export const PET_TIMELINE_VOIDED_LABEL = 'İptal / yanlış işaretli';
 
-export type PetCardTimelineFilter = 'all' | 'examination' | 'vaccination' | 'lab' | 'treatment' | 'payment';
+export type PetCardTimelineFilter = 'all' | 'examination' | 'vaccination' | 'lab' | 'imaging' | 'treatment' | 'payment';
 
 interface PetCardTimelineFilterDefinition {
     readonly value: PetCardTimelineFilter;
@@ -101,6 +102,7 @@ export const PET_CARD_TIMELINE_FILTERS: ReadonlyArray<PetCardTimelineFilterDefin
     { value: 'examination', label: 'Muayene', types: ['Examination'] },
     { value: 'vaccination', label: 'Aşı', types: ['Vaccination'] },
     { value: 'lab', label: 'Lab', types: ['LabResult'] },
+    { value: 'imaging', label: 'Görüntüleme', types: ['Imaging'] },
     { value: 'treatment', label: 'Tedavi', types: ['Treatment', 'Prescription', 'Administration'] },
     { value: 'payment', label: 'Ödeme', types: [] }
 ];

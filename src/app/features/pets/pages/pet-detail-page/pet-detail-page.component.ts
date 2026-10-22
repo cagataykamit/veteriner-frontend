@@ -4,8 +4,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { EMPTY, type Observable, Subscription, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import { PetImagingSectionComponent } from '@/app/features/imaging/components/pet-imaging-section.component';
 import { PetCardHeaderComponent } from '@/app/features/pets/components/pet-card-header.component';
 import { PetCardTimelineComponent } from '@/app/features/pets/components/pet-card-timeline.component';
 import { PetSummaryCardComponent } from '@/app/features/pets/components/pet-summary-card.component';
@@ -51,6 +52,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         PetSummaryCardComponent,
         PetCardTimelineComponent,
         PetStatusDialogComponent,
+        PetImagingSectionComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent
     ],
@@ -161,6 +163,11 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             <p class="m-0 whitespace-pre-wrap" data-testid="pet-notes">{{ p.notes }}</p>
                         }
                     </section>
+                    @if (canReadImaging && p.ownerId) {
+                        <div class="mt-4">
+                            <app-pet-imaging-section [petId]="p.id" [clientId]="p.ownerId" />
+                        </div>
+                    }
                 </div>
             </div>
         }
@@ -173,6 +180,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     private readonly cardData = inject(PetCardDataService);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
+    readonly canReadImaging = this.auth.hasOperationClaim(IMAGING_READ_CLAIM);
 
     /** Yeni oluşturma sonrası kısa onay (query `saved=1`). */
     readonly showSavedBanner = signal(false);

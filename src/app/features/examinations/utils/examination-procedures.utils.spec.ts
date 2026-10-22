@@ -1,6 +1,7 @@
 import type { ExaminationRelatedSummaryVm } from '@/app/features/examinations/models/examination-vm.model';
 import {
     buildProcedureRows,
+    FINALIZED_IMAGING_NOTE,
     FINALIZED_LOCK_MESSAGE,
     finalizeChecklist,
     finalizeWarnings,
@@ -49,6 +50,14 @@ describe('procedureAddState', () => {
 
         expect(h.disabled).toBeFalse();
         expect(h.note).toContain('muayenesiz');
+    });
+
+    it('kesinleşmiş muayenede görüntüleme açıktır; yeni (ek) kayıt olarak eklendiği söylenir (ADR-013 uyumu)', () => {
+        expect(procedureAddState('imaging', open)).toEqual({ disabled: false, reason: null, note: null });
+        const s = procedureAddState('imaging', { ...open, finalized: true });
+
+        expect(s.disabled).toBeFalse();
+        expect(s.note).toBe(FINALIZED_IMAGING_NOTE);
     });
 
     it('salt okunur kurumda her tür nedenle kapanır', () => {

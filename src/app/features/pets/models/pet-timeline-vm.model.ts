@@ -1,5 +1,5 @@
 /** Backend'in bugün döndürdüğü olay türleri; ödeme sonradan `Payment` olarak eklenecek. */
-export type PetTimelineType = 'Visit' | 'Examination' | 'Treatment' | 'Prescription' | 'LabResult' | 'Vaccination' | 'Hospitalization' | 'Administration';
+export type PetTimelineType = 'Visit' | 'Examination' | 'Treatment' | 'Prescription' | 'LabResult' | 'Vaccination' | 'Hospitalization' | 'Administration' | 'Imaging';
 
 export interface PetTimelineItemVm {
     /** Tür + kaynak kimliği (liste `track` anahtarı). */
@@ -17,7 +17,7 @@ export interface PetTimelineItemVm {
     linkType: string;
     linkId: string;
     relatedExaminationId: string | null;
-    /** Yalnız `Administration`: bağlı muayene kayıt anında kesinleşmişti. */
+    /** `Administration` ve `Imaging`: bağlı muayene kayıt anında kesinleşmişti (ek kayıt). */
     addedAfterFinalization: boolean;
 }
 
