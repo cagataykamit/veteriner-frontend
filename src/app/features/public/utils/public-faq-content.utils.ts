@@ -81,7 +81,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Sözleşme ve iptal nasıl?',
-                answer: 'Kullanım şartları sitede yayımlıdır (hukuki onay sürüyor, taslak bandıyla). Sonlandırmada verilerinizi dışa aktarabilirsiniz.'
+                answer: 'Kullanım şartları sitede yayımlıdır. Sonlandırmada verilerinizi dışa aktarabilirsiniz.'
             },
             {
                 question: 'Fatura kesiliyor mu?',

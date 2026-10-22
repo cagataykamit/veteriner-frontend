@@ -46,7 +46,6 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
                                 <li><a [routerLink]="doc.path" class="public-brand-link">{{ doc.shortTitle }}</a></li>
                             }
                         </ul>
-                        <p class="m-0 mt-3 text-xs text-muted-color">Metinler hukuki onay bekliyor; taslak bandıyla yayımlıdır.</p>
                     </section>
                 </aside>
             </div>
