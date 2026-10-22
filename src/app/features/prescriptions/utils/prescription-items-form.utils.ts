@@ -9,12 +9,19 @@ export const PRESCRIPTION_ITEM_NAME_MAX = 200;
 export const PRESCRIPTION_ITEM_INSTRUCTIONS_MAX = 1000;
 export const PRESCRIPTION_ITEM_QUANTITY_MAX = CHARGE_QUANTITY_MAX;
 export const PRESCRIPTION_ITEM_QUANTITY_MAX_DECIMALS = CHARGE_QUANTITY_MAX_DECIMALS;
+/** ADR-036 Dilim 2 (`HBS_ASSISTANT_API_CONTRACT.md` §2). */
+export const PRESCRIPTION_ITEM_DOSE_MAX = 100;
+export const PRESCRIPTION_ITEM_UNIT_MAX = 30;
+export const PRESCRIPTION_ITEM_LOT_MAX = 100;
 
 export type PrescriptionItemFormGroup = FormGroup<{
     name: FormControl<string>;
     productId: FormControl<string>;
     instructions: FormControl<string>;
     quantity: FormControl<number | null>;
+    dose: FormControl<string>;
+    unit: FormControl<string>;
+    lotNumber: FormControl<string>;
 }>;
 
 /** Ürün bağı yoksa ad zorunludur; ürün seçiliyse ad boş kalabilir (sunucu ürün adını kopyalar). */
@@ -30,7 +37,10 @@ export function createPrescriptionItemGroup(value?: Partial<PrescriptionItemVm>)
             name: new FormControl(value?.name ?? '', { nonNullable: true, validators: Validators.maxLength(PRESCRIPTION_ITEM_NAME_MAX) }),
             productId: new FormControl(value?.productId ?? '', { nonNullable: true }),
             instructions: new FormControl(value?.instructions ?? '', { nonNullable: true, validators: Validators.maxLength(PRESCRIPTION_ITEM_INSTRUCTIONS_MAX) }),
-            quantity: new FormControl<number | null>(value?.quantity ?? null, chargeNumberValidator(PRESCRIPTION_ITEM_QUANTITY_MAX, PRESCRIPTION_ITEM_QUANTITY_MAX_DECIMALS))
+            quantity: new FormControl<number | null>(value?.quantity ?? null, chargeNumberValidator(PRESCRIPTION_ITEM_QUANTITY_MAX, PRESCRIPTION_ITEM_QUANTITY_MAX_DECIMALS)),
+            dose: new FormControl(value?.dose ?? '', { nonNullable: true, validators: Validators.maxLength(PRESCRIPTION_ITEM_DOSE_MAX) }),
+            unit: new FormControl(value?.unit ?? '', { nonNullable: true, validators: Validators.maxLength(PRESCRIPTION_ITEM_UNIT_MAX) }),
+            lotNumber: new FormControl(value?.lotNumber ?? '', { nonNullable: true, validators: Validators.maxLength(PRESCRIPTION_ITEM_LOT_MAX) })
         },
         { validators: nameOrProductValidator }
     );
@@ -48,6 +58,9 @@ export function prescriptionItemsFormToInputs(array: FormArray<PrescriptionItemF
             name: r.name.trim(),
             productId: r.productId.trim() || null,
             instructions: r.instructions.trim() || null,
-            quantity: r.quantity
+            quantity: r.quantity,
+            dose: r.dose.trim() || null,
+            unit: r.unit.trim() || null,
+            lotNumber: r.lotNumber.trim() || null
         }));
 }

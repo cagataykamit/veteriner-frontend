@@ -8,6 +8,9 @@ export interface PrescriptionItemInput {
     productId?: string | null;
     instructions?: string | null;
     quantity?: number | null;
+    dose?: string | null;
+    unit?: string | null;
+    lotNumber?: string | null;
 }
 
 export interface CreatePrescriptionRequest {

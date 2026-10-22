@@ -12,6 +12,8 @@ import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } fr
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { HbsSectionComponent } from '@/app/features/hbs/components/hbs-section.component';
+import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
 
 @Component({
     selector: 'app-prescription-detail-page',
@@ -23,7 +25,8 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
         AppPageHeaderComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        HbsSectionComponent
     ],
     template: `
         @if (showSavedBanner()) {
@@ -166,11 +169,17 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
                                         <div class="font-medium break-words">
                                             {{ item.name }}
                                             @if (item.quantity !== null) {
-                                                <span class="text-muted-color font-normal"> · Miktar: {{ item.quantity }}</span>
+                                                <span class="text-muted-color font-normal"> · Miktar: {{ item.quantity }} {{ item.unit }}</span>
+                                            }
+                                            @if (item.dose) {
+                                                <span class="text-muted-color font-normal"> · Doz: {{ item.dose }}</span>
                                             }
                                         </div>
                                         @if (item.instructions) {
                                             <div class="text-sm text-muted-color break-words">{{ item.instructions }}</div>
+                                        }
+                                        @if (item.lotNumber) {
+                                            <div class="text-sm text-muted-color break-words">Parti/seri no: {{ item.lotNumber }}</div>
                                         }
                                     </li>
                                 }
@@ -178,6 +187,15 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
                         </div>
                     </div>
                 }
+                <div class="col-span-12">
+                    <app-hbs-section
+                        kind="prescription"
+                        [recordId]="row()!.id"
+                        [entry]="row()!.hbs"
+                        [canEdit]="canUpdatePrescription && !ro.mutationBlocked()"
+                        (entryChange)="onHbsChange($event)"
+                    />
+                </div>
             </div>
         }
     `
@@ -212,6 +230,11 @@ export class PrescriptionDetailPageComponent implements OnInit {
         this.prescriptionId = id;
         this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
         this.reload();
+    }
+
+    /** HBS geri kaydı klinik içeriği değiştirmez; yalnız HBS alanı güncellenir (sayfa yeniden yüklenmez). */
+    onHbsChange(hbs: HbsEntryVm): void {
+        this.row.update((r) => (r ? { ...r, hbs } : r));
     }
 
     reload(): void {

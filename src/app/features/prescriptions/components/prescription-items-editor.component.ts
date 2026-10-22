@@ -9,7 +9,10 @@ import type { ProductListItemVm } from '@/app/features/inventory/models/product-
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import {
     createPrescriptionItemGroup,
+    PRESCRIPTION_ITEM_DOSE_MAX,
     PRESCRIPTION_ITEM_INSTRUCTIONS_MAX,
+    PRESCRIPTION_ITEM_LOT_MAX,
+    PRESCRIPTION_ITEM_UNIT_MAX,
     PRESCRIPTION_ITEM_NAME_MAX,
     PRESCRIPTION_ITEM_QUANTITY_MAX,
     PRESCRIPTION_ITEM_QUANTITY_MAX_DECIMALS,
@@ -18,7 +21,8 @@ import {
 } from '@/app/features/prescriptions/utils/prescription-items-form.utils';
 
 /**
- * Reçete satırları editörü: serbest ad + opsiyonel katalog ürünü (D2). Birim/lot/son kullanma yoktur (D4); reçete stok düşmez.
+ * Reçete satırları editörü: serbest ad + opsiyonel katalog ürünü (D2); miktar, birim, doz ve parti/seri no yapılandırılmış alanlardır
+ * (ADR-036: e-Reçete için serbest metin yetmez). Reçete stok düşmez; parti no serbest metindir.
  * Form durumu çağıran sayfadaki `FormArray`dedir; ürün listesi yalnız `Products.Read` izniyle yüklenir (yoksa yalnız serbest ad).
  */
 @Component({
@@ -75,18 +79,36 @@ import {
                                 <small class="text-red-500">İlaç adı yazın veya katalogdan ürün seçin.</small>
                             }
                         </div>
-                        <div class="col-span-12 sm:col-span-4">
-                            <label [attr.for]="'rx-qty-' + i" class="block text-xs font-medium text-muted-color mb-1">
-                                Miktar@if (unitFor(g)) { <span> ({{ unitFor(g) }})</span> }
-                            </label>
+                        <div class="col-span-6 sm:col-span-3">
+                            <label [attr.for]="'rx-qty-' + i" class="block text-xs font-medium text-muted-color mb-1">Miktar</label>
                             <input [id]="'rx-qty-' + i" type="number" step="any" min="0" class="w-full p-inputtext p-component" [formControl]="g.controls.quantity" />
                             @if (g.controls.quantity.invalid && g.controls.quantity.touched) {
                                 <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
                             }
                         </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <label [attr.for]="'rx-unit-' + i" class="block text-xs font-medium text-muted-color mb-1">Birim</label>
+                            <input
+                                [id]="'rx-unit-' + i"
+                                type="text"
+                                class="w-full p-inputtext p-component"
+                                [formControl]="g.controls.unit"
+                                [attr.maxlength]="unitMax"
+                                [placeholder]="unitFor(g) || 'Örn. kutu'"
+                                data-testid="prescription-item-unit"
+                            />
+                        </div>
+                        <div class="col-span-12 sm:col-span-6">
+                            <label [attr.for]="'rx-dose-' + i" class="block text-xs font-medium text-muted-color mb-1">Doz</label>
+                            <input [id]="'rx-dose-' + i" type="text" class="w-full p-inputtext p-component" [formControl]="g.controls.dose" [attr.maxlength]="doseMax" placeholder="Örn. 1 tablet" data-testid="prescription-item-dose" />
+                        </div>
                         <div class="col-span-12 sm:col-span-8">
                             <label [attr.for]="'rx-instr-' + i" class="block text-xs font-medium text-muted-color mb-1">Kullanım talimatı</label>
                             <input [id]="'rx-instr-' + i" type="text" class="w-full p-inputtext p-component" [formControl]="g.controls.instructions" [attr.maxlength]="instructionsMax" placeholder="Örn. Günde 2 kez, 7 gün" />
+                        </div>
+                        <div class="col-span-12 sm:col-span-4">
+                            <label [attr.for]="'rx-lot-' + i" class="block text-xs font-medium text-muted-color mb-1">Parti/seri no</label>
+                            <input [id]="'rx-lot-' + i" type="text" class="w-full p-inputtext p-component" [formControl]="g.controls.lotNumber" [attr.maxlength]="lotMax" data-testid="prescription-item-lot" />
                         </div>
                     </div>
                     <div class="flex justify-end mt-2">
@@ -111,6 +133,9 @@ export class PrescriptionItemsEditorComponent implements OnInit {
     protected readonly instructionsMax = PRESCRIPTION_ITEM_INSTRUCTIONS_MAX;
     protected readonly quantityMax = PRESCRIPTION_ITEM_QUANTITY_MAX;
     protected readonly quantityDecimals = PRESCRIPTION_ITEM_QUANTITY_MAX_DECIMALS;
+    protected readonly doseMax = PRESCRIPTION_ITEM_DOSE_MAX;
+    protected readonly unitMax = PRESCRIPTION_ITEM_UNIT_MAX;
+    protected readonly lotMax = PRESCRIPTION_ITEM_LOT_MAX;
 
     readonly canPickProduct = this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM);
     private readonly products = signal<ProductListItemVm[]>([]);
@@ -153,7 +178,7 @@ export class PrescriptionItemsEditorComponent implements OnInit {
         return id ? (this.products().find((p) => p.id === id)?.unit ?? '') : '';
     }
 
-    /** Ad boşken seçilen ürünün adı önerilir (sunucu da boş adı ürün adıyla doldurur). */
+    /** Ad/birim boşken seçilen ürünün adı ve stok birimi önerilir (sunucu da boş adı ve birimi üründen doldurur). */
     onProductChange(g: PrescriptionItemFormGroup, productId: string | null): void {
         if (!productId) {
             g.controls.productId.setValue('');
@@ -161,8 +186,14 @@ export class PrescriptionItemsEditorComponent implements OnInit {
             return;
         }
 
+        const product = this.products().find((p) => p.id === productId);
+
         if (!g.controls.name.value.trim()) {
-            g.controls.name.setValue(this.products().find((p) => p.id === productId)?.name ?? '');
+            g.controls.name.setValue(product?.name ?? '');
+        }
+
+        if (!g.controls.unit.value.trim() && product?.unit) {
+            g.controls.unit.setValue(product.unit);
         }
     }
 }

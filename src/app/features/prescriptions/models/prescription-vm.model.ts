@@ -2,6 +2,8 @@
  * Reçete — UI view modelleri.
  */
 
+import type { HbsEntryStatus, HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
+
 export interface PrescriptionListItemVm {
     id: string;
     clinicId: string | null;
@@ -14,6 +16,7 @@ export interface PrescriptionListItemVm {
     examinationId: string | null;
     treatmentId: string | null;
     followUpDateUtc: string | null;
+    hbsStatus: HbsEntryStatus | null;
 }
 
 export interface PrescriptionDetailVm {
@@ -33,6 +36,7 @@ export interface PrescriptionDetailVm {
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
     items: PrescriptionItemVm[];
+    hbs: HbsEntryVm | null;
 }
 
 export interface PrescriptionEditVm {
@@ -58,4 +62,10 @@ export interface PrescriptionItemVm {
     productId: string | null;
     instructions: string;
     quantity: number | null;
+    /** Uygulama başına doz (ör. "1 tablet"). */
+    dose: string;
+    /** Miktar birimi (ör. "kutu"). */
+    unit: string;
+    /** Parti/seri no. */
+    lotNumber: string;
 }

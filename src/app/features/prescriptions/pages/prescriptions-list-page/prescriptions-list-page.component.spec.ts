@@ -22,17 +22,21 @@ describe('PrescriptionsListPageComponent — satırda Düzenle', () => {
         title: 'Antibiyotik',
         examinationId: null,
         treatmentId: null,
-        followUpDateUtc: null
+        followUpDateUtc: null,
+        hbsStatus: 'NotEntered'
     };
 
-    const create = (claims: string[], mutationBlocked = false): HTMLElement => {
+    let getPrescriptions: jasmine.Spy;
+
+    const create = (claims: string[], mutationBlocked = false, query: Record<string, string> = {}): HTMLElement => {
         sessionStorage.clear();
+        getPrescriptions = jasmine.createSpy('getPrescriptions').and.returnValue(of({ items: [prescription], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
         TestBed.configureTestingModule({
             imports: [PrescriptionsListPageComponent],
             providers: [
                 provideRouter([]),
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
-                { provide: PrescriptionsService, useValue: { getPrescriptions: () => of({ items: [prescription], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }) } },
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
+                { provide: PrescriptionsService, useValue: { getPrescriptions } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
             ]
@@ -65,5 +69,65 @@ describe('PrescriptionsListPageComponent — satırda Düzenle', () => {
 
         expect(readOnly.length).toBe(2);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+    });
+});
+
+/** ADR-036 Dilim 2: HBS durum sütunu (rozet) ve süzgeç; Bugün bağlantısı `?hbsStatus=NotEntered` ile süzer. */
+describe('PrescriptionsListPageComponent — HBS durumu', () => {
+    const row: PrescriptionListItemVm = {
+        id: 'r1',
+        clinicId: null,
+        petId: 'p1',
+        petName: 'Pamuk',
+        clientId: 'c1',
+        clientName: 'Ali Veli',
+        prescribedAtUtc: '2026-10-10T07:00:00Z',
+        title: 'Antibiyotik',
+        examinationId: null,
+        treatmentId: null,
+        followUpDateUtc: null,
+        hbsStatus: 'NotEntered'
+    };
+
+    const create = (query: Record<string, string> = {}) => {
+        sessionStorage.clear();
+        const getPrescriptions = jasmine.createSpy('getPrescriptions').and.returnValue(of({ items: [row], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
+
+        TestBed.configureTestingModule({
+            imports: [PrescriptionsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
+                { provide: PrescriptionsService, useValue: { getPrescriptions } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(PrescriptionsListPageComponent);
+
+        fixture.detectChanges();
+
+        return { el: fixture.nativeElement as HTMLElement, getPrescriptions };
+    };
+
+    afterEach(() => sessionStorage.clear());
+
+    it('satırda HBS durum rozeti ve süzgeç bulunur', () => {
+        const { el } = create();
+
+        expect(el.querySelector('[data-testid="hbs-status-badge"]')?.textContent).toContain("HBS'e girilmedi");
+        expect(el.querySelector('[data-testid="rx-hbs-filter"]')).not.toBeNull();
+    });
+
+    it('?hbsStatus=NotEntered bağlantısı listeyi süzerek yükler', () => {
+        const { getPrescriptions } = create({ hbsStatus: 'NotEntered' });
+
+        expect(getPrescriptions.calls.mostRecent().args[0].hbsStatus).toBe('NotEntered');
+    });
+
+    it('bilinmeyen hbsStatus yok sayılır', () => {
+        const { getPrescriptions } = create({ hbsStatus: 'Zorunlu' });
+
+        expect(getPrescriptions.calls.mostRecent().args[0].hbsStatus).toBeUndefined();
     });
 });

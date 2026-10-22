@@ -2,8 +2,10 @@
  * Backend Veteriner API — reçete (prescription) DTO’ları.
  *
  * Write/read `title` / `content` / `notes` / `followUpDateUtc` ve yapılandırılmış satırlar (`items`, `docs/PRESCRIPTION_ITEMS_API_CONTRACT.md`).
- * Satırda birim/lot/son kullanma yoktur (D4); reçete stok düşmez.
+ * Satırda doz, birim ve parti/seri no vardır (ADR-036, `HBS_ASSISTANT_API_CONTRACT.md` §2); reçete stok düşmez.
  */
+
+import type { HbsEntryDto, HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
 
 export interface PrescriptionListItemDto {
     id: string;
@@ -18,6 +20,7 @@ export interface PrescriptionListItemDto {
     examinationId?: string | null;
     treatmentId?: string | null;
     followUpDateUtc?: string | null;
+    hbsStatus?: HbsEntryStatus | null;
 }
 
 export interface PrescriptionListItemDtoPagedResult {
@@ -36,14 +39,20 @@ export interface PrescriptionItemDto {
     productId?: string | null;
     instructions?: string | null;
     quantity?: number | null;
+    dose?: string | null;
+    unit?: string | null;
+    lotNumber?: string | null;
 }
 
-/** İstek satırı: `id` ve `sortOrder` sunucuda atanır. */
+/** İstek satırı: `id` ve `sortOrder` sunucuda atanır; `unit` boşsa ve ürün seçiliyse ürünün stok birimi kopyalanır. */
 export interface PrescriptionItemWriteDto {
     name: string;
     productId?: string | null;
     instructions?: string | null;
     quantity?: number | null;
+    dose?: string | null;
+    unit?: string | null;
+    lotNumber?: string | null;
 }
 
 export interface PrescriptionDetailDto {
@@ -64,6 +73,8 @@ export interface PrescriptionDetailDto {
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
     items?: PrescriptionItemDto[] | null;
+    /** e-Reçete geri kaydı (ADR-036 Dilim 2). */
+    hbs?: HbsEntryDto | null;
 }
 
 /** POST / PUT body — alan adları API ile uyumlu. */

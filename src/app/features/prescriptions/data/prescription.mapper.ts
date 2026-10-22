@@ -1,4 +1,5 @@
 import { HttpParams } from '@angular/common/http';
+import { mapHbsEntryDtoToVm, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
 import type {
     PrescriptionDetailDto,
     PrescriptionItemDto,
@@ -112,7 +113,10 @@ export function mapPrescriptionItemDtosToVm(items: PrescriptionItemDto[] | null 
             name: i.name ?? '',
             productId: firstTrimmed(i.productId),
             instructions: i.instructions?.trim() ?? '',
-            quantity: i.quantity ?? null
+            quantity: i.quantity ?? null,
+            dose: i.dose?.trim() ?? '',
+            unit: i.unit?.trim() ?? '',
+            lotNumber: i.lotNumber?.trim() ?? ''
         }));
 }
 
@@ -121,7 +125,10 @@ function mapPrescriptionItemInputsToApi(items: PrescriptionItemInput[]): Prescri
         name: i.name.trim(),
         productId: firstTrimmed(i.productId),
         instructions: firstTrimmed(i.instructions),
-        quantity: i.quantity ?? null
+        quantity: i.quantity ?? null,
+        dose: firstTrimmed(i.dose),
+        unit: firstTrimmed(i.unit),
+        lotNumber: firstTrimmed(i.lotNumber)
     }));
 }
 
@@ -137,7 +144,8 @@ export function mapPrescriptionListItemDtoToVm(dto: PrescriptionListItemDto): Pr
         title: canonicalTitle(dto),
         examinationId: canonicalExaminationId(dto),
         treatmentId: canonicalTreatmentId(dto),
-        followUpDateUtc: canonicalFollowUp(dto)
+        followUpDateUtc: canonicalFollowUp(dto),
+        hbsStatus: parseHbsStatus(dto.hbsStatus)
     };
 }
 
@@ -158,7 +166,8 @@ export function mapPrescriptionDetailDtoToVm(dto: PrescriptionDetailDto): Prescr
         followUpDateUtc: canonicalFollowUp(dto),
         createdAtUtc: canonicalCreatedAt(dto),
         updatedAtUtc: canonicalUpdatedAt(dto),
-        items: mapPrescriptionItemDtosToVm(dto.items)
+        items: mapPrescriptionItemDtosToVm(dto.items),
+        hbs: mapHbsEntryDtoToVm(dto.hbs)
     };
 }
 
@@ -204,7 +213,7 @@ export function mapPagedPrescriptionsToVm(result: PrescriptionListItemDtoPagedRe
 }
 
 /**
- * GET `/api/v1/prescriptions` — canonical query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`).
+ * GET `/api/v1/prescriptions` — canonical query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`, `hbsStatus`).
  * Backend `prescribedAtUtc >= dateFromUtc` ve `<= dateToUtc` (iki uç dahil); İstanbul günü başı ve günü sonu (23:59:59.999) gönderilir.
  */
 export function prescriptionsQueryToHttpParams(query: PrescriptionsListQuery): HttpParams {
@@ -245,6 +254,10 @@ export function prescriptionsQueryToHttpParams(query: PrescriptionsListQuery): H
 
     if (query.order?.trim()) {
         p = p.set('Order', query.order.trim());
+    }
+
+    if (query.hbsStatus) {
+        p = p.set('hbsStatus', query.hbsStatus);
     }
 
     return p;

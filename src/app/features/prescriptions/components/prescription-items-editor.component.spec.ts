@@ -119,8 +119,32 @@ describe('PrescriptionItemsEditorComponent', () => {
     });
 
     it('istek satırları kırpılır; ürün bağı olmayan satır productId null gönderir', () => {
-        const arr = createPrescriptionItemsArray([{ name: ' Amoksisilin ', productId: null, instructions: ' 2x1 ', quantity: 14 }]);
+        const arr = createPrescriptionItemsArray([{ name: ' Amoksisilin ', productId: null, instructions: ' 2x1 ', quantity: 14, dose: ' 1 tablet ', unit: ' kutu ', lotNumber: '' }]);
 
-        expect(prescriptionItemsFormToInputs(arr)).toEqual([{ name: 'Amoksisilin', productId: null, instructions: '2x1', quantity: 14 }]);
+        expect(prescriptionItemsFormToInputs(arr)).toEqual([
+            { name: 'Amoksisilin', productId: null, instructions: '2x1', quantity: 14, dose: '1 tablet', unit: 'kutu', lotNumber: null }
+        ]);
+    });
+
+    it('satırda birim, doz ve parti/seri no alanları bulunur (ADR-036)', async () => {
+        await setup();
+        click('prescription-item-add');
+        fixture.detectChanges();
+
+        expect(el().querySelector('[data-testid="prescription-item-unit"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="prescription-item-dose"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="prescription-item-lot"]')).not.toBeNull();
+    });
+
+    it('ürün seçilince boş birim ürünün stok birimiyle dolar; dolu birim korunur', async () => {
+        await setup();
+        const empty = createPrescriptionItemGroup();
+        const filled = createPrescriptionItemGroup({ unit: 'kutu' });
+
+        cmp.onProductChange(empty, 'pr1');
+        cmp.onProductChange(filled, 'pr1');
+
+        expect(empty.controls.unit.value).toBe('şişe');
+        expect(filled.controls.unit.value).toBe('kutu');
     });
 });

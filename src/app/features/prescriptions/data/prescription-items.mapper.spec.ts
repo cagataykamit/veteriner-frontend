@@ -22,14 +22,14 @@ describe('reçete satırları (mapper)', () => {
         const vm = mapPrescriptionDetailDtoToVm({
             ...detail,
             items: [
-                { id: 'i2', sortOrder: 2, name: 'Serum', productId: 'pr1', instructions: null, quantity: 0.5 },
+                { id: 'i2', sortOrder: 2, name: 'Serum', productId: 'pr1', instructions: null, quantity: 0.5, dose: ' 5 ml ', unit: 'şişe', lotNumber: 'L-1' },
                 { id: 'i1', sortOrder: 1, name: 'Dış ilaç', instructions: 'Günde 2 kez' }
             ]
         });
 
         expect(vm.items).toEqual([
-            { name: 'Dış ilaç', productId: null, instructions: 'Günde 2 kez', quantity: null },
-            { name: 'Serum', productId: 'pr1', instructions: '', quantity: 0.5 }
+            { name: 'Dış ilaç', productId: null, instructions: 'Günde 2 kez', quantity: null, dose: '', unit: '', lotNumber: '' },
+            { name: 'Serum', productId: 'pr1', instructions: '', quantity: 0.5, dose: '5 ml', unit: 'şişe', lotNumber: 'L-1' }
         ]);
     });
 
@@ -42,6 +42,19 @@ describe('reçete satırları (mapper)', () => {
         expect(mapCreatePrescriptionToApiBody({ ...base, items: [] }).items).toEqual([]);
         expect(
             mapCreatePrescriptionToApiBody({ ...base, items: [{ name: '  Amoksisilin ', productId: ' ', instructions: ' ', quantity: 14 }] }).items
-        ).toEqual([{ name: 'Amoksisilin', productId: null, instructions: null, quantity: 14 }]);
+        ).toEqual([{ name: 'Amoksisilin', productId: null, instructions: null, quantity: 14, dose: null, unit: null, lotNumber: null }]);
+    });
+
+    it('doz, birim ve parti/seri no kırpılarak gövdeye girer (ADR-036)', () => {
+        expect(
+            mapCreatePrescriptionToApiBody({ ...base, items: [{ name: 'Amoksisilin', dose: ' 1 tablet ', unit: ' kutu ', lotNumber: ' L-77 ' }] }).items
+        ).toEqual([{ name: 'Amoksisilin', productId: null, instructions: null, quantity: null, dose: '1 tablet', unit: 'kutu', lotNumber: 'L-77' }]);
+    });
+
+    it('detaydaki HBS kaydı ve listedeki HBS durumu eşlenir', () => {
+        const vm = mapPrescriptionDetailDtoToVm({ ...detail, hbs: { status: 'Entered', referenceNumber: '2RX4K9', markedByName: 'Dr. Ayşe', isTracked: true } });
+
+        expect(vm.hbs).toEqual({ status: 'Entered', referenceNumber: '2RX4K9', notRequiredReason: null, markedAtUtc: null, markedByName: 'Dr. Ayşe', isTracked: true });
+        expect(mapPrescriptionDetailDtoToVm(detail).hbs).toBeNull();
     });
 });

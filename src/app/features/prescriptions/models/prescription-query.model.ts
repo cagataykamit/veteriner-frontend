@@ -1,7 +1,9 @@
 /**
  * Reçete listesi — GET `/api/v1/prescriptions`.
- * HttpParams: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`).
+ * HttpParams: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`, `hbsStatus`).
  */
+
+import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
 
 export interface PrescriptionsListQuery {
     page?: number;
@@ -17,4 +19,6 @@ export interface PrescriptionsListQuery {
     toDate?: string;
     sort?: string;
     order?: string;
+    /** HBS durumu süzgeci (`hbsStatus`). */
+    hbsStatus?: HbsEntryStatus;
 }

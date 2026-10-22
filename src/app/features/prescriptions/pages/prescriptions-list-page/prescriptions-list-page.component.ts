@@ -26,11 +26,16 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { SelectModule } from 'primeng/select';
+import { HbsStatusBadgeComponent } from '@/app/features/hbs/components/hbs-status-badge.component';
+import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+import { HBS_STATUS_FILTER_OPTIONS, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
 
 type PrescriptionsListState = {
     search: string;
     fromDate: string;
     toDate: string;
+    hbsStatus?: string;
     page: number;
     pageSize: number;
 };
@@ -53,7 +58,9 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         AppEmptyStateComponent,
         AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
         SearchInputComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        SelectModule,
+        HbsStatusBadgeComponent
     ],
     template: `
         @if (contextPetId()) {
@@ -75,6 +82,21 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                             </app-filter-field>
                             <app-filter-field label="Bitiş" labelFor="rxTo" [active]="isToDateActive()" width="date">
                                 <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="HBS durumu" labelId="rxHbsLabel" [active]="!!activeHbsStatus()" width="select">
+                                <p-select
+                                    ariaLabelledBy="rxHbsLabel"
+                                    inputId="rxHbs"
+                                    [options]="hbsOptions"
+                                    [(ngModel)]="hbsStatusInput"
+                                    (ngModelChange)="scheduleApply()"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Tümü"
+                                    [showClear]="true"
+                                    styleClass="w-full"
+                                    data-testid="rx-hbs-filter"
+                                />
                             </app-filter-field>
                         </div>
                     </div>
@@ -108,6 +130,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                     <th>Hasta</th>
                                     <th>Başlık</th>
                                     <th>Takip</th>
+                                    <th>HBS</th>
                                     <th style="width: 8rem">İşlemler</th>
                                 </tr>
                             </ng-template>
@@ -132,6 +155,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                     </td>
                                     <td>{{ row.title }}</td>
                                     <td>{{ formatDate(row.followUpDateUtc) }}</td>
+                                    <td><app-hbs-status-badge [status]="row.hbsStatus" /></td>
                                     <td>
                                         <div class="flex items-center gap-1">
                                             <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
@@ -181,6 +205,9 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.title }}</div>
                                     @if (row.followUpDateUtc) {
                                         <div class="text-xs text-muted-color mt-1 line-clamp-2">Takip: {{ formatDate(row.followUpDateUtc) }}</div>
+                                    }
+                                    @if (row.hbsStatus) {
+                                        <div class="mt-2"><app-hbs-status-badge [status]="row.hbsStatus" /></div>
                                     }
                                 </div>
                                 <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
@@ -239,10 +266,14 @@ export class PrescriptionsListPageComponent implements OnInit {
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
     readonly activeToDate = signal('');
+    readonly activeHbsStatus = signal<HbsEntryStatus | null>(null);
+
+    readonly hbsOptions = HBS_STATUS_FILTER_OPTIONS;
 
     searchInput = '';
     fromDateInput = '';
     toDateInput = '';
+    hbsStatusInput: HbsEntryStatus | null = null;
     readonly displayedRows = computed(() => this.rawItems());
 
     readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
@@ -255,6 +286,16 @@ export class PrescriptionsListPageComponent implements OnInit {
         const restored = this.restoreStateFromSessionStorage();
 
         if (!restored) {
+            this.currentPage.set(1);
+            this.first.set(0);
+        }
+
+        // Bugün "HBS'e girilmedi" bağlantısı: `?hbsStatus=NotEntered` saklı süzgeci ezer.
+        const hbsFromLink = parseHbsStatus(this.route.snapshot.queryParamMap.get('hbsStatus'));
+
+        if (hbsFromLink) {
+            this.hbsStatusInput = hbsFromLink;
+            this.activeHbsStatus.set(hbsFromLink);
             this.currentPage.set(1);
             this.first.set(0);
         }
@@ -279,6 +320,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
+        this.activeHbsStatus.set(parseHbsStatus(this.hbsStatusInput));
         this.first.set(0);
         this.currentPage.set(1);
         this.persistStateToSessionStorage(1, this.pageSize());
@@ -289,9 +331,11 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.searchInput = '';
         this.fromDateInput = '';
         this.toDateInput = '';
+        this.hbsStatusInput = null;
         this.activeSearch.set('');
         this.activeFromDate.set('');
         this.activeToDate.set('');
+        this.activeHbsStatus.set(null);
         this.first.set(0);
         this.currentPage.set(1);
         this.clearStateFromSessionStorage();
@@ -373,7 +417,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         toDate: string,
         force = false
     ): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}`;
+        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}|${this.activeHbsStatus() ?? ''}`;
 
         if (!force && key === this.lastLoadKey) {
             return;
@@ -389,7 +433,8 @@ export class PrescriptionsListPageComponent implements OnInit {
                 pageSize,
                 search: search || undefined,
                 fromDate: fromDate || undefined,
-                toDate: toDate || undefined
+                toDate: toDate || undefined,
+                hbsStatus: this.activeHbsStatus() ?? undefined
             })
             .subscribe({
                 next: (r) => {
@@ -441,9 +486,11 @@ export class PrescriptionsListPageComponent implements OnInit {
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
             this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+            this.hbsStatusInput = parseHbsStatus(parsed.hbsStatus);
             this.activeSearch.set(this.searchInput.trim());
             this.activeFromDate.set(this.fromDateInput.trim());
             this.activeToDate.set(this.toDateInput.trim());
+            this.activeHbsStatus.set(this.hbsStatusInput);
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
             this.first.set((page - 1) * pageSize);
@@ -461,6 +508,7 @@ export class PrescriptionsListPageComponent implements OnInit {
             search: this.searchInput.trim(),
             fromDate: this.fromDateInput.trim(),
             toDate: this.toDateInput.trim(),
+            hbsStatus: this.activeHbsStatus() ?? undefined,
             page,
             pageSize
         };
