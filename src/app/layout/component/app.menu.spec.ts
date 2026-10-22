@@ -200,7 +200,7 @@ describe('AppMenu', () => {
             expect(panel().getAttribute('aria-label')).toBe('Kayıtlar alt sayfaları');
             expect(link(fixture, 'Kayıtlar').getAttribute('aria-expanded')).toBe('true');
             expect(link(fixture, 'Kayıtlar').getAttribute('aria-controls')).toBe(panel().id);
-            expect(itemLabels()).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Yatışlar', 'Uygulamalar']);
+            expect(itemLabels()).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Görüntüleme', 'Yatışlar', 'Uygulamalar']);
             expect(panel().querySelector('.layout-menu-flyout-heading')).toBeNull();
 
             pointer(row(fixture, 'Kayıtlar'), 'pointerleave');

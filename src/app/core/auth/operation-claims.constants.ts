@@ -107,6 +107,12 @@ export const LAB_RESULTS_READ_CLAIM = 'LabResults.Read' as const;
 export const LAB_RESULTS_CREATE_CLAIM = 'LabResults.Create' as const;
 export const LAB_RESULTS_UPDATE_CLAIM = 'LabResults.Update' as const;
 
+/** Görüntüleme kaydı ve dosyaları — `docs/IMAGING_API_CONTRACT.md` §3; Sekreter yalnız okur. Dosya yükleme `Create` ister. */
+export const IMAGING_READ_CLAIM = 'Imaging.Read' as const;
+export const IMAGING_CREATE_CLAIM = 'Imaging.Create' as const;
+export const IMAGING_UPDATE_CLAIM = 'Imaging.Update' as const;
+export const IMAGING_CANCEL_CLAIM = 'Imaging.Cancel' as const;
+
 export const HOSPITALIZATIONS_READ_CLAIM = 'Hospitalizations.Read' as const;
 export const HOSPITALIZATIONS_CREATE_CLAIM = 'Hospitalizations.Create' as const;
 export const HOSPITALIZATIONS_UPDATE_CLAIM = 'Hospitalizations.Update' as const;

@@ -15,6 +15,7 @@ import {
     EXAMINATION_TEMPLATES_UPDATE_CLAIM,
     EXAMINATIONS_READ_CLAIM,
     HOSPITALIZATIONS_READ_CLAIM,
+    IMAGING_READ_CLAIM,
     IMPORTS_READ_CLAIM,
     LAB_RESULTS_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
@@ -283,6 +284,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                     { label: 'Reçeteler', route: '/panel/prescriptions', claims: [PRESCRIPTIONS_READ_CLAIM] },
                     { label: 'Aşılar', route: '/panel/vaccinations', claims: [VACCINATIONS_READ_CLAIM] },
                     { label: 'Lab sonuçları', route: '/panel/lab-results', claims: [LAB_RESULTS_READ_CLAIM], badge: 'requestedLabResults' },
+                    { label: 'Görüntüleme', route: '/panel/imaging', claims: [IMAGING_READ_CLAIM] },
                     { label: 'Yatışlar', route: '/panel/hospitalizations', claims: [HOSPITALIZATIONS_READ_CLAIM] },
                     { label: 'Uygulamalar', route: '/panel/administrations', claims: [ADMINISTRATIONS_READ_CLAIM] }
                 ],

@@ -95,7 +95,7 @@ describe('panel-navigation', () => {
             ['Satışlar', '/panel/sales']
         ]);
         expect(tabs('Stok').map(([l]) => l)).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
-        expect(tabs('Kayıtlar').map(([l]) => l)).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Yatışlar', 'Uygulamalar']);
+        expect(tabs('Kayıtlar').map(([l]) => l)).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Görüntüleme', 'Yatışlar', 'Uygulamalar']);
     });
 
     it('Tür, Irk ve Kategori ana menüde yer almaz', () => {
@@ -249,7 +249,8 @@ describe('panel-navigation', () => {
             expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hastalar']);
             expect(tabs('/panel/pets?clientId=c1')?.active.label).toBe('Hastalar');
             expect(tabs('/panel/appointments/calendar')?.active.label).toBe('Takvim');
-            expect(tabs('/panel/administrations')?.tabs).toHaveSize(7);
+            expect(tabs('/panel/administrations')?.tabs).toHaveSize(8);
+            expect(tabs('/panel/imaging')?.active.label).toBe('Görüntüleme');
         });
 
         it('detay, form ve menüde olmayan adreslerde çubuk çıkmaz', () => {
@@ -290,6 +291,7 @@ describe('panel-navigation', () => {
                 'Reçeteler',
                 'Aşılar',
                 'Lab sonuçları',
+                'Görüntüleme',
                 'Yatışlar',
                 'Uygulamalar'
             ]);
