@@ -22,7 +22,7 @@ export interface UpdateAppointmentRequest {
     scheduledAtUtc: string;
     durationMinutes: number;
     appointmentType: number;
-    /** Update için zorunlu (0/1/2). */
+    /** Update için zorunlu: mevcut durum aynen gönderilir (durum değişimi `PUT` ile yapılmaz; `Appointments.InvalidStatusTransition`). */
     status: number;
     notes?: string;
 }

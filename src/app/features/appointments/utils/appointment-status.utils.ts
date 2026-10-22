@@ -4,11 +4,6 @@ const EM = '—';
 
 type StatusEnum0123 = 0 | 1 | 2 | 3;
 
-export interface AppointmentWriteStatusOption {
-    readonly label: string;
-    readonly value: StatusEnum0123;
-}
-
 const ENUM_LABEL: Record<StatusEnum0123, string> = {
     0: 'Planlandı',
     1: 'Tamamlandı',
@@ -22,13 +17,6 @@ const ENUM_SEVERITY: Record<StatusEnum0123, StatusTagSeverity> = {
     2: 'danger',
     3: 'warn'
 };
-
-/** Düzenleme `p-select` — `optionValue` = 0 | 1 | 2. Gelmedi (3) formdan seçilmez; kendi ucuyla işaretlenir. */
-export const APPOINTMENT_WRITE_STATUS_OPTIONS: ReadonlyArray<AppointmentWriteStatusOption> = [
-    { label: 'Planlandı', value: 0 },
-    { label: 'Tamamlandı', value: 1 },
-    { label: 'İptal', value: 2 }
-];
 
 /**
  * API ham değerini resmi enum’a çevirir; tanınmazsa `null` (sessiz Planlandı yok).

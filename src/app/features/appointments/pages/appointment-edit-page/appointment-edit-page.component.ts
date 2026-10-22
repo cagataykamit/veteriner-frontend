@@ -25,7 +25,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/features/appointments/utils/appointment-type.utils';
-import { APPOINTMENT_WRITE_STATUS_OPTIONS } from '@/app/features/appointments/utils/appointment-status.utils';
+import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
 import { APPOINTMENT_NOTES_MAX_LENGTH, appointmentLatestDateYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
@@ -42,10 +42,7 @@ import {
 } from '@/app/shared/utils/date-input-validation.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    APPOINTMENTS_CANCEL_CLAIM,
-    APPOINTMENTS_COMPLETE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 
 @Component({
@@ -59,7 +56,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
         SelectModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppStatusTagComponent
     ],
     template: `
         @if (loading()) {
@@ -173,21 +170,13 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                            <p-select
-                                inputId="status"
-                                formControlName="status"
-                                [options]="statusOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Durum seçin"
-                                [showClear]="false"
-                                styleClass="w-full"
-                            />
+                            <span id="statusLabel" class="block text-sm font-medium text-muted-color mb-2">Durum</span>
+                            <div class="flex min-h-10 items-center" role="group" aria-labelledby="statusLabel" data-testid="appointment-status">
+                                <app-status-tag [label]="statusLabel(form.controls.status.value)" [severity]="statusSeverity(form.controls.status.value)" />
+                            </div>
+                            <small class="block text-muted-color mt-1">Durum bu formdan değiştirilmez; iptal randevu listesinden, tamamlama muayeneyle yapılır.</small>
                             @if (apiFieldErrors().status) {
-                                <small class="text-red-500">{{ apiFieldErrors().status }}</small>
-                            } @else if (form.controls.status.invalid && form.controls.status.touched) {
-                                <small class="text-red-500">Durum seçimi zorunludur.</small>
+                                <small class="block text-red-500">{{ apiFieldErrors().status }}</small>
                             }
                         </div>
                         <div class="col-span-12">
@@ -270,23 +259,9 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
 
-    readonly canCancelAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CANCEL_CLAIM);
-    readonly canCompleteAppointment = this.auth.hasOperationClaim(APPOINTMENTS_COMPLETE_CLAIM);
-    private readonly writableStatusOptions = APPOINTMENT_WRITE_STATUS_OPTIONS.filter((x) => {
-        const v = String(x.value);
-
-        if (v === '2') {
-            return this.canCancelAppointment;
-        }
-
-        if (v === '1') {
-            return this.canCompleteAppointment;
-        }
-
-        return true;
-    });
-    /** Gelmedi (3) formdan seçilmez; yalnızca zaten gelmedi olan randevuda mevcut durum olarak görünür (yüklemede eklenir). */
-    statusOptions: Array<{ label: string; value: number }> = [...this.writableStatusOptions];
+    /** Durum salt okunur rozet: `PUT` her durum değişimini reddeder (`Appointments.InvalidStatusTransition`); iptal/gelmedi kendi uçlarıyla, tamamlama muayeneyle. */
+    readonly statusLabel = appointmentStatusLabel;
+    readonly statusSeverity = appointmentStatusSeverity;
 
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
@@ -300,6 +275,7 @@ export class AppointmentEditPageComponent implements OnInit {
             Validators.pattern(/^[0-9]+$/)
         ]),
         appointmentType: this.fb.control<number | null>(null, Validators.required),
+        /** Yüklenen mevcut durum; `PUT` gövdesinde aynen geri gönderilir. */
         status: this.fb.control<number | null>(null, Validators.required),
         notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH))
     });
@@ -322,7 +298,6 @@ export class AppointmentEditPageComponent implements OnInit {
         this.form.controls.scheduledTime.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('scheduledAtLocal'));
         this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('durationMinutes'));
         this.form.controls.appointmentType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('appointmentType'));
-        this.form.controls.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('status'));
         this.form.controls.notes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('notes'));
     }
 
@@ -372,7 +347,6 @@ export class AppointmentEditPageComponent implements OnInit {
         this.loadError.set(null);
         this.appointmentsService.getAppointmentForEditById(this.appointmentId).subscribe({
             next: (x) => {
-                this.statusOptions = x.status === 3 ? [...this.writableStatusOptions, { label: 'Gelmedi', value: 3 }] : [...this.writableStatusOptions];
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
@@ -444,8 +418,7 @@ export class AppointmentEditPageComponent implements OnInit {
         const statusNum = v.status;
 
         if (statusNum === null || statusNum === undefined || ![0, 1, 2, 3].includes(statusNum)) {
-            this.form.markAllAsTouched();
-            this.submitError.set('Durum seçin.');
+            this.submitError.set('Randevu durumu okunamadı; sayfayı yenileyin.');
 
             return;
         }
