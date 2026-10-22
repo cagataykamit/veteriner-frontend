@@ -4,6 +4,12 @@
  */
 export const TENANT_MANAGEMENT_CLAIM = 'Tenants.InviteCreate' as const;
 
+/**
+ * Platform yöneticisi (Vetinity'nin kendi yönetimi): izin değil, JWT `platform_admin` claim'i. `AuthService.hasOperationClaim`
+ * bu adı claim'e çevirir; menü ve guard'lar izin listesi gibi kullanır (satış ortakları, ADR-037).
+ */
+export const PLATFORM_ADMIN_CLAIM = 'platform_admin' as const;
+
 /** Abonelik özeti (okuma) */
 export const SUBSCRIPTIONS_READ_CLAIM = 'Subscriptions.Read' as const;
 

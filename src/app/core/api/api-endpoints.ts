@@ -399,10 +399,32 @@ export const ApiEndpoints = {
         assignableRolePermissionMatrix: (tenantId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/assignable-role-permission-matrix`,
         /** GET: panel salt okunur / yazma kilit durumu (abonelik özetinden bağımsız). */
-        accessState: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/access-state`
+        accessState: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/access-state`,
+        /** GET (`Subscriptions.Read`) ve POST `{ code }` (`Subscriptions.Manage`): satış ortağı kodu (`SALES_PARTNER_DISCOUNT_API_CONTRACT.md` §4). */
+        subscriptionDiscount: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-discount`
+    },
+    /** Platform yöneticisi: satış ortakları ve indirim kodları (`SALES_PARTNER_DISCOUNT_API_CONTRACT.md` §5). */
+    salesPartners: {
+        list: () => `/api/v1/admin/sales-partners`,
+        byId: (id: string) => `/api/v1/admin/sales-partners/${encodeURIComponent(id)}`,
+        codes: (id: string) => `/api/v1/admin/sales-partners/${encodeURIComponent(id)}/codes`,
+        codeById: (id: string, codeId: string) =>
+            `/api/v1/admin/sales-partners/${encodeURIComponent(id)}/codes/${encodeURIComponent(codeId)}`,
+        codeDeactivate: (id: string, codeId: string) =>
+            `/api/v1/admin/sales-partners/${encodeURIComponent(id)}/codes/${encodeURIComponent(codeId)}/deactivate`,
+        codeActivate: (id: string, codeId: string) =>
+            `/api/v1/admin/sales-partners/${encodeURIComponent(id)}/codes/${encodeURIComponent(codeId)}/activate`,
+        redemptions: (id: string) => `/api/v1/admin/sales-partners/${encodeURIComponent(id)}/redemptions`,
+        markPaid: (id: string) => `/api/v1/admin/sales-partners/${encodeURIComponent(id)}/commissions/mark-paid`,
+        cancelCollection: (id: string, collectionId: string) =>
+            `/api/v1/admin/sales-partners/${encodeURIComponent(id)}/collections/${encodeURIComponent(collectionId)}/cancel`,
+        /** GET CSV; Query `partnerId` (yoksa tüm ortaklar). */
+        exportCsv: () => `/api/v1/admin/sales-partners/export.csv`
     },
     public: {
         ownerSignup: () => `/api/v1/public/owner-signup`,
+        /** Anonim, hız sınırlı: satış ortağı kodu doğrulama; geçersizde tek tip yanıt. */
+        validateDiscountCode: () => `/api/v1/public/discount-codes/validate`,
         /** Anonim: hukuki belgelerin güncel sürümleri (`LEGAL_ACCEPTANCE_API_CONTRACT.md` §3). */
         legalDocuments: () => `/api/v1/public/legal-documents`,
         inviteByToken: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}`,

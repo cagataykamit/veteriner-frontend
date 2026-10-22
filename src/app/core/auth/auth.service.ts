@@ -11,6 +11,7 @@ import type {
     SelectClinicRequest,
     SessionTokens
 } from '@/app/core/auth/auth.models';
+import { PLATFORM_ADMIN_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 const ACCESS_TOKEN_KEY = 'veteriner.access_token';
 const REFRESH_TOKEN_KEY = 'veteriner.refresh_token';
@@ -186,7 +187,20 @@ export class AuthService {
             return false;
         }
 
+        // Platform yöneticisi izin değil, ayrı JWT claim'idir; menü/guard aynı izin listesinden süzebilsin diye burada çözülür.
+        if (wanted === PLATFORM_ADMIN_CLAIM) {
+            return this.isPlatformAdmin();
+        }
+
         return this.readOperationClaimsFromCurrentToken().some((c) => c === wanted);
+    }
+
+    /** Vetinity platform yöneticisi mi (JWT `platform_admin = true`; klinik rollerinden bağımsız, ADR-037). */
+    isPlatformAdmin(): boolean {
+        const token = this.getAccessToken();
+        const value = token ? this.decodeJwtPayload(token)?.['platform_admin'] : undefined;
+
+        return value === true || (typeof value === 'string' && value.trim().toLowerCase() === 'true');
     }
 
     /**
