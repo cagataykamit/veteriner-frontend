@@ -4,6 +4,7 @@ import { AppLayout } from './app/layout/component/app.layout';
 import { panelHomeRedirect } from '@/app/core/routing/panel-home.redirect';
 import { Notfound } from './app/pages/notfound/notfound';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
+import { referralCodeRedirect } from '@/app/features/sales-partners/routes/referral-code.redirect';
 
 /** Rota yolu (başındaki `/` olmadan). */
 const publicPath = (path: string): string => path.replace(/^\//, '');
@@ -80,5 +81,7 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./app/pages/public/join-invite-page.component').then((m) => m.JoinInvitePageComponent)
     },
     { path: 'auth', loadChildren: () => import('./app/features/auth/auth.routes') },
+    // Satış ortağı bağlantısı (ADR-037): kodu oturum belleğine alıp kayıt sayfasına yönlendirir.
+    { path: 'r/:code', canActivate: [referralCodeRedirect], children: [] },
     { path: '**', redirectTo: '/notfound' }
 ];

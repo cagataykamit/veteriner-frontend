@@ -11,6 +11,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { SubscriptionDiscountCardComponent } from '@/app/features/sales-partners/components/subscription-discount-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import type {
@@ -83,7 +84,8 @@ interface ReturnBannerVm {
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        SubscriptionDiscountCardComponent
     ],
     providers: [MessageService],
     template: `
@@ -222,6 +224,8 @@ interface ReturnBannerVm {
                         }
                     </div>
                 </div>
+
+                <app-subscription-discount-card class="col-span-12" [canManage]="canManageSubscriptionOperations(s)" />
 
                 <div class="col-span-12">
                     <div class="card mb-0">

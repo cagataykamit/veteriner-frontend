@@ -7,6 +7,8 @@ import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services
 import { LEGAL_ACCEPTANCE_CODE_MESSAGES, LEGAL_VERSION_OUTDATED_CODE } from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
 import type { PublicOwnerSignupRequestDto, PublicOwnerSignupResultDto } from '@/app/features/public/models/public-owner-signup-api.model';
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
+import { DiscountCodesService } from '@/app/features/sales-partners/services/discount-codes.service';
+import { PENDING_DISCOUNT_CODE_KEY } from '@/app/features/sales-partners/utils/discount-code.utils';
 import { OwnerSignupPageComponent } from './owner-signup-page.component';
 
 const VERSIONS: LegalDocumentVersionDto[] = [
@@ -42,9 +44,17 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         legal.getCurrentVersions.and.returnValue(of(VERSIONS));
         legal.refreshCurrentVersions.and.returnValue(of(VERSIONS));
 
+        sessionStorage.removeItem(PENDING_DISCOUNT_CODE_KEY);
+        const discountCodes = jasmine.createSpyObj<DiscountCodesService>('DiscountCodesService', ['validate']);
+
         await TestBed.configureTestingModule({
             imports: [OwnerSignupPageComponent],
-            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }]
+            providers: [
+                provideRouter([]),
+                { provide: PublicOwnerSignupService, useValue: signup },
+                { provide: LegalAcceptanceService, useValue: legal },
+                { provide: DiscountCodesService, useValue: discountCodes }
+            ]
         }).compileComponents();
 
         fixture = TestBed.createComponent(OwnerSignupPageComponent);
@@ -86,7 +96,33 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         const body = signup.signup.calls.mostRecent().args[0] as PublicOwnerSignupRequestDto;
 
         expect(body.acceptedLegalDocuments).toEqual(VERSIONS);
+        expect(body.discountCode).toBeUndefined();
         expect(cmp.successResult()).toEqual(RESULT);
+    });
+
+    it('ortak kodu girilmişse gövdeye eklenir, başarıda indirim notu gösterilir ve oturum belleği temizlenir (ADR-037)', () => {
+        sessionStorage.setItem(PENDING_DISCOUNT_CODE_KEY, 'ISIK10');
+        signup.signup.and.returnValue(of({ ...RESULT, discount: { code: 'ISIK10', discountPercent: 10, discountMonths: 12 } }));
+        cmp.discountCode.set('ISIK10');
+        cmp.legalConsent.set(true);
+
+        cmp.submit();
+        fixture.detectChanges();
+
+        expect((signup.signup.calls.mostRecent().args[0] as PublicOwnerSignupRequestDto).discountCode).toBe('ISIK10');
+        expect(host().querySelector('[data-testid="signup-discount-note"]')?.textContent).toContain('%10 indirim, ilk 12 ay');
+        expect(sessionStorage.getItem(PENDING_DISCOUNT_CODE_KEY)).toBeNull();
+    });
+
+    it('geçersiz kodda sunucunun tek tip hatasını gösterir', () => {
+        const invalid = new HttpErrorResponse({ status: 400, error: { status: 400, extensions: { code: 'DiscountCodes.Invalid' } } });
+
+        signup.signup.and.returnValue(throwError(() => invalid));
+        cmp.discountCode.set('YANLIS');
+        cmp.legalConsent.set(true);
+        cmp.submit();
+
+        expect(cmp.formError()).toBe('Ortak kodu geçersiz.');
     });
 
     it('409 VersionOutdated: mesaj gösterir, onayı kaldırır ve sürümleri yeniler', () => {

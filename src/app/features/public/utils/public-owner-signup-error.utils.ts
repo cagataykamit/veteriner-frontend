@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
+import { DISCOUNT_CODE_INVALID_MESSAGE } from '@/app/features/sales-partners/utils/discount-code.utils';
 
 const PUBLIC_OWNER_SIGNUP_CODE_MESSAGES: Record<string, string> = {
     ...LEGAL_ACCEPTANCE_CODE_MESSAGES,
@@ -9,7 +10,8 @@ const PUBLIC_OWNER_SIGNUP_CODE_MESSAGES: Record<string, string> = {
     'Users.DuplicateEmail': 'Bu e-posta adresi zaten kayıtlı.',
     'Tenants.DuplicateName': 'Bu kurum adı zaten kullanılıyor.',
     'Clinics.DuplicateName': 'Bu klinik adı bu kurumda zaten kullanılıyor.',
-    'Auth.AdminClaimMissing': 'Yönetici yetkisi atanamadı. Lütfen destek ile iletişime geçin.'
+    'Auth.AdminClaimMissing': 'Yönetici yetkisi atanamadı. Lütfen destek ile iletişime geçin.',
+    'DiscountCodes.Invalid': DISCOUNT_CODE_INVALID_MESSAGE
 };
 
 /**

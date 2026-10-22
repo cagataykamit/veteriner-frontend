@@ -9,6 +9,15 @@ export interface PublicOwnerSignupRequestDto {
     password: string;
     /** Onay kutusuyla kabul edilen belgeler ve gösterilen sürümler; sunucu güncel sürümü doğrular (ADR-029). */
     acceptedLegalDocuments: LegalDocumentVersionDto[];
+    /** İsteğe bağlı satış ortağı kodu (ADR-037); sunucu yeniden doğrular, geçersizse kayıt yapılmaz. */
+    discountCode?: string;
+}
+
+/** Kayıtta kullanılan ortak kodu özeti; ortak bilgisi içermez. */
+export interface SignupDiscountDto {
+    code: string;
+    discountPercent: number;
+    discountMonths: number;
 }
 
 export interface PublicOwnerSignupResultDto {
@@ -20,4 +29,5 @@ export interface PublicOwnerSignupResultDto {
     trialEndsAtUtc: string;
     canLogin: boolean;
     nextStep: string;
+    discount?: SignupDiscountDto | null;
 }

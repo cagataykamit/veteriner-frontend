@@ -27,11 +27,30 @@ import {
     PASSWORD_POLICY_HINT,
     validateStrongPasswordValue
 } from '@/app/core/validation/password-policy.util';
+import { DiscountCodeFieldComponent } from '@/app/features/sales-partners/components/discount-code-field.component';
+import type { DiscountCodeValidationDto } from '@/app/features/sales-partners/models/sales-partner.model';
+import {
+    clearPendingDiscountCode,
+    DISCOUNT_CODE_QUERY_PARAM,
+    discountNoteText,
+    normalizeDiscountCodeInput,
+    readPendingDiscountCode
+} from '@/app/features/sales-partners/utils/discount-code.utils';
 
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent],
+    imports: [
+        FormsModule,
+        ButtonModule,
+        InputTextModule,
+        PasswordModule,
+        RippleModule,
+        RouterLink,
+        PublicLegalLinksComponent,
+        LegalConsentCheckboxComponent,
+        DiscountCodeFieldComponent
+    ],
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
@@ -61,6 +80,12 @@ import {
                             <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 mb-6 text-left">
                                 <div class="text-sm text-muted-color mb-1">Seçilen plan</div>
                                 <div class="font-semibold text-surface-900 dark:text-surface-0 mb-4">{{ successPlanTitle(res) }}</div>
+                                @if (res.discount; as discount) {
+                                    <div class="text-sm mb-4" data-testid="signup-discount-note">
+                                        Ortak kodu <span class="font-semibold">{{ discount.code }}</span>:
+                                        {{ discountNote(discount.discountPercent, discount.discountMonths) }}
+                                    </div>
+                                }
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                     <div>
                                         <div class="text-muted-color mb-1">Deneme başlangıcı</div>
@@ -147,6 +172,13 @@ import {
                                     }
                                 </div>
 
+                                <app-discount-code-field
+                                    inputId="signupDiscountCode"
+                                    [disabled]="submitting()"
+                                    [(code)]="discountCode"
+                                    (validated)="discountValidation.set($event)"
+                                />
+
                                 <p class="text-sm text-muted-color m-0">
                                     Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır. Paket değişimi ve ödeme sonraki fazda
                                     eklenecektir.
@@ -214,6 +246,13 @@ export class OwnerSignupPageComponent implements OnInit {
     clinicCity = '';
     email = '';
     password = '';
+
+    /** Satış ortağı kodu (ADR-037): `/r/:kod` bağlantısından (URL `kod` ya da oturum belleği) gelir ya da elle girilir. */
+    readonly discountCode = signal(
+        normalizeDiscountCodeInput(this.route.snapshot.queryParamMap.get(DISCOUNT_CODE_QUERY_PARAM) ?? readPendingDiscountCode())
+    );
+    readonly discountValidation = signal<DiscountCodeValidationDto | null>(null);
+    readonly discountNote = discountNoteText;
 
     readonly submitting = signal(false);
     readonly formError = signal<string | null>(null);
@@ -291,7 +330,9 @@ export class OwnerSignupPageComponent implements OnInit {
             clinicCity,
             email,
             password,
-            acceptedLegalDocuments: legalVersions
+            acceptedLegalDocuments: legalVersions,
+            // Kod sunucuda yeniden doğrulanır; anlık doğrulama yalnız bilgi amaçlıdır (geçersizse kayıt tek tip hatayla döner).
+            ...(this.discountCode() ? { discountCode: this.discountCode() } : {})
         };
 
         this.submitting.set(true);
@@ -302,6 +343,7 @@ export class OwnerSignupPageComponent implements OnInit {
                 next: (res) => {
                     this.loginEmailAfterSuccess.set(email);
                     this.successResult.set(res);
+                    clearPendingDiscountCode();
                 },
                 error: (err: unknown) => {
                     this.formError.set(publicOwnerSignupFailureMessage(err));
