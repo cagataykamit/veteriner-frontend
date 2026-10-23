@@ -124,6 +124,26 @@ describe('ImagingRecordFormComponent — hata korumalı kayıt ve yükleme (L6)'
         expect(saved).toEqual(['r1']);
     });
 
+    it('kuyruktaki "Yeniden dene" başarılı olunca hata kalkar ve kayıt tamamlanır', async () => {
+        const { c, uploader, fixture } = setup();
+        const saved: string[] = [];
+
+        c.saved.subscribe((id) => saved.push(id));
+        uploader.addFiles([jpg()]);
+        upload.and.returnValue(throwError(() => new Error('Dosya deposu şu anda kullanılamıyor.')));
+        await c.onSubmit();
+        fixture.detectChanges();
+
+        expect(c.submitError()).toContain('1 dosya yüklenemedi');
+
+        upload.and.returnValue(of({ type: 'done', file: { id: 'f1', fileName: 'a.jpg', contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '' } }));
+        uploader.retry(uploader.items()[0]);
+        await Promise.resolve();
+
+        expect(c.submitError()).toBeNull();
+        expect(saved).toEqual(['r1']);
+    });
+
     it('kayıt oluşturma hatasında metin formda kalır ve dosya gönderilmez', async () => {
         const { c, uploader } = setup();
 

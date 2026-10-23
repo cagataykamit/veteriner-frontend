@@ -123,7 +123,7 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
                     </div>
                     <div class="col-span-12">
                         <span class="block text-sm font-medium text-muted-color mb-2">Dosyalar *</span>
-                        <app-stored-file-upload [ownerPath]="ownerPath()" [disabled]="submitting() || ro.mutationBlocked()" />
+                        <app-stored-file-upload [ownerPath]="ownerPath()" [disabled]="submitting() || ro.mutationBlocked()" (uploaded)="onFileUploaded()" />
                         @if (filesMissing()) {
                             <small class="text-red-500 block mt-1" role="alert">En az bir dosya ekleyin.</small>
                         }
@@ -266,6 +266,19 @@ export class ImagingRecordFormComponent implements OnInit {
         } finally {
             this.submitting.set(false);
         }
+    }
+
+    /** Kuyruktaki "Yeniden dene" ile gönderim formdan geçmez; son dosya da tamamlanınca hata kalkar ve kayıt tamamlanır. */
+    onFileUploaded(): void {
+        const id = this.recordId();
+        const uploader = this.uploader();
+
+        if (!id || this.submitting() || uploader.pendingCount() > 0) {
+            return;
+        }
+
+        this.submitError.set(null);
+        this.saved.emit(id);
     }
 
     /** Kaydı oluşturur, alanları kilitler (yeniden gönderim yalnız dosyalar içindir). Hata metni formda kalır. */
