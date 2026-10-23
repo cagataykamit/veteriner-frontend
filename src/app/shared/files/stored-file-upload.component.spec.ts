@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Subject, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import type { StoredFileUploadEvent, StoredFileVm } from './stored-file.model';
 import { StoredFileUploadComponent } from './stored-file-upload.component';
 import { StoredFilesService } from './stored-files.service';
@@ -94,5 +94,18 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
         fixture.componentInstance.addFiles([jpg()]);
 
         expect(upload).toHaveBeenCalledTimes(1);
+    });
+
+    it('autoUpload açıkken biten dosya kuyrukta tekrarlanmaz', async () => {
+        const fixture = create('/api/v1/imaging-records/r1');
+
+        fixture.componentRef.setInput('autoUpload', true);
+        upload.and.returnValue(of({ type: 'done', file: { id: 'f1', fileName: 'a.jpg', contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '' } }));
+        fixture.componentInstance.addFiles([jpg()]);
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.items()[0].status).toBe('done');
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="file-queue"]')).toBeNull();
     });
 });

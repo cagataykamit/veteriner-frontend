@@ -60,9 +60,9 @@ let nextKey = 1;
             <input #picker type="file" class="hidden" multiple [accept]="accept" (change)="onPicked($event)" data-testid="file-input" />
         </div>
 
-        @if (items().length > 0) {
+        @if (visibleItems().length > 0) {
             <ul class="list-none m-0 mt-3 p-0 flex flex-col gap-2" aria-label="Yüklenecek dosyalar" data-testid="file-queue">
-                @for (item of items(); track item.key) {
+                @for (item of visibleItems(); track item.key) {
                     <li class="rounded-border border border-surface-200 dark:border-surface-700 p-2" [attr.data-status]="item.status">
                         <div class="flex flex-wrap items-center gap-2">
                             <i [class]="item.status === 'done' ? 'pi pi-check-circle text-green-600' : item.status === 'failed' || item.status === 'rejected' ? 'pi pi-exclamation-circle text-red-500' : 'pi pi-file'" aria-hidden="true"></i>
@@ -120,6 +120,8 @@ export class StoredFileUploadComponent {
     protected readonly size = formatFileSize;
 
     readonly items = signal<QueueItem[]>([]);
+    /** Otomatik yüklemede biten dosya sayfadaki dosya listesinde zaten görünür; kuyrukta tekrarlanmaz. */
+    protected readonly visibleItems = computed(() => (this.autoUpload() ? this.items().filter((i) => i.status !== 'done') : this.items()));
     readonly dragActive = signal(false);
     readonly busy = signal(false);
     /** Yüklenmeyi bekleyen veya başarısız (yeniden denenebilir) dosya sayısı. */
