@@ -73,12 +73,12 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 
                 @if (error()) {
                     <app-error-state [detail]="error()!" (retry)="reload()" />
-                } @else if (loading()) {
+                } @else if (loading() && !loaded()) {
                     <app-loading-state message="Uygulamalar yükleniyor…" />
                 } @else if (rows().length === 0) {
                     <p class="text-muted-color text-sm m-0" data-testid="administrations-empty">Bu kayıtta uygulanan ürün yok.</p>
                 } @else {
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
                         <p-table [value]="rows()" [tableStyle]="{ 'min-width': '34rem' }">
                             <ng-template #header>
                                 <tr>
@@ -146,6 +146,8 @@ export class AdministrationsSectionComponent {
     readonly canAdd = computed(() => this.canCreate && !this.ro.mutationBlocked());
 
     readonly loading = signal(true);
+    /** İlk yükleme bitince liste yenilemede yerinde kalır; kart küçülüp alttaki bölümleri zıplatmaz. */
+    readonly loaded = signal(false);
     readonly error = signal<string | null>(null);
     readonly rows = signal<AdministrationVm[]>([]);
     /** İptal edilen uygulamalar varsayılan gizli (ADR-013); açıkça istenince listelenir. */
@@ -184,6 +186,7 @@ export class AdministrationsSectionComponent {
             .subscribe({
                 next: (r) => {
                     this.rows.set(r.items);
+                    this.loaded.set(true);
                     this.loading.set(false);
                 },
                 error: (e: Error) => {

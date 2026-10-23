@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, EMPTY } from 'rxjs';
+import { of, EMPTY, Subject } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
 import type { AdministrationsPagedVm, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
@@ -111,6 +111,22 @@ describe('AdministrationsSectionComponent', () => {
         expect(service.getAdministrations.calls.mostRecent().args[0]?.includeVoided).toBeTrue();
         fixture.detectChanges();
         expect(text()).toContain('İptal edilenleri göster');
+    });
+
+    it('süzgeç değişince liste yerinde kalır; "Yükleniyor" yalnız ilk yüklemede görünür (alttaki bölümler zıplamaz)', async () => {
+        await setup();
+        const pending = new Subject<AdministrationsPagedVm>();
+
+        service.getAdministrations.and.returnValue(pending);
+        fixture.componentInstance.setShowVoided(true);
+        fixture.detectChanges();
+
+        expect(text()).toContain('Serum');
+        expect(text()).not.toContain('Uygulamalar yükleniyor');
+        pending.next(page([row]));
+        pending.complete();
+        fixture.detectChanges();
+        expect(text()).toContain('Serum');
     });
 
     it('kayıt yokken boş durum tek satır; süzgeç ve Uygulama ekle başlık satırında kalır', async () => {
