@@ -422,7 +422,9 @@ export const ApiEndpoints = {
         /** GET: panel salt okunur / yazma kilit durumu (abonelik özetinden bağımsız). */
         accessState: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/access-state`,
         /** GET (`Subscriptions.Read`) ve POST `{ code }` (`Subscriptions.Manage`): satış ortağı kodu (`SALES_PARTNER_DISCOUNT_API_CONTRACT.md` §4). */
-        subscriptionDiscount: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-discount`
+        subscriptionDiscount: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-discount`,
+        /** POST gövdesiz (`Subscriptions.Manage`): boş deneme kiracısına Örnek Veteriner Kliniğini yükler (`EXAMPLE_CLINIC_API_CONTRACT.md` §4). */
+        exampleClinic: (tenantId: string) => `/api/v1/tenants/${encodeURIComponent(tenantId)}/example-clinic`
     },
     /** Platform yöneticisi: satış ortakları ve indirim kodları (`SALES_PARTNER_DISCOUNT_API_CONTRACT.md` §5). */
     salesPartners: {
