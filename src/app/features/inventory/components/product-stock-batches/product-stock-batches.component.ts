@@ -18,7 +18,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     template: `
         <section class="mb-6 last:mb-0" [attr.aria-label]="'Partiler: ' + clinicName()" data-testid="product-stock-batches">
             <h6 class="mt-0 mb-2 text-base font-semibold">{{ clinicName() }}</h6>
-            @if (loading()) {
+            @if (loading() && !data()) {
                 <app-loading-state message="Partiler yükleniyor…" />
             } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="load()" />
@@ -44,7 +44,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 @if (d.batches.length === 0) {
                     <app-empty-state message="Kalanı olan parti yok." />
                 } @else {
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
                         <p-table [value]="d.batches" [tableStyle]="{ 'min-width': '40rem' }">
                             <ng-template #header>
                                 <tr>

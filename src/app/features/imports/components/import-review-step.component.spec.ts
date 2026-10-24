@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { ImportReviewStepComponent } from '@/app/features/imports/components/import-review-step.component';
 import type { ImportBatchDto, ImportPreviewDto, ImportRowDto, ImportRowPageDto, ImportTableSummaryDto } from '@/app/features/imports/models/import-api.model';
@@ -66,5 +66,30 @@ describe('ImportReviewStepComponent', () => {
         expect(text).toContain('(Hasta no)');
         expect(text).not.toContain('HayvanAdi');
         expect(text).not.toContain('HayvanNo');
+    });
+
+    it('süzgeç değişince satırlar yerinde kalır; "yükleniyor" yalnız ilk yüklemede görünür (alttaki düğmeler zıplamaz)', () => {
+        imports.getRows.and.returnValue(of({ items: [row('pets', 'HayvanAdi')], totalItems: 1 } as unknown as ImportRowPageDto));
+        fixture = TestBed.createComponent(ImportReviewStepComponent);
+        fixture.componentRef.setInput('batch', batch);
+        fixture.componentRef.setInput('preview', preview);
+        fixture.componentRef.setInput('choices', {});
+        fixture.detectChanges();
+        fixture.detectChanges();
+
+        const pending = new Subject<ImportRowPageDto>();
+
+        imports.getRows.and.returnValue(pending);
+        fixture.componentInstance['setStatus']('Error');
+        fixture.detectChanges();
+
+        const text = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+        expect(text()).toContain('(Hasta adı)');
+        expect(text()).not.toContain('Satırlar yükleniyor');
+        pending.next({ items: [row('pets', 'HayvanAdi')], totalItems: 1 } as unknown as ImportRowPageDto);
+        pending.complete();
+        fixture.detectChanges();
+        expect(text()).toContain('(Hasta adı)');
     });
 });

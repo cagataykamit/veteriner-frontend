@@ -181,12 +181,12 @@ const ROW_PAGE_SIZE = 25;
 
                     @if (rowsError()) {
                         <p-message severity="error" styleClass="w-full" role="alert">{{ rowsError() }}</p-message>
-                    } @else if (rowsLoading()) {
+                    } @else if (rowsLoading() && rows().length === 0) {
                         <p class="text-muted-color">Satırlar yükleniyor…</p>
                     } @else if (rows().length === 0) {
                         <app-empty-state message="Bu süzgece uyan satır yok." />
                     } @else {
-                        <ul class="list-none p-0 m-0 flex flex-col gap-2">
+                        <ul class="list-none p-0 m-0 flex flex-col gap-2" [class.opacity-60]="rowsLoading()" [attr.aria-busy]="rowsLoading()">
                             @for (r of rows(); track r.table + r.rowNumber) {
                                 <li class="rounded-border border border-surface-200 dark:border-surface-700 p-3">
                                     <div class="flex flex-wrap items-center gap-2">

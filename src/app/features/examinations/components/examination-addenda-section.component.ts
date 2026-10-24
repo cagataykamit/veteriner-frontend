@@ -31,14 +31,14 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     ></button>
                 }
             </div>
-            @if (loading()) {
+            @if (loading() && addenda().length === 0) {
                 <p class="m-0 text-muted-color">Ek notlar yükleniyor…</p>
             } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="load()" />
             } @else if (addenda().length === 0) {
                 <app-empty-state message="Ek not yok." />
             } @else {
-                <ul class="list-none m-0 p-0">
+                <ul class="list-none m-0 p-0" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
                     @for (a of addenda(); track a.id) {
                         <li class="mb-4 pb-4 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0" data-testid="addendum-item">
                             <div class="text-muted-color text-sm mb-1">

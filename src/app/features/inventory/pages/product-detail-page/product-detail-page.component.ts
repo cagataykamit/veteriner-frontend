@@ -256,7 +256,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                 Salt okunur modda stok girişi, stok çıkışı ve minimum stok güncellenemez; stok bilgileri görüntülenebilir.
                             </p>
                         }
-                        @if (stocksLoading()) {
+                        @if (stocksLoading() && stocksRows().length === 0) {
                             <app-loading-state message="Stok bilgileri yükleniyor…" />
                         } @else if (stocksError()) {
                             <app-error-state [detail]="stocksError()!" (retry)="reloadStocks()" />
@@ -264,7 +264,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                             <app-empty-state message="Bu ürün için henüz stok kaydı yok." />
                         } @else {
                             <!-- Masaüstü: çizgisiz kolon hizası; yalnızca satır ayırıcıları -->
-                            <div class="hidden md:block overflow-x-auto w-full">
+                            <div class="hidden md:block overflow-x-auto w-full" [class.opacity-60]="stocksLoading()" [attr.aria-busy]="stocksLoading()">
                                 <div class="w-full min-w-0">
                                     <div
                                         role="row"
@@ -318,7 +318,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                     }
                                 </div>
                             </div>
-                            <div class="md:hidden space-y-2.5">
+                            <div class="md:hidden space-y-2.5" [class.opacity-60]="stocksLoading()" [attr.aria-busy]="stocksLoading()">
                                 @for (row of stocksRowsView().displayed; track row.id) {
                                     <div
                                         class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 px-3 py-2.5 shadow-sm"
@@ -365,7 +365,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                     </div>
                 </div>
 
-                @if (canReadStockMovements && !stocksLoading() && stocksRows().length > 0) {
+                @if (canReadStockMovements && stocksRows().length > 0) {
                     <div class="col-span-12">
                         <div class="card" data-testid="product-batches-card">
                             <h5 class="mt-0 mb-4 text-base font-semibold text-surface-900 dark:text-surface-0">Partiler</h5>

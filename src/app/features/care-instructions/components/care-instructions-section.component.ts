@@ -43,12 +43,12 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 
                 @if (error()) {
                     <app-error-state [detail]="error()!" (retry)="reload()" />
-                } @else if (loading()) {
+                } @else if (loading() && rows().length === 0) {
                     <app-loading-state message="Bakım talimatları yükleniyor…" />
                 } @else if (rows().length === 0) {
                     <app-empty-state message="Bu yatış için bakım talimatı yok." />
                 } @else {
-                    <ul class="list-none m-0 p-0">
+                    <ul class="list-none m-0 p-0" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
                         @for (row of rows(); track row.id) {
                             <li class="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-b-0 border-surface-200 dark:border-surface-700" data-testid="care-instruction-row">
                                 <p class="mt-0 mb-2 whitespace-pre-wrap break-words">{{ row.text }}</p>

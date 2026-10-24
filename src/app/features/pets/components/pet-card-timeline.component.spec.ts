@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/features/pets/models/pet-timeline-vm.model';
 import type { PetHistoryPaymentItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
@@ -104,5 +104,20 @@ describe('PetCardTimelineComponent', () => {
 
         expect(calls.length).toBe(2);
         expect(el().querySelector('[data-testid="timeline-empty"]')).not.toBeNull();
+    });
+
+    it('süzgeç değişince liste yerinde kalır; "Yükleniyor" yalnız ilk yüklemede görünür (alttaki bölümler zıplamaz)', () => {
+        create({ state: 'ok', data: [] });
+        const pending = new Subject<PetTimelinePageVm>();
+
+        responder = () => pending;
+        select('lab');
+
+        expect(el().querySelector('[data-testid="timeline-list"]')).not.toBeNull();
+        expect(el().textContent).not.toContain('Yükleniyor');
+        pending.next({ items: [event('LabResult', 'l1', '2026-10-12T10:00:00Z')], nextCursor: null, omittedTypes: [] });
+        pending.complete();
+        fixture.detectChanges();
+        expect(el().querySelector('a[href="/panel/lab-results/l1"]')).not.toBeNull();
     });
 });

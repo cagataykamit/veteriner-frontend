@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CareInstructionsSectionComponent } from '@/app/features/care-instructions/components/care-instructions-section.component';
 import type { CareInstructionVm } from '@/app/features/care-instructions/models/care-instruction-vm.model';
@@ -123,5 +123,21 @@ describe('CareInstructionsSectionComponent', () => {
         fixture.componentInstance.openCreate();
         await typeAndSubmit('   ');
         expect(service.createCareInstruction).not.toHaveBeenCalled();
+    });
+
+    it('yenilemede liste yerinde kalır; "yükleniyor" yalnız ilk yüklemede görünür (alttaki bölümler zıplamaz)', async () => {
+        await setup();
+        const pending = new Subject<CareInstructionVm[]>();
+
+        service.getCareInstructions.and.returnValue(pending);
+        fixture.componentInstance.reload();
+        fixture.detectChanges();
+
+        expect(root().textContent).toContain('Günde iki kez yemek');
+        expect(root().textContent).not.toContain('Bakım talimatları yükleniyor');
+        pending.next([row]);
+        pending.complete();
+        fixture.detectChanges();
+        expect(root().textContent).toContain('Günde iki kez yemek');
     });
 });

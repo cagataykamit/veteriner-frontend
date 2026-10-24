@@ -57,7 +57,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
 
             @if (filter() === 'payment' && payments() === null) {
                 <p class="m-0 text-muted-color" data-testid="payments-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Ödemeleri görme yetkiniz yok</p>
-            } @else if (loading()) {
+            } @else if (loading() && items().length === 0) {
                 <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>
             } @else if (error()) {
                 <div class="flex flex-wrap items-center gap-3" data-testid="timeline-error">
@@ -78,7 +78,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
                 @if (items().length === 0) {
                     <p class="m-0 text-muted-color" data-testid="timeline-empty">Bu süzgece uyan kayıt yok.</p>
                 } @else {
-                    <ol class="list-none m-0 p-0" data-testid="timeline-list">
+                    <ol class="list-none m-0 p-0" data-testid="timeline-list" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
                         @for (item of items(); track item.key) {
                             <li appPetTimelineItem [item]="item"></li>
                         }
