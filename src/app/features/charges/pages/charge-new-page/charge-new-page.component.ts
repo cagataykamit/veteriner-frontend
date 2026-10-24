@@ -196,6 +196,9 @@ export class ChargeNewPageComponent implements OnInit {
     /** "Bugün" listesinin tarihi (yyyy-MM-dd); önceki günden süren gelişler bağlanabilir geliş sayılmaz. */
     private readonly todayDate = signal('');
     private visitPresetId = this.route.snapshot.queryParamMap.get('visitId')?.trim() || null;
+    private examinationPresetId = this.route.snapshot.queryParamMap.get('examinationId')?.trim() || null;
+    /** Adresten gelen müşteri/hayvan ön seçimleri uygulandı; sonraki değişiklikler kullanıcıdan gelir. */
+    private presetsSettled = false;
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -254,6 +257,7 @@ export class ChargeNewPageComponent implements OnInit {
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.form.patchValue({ petId: '', visitId: '', examinationId: '' }, { emitEvent: false });
             this.examinationOptions.set([]);
+            this.dropExaminationPresetIfSettled();
             const id = trimClientIdControlValue(clientId);
 
             this.form.updateValueAndValidity();
@@ -261,18 +265,33 @@ export class ChargeNewPageComponent implements OnInit {
         });
         this.form.controls.petId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((petId) => {
             this.form.patchValue({ visitId: '', examinationId: '' }, { emitEvent: false });
+            this.dropExaminationPresetIfSettled();
             this.form.updateValueAndValidity();
             this.loadExaminations(trimClientIdControlValue(this.form.controls.clientId.value), trimClientIdControlValue(petId));
         });
         // Abonelikler kurulduktan sonra: query'den gelen müşteri ön seçimi değişiklik akışını tetiklemeli.
         const query = this.route.snapshot.queryParamMap;
         const preset = query.get('clientId')?.trim();
+        const petPreset = query.get('petId')?.trim();
 
         if (!prefillPetFromRoute(query, this.form.controls.clientId, this.form.controls.petId) && preset) {
             this.form.controls.clientId.setValue(preset);
+
+            // Geliş/muayene bağlamıyla gelen hayvan: yardımcı (başka bağlam var diye) atlar, burada seçilir.
+            if (petPreset) {
+                this.form.controls.petId.setValue(petPreset);
+            }
         }
 
+        this.presetsSettled = true;
         this.applyVisitPreset();
+    }
+
+    /** Adres ön ayarları yerleştikten sonra müşteri/hayvan değişirse bekleyen muayene ön ayarı geçersizdir. */
+    private dropExaminationPresetIfSettled(): void {
+        if (this.presetsSettled) {
+            this.examinationPresetId = null;
+        }
     }
 
     private arrivedToday(item: TodayItemVm): boolean {
@@ -289,8 +308,27 @@ export class ChargeNewPageComponent implements OnInit {
         }
 
         this.visitPresetId = null;
-        this.form.controls.petId.setValue(item.petId);
+
+        // Hayvan zaten adresten seçiliyse yeniden atanmaz: muayene listesi ve seçimi sıfırlanmasın.
+        if (trimClientIdControlValue(this.form.controls.petId.value) !== item.petId) {
+            this.form.controls.petId.setValue(item.petId);
+        }
+
         this.form.controls.visitId.setValue(item.visitId as string, { emitEvent: false });
+    }
+
+    /**
+     * Muayene ekranından gelen `examinationId`: muayene yüklenen seçeneklerdeyse önceden seçilir. Ön ayar, adres ön seçimleri
+     * (müşteri, sonra hayvan) peş peşe liste yüklediği için her yüklemede yeniden uygulanır; kullanıcı değişikliğinde düşer.
+     */
+    private applyExaminationPreset(): void {
+        const examinationId = this.examinationPresetId;
+
+        if (!examinationId || !this.examinationOptions().some((o) => o.value === examinationId)) {
+            return;
+        }
+
+        this.form.controls.examinationId.setValue(examinationId, { emitEvent: false });
     }
 
     goList(): void {
@@ -380,6 +418,7 @@ export class ChargeNewPageComponent implements OnInit {
                         }))
                     );
                     this.loadingExaminations.set(false);
+                    this.applyExaminationPreset();
                 },
                 error: () => {
                     this.examinationOptions.set([]);

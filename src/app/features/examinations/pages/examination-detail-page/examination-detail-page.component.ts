@@ -31,6 +31,7 @@ import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     ADMINISTRATIONS_CREATE_CLAIM,
+    CHARGES_CREATE_CLAIM,
     EXAMINATION_TEMPLATES_APPLY_CLAIM,
     EXAMINATION_TEMPLATES_READ_CLAIM,
     EXAMINATIONS_ADDENDUM_CLAIM,
@@ -101,33 +102,28 @@ const RECORD_TEXT_SECTIONS: readonly {
                     @if (canApplyTemplateNow()) {
                         <button pButton type="button" label="Şablon uygula" icon="pi pi-clone" class="p-button-secondary" data-testid="template-apply-open" (click)="templateDialogVisible.set(true)"></button>
                     }
-                    @if (canUpdateExamination && !ro.mutationBlocked()) {
-                        @if (isEditable(exam()!.status)) {
+                    @if (canUpdateExamination && isEditable(exam()!.status)) {
+                        @if (!ro.mutationBlocked()) {
                             <a [routerLink]="['/panel/examinations', exam()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
-                        }
-                        @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
-                            @if (canCreatePayment) {
-                                <a
-                                    [routerLink]="['/panel/payments/new']"
-                                    [queryParams]="{
-                                        clientId: exam()!.clientId,
-                                        petId: exam()!.petId,
-                                        examinationId: exam()!.id
-                                    }"
-                                    pButton
-                                    type="button"
-                                    label="Ödeme Oluştur"
-                                    icon="pi pi-wallet"
-                                    class="p-button-secondary"
-                                ></a>
-                            }
-                        }
-                    } @else if (canUpdateExamination && ro.mutationBlocked()) {
-                        @if (isEditable(exam()!.status)) {
+                        } @else {
                             <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                         }
-                        @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
-                            <button pButton type="button" label="Ödeme (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                    }
+                    @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
+                        @let moneyContext = { clientId: exam()!.clientId, petId: exam()!.petId, examinationId: exam()!.id };
+                        @if (canCreateCharge) {
+                            @if (!ro.mutationBlocked()) {
+                                <a [routerLink]="['/panel/charges/new']" [queryParams]="moneyContext" pButton type="button" label="Ücret ekle" icon="pi pi-plus" class="p-button-secondary" data-testid="charge-new-link"></a>
+                            } @else {
+                                <button pButton type="button" label="Ücret ekle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            }
+                        }
+                        @if (canCreatePayment) {
+                            @if (!ro.mutationBlocked()) {
+                                <a [routerLink]="['/panel/payments/new']" [queryParams]="moneyContext" pButton type="button" label="Ödeme Oluştur" icon="pi pi-wallet" class="p-button-secondary"></a>
+                            } @else {
+                                <button pButton type="button" label="Ödeme (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            }
                         }
                     }
                 </div>
@@ -328,6 +324,8 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly isEditable = isExaminationEditable;
     readonly canFinalizeExamination = this.auth.hasOperationClaim(EXAMINATIONS_FINALIZE_CLAIM);
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
+    /** Ücret ekle / Ödeme Oluştur: muayene düzenleme izninden bağımsız, yalnız ilgili finans izniyle (resepsiyon akışı). */
+    readonly canCreateCharge = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
     readonly canAddendumExamination = this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);
     readonly statusLabel = examinationStatusLabel;
     readonly statusSeverity = examinationStatusSeverity;

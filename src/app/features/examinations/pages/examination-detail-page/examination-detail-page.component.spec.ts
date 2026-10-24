@@ -298,6 +298,34 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(yetkili.el.querySelector('a[href*="/panel/payments/new"]')).not.toBeNull();
     });
 
+    it('Ücret ekle yalnız Charges.Create izniyle görünür ve müşteri + hasta + muayene bağlamını taşır; Payments.Create tek başına yetmez', async () => {
+        const odemeci = await setup(detailVm, ['Payments.Create']);
+
+        expect(odemeci.el.querySelector('a[href*="/panel/charges/new"]')).toBeNull();
+        expect(odemeci.el.querySelector('a[href*="/panel/payments/new"]')).not.toBeNull();
+        TestBed.resetTestingModule();
+
+        const resepsiyon = await setup(detailVm, ['Charges.Create']);
+        const link = resepsiyon.el.querySelector<HTMLAnchorElement>('a[href*="/panel/charges/new"]');
+
+        expect(link).not.toBeNull();
+        expect(link!.textContent).toContain('Ücret ekle');
+        const params = new URL(link!.href, 'http://x').searchParams;
+
+        expect(params.get('clientId')).toBe('client-1');
+        expect(params.get('petId')).toBe('pet-1');
+        expect(params.get('examinationId')).toBe('e1');
+    });
+
+    it('kurum salt okunurken Ücret ekle ve Ödeme kilitli düğme olarak görünür', async () => {
+        const { el } = await setup(detailVm, ['Charges.Create', 'Payments.Create'], { examinationId: 'e1' }, true);
+
+        expect(el.querySelector('a[href*="/panel/charges/new"]')).toBeNull();
+        expect(el.querySelector('a[href*="/panel/payments/new"]')).toBeNull();
+        expect(label(el)).toContain('Ücret ekle (salt okunur)');
+        expect(label(el)).toContain('Ödeme (salt okunur)');
+    });
+
     it('"Tümü →" bağlantıları hayvan bağlamını (petId) taşır', async () => {
         const { el } = await setup(detailVm, ['Examinations.Read']);
 

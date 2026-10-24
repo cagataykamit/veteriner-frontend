@@ -61,6 +61,7 @@ describe('ChargeNewPageComponent', () => {
     let queryClientId: string | null;
     let queryVisitId: string | null = null;
     let queryPetId: string | null = null;
+    let queryExaminationId: string | null = null;
     let getExaminations: (q: ExamQuery) => Observable<{ items: ExamItem[] }>;
 
     const setup = async () => {
@@ -96,7 +97,17 @@ describe('ChargeNewPageComponent', () => {
                 },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : k === 'petId' ? queryPetId : null) } } } }
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        snapshot: {
+                            queryParamMap: {
+                                get: (k: string) =>
+                                    k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : k === 'petId' ? queryPetId : k === 'examinationId' ? queryExaminationId : null
+                            }
+                        }
+                    }
+                }
             ]
         }).compileComponents();
         router = TestBed.inject(Router);
@@ -117,6 +128,7 @@ describe('ChargeNewPageComponent', () => {
         mutationBlocked = false;
         queryVisitId = null;
         queryPetId = null;
+        queryExaminationId = null;
         queryClientId = null;
         getExaminations = () => of({ items: [exam('ex1', 'Pamuk')] });
     });
@@ -273,6 +285,52 @@ describe('ChargeNewPageComponent', () => {
         await setup();
         expect(cmp.form.controls.clientId.value).toBe('cl1');
         expect(cmp.form.controls.petId.value).toBe('p2');
+    });
+
+    it('Bugün satırından gelen clientId + petId + visitId ile müşteri, hayvan ve geliş önceden seçilir', async () => {
+        queryClientId = 'cl1';
+        queryPetId = 'p2';
+        queryVisitId = 'v2';
+        await setup();
+        expect(cmp.form.controls.clientId.value).toBe('cl1');
+        expect(cmp.form.controls.petId.value).toBe('p2');
+        expect(cmp.form.controls.visitId.value).toBe('v2');
+    });
+
+    it('muayene ekranından gelen clientId + petId + examinationId ile hayvan ve (listedeyse) muayene önceden seçilir; muayene seçenekleri hayvana göre süzülür', async () => {
+        const queries: ExamQuery[] = [];
+
+        getExaminations = (q) => {
+            queries.push(q);
+
+            return of({ items: [exam('ex1', 'Pamuk'), exam('ex2', 'Boncuk')] });
+        };
+
+        queryClientId = 'cl1';
+        queryPetId = 'p2';
+        queryExaminationId = 'ex2';
+        await setup();
+        expect(cmp.form.controls.clientId.value).toBe('cl1');
+        expect(cmp.form.controls.petId.value).toBe('p2');
+        expect(cmp.form.controls.examinationId.value).toBe('ex2');
+        expect(queries[queries.length - 1]).toEqual(jasmine.objectContaining({ clientId: 'cl1', petId: 'p2' }));
+    });
+
+    it('kullanıcı hayvanı değiştirince adresten gelen muayene ön ayarı düşer', async () => {
+        queryClientId = 'cl1';
+        queryPetId = 'p2';
+        queryExaminationId = 'ex1';
+        await setup();
+        expect(cmp.form.controls.examinationId.value).toBe('ex1');
+        cmp.form.controls.petId.setValue('p1');
+        expect(cmp.form.controls.examinationId.value).toBe('');
+    });
+
+    it('query examinationId yüklenen muayene listesinde yoksa seçilmez', async () => {
+        queryClientId = 'cl1';
+        queryExaminationId = 'ex-yok';
+        await setup();
+        expect(cmp.form.controls.examinationId.value).toBe('');
     });
 
     it('müşteri değişince hayvan, geliş ve muayene seçimi sıfırlanır', async () => {
