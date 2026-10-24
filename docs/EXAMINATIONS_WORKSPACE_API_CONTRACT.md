@@ -104,7 +104,7 @@ Vital kuralları: değerler `> 0`; üst sınır/uyarı eşiği yok. İlk vital g
 `Location`: `GET /api/v1/examinations/{id}`
 
 **Randevu etkisi (mevcut davranış):** `appointmentId` ile oluşturma ve randevu `Scheduled` ise randevu `Complete()` ile tamamlanır; iptal randevuda `Examinations.AppointmentCancelled`.
-**Geliş (Visit) bağlantısı:** `visitId` verilirse klinik, hayvan ve randevu Visit'ten türetilir (hasta tekrar seçilmez); istekteki `clinicId`/`petId`/`appointmentId` Visit ile uyuşmazsa `400` + `Examinations.VisitMismatch`. Visit bulunamazsa `404` + `Visits.NotFound`; tamamlanmış veya yanlış geliş işaretli Visit için `409` + `Visits.NotOpen`. Visit `Waiting` ise muayene ile aynı işlemde `InProgress` olur. Randevuyu otomatik tamamlama davranışı Visit'ten bağımsız aynen sürer. `PUT` `visitId`'yi değiştirmez. Ayrıntı: `VISITS_API_CONTRACT.md`.
+**Geliş (Visit) bağlantısı:** `visitId` verilirse klinik, hayvan ve randevu Visit'ten türetilir (hasta tekrar seçilmez); istekteki `clinicId`/`petId`/`appointmentId` Visit ile uyuşmazsa `400` + `Examinations.VisitMismatch`. Visit bulunamazsa `404` + `Visits.NotFound`; tamamlanmış veya yanlış geliş işaretli Visit için `409` + `Visits.NotOpen`. Visit `Waiting` ise muayene ile aynı işlemde `InProgress` olur. Randevuyu otomatik tamamlama davranışı Visit'ten bağımsız aynen sürer. `PUT` `visitId`'yi değiştirmez. Aynı Visit’e ikinci muayene engellenmez (K4 kapsam dışı); Visit’in mevcut muayenesini bulmak için `GET /examinations?clinicId=…&visitId=…` kullanılır. Ayrıntı: `VISITS_API_CONTRACT.md`.
 
 ---
 
@@ -226,7 +226,8 @@ Gönderilmeyen alan hiçbir zaman silinmez/ezilmez.
 | Parametre | Açıklama |
 |-----------|----------|
 | `clinicId` | Opsiyonel (kapsam zorunluluğu geçerli) |
-| `petId`, `appointmentId` | Opsiyonel filtre |
+| `petId`, `appointmentId`, `visitId` | Opsiyonel filtre. `visitId` yalnızca o Visit’e bağlı muayeneleri döner; klinik kapsamı (`clinicId` zorunlu, atama kontrolü) ve kiracı filtresi aynen geçerlidir. `Guid.Empty` → `400 Validation.FluentValidation`; başka klinikteki Visit’in muayeneleri kendi klinik kapsamında boş döner. |
+| `clientId` | Opsiyonel. Yalnız bu müşterinin (kiracı içindeki) hayvanlarının muayeneleri; diğer süzgeçler ve `search` ile AND. Müşterinin hayvanı yoksa veya müşteri başka kiracıdaysa boş sayfa (`200`, hata değil). `Guid.Empty` → `400`. |
 | `examinedOnLocalDate` | `yyyy-MM-dd`, **İstanbul** takvim günü → UTC `[start,end)` |
 | `dateFromUtc` | Alt sınır **dahil** |
 | `dateToUtc` | Üst sınır **hariç** |
@@ -240,7 +241,7 @@ Rapor/export: `GET /api/v1/reports/examinations*` — `from`/`to` UTC, filtre `[
 
 ### Sayfalama ve yanıt şekli (doğrulanmış, kodda)
 
-Sorgu: `page` (varsayılan `1`, en az 1), `pageSize` (varsayılan `20`, sunucuda `1..200` aralığına sıkıştırılır), `search` veya `page.search` (metin araması). `sort`/`order` **işlenmez**; sıralama sabit: `examinedAtUtc` azalan, eşitlikte `id` azalan.
+Sorgu: `page` (varsayılan `1`, en az 1), `pageSize` (varsayılan `20`, sunucuda `1..200` aralığına sıkıştırılır), `search` veya `page.search` (metin araması). Sıralama: `sort` boşsa `examinedAtUtc` azalan, eşitlikte `id` azalan (varsayılan değişmedi). İzinli `sort`: `examinedAtUtc` (eski istemciler için eş ad `examinationDateUtc`; büyük/küçük harf duyarsız), `order=asc|desc` (boşsa `desc`); eşitlikte `id` aynı yönde. Başka `sort` veya `order` değeri → `400`. `sort` boşken `order` yok sayılır.
 
 ```json
 {

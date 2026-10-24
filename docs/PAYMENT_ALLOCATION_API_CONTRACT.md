@@ -47,6 +47,7 @@ Backend tek doğruluk kaynağıdır. Kaynak karar: ADR-012 (kabul edildi), backl
 - Her ücret aynı kiracıda (`Charges.NotFound`), aynı klinikte (`PaymentAllocations.ChargeClinicMismatch`), aynı müşteride (`PaymentAllocations.ChargeClientMismatch`) olmalı.
 - Her tahsis işlem anındaki açık tutarı aşamaz → `PaymentAllocations.ExceedsOutstanding` (409; ilgili ücret ve açık tutar `detail` metnindedir).
 - `currency` yalnızca `TRY` (`Payments.Validation`). Eski kayıtlar etkilenmez.
+- **Hayvan / muayene bağlamı (türetme):** `petId` veya `examinationId` istekte verilmezse, tahsis edilen ücretlerin **tamamı aynı** `petId` (`examinationId`) değerini taşıyorsa ödeme o değerle kaydedilir; ücretler farklı ya da bağlamsızsa (ör. çoklu hayvan, hayvansız ücret) alan `null` kalır, tek hayvana indirgenmez. Açıkça verilen değer her zaman önceliklidir. Böylece `GET /payments` (liste, `petId` süzgeci, `petName`), `GET /payments/{id}` ve hayvan detayındaki "Son ödemeler" tahsis edilen ücretin hayvanını/muayenesini gösterir. Şema ve yanıt biçimi değişmez; bu davranıştan önce kaydedilmiş ödemeler etkilenmez.
 - **Yanıt (geriye uyumlu):** 201, gövde yalnızca `Guid`, `Location` başlığı. Tekrar isteği 200, aynı `Guid` ve `Idempotency-Replayed: true` başlığı.
 - Başarılı oluşturma bugünkü gibi `payment.created.v1` olayını üretir (tahsis bilgisi olaya girmez). Komut tek veritabanı işleminde çalışır; herhangi bir adım başarısız olursa hiçbir şey yazılmaz.
 
@@ -91,6 +92,8 @@ Backend tek doğruluk kaynağıdır. Kaynak karar: ADR-012 (kabul edildi), backl
 | `GET /payments/{id}/allocations` | `[ { id, chargeId, chargeDescription, amount, createdAtUtc, createdByUserId } ]` | `Payments.Read` |
 | `GET /charges/{id}` ve `GET /charges` | `ChargeDto`'ya `allocatedAmount`, `outstandingAmount` | `Charges.Read` |
 | `GET /charges/{id}/allocations` | `[ { id, paymentId, paidAtUtc, method, amount, createdAtUtc, createdByUserId } ]` | `Charges.Read` |
+
+**`petCount` (Command DB yolu):** `GET /payments` liste öğesine ve `GET /payments/{id}`'ye eklenen `petCount` (`int?`), ödemenin bağlı olduğu **farklı hayvan** sayısıdır: tahsis edilen ücretlerin farklı `petId` sayısı; tahsis yoksa (eski ödeme) `petId` doluysa 1, değilse 0. `petCount > 1` ise `petId` null olur ve istemci "Birden fazla hayvan" gösterir; `0` hayvansız ödemedir. Query DB yolu (liste/detay okuma bayrakları açık) tahsisleri bilmediği için `null` döner; istemci `null`'ı bilinmiyor sayar ve mevcut `petName` davranışına düşer. Şema değişmez, alan eklemedir.
 
 Command DB'den okunur; klinik kapsamı mevcut ödeme/ücret kuralıyla aynıdır (kapsam dışı klinikte 404, varlık sızdırmaz). Alanlar eklemedir; ödeme listesi (`GET /payments`) bu dilimde değişmez.
 
