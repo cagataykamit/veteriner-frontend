@@ -13,7 +13,7 @@ import { KvkkFormDocumentComponent } from '@/app/features/kvkk/components/kvkk-f
 import type { KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
 import { KvkkFormTemplateService } from '@/app/features/kvkk/services/kvkk-form-template.service';
 import { KVKK_FORM_DEFAULT_TEXT_WARNING, KVKK_TEMPLATE_KINDS, kvkkFormDate, kvkkFormPlaceholderHint, parseKvkkTemplateKind, type KvkkTemplateKind } from '@/app/features/kvkk/utils/kvkk-form.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

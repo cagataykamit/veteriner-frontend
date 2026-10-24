@@ -17,7 +17,7 @@ import { isStockTrackedKind } from '@/app/features/inventory/utils/product-class
 import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     PRODUCTS_DEACTIVATE_CLAIM,

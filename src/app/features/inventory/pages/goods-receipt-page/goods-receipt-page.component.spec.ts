@@ -10,7 +10,7 @@ import { GoodsReceiptSubmitError, type GoodsReceiptProductPick } from '@/app/fea
 import { GoodsReceiptService } from '@/app/features/inventory/services/goods-receipt.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import type { ProductDetailVm } from '@/app/features/inventory/models/product-vm.model';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 const plain: GoodsReceiptProductPick = { id: 'p1', label: 'Serum (S1)', barcode: '869', requiresLotAndExpiry: false };
 const vaccine: GoodsReceiptProductPick = { id: 'p2', label: 'Kuduz aşısı (V1)', barcode: '', requiresLotAndExpiry: true };

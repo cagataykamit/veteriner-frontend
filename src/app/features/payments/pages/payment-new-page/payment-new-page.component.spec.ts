@@ -7,7 +7,7 @@ import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/features/clients
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { PaymentNewPageComponent } from './payment-new-page.component';
 

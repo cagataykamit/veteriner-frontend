@@ -5,7 +5,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientsListPageComponent } from './clients-list-page.component';
 
 /** Ortak arama davranışı (ürün kararı): yazdıkça arar, Enter anında, × listeyi geri getirir, "Ara" düğmesi yok. */

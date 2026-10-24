@@ -11,7 +11,7 @@ import { AdministrationsService } from '@/app/features/administrations/services/
 import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';

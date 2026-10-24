@@ -21,7 +21,7 @@ import {
     DATETIME_LOCAL_INPUT_MIN,
     dateTimeYearRangeValidator
 } from '@/app/shared/utils/date-input-validation.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-tenant-invite-panel-page',

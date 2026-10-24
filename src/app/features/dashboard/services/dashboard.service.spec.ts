@@ -5,7 +5,7 @@ import { DashboardService } from '@/app/features/dashboard/services/dashboard.se
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { upcomingVaccinationsFilters, vaccinationsListLinkQuery } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
 
 describe('DashboardService — liste fazı istekleri', () => {

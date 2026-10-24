@@ -52,7 +52,7 @@ import {
     LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE,
     labResultResultFieldsValidator
 } from '@/app/features/lab-results/utils/lab-result-form.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-lab-result-edit-page',

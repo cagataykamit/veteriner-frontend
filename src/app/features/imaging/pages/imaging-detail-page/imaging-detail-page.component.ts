@@ -7,7 +7,7 @@ import { ImagingCancelDialogComponent } from '@/app/features/imaging/components/
 import type { ImagingRecordDetailVm } from '@/app/features/imaging/models/imaging.model';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL, imagingAltText, imagingModalityLabel, imagingStatusLabel, imagingStatusSeverity } from '@/app/features/imaging/utils/imaging.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { StoredFileVm } from '@/app/shared/files/stored-file.model';
 import { StoredFileGalleryComponent } from '@/app/shared/files/stored-file-gallery.component';
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';

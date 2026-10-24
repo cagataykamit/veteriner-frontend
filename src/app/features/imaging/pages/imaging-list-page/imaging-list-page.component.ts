@@ -11,7 +11,7 @@ import { ImagingCancelDialogComponent } from '@/app/features/imaging/components/
 import type { ImagingModality, ImagingRecordListItemVm, ImagingRecordStatus } from '@/app/features/imaging/models/imaging.model';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL, IMAGING_MODALITY_OPTIONS, IMAGING_STATUS_FILTER_OPTIONS, imagingModalityLabel } from '@/app/features/imaging/utils/imaging.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';

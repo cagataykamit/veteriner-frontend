@@ -31,7 +31,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import {
     buildVaccinationAppliedDueForSubmit,
     minDateTimeLocalMinuteAfter,

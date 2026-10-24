@@ -3,7 +3,7 @@ import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import type { ClinicTaxpayerSettingsDto } from '@/app/features/clinics/models/clinic-taxpayer-settings.model';
 import { ClinicTaxpayerSettingsService } from '@/app/features/clinics/services/clinic-taxpayer-settings.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicTaxpayerSettingsSectionComponent } from './clinic-taxpayer-settings-section.component';
 
 const defaults: ClinicTaxpayerSettingsDto = {

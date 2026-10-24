@@ -18,7 +18,7 @@ import { GoodsReceiptSubmitError, type GoodsReceiptProductPick, type GoodsReceip
 import { GoodsReceiptService } from '@/app/features/inventory/services/goods-receipt.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { goodsReceiptTotalCost } from '@/app/features/inventory/utils/goods-receipt.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 

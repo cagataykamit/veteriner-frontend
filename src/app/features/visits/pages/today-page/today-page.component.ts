@@ -24,7 +24,7 @@ import {
     VISITS_CREATE_CLAIM,
     VISITS_UPDATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
 import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';

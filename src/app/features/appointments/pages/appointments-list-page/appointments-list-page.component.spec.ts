@@ -7,7 +7,7 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { isLastRowAction, isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentsListPageComponent } from './appointments-list-page.component';
 
 const STATE_KEY = 'panel:appointments:listState';

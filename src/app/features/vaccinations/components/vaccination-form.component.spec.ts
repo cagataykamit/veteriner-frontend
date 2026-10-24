@@ -7,7 +7,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';

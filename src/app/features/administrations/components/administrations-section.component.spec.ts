@@ -7,7 +7,7 @@ import type { AdministrationsPagedVm, AdministrationVm } from '@/app/features/ad
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
 import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 const row: AdministrationVm = {
     id: 'a1',

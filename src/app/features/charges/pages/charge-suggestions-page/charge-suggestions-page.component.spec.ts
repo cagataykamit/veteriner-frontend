@@ -8,7 +8,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ChargeCreateResultVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { ChargeSuggestionsPageComponent } from './charge-suggestions-page.component';
 

@@ -13,7 +13,7 @@ import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.consta
 import type { SubscriptionStatusKey, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
 import { OrganizationSettingsService } from '@/app/features/organization/services/organization-settings.service';
 import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { subscriptionPlanLabel } from '@/app/features/subscriptions/utils/subscription-plan.utils';
 import { subscriptionStatusLabel } from '@/app/features/subscriptions/utils/subscription-status.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

@@ -6,7 +6,7 @@ import { of, throwError } from 'rxjs';
 import type { ClientPortalAccessDto, ClientPortalInviteDto, ClientPortalLinkDto } from '@/app/features/clients/models/client-portal-access-api.model';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientPortalAccessPanelComponent } from './client-portal-access-panel.component';
 
 const client: ClientDetailVm = {

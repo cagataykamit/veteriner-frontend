@@ -38,7 +38,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import type { VaccinationUpsertFieldErrors } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import {
     buildVaccinationAppliedDueForSubmit,
     minDateTimeLocalMinuteAfter,

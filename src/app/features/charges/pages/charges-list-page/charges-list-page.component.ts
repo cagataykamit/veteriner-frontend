@@ -10,7 +10,7 @@ import { CHARGES_CORRECT_CLAIM, CHARGES_CREATE_CLAIM, PAYMENTS_CREATE_CLAIM } fr
 import { ChargeCorrectionDialogComponent } from '@/app/features/charges/components/charge-correction-dialog.component';
 import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';

@@ -10,7 +10,7 @@ import { SALES_CORRECT_CLAIM, SALES_CREATE_CLAIM } from '@/app/core/auth/operati
 import { SaleVoidDialogComponent } from '@/app/features/sales/components/sale-void-dialog.component';
 import type { SaleListItemVm } from '@/app/features/sales/models/sale-vm.model';
 import { SalesService } from '@/app/features/sales/services/sales.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

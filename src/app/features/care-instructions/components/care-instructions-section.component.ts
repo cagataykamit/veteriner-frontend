@@ -8,7 +8,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CARE_INSTRUCTIONS_CREATE_CLAIM, CARE_INSTRUCTIONS_READ_CLAIM, CARE_INSTRUCTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { CARE_INSTRUCTION_TEXT_MAX, type CareInstructionVm } from '@/app/features/care-instructions/models/care-instruction-vm.model';
 import { CareInstructionsService } from '@/app/features/care-instructions/services/care-instructions.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';

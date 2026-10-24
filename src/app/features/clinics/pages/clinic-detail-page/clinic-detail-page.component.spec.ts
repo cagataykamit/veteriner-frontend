@@ -5,7 +5,7 @@ import { NEVER, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClinicTaxpayerSettingsService } from '@/app/features/clinics/services/clinic-taxpayer-settings.service';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicDetailPageComponent } from './clinic-detail-page.component';
 
 const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];

@@ -8,7 +8,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { ProductStockService } from '@/app/features/inventory/services/product-stock.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { DashboardPageComponent } from './dashboard-page.component';
 
 describe('DashboardPageComponent hızlı işlemler', () => {

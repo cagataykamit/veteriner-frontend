@@ -11,7 +11,7 @@ import { ImagingRecordFormComponent } from '@/app/features/imaging/components/im
 import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL } from '@/app/features/imaging/utils/imaging.utils';
 import { LabResultFormComponent } from '@/app/features/lab-results/components/lab-result-form.component';
 import { PrescriptionFormComponent } from '@/app/features/prescriptions/components/prescription-form.component';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TreatmentFormComponent } from '@/app/features/treatments/components/treatment-form.component';
 import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/features/vaccinations/components/vaccination-form.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

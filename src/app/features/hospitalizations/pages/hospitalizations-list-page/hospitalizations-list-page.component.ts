@@ -24,7 +24,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { HOSPITALIZATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 

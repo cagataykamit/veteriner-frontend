@@ -57,7 +57,7 @@ import {
     hospitalizationPlannedDischargeMin,
     plannedDischargeNotBeforeAdmissionValidator
 } from '@/app/features/hospitalizations/utils/hospitalization-date-validation.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-hospitalization-edit-page',

@@ -32,7 +32,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { EMPTY, Subscription, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';

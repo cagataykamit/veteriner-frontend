@@ -9,7 +9,7 @@ import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENT_SEARCH_MIN_LENGTH, ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import type { ClientSearchResultVm } from '@/app/features/clients/services/client-search.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { canShowQuickClientCreateButton } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';

@@ -8,7 +8,7 @@ import type { ClientPortalAccessDto } from '@/app/features/clients/models/client
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { clientPortalLastInviteNote, clientPortalState } from '@/app/features/clients/utils/client-portal-access.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { ownerPortalProblemUserMessageByCode, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';

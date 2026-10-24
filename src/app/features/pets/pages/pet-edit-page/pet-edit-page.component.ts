@@ -36,7 +36,7 @@ import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/qui
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-pet-edit-page',

@@ -7,7 +7,7 @@ import type {
     AppointmentCalendarItemVm
 } from '@/app/features/appointments/models/appointment-calendar-vm.model';
 import { groupCalendarItemsByDay } from '@/app/features/appointments/data/appointment-calendar.mapper';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';

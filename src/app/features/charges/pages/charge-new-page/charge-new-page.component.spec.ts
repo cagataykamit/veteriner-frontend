@@ -9,7 +9,7 @@ import { ExaminationsService } from '@/app/features/examinations/services/examin
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { ChargeNewPageComponent } from './charge-new-page.component';

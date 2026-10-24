@@ -7,7 +7,7 @@ import { catchError, of, Subject, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_CREATE_CLAIM, CLIENTS_READ_CLAIM, PETS_CREATE_CLAIM, PETS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { PatientSearchService, type OwnerRowVm, type PatientRowVm, type PatientSearchResultVm } from '@/app/features/patients/services/patient-search.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
 import { VisitQuickRegistrationComponent } from '@/app/features/visits/components/visit-quick-registration.component';
 import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';

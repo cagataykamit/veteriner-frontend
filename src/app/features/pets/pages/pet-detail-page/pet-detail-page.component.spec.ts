@@ -11,7 +11,7 @@ import type { PetDetailVm, PetHistorySummaryVm } from '@/app/features/pets/model
 import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { PetDetailPageComponent } from './pet-detail-page.component';
 

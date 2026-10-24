@@ -10,7 +10,7 @@ import type { CreateSaleRequest } from '@/app/features/sales/models/sale-api.mod
 import type { SaleProductVm } from '@/app/features/sales/models/sale-vm.model';
 import { SaleProductSearchService } from '@/app/features/sales/services/sale-product-search.service';
 import { SalesService } from '@/app/features/sales/services/sales.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { SaleNewPageComponent } from './sale-new-page.component';
 
 const mama: SaleProductVm = {

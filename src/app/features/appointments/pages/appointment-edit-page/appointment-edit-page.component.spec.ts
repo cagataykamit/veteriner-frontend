@@ -8,7 +8,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { AppointmentEditVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentEditPageComponent } from './appointment-edit-page.component';
 
 const APPT: AppointmentEditVm = {

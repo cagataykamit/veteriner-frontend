@@ -6,7 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { TodayPageComponent } from './today-page.component';

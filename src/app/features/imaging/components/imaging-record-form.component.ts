@@ -14,7 +14,7 @@ import {
     examinationListItemFromDetail,
     prescriptionExaminationSelectOption
 } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { type SelectOption, trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';

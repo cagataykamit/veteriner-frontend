@@ -6,7 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import type { ClientSearchResultVm } from '@/app/features/clients/services/client-search.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from './client-search.component';
 
 const ali: ClientSearchResultVm = { id: 'c1', fullName: 'Ali Veli', phone: '+90 532 123 45 67', petNames: ['Pamuk'], label: 'Ali Veli — +90 532 123 45 67' };

@@ -15,7 +15,7 @@ import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     PRODUCTS_CREATE_CLAIM,

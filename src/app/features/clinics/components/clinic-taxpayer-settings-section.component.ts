@@ -13,7 +13,7 @@ import {
 } from '@/app/features/clinics/data/clinic-taxpayer-settings.mapper';
 import type { ClinicTaxpayerType } from '@/app/features/clinics/models/clinic-taxpayer-settings.model';
 import { ClinicTaxpayerSettingsService } from '@/app/features/clinics/services/clinic-taxpayer-settings.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';

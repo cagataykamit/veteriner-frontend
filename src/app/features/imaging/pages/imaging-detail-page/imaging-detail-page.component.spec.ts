@@ -6,7 +6,7 @@ import { IMAGING_CANCEL_CLAIM, IMAGING_CREATE_CLAIM, IMAGING_READ_CLAIM } from '
 import type { ImagingRecordDetailVm, ImagingRecordStatus } from '@/app/features/imaging/models/imaging.model';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
 import { ImagingDetailPageComponent } from './imaging-detail-page.component';
 

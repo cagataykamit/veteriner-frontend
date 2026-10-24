@@ -26,7 +26,7 @@ import {
     petCardEmphasis,
     petIdentityParts
 } from '@/app/features/pets/utils/pet-card.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { PatientActionBarComponent } from '@/app/shared/panel/patient-action-bar/patient-action-bar.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

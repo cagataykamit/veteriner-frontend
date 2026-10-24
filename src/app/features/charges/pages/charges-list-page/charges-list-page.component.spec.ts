@@ -5,7 +5,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { ChargesPagedVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ChargesListPageComponent } from './charges-list-page.component';
 
 const row: ChargeVm = {

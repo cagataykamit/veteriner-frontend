@@ -8,7 +8,7 @@ import type { AppointmentListItemVm } from '@/app/features/appointments/models/a
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
 import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PetStatusDialogComponent } from './pet-status-dialog.component';
 
 const pet = { id: 'p1', name: 'Pamuk', status: 'Active', deceasedOn: null, rowVersion: 'rv1', birthDate: '2020-05-01' } as PetDetailVm;

@@ -9,7 +9,7 @@ import {
     type BreedUpsertFieldErrors,
     parseBreedUpsertHttpError
 } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';

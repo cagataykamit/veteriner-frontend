@@ -14,7 +14,7 @@ import type { ChargeCreateResultVm, ChargeVm } from '@/app/features/charges/mode
 import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
 import { computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
 import { CHARGE_SUGGESTION_PERIOD_OPTIONS, ChargeSuggestionPeriod, filterChargeSuggestions } from '@/app/features/charges/utils/charge-suggestion-filter.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';

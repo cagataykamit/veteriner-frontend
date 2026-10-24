@@ -6,7 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PetSearchComponent } from './pet-search.component';
 
 const pet = (id: string, name: string, clientId: string | null = 'c1', status = 'Active') => ({ id, name, clientId, speciesName: 'Kedi', status });

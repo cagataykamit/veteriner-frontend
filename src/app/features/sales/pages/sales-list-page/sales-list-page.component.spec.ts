@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { mapPagedSalesToVm } from '@/app/features/sales/data/sale.mapper';
 import { SalesService } from '@/app/features/sales/services/sales.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { isLastRowAction, rowDangerActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { SalesListPageComponent } from './sales-list-page.component';

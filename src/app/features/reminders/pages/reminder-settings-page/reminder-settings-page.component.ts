@@ -13,7 +13,7 @@ import {
 } from '@/app/features/reminders/forms/reminder-settings-form.factory';
 import { mapReminderSettingsFormToUpdateRequest } from '@/app/features/reminders/data/reminders.mapper';
 import { RemindersService } from '@/app/features/reminders/services/reminders.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { REMINDERS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

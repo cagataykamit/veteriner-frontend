@@ -25,7 +25,7 @@ import {
     ORG_BILLING_PROFILE_FIELD_MAP,
     sanitizeTaxNumberValue
 } from '@/app/features/organization/utils/organization-billing-profile.validation.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';

@@ -5,7 +5,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CareInstructionsSectionComponent } from '@/app/features/care-instructions/components/care-instructions-section.component';
 import type { CareInstructionVm } from '@/app/features/care-instructions/models/care-instruction-vm.model';
 import { CareInstructionsService } from '@/app/features/care-instructions/services/care-instructions.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 const row: CareInstructionVm = { id: 'ci1', text: 'Günde iki kez yemek', createdAtUtc: '2026-10-13T08:00:00Z', updatedAtUtc: null, rowVersion: 'v1' };
 

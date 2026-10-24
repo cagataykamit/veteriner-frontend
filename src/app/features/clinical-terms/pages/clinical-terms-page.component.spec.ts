@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ClinicalTermDto } from '@/app/features/clinical-terms/models/clinical-term.model';
 import { ClinicalTermError, ClinicalTermsService } from '@/app/features/clinical-terms/services/clinical-terms.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicalTermsPageComponent } from './clinical-terms-page.component';
 
 const term = (id: string, name: string, over: Partial<ClinicalTermDto> = {}): ClinicalTermDto => ({

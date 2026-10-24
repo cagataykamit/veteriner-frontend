@@ -56,7 +56,7 @@ import {
     parseVisitExaminationRouteContext,
     prefillPetFromRoute
 } from '@/app/shared/panel/examination-create-route-context.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-hospitalization-form',

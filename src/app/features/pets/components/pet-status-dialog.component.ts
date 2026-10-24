@@ -15,7 +15,7 @@ import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/a
 import type { PetDetailVm, PetStatusUpdateResult } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { upcomingScheduledAppointments } from '@/app/features/pets/utils/pet-card.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 

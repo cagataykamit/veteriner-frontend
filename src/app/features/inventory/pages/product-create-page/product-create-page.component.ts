@@ -11,7 +11,7 @@ import { createProductUpsertFormGroup } from '@/app/features/inventory/forms/pro
 import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCT_CATEGORIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import {

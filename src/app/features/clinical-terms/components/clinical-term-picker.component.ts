@@ -14,7 +14,7 @@ import {
 import { CLINICAL_TERM_NAME_MAX, type ClinicalTermDto, type ClinicalTermKind } from '@/app/features/clinical-terms/models/clinical-term.model';
 import { ClinicalTermError, ClinicalTermsService } from '@/app/features/clinical-terms/services/clinical-terms.service';
 import { appendClinicalTermToText, clinicalTermNameKey } from '@/app/features/clinical-terms/utils/clinical-term-text.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 const PAGE_SIZE = 20;

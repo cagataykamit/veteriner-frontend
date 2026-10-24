@@ -17,7 +17,7 @@ import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import type { PendingPlanChangeStatusKey, PendingPlanChangeTypeKey, PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
 import type { SubscriptionSummaryRequestOptions } from '@/app/features/subscriptions/services/subscriptions.service';
 import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { shouldOfferManualCheckoutFinalize } from '@/app/features/subscriptions/utils/subscription-checkout-provider.utils';
 import { hasSubscriptionCheckoutReturnQuery, parseSubscriptionCheckoutReturn, type ParsedSubscriptionCheckoutReturn } from '@/app/features/subscriptions/utils/subscription-checkout-return.utils';
 import {

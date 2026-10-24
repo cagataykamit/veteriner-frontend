@@ -35,7 +35,7 @@ import {
     parseExaminationUpsertHttpError
 } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { VisitsService } from '@/app/features/visits/services/visits.service';

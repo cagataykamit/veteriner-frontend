@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
 import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { buildPatientActions } from './patient-actions.utils';
 
 /**

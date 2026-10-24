@@ -5,7 +5,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { mapSaleDtoToDetailVm } from '@/app/features/sales/data/sale.mapper';
 import type { SaleDto } from '@/app/features/sales/models/sale-api.model';
 import { SalesService } from '@/app/features/sales/services/sales.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { SaleDetailPageComponent } from './sale-detail-page.component';
 
 const dto = (over: Partial<SaleDto> = {}): SaleDto => ({

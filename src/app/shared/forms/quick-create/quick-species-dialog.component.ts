@@ -8,7 +8,7 @@ import {
     type SpeciesUpsertFieldErrors,
     parseSpeciesUpsertHttpError
 } from '@/app/features/species/utils/species-upsert-validation-parse.utils';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';

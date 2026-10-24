@@ -22,7 +22,7 @@ import {
 import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';

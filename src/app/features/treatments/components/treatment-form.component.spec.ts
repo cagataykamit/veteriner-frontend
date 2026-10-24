@@ -9,7 +9,7 @@ import { ClientSearchService } from '@/app/features/clients/services/client-sear
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TreatmentsService } from '../services/treatments.service';
 import { TreatmentFormComponent } from './treatment-form.component';
 

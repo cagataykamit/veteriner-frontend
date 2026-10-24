@@ -10,7 +10,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { VisitVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { ExaminationWorkspacePageComponent } from './examination-workspace-page.component';

@@ -36,7 +36,7 @@ import { upcomingVaccinationsFilters } from '@/app/features/vaccinations/utils/v
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
-import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 /** Faz 1: dashboard summary (+ paylaşımlı tenant access-state / salt okunur bağlamı). */
 export interface DashboardSummariesPhaseResult {
