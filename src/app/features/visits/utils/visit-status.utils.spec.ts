@@ -234,7 +234,7 @@ describe('Gelmedi (NoShow) satırı', () => {
 });
 
 describe('satır eylem düzeni (görünür / menü)', () => {
-    const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true, canCollectPayment: false };
+    const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true, canCollectPayment: false, canCreateCharge: false };
     const now = new Date('2026-10-10T10:00:00Z');
     const secondary = (i: TodayItemVm, perms = all) => todaySecondaryActions(i, todayItemActions(i, now), perms).map((a) => a.key);
     const urgency = (i: TodayItemVm, perms = all) => todayUrgencyToggle(i, todayItemActions(i, now), perms);
@@ -255,7 +255,7 @@ describe('satır eylem düzeni (görünür / menü)', () => {
 
     it('menüde yalnızca seyrek eylemler; yetkisiz kullanıcıda menü boş', () => {
         expect(secondary(item({ careStatus: 'Completed' }))).toEqual(['correct']);
-        expect(secondary(item(), { canUpdateVisit: true, canNoShow: true, canCorrect: false, canCollectPayment: false })).toEqual([]);
+        expect(secondary(item(), { ...all, canCorrect: false })).toEqual([]);
     });
 
     it('yanlış işaretli satırda Geri al menüdedir; yetkisizde menü boş', () => {
@@ -269,6 +269,15 @@ describe('satır eylem düzeni (görünür / menü)', () => {
         expect(secondary(item(), pay)).toEqual(['collectPayment', 'correct']);
         expect(secondary(item(), all)).toEqual(['correct']);
         expect(secondary(item({ isVoided: true }), pay)).toEqual(['restore']);
+    });
+
+    it('Ücret ekle: yetki varsa Ödeme al\'dan önce; yanlış işaretli satırda ve yetkisizde yok', () => {
+        const charge = { ...all, canCreateCharge: true };
+
+        expect(secondary(item(), charge)).toEqual(['addCharge', 'correct']);
+        expect(secondary(item(), { ...charge, canCollectPayment: true })).toEqual(['addCharge', 'collectPayment', 'correct']);
+        expect(secondary(item(), all)).toEqual(['correct']);
+        expect(secondary(item({ isVoided: true }), charge)).toEqual(['restore']);
     });
 
     it('planlı ve gelmedi satırları', () => {

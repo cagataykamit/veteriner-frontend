@@ -16,6 +16,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     APPOINTMENTS_CREATE_CLAIM,
     APPOINTMENTS_NOSHOW_CLAIM,
+    CHARGES_CREATE_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
     HOSPITALIZATIONS_READ_CLAIM,
     PAYMENTS_CREATE_CLAIM,
@@ -547,7 +548,7 @@ type TodayScope = 'mine' | 'all';
             }
         </ng-template>
 
-        <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" (onHide)="openPendingPayment()" />
+        <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" (onHide)="openPendingNavigation()" />
         @if (canCreateVisit) {
             <app-visit-arrival-dialog [(visible)]="arrivalOpen" [appointment]="arrivalAppointment()" (arrived)="onArrived($event)" />
         }
@@ -582,6 +583,7 @@ export class TodayPageComponent implements OnInit {
     readonly canReadHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
     readonly canCollectPayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
+    readonly canCreateCharge = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
 
     readonly loading = signal(true);
     /** İlk yükleme / elle yenileme hatası: listeyi değiştirir. */
@@ -604,8 +606,8 @@ export class TodayPageComponent implements OnInit {
     readonly restoreItem = signal<TodayItemVm | null>(null);
     private readonly rowMenu = viewChild<Menu>('rowMenu');
     readonly rowMenuItems = signal<MenuItem[]>([]);
-    /** Menü kapanış animasyonu bitmeden sayfa değişirse kaplama gövdede asılı kalır; ödeme sayfasına menü kapandıktan sonra gidilir. */
-    private readonly paymentAfterMenu = signal<TodayItemVm | null>(null);
+    /** Menü kapanış animasyonu bitmeden sayfa değişirse kaplama gövdede asılı kalır; ödeme/ücret sayfasına menü kapandıktan sonra gidilir. */
+    private readonly navigateAfterMenu = signal<{ item: TodayItemVm; target: 'payment' | 'charge' } | null>(null);
     readonly noShowOpen = signal(false);
     readonly noShowItem = signal<TodayItemVm | null>(null);
     readonly noShowMode = signal<'mark' | 'revert'>('mark');
@@ -798,7 +800,13 @@ export class TodayPageComponent implements OnInit {
     }
 
     private rowPermissions(): TodayRowPermissions {
-        return { canUpdateVisit: this.canUpdateVisit, canNoShow: this.canNoShow, canCorrect: this.canCorrect, canCollectPayment: this.canCollectPayment };
+        return {
+            canUpdateVisit: this.canUpdateVisit,
+            canNoShow: this.canNoShow,
+            canCorrect: this.canCorrect,
+            canCollectPayment: this.canCollectPayment,
+            canCreateCharge: this.canCreateCharge
+        };
     }
 
     urgencyToggleOf(item: TodayItemVm, actions: TodayItemActions): TodayUrgencyToggle | null {
@@ -816,7 +824,8 @@ export class TodayPageComponent implements OnInit {
             revertNoShow: () => this.openNoShow(item, 'revert'),
             restore: () => this.openRestore(item),
             correct: () => this.openCorrection(item),
-            collectPayment: () => this.paymentAfterMenu.set(item)
+            collectPayment: () => this.navigateAfterMenu.set({ item, target: 'payment' }),
+            addCharge: () => this.navigateAfterMenu.set({ item, target: 'charge' })
         };
         const blocked = this.ro.mutationBlocked() || this.isBusy(item);
 
@@ -892,14 +901,16 @@ export class TodayPageComponent implements OnInit {
         });
     }
 
-    /** Müşteri ve (varsa) geliş bağlamı ödeme formuna taşınır; o gelişin açık ücretleri dolu gelir. */
-    openPendingPayment(): void {
-        const item = this.paymentAfterMenu();
+    /** Menü kapandıktan sonra bekleyen geçiş (ödeme ya da ücret formu) bir kez yapılır. */
+    openPendingNavigation(): void {
+        const pending = this.navigateAfterMenu();
 
-        this.paymentAfterMenu.set(null);
+        this.navigateAfterMenu.set(null);
 
-        if (item) {
-            this.openPayment(item);
+        if (pending?.target === 'payment') {
+            this.openPayment(pending.item);
+        } else if (pending?.target === 'charge') {
+            this.openCharge(pending.item);
         }
     }
 
@@ -908,8 +919,14 @@ export class TodayPageComponent implements OnInit {
         void this.router.navigate(['/panel/charges/pending'], { queryParams: { visitId: item.visitId } });
     }
 
+    /** Müşteri ve (varsa) geliş bağlamı ödeme formuna taşınır; o gelişin açık ücretleri dolu gelir. */
     openPayment(item: TodayItemVm): void {
         void this.router.navigate(['/panel/payments/new'], { queryParams: { clientId: item.clientId, visitId: item.visitId } });
+    }
+
+    /** Müşteri, hasta ve (varsa) geliş bağlamı ücret formuna taşınır; hasta tekrar seçilmez. */
+    openCharge(item: TodayItemVm): void {
+        void this.router.navigate(['/panel/charges/new'], { queryParams: { clientId: item.clientId, petId: item.petId, visitId: item.visitId } });
     }
 
     /** Satır kilitliyken ikinci istek gitmez; hatada da liste yenilenir (durum başkası tarafından değişmiş olabilir). */

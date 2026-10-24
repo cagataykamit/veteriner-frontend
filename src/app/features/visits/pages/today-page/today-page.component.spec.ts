@@ -476,9 +476,41 @@ describe('TodayPageComponent', () => {
         c.openRowMenu(new Event('click'), today.items[0], [{ key: 'collectPayment', label: 'Ödeme al', icon: 'pi pi-wallet' } as never]);
         c.rowMenuItems()[0].command?.({});
         expect(navigate).not.toHaveBeenCalled();
-        c.openPendingPayment();
+        c.openPendingNavigation();
         expect(navigate).toHaveBeenCalledWith(['/panel/payments/new'], { queryParams: { clientId: 'cl7', visitId: 'v9' } });
-        c.openPendingPayment();
+        c.openPendingNavigation();
+        expect(navigate).toHaveBeenCalledTimes(1);
+    });
+
+    it('Ücret ekle yalnızca Charges.Create yetkisiyle görünür ve müşteri + hasta + geliş bağlamıyla ücret formuna gider', async () => {
+        const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item({ visitId: 'v9', clientId: 'cl7', petId: 'p7' })] };
+        const keys = (f: ComponentFixture<TodayPageComponent>) => f.componentInstance.secondaryActionsOf(today.items[0], f.componentInstance.actionsOf(today.items[0])).map((a) => a.key);
+        const without = await create(['Visits.Read', 'Payments.Create'], today);
+
+        expect(keys(without)).not.toContain('addCharge');
+        TestBed.resetTestingModule();
+
+        const f = await create(['Visits.Read', 'Charges.Create'], today);
+
+        expect(keys(f)).toContain('addCharge');
+        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+        f.componentInstance.openCharge(today.items[0]);
+        expect(navigate).toHaveBeenCalledWith(['/panel/charges/new'], { queryParams: { clientId: 'cl7', petId: 'p7', visitId: 'v9' } });
+    });
+
+    it('menüden Ücret ekle, menü kapanana (onHide) kadar sayfa değiştirmez', async () => {
+        const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item({ visitId: 'v9', clientId: 'cl7', petId: 'p7' })] };
+        const f = await create(['Visits.Read', 'Charges.Create'], today);
+        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const c = f.componentInstance;
+
+        c.openRowMenu(new Event('click'), today.items[0], [{ key: 'addCharge', label: 'Ücret ekle', icon: 'pi pi-plus' } as never]);
+        c.rowMenuItems()[0].command?.({});
+        expect(navigate).not.toHaveBeenCalled();
+        c.openPendingNavigation();
+        expect(navigate).toHaveBeenCalledWith(['/panel/charges/new'], { queryParams: { clientId: 'cl7', petId: 'p7', visitId: 'v9' } });
+        c.openPendingNavigation();
         expect(navigate).toHaveBeenCalledTimes(1);
     });
 
