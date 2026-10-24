@@ -70,6 +70,26 @@ export default tseslint.config(
         }
     },
     {
+        // Katman yönü: core ve shared, features'a bağımlı olmaz (features → core/shared tek yön). Tip importu (sözleşme) serbesttir;
+        // çalışma zamanı importu uyarıdır: mevcut ihlaller (shared/forms arama bileşenleri, Pets/Clients servisleri) kademeli
+        // olarak shared/domain altına taşınır; yenisi eklenmez.
+        files: ['src/app/core/**/*.ts', 'src/app/shared/**/*.ts'],
+        rules: {
+            '@typescript-eslint/no-restricted-imports': [
+                'warn',
+                {
+                    patterns: [
+                        {
+                            group: ['@/app/features/*', '@/app/features/**', '**/features/**'],
+                            allowTypeImports: true,
+                            message: 'core/shared, features içinden çalışma zamanı kodu içe aktarmaz; paylaşılan servisi/modeli core veya shared altına taşıyın.'
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
         files: ['**/*.html'],
         extends: [...angular.configs.templateRecommended, prettier],
         rules: {
