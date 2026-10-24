@@ -87,6 +87,74 @@ export function problemCodeFromHttpError(err: HttpErrorResponse): string | null 
     return readProblemCodeFromHttp(err);
 }
 
+/**
+ * Deneme (trial) kiracısı kısıtları — `docs/TRIAL_LIMITS_API_CONTRACT.md` §3, §5. Kod `Trial.` önekli ve 422;
+ * sunucunun `detail` metni olduğu gibi gösterilir, yanına "Aboneliğe geç" eylemi eklenir (`AppTrialLimitNoticeComponent`).
+ * `detail` yoksa koda göre sözleşmedeki metin kullanılır. Ücretli kiracının `*.ExportTooManyRows` / `Imports.TooManyRows` dalları ayrıdır.
+ */
+const TRIAL_LIMIT_CODE_PREFIX = 'Trial.';
+
+const TRIAL_LIMIT_FALLBACK_MESSAGES: Record<string, string> = {
+    'Trial.ExportLimitExceeded': 'Deneme sürümünde dışa aktarma en fazla 1000 satır sınırı; abonelikle kalkar. Filtreyi daraltın.',
+    'Trial.ImportLimitExceeded': 'Deneme sürümünde içe aktarma tablo başına en fazla 500 satır sınırı; abonelikle kalkar.'
+};
+
+const TRIAL_LIMIT_GENERIC_MESSAGE = 'Deneme sürümünde bu işlem için sınır aşıldı; sınır abonelikle kalkar.';
+
+export const TRIAL_LIMIT_ACTION_LABEL = 'Aboneliğe geç';
+
+/** Deneme kısıtı hatası: mesaj kullanıcıya gösterilecek metindir; `code` ile ekran "Aboneliğe geç" eylemini ekler. */
+export class TrialLimitError extends Error {
+    constructor(
+        message: string,
+        readonly code: string
+    ) {
+        super(message);
+        this.name = 'TrialLimitError';
+    }
+}
+
+/** `Trial.*` problem kodu; başka hata ya da başka kod ise `null`. */
+export function trialLimitProblemCode(err: unknown): string | null {
+    if (!(err instanceof HttpErrorResponse)) {
+        return null;
+    }
+
+    const code = readProblemCodeFromHttp(err);
+
+    return code?.startsWith(TRIAL_LIMIT_CODE_PREFIX) ? code : null;
+}
+
+/** Servis katmanında `Error`'a çevrilmiş (`TrialLimitError`) ya da ham `HttpErrorResponse` deneme kısıtı. */
+export function isTrialLimitError(err: unknown): boolean {
+    return err instanceof TrialLimitError || trialLimitProblemCode(err) !== null;
+}
+
+function trialLimitProblemUserMessage(err: HttpErrorResponse): string | null {
+    const code = trialLimitProblemCode(err);
+
+    if (!code) {
+        return null;
+    }
+
+    const body = err.error as Record<string, unknown>;
+    const detail = typeof body['detail'] === 'string' ? body['detail'].trim() : '';
+
+    if (detail && !isUnhelpfulProblemText(detail)) {
+        return detail;
+    }
+
+    return TRIAL_LIMIT_FALLBACK_MESSAGES[code] ?? TRIAL_LIMIT_GENERIC_MESSAGE;
+}
+
+/** HTTP hatasını kullanıcı mesajlı `Error`'a çevirir; deneme kısıtında `TrialLimitError` (ekran eylem bağlantısı ekler). */
+export function userErrorFromHttp(err: HttpErrorResponse, fallback: string): Error {
+    const message = messageFromHttpError(err, fallback);
+    const trialCode = trialLimitProblemCode(err);
+
+    return trialCode ? new TrialLimitError(message, trialCode) : new Error(message);
+}
+
 function readProblemCodeFromHttp(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
 
@@ -531,6 +599,12 @@ function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
 
 /** Panel listeleri / formlar: ProblemDetails, düz metin ve HTTP durumuna göre anlamlı mesaj. */
 export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek başarısız.'): string {
+    const trialLimitMsg = trialLimitProblemUserMessage(err);
+
+    if (trialLimitMsg) {
+        return trialLimitMsg;
+    }
+
     const subscriptionMsg = subscriptionWriteUserMessage(err);
 
     if (subscriptionMsg) {
@@ -715,10 +789,10 @@ export function isReportRecoverableClinicConstraint403(err: unknown): boolean {
     return false;
 }
 
-/** Hatayı kullanıcıya gösterilecek Türkçe mesajlı `Error`'a çevirir (backend `code` eşlemesi `messageFromHttpError` içinde). */
+/** Hatayı kullanıcıya gösterilecek Türkçe mesajlı `Error`'a çevirir (backend `code` eşlemesi `messageFromHttpError` içinde; deneme kısıtı `TrialLimitError`). */
 export function toUserError<T>(fallback: string): MonoTypeOperatorFunction<T> {
     return catchError((err: unknown) =>
-        throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, fallback)) : err))
+        throwError(() => (err instanceof HttpErrorResponse ? userErrorFromHttp(err, fallback) : err))
     );
 }
 

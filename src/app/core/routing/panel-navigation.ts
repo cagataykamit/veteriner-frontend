@@ -109,6 +109,7 @@ export const CLINICAL_TERMS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-terms`;
 export const EXAMINATION_TEMPLATES_ROUTE = `${DEFINITIONS_ROUTE}/examination-templates`;
 export const HOSPITALIZATION_WARDS_ROUTE = `${DEFINITIONS_ROUTE}/hospitalization-wards`;
 export const IMPORTS_ROUTE = '/panel/settings/imports';
+export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const REPORTS_ROUTE = '/panel/reports';
 export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
 
@@ -389,7 +390,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
             {
                 label: 'Abonelik',
                 icon: 'pi pi-fw pi-wallet',
-                route: '/panel/settings/subscription',
+                route: SUBSCRIPTION_ROUTE,
                 claims: [SUBSCRIPTIONS_READ_CLAIM, SUBSCRIPTIONS_MANAGE_CLAIM],
                 description: 'Plan, deneme süresi ve ödeme durumu.'
             }
