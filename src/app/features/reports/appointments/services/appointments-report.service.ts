@@ -12,7 +12,7 @@ import {
 } from '@/app/features/reports/appointments/models/appointments-report-query.model';
 import type { AppointmentsReportResultVm } from '@/app/features/reports/appointments/models/appointments-report.model';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentsReportService {
@@ -39,7 +39,7 @@ export class AppointmentsReportService {
 
         return this.api.getBlob(ApiEndpoints.reports.appointmentsExport(), params).pipe(
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
             )
         );
     }
@@ -51,7 +51,7 @@ export class AppointmentsReportService {
 
         return this.api.getBlob(ApiEndpoints.reports.appointmentsExportXlsx(), params).pipe(
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
             )
         );
     }

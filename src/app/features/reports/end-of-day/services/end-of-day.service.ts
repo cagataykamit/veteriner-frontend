@@ -10,7 +10,7 @@ import type { ReportListQueryBase, ReportListSource } from '@/app/features/repor
 import { mapTodayOpenItemsDtoToVm } from '@/app/features/visits/data/visit.mapper';
 import type { TodayOpenItemsVm } from '@/app/features/visits/models/visit-vm.model';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 
 /** Üç gün sonu ucunun ortak süzgeçleri; gün sonu `from`/`to` takvim günüdür (`yyyy-MM-dd`). */
 export function endOfDayQueryToHttpParams(query: ReportListQueryBase, opts?: { omitPaging?: boolean; listFilters?: boolean }): HttpParams {
@@ -73,7 +73,7 @@ export class DailyTransactionsSource implements ReportListSource<ReportListQuery
         const params = endOfDayQueryToHttpParams(withActiveClinic(this.auth, query), { omitPaging: true, listFilters: true });
 
         return this.api.getBlob(path, params).pipe(
-            catchError((err) => throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback))))
+            catchError((err) => throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback)))
         );
     }
 

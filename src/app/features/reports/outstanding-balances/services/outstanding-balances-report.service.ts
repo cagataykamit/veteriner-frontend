@@ -11,7 +11,7 @@ import {
 } from '@/app/features/reports/outstanding-balances/models/outstanding-balances-report-query.model';
 import type { OutstandingBalancesReportResultVm } from '@/app/features/reports/outstanding-balances/models/outstanding-balances-report.model';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
 export class OutstandingBalancesReportService {
@@ -35,7 +35,7 @@ export class OutstandingBalancesReportService {
         const params = outstandingBalancesReportQueryToHttpParams(this.mergeClinicContext(query), { omitPaging: true });
 
         return this.api.getBlob(ApiEndpoints.reports.outstandingBalancesExport(), params).pipe(
-            catchError((err) => throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback))))
+            catchError((err) => throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback)))
         );
     }
 
@@ -44,7 +44,7 @@ export class OutstandingBalancesReportService {
         const params = outstandingBalancesReportQueryToHttpParams(this.mergeClinicContext(query), { omitPaging: true });
 
         return this.api.getBlob(ApiEndpoints.reports.outstandingBalancesExportXlsx(), params).pipe(
-            catchError((err) => throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback))))
+            catchError((err) => throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback)))
         );
     }
 

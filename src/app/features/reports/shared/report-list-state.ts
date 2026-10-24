@@ -9,7 +9,7 @@ import { mapMyClinicsToSelectOptions } from '@/app/features/reports/shared/map-m
 import { isReportUiClinicIdMisalignedWithJwt, isReportUiClinicIdUnknownToMyClinics } from '@/app/features/reports/shared/report-my-clinic.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
-import { isReportRecoverableClinicConstraint403, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { isReportRecoverableClinicConstraint403, isTrialLimitError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import {
     dateOnlyInputToIstanbulEndUtcIso,
     dateOnlyInputToIstanbulStartUtcIso,
@@ -102,6 +102,8 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     /** Hata istek içeriğinden (400/422: ör. tarih aralığı çok geniş) kaynaklı: aynı istekle tekrar denemek işe yaramaz. */
     readonly errorIsInvalidInput = signal(false);
     readonly exportError = signal<string | null>(null);
+    /** Dışa aktarma hatası deneme kısıtı (`Trial.ExportLimitExceeded`): mesajın yanında "Aboneliğe geç" eylemi gösterilir. */
+    readonly exportTrialLimited = signal(false);
     readonly dateFilterError = signal<string | null>(null);
     readonly report = signal<R | null>(null);
 
@@ -326,6 +328,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         const { source, exportFilePrefix } = this.config;
 
         this.exportError.set(null);
+        this.exportTrialLimited.set(false);
         this.exportKind.set(kind);
         this.sanitizeExportClinicFilterIfStale();
         const q = this.buildQuery(1, this.pageSize());
@@ -349,6 +352,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             },
             error: (e: Error) => {
                 this.exportKind.set(null);
+                this.exportTrialLimited.set(isTrialLimitError(e));
                 this.exportError.set(e.message?.trim() || PANEL_COPY.reportsExportFailedFallback);
             }
         });

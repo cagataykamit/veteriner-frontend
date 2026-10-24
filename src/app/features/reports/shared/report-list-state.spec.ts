@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpHeaders, HttpResponse } from '@angular/common/ht
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TrialLimitError } from '@/app/shared/utils/api-error.utils';
 import { ReportListQueryBase, ReportListResultBase, ReportListSource, ReportListState } from './report-list-state';
 
 type Query = ReportListQueryBase & { status?: string; minAmount?: string };
@@ -262,7 +263,23 @@ describe('ReportListState', () => {
         source.exportCsvBlob.and.returnValue(throwError(() => new Error('Sunucu hatası')));
         state.exportCsv();
         expect(state.exportError()).toBe('Sunucu hatası');
+        expect(state.exportTrialLimited()).toBeFalse();
         expect(state.exportKind()).toBeNull();
+    });
+
+    it('deneme kısıtı (Trial.ExportLimitExceeded): sunucu metni ve abonelik eylemi bayrağı; sonraki denemede bayrak sıfırlanır', () => {
+        const state = create();
+        const detail = 'Deneme sürümünde dışa aktarma en fazla 1000 satır sınırı; abonelikle kalkar. Filtreyi daraltın.';
+
+        state.init();
+        source.exportXlsxBlob.and.returnValue(throwError(() => new TrialLimitError(detail, 'Trial.ExportLimitExceeded')));
+        state.exportXlsx();
+        expect(state.exportError()).toBe(detail);
+        expect(state.exportTrialLimited()).toBeTrue();
+
+        source.exportCsvBlob.and.returnValue(throwError(() => new Error('Sunucu hatası')));
+        state.exportCsv();
+        expect(state.exportTrialLimited()).toBeFalse();
     });
 
     it('yükleme hatasında hata mesajı gösterir', () => {

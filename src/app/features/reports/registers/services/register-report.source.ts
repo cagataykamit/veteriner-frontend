@@ -6,7 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { RegisterDto, RegisterResultVm } from '@/app/features/reports/registers/models/register.model';
 import type { ReportListQueryBase, ReportListSource } from '@/app/features/reports/shared/report-list-state';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 
 /** Liste ve dışa aktarma aynı süzgeç kümesini (`from`, `to`, `clinicId`) gönderir; sayfalama yalnız listede. */
 export function registerQueryToHttpParams(query: ReportListQueryBase, opts?: { omitPaging?: boolean }): HttpParams {
@@ -69,7 +69,7 @@ export class RegisterReportSource<T> implements ReportListSource<ReportListQuery
         const params = registerQueryToHttpParams(this.mergeClinicContext(query), { omitPaging: true });
 
         return this.api.getBlob(path, params).pipe(
-            catchError((err) => throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback))))
+            catchError((err) => throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback)))
         );
     }
 

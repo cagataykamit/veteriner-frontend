@@ -1,11 +1,12 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VaccinationsReportService } from '@/app/features/reports/vaccinations/services/vaccinations-report.service';
+import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 import { VaccinationsReportPageComponent } from './vaccinations-report-page.component';
 
 describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
@@ -79,5 +80,37 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
         fixture.componentInstance.state.petIdFilter = 'pet-1';
         fixture.componentInstance.state.applyFilters();
         expect(source.loadReport.calls.mostRecent().args[0].petId).toBe('pet-1');
+    });
+
+    it('422 Trial.ExportLimitExceeded: sunucunun detail metni ve "Aboneliğe geç" bağlantısı gösterilir (TRIAL-004)', () => {
+        const detail = 'Deneme sürümünde dışa aktarma en fazla 1000 satır sınırı; abonelikle kalkar. Filtreyi daraltın.';
+        const http = new HttpErrorResponse({ status: 422, error: { status: 422, title: 'İş kuralı ihlali', detail, code: 'Trial.ExportLimitExceeded' } });
+
+        source.exportCsvBlob.and.returnValue(throwError(() => userErrorFromHttp(http, 'Dışa aktarma işlemi tamamlanamadı.')));
+        const fixture = create();
+
+        fixture.componentInstance.state.exportCsv();
+        fixture.detectChanges();
+        const el: HTMLElement = fixture.nativeElement;
+        const notice = el.querySelector('[data-testid="trial-limit-notice"]');
+        const link = el.querySelector<HTMLAnchorElement>('[data-testid="trial-limit-subscription-link"]');
+
+        expect(notice?.textContent).toContain(detail);
+        expect(link?.textContent).toContain('Aboneliğe geç');
+        expect(link?.getAttribute('href')).toBe('/panel/settings/subscription');
+    });
+
+    it('ücretli kiracı dışa aktarma hatası (400 ReportExportTooManyRows) düz hata metni kalır, abonelik bağlantısı çıkmaz', () => {
+        const http = new HttpErrorResponse({ status: 400, error: { detail: 'Dışa aktarma için çok fazla satır.', code: 'Vaccinations.ReportExportTooManyRows' } });
+
+        source.exportCsvBlob.and.returnValue(throwError(() => userErrorFromHttp(http, 'Dışa aktarma işlemi tamamlanamadı.')));
+        const fixture = create();
+
+        fixture.componentInstance.state.exportCsv();
+        fixture.detectChanges();
+        const el: HTMLElement = fixture.nativeElement;
+
+        expect(el.querySelector('[data-testid="trial-limit-notice"]')).toBeNull();
+        expect(el.querySelector('[role="alert"]')?.textContent).toContain('çok fazla satır');
     });
 });

@@ -11,6 +11,7 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
+import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 
 /** Rapora özgü süzgeç: `options` varsa açılır liste, yoksa tutar alanı. */
 export interface ReportExtraFilter {
@@ -31,14 +32,19 @@ export interface ReportExtraFilter {
         DateInputComponent,
         ClientSearchComponent,
         PetSearchComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        AppTrialLimitNoticeComponent
     ],
     template: `
         @let s = state();
-        @if (s.exportError()) {
-            <div class="card mb-4 border-red-200 dark:border-red-800">
-                <p class="text-red-500 m-0 text-sm" role="alert">{{ s.exportError() }}</p>
-            </div>
+        @if (s.exportError(); as exportError) {
+            @if (s.exportTrialLimited()) {
+                <app-trial-limit-notice [message]="exportError" />
+            } @else {
+                <div class="card mb-4 border-red-200 dark:border-red-800">
+                    <p class="text-red-500 m-0 text-sm" role="alert">{{ exportError }}</p>
+                </div>
+            }
         }
 
         <div class="card mb-4">

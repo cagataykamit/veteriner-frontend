@@ -12,7 +12,7 @@ import {
 } from '@/app/features/reports/examinations/models/examinations-report-query.model';
 import type { ExaminationsReportResultVm } from '@/app/features/reports/examinations/models/examinations-report.model';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
 export class ExaminationsReportService {
@@ -39,7 +39,7 @@ export class ExaminationsReportService {
 
         return this.api.getBlob(ApiEndpoints.reports.examinationsExport(), params).pipe(
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
             )
         );
     }
@@ -51,7 +51,7 @@ export class ExaminationsReportService {
 
         return this.api.getBlob(ApiEndpoints.reports.examinationsExportXlsx(), params).pipe(
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
             )
         );
     }

@@ -9,7 +9,7 @@ import type { PaymentsReportDto } from '@/app/features/reports/payments/models/p
 import { paymentsReportQueryToHttpParams, type PaymentsReportQuery } from '@/app/features/reports/payments/models/payments-report-query.model';
 import type { PaymentsReportResultVm } from '@/app/features/reports/payments/models/payments-report.model';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
 export class PaymentsReportService {
@@ -40,7 +40,7 @@ export class PaymentsReportService {
 
         return this.api.getBlob(ApiEndpoints.reports.paymentsExport(), params).pipe(
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
             )
         );
     }
@@ -52,7 +52,7 @@ export class PaymentsReportService {
 
         return this.api.getBlob(ApiEndpoints.reports.paymentsExportXlsx(), params).pipe(
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, PANEL_COPY.reportsExportFailedFallback)))
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
             )
         );
     }
