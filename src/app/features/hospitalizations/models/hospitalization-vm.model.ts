@@ -11,7 +11,13 @@ export interface HospitalizationListItemVm {
     clientName: string;
     examinationId: string | null;
     visitId: string | null;
+    /** Atama anında türetilmiş ya da eski serbest metin konum. */
     location: string;
+    roomId: string | null;
+    roomName: string | null;
+    wardName: string | null;
+    /** Ekranda gösterilen konum: oda varsa "Bölüm / Oda", yoksa `location` metni; ikisi de yoksa `''`. */
+    locationLabel: string;
     admittedAtUtc: string | null;
     plannedDischargeAtUtc: string | null;
     dischargedAtUtc: string | null;
@@ -29,6 +35,10 @@ export interface HospitalizationDetailVm {
     examinationId: string | null;
     visitId: string | null;
     location: string;
+    roomId: string | null;
+    roomName: string | null;
+    wardName: string | null;
+    locationLabel: string;
     admittedAtUtc: string | null;
     plannedDischargeAtUtc: string | null;
     dischargedAtUtc: string | null;
@@ -51,7 +61,10 @@ export interface HospitalizationEditVm {
     petName: string | null;
     examinationId: string;
     visitId: string;
+    /** Kayıtlı konum metni; oda yoksa eski serbest metin olabilir. */
     location: string;
+    /** Kayıtlı oda; yoksa `''`. Pasifleşmiş olsa da seçicide gösterilir. */
+    roomId: string;
     admittedAtUtc: string | null;
     plannedDischargeAtUtc: string | null;
     reason: string;

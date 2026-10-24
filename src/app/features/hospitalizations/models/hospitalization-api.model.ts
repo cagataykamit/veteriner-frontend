@@ -18,6 +18,10 @@ export interface HospitalizationListItemDto {
     dischargedAtUtc?: string | null;
     reason?: string | null;
     isActive?: boolean | null;
+    /** HOSP-002: klinik tanımlı oda; eski kayıtlarda `null`. Adlar tanımın o anki adıdır (pasifleşmiş olsa da döner). */
+    roomId?: string | null;
+    roomName?: string | null;
+    wardName?: string | null;
 }
 
 export interface HospitalizationListItemDtoPagedResult {
@@ -49,6 +53,9 @@ export interface HospitalizationDetailDto {
     updatedAtUtc?: string | null;
     isActive?: boolean | null;
     rowVersion?: string | null;
+    roomId?: string | null;
+    roomName?: string | null;
+    wardName?: string | null;
 }
 
 /** POST create / PUT update body — API ile uyumlu. */
@@ -58,8 +65,12 @@ export interface HospitalizationWriteRequestDto {
     examinationId?: string | null;
     /** PUT’ta yok/`null` = mevcut bağı koru veya muayeneden miras al. */
     visitId?: string | null;
-    /** PUT’ta yok/`null` = dokunma, boş metin = temizle. */
+    /** PUT’ta yok/`null` = dokunma, boş metin = temizle; `roomId` varsa sunucu yok sayar ("Bölüm / Oda" türetir). */
     location?: string | null;
+    /** HOSP-002 (§10.4): yatışın kliniğindeki aktif oda. PUT’ta yok/`null` = oda bağına dokunma. */
+    roomId?: string | null;
+    /** Yalnız PUT: `true` = oda bağını kaldır; `roomId` ile birlikte gönderilemez (400). */
+    clearRoom?: boolean;
     admittedAtUtc: string;
     plannedDischargeAtUtc?: string | null;
     reason: string;

@@ -106,6 +106,42 @@ function canonicalLocation(dto: HospitalizationListItemDto | HospitalizationDeta
     return firstTrimmed(dto.location, readDtoString(dto, ['Location'])) ?? '';
 }
 
+function canonicalRoomId(dto: HospitalizationListItemDto | HospitalizationDetailDto): string | null {
+    return firstTrimmed(dto.roomId, readDtoString(dto, ['RoomId']));
+}
+
+function canonicalRoomName(dto: HospitalizationListItemDto | HospitalizationDetailDto): string | null {
+    return firstTrimmed(dto.roomName, readDtoString(dto, ['RoomName']));
+}
+
+function canonicalWardName(dto: HospitalizationListItemDto | HospitalizationDetailDto): string | null {
+    return firstTrimmed(dto.wardName, readDtoString(dto, ['WardName']));
+}
+
+/** Konum gösterimi tek kural (sözleşme §10.3): oda varsa "Bölüm / Oda" (adlar tanımın o anki adı), yoksa `location` metni. */
+export function hospitalizationLocationLabel(input: { roomId: string | null; roomName: string | null; wardName: string | null; location: string }): string {
+    if (input.roomId) {
+        const parts = [input.wardName, input.roomName].filter((p): p is string => !!p?.trim());
+
+        if (parts.length > 0) {
+            return parts.join(' / ');
+        }
+    }
+
+    return input.location;
+}
+
+function canonicalLocationFields(dto: HospitalizationListItemDto | HospitalizationDetailDto): Pick<HospitalizationListItemVm, 'location' | 'roomId' | 'roomName' | 'wardName' | 'locationLabel'> {
+    const fields = {
+        location: canonicalLocation(dto),
+        roomId: canonicalRoomId(dto),
+        roomName: canonicalRoomName(dto),
+        wardName: canonicalWardName(dto)
+    };
+
+    return { ...fields, locationLabel: hospitalizationLocationLabel(fields) };
+}
+
 function canonicalAdmittedAt(dto: HospitalizationListItemDto | HospitalizationDetailDto): string | null {
     return firstTrimmed(dto.admittedAtUtc, readDtoString(dto, ['AdmittedAtUtc']));
 }
@@ -165,7 +201,7 @@ export function mapHospitalizationListItemDtoToVm(dto: HospitalizationListItemDt
         clientName: canonicalClientName(dto),
         examinationId: canonicalExaminationId(dto),
         visitId: canonicalVisitId(dto),
-        location: canonicalLocation(dto),
+        ...canonicalLocationFields(dto),
         admittedAtUtc: canonicalAdmittedAt(dto),
         plannedDischargeAtUtc: canonicalPlannedDischargeAt(dto),
         dischargedAtUtc: canonicalDischargedAt(dto),
@@ -184,7 +220,7 @@ export function mapHospitalizationDetailDtoToVm(dto: HospitalizationDetailDto): 
         clientName: canonicalClientName(dto),
         examinationId: canonicalExaminationId(dto),
         visitId: canonicalVisitId(dto),
-        location: canonicalLocation(dto),
+        ...canonicalLocationFields(dto),
         admittedAtUtc: canonicalAdmittedAt(dto),
         plannedDischargeAtUtc: canonicalPlannedDischargeAt(dto),
         dischargedAtUtc: canonicalDischargedAt(dto),
@@ -209,6 +245,7 @@ export function mapHospitalizationDetailDtoToEditVm(dto: HospitalizationDetailDt
         examinationId: canonicalExaminationId(dto) ?? '',
         visitId: canonicalVisitId(dto) ?? '',
         location: canonicalLocation(dto),
+        roomId: canonicalRoomId(dto) ?? '',
         admittedAtUtc: canonicalAdmittedAt(dto),
         plannedDischargeAtUtc: canonicalPlannedDischargeAt(dto),
         reason: firstTrimmed(dto.reason, readDtoString(dto, ['Reason'])) ?? '',
@@ -340,6 +377,15 @@ export function mapCreateHospitalizationToApiBody(req: CreateHospitalizationRequ
         dto.location = req.location.trim();
     }
 
+    const roomId = req.roomId?.trim();
+
+    if (roomId) {
+        dto.roomId = roomId;
+    } else if (req.clearRoom) {
+        // `roomId` ve `clearRoom` birlikte gönderilemez (400); oda seçiliyse kaldırma isteği anlamsızdır.
+        dto.clearRoom = true;
+    }
+
     const rowVersion = req.rowVersion?.trim();
 
     if (rowVersion) {
@@ -359,6 +405,8 @@ export interface HospitalizationUpsertFormAdapterInput {
     examinationId?: string | null;
     visitId?: string | null;
     location?: string | null;
+    roomId?: string | null;
+    clearRoom?: boolean;
     rowVersion?: string;
 }
 
@@ -375,6 +423,8 @@ export function mapHospitalizationUpsertFormToCreateRequest(
         examinationId: input.examinationId?.trim() ? input.examinationId.trim() : null,
         visitId: input.visitId?.trim() ? input.visitId.trim() : null,
         location: input.location == null ? null : input.location.trim(),
+        roomId: input.roomId?.trim() ? input.roomId.trim() : null,
+        clearRoom: input.clearRoom === true,
         rowVersion: input.rowVersion
     };
 }

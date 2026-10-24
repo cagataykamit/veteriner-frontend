@@ -19,6 +19,12 @@ export const HOSPITALIZATION_CONCURRENCY_CONFLICT_CODE = 'Hospitalizations.Concu
 export const HOSPITALIZATION_EXAMINATION_FINALIZED_MESSAGE =
     'Kesinleşmiş muayeneye yatış bağlanamaz ve bağlı olduğu kesinleşmiş muayeneden ayrılamaz. Gerekirse muayeneye ek not ekleyin veya yatışı muayene olmadan, geliş kaydıyla bağlayın.';
 
+/** Oda seçimi kodları (sözleşme §10.5) → oda alanı mesajı; seçici güncel tanımlarla yenilenmelidir. */
+export const HOSPITALIZATION_ROOM_PROBLEM_MESSAGES: Record<string, string> = {
+    'Hospitalizations.RoomNotFound': 'Seçilen oda bu klinikte bulunamadı; konum listesini yenileyip tekrar seçin.',
+    'Hospitalizations.RoomInactive': 'Seçilen oda veya bölümü pasife alınmış; aktif bir oda seçin.'
+};
+
 function isConcurrencyConflict(err: HttpErrorResponse): boolean {
     return err.status === 409 && problemCodeFromHttpError(err) === HOSPITALIZATION_CONCURRENCY_CONFLICT_CODE;
 }
@@ -28,6 +34,12 @@ function examinationFinalizedMessage(err: HttpErrorResponse): string | null {
     return err.status === 409 && problemCodeFromHttpError(err) === 'Examinations.Finalized' ? HOSPITALIZATION_EXAMINATION_FINALIZED_MESSAGE : null;
 }
 
+function roomProblemMessage(err: HttpErrorResponse): string | null {
+    const code = problemCodeFromHttpError(err);
+
+    return (code && HOSPITALIZATION_ROOM_PROBLEM_MESSAGES[code]) || null;
+}
+
 export type HospitalizationUpsertFormFieldKey =
     | 'clientId'
     | 'petId'
@@ -35,7 +47,7 @@ export type HospitalizationUpsertFormFieldKey =
     | 'plannedDischargeAtLocal'
     | 'examinationId'
     | 'visitId'
-    | 'location'
+    | 'roomId'
     | 'reason'
     | 'notes';
 
@@ -61,7 +73,10 @@ const FIELD_MAP: Record<string, HospitalizationUpsertFormFieldKey> = {
     planneddischargeat: 'plannedDischargeAtLocal',
     examinationid: 'examinationId',
     visitid: 'visitId',
-    location: 'location',
+    // Konum artık bölüm → oda seçimidir; sunucunun `location`/`clearRoom` hataları da oda alanında gösterilir.
+    roomid: 'roomId',
+    clearroom: 'roomId',
+    location: 'roomId',
     reason: 'reason',
     notes: 'notes',
     note: 'notes'
@@ -131,6 +146,12 @@ export function parseHospitalizationUpsertHttpError(err: HttpErrorResponse): Par
 
     if (finalized) {
         return { fieldErrors: { examinationId: finalized }, summaryMessage: SUMMARY_FIELD_ERRORS, isConcurrencyConflict: false };
+    }
+
+    const room = roomProblemMessage(err);
+
+    if (room) {
+        return { fieldErrors: { roomId: room }, summaryMessage: SUMMARY_FIELD_ERRORS, isConcurrencyConflict: false };
     }
 
     return { ...parseUpsertFieldErrors(err), isConcurrencyConflict: isConcurrencyConflict(err) };

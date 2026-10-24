@@ -292,6 +292,27 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
     },
+    /** Klinik tanımlı yatış bölümleri ve altındaki oda/kafesler (HOSPITALIZATION_MODEL_API_CONTRACT.md §10.2). */
+    hospitalizationWards: {
+        /** GET: aktif/pasif tüm bölümler odalarıyla (`Clinics_HospitalizationWardsRead`); POST `{ name, sortOrder }` (`Clinics.Update`). */
+        list: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards`,
+        /** PUT `{ name, sortOrder }`; aktif/pasif bu uçla değişmez. */
+        byId: (clinicId: string, wardId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards/${encodeURIComponent(wardId)}`,
+        activate: (clinicId: string, wardId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards/${encodeURIComponent(wardId)}/activate`,
+        deactivate: (clinicId: string, wardId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards/${encodeURIComponent(wardId)}/deactivate`,
+        /** POST `{ name, sortOrder }`: bölüme oda ekler. */
+        rooms: (clinicId: string, wardId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards/${encodeURIComponent(wardId)}/rooms`,
+        roomById: (clinicId: string, wardId: string, roomId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards/${encodeURIComponent(wardId)}/rooms/${encodeURIComponent(roomId)}`,
+        roomActivate: (clinicId: string, wardId: string, roomId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards/${encodeURIComponent(wardId)}/rooms/${encodeURIComponent(roomId)}/activate`,
+        roomDeactivate: (clinicId: string, wardId: string, roomId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards/${encodeURIComponent(wardId)}/rooms/${encodeURIComponent(roomId)}/deactivate`
+    },
     careInstructions: {
         /** GET (Query: `Page`, `PageSize`, `clinicId`, `petId`, `hospitalizationId`, `examinationId`, `visitId`; en yeni üstte) ve POST. */
         list: () => `/api/v1/care-instructions`,
