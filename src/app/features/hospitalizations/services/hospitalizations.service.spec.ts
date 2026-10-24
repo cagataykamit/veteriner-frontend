@@ -60,6 +60,26 @@ describe('HospitalizationsService', () => {
         req.flush({ id: 'h1', rowVersion: 'x' });
     });
 
+    it('PUT: oda seçildiyse roomId gider, clearRoom ve location gitmez (HOSP-002)', (done) => {
+        service.updateHospitalization('h1', { ...update, location: null, roomId: 'r1', clearRoom: false }).subscribe(() => done());
+        const req = http.expectOne(URL);
+
+        expect(req.request.body.roomId).toBe('r1');
+        expect('clearRoom' in req.request.body).toBeFalse();
+        expect('location' in req.request.body).toBeFalse();
+        req.flush({ id: 'h1', rowVersion: 'x' });
+    });
+
+    it('PUT: "Konum yok" seçimi clearRoom:true ve boş location gönderir, roomId gitmez', (done) => {
+        service.updateHospitalization('h1', { ...update, location: '', roomId: null, clearRoom: true }).subscribe(() => done());
+        const req = http.expectOne(URL);
+
+        expect(req.request.body.clearRoom).toBeTrue();
+        expect(req.request.body.location).toBe('');
+        expect('roomId' in req.request.body).toBeFalse();
+        req.flush({ id: 'h1', rowVersion: 'x' });
+    });
+
     it('PUT 409 ham HttpErrorResponse olarak iletilir (çakışma kodu ayrıştırılabilsin)', (done) => {
         service.updateHospitalization('h1', update).subscribe({
             error: (e: unknown) => {
@@ -111,5 +131,18 @@ describe('HospitalizationsService', () => {
             done();
         });
         http.expectOne(URL).flush({ id: 'h1', notes: 'Giriş', dischargeNote: 'Çıkış', rowVersion: 'AAAAAAAAB9E=' });
+    });
+
+    it('detay: odalı yatışta konum etiketi "Bölüm / Oda", düzenleme verisi roomId taşır', (done) => {
+        service.getHospitalizationById('h1').subscribe((vm) => {
+            expect(vm.roomId).toBe('r1');
+            expect(vm.locationLabel).toBe('Yoğun bakım / Kafes 1');
+            service.getHospitalizationForEditById('h1').subscribe((edit) => {
+                expect(edit.roomId).toBe('r1');
+                done();
+            });
+            http.expectOne(URL).flush({ id: 'h1', roomId: 'r1', roomName: 'Kafes 1', wardName: 'Yoğun bakım', isActive: true, rowVersion: 'AAAAAAAAB9E=' });
+        });
+        http.expectOne(URL).flush({ id: 'h1', roomId: 'r1', roomName: 'Kafes 1', wardName: 'Yoğun bakım', location: 'Eski metin', rowVersion: 'AAAAAAAAB9E=' });
     });
 });

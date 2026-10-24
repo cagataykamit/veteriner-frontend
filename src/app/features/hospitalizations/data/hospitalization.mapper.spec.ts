@@ -1,4 +1,64 @@
-import { hospitalizationsQueryToHttpParams } from '@/app/features/hospitalizations/data/hospitalization.mapper';
+import {
+    hospitalizationLocationLabel,
+    hospitalizationsQueryToHttpParams,
+    mapCreateHospitalizationToApiBody,
+    mapHospitalizationDetailDtoToEditVm,
+    mapHospitalizationListItemDtoToVm,
+    mapHospitalizationUpsertFormToCreateRequest
+} from '@/app/features/hospitalizations/data/hospitalization.mapper';
+
+describe('hospitalization mapper — konum (HOSP-002)', () => {
+    const base = { id: 'h1', petName: 'Pamuk', reason: 'Gözlem', admittedAtUtc: '2026-10-10T07:00:00Z' };
+
+    it('oda varsa "Bölüm / Oda" gösterilir; serbest metin konum yedek kalır', () => {
+        const vm = mapHospitalizationListItemDtoToVm({ ...base, roomId: 'r1', roomName: 'Kafes 1', wardName: 'Yoğun bakım', location: 'Yoğun bakım / Kafes 1' });
+
+        expect(vm.roomId).toBe('r1');
+        expect(vm.wardName).toBe('Yoğun bakım');
+        expect(vm.roomName).toBe('Kafes 1');
+        expect(vm.locationLabel).toBe('Yoğun bakım / Kafes 1');
+    });
+
+    it('oda yoksa eski serbest metin, o da yoksa boş etiket', () => {
+        expect(mapHospitalizationListItemDtoToVm({ ...base, location: 'Kafes 3' }).locationLabel).toBe('Kafes 3');
+        expect(mapHospitalizationListItemDtoToVm(base).locationLabel).toBe('');
+        expect(mapHospitalizationListItemDtoToVm(base).roomId).toBeNull();
+    });
+
+    it('oda var ama adlar gelmezse konum metnine düşer; yalnız bölüm adı gelirse o yazılır', () => {
+        expect(hospitalizationLocationLabel({ roomId: 'r1', roomName: null, wardName: null, location: 'Metin' })).toBe('Metin');
+        expect(hospitalizationLocationLabel({ roomId: 'r1', roomName: null, wardName: 'Kedi servisi', location: '' })).toBe('Kedi servisi');
+    });
+
+    it('düzenleme VM roomId taşır; oda yoksa boş metin', () => {
+        expect(mapHospitalizationDetailDtoToEditVm({ ...base, roomId: 'r1', rowVersion: 'v' }).roomId).toBe('r1');
+        expect(mapHospitalizationDetailDtoToEditVm({ ...base, rowVersion: 'v' }).roomId).toBe('');
+    });
+
+    const write = { clinicId: 'c1', petId: 'p1', admittedAtUtc: '2026-10-10T07:00:00Z', reason: 'Gözlem' };
+
+    it('yazma gövdesi: roomId seçildiyse gider, location ve clearRoom gitmez', () => {
+        const body = mapCreateHospitalizationToApiBody({ ...write, roomId: ' r1 ' });
+
+        expect(body.roomId).toBe('r1');
+        expect('location' in body).toBeFalse();
+        expect('clearRoom' in body).toBeFalse();
+    });
+
+    it('yazma gövdesi: clearRoom yalnız oda seçili değilken gider', () => {
+        expect(mapCreateHospitalizationToApiBody({ ...write, clearRoom: true }).clearRoom).toBeTrue();
+        expect('clearRoom' in mapCreateHospitalizationToApiBody({ ...write, roomId: 'r1', clearRoom: true })).toBeFalse();
+        expect('clearRoom' in mapCreateHospitalizationToApiBody(write)).toBeFalse();
+    });
+
+    it('form adaptörü boş oda seçimini null, clearRoom bayrağını boolean yapar', () => {
+        const req = mapHospitalizationUpsertFormToCreateRequest({ ...write, roomId: '', clearRoom: undefined });
+
+        expect(req.roomId).toBeNull();
+        expect(req.clearRoom).toBeFalse();
+        expect(mapHospitalizationUpsertFormToCreateRequest({ ...write, roomId: 'r2', clearRoom: true }).roomId).toBe('r2');
+    });
+});
 
 describe('hospitalization mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [dateFromUtc, dateToUtc] olarak gönderir', () => {

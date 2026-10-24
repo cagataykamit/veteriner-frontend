@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import {
     HOSPITALIZATION_EXAMINATION_FINALIZED_MESSAGE,
+    HOSPITALIZATION_ROOM_PROBLEM_MESSAGES,
     parseHospitalizationDischargeHttpError,
     parseHospitalizationUpsertHttpError
 } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
@@ -36,5 +37,20 @@ describe('hospitalization-upsert-validation-parse.utils', () => {
 
     it('çakışma dışı hata çakışma işaretlemez', () => {
         expect(parseHospitalizationUpsertHttpError(problem(400, 'Hospitalizations.VisitClinicMismatch')).isConcurrencyConflict).toBeFalse();
+    });
+
+    it('oda kodları (RoomNotFound 404, RoomInactive 409) oda alanına Türkçe mesaj yazar, çakışma değildir', () => {
+        const notFound = parseHospitalizationUpsertHttpError(problem(404, 'Hospitalizations.RoomNotFound'));
+        const inactive = parseHospitalizationUpsertHttpError(problem(409, 'Hospitalizations.RoomInactive'));
+
+        expect(notFound.fieldErrors.roomId).toBe(HOSPITALIZATION_ROOM_PROBLEM_MESSAGES['Hospitalizations.RoomNotFound']);
+        expect(inactive.fieldErrors.roomId).toContain('pasife alınmış');
+        expect(inactive.isConcurrencyConflict).toBeFalse();
+    });
+
+    it('sunucunun location / clearRoom alan hataları oda alanında gösterilir', () => {
+        const err = new HttpErrorResponse({ status: 400, error: { errors: { ClearRoom: ['roomId ile birlikte gönderilemez'] } } });
+
+        expect(parseHospitalizationUpsertHttpError(err).fieldErrors.roomId).toBe('roomId ile birlikte gönderilemez');
     });
 });

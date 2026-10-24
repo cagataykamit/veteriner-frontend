@@ -1,0 +1,180 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, Directive, forwardRef, input } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
+import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
+import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
+import { PetsService } from '@/app/features/pets/services/pets.service';
+import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
+import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { HospitalizationFormComponent } from './hospitalization-form.component';
+
+/** Arama bileşenlerinin yerine basit değer erişimcisi (sunucu araması bu testin konusu değil). */
+@Directive()
+abstract class StubValueAccessor implements ControlValueAccessor {
+    readonly inputId = input('');
+    writeValue(): void {}
+    registerOnChange(): void {}
+    registerOnTouched(): void {}
+}
+
+@Component({
+    selector: 'app-client-search',
+    standalone: true,
+    template: '',
+    providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => StubClientSearchComponent), multi: true }]
+})
+class StubClientSearchComponent extends StubValueAccessor {}
+
+@Component({
+    selector: 'app-pet-search',
+    standalone: true,
+    template: '',
+    providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => StubPetSearchComponent), multi: true }]
+})
+class StubPetSearchComponent extends StubValueAccessor {
+    readonly clientId = input<string | null>(null);
+}
+
+@Component({ selector: 'app-pet-alert-banner', standalone: true, template: '' })
+class StubPetAlertBannerComponent {
+    readonly petId = input<string | null>(null);
+}
+
+const wards: HospitalizationWardVm[] = [
+    {
+        id: 'w1',
+        clinicId: 'clinic-1',
+        name: 'Yoğun bakım',
+        sortOrder: 1,
+        isActive: true,
+        rooms: [
+            { id: 'r1', wardId: 'w1', name: 'Kafes 1', sortOrder: 1, isActive: true },
+            { id: 'r2', wardId: 'w1', name: 'Kafes 2', sortOrder: 2, isActive: false }
+        ]
+    },
+    { id: 'w2', clinicId: 'clinic-1', name: 'Pasif servis', sortOrder: 2, isActive: false, rooms: [] }
+];
+
+describe('HospitalizationFormComponent — konum: bölüm → oda (HOSP-002)', () => {
+    let fixture: ComponentFixture<HospitalizationFormComponent>;
+    let create: jasmine.Spy;
+    let listWards: jasmine.Spy;
+
+    const setup = async () => {
+        await TestBed.configureTestingModule({
+            imports: [HospitalizationFormComponent],
+            providers: [
+                provideRouter([]),
+                { provide: HospitalizationsService, useValue: { createHospitalization: create } },
+                { provide: HospitalizationWardsService, useValue: { listWards } },
+                { provide: ExaminationsService, useValue: { getExaminations: () => of({ items: [] }) } },
+                { provide: VisitsService, useValue: { getToday: () => of({ items: [] }) } },
+                { provide: ClientsService, useValue: {} },
+                { provide: PetsService, useValue: {} },
+                { provide: AuthService, useValue: { getClinicId: () => 'clinic-1', getClinicName: () => 'Pati', hasOperationClaim: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        TestBed.overrideComponent(HospitalizationFormComponent, {
+            remove: { imports: [ClientSearchComponent, PetSearchComponent, PetAlertBannerComponent] },
+            add: { imports: [StubClientSearchComponent, StubPetSearchComponent, StubPetAlertBannerComponent] }
+        });
+        fixture = TestBed.createComponent(HospitalizationFormComponent);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        return fixture.componentInstance;
+    };
+
+    const fillRequired = (c: HospitalizationFormComponent) => {
+        c.form.controls.clientId.setValue('client-1');
+        c.form.controls.petId.setValue('pet-1');
+        c.form.patchValue({ admittedAtLocal: '2026-10-20T09:00', reason: 'Gözlem' });
+    };
+
+    beforeEach(() => {
+        create = jasmine.createSpy('createHospitalization').and.returnValue(of({ id: 'h1' }));
+        listWards = jasmine.createSpy('listWards').and.returnValue(of(wards));
+    });
+
+    it('aktif kliniğin tanımlarını yükler; bölüm seçenekleri "Konum yok" + aktif bölümler, oda bölüm seçilince aktif odalar', async () => {
+        const c = await setup();
+
+        expect(listWards).toHaveBeenCalledWith('clinic-1');
+        expect(c.wardOptions().map((o) => o.label)).toEqual(['Konum yok', 'Yoğun bakım']);
+        expect(c.form.controls.roomId.disabled).toBeTrue();
+
+        c.form.controls.wardId.setValue('w1');
+        expect(c.form.controls.roomId.disabled).toBeFalse();
+        expect(c.roomOptions().map((o) => o.value)).toEqual(['r1']);
+    });
+
+    it('oda seçilince payload roomId taşır; serbest metin konum gönderilmez', async () => {
+        const c = await setup();
+
+        fillRequired(c);
+        c.form.controls.wardId.setValue('w1');
+        c.form.controls.roomId.setValue('r1');
+        c.onSubmit();
+
+        expect(create).toHaveBeenCalledTimes(1);
+        const payload = create.calls.mostRecent().args[0];
+
+        expect(payload.roomId).toBe('r1');
+        expect(payload.location).toBeNull();
+        expect(payload.clearRoom).toBeFalse();
+    });
+
+    it('"Konum yok" iken roomId null gider; bölüm seçili ama oda seçilmemişse form gönderilmez', async () => {
+        const c = await setup();
+
+        fillRequired(c);
+        c.onSubmit();
+        expect(create.calls.mostRecent().args[0].roomId).toBeNull();
+
+        create.calls.reset();
+        c.form.controls.wardId.setValue('w1');
+        c.onSubmit();
+        expect(create).not.toHaveBeenCalled();
+        expect(c.form.invalid).toBeTrue();
+
+        c.form.controls.wardId.setValue('');
+        expect(c.form.controls.roomId.value).toBe('');
+        expect(c.form.controls.roomId.disabled).toBeTrue();
+    });
+
+    it('Hospitalizations.RoomInactive oda alanında gösterilir', async () => {
+        create.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Hospitalizations.RoomInactive' } } })));
+        const c = await setup();
+
+        fillRequired(c);
+        c.form.controls.wardId.setValue('w1');
+        c.form.controls.roomId.setValue('r1');
+        c.onSubmit();
+        fixture.detectChanges();
+
+        expect(c.apiFieldErrors().roomId).toContain('pasife alınmış');
+        expect(c.submitError()).toBeNull();
+    });
+
+    it('tanımlar yüklenemezse bölüm alanında hata görünür, form yine de odasız kaydedilebilir', async () => {
+        listWards.and.returnValue(throwError(() => new Error('Yatış konumları yüklenemedi.')));
+        const c = await setup();
+
+        expect(c.wardsError()).toBe('Yatış konumları yüklenemedi.');
+        fillRequired(c);
+        c.onSubmit();
+        expect(create).toHaveBeenCalledTimes(1);
+    });
+});
