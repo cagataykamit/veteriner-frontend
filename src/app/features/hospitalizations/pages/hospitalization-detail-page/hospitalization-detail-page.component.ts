@@ -109,9 +109,9 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                                     Taburcu
                                 }
                             </dd>
-                            @if (row()!.location) {
+                            @if (row()!.locationLabel) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Konum</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.location }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0" data-testid="hospitalization-location">{{ row()!.locationLabel }}</dd>
                             }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Yatış</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.admittedAtUtc | trDateTime }}</dd>

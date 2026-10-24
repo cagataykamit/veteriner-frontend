@@ -130,6 +130,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                         <th>Durum</th>
                                         <th>Müşteri</th>
                                         <th>Hasta</th>
+                                        <th>Konum</th>
                                         <th>Neden</th>
                                         <th style="width: 8rem">İşlemler</th>
                                     </tr>
@@ -160,6 +161,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                                 {{ row.petName }}
                                             }
                                         </td>
+                                        <td>{{ row.locationLabel || '—' }}</td>
                                         <td>{{ row.reason }}</td>
                                         <td>
                                             <div class="flex items-center gap-1">
@@ -200,6 +202,9 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                             }
                                         </div>
                                     </div>
+                                    @if (row.locationLabel) {
+                                        <div class="text-sm text-surface-900 dark:text-surface-0 mb-3 min-w-0 break-words"><span class="text-muted-color font-medium">Konum: </span>{{ row.locationLabel }}</div>
+                                    }
                                     <div class="text-sm text-surface-900 dark:text-surface-0 mb-3 min-w-0 break-words"><span class="text-muted-color font-medium">Neden: </span>{{ row.reason }}</div>
                                     <div class="text-sm mb-3">
                                         @if (row.isActive) {

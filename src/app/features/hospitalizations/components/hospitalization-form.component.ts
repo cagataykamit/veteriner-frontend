@@ -28,6 +28,14 @@ import {
     hospitalizationVisitOptions,
     type HospitalizationRelationOption
 } from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
+import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
+import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
+import {
+    HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY,
+    hospitalizationRoomOptions,
+    hospitalizationWardOptions,
+    roomRequiredWhenWardSelectedValidator
+} from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { examinationListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
@@ -180,10 +188,39 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                     }
                     <div class="col-span-12 md:col-span-6">
-                        <label for="location" class="block text-sm font-medium text-muted-color mb-2">Konum</label>
-                        <input id="location" type="text" maxlength="200" class="w-full p-inputtext p-component" placeholder="Ör. Kafes 3" formControlName="location" />
-                        @if (apiFieldErrors().location) {
-                            <small class="text-red-500">{{ apiFieldErrors().location }}</small>
+                        <label for="wardId" class="block text-sm font-medium text-muted-color mb-2">Bölüm</label>
+                        <p-select
+                            inputId="wardId"
+                            formControlName="wardId"
+                            [options]="wardOptions()"
+                            optionLabel="label"
+                            optionValue="value"
+                            styleClass="w-full"
+                            [loading]="loadingWards()"
+                        />
+                        @if (wardsError()) {
+                            <small class="text-red-500 block">{{ wardsError() }}</small>
+                        } @else if (!loadingWards() && wardOptions().length === 1) {
+                            <small class="text-muted-color">Bu klinikte tanımlı bölüm yok; Ayarlar → Tanımlar → Yatış konumları.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-6">
+                        <label for="roomId" class="block text-sm font-medium text-muted-color mb-2">Oda / kafes</label>
+                        <p-select
+                            inputId="roomId"
+                            formControlName="roomId"
+                            [options]="roomOptions()"
+                            optionLabel="label"
+                            optionValue="value"
+                            [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'"
+                            styleClass="w-full"
+                        />
+                        @if (apiFieldErrors().roomId) {
+                            <small class="text-red-500">{{ apiFieldErrors().roomId }}</small>
+                        } @else if (form.hasError(roomRequiredKey) && form.controls.roomId.touched) {
+                            <small class="text-red-500">Bölüm seçildiyse oda da seçilmelidir.</small>
+                        } @else if (form.controls.wardId.value && roomOptions().length === 0) {
+                            <small class="text-muted-color">Bu bölümde aktif oda yok.</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -245,6 +282,7 @@ export class HospitalizationFormComponent implements OnInit {
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly visitsService = inject(VisitsService);
+    private readonly wardsService = inject(HospitalizationWardsService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
@@ -268,6 +306,15 @@ export class HospitalizationFormComponent implements OnInit {
     private relationLoadSeq = 0;
     readonly apiFieldErrors = signal<HospitalizationUpsertFieldErrors>({});
 
+    /** Aktif kliniğin bölüm/oda tanımları (HOSP-002); yalnız aktif olanlar seçilir, bölüm odadan türetilir. */
+    readonly loadingWards = signal(false);
+    readonly wardsError = signal<string | null>(null);
+    private readonly wards = signal<HospitalizationWardVm[]>([]);
+    private readonly selectedWardId = signal('');
+    readonly wardOptions = computed(() => hospitalizationWardOptions(this.wards()));
+    readonly roomOptions = computed(() => hospitalizationRoomOptions(this.wards(), this.selectedWardId()));
+    protected readonly roomRequiredKey = HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY;
+
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
@@ -275,10 +322,11 @@ export class HospitalizationFormComponent implements OnInit {
         plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
         examinationId: [''],
         visitId: [''],
-        location: ['', Validators.maxLength(200)],
+        wardId: [''],
+        roomId: [{ value: '', disabled: true }],
         reason: ['', Validators.required],
         notes: ['']
-    }, { validators: [plannedDischargeNotBeforeAdmissionValidator()] });
+    }, { validators: [plannedDischargeNotBeforeAdmissionValidator(), roomRequiredWhenWardSelectedValidator()] });
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
@@ -288,6 +336,17 @@ export class HospitalizationFormComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.form.controls.examinationId.disable({ emitEvent: false });
+        this.loadWards();
+        this.form.controls.wardId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((wardId) => {
+            this.selectedWardId.set(wardId);
+            this.form.controls.roomId.setValue('', { emitEvent: false });
+
+            if (wardId) {
+                this.form.controls.roomId.enable({ emitEvent: false });
+            } else {
+                this.form.controls.roomId.disable({ emitEvent: false });
+            }
+        });
 
         if (this.canLinkVisit) {
             this.visitsService.getToday().subscribe({
@@ -418,7 +477,8 @@ export class HospitalizationFormComponent implements OnInit {
             notes: v.notes,
             examinationId: v.examinationId,
             visitId: v.visitId,
-            location: v.location.trim() || null
+            // Konum metni gönderilmez: oda seçildiyse sunucu "Bölüm / Oda" türetir, seçilmediyse konum yok (sözleşme §10.4).
+            roomId: v.roomId
         });
 
         this.submitting.set(true);
@@ -445,6 +505,27 @@ export class HospitalizationFormComponent implements OnInit {
     }
 
 
+
+    private loadWards(): void {
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+
+        if (!clinicId) {
+            return;
+        }
+
+        this.loadingWards.set(true);
+        this.wardsError.set(null);
+        this.wardsService.listWards(clinicId).subscribe({
+            next: (wards) => {
+                this.wards.set(wards);
+                this.loadingWards.set(false);
+            },
+            error: (e: unknown) => {
+                this.wardsError.set(this.mapLoadError(e, 'Yatış konumları yüklenemedi.'));
+                this.loadingWards.set(false);
+            }
+        });
+    }
 
     private loadExaminationsForPet(petId: string): void {
         const seq = ++this.relationLoadSeq;
