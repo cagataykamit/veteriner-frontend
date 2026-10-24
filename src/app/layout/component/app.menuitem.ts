@@ -1,4 +1,5 @@
-import { Component, computed, inject, input, signal, viewChild, OnInit, AfterViewInit } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, signal, viewChild, OnInit, AfterViewInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RippleModule } from 'primeng/ripple';
@@ -257,11 +258,17 @@ export class AppMenuitem implements OnInit, AfterViewInit {
     initialized = signal<boolean>(false);
 
     constructor() {
-        this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
-            if (this.item()?.routerLink) {
-                this.updateActiveStateFromRoute();
-            }
-        });
+        // Öğeler bölüm/yetki değişiminde yeniden yaratılır; abonelik bileşenle birlikte kapanmalı.
+        this.router.events
+            .pipe(
+                filter((event) => event instanceof NavigationEnd),
+                takeUntilDestroyed(inject(DestroyRef))
+            )
+            .subscribe(() => {
+                if (this.item()?.routerLink) {
+                    this.updateActiveStateFromRoute();
+                }
+            });
     }
 
     ngOnInit() {
