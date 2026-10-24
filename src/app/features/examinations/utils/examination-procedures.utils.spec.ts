@@ -21,6 +21,7 @@ const summary = (over: Partial<ExaminationRelatedSummaryVm> = {}): ExaminationRe
     labResults: [],
     hospitalizations: [],
     vaccinations: [],
+    imaging: [],
     payments: [],
     pendingChargeCount: null,
     ...over
@@ -97,6 +98,30 @@ describe('buildProcedureRows', () => {
             ['v3', 'İptal', true],
             ['v2', 'Planlı', false]
         ]);
+    });
+
+    it('görüntülemeyi özetten okur: tür adı başlık, açıklama ayrıntı; iptal silik, ek kayıt işaretli', () => {
+        const rows = buildProcedureRows(
+            summary({
+                imaging: [
+                    { id: 'i1', performedAtUtc: '2026-10-08T09:00:00Z', modality: 'XRay', description: 'Sol arka bacak', cancelled: false, addedAfterFinalization: true, clinicId: null, clinicName: null },
+                    { id: 'i2', performedAtUtc: '2026-10-08T08:00:00Z', modality: 'Ultrasound', description: null, cancelled: true, addedAfterFinalization: false, clinicId: null, clinicName: null }
+                ]
+            })
+        );
+
+        expect(rows.map((r) => [r.kind, r.id, r.title, r.detail, r.stateLabel ?? null, !!r.cancelled, !!r.addedAfterFinalization])).toEqual([
+            ['imaging', 'i2', 'Ultrason', null, 'İptal', true, false],
+            ['imaging', 'i1', 'Röntgen', 'Sol arka bacak', null, false, true]
+        ]);
+    });
+
+    it('kesinleştirme kontrolünde etkin görüntüleme işlem sayılır, iptal edilen sayılmaz', () => {
+        const done = { assessment: 'x', plan: 'y' };
+        const img = (cancelled: boolean) => ({ id: 'i1', performedAtUtc: null, modality: 'XRay', description: null, cancelled, addedAfterFinalization: false, clinicId: null, clinicName: null });
+
+        expect(finalizeWarnings(done, summary({ imaging: [img(false)] }))).toEqual([]);
+        expect(finalizeWarnings(done, summary({ imaging: [img(true)] })).length).toBe(1);
     });
 
     it('özet yokken boş liste döner', () => {

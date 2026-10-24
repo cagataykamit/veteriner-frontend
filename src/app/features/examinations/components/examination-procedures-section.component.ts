@@ -22,6 +22,7 @@ import {
 } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { HospitalizationFormComponent } from '@/app/features/hospitalizations/components/hospitalization-form.component';
 import { ImagingRecordFormComponent } from '@/app/features/imaging/components/imaging-record-form.component';
+import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL } from '@/app/features/imaging/utils/imaging.utils';
 import { LabResultFormComponent } from '@/app/features/lab-results/components/lab-result-form.component';
 import { PrescriptionFormComponent } from '@/app/features/prescriptions/components/prescription-form.component';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -50,10 +51,10 @@ const ADD_ICON: Record<ProcedureKind, string> = {
 };
 
 /**
- * Ziyaret çalışma alanının "İşlemler" bölümü: muayeneye bağlı tedavi, reçete, aşı, lab istemi ve yatış tek listede.
+ * Ziyaret çalışma alanının "İşlemler" bölümü: muayeneye bağlı tedavi, reçete, aşı, lab istemi, görüntüleme ve yatış tek listede.
  * "Ekle" yan panelde mevcut form bileşenini açar (müşteri, hayvan, muayene dolu ve kilitli); kayıttan sonra aynı
  * muayenede kalınır, liste `changed` ile yenilenir. Kilitli düğme nedenini görünür söyler (ADR-013).
- * Görüntüleme yalnız ekleme kısayoludur (ilgili özet ucunda yok); kayıtlar görüntüleme sayfasında ve hasta zaman çizelgesindedir.
+ * Görüntüleme kayıtları özet ucunun `imaging` bloğundan gelir; iptaller aşı gibi silik gösterilir, kesinleştirmeden sonra ekleneni rozetlidir.
  */
 @Component({
     selector: 'app-examination-procedures-section',
@@ -124,6 +125,9 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                                 <span class="font-medium min-w-0 break-words flex-1" [class.line-through]="row.cancelled">{{ row.title }}</span>
                                 @if (row.stateLabel) {
                                     <app-status-tag [label]="row.stateLabel" [severity]="row.cancelled ? 'secondary' : 'warn'" />
+                                }
+                                @if (row.addedAfterFinalization) {
+                                    <app-status-tag [label]="lateEntryLabel" severity="warn" data-testid="procedure-late-entry" />
                                 }
                                 @if (row.detail) {
                                     <span class="text-sm text-muted-color">{{ row.detail }}</span>
@@ -209,6 +213,7 @@ export class ExaminationProceduresSectionComponent {
         return [...new Set(notes.filter((n): n is string => !!n))];
     });
 
+    readonly lateEntryLabel = IMAGING_ADDED_AFTER_FINALIZATION_LABEL;
     readonly label = (kind: ProcedureKind) => PROCEDURE_LABEL[kind];
     readonly icon = (kind: ProcedureKind) => ADD_ICON[kind];
     readonly routeSegment = (kind: ProcedureKind) => PROCEDURE_ROUTE_SEGMENT[kind];

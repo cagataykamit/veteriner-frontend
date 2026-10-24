@@ -20,6 +20,10 @@ const summary = {
         { id: 'v8', vaccineName: 'Karma', status: 'Scheduled', appliedAtUtc: null, dueAtUtc: '2026-11-08T12:00:00Z', clinicId: null, clinicName: null },
         { id: 'v7', vaccineName: 'Lösemi', status: 'Cancelled', appliedAtUtc: null, dueAtUtc: '2026-10-09T12:00:00Z', clinicId: null, clinicName: null }
     ],
+    imaging: [
+        { id: 'i1', performedAtUtc: '2026-10-08T13:00:00Z', modality: 'XRay', description: 'Sol arka bacak', cancelled: false, addedAfterFinalization: true, clinicId: null, clinicName: null },
+        { id: 'i2', performedAtUtc: '2026-10-08T14:00:00Z', modality: 'Ultrasound', description: null, cancelled: true, addedAfterFinalization: false, clinicId: null, clinicName: null }
+    ],
     payments: []
 } as unknown as ExaminationRelatedSummaryVm;
 
@@ -103,6 +107,24 @@ describe('ExaminationProceduresSectionComponent', () => {
         expect(byText('Kuduz').getAttribute('data-cancelled')).toBeNull();
     });
 
+    it('görüntüleme satırları özetten gelir: tür etiketi, açıklama, detay bağlantısı; iptal silik, ek kayıt rozetli', () => {
+        const el = create();
+        const items = Array.from(el.querySelectorAll('[data-testid="procedure-list"] li'));
+        const byText = (t: string) => items.find((li) => li.textContent?.includes(t)) as HTMLElement;
+        const xray = byText('Röntgen');
+
+        expect(xray.textContent).toContain('Görüntüleme');
+        expect(xray.textContent).toContain('Sol arka bacak');
+        expect(xray.querySelector('a')?.getAttribute('href')).toBe('/panel/imaging/i1');
+        expect(xray.querySelector('[data-testid="procedure-late-entry"]')?.textContent).toContain('Kesinleştirmeden sonra eklendi');
+        expect(xray.getAttribute('data-cancelled')).toBeNull();
+        const cancelled = byText('Ultrason');
+
+        expect(cancelled.textContent).toContain('İptal');
+        expect(cancelled.getAttribute('data-cancelled')).toBe('true');
+        expect(cancelled.querySelector('[data-testid="procedure-late-entry"]')).toBeNull();
+    });
+
     it('aşı kaydı stok bildirimiyle gelir; liste yerel eklenmez, özetten tazelenmesi istenir (çift satır yok)', () => {
         create();
         const before = cmp.rows().length;
@@ -117,7 +139,7 @@ describe('ExaminationProceduresSectionComponent', () => {
     it('özet boşsa nötr ve kompakt (tek satır) boş durum gösterir', () => {
         const el = create();
 
-        fixture.componentRef.setInput('summary', { ...summary, treatments: [], vaccinations: [] });
+        fixture.componentRef.setInput('summary', { ...summary, treatments: [], vaccinations: [], imaging: [] });
         fixture.detectChanges();
 
         expect(el.querySelector('[data-testid="procedure-list"]')).toBeNull();

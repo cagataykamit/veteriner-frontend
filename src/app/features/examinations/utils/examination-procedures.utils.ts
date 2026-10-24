@@ -1,4 +1,5 @@
 import type { ExaminationDetailVm, ExaminationRelatedSummaryVm } from '@/app/features/examinations/models/examination-vm.model';
+import { imagingModalityLabel } from '@/app/features/imaging/utils/imaging.utils';
 
 /** Ziyaret çalışma alanında muayeneye eklenen işlem türleri (uygulama kendi bölümünde, gerekçeli ekleme kuralı orada). */
 export type ProcedureKind = 'treatment' | 'prescription' | 'vaccination' | 'lab' | 'imaging' | 'hospitalization';
@@ -74,11 +75,13 @@ export interface ProcedureRowVm {
     detail: string | null;
     /** Durum etiketi (aşı: Planlı / İptal); yoksa null. */
     stateLabel?: string | null;
+    /** Kesinleştirmeden sonra eklenen kayıt (ADR-013 uyumu) rozetle işaretlenir. */
+    addedAfterFinalization?: boolean;
     /** İptal edilmiş kayıt gizlenmez; silik ve üstü çizili gösterilir. */
     cancelled?: boolean;
 }
 
-/** İlgili özetten tek işlem listesi; eski kayıt önce, tarihsiz sonda. */
+/** İlgili özetten tek işlem listesi; eski kayıt önce, tarihsiz sonda. İptal edilen aşı ve görüntüleme gizlenmez, silik gösterilir. */
 export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null): ProcedureRowVm[] {
     const rows: ProcedureRowVm[] = [
         ...(summary?.treatments ?? []).map((r) => ({ kind: 'treatment' as const, id: r.id, atUtc: r.treatmentDateUtc, title: r.title, detail: null })),
@@ -96,6 +99,16 @@ export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null):
             atUtc: r.admittedAtUtc,
             title: r.reason,
             detail: r.dischargedAtUtc ? 'Taburcu' : r.isActive ? 'Aktif yatış' : null
+        })),
+        ...(summary?.imaging ?? []).map((r) => ({
+            kind: 'imaging' as const,
+            id: r.id,
+            atUtc: r.performedAtUtc,
+            title: imagingModalityLabel(r.modality),
+            detail: r.description,
+            stateLabel: r.cancelled ? 'İptal' : null,
+            cancelled: r.cancelled,
+            addedAfterFinalization: r.addedAfterFinalization
         })),
         ...(summary?.vaccinations ?? []).map((r) => ({
             kind: 'vaccination' as const,
@@ -155,7 +168,7 @@ export function finalizeChecklist(
             key: 'procedures',
             ok: buildProcedureRows(summary).some((r) => !r.cancelled),
             okLabel: 'Muayeneye bağlı işlem var',
-            warning: 'Muayeneye bağlı tedavi, reçete, aşı, lab istemi veya yatış kaydı yok (uygulama bu denetime dahil değildir).'
+            warning: 'Muayeneye bağlı tedavi, reçete, aşı, lab istemi, görüntüleme veya yatış kaydı yok (uygulama bu denetime dahil değildir).'
         });
     }
 
