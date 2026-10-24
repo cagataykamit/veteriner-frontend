@@ -13,6 +13,7 @@ import {
 } from '@/app/features/imports/utils/import-labels.utils';
 import { columnMapsToRequest, fieldLabel, initialColumnMaps, mappingConfidence, missingRequired } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
+import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
 
 const customers: ImportTableInfoDto = {
     table: 'customers',
@@ -107,6 +108,16 @@ describe('import-labels.utils', () => {
 
     it('içe aktarma hata kodlarını Türkçe mesaja çevirir', () => {
         expect(importErrorMessage(problem(409, 'Imports.ValidationStale'), 'x')).toContain('Yeniden doğrulayın');
+    });
+
+    it('422 Trial.ImportLimitExceeded: sunucunun detail metni gösterilir ve deneme kısıtı olarak tanınır; ücretli Imports.TooManyRows değişmez (TRIAL-004)', () => {
+        const detail = 'Deneme sürümünde içe aktarma tablo başına en fazla 500 satır sınırı (Müşteriler tablosu aşıyor); abonelikle kalkar.';
+        const trial = problem(422, 'Trial.ImportLimitExceeded', { detail });
+
+        expect(importErrorMessage(trial, 'x')).toBe(detail);
+        expect(isTrialLimitError(trial)).toBeTrue();
+        expect(importErrorMessage(problem(400, 'Imports.TooManyRows'), 'x')).toContain('10.000');
+        expect(isTrialLimitError(problem(400, 'Imports.TooManyRows'))).toBeFalse();
     });
 
     it('dosya ön kontrolü uzantı, boşluk ve boyutu denetler', () => {

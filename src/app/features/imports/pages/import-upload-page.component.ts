@@ -16,6 +16,8 @@ import { saveDownload } from '@/app/features/imports/utils/import-download.utils
 import { duplicateBatchId, importErrorMessage } from '@/app/features/imports/utils/import-labels.utils';
 import { IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
+import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
 
 type UploadMode = 'xlsx' | 'csv';
 
@@ -32,7 +34,8 @@ type UploadMode = 'xlsx' | 'csv';
         SelectModule,
         SelectButtonModule,
         ImportDropZoneComponent,
-        AppPageHeaderComponent
+        AppPageHeaderComponent,
+        AppTrialLimitNoticeComponent
     ],
     template: `
         <app-page-header title="Yeni içe aktarma" description="Adım 1 / 4 · Şablonu indirin, kayıtlarınızı doldurun ve dosyayı yükleyin. Bu adımda hiçbir kayıt oluşmaz.">
@@ -105,8 +108,12 @@ type UploadMode = 'xlsx' | 'csv';
                 }
             </section>
 
-            @if (error()) {
-                <p-message severity="error" styleClass="w-full" role="alert">{{ error() }}</p-message>
+            @if (error(); as error) {
+                @if (trialLimited()) {
+                    <app-trial-limit-notice [message]="error" />
+                } @else {
+                    <p-message severity="error" styleClass="w-full" role="alert">{{ error }}</p-message>
+                }
             }
             @if (duplicateId()) {
                 <p-message severity="info" styleClass="w-full">
@@ -158,6 +165,8 @@ export class ImportUploadPageComponent implements OnInit {
     readonly templateBusy = signal<string | null>(null);
     readonly submitting = signal(false);
     readonly error = signal<string | null>(null);
+    /** Hata deneme kısıtı (`Trial.ImportLimitExceeded`, sözleşme §3.2): mesajın yanında "Aboneliğe geç" eylemi gösterilir. */
+    readonly trialLimited = signal(false);
     readonly duplicateId = signal<string | null>(null);
 
     /** Aynı yükleme tekrarında aynı parti dönsün diye dosya değişene kadar sabit. */
@@ -240,6 +249,7 @@ export class ImportUploadPageComponent implements OnInit {
         if (this.name.trim()) form.append('name', this.name.trim());
 
         this.error.set(null);
+        this.trialLimited.set(false);
         this.duplicateId.set(null);
         this.submitting.set(true);
         this.imports.createBatch(form).subscribe({
@@ -250,6 +260,7 @@ export class ImportUploadPageComponent implements OnInit {
             error: (e: unknown) => {
                 this.submitting.set(false);
                 this.duplicateId.set(duplicateBatchId(e));
+                this.trialLimited.set(isTrialLimitError(e));
                 this.error.set(importErrorMessage(e, 'Dosya yüklenemedi. Tekrar deneyin.'));
             }
         });
@@ -258,6 +269,7 @@ export class ImportUploadPageComponent implements OnInit {
     private resetAttempt(): void {
         this.requestId = crypto.randomUUID();
         this.error.set(null);
+        this.trialLimited.set(false);
         this.duplicateId.set(null);
     }
 }
