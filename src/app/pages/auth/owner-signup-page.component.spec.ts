@@ -100,6 +100,74 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         expect(cmp.successResult()).toEqual(RESULT);
     });
 
+    describe('örnek klinik seçimi (ADR-002, TRIAL-002)', () => {
+        const EXAMPLE = {
+            tenantId: 't1',
+            clinicId: 'c1',
+            clients: 12,
+            pets: 20,
+            appointments: 38,
+            examinations: 26,
+            vaccinations: 14,
+            treatments: 9,
+            labResults: 5,
+            charges: 48,
+            payments: 19,
+            products: 10,
+            stockMovements: 29
+        };
+
+        it('varsayılan seçim örnek klinik; iki seçenek ve sentetik veri açıklaması gösterilir', async () => {
+            // ngModel değeri bir sonraki mikro görevde yazar; işaretli durum için beklenir.
+            await fixture.whenStable();
+            fixture.detectChanges();
+
+            const fieldset = host().querySelector('[data-testid="signup-start-mode"]');
+            const radios = Array.from(fieldset?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? []);
+
+            expect(cmp.startMode()).toBe('example');
+            expect(radios.length).toBe(2);
+            expect(radios.find((r) => r.id === 'startModeExample')?.checked).toBeTrue();
+            expect(radios.find((r) => r.id === 'startModeEmpty')?.checked).toBeFalse();
+            expect(fieldset?.textContent).toContain('Örnek Veteriner Kliniğini yükle');
+            expect(fieldset?.textContent).toContain('(önerilen)');
+            expect(fieldset?.textContent).toContain('Boş klinikle başla');
+            expect(fieldset?.textContent).toContain('gerçek müşteri verisi içermez');
+        });
+
+        it('varsayılanla gönderimde startWithExampleClinic=true gider; başarıda özet kartı gösterilir', () => {
+            signup.signup.and.returnValue(of({ ...RESULT, exampleClinic: EXAMPLE }));
+            cmp.legalConsent.set(true);
+
+            cmp.submit();
+            fixture.detectChanges();
+
+            expect((signup.signup.calls.mostRecent().args[0] as PublicOwnerSignupRequestDto).startWithExampleClinic).toBeTrue();
+
+            const card = host().querySelector('[data-testid="signup-example-clinic-card"]');
+
+            expect(card?.textContent).toContain('Yüklenen örnek içerik');
+            expect(card?.querySelector('[data-testid="example-clinic-count-clients"]')?.textContent).toContain('12');
+            expect(card?.querySelector('[data-testid="example-clinic-count-pets"]')?.textContent).toContain('20');
+            expect(card?.querySelector('[data-testid="example-clinic-count-payments"]')?.textContent).toContain('19');
+            expect(host().querySelector('[data-testid="signup-empty-clinic-note"]')).toBeNull();
+            expect(Array.from(host().querySelectorAll('button')).some((b) => b.textContent?.includes('Giriş yap'))).toBeTrue();
+        });
+
+        it('boş klinik seçiminde false gider; başarıda boş klinik notu gösterilir', () => {
+            signup.signup.and.returnValue(of({ ...RESULT, exampleClinic: null }));
+            cmp.startMode.set('empty');
+            cmp.legalConsent.set(true);
+
+            cmp.submit();
+            fixture.detectChanges();
+
+            expect((signup.signup.calls.mostRecent().args[0] as PublicOwnerSignupRequestDto).startWithExampleClinic).toBeFalse();
+            expect(host().querySelector('[data-testid="signup-example-clinic-card"]')).toBeNull();
+            expect(host().querySelector('[data-testid="signup-empty-clinic-note"]')?.textContent).toContain('Boş klinikle başlıyorsunuz');
+        });
+    });
+
     it('ortak kodu girilmişse gövdeye eklenir, başarıda indirim notu gösterilir ve oturum belleği temizlenir (ADR-037)', () => {
         sessionStorage.setItem(PENDING_DISCOUNT_CODE_KEY, 'ISIK10');
         signup.signup.and.returnValue(of({ ...RESULT, discount: { code: 'ISIK10', discountPercent: 10, discountMonths: 12 } }));
