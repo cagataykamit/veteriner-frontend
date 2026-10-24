@@ -1,3 +1,4 @@
+import type { ExampleClinicLoadSummaryDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
 import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
 
 export interface PublicOwnerSignupRequestDto {
@@ -11,6 +12,8 @@ export interface PublicOwnerSignupRequestDto {
     acceptedLegalDocuments: LegalDocumentVersionDto[];
     /** İsteğe bağlı satış ortağı kodu (ADR-037); sunucu yeniden doğrular, geçersizse kayıt yapılmaz. */
     discountCode?: string;
+    /** Örnek Veteriner Kliniğini kayıtla aynı işlemde yükle (ADR-002); eksikse sunucu `false` sayar. */
+    startWithExampleClinic: boolean;
 }
 
 /** Kayıtta kullanılan ortak kodu özeti; ortak bilgisi içermez. */
@@ -30,4 +33,6 @@ export interface PublicOwnerSignupResultDto {
     canLogin: boolean;
     nextStep: string;
     discount?: SignupDiscountDto | null;
+    /** Yüklenen örnek içerik özeti; `null`/eksik = boş klinik (`EXAMPLE_CLINIC_API_CONTRACT.md` §3). */
+    exampleClinic?: ExampleClinicLoadSummaryDto | null;
 }

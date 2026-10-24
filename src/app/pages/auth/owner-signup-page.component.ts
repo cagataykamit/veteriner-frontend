@@ -8,9 +8,13 @@ import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { RippleModule } from 'primeng/ripple';
-import type { PublicOwnerSignupRequestDto, PublicOwnerSignupResultDto } from '@/app/features/public/models/public-owner-signup-api.model';
+import type { PublicOwnerSignupResultDto } from '@/app/features/public/models/public-owner-signup-api.model';
+import { DEFAULT_ONBOARDING_START_MODE, type OnboardingStartMode } from '@/app/features/public/models/public-owner-signup-form.model';
+import { mapPublicOwnerSignupFormToRequest } from '@/app/features/public/data/public-owner-signup.mapper';
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
+import { ExampleClinicSummaryComponent } from '@/app/features/example-clinic/components/example-clinic-summary.component';
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
 import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/features/public/utils/pricing-plan.utils';
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
@@ -31,7 +35,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, TrDatePipe],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, TrDatePipe],
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
@@ -46,6 +50,15 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Kayıt tamamlandı</div>
                                 <span class="text-muted-color font-medium">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</span>
                             </div>
+                            @if (res.exampleClinic; as example) {
+                                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 mb-6 text-left" data-testid="signup-example-clinic-card">
+                                    <div class="font-semibold text-surface-900 dark:text-surface-0 mb-1">Yüklenen örnek içerik</div>
+                                    <p class="text-sm text-muted-color m-0 mb-3">Örnek Veteriner Kliniği hazır: giriş yapınca Bugün, randevu ve hasta ekranlarını dolu görürsünüz.</p>
+                                    <app-example-clinic-summary [summary]="example" />
+                                </div>
+                            } @else {
+                                <p class="text-sm text-muted-color text-left m-0 mb-6" data-testid="signup-empty-clinic-note">Boş klinikle başlıyorsunuz. İsterseniz örnek içeriği daha sonra Ayarlar &gt; Abonelik sayfasından yükleyebilirsiniz.</p>
+                            }
                             <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 mb-6 text-left">
                                 <div class="text-sm text-muted-color mb-1">Seçilen plan</div>
                                 <div class="font-semibold text-surface-900 dark:text-surface-0 mb-4">{{ successPlanTitle(res) }}</div>
@@ -122,6 +135,34 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
                                 <app-discount-code-field inputId="signupDiscountCode" [disabled]="submitting()" [(code)]="discountCode" (validated)="discountValidation.set($event)" />
 
+                                <fieldset class="border-0 p-0 m-0 min-w-0" data-testid="signup-start-mode">
+                                    <legend class="block text-surface-900 dark:text-surface-0 font-medium mb-2 p-0">Nasıl başlayalım?</legend>
+                                    <div class="flex flex-col gap-3">
+                                        <label
+                                            for="startModeExample"
+                                            class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors"
+                                            [class]="startModeCardClass('example')"
+                                        >
+                                            <p-radiobutton inputId="startModeExample" name="startMode" value="example" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
+                                            <span class="min-w-0">
+                                                <span class="block font-medium text-surface-900 dark:text-surface-0">Örnek Veteriner Kliniğini yükle <span class="text-primary text-sm font-semibold">(önerilen)</span></span>
+                                                <span class="block text-sm text-muted-color mt-1">Müşteri, hasta, randevu, muayene, aşı, ödeme ve stok örnekleriyle dolu bir klinikte ilk dakikadan deneyin. Veriler tamamen sentetiktir, gerçek müşteri verisi içermez ve "ÖRNEK" olarak işaretlidir.</span>
+                                            </span>
+                                        </label>
+                                        <label
+                                            for="startModeEmpty"
+                                            class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors"
+                                            [class]="startModeCardClass('empty')"
+                                        >
+                                            <p-radiobutton inputId="startModeEmpty" name="startMode" value="empty" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
+                                            <span class="min-w-0">
+                                                <span class="block font-medium text-surface-900 dark:text-surface-0">Boş klinikle başla</span>
+                                                <span class="block text-sm text-muted-color mt-1">Kendi kayıtlarınızı sıfırdan girin. Örnek içeriği daha sonra Ayarlar &gt; Abonelik sayfasından da yükleyebilirsiniz.</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </fieldset>
+
                                 <p class="text-sm text-muted-color m-0">Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır. Paket değişimi ve ödeme sonraki fazda eklenecektir.</p>
 
                                 <app-legal-consent-checkbox inputId="signupLegalConsent" [documents]="legalDocumentTypes()" [disabled]="submitting()" [(checked)]="legalConsent" />
@@ -179,6 +220,13 @@ export class OwnerSignupPageComponent implements OnInit {
     readonly discountCode = signal(normalizeDiscountCodeInput(this.route.snapshot.queryParamMap.get(DISCOUNT_CODE_QUERY_PARAM) ?? readPendingDiscountCode()));
     readonly discountValidation = signal<DiscountCodeValidationDto | null>(null);
     readonly discountNote = discountNoteText;
+
+    /** "Nasıl başlayalım?" — örnek klinik önerilen ve varsayılan (ADR-002). */
+    readonly startMode = signal<OnboardingStartMode>(DEFAULT_ONBOARDING_START_MODE);
+
+    startModeCardClass(mode: OnboardingStartMode): string {
+        return this.startMode() === mode ? 'border-primary' : 'border-surface-200 dark:border-surface-700';
+    }
 
     readonly submitting = signal(false);
     readonly formError = signal<string | null>(null);
@@ -247,7 +295,7 @@ export class OwnerSignupPageComponent implements OnInit {
             return;
         }
 
-        const body: PublicOwnerSignupRequestDto = {
+        const body = mapPublicOwnerSignupFormToRequest({
             planCode: plan.apiCode,
             tenantName,
             clinicName,
@@ -255,9 +303,9 @@ export class OwnerSignupPageComponent implements OnInit {
             email,
             password,
             acceptedLegalDocuments: legalVersions,
-            // Kod sunucuda yeniden doğrulanır; anlık doğrulama yalnız bilgi amaçlıdır (geçersizse kayıt tek tip hatayla döner).
-            ...(this.discountCode() ? { discountCode: this.discountCode() } : {})
-        };
+            discountCode: this.discountCode(),
+            startMode: this.startMode()
+        });
 
         this.submitting.set(true);
         this.signup
