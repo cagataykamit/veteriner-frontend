@@ -449,6 +449,26 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),
+        imaging: (dto.imaging ?? [])
+            .map((x) => {
+                const id = x.id?.trim();
+
+                if (!id) {
+                    return null;
+                }
+
+                return {
+                    id,
+                    performedAtUtc: relatedSafeTrim(x.performedAtUtc),
+                    modality: x.modality?.trim() ?? '',
+                    description: relatedSafeTrim(x.description),
+                    cancelled: x.status?.trim().toLowerCase() === 'cancelled',
+                    addedAfterFinalization: x.addedAfterFinalization === true,
+                    clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null),
         payments: (dto.payments ?? [])
             .map((x) => {
                 const id = x.id?.trim();

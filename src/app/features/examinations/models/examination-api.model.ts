@@ -61,6 +61,8 @@ export interface ExaminationRelatedSummaryDto {
     hospitalizations?: ExaminationRelatedHospitalizationItemDto[] | null;
     /** Yalnız Vaccinations.Read izni varsa dolu; izinsizde [] (kayıt yok ile ayırt edilemez). */
     vaccinations?: ExaminationRelatedVaccinationItemDto[] | null;
+    /** Yalnız Imaging.Read izni varsa dolu; izinsizde [] (kayıt yok ile ayırt edilemez). */
+    imaging?: ExaminationRelatedImagingItemDto[] | null;
     payments?: ExaminationRelatedPaymentItemDto[] | null;
     /** Muayeneye bağlı ücret bekleyen kalem sayısı (ADR-018); `Charges.Read` yoksa `null`. */
     pendingChargeCount?: number | null;
@@ -101,6 +103,19 @@ export interface ExaminationRelatedVaccinationItemDto {
     status?: string | null;
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
+    clinicId?: string | null;
+    clinicName?: string | null;
+}
+
+export interface ExaminationRelatedImagingItemDto {
+    id: string;
+    performedAtUtc?: string | null;
+    /** XRay | Ultrasound | CT | MRI | Endoscopy | ClinicalPhoto | Other (string enum). */
+    modality?: string | null;
+    description?: string | null;
+    /** Active | Cancelled (string enum). */
+    status?: string | null;
+    addedAfterFinalization?: boolean | null;
     clinicId?: string | null;
     clinicName?: string | null;
 }

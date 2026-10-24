@@ -366,3 +366,26 @@ describe('mapExaminationRelatedSummaryDtoToVm vaccinations', () => {
         expect(mapExaminationRelatedSummaryDtoToVm({ examinationId: 'e1' }).vaccinations).toEqual([]);
     });
 });
+
+describe('mapExaminationRelatedSummaryDtoToVm imaging', () => {
+    it('görüntüleme bloğunu eşler; durum string enum, rozet ve eksik alanlar güvenli', () => {
+        const vm = mapExaminationRelatedSummaryDtoToVm({
+            examinationId: 'e1',
+            imaging: [
+                { id: 'i1', performedAtUtc: '2026-10-08T09:00:00Z', modality: 'XRay', description: ' Sol arka bacak ', status: 'Active', addedAfterFinalization: true, clinicName: 'Merkez' },
+                { id: 'i2', status: 'Cancelled' },
+                { id: ' ' }
+            ]
+        });
+
+        expect(vm.imaging.map((i) => [i.id, i.modality, i.description, i.cancelled, i.addedAfterFinalization])).toEqual([
+            ['i1', 'XRay', 'Sol arka bacak', false, true],
+            ['i2', '', null, true, false]
+        ]);
+        expect(vm.imaging[0].clinicName).toBe('Merkez');
+    });
+
+    it('imaging yoksa boş dizi döner', () => {
+        expect(mapExaminationRelatedSummaryDtoToVm({ examinationId: 'e1' }).imaging).toEqual([]);
+    });
+});

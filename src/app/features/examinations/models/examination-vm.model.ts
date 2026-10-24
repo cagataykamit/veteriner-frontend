@@ -103,6 +103,17 @@ export interface ExaminationRelatedVaccinationItemVm {
     clinicName: string | null;
 }
 
+export interface ExaminationRelatedImagingItemVm {
+    id: string;
+    performedAtUtc: string | null;
+    modality: string;
+    description: string | null;
+    cancelled: boolean;
+    addedAfterFinalization: boolean;
+    clinicId: string | null;
+    clinicName: string | null;
+}
+
 export interface ExaminationRelatedPaymentItemVm {
     id: string;
     paidAtUtc: string | null;
@@ -124,6 +135,7 @@ export interface ExaminationRelatedSummaryVm {
     labResults: ExaminationRelatedLabResultItemVm[];
     hospitalizations: ExaminationRelatedHospitalizationItemVm[];
     vaccinations: ExaminationRelatedVaccinationItemVm[];
+    imaging: ExaminationRelatedImagingItemVm[];
     payments: ExaminationRelatedPaymentItemVm[];
     /** Ücret bekleyen kalem sayısı. `null`: yetki yok ("yok" anlamına gelmez). */
     pendingChargeCount: number | null;
