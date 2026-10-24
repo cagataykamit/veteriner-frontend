@@ -11,6 +11,9 @@ import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/ap
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { TodayPageComponent } from './today-page.component';
 
+/** Göreli süreler ("12 dk", yatış süresi) gerçek saate değil sabit saate göre hesaplanır; describe seviyesindeki fixture'lar koşudan dakikalar önce üretilse de kaymaz. */
+const NOW = new Date('2026-10-10T10:00:00Z');
+
 const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     key: 'v1',
     visitId: 'v1',
@@ -22,7 +25,7 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     clientName: 'Ali Veli',
     clientPhone: null,
     scheduledAtUtc: null,
-    arrivedAtUtc: new Date(Date.now() - 12 * 60_000).toISOString(),
+    arrivedAtUtc: new Date(NOW.getTime() - 12 * 60_000).toISOString(),
     careStatus: 'Waiting',
     appointmentStatus: null,
     responsibleVeterinarianName: 'Dr. Ayşe',
@@ -57,6 +60,13 @@ const visitVm: VisitVm = {
 };
 
 describe('TodayPageComponent', () => {
+    beforeEach(() => {
+        jasmine.clock().install();
+        jasmine.clock().mockDate(NOW);
+    });
+
+    afterEach(() => jasmine.clock().uninstall());
+
     let visits: jasmine.SpyObj<VisitsService>;
     let toasts: jasmine.Spy;
 
@@ -160,7 +170,7 @@ describe('TodayPageComponent', () => {
             petId: 'p1',
             petName: 'Pamuk',
             clientName: 'Ali Veli',
-            admittedAtUtc: new Date(Date.now() - 3 * 86_400_000 - 60_000).toISOString(),
+            admittedAtUtc: new Date(NOW.getTime() - 3 * 86_400_000 - 60_000).toISOString(),
             plannedDischargeAtUtc: null,
             ...over
         });
@@ -254,7 +264,7 @@ describe('TodayPageComponent', () => {
             const f = await create(['Visits.Read'], {
                 date: 'd',
                 activeHospitalizations: [],
-                items: [item({ key: 'p', visitId: null, appointmentId: 'a1', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: new Date().toISOString() })]
+                items: [item({ key: 'p', visitId: null, appointmentId: 'a1', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: NOW.toISOString() })]
             });
 
             expect(text(f)).not.toMatch(/Ücret yok|Lab bekliyor|Ödeme bekliyor|Kısmi ödeme/);
@@ -666,7 +676,7 @@ describe('TodayPageComponent', () => {
 
         it('eylem düğmeleri sabit ızgara yuvalarında: birincil=1, ikincil=2, acil=3, ⋯=4 (satırlar arası hiza; konum tarayıcıda ölçülür, Tailwind testte yüklü değil)', async () => {
             const claims = ['Visits.Read', 'Visits.Create', 'Visits.Update', 'Visits.Correct', 'Examinations.Create'];
-            const planned = item({ key: 'p', visitId: null, appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, scheduledAtUtc: new Date(Date.now() + 3_600_000).toISOString(), appointmentStatus: 'Scheduled' });
+            const planned = item({ key: 'p', visitId: null, appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, scheduledAtUtc: new Date(NOW.getTime() + 3_600_000).toISOString(), appointmentStatus: 'Scheduled' });
             const f = await create(claims, { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' }), item({ key: 'i', careStatus: 'InProgress' }), planned] });
             const host = f.nativeElement as HTMLElement;
             const slotOf = (label: string) => Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.textContent?.trim() === label).map((p) => Array.from(p.classList).find((c) => c.startsWith('col-start-')));
@@ -702,7 +712,7 @@ describe('TodayPageComponent', () => {
             expect(tag.classList.contains('p-tag-contrast')).toBeFalse();        });
 
         it('12 saati aşan açık gelişte sönük "Unutulmuş olabilir" ipucu; kısa sürede ve tamamlananda yok', async () => {
-            const old = new Date(Date.now() - 13 * 3_600_000).toISOString();
+            const old = new Date(NOW.getTime() - 13 * 3_600_000).toISOString();
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'old', arrivedAtUtc: old }), item({ key: 'new' }), item({ key: 'done', careStatus: 'Completed', arrivedAtUtc: old })] });
             const hints = ((f.nativeElement as HTMLElement).textContent ?? '').match(/Unutulmuş olabilir/g) ?? [];
 
@@ -750,8 +760,8 @@ describe('TodayPageComponent', () => {
                 date: 'd',
                 items: [],
                 activeHospitalizations: [
-                    { hospitalizationId: 'h1', petId: 'p1', petName: 'Pamuk', clientName: 'Ali Veli', admittedAtUtc: new Date(Date.now() - 3 * 86_400_000 - 60_000).toISOString(), plannedDischargeAtUtc: null },
-                    { hospitalizationId: 'h2', petId: 'p2', petName: 'Boncuk', clientName: 'Ayşe Kaya', admittedAtUtc: new Date(Date.now() - 86_400_000 - 60_000).toISOString(), plannedDischargeAtUtc: null }
+                    { hospitalizationId: 'h1', petId: 'p1', petName: 'Pamuk', clientName: 'Ali Veli', admittedAtUtc: new Date(NOW.getTime() - 3 * 86_400_000 - 60_000).toISOString(), plannedDischargeAtUtc: null },
+                    { hospitalizationId: 'h2', petId: 'p2', petName: 'Boncuk', clientName: 'Ayşe Kaya', admittedAtUtc: new Date(NOW.getTime() - 86_400_000 - 60_000).toISOString(), plannedDischargeAtUtc: null }
                 ]
             };
 
