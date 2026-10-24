@@ -20,7 +20,8 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { dateOnlyInputToIstanbulStartUtcIso, dateOnlyInputToIstanbulEndUtcIso, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { dateOnlyInputToIstanbulStartUtcIso, dateOnlyInputToIstanbulEndUtcIso } from '@/app/shared/utils/date.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 type ClinicSelectOption = { label: string; value: string };
 type ReminderLogsListState = {
@@ -54,7 +55,9 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
-        AppStatusTagComponent, DateInputComponent
+        AppStatusTagComponent,
+        DateInputComponent,
+        TrDateTimePipe
     ],
     template: `
         <app-page-header title="Hatırlatma Geçmişi" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
@@ -68,24 +71,10 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                 <div class="flex flex-col gap-4">
                     <div class="grid grid-cols-12 gap-3 items-end pb-3 border-b border-surface-200 dark:border-surface-700">
                         <app-filter-field label="Tür" [active]="isReminderTypeActive()" width="select">
-                            <p-select
-                                [options]="reminderTypeOptions"
-                                [(ngModel)]="reminderTypeFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Tümü"
-                                styleClass="w-full"
-                                [showClear]="true" (ngModelChange)="scheduleApply()" />
+                            <p-select [options]="reminderTypeOptions" [(ngModel)]="reminderTypeFilter" optionLabel="label" optionValue="value" placeholder="Tümü" styleClass="w-full" [showClear]="true" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
                         <app-filter-field label="Durum" [active]="isStatusActive()" width="select">
-                            <p-select
-                                [options]="statusOptions"
-                                [(ngModel)]="statusFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Tümü"
-                                styleClass="w-full"
-                                [showClear]="true" (ngModelChange)="scheduleApply()" />
+                            <p-select [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="Tümü" styleClass="w-full" [showClear]="true" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
                         <app-filter-field label="Klinik" [active]="isClinicActive()" width="select">
                             <p-select
@@ -99,7 +88,9 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 [loading]="clinicsLoading()"
                                 [filter]="true"
                                 filterPlaceholder="Ara…"
-                                filterBy="label" (ngModelChange)="scheduleApply()" />
+                                filterBy="label"
+                                (ngModelChange)="scheduleApply()"
+                            />
                         </app-filter-field>
                         <app-filter-field label="Başlangıç tarihi" labelFor="remLogFrom" [active]="isFromDateActive()" width="date">
                             <app-date-input inputId="remLogFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
@@ -114,10 +105,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
 
                     @if (displayedRows().length === 0) {
                         @if (hasActiveFilters()) {
-                            <app-empty-state
-                                message="Seçili filtrelere uygun hatırlatma kaydı bulunamadı."
-                                hint="Filtreleri temizleyerek tüm kayıtları görüntüleyebilirsiniz."
-                            >
+                            <app-empty-state message="Seçili filtrelere uygun hatırlatma kaydı bulunamadı." hint="Filtreleri temizleyerek tüm kayıtları görüntüleyebilirsiniz.">
                                 <p-button type="button" size="small" severity="secondary" icon="pi pi-times" label="Filtreleri temizle" (onClick)="clearFilters()" />
                             </app-empty-state>
                         } @else {
@@ -125,16 +113,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                         }
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
-                            <p-table
-                                [value]="displayedRows()"
-                                [paginator]="true"
-                                [rows]="pageSize()"
-                                [totalRecords]="totalItems()"
-                                [lazy]="true"
-                                [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '78rem' }"
-                            >
+                            <p-table [value]="displayedRows()" [paginator]="true" [rows]="pageSize()" [totalRecords]="totalItems()" [lazy]="true" [first]="first()" (onLazyLoad)="onTableLazyLoad($event)" [tableStyle]="{ 'min-width': '78rem' }">
                                 <ng-template #header>
                                     <tr>
                                         <th>Tarih</th>
@@ -148,7 +127,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 </ng-template>
                                 <ng-template #body let-row>
                                     <tr>
-                                        <td>{{ formatDateTime(row.primaryDateUtc) }}</td>
+                                        <td>{{ row.primaryDateUtc | trDateTime }}</td>
                                         <td class="break-words">{{ row.clinicDisplay }}</td>
                                         <td>{{ row.reminderTypeLabel }}</td>
                                         <td class="break-words">{{ row.recipientDisplay }}</td>
@@ -176,7 +155,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                             @for (row of displayedRows(); track row.id) {
                                 <div class="rounded-border border border-surface-200 dark:border-surface-700 p-4">
                                     <div class="flex items-center justify-between gap-2 mb-2">
-                                        <div class="text-sm font-medium">{{ formatDateTime(row.primaryDateUtc) }}</div>
+                                        <div class="text-sm font-medium">{{ row.primaryDateUtc | trDateTime }}</div>
                                         <span class="inline-flex items-center w-auto max-w-fit whitespace-nowrap">
                                             <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
                                         </span>
@@ -200,13 +179,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                         </div>
 
                         <div class="lg:hidden mt-4">
-                            <p-paginator
-                                [rows]="pageSize()"
-                                [totalRecords]="totalItems()"
-                                [first]="first()"
-                                [rowsPerPageOptions]="[20, 50]"
-                                (onPageChange)="onMobilePageChange($event)"
-                            />
+                            <p-paginator [rows]="pageSize()" [totalRecords]="totalItems()" [first]="first()" [rowsPerPageOptions]="[20, 50]" (onPageChange)="onMobilePageChange($event)" />
                         </div>
                     }
                 </div>
@@ -258,15 +231,7 @@ export class ReminderLogsPageComponent implements OnInit {
     ];
 
     readonly displayedRows = computed(() => this.rows());
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly hasActiveFilters = computed(
-        () =>
-            !!this.activeReminderType().trim() ||
-            !!this.activeStatus().trim() ||
-            !!this.activeClinicId().trim() ||
-            !!this.fromDateInput.trim() ||
-            !!this.toDateInput.trim()
-    );
+    readonly hasActiveFilters = computed(() => !!this.activeReminderType().trim() || !!this.activeStatus().trim() || !!this.activeClinicId().trim() || !!this.fromDateInput.trim() || !!this.toDateInput.trim());
 
     private suppressNextLazy = false;
     private lastLoadKey = '';
@@ -276,15 +241,7 @@ export class ReminderLogsPageComponent implements OnInit {
         const restored = this.restoreStateFromSessionStorage();
 
         this.loadClinicOptions(() => {
-            this.loadFromServer(
-                restored?.page ?? 1,
-                restored?.pageSize ?? this.pageSize(),
-                this.activeReminderType(),
-                this.activeStatus(),
-                this.activeClinicId(),
-                this.activeFromUtc(),
-                this.activeToUtc()
-            );
+            this.loadFromServer(restored?.page ?? 1, restored?.pageSize ?? this.pageSize(), this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc());
         });
     }
 
@@ -292,10 +249,7 @@ export class ReminderLogsPageComponent implements OnInit {
         this.clinicsLoading.set(true);
         this.clinics.listClinics().subscribe({
             next: (list) => {
-                const opts: ClinicSelectOption[] = [
-                    { label: 'Tüm klinikler', value: '' },
-                    ...list.map((c) => ({ label: c.name, value: c.id }))
-                ];
+                const opts: ClinicSelectOption[] = [{ label: 'Tüm klinikler', value: '' }, ...list.map((c) => ({ label: c.name, value: c.id }))];
 
                 this.clinicOptions.set(opts);
                 const activeClinicId = this.activeClinicId().trim();
@@ -341,15 +295,7 @@ export class ReminderLogsPageComponent implements OnInit {
         this.first.set(0);
         this.currentPage.set(1);
         this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(
-            1,
-            this.pageSize(),
-            this.activeReminderType(),
-            this.activeStatus(),
-            this.activeClinicId(),
-            this.activeFromUtc(),
-            this.activeToUtc()
-        );
+        this.loadFromServer(1, this.pageSize(), this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc());
     }
 
     clearFilters(): void {
@@ -371,16 +317,7 @@ export class ReminderLogsPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loadFromServer(
-            this.currentPage(),
-            this.pageSize(),
-            this.activeReminderType(),
-            this.activeStatus(),
-            this.activeClinicId(),
-            this.activeFromUtc(),
-            this.activeToUtc(),
-            true
-        );
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc(), true);
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
@@ -395,15 +332,7 @@ export class ReminderLogsPageComponent implements OnInit {
         const page = Math.floor(first / rows) + 1;
 
         this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(
-            page,
-            rows,
-            this.activeReminderType(),
-            this.activeStatus(),
-            this.activeClinicId(),
-            this.activeFromUtc(),
-            this.activeToUtc()
-        );
+        this.loadFromServer(page, rows, this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc());
     }
 
     onMobilePageChange(state: PaginatorState): void {
@@ -413,15 +342,7 @@ export class ReminderLogsPageComponent implements OnInit {
 
         this.suppressNextLazy = true;
         this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(
-            page,
-            rows,
-            this.activeReminderType(),
-            this.activeStatus(),
-            this.activeClinicId(),
-            this.activeFromUtc(),
-            this.activeToUtc()
-        );
+        this.loadFromServer(page, rows, this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc());
     }
 
     /** API `clinicName` veya `clinicId` → `ClinicsService` listesi ile gösterim adı; GUID gösterilmez. */
@@ -451,16 +372,7 @@ export class ReminderLogsPageComponent implements OnInit {
         return label && label !== 'Tüm klinikler' ? label : '—';
     }
 
-    private loadFromServer(
-        page: number,
-        pageSize: number,
-        reminderType: string,
-        status: string,
-        clinicId: string,
-        fromUtc: string | undefined,
-        toUtc: string | undefined,
-        force = false
-    ): void {
+    private loadFromServer(page: number, pageSize: number, reminderType: string, status: string, clinicId: string, fromUtc: string | undefined, toUtc: string | undefined, force = false): void {
         const cid = clinicId.trim();
         const key = `${page}|${pageSize}|${reminderType}|${status}|${cid}|${fromUtc ?? ''}|${toUtc ?? ''}`;
 
@@ -516,11 +428,11 @@ export class ReminderLogsPageComponent implements OnInit {
                 return null;
             }
 
-            this.reminderTypeFilter = typeof parsed.reminderType === "string" ? parsed.reminderType : '';
-            this.statusFilter = typeof parsed.status === "string" ? parsed.status : '';
-            this.clinicFilter = typeof parsed.clinicId === "string" ? parsed.clinicId : '';
-            this.fromDateInput = typeof parsed.fromDateInput === "string" ? parsed.fromDateInput : '';
-            this.toDateInput = typeof parsed.toDateInput === "string" ? parsed.toDateInput : '';
+            this.reminderTypeFilter = typeof parsed.reminderType === 'string' ? parsed.reminderType : '';
+            this.statusFilter = typeof parsed.status === 'string' ? parsed.status : '';
+            this.clinicFilter = typeof parsed.clinicId === 'string' ? parsed.clinicId : '';
+            this.fromDateInput = typeof parsed.fromDateInput === 'string' ? parsed.fromDateInput : '';
+            this.toDateInput = typeof parsed.toDateInput === 'string' ? parsed.toDateInput : '';
 
             this.activeReminderType.set(this.reminderTypeFilter);
             this.activeStatus.set(this.statusFilter);

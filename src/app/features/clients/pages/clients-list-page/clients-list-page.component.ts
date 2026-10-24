@@ -16,13 +16,13 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
-import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_CREATE_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 type ClientsListState = {
     search: string;
@@ -46,9 +46,11 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, FilterFieldComponent,
+        AppErrorStateComponent,
+        FilterFieldComponent,
         SearchInputComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        TrDatePipe
     ],
     template: `
         <div class="card">
@@ -64,106 +66,104 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                         <button actions pButton type="button" label="Yeni Müşteri (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                     }
                 </app-list-header>
-            @if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else if (initialLoad() && loading()) {
-                <app-loading-state message="Müşteri listesi yükleniyor…" />
-            } @else {
-                @if (displayedRows().length === 0) {
-                    <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                @if (error()) {
+                    <app-error-state [detail]="error()!" (retry)="reload()" />
+                } @else if (initialLoad() && loading()) {
+                    <app-loading-state message="Müşteri listesi yükleniyor…" />
                 } @else {
-                    <div class="hidden lg:block overflow-x-auto">
-                        <p-table
-                            [value]="displayedRows()"
-                            [paginator]="true"
-                            [rows]="pageSize()"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            [paginatorDropdownAppendTo]="'body'"
-                            [totalRecords]="totalItems()"
-                            [lazy]="true"
-                            [first]="first()"
-                            [loading]="loading()"
-                            (onLazyLoad)="onTableLazyLoad($event)"
-                            [tableStyle]="{ 'min-width': '50rem' }"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                        >
-                            <ng-template #header>
-                                <tr>
-                                    <th>Ad Soyad</th>
-                                    <th>Telefon</th>
-                                    <th>E-posta</th>
-                                    <th>Kayıt Tarihi</th>
-                                    <th style="width: 8rem">İşlemler</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template #body let-row>
-                                <tr>
-                                    <td class="font-medium">{{ row.fullName }}</td>
-                                    <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
-                                    <td>{{ row.email }}</td>
-                                    <td>{{ formatDate(row.createdAtUtc) }}</td>
-                                    <td>
-                                        <div class="flex items-center gap-1">
-                                            <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
-                                            @if (canUpdateClient && !ro.mutationBlocked()) {
-                                                <app-row-action-button action="edit" [link]="['/panel/clients', row.id, 'edit']" />
-                                            } @else if (canUpdateClient && ro.mutationBlocked()) {
-                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-
-                    <div class="lg:hidden space-y-3">
-                        @for (row of displayedRows(); track row.id) {
-                            <div
-                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
+                    @if (displayedRows().length === 0) {
+                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                    } @else {
+                        <div class="hidden lg:block overflow-x-auto">
+                            <p-table
+                                [value]="displayedRows()"
+                                [paginator]="true"
+                                [rows]="pageSize()"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                [paginatorDropdownAppendTo]="'body'"
+                                [totalRecords]="totalItems()"
+                                [lazy]="true"
+                                [first]="first()"
+                                [loading]="loading()"
+                                (onLazyLoad)="onTableLazyLoad($event)"
+                                [tableStyle]="{ 'min-width': '50rem' }"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
-                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                    <a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline break-words">{{ row.fullName }}</a>
-                                </div>
-                                <div class="space-y-2 mb-3 min-w-0 text-sm">
-                                    <div>
-                                        <span class="text-muted-color font-medium">Telefon: </span>
-                                        <span class="break-words">{{ formatClientPhoneForDisplay(row.phone) }}</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-muted-color font-medium">E-posta: </span>
-                                        <span class="break-all">{{ row.email }}</span>
-                                    </div>
-                                </div>
-                                @if (row.createdAtUtc) {
-                                    <div class="text-xs text-muted-color mb-3 min-w-0">Kayıt: {{ formatDate(row.createdAtUtc) }}</div>
-                                }
-                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
-                                    @if (canUpdateClient && !ro.mutationBlocked()) {
-                                        <app-row-action-button action="edit" [link]="['/panel/clients', row.id, 'edit']" />
-                                    } @else if (canUpdateClient && ro.mutationBlocked()) {
-                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
+                                <ng-template #header>
+                                    <tr>
+                                        <th>Ad Soyad</th>
+                                        <th>Telefon</th>
+                                        <th>E-posta</th>
+                                        <th>Kayıt Tarihi</th>
+                                        <th style="width: 8rem">İşlemler</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr>
+                                        <td class="font-medium">{{ row.fullName }}</td>
+                                        <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
+                                        <td>{{ row.email }}</td>
+                                        <td>{{ row.createdAtUtc | trDate }}</td>
+                                        <td>
+                                            <div class="flex items-center gap-1">
+                                                <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
+                                                @if (canUpdateClient && !ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" [link]="['/panel/clients', row.id, 'edit']" />
+                                                } @else if (canUpdateClient && ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
 
-                    <div class="lg:hidden mt-4">
-                        <p-paginator
-                            [rows]="pageSize()"
-                            [totalRecords]="totalItems()"
-                            [first]="first()"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            (onPageChange)="onMobilePageChange($event)"
-                        />
-                    </div>
+                        <div class="lg:hidden space-y-3">
+                            @for (row of displayedRows(); track row.id) {
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
+                                        <a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline break-words">{{ row.fullName }}</a>
+                                    </div>
+                                    <div class="space-y-2 mb-3 min-w-0 text-sm">
+                                        <div>
+                                            <span class="text-muted-color font-medium">Telefon: </span>
+                                            <span class="break-words">{{ formatClientPhoneForDisplay(row.phone) }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-muted-color font-medium">E-posta: </span>
+                                            <span class="break-all">{{ row.email }}</span>
+                                        </div>
+                                    </div>
+                                    @if (row.createdAtUtc) {
+                                        <div class="text-xs text-muted-color mb-3 min-w-0">Kayıt: {{ row.createdAtUtc | trDate }}</div>
+                                    }
+                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                        <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
+                                        @if (canUpdateClient && !ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" [link]="['/panel/clients', row.id, 'edit']" />
+                                        } @else if (canUpdateClient && ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="lg:hidden mt-4">
+                            <p-paginator
+                                [rows]="pageSize()"
+                                [totalRecords]="totalItems()"
+                                [first]="first()"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                (onPageChange)="onMobilePageChange($event)"
+                            />
+                        </div>
+                    }
                 }
-            }
             </div>
         </div>
     `
@@ -196,7 +196,6 @@ export class ClientsListPageComponent implements OnInit {
     readonly canCreateClient = this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM);
     readonly canUpdateClient = this.auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM);
 
-    readonly formatDate = (v: string | null) => formatDateDisplay(v);
     private suppressNextLazy = false;
     private lastLoadKey = '';
 

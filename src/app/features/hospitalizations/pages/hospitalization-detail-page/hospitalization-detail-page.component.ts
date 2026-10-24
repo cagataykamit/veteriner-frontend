@@ -9,26 +9,17 @@ import { DialogModule } from 'primeng/dialog';
 import { CareInstructionsSectionComponent } from '@/app/features/care-instructions/components/care-instructions-section.component';
 import type { HospitalizationDetailVm } from '@/app/features/hospitalizations/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
-import {
-    type HospitalizationDischargeFieldErrors,
-    parseHospitalizationDischargeHttpError
-} from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
+import { type HospitalizationDischargeFieldErrors, parseHospitalizationDischargeHttpError } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
-import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
-import {
-    DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator
-} from '@/app/shared/utils/date-input-validation.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    HOSPITALIZATIONS_DISCHARGE_CLAIM,
-    HOSPITALIZATIONS_UPDATE_CLAIM,
-    PAYMENTS_CREATE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { HOSPITALIZATIONS_DISCHARGE_CLAIM, HOSPITALIZATIONS_UPDATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
 const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
@@ -45,7 +36,10 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         AppPageHeaderComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, DateInputComponent, CareInstructionsSectionComponent
+        AppErrorStateComponent,
+        DateInputComponent,
+        CareInstructionsSectionComponent,
+        TrDateTimePipe
     ],
     template: `
         @if (savedMessage(); as message) {
@@ -63,47 +57,18 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             </div>
         } @else if (row()) {
             <app-page-header categoryLink="/panel/hospitalizations" categoryLinkLabel="Listeye dön" title="Yatış" [description]="row()!.reason">
-                @if (
-                    row()!.isActive ||
-                    (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim())
-                ) {
+                @if (row()!.isActive || (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim())) {
                     <div actions class="flex flex-wrap gap-2">
                         @if (row()!.isActive) {
                             @if (canUpdateHospitalization && !ro.mutationBlocked()) {
-                                <a
-                                    [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']"
-                                    pButton
-                                    type="button"
-                                    label="Düzenle"
-                                    icon="pi pi-pencil"
-                                    class="p-button-secondary"
-                                ></a>
+                                <a [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                                 @if (canDischargeHospitalization) {
-                                    <p-button
-                                        type="button"
-                                        label="Taburcu et"
-                                        icon="pi pi-sign-out"
-                                        severity="warn"
-                                        (onClick)="openDischargeDialog()"
-                                    />
+                                    <p-button type="button" label="Taburcu et" icon="pi pi-sign-out" severity="warn" (onClick)="openDischargeDialog()" />
                                 }
                             } @else if (canUpdateHospitalization && ro.mutationBlocked()) {
-                                <button
-                                    pButton
-                                    type="button"
-                                    label="Düzenle (salt okunur)"
-                                    icon="pi pi-lock"
-                                    [disabled]="true"
-                                    class="p-button-secondary"
-                                ></button>
+                                <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                                 @if (canDischargeHospitalization) {
-                                    <p-button
-                                        type="button"
-                                        label="Taburcu et (salt okunur)"
-                                        icon="pi pi-lock"
-                                        severity="secondary"
-                                        [disabled]="true"
-                                    />
+                                    <p-button type="button" label="Taburcu et (salt okunur)" icon="pi pi-lock" severity="secondary" [disabled]="true" />
                                 }
                             }
                         }
@@ -123,14 +88,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                                     class="p-button-secondary"
                                 ></a>
                             } @else if (canCreatePayment && ro.mutationBlocked()) {
-                                <button
-                                    pButton
-                                    type="button"
-                                    label="Ödeme Oluştur (salt okunur)"
-                                    icon="pi pi-lock"
-                                    [disabled]="true"
-                                    class="p-button-secondary"
-                                ></button>
+                                <button pButton type="button" label="Ödeme Oluştur (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                             }
                         }
                     </div>
@@ -156,23 +114,19 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                                 <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.location }}</dd>
                             }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Yatış</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.admittedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.admittedAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlı taburcu</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.plannedDischargeAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.plannedDischargeAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Taburcu</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.dischargedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.dischargedAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
                             @if (row()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a
-                                        [routerLink]="['/panel/examinations', row()!.examinationId]"
-                                        class="text-primary font-medium no-underline"
-                                        >Muayene kaydına git →</a
-                                    >
+                                    <a [routerLink]="['/panel/examinations', row()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
                                 </dd>
                             }
                         </dl>
@@ -220,15 +174,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             </div>
         }
 
-        <p-dialog
-            header="Taburcu işlemi"
-            [modal]="true"
-            [(visible)]="dischargeDialogVisible"
-            [style]="{ width: 'min(32rem, 95vw)' }"
-            [draggable]="false"
-            [focusOnShow]="false"
-            (onHide)="onDischargeDialogHide()"
-        >
+        <p-dialog header="Taburcu işlemi" [modal]="true" [(visible)]="dischargeDialogVisible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [focusOnShow]="false" (onHide)="onDischargeDialogHide()">
             <p class="text-sm text-muted-color mt-0 mb-4">Taburcu tarihi ve saati zorunludur. İşlem sonrası kayıt kapatılır.</p>
             <form [formGroup]="dischargeForm" (ngSubmit)="onDischargeSubmit()">
                 <div class="flex flex-col gap-4">
@@ -256,14 +202,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                     <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
                         <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ dischargeSubmitError() }}</p>
                         <div class="mt-3">
-                            <p-button
-                                type="button"
-                                label="Yazdıklarımı atıp güncel kaydı yükle"
-                                icon="pi pi-refresh"
-                                severity="secondary"
-                                size="small"
-                                (onClick)="discardDischargeAndReload()"
-                            />
+                            <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="discardDischargeAndReload()" />
                         </div>
                     </div>
                 } @else if (dischargeSubmitError()) {
@@ -271,13 +210,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 }
                 <div class="flex flex-wrap justify-end gap-2 mt-4">
                     <p-button type="button" label="Vazgeç" severity="secondary" (onClick)="dischargeDialogVisible = false" [disabled]="dischargeSubmitting()" />
-                    <p-button
-                        type="submit"
-                        label="Taburcu et"
-                        icon="pi pi-check"
-                        [loading]="dischargeSubmitting()"
-                        [disabled]="ro.mutationBlocked()"
-                    />
+                    <p-button type="submit" label="Taburcu et" icon="pi pi-check" [loading]="dischargeSubmitting()" [disabled]="ro.mutationBlocked()" />
                 </div>
             </form>
         </p-dialog>
@@ -313,7 +246,6 @@ export class HospitalizationDetailPageComponent implements OnInit {
         dischargeNote: ['']
     });
 
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly canUpdateHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM);
     readonly canDischargeHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_DISCHARGE_CLAIM);
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);

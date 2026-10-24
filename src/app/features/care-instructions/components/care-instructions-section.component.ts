@@ -5,11 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    CARE_INSTRUCTIONS_CREATE_CLAIM,
-    CARE_INSTRUCTIONS_READ_CLAIM,
-    CARE_INSTRUCTIONS_UPDATE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { CARE_INSTRUCTIONS_CREATE_CLAIM, CARE_INSTRUCTIONS_READ_CLAIM, CARE_INSTRUCTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { CARE_INSTRUCTION_TEXT_MAX, type CareInstructionVm } from '@/app/features/care-instructions/models/care-instruction-vm.model';
 import { CareInstructionsService } from '@/app/features/care-instructions/services/care-instructions.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -17,8 +13,8 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 
@@ -29,7 +25,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 @Component({
     selector: 'app-care-instructions-section',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe],
     template: `
         @if (canRead) {
             <div class="card" data-testid="care-instructions-section">
@@ -54,9 +50,9 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                                 <p class="mt-0 mb-2 whitespace-pre-wrap break-words">{{ row.text }}</p>
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <span class="text-sm text-muted-color">
-                                        {{ formatDate(row.createdAtUtc) }}
+                                        {{ row.createdAtUtc | trDateTime }}
                                         @if (row.updatedAtUtc) {
-                                            · güncellendi {{ formatDate(row.updatedAtUtc) }}
+                                            · güncellendi {{ row.updatedAtUtc | trDateTime }}
                                         }
                                     </span>
                                     @if (canEdit()) {
@@ -69,14 +65,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                 }
             </div>
 
-            <p-dialog
-                [header]="editing() ? 'Bakım talimatını düzenle' : 'Bakım talimatı ekle'"
-                [modal]="true"
-                [(visible)]="dialogVisible"
-                [style]="{ width: 'min(36rem, 95vw)' }"
-                [draggable]="false"
-                [closable]="!submitting()"
-            >
+            <p-dialog [header]="editing() ? 'Bakım talimatını düzenle' : 'Bakım talimatı ekle'" [modal]="true" [(visible)]="dialogVisible" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <label for="careInstructionText" class="block text-sm font-medium text-muted-color mb-2">Talimat metni *</label>
                     <textarea id="careInstructionText" rows="8" [attr.maxlength]="textMax" class="w-full p-inputtext p-component" formControlName="text"></textarea>
@@ -93,14 +82,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                         <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert" data-testid="care-instruction-conflict">
                             <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
                             <div class="mt-3">
-                                <p-button
-                                    type="button"
-                                    label="Yazdıklarımı atıp güncel kaydı yükle"
-                                    icon="pi pi-refresh"
-                                    severity="secondary"
-                                    size="small"
-                                    (onClick)="discardAndReload()"
-                                />
+                                <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="discardAndReload()" />
                             </div>
                         </div>
                     } @else if (submitError()) {
@@ -146,8 +128,6 @@ export class CareInstructionsSectionComponent {
     readonly form = this.fb.nonNullable.group({
         text: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(CARE_INSTRUCTION_TEXT_MAX)]]
     });
-
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     constructor() {
         effect(() => {
@@ -199,9 +179,7 @@ export class CareInstructionsSectionComponent {
         this.submitError.set(null);
         this.conflict.set(false);
         this.submitting.set(true);
-        const request$ = target
-            ? this.careInstructionsService.updateCareInstruction(target.id, text, target.rowVersion)
-            : this.careInstructionsService.createCareInstruction({ petId: this.petId(), hospitalizationId: this.hospitalizationId(), text });
+        const request$ = target ? this.careInstructionsService.updateCareInstruction(target.id, text, target.rowVersion) : this.careInstructionsService.createCareInstruction({ petId: this.petId(), hospitalizationId: this.hospitalizationId(), text });
 
         request$.subscribe({
             next: () => {

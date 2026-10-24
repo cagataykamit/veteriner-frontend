@@ -24,11 +24,11 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-lab-results-list-page',
@@ -44,9 +44,15 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, SearchInputComponent, SelectModule, LabResultStatusBadgesComponent,
+        AppContextFilterChipComponent,
+        AppErrorStateComponent,
+        DateInputComponent,
+        SearchInputComponent,
+        SelectModule,
+        LabResultStatusBadgesComponent,
         AppRowActionButtonComponent,
-        LabResultCancelDialogComponent
+        LabResultCancelDialogComponent,
+        TrDateTimePipe
     ],
     template: `
         @if (contextPetId()) {
@@ -54,176 +60,158 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         }
 
         <div class="card">
-                <div class="flex flex-col gap-4">
-                    <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
-                        <app-list-header class="mb-3" title="Lab sonuçları" [count]="totalItems()">
-                            <div class="flex-1 min-w-0">
-                                <label for="lrSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                <app-search-input inputId="lrSearch" placeholder="Test adı, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
-                            </div>
-                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                        </app-list-header>
-                        <div class="grid grid-cols-12 gap-3 items-end">
-                            <div class="col-span-12 md:col-span-4">
-                                <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">İstem tarihi (başlangıç)</label>
-                                <app-date-input inputId="lrFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </div>
-                            <div class="col-span-12 md:col-span-4">
-                                <label for="lrTo" class="block text-xs font-medium text-muted-color mb-1">İstem tarihi (bitiş)</label>
-                                <app-date-input inputId="lrTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </div>
-                            <div class="col-span-12 md:col-span-4">
-                                <label for="lrStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
-                                <p-select
-                                    inputId="lrStatus"
-                                    [options]="statusOptions"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    [(ngModel)]="statusInput"
-                                    (ngModelChange)="applyFilters()"
-                                    styleClass="w-full"
-                                />
-                            </div>
+            <div class="flex flex-col gap-4">
+                <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
+                    <app-list-header class="mb-3" title="Lab sonuçları" [count]="totalItems()">
+                        <div class="flex-1 min-w-0">
+                            <label for="lrSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
+                            <app-search-input inputId="lrSearch" placeholder="Test adı, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                        </div>
+                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                    </app-list-header>
+                    <div class="grid grid-cols-12 gap-3 items-end">
+                        <div class="col-span-12 md:col-span-4">
+                            <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">İstem tarihi (başlangıç)</label>
+                            <app-date-input inputId="lrFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                        </div>
+                        <div class="col-span-12 md:col-span-4">
+                            <label for="lrTo" class="block text-xs font-medium text-muted-color mb-1">İstem tarihi (bitiş)</label>
+                            <app-date-input inputId="lrTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                        </div>
+                        <div class="col-span-12 md:col-span-4">
+                            <label for="lrStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
+                            <p-select inputId="lrStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" styleClass="w-full" />
                         </div>
                     </div>
-            @if (loading()) {
-                <app-loading-state message="Liste yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
-                @if (displayedRows().length === 0) {
-                    <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                </div>
+                @if (loading()) {
+                    <app-loading-state message="Liste yükleniyor…" />
+                } @else if (error()) {
+                    <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
-                    <div class="hidden lg:block overflow-x-auto">
-                        <p-table
-                            [value]="displayedRows()"
-                            [paginator]="true"
-                            [rows]="pageSize()"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            [paginatorDropdownAppendTo]="'body'"
-                            [totalRecords]="totalItems()"
-                            [lazy]="true"
-                            [first]="first()"
-                            (onLazyLoad)="onTableLazyLoad($event)"
-                            [tableStyle]="{ 'min-width': '60rem' }"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                        >
-                            <ng-template #header>
-                                <tr>
-                                    <th>İstem tarihi</th>
-                                    <th>Sonuç tarihi</th>
-                                    <th>Durum</th>
-                                    <th>Müşteri</th>
-                                    <th>Hasta</th>
-                                    <th>Test</th>
-                                    <th style="width: 8rem">İşlemler</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template #body let-row>
-                                <tr>
-                                    <td data-testid="lr-requested-at">{{ formatDateTime(row.requestedAtUtc) }}</td>
-                                    <td data-testid="lr-result-date">{{ formatDateTime(row.resultDateUtc) }}</td>
-                                    <td><app-lab-result-status-badges [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" /></td>
-                                    <td>
-                                        @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
-                                                row.clientName
-                                            }}</a>
-                                        } @else {
-                                            {{ row.clientName }}
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                        } @else {
-                                            {{ row.petName }}
-                                        }
-                                    </td>
-                                    <td>{{ row.testName }}</td>
-                                    <td>
-                                        <div class="flex items-center gap-1">
-                                            <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
-                                            @if (canEditRow(row) && !ro.mutationBlocked()) {
-                                                <app-row-action-button action="edit" [label]="editLabel(row.status)" [link]="['/panel/lab-results', row.id, 'edit']" />
-                                            } @else if (canEditRow(row) && ro.mutationBlocked()) {
-                                                <app-row-action-button action="edit" [label]="editLabel(row.status) + ' (salt okunur)'" [disabled]="true" />
+                    @if (displayedRows().length === 0) {
+                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                    } @else {
+                        <div class="hidden lg:block overflow-x-auto">
+                            <p-table
+                                [value]="displayedRows()"
+                                [paginator]="true"
+                                [rows]="pageSize()"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                [paginatorDropdownAppendTo]="'body'"
+                                [totalRecords]="totalItems()"
+                                [lazy]="true"
+                                [first]="first()"
+                                (onLazyLoad)="onTableLazyLoad($event)"
+                                [tableStyle]="{ 'min-width': '60rem' }"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                            >
+                                <ng-template #header>
+                                    <tr>
+                                        <th>İstem tarihi</th>
+                                        <th>Sonuç tarihi</th>
+                                        <th>Durum</th>
+                                        <th>Müşteri</th>
+                                        <th>Hasta</th>
+                                        <th>Test</th>
+                                        <th style="width: 8rem">İşlemler</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr>
+                                        <td data-testid="lr-requested-at">{{ row.requestedAtUtc | trDateTime }}</td>
+                                        <td data-testid="lr-result-date">{{ row.resultDateUtc | trDateTime }}</td>
+                                        <td><app-lab-result-status-badges [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" /></td>
+                                        <td>
+                                            @if (row.clientId) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                            } @else {
+                                                {{ row.clientName }}
                                             }
-                                            @if (canEditRow(row) && !ro.mutationBlocked()) {
-                                                <app-row-action-button action="void" (pressed)="openCancel(row)" />
+                                        </td>
+                                        <td>
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                            } @else {
+                                                {{ row.petName }}
+                                            }
+                                        </td>
+                                        <td>{{ row.testName }}</td>
+                                        <td>
+                                            <div class="flex items-center gap-1">
+                                                <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
+                                                @if (canEditRow(row) && !ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" [label]="editLabel(row.status)" [link]="['/panel/lab-results', row.id, 'edit']" />
+                                                } @else if (canEditRow(row) && ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" [label]="editLabel(row.status) + ' (salt okunur)'" [disabled]="true" />
+                                                }
+                                                @if (canEditRow(row) && !ro.mutationBlocked()) {
+                                                    <app-row-action-button action="void" (pressed)="openCancel(row)" />
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+
+                        <div class="lg:hidden space-y-3">
+                            @for (row of displayedRows(); track row.id) {
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
+                                        <span class="text-muted-color">İstem: </span>{{ row.requestedAtUtc | trDateTime }}
+                                        <app-lab-result-status-badges class="ml-2" [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" />
+                                    </div>
+                                    <div class="space-y-2 mb-3 min-w-0">
+                                        <div class="text-sm"><span class="text-muted-color font-medium">Sonuç tarihi: </span>{{ row.resultDateUtc | trDateTime }}</div>
+                                        <div class="text-sm">
+                                            <span class="text-muted-color font-medium">Müşteri: </span>
+                                            @if (row.clientId) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
+                                            } @else {
+                                                <span class="break-words">{{ row.clientName }}</span>
                                             }
                                         </div>
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-
-                    <div class="lg:hidden space-y-3">
-                        @for (row of displayedRows(); track row.id) {
-                            <div
-                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                            >
-                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                    <span class="text-muted-color">İstem: </span>{{ formatDateTime(row.requestedAtUtc) }}
-                                    <app-lab-result-status-badges class="ml-2" [status]="row.status" [awaitingInterpretation]="row.awaitingInterpretation" />
-                                </div>
-                                <div class="space-y-2 mb-3 min-w-0">
-                                    <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Sonuç tarihi: </span>{{ formatDateTime(row.resultDateUtc) }}
+                                        <div class="text-sm">
+                                            <span class="text-muted-color font-medium">Hasta: </span>
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
+                                            } @else {
+                                                <span class="break-words">{{ row.petName }}</span>
+                                            }
+                                        </div>
                                     </div>
-                                    <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Müşteri: </span>
-                                        @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{
-                                                row.clientName
-                                            }}</a>
-                                        } @else {
-                                            <span class="break-words">{{ row.clientName }}</span>
+                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-3 min-w-0 break-words">{{ row.testName }}</div>
+                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                        <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
+                                        @if (canEditRow(row) && !ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" [label]="editLabel(row.status)" [link]="['/panel/lab-results', row.id, 'edit']" />
+                                        } @else if (canEditRow(row) && ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" [label]="editLabel(row.status) + ' (salt okunur)'" [disabled]="true" />
                                         }
-                                    </div>
-                                    <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Hasta: </span>
-                                        @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
-                                                row.petName
-                                            }}</a>
-                                        } @else {
-                                            <span class="break-words">{{ row.petName }}</span>
+                                        @if (canEditRow(row) && !ro.mutationBlocked()) {
+                                            <app-row-action-button action="void" (pressed)="openCancel(row)" />
                                         }
                                     </div>
                                 </div>
-                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-3 min-w-0 break-words">{{ row.testName }}</div>
-                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
-                                    @if (canEditRow(row) && !ro.mutationBlocked()) {
-                                        <app-row-action-button action="edit" [label]="editLabel(row.status)" [link]="['/panel/lab-results', row.id, 'edit']" />
-                                    } @else if (canEditRow(row) && ro.mutationBlocked()) {
-                                        <app-row-action-button action="edit" [label]="editLabel(row.status) + ' (salt okunur)'" [disabled]="true" />
-                                    }
-                                    @if (canEditRow(row) && !ro.mutationBlocked()) {
-                                        <app-row-action-button action="void" (pressed)="openCancel(row)" />
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
 
-                    <div class="lg:hidden mt-4">
-                        <p-paginator
-                            [rows]="pageSize()"
-                            [totalRecords]="totalItems()"
-                            [first]="first()"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            (onPageChange)="onMobilePageChange($event)"
-                        />
-                    </div>
+                        <div class="lg:hidden mt-4">
+                            <p-paginator
+                                [rows]="pageSize()"
+                                [totalRecords]="totalItems()"
+                                [first]="first()"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                (onPageChange)="onMobilePageChange($event)"
+                            />
+                        </div>
+                    }
                 }
-            }
-                </div>
+            </div>
         </div>
 
         <app-lab-result-cancel-dialog [(visible)]="cancelVisible" [target]="cancelTarget()" (cancelled)="reload()" />
@@ -279,8 +267,6 @@ export class LabResultsListPageComponent implements OnInit {
         this.cancelVisible = true;
     }
 
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-
     private suppressNextLazy = false;
     private lastLoadKey = '';
 
@@ -332,15 +318,7 @@ export class LabResultsListPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loadFromServer(
-            this.currentPage(),
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeFromDate(),
-            this.activeToDate(),
-            this.activeStatus(),
-            true
-        );
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus(), true);
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
@@ -366,15 +344,7 @@ export class LabResultsListPageComponent implements OnInit {
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
     }
 
-    private loadFromServer(
-        page: number,
-        pageSize: number,
-        search: string,
-        fromDate: string,
-        toDate: string,
-        status: LabResultStatus | '',
-        force = false
-    ): void {
+    private loadFromServer(page: number, pageSize: number, search: string, fromDate: string, toDate: string, status: LabResultStatus | '', force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status}|${this.contextPetId()}`;
 
         if (!force && key === this.lastLoadKey) {

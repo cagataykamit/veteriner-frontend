@@ -4,7 +4,7 @@ import { DiscountCodeFieldComponent } from '@/app/features/sales-partners/compon
 import type { SubscriptionDiscountDto } from '@/app/features/sales-partners/models/sales-partner.model';
 import { DiscountCodesService } from '@/app/features/sales-partners/services/discount-codes.service';
 import { discountNoteText } from '@/app/features/sales-partners/utils/discount-code.utils';
-import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
+import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Abonelik sayfasında satış ortağı kodu (ADR-037): uygulanmış kod ve indirim penceresi, ya da ilk ücretli ödemeden önce kod girişi.
@@ -13,7 +13,7 @@ import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
 @Component({
     selector: 'app-subscription-discount-card',
     standalone: true,
-    imports: [ButtonModule, DiscountCodeFieldComponent],
+    imports: [ButtonModule, DiscountCodeFieldComponent, TrDatePipe],
     // Gösterilecek bir şey yoksa ızgarada boş satır (aralık) bırakmasın.
     host: { '[class.hidden]': '!visible()' },
     template: `
@@ -22,9 +22,10 @@ import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
                 <div class="card mb-0" data-testid="subscription-discount-applied">
                     <h5 class="mt-0 mb-3">Ortak kodu</h5>
                     <p class="m-0 text-sm">
-                        <span class="font-semibold">{{ s.code }}</span>: {{ note(s) }}.
+                        <span class="font-semibold">{{ s.code }}</span
+                        >: {{ note(s) }}.
                         @if (s.windowEndsAtUtc) {
-                            İndirim {{ formatDate(s.windowEndsAtUtc) }} tarihine kadar uygulanır.
+                            İndirim {{ s.windowEndsAtUtc | trDate }} tarihine kadar uygulanır.
                         } @else {
                             İndirim ilk ücretli ödemeyle başlar.
                         }
@@ -38,15 +39,7 @@ import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
                         <div class="w-full md:max-w-sm">
                             <app-discount-code-field inputId="subscriptionDiscountCode" [disabled]="applying()" [(code)]="code" (validated)="valid.set(!!$event)" />
                         </div>
-                        <p-button
-                            label="Uygula"
-                            icon="pi pi-check"
-                            styleClass="md:mt-7"
-                            [loading]="applying()"
-                            [disabled]="!valid() || applying()"
-                            (onClick)="apply()"
-                            data-testid="subscription-discount-apply-button"
-                        />
+                        <p-button label="Uygula" icon="pi pi-check" styleClass="md:mt-7" [loading]="applying()" [disabled]="!valid() || applying()" (onClick)="apply()" data-testid="subscription-discount-apply-button" />
                     </div>
                     @if (error()) {
                         <p class="text-red-500 text-sm mt-2 mb-0" role="alert">{{ error() }}</p>
@@ -71,8 +64,6 @@ export class SubscriptionDiscountCardComponent implements OnInit {
 
         return !!s && (s.applied || (s.canApply && this.canManage()));
     });
-
-    readonly formatDate = (v: string | null | undefined) => formatUtcIsoAsLocalDateDisplay(v);
 
     private readonly codes = inject(DiscountCodesService);
 

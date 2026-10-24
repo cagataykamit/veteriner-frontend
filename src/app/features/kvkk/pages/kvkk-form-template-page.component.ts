@@ -12,21 +12,14 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { KvkkFormDocumentComponent } from '@/app/features/kvkk/components/kvkk-form-document.component';
 import type { KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
 import { KvkkFormTemplateService } from '@/app/features/kvkk/services/kvkk-form-template.service';
-import {
-    KVKK_FORM_DEFAULT_TEXT_WARNING,
-    KVKK_TEMPLATE_KINDS,
-    kvkkFormDate,
-    kvkkFormPlaceholderHint,
-    parseKvkkTemplateKind,
-    type KvkkTemplateKind
-} from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { KVKK_FORM_DEFAULT_TEXT_WARNING, KVKK_TEMPLATE_KINDS, kvkkFormDate, kvkkFormPlaceholderHint, parseKvkkTemplateKind, type KvkkTemplateKind } from '@/app/features/kvkk/utils/kvkk-form.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
 
@@ -39,25 +32,12 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
 @Component({
     selector: 'app-kvkk-form-template-page',
     standalone: true,
-    imports: [
-        ReactiveFormsModule,
-        ButtonModule,
-        ConfirmDialogModule,
-        TextareaModule,
-        ToastModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        KvkkFormDocumentComponent
-    ],
+    imports: [ReactiveFormsModule, ButtonModule, ConfirmDialogModule, TextareaModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, KvkkFormDocumentComponent, TrDateTimePipe],
     providers: [MessageService, ConfirmationService],
     template: `
         <p-toast position="bottom-right" />
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
-        <app-page-header
-            title="KVKK metinleri"
-            [description]="'Müşteri kartından yazdırılan açık rıza formu ve aydınlatma metni' + (clinicName ? ' · ' + clinicName : '') + '.'"
-        />
+        <app-page-header title="KVKK metinleri" [description]="'Müşteri kartından yazdırılan açık rıza formu ve aydınlatma metni' + (clinicName ? ' · ' + clinicName : '') + '.'" />
 
         <div class="mb-4 flex flex-wrap gap-2" role="group" aria-label="Metin türü" data-testid="kvkk-kind">
             @for (k of kindOptions; track k.value) {
@@ -84,15 +64,11 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
         } @else if (template(); as t) {
             <div class="card mb-4">
                 @if (t.isDefault) {
-                    <p
-                        class="m-0 mb-4 flex items-center gap-2 rounded-border border border-amber-300 dark:border-amber-700 px-3 py-2 text-sm font-medium text-amber-800 dark:text-amber-300"
-                        role="note"
-                        data-testid="kvkk-default-warning"
-                    >
+                    <p class="m-0 mb-4 flex items-center gap-2 rounded-border border border-amber-300 dark:border-amber-700 px-3 py-2 text-sm font-medium text-amber-800 dark:text-amber-300" role="note" data-testid="kvkk-default-warning">
                         <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ defaultWarning }} Onaylanan metni buraya kaydedin.
                     </p>
                 } @else if (t.updatedAtUtc) {
-                    <p class="m-0 mb-4 text-sm text-muted-color">Son kayıt: {{ formatDt(t.updatedAtUtc) }}</p>
+                    <p class="m-0 mb-4 text-sm text-muted-color">Son kayıt: {{ t.updatedAtUtc | trDateTime }}</p>
                 }
                 @if (ro.mutationBlocked()) {
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Bu işletme salt okunur moddadır; metin güncellenemez.</p>
@@ -123,7 +99,9 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
                     </p>
                     <ul class="list-none m-0 p-0 text-sm space-y-1">
                         @for (p of t.placeholders; track p) {
-                            <li><code class="font-mono">{{ p }}</code> <span class="text-muted-color">— {{ placeholderHint(p) }}</span></li>
+                            <li>
+                                <code class="font-mono">{{ p }}</code> <span class="text-muted-color">— {{ placeholderHint(p) }}</span>
+                            </li>
                         }
                     </ul>
                 </div>
@@ -158,7 +136,6 @@ export class KvkkFormTemplatePageComponent implements OnInit {
 
     readonly defaultWarning = KVKK_FORM_DEFAULT_TEXT_WARNING;
     readonly placeholderHint = kvkkFormPlaceholderHint;
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly clinicName = this.auth.getClinicName()?.trim() ?? '';
     readonly previewClientName = PREVIEW_CLIENT_NAME;
     readonly previewDate = kvkkFormDate();

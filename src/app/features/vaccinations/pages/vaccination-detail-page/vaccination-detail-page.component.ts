@@ -20,22 +20,12 @@ import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/cor
 import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
 import { HbsSectionComponent } from '@/app/features/hbs/components/hbs-section.component';
 import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-vaccination-detail-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        ButtonModule,
-        AppPageHeaderComponent,
-        PetAlertBannerComponent,
-        AppLoadingStateComponent,
-        AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent,
-        HbsSectionComponent
-    ],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, HbsSectionComponent, TrDateTimePipe],
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Aşı kaydı kaydedildi.</p>
@@ -51,32 +41,11 @@ import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (vac()) {
-            <app-page-header
-                categoryLink="/panel/vaccinations"
-                categoryLinkLabel="Aşı listesine dön"
-                title="Aşı kaydı"
-                [description]="headerDescription(vac()!)"
-            >
+            <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Aşı kaydı" [description]="headerDescription(vac()!)">
                 @if (canUpdateVaccination && !ro.mutationBlocked()) {
-                    <a
-                        actions
-                        [routerLink]="['/panel/vaccinations', vac()!.id, 'edit']"
-                        pButton
-                        type="button"
-                        label="Düzenle"
-                        icon="pi pi-pencil"
-                        class="p-button-secondary"
-                    ></a>
+                    <a actions [routerLink]="['/panel/vaccinations', vac()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                 } @else if (canUpdateVaccination && ro.mutationBlocked()) {
-                    <button
-                        actions
-                        pButton
-                        type="button"
-                        label="Düzenle (salt okunur)"
-                        icon="pi pi-lock"
-                        [disabled]="true"
-                        class="p-button-secondary"
-                    ></button>
+                    <button actions pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                 }
             </app-page-header>
             <app-pet-alert-banner [petId]="vac()!.petId" />
@@ -114,9 +83,7 @@ import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">SKT</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDay(adm.expiryDate) }}</dd>
                             </dl>
-                            <p class="text-sm text-muted-color mt-4 mb-0">
-                                Aşıyı iptal etmek için bu uygulamayı iptal edin; aşı kaydı da iptal olur. İptalde ürün stoğa iade edilir veya zarar/imha olarak yazılır (iptal eden seçer).
-                            </p>
+                            <p class="text-sm text-muted-color mt-4 mb-0">Aşıyı iptal etmek için bu uygulamayı iptal edin; aşı kaydı da iptal olur. İptalde ürün stoğa iade edilir veya zarar/imha olarak yazılır (iptal eden seçer).</p>
                         </div>
                     </div>
                 }
@@ -149,20 +116,20 @@ import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             @if (vac()!.status === 0) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlanan uygulama tarihi ve saati</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
                             } @else if (vac()!.status === 1) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.appliedAtUtc) }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.appliedAtUtc | trDateTime }}</dd>
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki uygulama</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
                             } @else if (vac()!.status === 2) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlı / sonraki tarih</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
                             } @else {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.appliedAtUtc) }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.appliedAtUtc | trDateTime }}</dd>
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.dueAtUtc) }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
                             }
                         </dl>
                     </div>
@@ -172,31 +139,20 @@ import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
                         <h5 class="mt-0 mb-4">Kayıt bilgileri</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.createdAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(vac()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.updatedAtUtc | trDateTime }}</dd>
                             @if (vac()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a
-                                        data-testid="linked-examination"
-                                        [routerLink]="['/panel/examinations', vac()!.examinationId]"
-                                        class="text-primary font-medium no-underline"
-                                        >Muayene kaydına git →</a
-                                    >
+                                    <a data-testid="linked-examination" [routerLink]="['/panel/examinations', vac()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
                                 </dd>
                             }
                         </dl>
                     </div>
                 </div>
                 <div class="col-span-12">
-                    <app-hbs-section
-                        kind="vaccination"
-                        [recordId]="vac()!.id"
-                        [entry]="vac()!.hbs"
-                        [canEdit]="canUpdateHbs && !ro.mutationBlocked()"
-                        (entryChange)="onHbsChange($event)"
-                    />
+                    <app-hbs-section kind="vaccination" [recordId]="vac()!.id" [entry]="vac()!.hbs" [canEdit]="canUpdateHbs && !ro.mutationBlocked()" (entryChange)="onHbsChange($event)" />
                 </div>
                 <div class="col-span-12">
                     <div class="card">
@@ -222,9 +178,7 @@ export class VaccinationDetailPageComponent implements OnInit {
     readonly emptyMark = '—';
     readonly showSavedBanner = signal(false);
     /** Kayıt formundan gelen stok bildirimi (kalan stok, minimum altı uyarısı); yenilemede kaybolur. */
-    readonly stockNotice = signal<{ text: string; warn: boolean } | null>(
-        (this.router.getCurrentNavigation()?.extras.state?.['stockNotice'] as { text: string; warn: boolean } | undefined) ?? null
-    );
+    readonly stockNotice = signal<{ text: string; warn: boolean } | null>((this.router.getCurrentNavigation()?.extras.state?.['stockNotice'] as { text: string; warn: boolean } | undefined) ?? null);
     readonly canReadAdministrations = this.auth.hasOperationClaim(ADMINISTRATIONS_READ_CLAIM);
     readonly formatDay = (v: string | null) => (v ? formatDateDisplay(v) : '—');
 

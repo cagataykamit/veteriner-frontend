@@ -19,9 +19,10 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-charges-list-page',
@@ -41,7 +42,9 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        MoneyPipe,
+        TrDateTimePipe
     ],
     template: `
         <div class="card">
@@ -98,7 +101,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                         </ng-template>
                         <ng-template #body let-row>
                             <tr>
-                                <td class="whitespace-nowrap">{{ formatDate(row.createdAtUtc) }}</td>
+                                <td class="whitespace-nowrap">{{ row.createdAtUtc | trDateTime }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
                                 </td>
@@ -109,40 +112,34 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                         —
                                     }
                                 </td>
-                                <td><div class="max-w-[10rem] truncate" [title]="row.description">{{ row.description }}</div></td>
+                                <td>
+                                    <div class="max-w-[10rem] truncate" [title]="row.description">{{ row.description }}</div>
+                                </td>
                                 <td class="text-right">{{ row.quantity }}</td>
-                                <td class="text-right whitespace-nowrap">{{ money(row.unitPrice, row.currency) }}</td>
-                                <td class="text-right whitespace-nowrap font-medium">{{ money(row.amount, row.currency) }}</td>
-                                <td class="text-right whitespace-nowrap">{{ money(row.allocatedAmount, row.currency) }}</td>
+                                <td class="text-right whitespace-nowrap">{{ row.unitPrice | money: row.currency || 'TRY' }}</td>
+                                <td class="text-right whitespace-nowrap font-medium">{{ row.amount | money: row.currency || 'TRY' }}</td>
+                                <td class="text-right whitespace-nowrap">{{ row.allocatedAmount | money: row.currency || 'TRY' }}</td>
                                 <td class="text-right whitespace-nowrap">
                                     @if (row.outstandingAmount === 0) {
                                         <app-status-tag label="Ödendi" severity="success" />
                                     } @else {
-                                        <span class="font-medium">{{ money(row.outstandingAmount, row.currency) }}</span>
+                                        <span class="font-medium">{{ row.outstandingAmount | money: row.currency || 'TRY' }}</span>
                                     }
                                 </td>
                                 @if (hasRowActions) {
                                     <td class="whitespace-nowrap">
                                         <div class="flex items-center justify-end gap-1">
-                                        @if (ro.mutationBlocked()) {
-                                            <span class="text-muted-color text-sm">Salt okunur</span>
-                                        } @else {
-                                            @if (canCollectPayment && row.outstandingAmount !== 0) {
-                                                <a
-                                                    [routerLink]="['/panel/payments/new']"
-                                                    [queryParams]="paymentQueryParams(row)"
-                                                    pButton
-                                                    label="Ödeme al"
-                                                    icon="pi pi-wallet"
-                                                    size="small"
-                                                    class="p-button-sm mr-1"
-                                                ></a>
+                                            @if (ro.mutationBlocked()) {
+                                                <span class="text-muted-color text-sm">Salt okunur</span>
+                                            } @else {
+                                                @if (canCollectPayment && row.outstandingAmount !== 0) {
+                                                    <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row)" pButton label="Ödeme al" icon="pi pi-wallet" size="small" class="p-button-sm mr-1"></a>
+                                                }
+                                                @if (canCorrect) {
+                                                    <app-row-action-button action="edit" label="Düzelt" (pressed)="openCorrection(row)" />
+                                                    <app-row-action-button action="void" (pressed)="openVoid(row)" />
+                                                }
                                             }
-                                            @if (canCorrect) {
-                                                <app-row-action-button action="edit" label="Düzelt" (pressed)="openCorrection(row)" />
-                                                <app-row-action-button action="void" (pressed)="openVoid(row)" />
-                                            }
-                                        }
                                         </div>
                                     </td>
                                 }
@@ -197,9 +194,6 @@ export class ChargesListPageComponent implements OnInit {
         return c ? `${c.clientName} · ${c.description} · ${formatMoney(c.amount, c.currency || 'TRY')}` : null;
     });
     readonly voidCharge = (reason: string) => this.chargesService.voidCharge(this.actionTarget()!.id, reason);
-
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
 
     ngOnInit(): void {
         this.clientId = this.route.snapshot.queryParamMap.get('clientId')?.trim() || null;

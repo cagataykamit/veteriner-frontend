@@ -21,8 +21,8 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-administrations-list-page',
@@ -43,7 +43,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        TrDateTimePipe
     ],
     template: `
         <div class="card">
@@ -116,7 +117,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                         </ng-template>
                         <ng-template #body let-row>
                             <tr [class.opacity-60]="row.isVoided">
-                                <td>{{ formatDate(row.administeredAtUtc) }}</td>
+                                <td>{{ row.administeredAtUtc | trDateTime }}</td>
                                 <td class="break-words">
                                     {{ row.productName }}
                                     <app-administration-row-marks [row]="row" />
@@ -172,8 +173,6 @@ export class AdministrationsListPageComponent implements OnInit {
 
     readonly voidTarget = signal<AdministrationVm | null>(null);
     voidVisible = false;
-
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     ngOnInit(): void {
         this.petId = this.route.snapshot.queryParamMap.get('petId')?.trim() || null;

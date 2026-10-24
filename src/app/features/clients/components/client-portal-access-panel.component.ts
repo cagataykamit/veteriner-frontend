@@ -13,6 +13,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { ownerPortalProblemUserMessageByCode, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Müşteri kartı "Portal erişimi" (ADR-031 K3, `PORTAL_API_CONTRACT.md` §4): bağ/davet durumu, davet gönder, daveti iptal et, erişimi kapat.
@@ -23,7 +24,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 @Component({
     selector: 'app-client-portal-access-panel',
     standalone: true,
-    imports: [ButtonModule, ConfirmDialogModule, AppErrorStateComponent],
+    imports: [ButtonModule, ConfirmDialogModule, AppErrorStateComponent, TrDateTimePipe],
     providers: [ConfirmationService],
     /** `.card:last-child` alt boşluğu sıfırladığından boşluk ana öğede (bölüm bileşenin son çocuğu). */
     host: { class: 'block mb-4' },
@@ -38,7 +39,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     @case ('linked') {
                         <p class="m-0 text-sm flex flex-wrap items-center gap-x-2 gap-y-1" data-testid="client-portal-status">
                             <span class="font-medium text-green-700 dark:text-green-400"><i class="pi pi-check-circle mr-1" aria-hidden="true"></i>Portal erişimi açık</span>
-                            <span class="text-muted-color">· bağlanma: {{ formatDt(linked()!.linkedAtUtc) }}</span>
+                            <span class="text-muted-color">· bağlanma: {{ linked()!.linkedAtUtc | trDateTime }}</span>
                             @if (linked()!.accountEmail; as email) {
                                 <span class="text-muted-color break-all">· hesap: {{ email }}</span>
                             }
@@ -51,15 +52,15 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         <p class="m-0 text-sm flex flex-wrap items-center gap-x-2 gap-y-1" data-testid="client-portal-status">
                             <span class="font-medium text-amber-800 dark:text-amber-300"><i class="pi pi-clock mr-1" aria-hidden="true"></i>Davet bekliyor</span>
                             <span class="text-muted-color break-all">· {{ pending()!.email }}</span>
-                            <span class="text-muted-color">· gönderim: {{ formatDt(pending()!.createdAtUtc) }}</span>
-                            <span class="text-muted-color">· son geçerlilik: {{ formatDt(pending()!.expiresAtUtc) }}</span>
+                            <span class="text-muted-color">· gönderim: {{ pending()!.createdAtUtc | trDateTime }}</span>
+                            <span class="text-muted-color">· son geçerlilik: {{ pending()!.expiresAtUtc | trDateTime }}</span>
                         </p>
                     }
                     @case ('closed') {
                         <p class="m-0 text-sm flex flex-wrap items-center gap-x-2 gap-y-1" data-testid="client-portal-status">
                             <span class="font-medium"><i class="pi pi-ban mr-1" aria-hidden="true"></i>Portal erişimi kapalı</span>
                             @if (closed()!.closedAtUtc; as at) {
-                                <span class="text-muted-color">· kapatılma: {{ formatDt(at) }}</span>
+                                <span class="text-muted-color">· kapatılma: {{ at | trDateTime }}</span>
                             }
                             <span class="text-muted-color">· müşteri yeniden davet edilebilir</span>
                         </p>
@@ -116,9 +117,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     }
                 </div>
                 @if (inviteBlockedReason(); as reason) {
-                    <p class="m-0 mt-1 text-sm text-muted-color" role="note" data-testid="client-portal-invite-blocked">
-                        <i class="pi pi-info-circle mr-1" aria-hidden="true"></i>{{ reason }}
-                    </p>
+                    <p class="m-0 mt-1 text-sm text-muted-color" role="note" data-testid="client-portal-invite-blocked"><i class="pi pi-info-circle mr-1" aria-hidden="true"></i>{{ reason }}</p>
                 }
             } @else {
                 <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>

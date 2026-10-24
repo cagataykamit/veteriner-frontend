@@ -21,36 +21,17 @@ import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/mo
 import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
 import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
 import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/features/public/utils/legal-documents.utils';
-import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
-import {
-    PASSWORD_POLICY_HINT,
-    validateStrongPasswordValue
-} from '@/app/core/validation/password-policy.util';
+import { PASSWORD_POLICY_HINT, validateStrongPasswordValue } from '@/app/core/validation/password-policy.util';
 import { DiscountCodeFieldComponent } from '@/app/features/sales-partners/components/discount-code-field.component';
 import type { DiscountCodeValidationDto } from '@/app/features/sales-partners/models/sales-partner.model';
-import {
-    clearPendingDiscountCode,
-    DISCOUNT_CODE_QUERY_PARAM,
-    discountNoteText,
-    normalizeDiscountCodeInput,
-    readPendingDiscountCode
-} from '@/app/features/sales-partners/utils/discount-code.utils';
+import { clearPendingDiscountCode, DISCOUNT_CODE_QUERY_PARAM, discountNoteText, normalizeDiscountCodeInput, readPendingDiscountCode } from '@/app/features/sales-partners/utils/discount-code.utils';
+import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [
-        FormsModule,
-        ButtonModule,
-        InputTextModule,
-        PasswordModule,
-        RippleModule,
-        RouterLink,
-        PublicLegalLinksComponent,
-        LegalConsentCheckboxComponent,
-        DiscountCodeFieldComponent
-    ],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, TrDatePipe],
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
@@ -59,20 +40,8 @@ import {
                         @if (successResult(); as res) {
                             <div class="text-center mb-6">
                                 <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex mb-6">
-                                    <img
-                                        [src]="brand.logoFull"
-                                        alt="Vetinity"
-                                        class="h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
-                                        width="120"
-                                        height="30"
-                                    />
-                                    <img
-                                        [src]="brand.logoFullDark"
-                                        alt="Vetinity"
-                                        class="hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
-                                        width="120"
-                                        height="30"
-                                    />
+                                    <img [src]="brand.logoFull" alt="Vetinity" class="h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden" width="120" height="30" />
+                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block" width="120" height="30" />
                                 </a>
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Kayıt tamamlandı</div>
                                 <span class="text-muted-color font-medium">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</span>
@@ -82,18 +51,19 @@ import {
                                 <div class="font-semibold text-surface-900 dark:text-surface-0 mb-4">{{ successPlanTitle(res) }}</div>
                                 @if (res.discount; as discount) {
                                     <div class="text-sm mb-4" data-testid="signup-discount-note">
-                                        Ortak kodu <span class="font-semibold">{{ discount.code }}</span>:
+                                        Ortak kodu <span class="font-semibold">{{ discount.code }}</span
+                                        >:
                                         {{ discountNote(discount.discountPercent, discount.discountMonths) }}
                                     </div>
                                 }
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                     <div>
                                         <div class="text-muted-color mb-1">Deneme başlangıcı</div>
-                                        <div class="font-medium">{{ formatDate(res.trialStartsAtUtc) }}</div>
+                                        <div class="font-medium">{{ res.trialStartsAtUtc | trDate }}</div>
                                     </div>
                                     <div>
                                         <div class="text-muted-color mb-1">Deneme bitişi</div>
-                                        <div class="font-medium">{{ formatDate(res.trialEndsAtUtc) }}</div>
+                                        <div class="font-medium">{{ res.trialEndsAtUtc | trDate }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -104,20 +74,8 @@ import {
                         } @else {
                             <div class="text-center mb-8">
                                 <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex mb-6">
-                                    <img
-                                        [src]="brand.logoFull"
-                                        alt="Vetinity"
-                                        class="h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
-                                        width="120"
-                                        height="30"
-                                    />
-                                    <img
-                                        [src]="brand.logoFullDark"
-                                        alt="Vetinity"
-                                        class="hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
-                                        width="120"
-                                        height="30"
-                                    />
+                                    <img [src]="brand.logoFull" alt="Vetinity" class="h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden" width="120" height="30" />
+                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block" width="120" height="30" />
                                 </a>
                                 <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Hesap oluştur</div>
                                 <span class="text-muted-color font-medium">Deneme paketiyle işletmenizi tek adımda başlatın</span>
@@ -128,9 +86,7 @@ import {
                                     <div class="text-xs text-muted-color uppercase tracking-wide mb-1">Seçilen paket</div>
                                     <div class="font-semibold text-surface-900 dark:text-surface-0 text-lg mb-2">{{ selectedPlan().title }}</div>
                                     <p class="text-sm text-muted-color m-0 mb-3">{{ selectedPlan().description }}</p>
-                                    <p class="text-sm text-muted-color m-0 mb-3">
-                                        Deneme paketiyle başlayın. İsterseniz paketleri inceleyerek farklı bir planla devam edebilirsiniz.
-                                    </p>
+                                    <p class="text-sm text-muted-color m-0 mb-3">Deneme paketiyle başlayın. İsterseniz paketleri inceleyerek farklı bir planla devam edebilirsiniz.</p>
                                     <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketleri inceleyin</a>
                                 </div>
 
@@ -158,48 +114,22 @@ import {
                                 <div>
                                     <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Şifre *</label>
                                     <p class="text-sm text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
-                                    <p-password
-                                        id="password"
-                                        [(ngModel)]="password"
-                                        placeholder="Şifre"
-                                        [toggleMask]="true"
-                                        styleClass="w-full"
-                                        [fluid]="true"
-                                        [feedback]="false"
-                                    />
+                                    <p-password id="password" [(ngModel)]="password" placeholder="Şifre" [toggleMask]="true" styleClass="w-full" [fluid]="true" [feedback]="false" />
                                     @if (passwordFieldError()) {
                                         <small class="text-red-500 block mt-2">{{ passwordFieldError() }}</small>
                                     }
                                 </div>
 
-                                <app-discount-code-field
-                                    inputId="signupDiscountCode"
-                                    [disabled]="submitting()"
-                                    [(code)]="discountCode"
-                                    (validated)="discountValidation.set($event)"
-                                />
+                                <app-discount-code-field inputId="signupDiscountCode" [disabled]="submitting()" [(code)]="discountCode" (validated)="discountValidation.set($event)" />
 
-                                <p class="text-sm text-muted-color m-0">
-                                    Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır. Paket değişimi ve ödeme sonraki fazda
-                                    eklenecektir.
-                                </p>
+                                <p class="text-sm text-muted-color m-0">Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır. Paket değişimi ve ödeme sonraki fazda eklenecektir.</p>
 
                                 <app-legal-consent-checkbox inputId="signupLegalConsent" [documents]="legalDocumentTypes()" [disabled]="submitting()" [(checked)]="legalConsent" />
 
-                                <p-button
-                                    label="Hesabı oluştur"
-                                    styleClass="w-full public-auth-submit"
-                                    [loading]="submitting()"
-                                    [disabled]="submitting() || !legalConsent()"
-                                    (onClick)="submit()"
-                                />
+                                <p-button label="Hesabı oluştur" styleClass="w-full public-auth-submit" [loading]="submitting()" [disabled]="submitting() || !legalConsent()" (onClick)="submit()" />
 
                                 @if (formError()) {
-                                    <div
-                                        class="rounded-sm border-l-[3px] border-l-red-400/75 bg-red-500/[0.06] py-2 px-3 dark:border-l-red-500/45 dark:bg-red-500/[0.08]"
-                                        role="alert"
-                                        aria-live="assertive"
-                                    >
+                                    <div class="rounded-sm border-l-[3px] border-l-red-400/75 bg-red-500/[0.06] py-2 px-3 dark:border-l-red-500/45 dark:bg-red-500/[0.08]" role="alert" aria-live="assertive">
                                         <span class="text-sm font-medium text-red-950 dark:text-red-100">{{ formError() }}</span>
                                     </div>
                                 }
@@ -231,9 +161,7 @@ export class OwnerSignupPageComponent implements OnInit {
 
     /** Kayıt olan klinik yöneticisidir: sunucunun yayımladığı tüm belgeler (ADR-029 madde 4). */
     private readonly legalVersions = signal<LegalDocumentVersionDto[] | null>(null);
-    readonly legalDocumentTypes = computed<readonly LegalDocumentType[]>(
-        () => this.legalVersions()?.map((v) => v.documentType) ?? (Object.keys(LEGAL_DOCUMENTS_BY_TYPE) as LegalDocumentType[])
-    );
+    readonly legalDocumentTypes = computed<readonly LegalDocumentType[]>(() => this.legalVersions()?.map((v) => v.documentType) ?? (Object.keys(LEGAL_DOCUMENTS_BY_TYPE) as LegalDocumentType[]));
     readonly legalConsent = signal(false);
 
     readonly selectedPlan = signal<PricingPlanDef>(resolveSignupPlan(null));
@@ -248,9 +176,7 @@ export class OwnerSignupPageComponent implements OnInit {
     password = '';
 
     /** Satış ortağı kodu (ADR-037): `/r/:kod` bağlantısından (URL `kod` ya da oturum belleği) gelir ya da elle girilir. */
-    readonly discountCode = signal(
-        normalizeDiscountCodeInput(this.route.snapshot.queryParamMap.get(DISCOUNT_CODE_QUERY_PARAM) ?? readPendingDiscountCode())
-    );
+    readonly discountCode = signal(normalizeDiscountCodeInput(this.route.snapshot.queryParamMap.get(DISCOUNT_CODE_QUERY_PARAM) ?? readPendingDiscountCode()));
     readonly discountValidation = signal<DiscountCodeValidationDto | null>(null);
     readonly discountNote = discountNoteText;
 
@@ -258,8 +184,6 @@ export class OwnerSignupPageComponent implements OnInit {
     readonly formError = signal<string | null>(null);
     readonly passwordFieldError = signal<string | null>(null);
     readonly passwordPolicyHint = PASSWORD_POLICY_HINT;
-
-    readonly formatDate = (v: string | null | undefined) => formatDateDisplay(v);
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, AUTH_SIGNUP_PAGE_META);
@@ -358,12 +282,10 @@ export class OwnerSignupPageComponent implements OnInit {
 
     /** Görünen ve gönderilen sürüm backend'den (tek kaynak); 409 sonrası yenilenir. */
     private loadLegalVersions(refresh: boolean): void {
-        (refresh ? this.legal.refreshCurrentVersions() : this.legal.getCurrentVersions())
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-                next: (versions) => this.legalVersions.set(versions),
-                error: () => this.legalVersions.set(null)
-            });
+        (refresh ? this.legal.refreshCurrentVersions() : this.legal.getCurrentVersions()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+            next: (versions) => this.legalVersions.set(versions),
+            error: () => this.legalVersions.set(null)
+        });
     }
 
     successPlanTitle(res: PublicOwnerSignupResultDto): string {

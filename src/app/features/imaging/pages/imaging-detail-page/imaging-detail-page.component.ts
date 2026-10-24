@@ -6,13 +6,7 @@ import { IMAGING_CANCEL_CLAIM, IMAGING_CREATE_CLAIM } from '@/app/core/auth/oper
 import { ImagingCancelDialogComponent } from '@/app/features/imaging/components/imaging-cancel-dialog.component';
 import type { ImagingRecordDetailVm } from '@/app/features/imaging/models/imaging.model';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
-import {
-    IMAGING_ADDED_AFTER_FINALIZATION_LABEL,
-    imagingAltText,
-    imagingModalityLabel,
-    imagingStatusLabel,
-    imagingStatusSeverity
-} from '@/app/features/imaging/utils/imaging.utils';
+import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL, imagingAltText, imagingModalityLabel, imagingStatusLabel, imagingStatusSeverity } from '@/app/features/imaging/utils/imaging.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import type { StoredFileVm } from '@/app/shared/files/stored-file.model';
 import { StoredFileGalleryComponent } from '@/app/shared/files/stored-file-gallery.component';
@@ -22,7 +16,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kaydedildi.' };
 
@@ -43,7 +37,8 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
         AppStatusTagComponent,
         StoredFileGalleryComponent,
         StoredFileUploadComponent,
-        ImagingCancelDialogComponent
+        ImagingCancelDialogComponent,
+        TrDateTimePipe
     ],
     template: `
         @if (savedMessage(); as message) {
@@ -83,7 +78,7 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
                                 }
                             </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tarih</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(r.performedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ r.performedAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tür</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ modalityLabel(r.modality) }}</dd>
                             @if (r.examinationId) {
@@ -94,12 +89,12 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
                             }
                             @if (r.status === 'Cancelled') {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal tarihi</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(r.cancelledAtUtc) }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ r.cancelledAtUtc | trDateTime }}</dd>
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal gerekçesi</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0 whitespace-pre-wrap">{{ r.cancelReason ?? '—' }}</dd>
                             }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(r.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ r.createdAtUtc | trDateTime }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -125,12 +120,7 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
                 <div class="col-span-12">
                     <section class="card" aria-labelledby="imaging-files-title">
                         <h5 id="imaging-files-title" class="mt-0 mb-4">Dosyalar</h5>
-                        <app-stored-file-gallery
-                            [ownerPath]="ownerPath()"
-                            [files]="r.files"
-                            [altBase]="altBase()"
-                            [emptyText]="r.status === 'Cancelled' ? 'Kayıt iptal edildi; dosyalara erişim kapalı.' : 'Henüz dosya yok.'"
-                        />
+                        <app-stored-file-gallery [ownerPath]="ownerPath()" [files]="r.files" [altBase]="altBase()" [emptyText]="r.status === 'Cancelled' ? 'Kayıt iptal edildi; dosyalara erişim kapalı.' : 'Henüz dosya yok.'" />
                         @if (canAddFiles()) {
                             <div class="mt-4">
                                 <app-stored-file-upload [ownerPath]="ownerPath()" [autoUpload]="true" (uploaded)="onUploaded($event)" />
@@ -162,7 +152,6 @@ export class ImagingDetailPageComponent implements OnInit {
     readonly modalityLabel = imagingModalityLabel;
     readonly statusLabel = imagingStatusLabel;
     readonly statusSeverity = imagingStatusSeverity;
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     readonly ownerPath = computed(() => this.imagingService.filesOwner(this.row()?.id ?? this.recordId));
     readonly altBase = computed(() => {

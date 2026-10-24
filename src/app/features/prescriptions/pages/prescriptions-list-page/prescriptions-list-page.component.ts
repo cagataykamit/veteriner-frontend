@@ -20,7 +20,6 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
-import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -30,6 +29,7 @@ import { SelectModule } from 'primeng/select';
 import { HbsStatusBadgeComponent } from '@/app/features/hbs/components/hbs-status-badge.component';
 import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
 import { HBS_STATUS_FILTER_OPTIONS, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
+import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 type PrescriptionsListState = {
     search: string;
@@ -56,11 +56,16 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppContextFilterChipComponent, AppErrorStateComponent, DateInputComponent, FilterFieldComponent,
+        AppContextFilterChipComponent,
+        AppErrorStateComponent,
+        DateInputComponent,
+        FilterFieldComponent,
         SearchInputComponent,
         AppRowActionButtonComponent,
         SelectModule,
-        HbsStatusBadgeComponent
+        HbsStatusBadgeComponent,
+        TrDatePipe,
+        TrDateTimePipe
     ],
     template: `
         @if (contextPetId()) {
@@ -68,174 +73,166 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         }
 
         <div class="card">
-                <div class="flex flex-col gap-4">
-                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <app-list-header class="mb-3" title="Reçeteler" [count]="totalItems()">
-                            <app-filter-field label="Arama" labelFor="rxSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
-                            </app-filter-field>
-                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                        </app-list-header>
-                        <div class="flex flex-wrap items-end gap-3">
-                            <app-filter-field label="Başlangıç" labelFor="rxFrom" [active]="isFromDateActive()" width="date">
-                                <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                            <app-filter-field label="Bitiş" labelFor="rxTo" [active]="isToDateActive()" width="date">
-                                <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                            <app-filter-field label="HBS durumu" labelId="rxHbsLabel" [active]="!!activeHbsStatus()" width="select">
-                                <p-select
-                                    ariaLabelledBy="rxHbsLabel"
-                                    inputId="rxHbs"
-                                    [options]="hbsOptions"
-                                    [(ngModel)]="hbsStatusInput"
-                                    (ngModelChange)="scheduleApply()"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    placeholder="Tümü"
-                                    [showClear]="true"
-                                    styleClass="w-full"
-                                    data-testid="rx-hbs-filter"
-                                />
-                            </app-filter-field>
-                        </div>
+            <div class="flex flex-col gap-4">
+                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                    <app-list-header class="mb-3" title="Reçeteler" [count]="totalItems()">
+                        <app-filter-field label="Arama" labelFor="rxSearch" [active]="isSearchActive()" width="grow">
+                            <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                        </app-filter-field>
+                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                    </app-list-header>
+                    <div class="flex flex-wrap items-end gap-3">
+                        <app-filter-field label="Başlangıç" labelFor="rxFrom" [active]="isFromDateActive()" width="date">
+                            <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                        </app-filter-field>
+                        <app-filter-field label="Bitiş" labelFor="rxTo" [active]="isToDateActive()" width="date">
+                            <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                        </app-filter-field>
+                        <app-filter-field label="HBS durumu" labelId="rxHbsLabel" [active]="!!activeHbsStatus()" width="select">
+                            <p-select
+                                ariaLabelledBy="rxHbsLabel"
+                                inputId="rxHbs"
+                                [options]="hbsOptions"
+                                [(ngModel)]="hbsStatusInput"
+                                (ngModelChange)="scheduleApply()"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Tümü"
+                                [showClear]="true"
+                                styleClass="w-full"
+                                data-testid="rx-hbs-filter"
+                            />
+                        </app-filter-field>
                     </div>
-            @if (loading()) {
-                <app-loading-state message="Reçete listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
-                @if (displayedRows().length === 0) {
-                    <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                </div>
+                @if (loading()) {
+                    <app-loading-state message="Reçete listesi yükleniyor…" />
+                } @else if (error()) {
+                    <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
-                    <div class="hidden lg:block overflow-x-auto">
-                        <p-table
-                            [value]="displayedRows()"
-                            [paginator]="true"
-                            [rows]="pageSize()"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            [paginatorDropdownAppendTo]="'body'"
-                            [totalRecords]="totalItems()"
-                            [lazy]="true"
-                            [first]="first()"
-                            (onLazyLoad)="onTableLazyLoad($event)"
-                            [tableStyle]="{ 'min-width': '60rem' }"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                        >
-                            <ng-template #header>
-                                <tr>
-                                    <th>Tarih</th>
-                                    <th>Müşteri</th>
-                                    <th>Hasta</th>
-                                    <th>Başlık</th>
-                                    <th>Takip</th>
-                                    <th>HBS</th>
-                                    <th style="width: 8rem">İşlemler</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template #body let-row>
-                                <tr>
-                                    <td>{{ formatDateTime(row.prescribedAtUtc) }}</td>
-                                    <td>
-                                        @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
-                                                row.clientName
-                                            }}</a>
-                                        } @else {
-                                            {{ row.clientName }}
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                        } @else {
-                                            {{ row.petName }}
-                                        }
-                                    </td>
-                                    <td>{{ row.title }}</td>
-                                    <td>{{ formatDate(row.followUpDateUtc) }}</td>
-                                    <td><app-hbs-status-badge [status]="row.hbsStatus" /></td>
-                                    <td>
-                                        <div class="flex items-center gap-1">
-                                            <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
-                                            @if (canUpdatePrescription && !ro.mutationBlocked()) {
-                                                <app-row-action-button action="edit" [link]="['/panel/prescriptions', row.id, 'edit']" />
-                                            } @else if (canUpdatePrescription && ro.mutationBlocked()) {
-                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                    @if (displayedRows().length === 0) {
+                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                    } @else {
+                        <div class="hidden lg:block overflow-x-auto">
+                            <p-table
+                                [value]="displayedRows()"
+                                [paginator]="true"
+                                [rows]="pageSize()"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                [paginatorDropdownAppendTo]="'body'"
+                                [totalRecords]="totalItems()"
+                                [lazy]="true"
+                                [first]="first()"
+                                (onLazyLoad)="onTableLazyLoad($event)"
+                                [tableStyle]="{ 'min-width': '60rem' }"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                            >
+                                <ng-template #header>
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Müşteri</th>
+                                        <th>Hasta</th>
+                                        <th>Başlık</th>
+                                        <th>Takip</th>
+                                        <th>HBS</th>
+                                        <th style="width: 8rem">İşlemler</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr>
+                                        <td>{{ row.prescribedAtUtc | trDateTime }}</td>
+                                        <td>
+                                            @if (row.clientId) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                            } @else {
+                                                {{ row.clientName }}
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                            } @else {
+                                                {{ row.petName }}
+                                            }
+                                        </td>
+                                        <td>{{ row.title }}</td>
+                                        <td>{{ row.followUpDateUtc | trDate }}</td>
+                                        <td><app-hbs-status-badge [status]="row.hbsStatus" /></td>
+                                        <td>
+                                            <div class="flex items-center gap-1">
+                                                <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
+                                                @if (canUpdatePrescription && !ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" [link]="['/panel/prescriptions', row.id, 'edit']" />
+                                                } @else if (canUpdatePrescription && ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+
+                        <div class="lg:hidden space-y-3">
+                            @for (row of displayedRows(); track row.id) {
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
+                                        {{ row.prescribedAtUtc | trDateTime }}
+                                    </div>
+                                    <div class="space-y-2 mb-3 min-w-0">
+                                        <div class="text-sm">
+                                            <span class="text-muted-color font-medium">Müşteri: </span>
+                                            @if (row.clientId) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
+                                            } @else {
+                                                <span class="break-words">{{ row.clientName }}</span>
                                             }
                                         </div>
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-
-                    <div class="lg:hidden space-y-3">
-                        @for (row of displayedRows(); track row.id) {
-                            <div
-                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                            >
-                                <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                    {{ formatDateTime(row.prescribedAtUtc) }}
-                                </div>
-                                <div class="space-y-2 mb-3 min-w-0">
-                                    <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Müşteri: </span>
-                                        @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{
-                                                row.clientName
-                                            }}</a>
-                                        } @else {
-                                            <span class="break-words">{{ row.clientName }}</span>
+                                        <div class="text-sm">
+                                            <span class="text-muted-color font-medium">Hasta: </span>
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
+                                            } @else {
+                                                <span class="break-words">{{ row.petName }}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 min-w-0">
+                                        <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.title }}</div>
+                                        @if (row.followUpDateUtc) {
+                                            <div class="text-xs text-muted-color mt-1 line-clamp-2">Takip: {{ row.followUpDateUtc | trDate }}</div>
+                                        }
+                                        @if (row.hbsStatus) {
+                                            <div class="mt-2"><app-hbs-status-badge [status]="row.hbsStatus" /></div>
                                         }
                                     </div>
-                                    <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Hasta: </span>
-                                        @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
-                                                row.petName
-                                            }}</a>
-                                        } @else {
-                                            <span class="break-words">{{ row.petName }}</span>
+                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                        <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
+                                        @if (canUpdatePrescription && !ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" [link]="['/panel/prescriptions', row.id, 'edit']" />
+                                        } @else if (canUpdatePrescription && ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
                                         }
                                     </div>
                                 </div>
-                                <div class="mb-3 min-w-0">
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.title }}</div>
-                                    @if (row.followUpDateUtc) {
-                                        <div class="text-xs text-muted-color mt-1 line-clamp-2">Takip: {{ formatDate(row.followUpDateUtc) }}</div>
-                                    }
-                                    @if (row.hbsStatus) {
-                                        <div class="mt-2"><app-hbs-status-badge [status]="row.hbsStatus" /></div>
-                                    }
-                                </div>
-                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <app-row-action-button action="detail" [link]="['/panel/prescriptions', row.id]" />
-                                    @if (canUpdatePrescription && !ro.mutationBlocked()) {
-                                        <app-row-action-button action="edit" [link]="['/panel/prescriptions', row.id, 'edit']" />
-                                    } @else if (canUpdatePrescription && ro.mutationBlocked()) {
-                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
 
-                    <div class="lg:hidden mt-4">
-                        <p-paginator
-                            [rows]="pageSize()"
-                            [totalRecords]="totalItems()"
-                            [first]="first()"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            (onPageChange)="onMobilePageChange($event)"
-                        />
-                    </div>
+                        <div class="lg:hidden mt-4">
+                            <p-paginator
+                                [rows]="pageSize()"
+                                [totalRecords]="totalItems()"
+                                [first]="first()"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                (onPageChange)="onMobilePageChange($event)"
+                            />
+                        </div>
+                    }
                 }
-            }
-                </div>
+            </div>
         </div>
     `
 })
@@ -275,9 +272,6 @@ export class PrescriptionsListPageComponent implements OnInit {
     toDateInput = '';
     hbsStatusInput: HbsEntryStatus | null = null;
     readonly displayedRows = computed(() => this.rawItems());
-
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     private suppressNextLazy = false;
     private lastLoadKey = '';
@@ -351,14 +345,7 @@ export class PrescriptionsListPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loadFromServer(
-            this.currentPage(),
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeFromDate(),
-            this.activeToDate(),
-            true
-        );
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), true);
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
@@ -409,14 +396,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
     }
 
-    private loadFromServer(
-        page: number,
-        pageSize: number,
-        search: string,
-        fromDate: string,
-        toDate: string,
-        force = false
-    ): void {
+    private loadFromServer(page: number, pageSize: number, search: string, fromDate: string, toDate: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}|${this.activeHbsStatus() ?? ''}`;
 
         if (!force && key === this.lastLoadKey) {

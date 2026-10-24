@@ -8,19 +8,12 @@ import { DialogModule } from 'primeng/dialog';
 import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargeTaxFieldsComponent } from '@/app/features/charges/components/charge-tax-fields.component';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
-import {
-    CHARGE_DESCRIPTION_MAX_LENGTH,
-    CHARGE_QUANTITY_MAX,
-    CHARGE_QUANTITY_MAX_DECIMALS,
-    CHARGE_UNIT_PRICE_MAX,
-    CHARGE_UNIT_PRICE_MAX_DECIMALS,
-    chargeNumberValidator,
-    computeChargeAmount
-} from '@/app/features/charges/utils/charge-amount.utils';
+import { CHARGE_DESCRIPTION_MAX_LENGTH, CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS, chargeNumberValidator, computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
 import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 
 /**
  * Ücret düzeltmesi (`Charges.Correct`): açıklama, miktar, birim fiyat, satır türü ve KDV oranı (ADR-036). Gerekçe zorunlu; yeni tutar tahsis edilen tutarın altına inemez (sunucu 409 verir).
@@ -29,22 +22,13 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-charge-correction-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, ChargeTaxFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, ChargeTaxFieldsComponent, MoneyPipe],
     template: `
-        <p-dialog
-            header="Ücreti düzelt"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(560px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog header="Ücreti düzelt" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (charge(); as c) {
                 <p class="mt-0 mb-1 font-medium">{{ c.clientName }}</p>
                 @if (c.allocatedAmount) {
-                    <p class="mt-0 mb-4 text-sm text-muted-color">
-                        Bu ücrete {{ money(c.allocatedAmount, c.currency) }} ödeme bağlı; yeni tutar bunun altına inemez.
-                    </p>
+                    <p class="mt-0 mb-4 text-sm text-muted-color">Bu ücrete {{ c.allocatedAmount | money: c.currency }} ödeme bağlı; yeni tutar bunun altına inemez.</p>
                 }
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -74,13 +58,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         <span class="block text-sm font-medium text-muted-color mb-2">Yeni tutar</span>
                         <div class="p-inputtext p-component w-full font-semibold" aria-live="polite">{{ amountDisplay() }}</div>
                     </div>
-                    <app-charge-tax-fields
-                        [lineKind]="form.controls.lineKind"
-                        [vatRate]="form.controls.vatRate"
-                        [currentVatRate]="charge()?.vatRate ?? null"
-                        idPrefix="cc"
-                        cellClass="col-span-12 sm:col-span-6"
-                    />
+                    <app-charge-tax-fields [lineKind]="form.controls.lineKind" [vatRate]="form.controls.vatRate" [currentVatRate]="charge()?.vatRate ?? null" idPrefix="cc" cellClass="col-span-12 sm:col-span-6" />
                     <div class="col-span-12">
                         <label for="cc-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
                         <textarea id="cc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
@@ -98,14 +76,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
             </form>
             <ng-template pTemplate="footer">
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    label="Düzeltmeyi kaydet"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || unchanged() || submitting()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" label="Düzeltmeyi kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || unchanged() || submitting()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `
@@ -126,7 +97,6 @@ export class ChargeCorrectionDialogComponent {
     protected readonly unitPriceDecimals = CHARGE_UNIT_PRICE_MAX_DECIMALS;
     protected readonly reasonMin = REASON_MIN;
     protected readonly reasonMax = REASON_MAX;
-    protected readonly money = formatMoney;
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -156,14 +126,7 @@ export class ChargeCorrectionDialogComponent {
         const c = this.charge();
         const { description, quantity, unitPrice, lineKind, vatRate } = this.form.getRawValue();
 
-        return (
-            !!c &&
-            description.trim() === c.description.trim() &&
-            quantity === c.quantity &&
-            unitPrice === c.unitPrice &&
-            lineKind === c.lineKind &&
-            vatRate === c.vatRate
-        );
+        return !!c && description.trim() === c.description.trim() && quantity === c.quantity && unitPrice === c.unitPrice && lineKind === c.lineKind && vatRate === c.vatRate;
     });
 
     constructor() {

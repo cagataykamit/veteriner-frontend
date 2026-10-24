@@ -6,25 +6,19 @@ import type { ImagingRecordListItemVm } from '@/app/features/imaging/models/imag
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { imagingModalityLabel } from '@/app/features/imaging/utils/imaging.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
-import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
+import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Hasta kartında son görüntülemeler (yalnız başlık; küçük resim yüklenmez). Okuma yetkisi denetimi çağırandadır. */
 @Component({
     selector: 'app-pet-imaging-section',
     standalone: true,
-    imports: [RouterLink],
+    imports: [RouterLink, TrDatePipe],
     template: `
         <section class="card mb-0" aria-labelledby="pet-imaging-title" data-testid="pet-imaging-section">
             <div class="flex items-center justify-between gap-2 mb-3">
                 <h5 id="pet-imaging-title" class="m-0">Görüntüleme</h5>
                 @if (canCreate && !ro.mutationBlocked()) {
-                    <a
-                        routerLink="/panel/imaging/new"
-                        [queryParams]="{ clientId: clientId(), petId: petId() }"
-                        class="text-primary font-medium no-underline text-sm"
-                        data-testid="pet-imaging-new"
-                        >+ Ekle</a
-                    >
+                    <a routerLink="/panel/imaging/new" [queryParams]="{ clientId: clientId(), petId: petId() }" class="text-primary font-medium no-underline text-sm" data-testid="pet-imaging-new">+ Ekle</a>
                 }
             </div>
             @if (loading()) {
@@ -38,7 +32,7 @@ import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
                     @for (item of items(); track item.id) {
                         <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0">
                             <a [routerLink]="['/panel/imaging', item.id]" class="text-primary font-medium no-underline">{{ modalityLabel(item.modality) }}</a>
-                            <span class="text-sm text-muted-color"> · {{ formatDate(item.performedAtUtc) }} · {{ item.fileCount }} dosya</span>
+                            <span class="text-sm text-muted-color"> · {{ item.performedAtUtc | trDate }} · {{ item.fileCount }} dosya</span>
                             @if (item.description) {
                                 <span class="block text-sm text-muted-color break-words">{{ item.description }}</span>
                             }
@@ -65,7 +59,6 @@ export class PetImagingSectionComponent implements OnInit {
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly modalityLabel = imagingModalityLabel;
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
 
     ngOnInit(): void {
         this.imagingService.list({ petId: this.petId(), page: 1, pageSize: 5 }).subscribe({

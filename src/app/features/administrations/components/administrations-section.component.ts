@@ -6,11 +6,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    ADMINISTRATIONS_CORRECT_CLAIM,
-    ADMINISTRATIONS_CREATE_CLAIM,
-    ADMINISTRATIONS_READ_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { ADMINISTRATIONS_CORRECT_CLAIM, ADMINISTRATIONS_CREATE_CLAIM, ADMINISTRATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AdministrationCreateDialogComponent } from '@/app/features/administrations/components/administration-create-dialog.component';
 import { AdministrationRowMarksComponent } from '@/app/features/administrations/components/administration-row-marks.component';
 import { administrationSavedNotice } from '@/app/features/administrations/utils/administration-labels';
@@ -20,8 +16,8 @@ import { AdministrationsService } from '@/app/features/administrations/services/
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Muayene veya tedavi bağlamında uygulama kayıtları: liste, "Uygulama ekle" ve gerekçeli iptal.
@@ -42,7 +38,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AdministrationVoidDialogComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        TrDateTimePipe
     ],
     template: `
         @if (canRead) {
@@ -63,9 +60,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                 </div>
 
                 @if (canCreate && locked()) {
-                    <p class="text-sm text-muted-color mt-0 mb-3" role="note" data-testid="administrations-locked">
-                        Muayene kesinleştirildi. Unutulan uygulama gerekçe yazılarak sonradan eklenebilir; yanlış kayıt iptal edilebilir.
-                    </p>
+                    <p class="text-sm text-muted-color mt-0 mb-3" role="note" data-testid="administrations-locked">Muayene kesinleştirildi. Unutulan uygulama gerekçe yazılarak sonradan eklenebilir; yanlış kayıt iptal edilebilir.</p>
                 }
                 @if (notice()) {
                     <p class="text-sm mt-0 mb-3" [class.text-amber-700]="noticeIsWarning()" role="status" data-testid="administration-notice">{{ notice() }}</p>
@@ -93,7 +88,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr [class.opacity-60]="row.isVoided">
-                                    <td>{{ formatDate(row.administeredAtUtc) }}</td>
+                                    <td>{{ row.administeredAtUtc | trDateTime }}</td>
                                     <td class="break-words">
                                         {{ row.productName }}
                                         <app-administration-row-marks [row]="row" />
@@ -114,15 +109,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                 }
             </div>
 
-            <app-administration-create-dialog
-                [(visible)]="createVisible"
-                [petId]="petId()"
-                [petName]="petName()"
-                [examinationId]="examinationId()"
-                [treatmentId]="treatmentId()"
-                [lateEntry]="locked()"
-                (saved)="onSaved($event)"
-            />
+            <app-administration-create-dialog [(visible)]="createVisible" [petId]="petId()" [petName]="petName()" [examinationId]="examinationId()" [treatmentId]="treatmentId()" [lateEntry]="locked()" (saved)="onSaved($event)" />
             <app-administration-void-dialog [(visible)]="voidVisible" [target]="voidTarget()" (voided)="onVoided($event)" />
         }
     `
@@ -158,8 +145,6 @@ export class AdministrationsSectionComponent {
     readonly voidTarget = signal<AdministrationVm | null>(null);
     createVisible = false;
     voidVisible = false;
-
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     constructor() {
         effect(() => {

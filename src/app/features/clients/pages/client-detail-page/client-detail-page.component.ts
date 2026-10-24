@@ -36,6 +36,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { EMPTY, Subscription, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): iletişim ve hesap durumu,
@@ -59,7 +60,8 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
         PetTodoPanelComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        TrDateTimePipe
     ],
     providers: [MessageService],
     template: `
@@ -77,33 +79,9 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
         } @else if (client(); as c) {
             <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" [title]="c.fullName" [description]="registrationLine()">
                 <ng-container actions>
-                    <a
-                        [routerLink]="['/panel/clients', c.id, 'kvkk-form']"
-                        pButton
-                        type="button"
-                        label="KVKK formu yazdır"
-                        icon="pi pi-print"
-                        class="p-button-text p-button-secondary"
-                        data-testid="kvkk-print-action"
-                    ></a>
-                    <a
-                        [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']"
-                        pButton
-                        type="button"
-                        label="Aydınlatma metni yazdır"
-                        icon="pi pi-print"
-                        class="p-button-text p-button-secondary"
-                        data-testid="kvkk-disclosure-print-action"
-                    ></a>
-                    <a
-                        [routerLink]="['/panel/clients', c.id, 'data-export']"
-                        pButton
-                        type="button"
-                        label="Veri kopyası"
-                        icon="pi pi-file-export"
-                        class="p-button-text p-button-secondary"
-                        data-testid="client-data-export-action"
-                    ></a>
+                    <a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" pButton type="button" label="KVKK formu yazdır" icon="pi pi-print" class="p-button-text p-button-secondary" data-testid="kvkk-print-action"></a>
+                    <a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" pButton type="button" label="Aydınlatma metni yazdır" icon="pi pi-print" class="p-button-text p-button-secondary" data-testid="kvkk-disclosure-print-action"></a>
+                    <a [routerLink]="['/panel/clients', c.id, 'data-export']" pButton type="button" label="Veri kopyası" icon="pi pi-file-export" class="p-button-text p-button-secondary" data-testid="client-data-export-action"></a>
                     @if (canUpdateClient && !ro.mutationBlocked()) {
                         <a [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                     } @else if (canUpdateClient && ro.mutationBlocked()) {
@@ -114,13 +92,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
 
             <app-patient-action-bar [sticky]="true" [clientId]="c.id" [clientName]="c.fullName" [arrivalPet]="arrivalPet()" />
 
-            <app-client-card-header
-                [client]="c"
-                [balance]="balance()"
-                [pendingCharges]="pendingCharges()"
-                [lastExamination]="lastExamination()"
-                [nextAppointment]="nextAppointment()"
-            >
+            <app-client-card-header [client]="c" [balance]="balance()" [pendingCharges]="pendingCharges()" [lastExamination]="lastExamination()" [nextAppointment]="nextAppointment()">
                 @if (canUpdateClient) {
                     <button
                         kvkkAction
@@ -154,18 +126,12 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
             <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-12 lg:col-span-6" [class.order-first]="emphasis === 'frontDesk'" data-testid="payments-column">
                     <div class="card">
-                        <div
-                            class="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-3 gap-y-1 items-center pb-2 mb-3 border-b border-surface-200 dark:border-surface-700"
-                        >
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-3 gap-y-1 items-center pb-2 mb-3 border-b border-surface-200 dark:border-surface-700">
                             <h5 class="mt-0 mb-0 min-w-0 text-base">Ödeme özeti</h5>
                             @if (canReadCharges) {
-                                <a routerLink="/panel/charges" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm shrink-0 whitespace-nowrap"
-                                    >Ücretler →</a
-                                >
+                                <a routerLink="/panel/charges" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm shrink-0 whitespace-nowrap">Ücretler →</a>
                             }
-                            <a routerLink="/panel/payments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm shrink-0 whitespace-nowrap"
-                                >Ödemeler →</a
-                            >
+                            <a routerLink="/panel/payments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm shrink-0 whitespace-nowrap">Ödemeler →</a>
                         </div>
                         @if (paymentSummaryLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
@@ -179,11 +145,8 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
                                 </div>
                                 <div class="min-w-0 text-left md:text-center">
                                     <p class="text-muted-color text-xs m-0 mb-0.5">Son ödeme</p>
-                                    <p
-                                        class="m-0 font-semibold text-surface-900 dark:text-surface-0 break-words"
-                                        [title]="paymentSummary()!.lastPaymentAtUtc ? formatDt(paymentSummary()!.lastPaymentAtUtc) : ''"
-                                    >
-                                        {{ paymentSummary()!.lastPaymentAtUtc ? formatDt(paymentSummary()!.lastPaymentAtUtc) : '—' }}
+                                    <p class="m-0 font-semibold text-surface-900 dark:text-surface-0 break-words" [title]="paymentSummary()!.lastPaymentAtUtc ? (paymentSummary()!.lastPaymentAtUtc | trDateTime) : ''">
+                                        {{ paymentSummary()!.lastPaymentAtUtc ? (paymentSummary()!.lastPaymentAtUtc | trDateTime) : '—' }}
                                     </p>
                                 </div>
                                 <div class="min-w-0 text-left md:text-right">
@@ -198,9 +161,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
                                         <p class="m-0 font-semibold text-sm text-surface-900 dark:text-surface-0">{{ money(paymentSummary()!.totalPaidAmount, 'TRY') }}</p>
                                         <p class="text-muted-color text-[10px] m-0 mt-0.5 leading-tight md:text-right">Genel toplam (rapor)</p>
                                     } @else if (paymentSummary()!.totalPaidAmount === 0 && paymentSummary()!.totalPaymentsCount > 0) {
-                                        <p class="text-muted-color text-xs m-0 leading-snug md:text-right">
-                                            Çoklu para biriminde tek tutar özetlenmez; doğruluk para birimi kırılımıyla backend’de tutulur.
-                                        </p>
+                                        <p class="text-muted-color text-xs m-0 leading-snug md:text-right">Çoklu para biriminde tek tutar özetlenmez; doğruluk para birimi kırılımıyla backend’de tutulur.</p>
                                     } @else {
                                         <p class="m-0 font-semibold text-surface-900 dark:text-surface-0">—</p>
                                     }
@@ -213,9 +174,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
                                 } @else {
                                     <div class="max-lg:overflow-visible max-lg:mx-0 max-lg:px-0 overflow-x-auto -mx-1 px-1 lg:mx-0 lg:px-0">
                                         <div class="w-full min-w-0 lg:min-w-[18rem]">
-                                            <div
-                                                class="hidden lg:grid grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 px-0.5 pb-2 text-xs font-medium text-muted-color border-b border-surface-200 dark:border-surface-700"
-                                            >
+                                            <div class="hidden lg:grid grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 px-0.5 pb-2 text-xs font-medium text-muted-color border-b border-surface-200 dark:border-surface-700">
                                                 <span>Tarih</span>
                                                 <span>Hasta / Klinik / Yöntem</span>
                                                 <span class="text-right">Tutar</span>
@@ -227,7 +186,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
                                                         class="min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:mb-3 max-lg:last:mb-0 max-lg:shadow-sm lg:border-b lg:border-surface-200 lg:dark:border-surface-700 lg:last:border-0"
                                                     >
                                                         <div class="lg:hidden space-y-2 min-w-0">
-                                                            <div class="text-muted-color text-sm">{{ formatDt(row.paidAtUtc) }}</div>
+                                                            <div class="text-muted-color text-sm">{{ row.paidAtUtc | trDateTime }}</div>
                                                             <div class="font-semibold text-base tabular-nums text-surface-900 dark:text-surface-0 min-w-0 break-words">
                                                                 {{ money(row.amount, row.currency) }}
                                                             </div>
@@ -243,7 +202,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
                                                             </div>
                                                         </div>
                                                         <div class="hidden lg:grid lg:grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 items-center py-1.5 text-sm">
-                                                            <div class="text-muted-color">{{ formatDt(row.paidAtUtc) }}</div>
+                                                            <div class="text-muted-color">{{ row.paidAtUtc | trDateTime }}</div>
                                                             <div class="min-w-0 space-y-0.5">
                                                                 @if (row.petName?.trim()) {
                                                                     <div class="text-surface-900 dark:text-surface-0 leading-tight">{{ row.petName }}</div>
@@ -286,7 +245,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
                                 @for (row of examListView().displayed; track row.id) {
                                     <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 min-w-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.examinedAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm min-w-0">{{ row.examinedAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ row.petName }}</div>
@@ -312,7 +271,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
                                 @for (row of apptListView().displayed; track row.id) {
                                     <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 min-w-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.scheduledAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ row.petName }}</div>

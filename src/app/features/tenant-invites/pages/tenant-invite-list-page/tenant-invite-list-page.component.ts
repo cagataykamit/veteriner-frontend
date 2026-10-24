@@ -18,11 +18,11 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-tenant-invite-list-page',
@@ -39,8 +39,10 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, SearchInputComponent,
-        AppRowActionButtonComponent
+        AppStatusTagComponent,
+        SearchInputComponent,
+        AppRowActionButtonComponent,
+        TrDateTimePipe
     ],
     template: `
         <app-page-header title="Davetler" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
@@ -56,9 +58,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else {
                 <div class="flex flex-col gap-4">
-                    <div
-                        class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 pb-3 border-b border-surface-200 dark:border-surface-700"
-                    >
+                    <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 pb-3 border-b border-surface-200 dark:border-surface-700">
                         <div class="min-w-0">
                             <h5 class="m-0">Davetler</h5>
                             @if (totalItems() > 0) {
@@ -71,13 +71,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                 <app-search-input inputId="tiSearch" placeholder="E-posta…" [(value)]="searchInput" (searchRequested)="applySearch()" />
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
-                                <p-button
-                                    [label]="copy.buttonClear"
-                                    icon="pi pi-times"
-                                    severity="secondary"
-                                    (onClick)="resetFilters()"
-                                    [disabled]="loading()"
-                                />
+                                <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             </div>
                         </div>
                     </div>
@@ -118,7 +112,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                         <td>
                                             <app-status-tag [label]="row.statusLabel" [severity]="inviteStatusSeverity(row)" />
                                         </td>
-                                        <td>{{ formatDate(row.expiresAtUtc) }}</td>
+                                        <td>{{ row.expiresAtUtc | trDateTime }}</td>
                                         <td class="break-words">{{ row.clinicSummary }}</td>
                                         <td class="break-words">{{ row.roleSummary }}</td>
                                         <td>
@@ -147,9 +141,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-2 break-all">
                                         {{ row.email }}
                                     </div>
@@ -161,7 +153,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                         <div><span class="text-muted-color font-medium">Klinik: </span>{{ row.clinicSummary }}</div>
                                         <div><span class="text-muted-color font-medium">Rol: </span>{{ row.roleSummary }}</div>
                                         @if (row.expiresAtUtc) {
-                                            <div class="text-xs text-muted-color">Son geçerlilik: {{ formatDate(row.expiresAtUtc) }}</div>
+                                            <div class="text-xs text-muted-color">Son geçerlilik: {{ row.expiresAtUtc | trDateTime }}</div>
                                         }
                                     </div>
                                     <div class="flex flex-wrap gap-1 items-center justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
@@ -204,16 +196,13 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 })
 export class TenantInviteListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
-    readonly inviteStatusSeverity = (row: TenantInviteListItemVm) =>
-        tenantInviteDisplayStatusSeverity(row.statusLifecycle, row.isCurrentMember);
+    readonly inviteStatusSeverity = (row: TenantInviteListItemVm) => tenantInviteDisplayStatusSeverity(row.statusLifecycle, row.isCurrentMember);
 
     private readonly auth = inject(AuthService);
     private readonly tenantInvites = inject(TenantInvitesService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly canManageTenantAccess = computed(
-        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
-    );
+    readonly canManageTenantAccess = computed(() => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked());
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -231,8 +220,6 @@ export class TenantInviteListPageComponent implements OnInit {
     searchInput = '';
 
     readonly displayedRows = computed(() => this.rawItems());
-
-    readonly formatDate = (v: string | null) => formatDateTimeDisplay(v);
 
     private suppressNextLazy = false;
     private lastLoadKey = '';

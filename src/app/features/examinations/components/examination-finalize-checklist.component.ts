@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
 import { FINALIZED_LOCK_MESSAGE, type FinalizeCheckItem } from '@/app/features/examinations/utils/examination-procedures.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Muayene çalışma alanının sağ paneli: kesinleştirme kontrol listesi (ADR-020 karar 4). Maddeler uyarıdır, engel değildir;
@@ -13,13 +13,14 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 @Component({
     selector: 'app-examination-finalize-checklist',
     standalone: true,
-    imports: [RouterLink, ButtonModule],
+    imports: [RouterLink, ButtonModule, TrDateTimePipe],
     template: `
         <section class="card mb-0 p-4" aria-label="Kesinleştirme kontrolü" data-testid="finalize-checklist">
             @if (exam().status === 'Finalized') {
                 <h5 class="mt-0 mb-2">Kesinleşti</h5>
                 <p class="text-sm text-muted-color m-0">
-                    {{ formatDateTime(exam().finalizedAtUtc) }}@if (exam().finalizedByName) {
+                    {{ exam().finalizedAtUtc | trDateTime }}
+                    @if (exam().finalizedByName) {
                         · {{ exam().finalizedByName }}
                     }
                 </p>
@@ -40,13 +41,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                 <span class="min-w-0">
                                     {{ item.warning }}
                                     @if (item.key === 'pendingCharges') {
-                                        <a
-                                            routerLink="/panel/charges/pending"
-                                            [queryParams]="{ examinationId: exam().id }"
-                                            class="text-primary font-medium no-underline block"
-                                            data-testid="pending-charges-link"
-                                            >Ücretlendir →</a
-                                        >
+                                        <a routerLink="/panel/charges/pending" [queryParams]="{ examinationId: exam().id }" class="text-primary font-medium no-underline block" data-testid="pending-charges-link">Ücretlendir →</a>
                                     }
                                 </span>
                             }
@@ -55,15 +50,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 </ul>
             }
             @if (canFinalize()) {
-                <button
-                    pButton
-                    type="button"
-                    label="Kesinleştir"
-                    icon="pi pi-lock"
-                    class="w-full mt-3"
-                    data-testid="finalize-open"
-                    (click)="finalizeRequested.emit()"
-                ></button>
+                <button pButton type="button" label="Kesinleştir" icon="pi pi-lock" class="w-full mt-3" data-testid="finalize-open" (click)="finalizeRequested.emit()"></button>
             }
         </section>
     `
@@ -76,10 +63,7 @@ export class ExaminationFinalizeChecklistComponent {
     readonly finalizeRequested = output<void>();
 
     /** Kesinleşince yalnız hâlâ iş doğuran madde (ücret bekleyen) kalır; diğerleri artık değiştirilemez. */
-    readonly visibleItems = computed(() =>
-        this.exam().status === 'Finalized' ? this.items().filter((i) => i.key === 'pendingCharges' && !i.ok) : this.items()
-    );
+    readonly visibleItems = computed(() => (this.exam().status === 'Finalized' ? this.items().filter((i) => i.key === 'pendingCharges' && !i.ok) : this.items()));
 
     readonly lockMessage = FINALIZED_LOCK_MESSAGE;
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 }

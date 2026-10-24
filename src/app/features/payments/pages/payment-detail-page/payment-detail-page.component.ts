@@ -22,20 +22,12 @@ import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-payment-detail-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        ButtonModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppEmptyStateComponent,
-        AppErrorStateComponent,
-        ReasonConfirmDialogComponent
-    ],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, ReasonConfirmDialogComponent, TrDateTimePipe],
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Ödeme kaydedildi.</p>
@@ -50,25 +42,9 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
         } @else if (payment()) {
             <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Ödeme" [description]="headerDescription(payment()!)">
                 @if (canUpdatePayment && !ro.mutationBlocked()) {
-                    <a
-                        actions
-                        [routerLink]="['/panel/payments', payment()!.id, 'edit']"
-                        pButton
-                        type="button"
-                        label="Düzenle"
-                        icon="pi pi-pencil"
-                        class="p-button-secondary"
-                    ></a>
+                    <a actions [routerLink]="['/panel/payments', payment()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                 } @else if (canUpdatePayment && ro.mutationBlocked()) {
-                    <button
-                        actions
-                        pButton
-                        type="button"
-                        label="Düzenle (salt okunur)"
-                        icon="pi pi-lock"
-                        [disabled]="true"
-                        class="p-button-secondary"
-                    ></button>
+                    <button actions pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                 }
                 @if (canVoidPayment && !ro.mutationBlocked()) {
                     <button actions pButton type="button" label="İptal et" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="voidVisible = true"></button>
@@ -83,9 +59,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">
                                 @if (payment()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', payment()!.clientId]" class="text-primary font-medium no-underline">{{
-                                        payment()!.clientName
-                                    }}</a>
+                                    <a [routerLink]="['/panel/clients', payment()!.clientId]" class="text-primary font-medium no-underline">{{ payment()!.clientName }}</a>
                                 } @else {
                                     {{ payment()!.clientName }}
                                 }
@@ -117,17 +91,13 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                             @if (payment()!.appointmentId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/appointments', payment()!.appointmentId]" class="text-primary font-medium no-underline"
-                                        >Randevu kaydına git →</a
-                                    >
+                                    <a [routerLink]="['/panel/appointments', payment()!.appointmentId]" class="text-primary font-medium no-underline">Randevu kaydına git →</a>
                                 </dd>
                             }
                             @if (payment()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/examinations', payment()!.examinationId]" class="text-primary font-medium no-underline"
-                                        >Muayene kaydına git →</a
-                                    >
+                                    <a [routerLink]="['/panel/examinations', payment()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
                                 </dd>
                             }
                         </dl>
@@ -151,7 +121,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                                 @for (row of exItemsView().displayed; track row.id) {
                                     <li class="mb-3 last:mb-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDt(row.examinedAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm">{{ row.examinedAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
                                         <div class="font-medium">{{ row.visitReason }}</div>
@@ -180,7 +150,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                                 @for (row of apptItemsView().displayed; track row.id) {
                                     <li class="mb-3 last:mb-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm">{{ formatDt(row.scheduledAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm">{{ row.scheduledAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
                                         <div class="font-medium">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
@@ -251,7 +221,6 @@ export class PaymentDetailPageComponent implements OnInit {
     private lastId: string | null = null;
 
     readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
     readonly typeDisplay = appointmentTypeDisplayLabel;
 

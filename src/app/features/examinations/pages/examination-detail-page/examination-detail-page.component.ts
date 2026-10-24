@@ -6,11 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
 import { appointmentTypeDisplayLabel } from '@/app/features/appointments/utils/appointment-type.utils';
-import type {
-    ExaminationDetailVm,
-    ExaminationFinalizeResultVm,
-    ExaminationRelatedSummaryVm
-} from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm, ExaminationFinalizeResultVm, ExaminationRelatedSummaryVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationAddendaSectionComponent } from '@/app/features/examinations/components/examination-addenda-section.component';
 import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
@@ -28,7 +24,6 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
@@ -44,12 +39,10 @@ import {
     PAYMENTS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { ExaminationTemplateApplyDialogComponent } from '@/app/features/examination-templates/components/examination-template-apply-dialog.component';
-import type {
-    ExaminationTemplateApplyResultDto,
-    ExaminationTemplateDto
-} from '@/app/features/examination-templates/models/examination-template.model';
+import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto } from '@/app/features/examination-templates/models/examination-template.model';
 import { templateApplySummary } from '@/app/features/examination-templates/utils/examination-template.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -84,27 +77,16 @@ const RECORD_TEXT_SECTIONS: readonly {
         ExaminationPatientHeaderComponent,
         ExaminationProceduresSectionComponent,
         ExaminationTemplateApplyDialogComponent,
-        ToastModule
+        ToastModule,
+        TrDateTimePipe
     ],
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
         @if (exam(); as e) {
-            <app-examination-finalize-dialog
-                [examinationId]="e.id"
-                [rowVersion]="e.rowVersion"
-                [warnings]="finalizeWarnings()"
-                [(visible)]="finalizeDialogVisible"
-                (finalized)="onFinalized($event)"
-            />
+            <app-examination-finalize-dialog [examinationId]="e.id" [rowVersion]="e.rowVersion" [warnings]="finalizeWarnings()" [(visible)]="finalizeDialogVisible" (finalized)="onFinalized($event)" />
             @if (canApplyTemplate) {
-                <app-examination-template-apply-dialog
-                    [examinationId]="e.id"
-                    [rowVersion]="e.rowVersion"
-                    [(visible)]="templateDialogVisible"
-                    (applied)="onTemplateApplied($event)"
-                    (stale)="onTemplateStale($event)"
-                />
+                <app-examination-template-apply-dialog [examinationId]="e.id" [rowVersion]="e.rowVersion" [(visible)]="templateDialogVisible" (applied)="onTemplateApplied($event)" (stale)="onTemplateStale($event)" />
             }
         }
         @if (loading()) {
@@ -114,34 +96,14 @@ const RECORD_TEXT_SECTIONS: readonly {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (exam()) {
-            <app-page-header
-                categoryLink="/panel/examinations"
-                categoryLinkLabel="Muayene listesine dön"
-                title="Muayene"
-                [description]="formatDateTime(exam()!.examinedAtUtc)"
-            >
+            <app-page-header categoryLink="/panel/examinations" categoryLinkLabel="Muayene listesine dön" title="Muayene" [description]="exam()!.examinedAtUtc | trDateTime">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canApplyTemplateNow()) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Şablon uygula"
-                            icon="pi pi-clone"
-                            class="p-button-secondary"
-                            data-testid="template-apply-open"
-                            (click)="templateDialogVisible.set(true)"
-                        ></button>
+                        <button pButton type="button" label="Şablon uygula" icon="pi pi-clone" class="p-button-secondary" data-testid="template-apply-open" (click)="templateDialogVisible.set(true)"></button>
                     }
                     @if (canUpdateExamination && !ro.mutationBlocked()) {
                         @if (isEditable(exam()!.status)) {
-                            <a
-                                [routerLink]="['/panel/examinations', exam()!.id, 'edit']"
-                                pButton
-                                type="button"
-                                label="Düzenle"
-                                icon="pi pi-pencil"
-                                class="p-button-secondary"
-                            ></a>
+                            <a [routerLink]="['/panel/examinations', exam()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                         }
                         @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
                             @if (canCreatePayment) {
@@ -162,24 +124,10 @@ const RECORD_TEXT_SECTIONS: readonly {
                         }
                     } @else if (canUpdateExamination && ro.mutationBlocked()) {
                         @if (isEditable(exam()!.status)) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Düzenle (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
+                            <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                         }
                         @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Ödeme (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
+                            <button pButton type="button" label="Ödeme (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                         }
                     }
                 </div>
@@ -200,7 +148,8 @@ const RECORD_TEXT_SECTIONS: readonly {
                                 <app-status-tag [label]="statusLabel(exam()!.status)" [severity]="statusSeverity(exam()!.status)" />
                                 @if (exam()!.status === 'Finalized') {
                                     <span class="text-muted-color text-sm ml-2" data-testid="finalized-info">
-                                        {{ formatDateTime(exam()!.finalizedAtUtc) }}@if (exam()!.finalizedByName) {
+                                        {{ exam()!.finalizedAtUtc | trDateTime }}
+                                        @if (exam()!.finalizedByName) {
                                             · {{ exam()!.finalizedByName }}
                                         }
                                     </span>
@@ -220,10 +169,13 @@ const RECORD_TEXT_SECTIONS: readonly {
                             } @else {
                                 <div class="flex flex-wrap gap-x-5 gap-y-1">
                                     @for (v of vitals(); track v.label) {
-                                        <span data-testid="vital"><span class="text-muted-color text-sm mr-1">{{ v.label }}</span><span class="font-medium">{{ v.value }}</span></span>
+                                        <span data-testid="vital"
+                                            ><span class="text-muted-color text-sm mr-1">{{ v.label }}</span
+                                            ><span class="font-medium">{{ v.value }}</span></span
+                                        >
                                     }
                                     @if (exam()!.vitalsMeasuredAtUtc) {
-                                        <span class="text-muted-color text-sm self-center">Ölçüm: {{ formatDateTime(exam()!.vitalsMeasuredAtUtc) }}</span>
+                                        <span class="text-muted-color text-sm self-center">Ölçüm: {{ exam()!.vitalsMeasuredAtUtc | trDateTime }}</span>
                                     }
                                 </div>
                             }
@@ -237,42 +189,23 @@ const RECORD_TEXT_SECTIONS: readonly {
                         @if (emptySectionLabels().length > 0) {
                             <p class="text-sm text-muted-color m-0" data-testid="record-empty-sections">Girilmemiş: {{ emptySectionLabels().join(', ') }}</p>
                         }
-                        <p class="text-xs text-muted-color mt-3 mb-0">
-                            Oluşturulma {{ formatDate(exam()!.createdAtUtc) }} · Güncellenme {{ formatDate(exam()!.updatedAtUtc) }}
-                        </p>
+                        <p class="text-xs text-muted-color mt-3 mb-0">Oluşturulma {{ exam()!.createdAtUtc | trDateTime }} · Güncellenme {{ exam()!.updatedAtUtc | trDateTime }}</p>
                     </div>
 
                     @if (exam()!.status === 'Finalized') {
                         <app-examination-addenda-section [examinationId]="exam()!.id" [canAdd]="canAddAddendum()" />
                     }
 
-                    <app-examination-procedures-section
-                        [exam]="exam()!"
-                        [summary]="relatedSummary()"
-                        [loading]="relatedSummaryLoading()"
-                        [error]="relatedSummaryError()"
-                        (changed)="onProcedureAdded()"
-                        (retry)="retryRelatedSummary()"
-                    />
+                    <app-examination-procedures-section [exam]="exam()!" [summary]="relatedSummary()" [loading]="relatedSummaryLoading()" [error]="relatedSummaryError()" (changed)="onProcedureAdded()" (retry)="retryRelatedSummary()" />
 
                     @if (exam()!.petId?.trim()) {
-                        <app-administrations-section
-                            [petId]="exam()!.petId!"
-                            [petName]="exam()!.petName"
-                            [examinationId]="exam()!.id"
-                            [locked]="exam()!.status === 'Finalized'"
-                        />
+                        <app-administrations-section [petId]="exam()!.petId!" [petName]="exam()!.petName" [examinationId]="exam()!.id" [locked]="exam()!.status === 'Finalized'" />
                     }
                 </div>
 
                 <!-- Geniş ekranda sabit: üst çubuk (4rem) + 1rem, soldaki menünün üst hizası (_menu.scss top: 5rem). -->
                 <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-20" data-testid="finalize-aside">
-                    <app-examination-finalize-checklist
-                        [exam]="exam()!"
-                        [items]="finalizeChecklist()"
-                        [canFinalize]="canFinalizeNow()"
-                        (finalizeRequested)="finalizeDialogVisible.set(true)"
-                    />
+                    <app-examination-finalize-checklist [exam]="exam()!" [items]="finalizeChecklist()" [canFinalize]="canFinalizeNow()" (finalizeRequested)="finalizeDialogVisible.set(true)" />
                 </aside>
             </div>
 
@@ -302,11 +235,9 @@ const RECORD_TEXT_SECTIONS: readonly {
                             } @else {
                                 <ul class="list-none m-0 p-0">
                                     @for (row of relatedPaymentsView().displayed; track row.id) {
-                                        <li
-                                            class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
-                                        >
+                                        <li class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm">
                                             <div class="lg:hidden space-y-2 min-w-0">
-                                                <div class="text-muted-color text-sm">{{ formatDt(row.paidAtUtc) }}</div>
+                                                <div class="text-muted-color text-sm">{{ row.paidAtUtc | trDateTime }}</div>
                                                 <div class="font-semibold text-base tabular-nums text-surface-900 dark:text-surface-0 min-w-0 break-words">
                                                     {{ money(row.amount, row.currency) }}
                                                 </div>
@@ -320,7 +251,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                                             </div>
                                             <div class="hidden lg:block space-y-1 min-w-0">
                                                 <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                                    <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.paidAtUtc) }}</span>
+                                                    <span class="text-muted-color text-sm min-w-0">{{ row.paidAtUtc | trDateTime }}</span>
                                                     <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                                 </div>
                                                 <div class="font-medium min-w-0 break-words">{{ money(row.amount, row.currency) }} · {{ payMethodLabel(row.method) }}</div>
@@ -352,12 +283,10 @@ const RECORD_TEXT_SECTIONS: readonly {
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of apptItemsView().displayed; track row.id) {
-                                    <li
-                                        class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
-                                    >
-                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDt(row.scheduledAtUtc) }}</div>
+                                    <li class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm">
+                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ row.scheduledAtUtc | trDateTime }}</div>
                                         <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                            <span class="text-muted-color text-sm min-w-0">{{ formatDt(row.scheduledAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
@@ -399,17 +328,12 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly isEditable = isExaminationEditable;
     readonly canFinalizeExamination = this.auth.hasOperationClaim(EXAMINATIONS_FINALIZE_CLAIM);
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
-    readonly canAddendumExamination =this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);
+    readonly canAddendumExamination = this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);
     readonly statusLabel = examinationStatusLabel;
     readonly statusSeverity = examinationStatusSeverity;
     readonly finalizeDialogVisible = signal(false);
     /** Şablon uygulama metin + uygulama kaydı + ücret kalemi yazar: üç yazma izni (ve listeyi okuma) birlikte gerekir. */
-    readonly canApplyTemplate = [
-        EXAMINATION_TEMPLATES_READ_CLAIM,
-        EXAMINATION_TEMPLATES_APPLY_CLAIM,
-        EXAMINATIONS_UPDATE_CLAIM,
-        ADMINISTRATIONS_CREATE_CLAIM
-    ].every((c) => this.auth.hasOperationClaim(c));
+    readonly canApplyTemplate = [EXAMINATION_TEMPLATES_READ_CLAIM, EXAMINATION_TEMPLATES_APPLY_CLAIM, EXAMINATIONS_UPDATE_CLAIM, ADMINISTRATIONS_CREATE_CLAIM].every((c) => this.auth.hasOperationClaim(c));
     readonly templateDialogVisible = signal(false);
 
     private readonly procedures = viewChild(ExaminationProceduresSectionComponent);
@@ -470,12 +394,8 @@ export class ExaminationDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly typeDisplay = appointmentTypeDisplayLabel;
-    readonly money = (amount: number | null, currency: string | null | undefined) =>
-        formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
+    readonly money = (amount: number | null, currency: string | null | undefined) => formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
     readonly payMethodLabel = paymentMethodLabel;
 
     /** Kesinleştir yalnız taslakta, yetkiliyse ve kurum yazmaya açıkken görünür. */

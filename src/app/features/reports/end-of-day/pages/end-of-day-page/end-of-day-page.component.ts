@@ -10,14 +10,7 @@ import { CHARGES_READ_CLAIM, LAB_RESULTS_READ_CLAIM, PAYMENTS_READ_CLAIM, VISITS
 import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import type { CashSummaryDto, DailyTransactionItemDto, DailyTransactionsResultVm } from '@/app/features/reports/end-of-day/models/end-of-day.model';
 import { DailyTransactionsSource, EndOfDayService } from '@/app/features/reports/end-of-day/services/end-of-day.service';
-import {
-    DAILY_TRANSACTION_KIND_OPTIONS,
-    DAILY_TRANSACTION_METHOD_OPTIONS,
-    dailyTransactionKindFlag,
-    dailyTransactionKindLabel,
-    dailyTransactionSign,
-    fillEmptyDays
-} from '@/app/features/reports/end-of-day/utils/end-of-day.utils';
+import { DAILY_TRANSACTION_KIND_OPTIONS, DAILY_TRANSACTION_METHOD_OPTIONS, dailyTransactionKindFlag, dailyTransactionKindLabel, dailyTransactionSign, fillEmptyDays } from '@/app/features/reports/end-of-day/utils/end-of-day.utils';
 import { dayText } from '@/app/features/reports/registers/data/register-definition';
 import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-filter-bar.component';
 import { ReportListState, type ReportExtraKey, type ReportListQueryBase } from '@/app/features/reports/shared/report-list-state';
@@ -30,6 +23,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatDateTimeDisplay, formatTimeDisplay, formatUtcIsoAsLocalDateTimeDisplay, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 
 /** Gövdeye eklenen sınıf: kayıt defterleriyle aynı yazdırma düzeni (üst çubuk, menü gizlenir). */
 const PRINT_BODY_CLASS = 'register-page-active';
@@ -50,7 +44,7 @@ interface OpenItemRow {
 @Component({
     selector: 'app-end-of-day-page',
     standalone: true,
-    imports: [RouterLink, FormsModule, ButtonModule, SelectModule, TableModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent],
+    imports: [RouterLink, FormsModule, ButtonModule, SelectModule, TableModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, MoneyPipe],
     styleUrl: './end-of-day-page.component.scss',
     encapsulation: ViewEncapsulation.None,
     template: `
@@ -69,13 +63,46 @@ interface OpenItemRow {
                 @if (canDaily) {
                     <ng-container ngProjectAs="[extraFilters]">
                         <app-filter-field label="Tür" labelId="eodRepKindLabel" [active]="false" width="select">
-                            <p-select ariaLabelledBy="eodRepKindLabel" inputId="eodRepKind" [options]="kindOptions" [ngModel]="state.extraInputs['kind']" (ngModelChange)="setExtra('kind', $event)" optionLabel="label" optionValue="value" [placeholder]="copy.filterPlaceholderAll" styleClass="w-full" [showClear]="true" />
+                            <p-select
+                                ariaLabelledBy="eodRepKindLabel"
+                                inputId="eodRepKind"
+                                [options]="kindOptions"
+                                [ngModel]="state.extraInputs['kind']"
+                                (ngModelChange)="setExtra('kind', $event)"
+                                optionLabel="label"
+                                optionValue="value"
+                                [placeholder]="copy.filterPlaceholderAll"
+                                styleClass="w-full"
+                                [showClear]="true"
+                            />
                         </app-filter-field>
                         <app-filter-field label="Ödeme türü" labelId="eodRepMethodLabel" [active]="false" width="select">
-                            <p-select ariaLabelledBy="eodRepMethodLabel" inputId="eodRepMethod" [options]="methodOptions" [ngModel]="state.extraInputs['paymentMethod']" (ngModelChange)="setExtra('paymentMethod', $event)" optionLabel="label" optionValue="value" [placeholder]="copy.filterPlaceholderAll" styleClass="w-full" [showClear]="true" />
+                            <p-select
+                                ariaLabelledBy="eodRepMethodLabel"
+                                inputId="eodRepMethod"
+                                [options]="methodOptions"
+                                [ngModel]="state.extraInputs['paymentMethod']"
+                                (ngModelChange)="setExtra('paymentMethod', $event)"
+                                optionLabel="label"
+                                optionValue="value"
+                                [placeholder]="copy.filterPlaceholderAll"
+                                styleClass="w-full"
+                                [showClear]="true"
+                            />
                         </app-filter-field>
                         <app-filter-field label="İşlemi yapan" labelId="eodRepUserLabel" [active]="false" width="select">
-                            <p-select ariaLabelledBy="eodRepUserLabel" inputId="eodRepUser" [options]="userOptions()" [ngModel]="state.extraInputs['performedByUserId']" (ngModelChange)="setExtra('performedByUserId', $event)" optionLabel="label" optionValue="value" [placeholder]="copy.filterPlaceholderAll" styleClass="w-full" [showClear]="true" />
+                            <p-select
+                                ariaLabelledBy="eodRepUserLabel"
+                                inputId="eodRepUser"
+                                [options]="userOptions()"
+                                [ngModel]="state.extraInputs['performedByUserId']"
+                                (ngModelChange)="setExtra('performedByUserId', $event)"
+                                optionLabel="label"
+                                optionValue="value"
+                                [placeholder]="copy.filterPlaceholderAll"
+                                styleClass="w-full"
+                                [showClear]="true"
+                            />
                         </app-filter-field>
                     </ng-container>
                 }
@@ -93,19 +120,19 @@ interface OpenItemRow {
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                             <span class="block text-muted-color text-sm mb-1">Brüt ücret</span>
-                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(r.totals.grossChargeAmount) }}</div>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totals.grossChargeAmount | money }}</div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                             <span class="block text-muted-color text-sm mb-1">İptal edilen ücret</span>
-                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(r.totals.voidedChargeAmount) }}</div>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totals.voidedChargeAmount | money }}</div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                             <span class="block text-muted-color text-sm mb-1">Net ücret</span>
-                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(r.totals.netChargeAmount) }}</div>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totals.netChargeAmount | money }}</div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                             <span class="block text-muted-color text-sm mb-1">Doğrudan satış ücreti</span>
-                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(r.totals.salesChargeAmount) }}</div>
+                            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totals.salesChargeAmount | money }}</div>
                             <span class="text-xs text-muted-color">Brüt ücrete dahildir.</span>
                         </div>
                     </div>
@@ -124,19 +151,19 @@ interface OpenItemRow {
                         <div class="grid grid-cols-12 gap-4">
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <span class="block text-muted-color text-sm mb-1">Tahsilat</span>
-                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(c.totals.collectedAmount) }}</div>
+                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ c.totals.collectedAmount | money }}</div>
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <span class="block text-muted-color text-sm mb-1">İptal edilen tahsilat</span>
-                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(c.totals.voidedAmount) }}</div>
+                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ c.totals.voidedAmount | money }}</div>
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <span class="block text-muted-color text-sm mb-1">Net tahsilat</span>
-                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(c.totals.netAmount) }}</div>
+                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ c.totals.netAmount | money }}</div>
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <span class="block text-muted-color text-sm mb-1">Doğrudan satış tahsilatı</span>
-                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(c.totals.salesCollectedAmount) }}</div>
+                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ c.totals.salesCollectedAmount | money }}</div>
                                 <span class="text-xs text-muted-color">Tahsilata dahildir.</span>
                             </div>
                         </div>
@@ -154,9 +181,9 @@ interface OpenItemRow {
                                     @for (m of c.byMethod; track m.paymentMethod) {
                                         <tr>
                                             <td>{{ methodLabel(m.paymentMethod) }}</td>
-                                            <td class="text-right">{{ money(m.collectedAmount) }}</td>
-                                            <td class="text-right">{{ money(m.voidedAmount) }}</td>
-                                            <td class="text-right font-medium">{{ money(m.netAmount) }}</td>
+                                            <td class="text-right">{{ m.collectedAmount | money }}</td>
+                                            <td class="text-right">{{ m.voidedAmount | money }}</td>
+                                            <td class="text-right font-medium">{{ m.netAmount | money }}</td>
                                         </tr>
                                     }
                                 </tbody>
@@ -177,9 +204,9 @@ interface OpenItemRow {
                                         @for (d of days(); track d.date) {
                                             <tr>
                                                 <td>{{ dayLabel(d.date) }}</td>
-                                                <td class="text-right">{{ money(d.collectedAmount) }}</td>
-                                                <td class="text-right">{{ money(d.voidedAmount) }}</td>
-                                                <td class="text-right font-medium">{{ money(d.netAmount) }}</td>
+                                                <td class="text-right">{{ d.collectedAmount | money }}</td>
+                                                <td class="text-right">{{ d.voidedAmount | money }}</td>
+                                                <td class="text-right font-medium">{{ d.netAmount | money }}</td>
                                             </tr>
                                         }
                                     </tbody>
@@ -219,13 +246,7 @@ interface OpenItemRow {
             }
 
             @if (canDaily) {
-                <app-report-results
-                    [state]="state"
-                    [showSummary]="false"
-                    [summaryLine]="true"
-                    emptyMessage="Bu aralıkta mali hareket yok."
-                    emptyHint="Tarih aralığını veya süzgeçleri değiştirip tekrar deneyin."
-                >
+                <app-report-results [state]="state" [showSummary]="false" [summaryLine]="true" emptyMessage="Bu aralıkta mali hareket yok." emptyHint="Tarih aralığını veya süzgeçleri değiştirip tekrar deneyin.">
                     <ng-template #rows>
                         <div class="overflow-x-auto">
                             <p-table
@@ -339,9 +360,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
     });
 
     /** İşlemi yapan süzgeci: tahsilatı veya iptali olan kullanıcılar (kasa özetinden); bilinmeyen kullanıcı satırı seçilemez. */
-    readonly userOptions = computed(() =>
-        (this.cash()?.byUser ?? []).filter((u) => !!u.userId).map((u) => ({ label: u.userName || '—', value: u.userId as string }))
-    );
+    readonly userOptions = computed(() => (this.cash()?.byUser ?? []).filter((u) => !!u.userId).map((u) => ({ label: u.userName || '—', value: u.userId as string })));
 
     /** Açık işler: izni olmayan alan (`null`) satırı hiç oluşturmaz. */
     readonly openItemRows = computed<OpenItemRow[]>(() => {

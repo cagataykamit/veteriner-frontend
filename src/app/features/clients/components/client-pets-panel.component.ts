@@ -2,8 +2,8 @@ import { Component, computed, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientPetRow } from '@/app/features/clients/utils/client-card.utils';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Müşteri kartındaki hayvanlar (ADR-020 karar 6): her satırda hasta kartına bağlantı, kimlik ve hayvana düşen borç,
@@ -13,7 +13,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-client-pets-panel',
     standalone: true,
-    imports: [RouterLink],
+    imports: [RouterLink, TrDateTimePipe],
     template: `
         <section class="card mb-0 h-full" aria-labelledby="client-pets-title" data-testid="client-pets">
             <div class="flex flex-wrap items-center gap-2 mb-3">
@@ -53,17 +53,11 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                     @if (visibleRows().length > 0) {
                         <ul class="list-none m-0 p-0">
                             @for (row of visibleRows(); track row.pet.id) {
-                                <li
-                                    class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 min-w-0"
-                                    [class.opacity-70]="row.pet.status === 'Deceased'"
-                                    data-testid="client-pet-row"
-                                >
+                                <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 min-w-0" [class.opacity-70]="row.pet.status === 'Deceased'" data-testid="client-pet-row">
                                     <div class="flex flex-wrap items-baseline gap-x-2">
                                         <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-medium no-underline break-words">{{ row.pet.name }}</a>
                                         @if (row.pet.status === 'Deceased') {
-                                            <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased"
-                                                >Vefat</span
-                                            >
+                                            <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased">Vefat</span>
                                         }
                                         <span class="text-muted-color text-sm break-words">{{ identity(row) }}</span>
                                     </div>
@@ -77,7 +71,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                             }
                                             @if (row.nextAppointment; as a) {
                                                 <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline" data-testid="pet-next-appointment"
-                                                    ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ formatDt(a.scheduledAtUtc) }}</a
+                                                    ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ a.scheduledAtUtc | trDateTime }}</a
                                                 >
                                             }
                                         </div>
@@ -92,9 +86,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                     }
                 }
                 @case ('error') {
-                    <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="pets-failed">
-                        <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.
-                    </p>
+                    <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="pets-failed"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.</p>
                 }
                 @case ('loading') {
                     <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>
@@ -122,7 +114,6 @@ export class ClientPetsPanelComponent {
     readonly deceasedCount = computed(() => this.okRows().filter((r) => r.pet.status === 'Deceased').length);
     readonly visibleRows = computed(() => (this.showAll() ? this.okRows() : this.okRows().filter((r) => r.pet.status !== 'Deceased')));
 
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly money = (amount: number) => formatMoney(amount, this.currency());
 
     identity(row: ClientPetRow): string {

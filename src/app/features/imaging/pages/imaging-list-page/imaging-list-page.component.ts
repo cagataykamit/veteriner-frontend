@@ -10,12 +10,7 @@ import { IMAGING_CANCEL_CLAIM } from '@/app/core/auth/operation-claims.constants
 import { ImagingCancelDialogComponent } from '@/app/features/imaging/components/imaging-cancel-dialog.component';
 import type { ImagingModality, ImagingRecordListItemVm, ImagingRecordStatus } from '@/app/features/imaging/models/imaging.model';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
-import {
-    IMAGING_ADDED_AFTER_FINALIZATION_LABEL,
-    IMAGING_MODALITY_OPTIONS,
-    IMAGING_STATUS_FILTER_OPTIONS,
-    imagingModalityLabel
-} from '@/app/features/imaging/utils/imaging.utils';
+import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL, IMAGING_MODALITY_OPTIONS, IMAGING_STATUS_FILTER_OPTIONS, imagingModalityLabel } from '@/app/features/imaging/utils/imaging.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
@@ -29,7 +24,7 @@ import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared/utils/context-filter.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Görüntüleme listesi (Kayıtlar > Görüntüleme; ADR-023): süzgeç hasta (arama ve hasta kartından bağlam), tür, tarih, durum.
@@ -54,7 +49,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         AppEmptyStateComponent,
         AppRowActionButtonComponent,
         AppStatusTagComponent,
-        ImagingCancelDialogComponent
+        ImagingCancelDialogComponent,
+        TrDateTimePipe
     ],
     template: `
         @if (contextPetId()) {
@@ -96,15 +92,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                         </div>
                         <div class="col-span-12 md:col-span-3">
                             <label for="imgStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
-                            <p-select
-                                inputId="imgStatus"
-                                [options]="statusOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                [(ngModel)]="statusInput"
-                                (ngModelChange)="applyFilters()"
-                                styleClass="w-full"
-                            />
+                            <p-select inputId="imgStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" styleClass="w-full" />
                         </div>
                     </div>
                 </div>
@@ -119,7 +107,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     <ul class="list-none m-0 p-0 flex flex-col" data-testid="imaging-rows">
                         @for (row of rows(); track row.id) {
                             <li class="flex flex-wrap items-center gap-x-4 gap-y-1 py-3 border-b border-surface-200 dark:border-surface-700 last:border-b-0" [class.opacity-60]="row.status === 'Cancelled'">
-                                <span class="text-sm w-40 shrink-0">{{ formatDateTime(row.performedAtUtc) }}</span>
+                                <span class="text-sm w-40 shrink-0">{{ row.performedAtUtc | trDateTime }}</span>
                                 <span class="font-medium w-32 shrink-0">{{ modalityLabel(row.modality) }}</span>
                                 <span class="min-w-0 flex-1 break-words">
                                     <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
@@ -168,7 +156,6 @@ export class ImagingListPageComponent implements OnInit {
     readonly statusOptions = IMAGING_STATUS_FILTER_OPTIONS;
     readonly lateLabel = IMAGING_ADDED_AFTER_FINALIZATION_LABEL;
     readonly modalityLabel = imagingModalityLabel;
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     private readonly auth = inject(AuthService);
     private readonly imagingService = inject(ImagingRecordsService);

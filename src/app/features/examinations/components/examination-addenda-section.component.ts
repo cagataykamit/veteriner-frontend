@@ -5,7 +5,7 @@ import type { ExaminationAddendumVm } from '@/app/features/examinations/models/e
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Kesinleşmiş muayenenin ek notları (en eski önce) ve "Ek not ekle" eylemi.
@@ -14,21 +14,13 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 @Component({
     selector: 'app-examination-addenda-section',
     standalone: true,
-    imports: [ButtonModule, AppEmptyStateComponent, AppErrorStateComponent, ExaminationAddendumDialogComponent],
+    imports: [ButtonModule, AppEmptyStateComponent, AppErrorStateComponent, ExaminationAddendumDialogComponent, TrDateTimePipe],
     template: `
         <div class="card" data-testid="addenda-section">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                 <h4 class="mt-0 mb-0 text-xl font-semibold">Kesinleşme sonrası ek notlar</h4>
                 @if (canAdd()) {
-                    <button
-                        pButton
-                        type="button"
-                        label="Ek not ekle"
-                        icon="pi pi-plus"
-                        class="p-button-secondary"
-                        data-testid="addendum-open"
-                        (click)="dialogVisible.set(true)"
-                    ></button>
+                    <button pButton type="button" label="Ek not ekle" icon="pi pi-plus" class="p-button-secondary" data-testid="addendum-open" (click)="dialogVisible.set(true)"></button>
                 }
             </div>
             @if (loading() && addenda().length === 0) {
@@ -42,7 +34,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     @for (a of addenda(); track a.id) {
                         <li class="mb-4 pb-4 border-b border-surface-200 dark:border-surface-700 last:mb-0 last:pb-0 last:border-b-0" data-testid="addendum-item">
                             <div class="text-muted-color text-sm mb-1">
-                                {{ formatDt(a.createdAtUtc) }}@if (a.createdByName) {
+                                {{ a.createdAtUtc | trDateTime }}
+                                @if (a.createdByName) {
                                     · {{ a.createdByName }}
                                 }
                             </div>
@@ -66,8 +59,6 @@ export class ExaminationAddendaSectionComponent implements OnInit {
     readonly loading = signal(false);
     readonly error = signal<string | null>(null);
     readonly dialogVisible = signal(false);
-
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     ngOnInit(): void {
         this.load();

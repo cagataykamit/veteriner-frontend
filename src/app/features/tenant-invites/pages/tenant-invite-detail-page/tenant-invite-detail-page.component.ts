@@ -15,23 +15,14 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-tenant-invite-detail-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        ButtonModule,
-        ToastModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent
-    ],
+    imports: [CommonModule, RouterLink, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
@@ -49,23 +40,10 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
             <div class="card mb-4">
                 <div class="flex flex-wrap gap-2 mb-4">
                     @if (d.canCancel && canManageTenantAccess()) {
-                        <p-button
-                            label="Daveti iptal et"
-                            icon="pi pi-times"
-                            severity="danger"
-                            [loading]="cancelBusy()"
-                            [disabled]="resendBusy()"
-                            (onClick)="onCancel(d.id)"
-                        />
+                        <p-button label="Daveti iptal et" icon="pi pi-times" severity="danger" [loading]="cancelBusy()" [disabled]="resendBusy()" (onClick)="onCancel(d.id)" />
                     }
                     @if (d.canResend && canManageTenantAccess()) {
-                        <p-button
-                            label="Yeniden gönder"
-                            icon="pi pi-send"
-                            [loading]="resendBusy()"
-                            [disabled]="cancelBusy()"
-                            (onClick)="onResend(d.id)"
-                        />
+                        <p-button label="Yeniden gönder" icon="pi pi-send" [loading]="resendBusy()" [disabled]="cancelBusy()" (onClick)="onResend(d.id)" />
                     }
                     @if (ro.mutationBlocked()) {
                         <p class="text-sm text-muted-color m-0 self-center">Salt okunur kurumda iptal ve yeniden gönder kullanılamaz.</p>
@@ -95,11 +73,11 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
                     <div>
                         <dt class="text-muted-color font-medium m-0 mb-1">Son geçerlilik</dt>
-                        <dd class="m-0">{{ formatDt(d.expiresAtUtc) }}</dd>
+                        <dd class="m-0">{{ d.expiresAtUtc | trDateTime }}</dd>
                     </div>
                     <div>
                         <dt class="text-muted-color font-medium m-0 mb-1">Oluşturulma</dt>
-                        <dd class="m-0">{{ formatDt(d.createdAtUtc) }}</dd>
+                        <dd class="m-0">{{ d.createdAtUtc | trDateTime }}</dd>
                     </div>
                 </dl>
             </div>
@@ -107,9 +85,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                 <div class="card">
                     <h5 class="mt-0 mb-2">Katılım bağlantısı</h5>
                     <p class="text-sm text-muted-color mt-0 mb-2">Davet hâlâ geçerliyse bu bağlantı kullanılabilir.</p>
-                    <div
-                        class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 break-all text-sm font-mono"
-                    >
+                    <div class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 break-all text-sm font-mono">
                         {{ joinUrl() }}
                     </div>
                 </div>
@@ -126,9 +102,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
     private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly canManageTenantAccess = computed(
-        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
-    );
+    readonly canManageTenantAccess = computed(() => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked());
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -139,9 +113,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
 
     readonly joinUrl = signal<string>('');
 
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly inviteStatusSeverity = (d: TenantInviteDetailVm) =>
-        tenantInviteDisplayStatusSeverity(d.statusLifecycle, d.isCurrentMember);
+    readonly inviteStatusSeverity = (d: TenantInviteDetailVm) => tenantInviteDisplayStatusSeverity(d.statusLifecycle, d.isCurrentMember);
 
     ngOnInit(): void {
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pm) => {

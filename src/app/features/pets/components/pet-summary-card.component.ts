@@ -7,7 +7,7 @@ import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.mod
 import { examinationAssessmentText, examinationVitalsLine, type PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Kartta gösterilen takipli tedavi sayısı. */
 const FOLLOW_UP_LIMIT = 3;
@@ -20,7 +20,7 @@ const FOLLOW_UP_LIMIT = 3;
 @Component({
     selector: 'app-pet-summary-card',
     standalone: true,
-    imports: [NgTemplateOutlet, RouterLink, ButtonModule, AppLoadingStateComponent],
+    imports: [NgTemplateOutlet, RouterLink, ButtonModule, AppLoadingStateComponent, TrDatePipe, TrDateTimePipe],
     template: `
         <ng-template #notOk let-state let-label="label">
             @switch (state) {
@@ -28,14 +28,10 @@ const FOLLOW_UP_LIMIT = 3;
                     <p class="m-0 text-muted-color" data-testid="state-empty">Kayıt yok</p>
                 }
                 @case ('Forbidden') {
-                    <p class="m-0 text-muted-color" data-testid="state-forbidden">
-                        <i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok
-                    </p>
+                    <p class="m-0 text-muted-color" data-testid="state-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
                 }
                 @default {
-                    <p class="m-0 text-orange-600 dark:text-orange-400" data-testid="state-unavailable">
-                        <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ label }} alınamadı
-                    </p>
+                    <p class="m-0 text-orange-600 dark:text-orange-400" data-testid="state-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ label }} alınamadı</p>
                 }
             }
         </ng-template>
@@ -47,9 +43,7 @@ const FOLLOW_UP_LIMIT = 3;
                 <app-loading-state message="Klinik özet yükleniyor…" />
             } @else if (error()) {
                 <div class="flex flex-wrap items-center gap-3" data-testid="summary-error">
-                    <p class="m-0 text-orange-600 dark:text-orange-400">
-                        <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ error() }}
-                    </p>
+                    <p class="m-0 text-orange-600 dark:text-orange-400"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ error() }}</p>
                     <button pButton type="button" size="small" label="Tekrar dene" icon="pi pi-refresh" class="p-button-secondary" (click)="retry.emit()"></button>
                 </div>
             } @else if (summary(); as s) {
@@ -59,7 +53,7 @@ const FOLLOW_UP_LIMIT = 3;
                         <dd class="m-0">
                             @if (s.latestWeight.data; as w) {
                                 <span class="font-medium">{{ w.weightKg }} kg</span>
-                                <span class="text-muted-color text-sm"> · {{ formatDt(w.measuredAtUtc) }}</span>
+                                <span class="text-muted-color text-sm"> · {{ w.measuredAtUtc | trDateTime }}</span>
                                 @if (w.examinationId) {
                                     <a [routerLink]="['/panel/examinations', w.examinationId]" class="text-primary no-underline text-sm ml-2">Muayene →</a>
                                 }
@@ -131,7 +125,7 @@ const FOLLOW_UP_LIMIT = 3;
                                 <div>
                                     <i class="pi pi-building text-sm mr-1" aria-hidden="true"></i>
                                     <a [routerLink]="['/panel/hospitalizations', h.id]" class="text-primary font-medium no-underline">{{ h.reason ?? 'Yatış' }}</a>
-                                    <span class="text-muted-color text-sm"> · yatış {{ formatDt(h.admittedAtUtc) }}</span>
+                                    <span class="text-muted-color text-sm"> · yatış {{ h.admittedAtUtc | trDateTime }}</span>
                                 </div>
                             } @else if (s.activeHospitalization.state !== 'Empty') {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.activeHospitalization.state, label: 'Yatış bilgisi' }" />
@@ -142,7 +136,7 @@ const FOLLOW_UP_LIMIT = 3;
                                         <div data-testid="follow-up">
                                             <i class="pi pi-wrench text-sm mr-1" aria-hidden="true"></i>
                                             <a [routerLink]="['/panel/treatments', t.id]" class="text-primary no-underline">{{ t.title }}</a>
-                                            <span class="text-muted-color text-sm"> · takip {{ formatDate(t.followUpDateUtc) }}</span>
+                                            <span class="text-muted-color text-sm"> · takip {{ t.followUpDateUtc | trDate }}</span>
                                         </div>
                                     }
                                 }
@@ -167,7 +161,7 @@ const FOLLOW_UP_LIMIT = 3;
                                     Son uygulanan:
                                     @if (v.lastApplied; as a) {
                                         <a [routerLink]="['/panel/vaccinations', a.id]" class="text-primary font-medium no-underline">{{ a.vaccineName }}</a>
-                                        <span class="text-muted-color text-sm"> · {{ formatDate(a.appliedAtUtc) }}</span>
+                                        <span class="text-muted-color text-sm"> · {{ a.appliedAtUtc | trDate }}</span>
                                     } @else {
                                         <span class="text-muted-color">yok</span>
                                     }
@@ -176,7 +170,7 @@ const FOLLOW_UP_LIMIT = 3;
                                     Sıradaki:
                                     @if (v.nextDue; as d) {
                                         <a [routerLink]="['/panel/vaccinations', d.id]" class="text-primary font-medium no-underline">{{ d.vaccineName }}</a>
-                                        <span class="text-muted-color text-sm"> · {{ formatDate(d.dueAtUtc) }}</span>
+                                        <span class="text-muted-color text-sm"> · {{ d.dueAtUtc | trDate }}</span>
                                         @if (d.isOverdue) {
                                             <span class="text-red-600 dark:text-red-400 font-medium text-sm" data-testid="vaccine-overdue"> · Gecikmiş</span>
                                         }
@@ -197,7 +191,7 @@ const FOLLOW_UP_LIMIT = 3;
                         <dd class="m-0">
                             @if (s.lastExamination.data; as e) {
                                 <a [routerLink]="['/panel/examinations', e.id]" class="text-primary font-medium no-underline">{{ e.visitReason ?? 'Muayene' }}</a>
-                                <div class="text-muted-color text-sm">{{ formatDt(e.examinedAtUtc) }}</div>
+                                <div class="text-muted-color text-sm">{{ e.examinedAtUtc | trDateTime }}</div>
                                 @if (e.clinicName) {
                                     <div class="text-muted-color text-sm">{{ e.clinicName }}</div>
                                 }
@@ -223,9 +217,6 @@ export class PetSummaryCardComponent {
     /** Takip tarihi gelmemiş tedaviler (sıralı); `null` = tedavi okuma yetkisi yok. */
     readonly followUps = input<PetCardSection<TreatmentListItemVm[]>>(null);
     readonly retry = output<void>();
-
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
 
     private readonly exam = computed(() => {
         const e = this.lastExamination();

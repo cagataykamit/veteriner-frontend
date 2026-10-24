@@ -2,7 +2,7 @@ import { Component, computed, input, output } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { todayOpenChips } from '@/app/features/visits/utils/visit-status.utils';
-import { formatMoney } from '@/app/shared/utils/money.utils';
+import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 
 /**
  * Bugün satırı: hesaplanan açık iş çipleri (renk + simge + metin), ziyaretin ücret / ödenen / kalan tutarı ve müşterinin toplam borcu.
@@ -11,28 +11,16 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-today-money',
     standalone: true,
-    imports: [TagModule],
+    imports: [TagModule, MoneyPipe],
     host: { class: 'flex flex-wrap gap-1 min-w-0' },
     template: `
         @for (chip of chips(); track chip.key) {
             @if (chip.reviewable) {
-                <button
-                    type="button"
-                    class="p-0 border-0 bg-transparent cursor-pointer rounded-border"
-                    [attr.title]="chip.title + ' — Ücretlendir'"
-                    [attr.aria-label]="chip.label + ', Ücretlendir'"
-                    (click)="review.emit()"
-                >
+                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border" [attr.title]="chip.title + ' — Ücretlendir'" [attr.aria-label]="chip.label + ', Ücretlendir'" (click)="review.emit()">
                     <p-tag [value]="chip.label" [severity]="chip.severity" [icon]="chip.icon" />
                 </button>
             } @else if (chip.payable && canPay()) {
-                <button
-                    type="button"
-                    class="p-0 border-0 bg-transparent cursor-pointer rounded-border"
-                    [attr.title]="chip.title + ' — ödeme al'"
-                    [attr.aria-label]="chip.label + ', ödeme al'"
-                    (click)="pay.emit()"
-                >
+                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border" [attr.title]="chip.title + ' — ödeme al'" [attr.aria-label]="chip.label + ', ödeme al'" (click)="pay.emit()">
                     <p-tag [value]="chip.label" [severity]="chip.severity" [icon]="chip.icon" />
                 </button>
             } @else {
@@ -41,15 +29,13 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         }
         @if ((item().chargedAmount ?? 0) > 0) {
             <div class="w-full text-sm text-muted-color mt-1 whitespace-normal">
-                <div>Ücret {{ money(item().chargedAmount) }}</div>
-                <div>Ödenen {{ money(item().allocatedAmount) }}</div>
-                <div [class.font-medium]="(item().outstandingAmount ?? 0) > 0">Kalan {{ money(item().outstandingAmount) }}</div>
+                <div>Ücret {{ item().chargedAmount | money }}</div>
+                <div>Ödenen {{ item().allocatedAmount | money }}</div>
+                <div [class.font-medium]="(item().outstandingAmount ?? 0) > 0">Kalan {{ item().outstandingAmount | money }}</div>
             </div>
         }
         @if ((item().clientOutstandingAmount ?? 0) > 0) {
-            <div class="w-full text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal">
-                Müşteri borcu {{ money(item().clientOutstandingAmount) }}
-            </div>
+            <div class="w-full text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal">Müşteri borcu {{ item().clientOutstandingAmount | money }}</div>
         }
     `
 })
@@ -61,5 +47,4 @@ export class TodayMoneyComponent {
     /** Ücret bekleyen kalemleri Ücretlendir ekranında aç. */
     readonly review = output<void>();
     readonly chips = computed(() => todayOpenChips(this.item()));
-    readonly money = (amount: number | null) => formatMoney(amount, 'TRY');
 }

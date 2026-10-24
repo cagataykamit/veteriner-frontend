@@ -9,24 +9,15 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
-import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-treatment-detail-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        ButtonModule,
-        AdministrationsSectionComponent,
-        AppPageHeaderComponent,
-        PetAlertBannerComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent
-    ],
+    imports: [CommonModule, RouterLink, ButtonModule, AdministrationsSectionComponent, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, TrDatePipe, TrDateTimePipe],
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Tedavi kaydedildi.</p>
@@ -42,24 +33,9 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
             <app-page-header categoryLink="/panel/treatments" categoryLinkLabel="Tedavi listesine dön" title="Tedavi" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdateTreatment && !ro.mutationBlocked()) {
-                        <a
-                            [routerLink]="['/panel/treatments', row()!.id, 'edit']"
-                            pButton
-                            type="button"
-                            label="Düzenle"
-                            icon="pi pi-pencil"
-                            class="p-button-secondary"
-                        ></a>
+                        <a [routerLink]="['/panel/treatments', row()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                         @if (row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <a
-                                [routerLink]="['/panel/prescriptions/new']"
-                                [queryParams]="prescriptionCreateQueryParams()"
-                                pButton
-                                type="button"
-                                label="Reçete Oluştur"
-                                icon="pi pi-file-edit"
-                                class="p-button-secondary"
-                            ></a>
+                            <a [routerLink]="['/panel/prescriptions/new']" [queryParams]="prescriptionCreateQueryParams()" pButton type="button" label="Reçete Oluştur" icon="pi pi-file-edit" class="p-button-secondary"></a>
                             @if (row()!.examinationId?.trim()) {
                                 <a
                                     [routerLink]="['/panel/payments/new']"
@@ -77,32 +53,11 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                             }
                         }
                     } @else if (canUpdateTreatment && ro.mutationBlocked()) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Düzenle (salt okunur)"
-                            icon="pi pi-lock"
-                            [disabled]="true"
-                            class="p-button-secondary"
-                        ></button>
+                        <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                         @if (row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Reçete Oluştur (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
+                            <button pButton type="button" label="Reçete Oluştur (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                             @if (row()!.examinationId?.trim()) {
-                                <button
-                                    pButton
-                                    type="button"
-                                    label="Ödeme Oluştur (salt okunur)"
-                                    icon="pi pi-lock"
-                                    [disabled]="true"
-                                    class="p-button-secondary"
-                                ></button>
+                                <button pButton type="button" label="Ödeme Oluştur (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                             }
                         }
                     }
@@ -116,21 +71,17 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                         <h5 class="mt-0 mb-4">Genel</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tedavi tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.treatmentDateUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.treatmentDateUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Takip tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.followUpDateUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.followUpDateUtc | trDate }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
                             @if (row()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a
-                                        [routerLink]="['/panel/examinations', row()!.examinationId]"
-                                        class="text-primary font-medium no-underline"
-                                        >Muayene kaydına git →</a
-                                    >
+                                    <a [routerLink]="['/panel/examinations', row()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
                                 </dd>
                             }
                         </dl>
@@ -171,12 +122,7 @@ import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.consta
                 </div>
                 @if (row()!.petId?.trim()) {
                     <div class="col-span-12">
-                        <app-administrations-section
-                            [petId]="row()!.petId!"
-                            [petName]="row()!.petName"
-                            [examinationId]="row()!.examinationId"
-                            [treatmentId]="row()!.id"
-                        />
+                        <app-administrations-section [petId]="row()!.petId!" [petName]="row()!.petName" [examinationId]="row()!.examinationId" [treatmentId]="row()!.id" />
                     </div>
                 }
             </div>
@@ -194,9 +140,6 @@ export class TreatmentDetailPageComponent implements OnInit {
     readonly row = signal<TreatmentDetailVm | null>(null);
     readonly showSavedBanner = signal(false);
     readonly canUpdateTreatment = this.auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM);
-
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     /** Reçete oluştur sayfasına taşınan tedavi bağlamı (treatmentId öncelikli parse). */
     prescriptionCreateQueryParams(): Record<string, string> {

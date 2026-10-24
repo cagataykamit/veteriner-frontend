@@ -13,62 +13,37 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import type { ClientOpenChargeVm } from '@/app/features/clients/models/client-balance-vm.model';
 import { mapPaymentUpsertFormToWriteRequest } from '@/app/features/payments/data/payment.mapper';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
-import {
-    allocationAmountError,
-    allocationTotal,
-    buildAllocations,
-    PAYMENT_CURRENCY
-} from '@/app/features/payments/utils/payment-allocation.utils';
+import { allocationAmountError, allocationTotal, buildAllocations, PAYMENT_CURRENCY } from '@/app/features/payments/utils/payment-allocation.utils';
 import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/features/payments/utils/payment-method.utils';
-import {
-    type PaymentUpsertFieldErrors,
-    parsePaymentUpsertHttpError
-} from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
+import { type PaymentUpsertFieldErrors, parsePaymentUpsertHttpError } from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
-import {
-    dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
-import {
-    PAYMENT_DATE_TOO_FAR_PAST_MESSAGE,
-    paymentDateNotTooFarPastValidator,
-    paymentDateTimeLocalMinAllowed
-} from '@/app/features/payments/utils/payment-date-validation.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
+import { PAYMENT_DATE_TOO_FAR_PAST_MESSAGE, paymentDateNotTooFarPastValidator, paymentDateTimeLocalMinAllowed } from '@/app/features/payments/utils/payment-date-validation.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Açık tutar bu arada değişti: güncel bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
 const STALE_BALANCE_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'Payments.ConcurrencyConflict']);
 const STALE_BALANCE_MESSAGE = 'Açık tutarlar değişti; güncel tutarlar yüklendi. Kontrol edip tekrar kaydedin.';
-const DUPLICATE_MISMATCH_MESSAGE =
-    'Bu form için ödeme daha önce kaydedilmiş olabilir. Ödeme listesini kontrol edin; gerekirse sayfayı yenileyip yeni bir ödeme girin.';
+const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş olabilir. Ödeme listesini kontrol edin; gerekirse sayfayı yenileyip yeni bir ödeme girin.';
 
 @Component({
     selector: 'app-payment-new-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        RouterLink,
-        ButtonModule,
-        SelectModule,
-        TableModule,
-        AppPageHeaderComponent, ClientSearchComponent, DateInputComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe],
     template: `
         <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni Ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; kayıt oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -115,7 +90,7 @@ const DUPLICATE_MISMATCH_MESSAGE =
                                                     <div class="text-sm text-muted-color">{{ row.petName }}</div>
                                                 }
                                             </td>
-                                            <td class="whitespace-nowrap">{{ formatDate(row.createdAtUtc) }}</td>
+                                            <td class="whitespace-nowrap">{{ row.createdAtUtc | trDateTime }}</td>
                                             <td class="text-right whitespace-nowrap">{{ money(row.outstandingAmount) }}</td>
                                             <td class="text-right">
                                                 <div class="flex items-center justify-end gap-2">
@@ -129,14 +104,7 @@ const DUPLICATE_MISMATCH_MESSAGE =
                                                         [value]="amountOf(row)"
                                                         (input)="onAmountInput(row, $any($event.target).value)"
                                                     />
-                                                    <p-button
-                                                        type="button"
-                                                        label="Tamamı"
-                                                        size="small"
-                                                        severity="secondary"
-                                                        [text]="true"
-                                                        (onClick)="fillOutstanding(row)"
-                                                    />
+                                                    <p-button type="button" label="Tamamı" size="small" severity="secondary" [text]="true" (onClick)="fillOutstanding(row)" />
                                                 </div>
                                                 @if (rowError(row); as err) {
                                                     <small class="text-red-500">{{ err }}</small>
@@ -159,14 +127,7 @@ const DUPLICATE_MISMATCH_MESSAGE =
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
-                        <p-select
-                            inputId="method"
-                            [options]="methodOptions"
-                            formControlName="method"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                        />
+                        <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" styleClass="w-full" />
                         @if (apiFieldErrors().method) {
                             <small class="text-red-500">{{ apiFieldErrors().method }}</small>
                         }
@@ -198,18 +159,11 @@ const DUPLICATE_MISMATCH_MESSAGE =
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="!canSubmit() || submitting() || ro.mutationBlocked()"
-                    />
+                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="!canSubmit() || submitting() || ro.mutationBlocked()" />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>
-
     `
 })
 export class PaymentNewPageComponent implements OnInit {
@@ -262,7 +216,6 @@ export class PaymentNewPageComponent implements OnInit {
         note: ['']
     });
 
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly money = (amount: number | null) => formatMoney(amount, PAYMENT_CURRENCY);
 
     ngOnInit(): void {

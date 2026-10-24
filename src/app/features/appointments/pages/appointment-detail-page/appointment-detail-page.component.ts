@@ -9,18 +9,8 @@ import type { ExaminationListItemVm } from '@/app/features/examinations/models/e
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import {
-    appointmentStatusLabel,
-    appointmentStatusSeverity,
-    canMarkAppointmentNoShow,
-    canRevertAppointmentNoShow,
-    isAppointmentNoShowStatus,
-    isAppointmentCancelledStatus
-} from '@/app/features/appointments/utils/appointment-status.utils';
-import {
-    appointmentTypeDisplayLabel,
-    appointmentTypeDisplaySeverity
-} from '@/app/features/appointments/utils/appointment-type.utils';
+import { appointmentStatusLabel, appointmentStatusSeverity, canMarkAppointmentNoShow, canRevertAppointmentNoShow, isAppointmentNoShowStatus, isAppointmentCancelledStatus } from '@/app/features/appointments/utils/appointment-status.utils';
+import { appointmentTypeDisplayLabel, appointmentTypeDisplaySeverity } from '@/app/features/appointments/utils/appointment-type.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -32,27 +22,13 @@ import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    APPOINTMENTS_NOSHOW_CLAIM,
-    APPOINTMENTS_RESCHEDULE_CLAIM,
-    EXAMINATIONS_CREATE_CLAIM,
-    VISITS_CREATE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_NOSHOW_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM, EXAMINATIONS_CREATE_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-appointment-detail-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        ButtonModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent,
-        AppointmentNoShowDialogComponent
-    ],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe],
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Randevu kaydedildi.</p>
@@ -69,30 +45,13 @@ import {
                 [categoryLink]="backLink()"
                 [categoryLinkLabel]="backLabel()"
                 title="Randevu"
-                [description]="
-                    formatDateTime(appt()!.scheduledAtUtc) + ' · ' + statusLabel(appt()!.status) + ' · ' + typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)
-                "
+                [description]="(appt()!.scheduledAtUtc | trDateTime) + ' · ' + statusLabel(appt()!.status) + ' · ' + typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)"
             >
                 <div actions class="flex flex-wrap gap-2">
                     @if (canRescheduleAppointment && !ro.mutationBlocked()) {
-                        <a
-                            [routerLink]="['/panel/appointments', appt()!.id, 'edit']"
-                            [queryParams]="returnContextQueryParams() ?? undefined"
-                            pButton
-                            type="button"
-                            label="Düzenle"
-                            icon="pi pi-pencil"
-                            class="p-button-secondary"
-                        ></a>
+                        <a [routerLink]="['/panel/appointments', appt()!.id, 'edit']" [queryParams]="returnContextQueryParams() ?? undefined" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                     } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Düzenle (salt okunur)"
-                            icon="pi pi-lock"
-                            [disabled]="true"
-                            class="p-button-secondary"
-                        ></button>
+                        <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                     }
                     @if (canNoShow && !ro.mutationBlocked()) {
                         @if (canMarkNoShow(appt()!.status, appt()!.scheduledAtUtc, now())) {
@@ -103,34 +62,11 @@ import {
                     }
                     @if (canCreateExamination && appt()!.clientId?.trim() && appt()!.petId?.trim()) {
                         @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Muayene Oluştur"
-                                icon="pi pi-ban"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
+                            <button pButton type="button" label="Muayene Oluştur" icon="pi pi-ban" [disabled]="true" class="p-button-secondary"></button>
                         } @else if (ro.mutationBlocked()) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Muayene Oluştur (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
+                            <button pButton type="button" label="Muayene Oluştur (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                         } @else if (canOpenVisit) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Muayene Oluştur"
-                                icon="pi pi-plus"
-                                class="p-button-secondary"
-                                [loading]="startingExam()"
-                                [disabled]="startingExam()"
-                                (click)="startExamination()"
-                            ></button>
+                            <button pButton type="button" label="Muayene Oluştur" icon="pi pi-plus" class="p-button-secondary" [loading]="startingExam()" [disabled]="startingExam()" (click)="startExamination()"></button>
                         } @else {
                             <a
                                 [routerLink]="['/panel/examinations/new']"
@@ -172,19 +108,16 @@ import {
                             </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu Türü</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag
-                                    [label]="typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)"
-                                    [severity]="typeSeverity(appt()!.appointmentType)"
-                                />
+                                <app-status-tag [label]="typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)" [severity]="typeSeverity(appt()!.appointmentType)" />
                             </dd>
                             @if (appt()!.speciesName) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan Türü</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.speciesName }}</dd>
                             }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Başlangıç</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.scheduledAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.scheduledAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Bitiş saati</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.scheduledEndUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.scheduledEndUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu süresi</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.durationLabel }}</dd>
                         </dl>
@@ -228,12 +161,10 @@ import {
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of linkedExamsView().displayed; track row.id) {
-                                    <li
-                                        class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm"
-                                    >
-                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ formatDateTime(row.examinedAtUtc) }}</div>
+                                    <li class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm">
+                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ row.examinedAtUtc | trDateTime }}</div>
                                         <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                            <span class="text-muted-color text-sm min-w-0">{{ formatDateTime(row.examinedAtUtc) }}</span>
+                                            <span class="text-muted-color text-sm min-w-0">{{ row.examinedAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Muayene detayı →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ row.visitReason }}</div>
@@ -261,9 +192,9 @@ import {
                         <h5 class="mt-0 mb-4">Kayıt bilgileri</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.createdAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(appt()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.updatedAtUtc | trDateTime }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -298,7 +229,6 @@ export class AppointmentDetailPageComponent implements OnInit {
 
     private lastId: string | null = null;
 
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;

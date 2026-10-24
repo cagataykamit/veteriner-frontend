@@ -21,10 +21,10 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-tenant-members-list-page',
@@ -40,28 +40,19 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppErrorStateComponent, SearchInputComponent,
+        AppErrorStateComponent,
+        SearchInputComponent,
         AppRowActionButtonComponent,
         ToastModule,
-        TenantMemberRemoveDialogComponent
+        TenantMemberRemoveDialogComponent,
+        TrDateTimePipe
     ],
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header
-            title="Kurum üyeleri"
-            description="Bu kuruma bağlı kullanıcıların salt okunur listesi."
-        >
+        <app-page-header title="Kurum üyeleri" description="Bu kuruma bağlı kullanıcıların salt okunur listesi.">
             @if (canManageTenantAccess()) {
-                <a
-                    actions
-                    routerLink="/panel/settings/members/role-permission-matrix"
-                    pButton
-                    type="button"
-                    [label]="copy.tenantRoleMatrixTitle"
-                    icon="pi pi-table"
-                    class="p-button-secondary p-button-outlined"
-                ></a>
+                <a actions routerLink="/panel/settings/members/role-permission-matrix" pButton type="button" [label]="copy.tenantRoleMatrixTitle" icon="pi pi-table" class="p-button-secondary p-button-outlined"></a>
             }
         </app-page-header>
 
@@ -72,9 +63,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else {
                 <div class="flex flex-col gap-4">
-                    <div
-                        class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 pb-3 border-b border-surface-200 dark:border-surface-700"
-                    >
+                    <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 pb-3 border-b border-surface-200 dark:border-surface-700">
                         <div class="min-w-0">
                             <h5 class="m-0">Üyeler</h5>
                             @if (totalItems() > 0) {
@@ -87,13 +76,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                 <app-search-input inputId="tmSearch" placeholder="E-posta…" [(value)]="searchInput" (searchRequested)="applySearch()" />
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
-                                <p-button
-                                    [label]="copy.buttonClear"
-                                    icon="pi pi-times"
-                                    severity="secondary"
-                                    (onClick)="resetFilters()"
-                                    [disabled]="loading()"
-                                />
+                                <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                             </div>
                         </div>
                     </div>
@@ -127,7 +110,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                     <tr>
                                         <td class="font-medium break-all">{{ row.email }}</td>
                                         <td>{{ formatConfirmed(row.emailConfirmed) }}</td>
-                                        <td>{{ formatDate(row.createdAtUtc) }}</td>
+                                        <td>{{ row.createdAtUtc | trDateTime }}</td>
                                         <td>
                                             <div class="flex items-center gap-1">
                                                 <app-row-action-button action="detail" [link]="['/panel/settings/members', row.id]" />
@@ -143,9 +126,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-2 break-all">
                                         {{ row.email }}
                                     </div>
@@ -155,7 +136,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                             {{ formatConfirmed(row.emailConfirmed) }}
                                         </div>
                                         @if (row.createdAtUtc) {
-                                            <div class="text-xs text-muted-color">Oluşturulma: {{ formatDate(row.createdAtUtc) }}</div>
+                                            <div class="text-xs text-muted-color">Oluşturulma: {{ row.createdAtUtc | trDateTime }}</div>
                                         }
                                     </div>
                                     <div class="flex justify-end items-center gap-1 pt-2 border-t border-surface-200 dark:border-surface-700">
@@ -197,9 +178,7 @@ export class TenantMembersListPageComponent implements OnInit {
     private readonly router = inject(Router);
 
     /** Davet/üye yönetimi: `Tenants.InviteCreate` ve salt okunur değil. */
-    readonly canManageTenantAccess = computed(
-        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
-    );
+    readonly canManageTenantAccess = computed(() => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked());
 
     /** Üye detayındaki "Üyeyi kurumdan çıkar" koşulu: yönetim yetkisi, salt okunur değil, kendi hesabı değil. */
     canRemoveRow(row: TenantMemberListItemVm): boolean {
@@ -238,8 +217,6 @@ export class TenantMembersListPageComponent implements OnInit {
     searchInput = '';
 
     readonly displayedRows = computed(() => this.rawItems());
-
-    readonly formatDate = (v: string | null) => formatDateTimeDisplay(v);
 
     formatConfirmed(v: boolean | null): string {
         if (v === true) {

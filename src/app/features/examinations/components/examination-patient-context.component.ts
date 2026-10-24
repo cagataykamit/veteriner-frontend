@@ -12,7 +12,7 @@ import { TreatmentsService } from '@/app/features/treatments/services/treatments
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
-import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
+import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Bölüm yükleme durumu; `null` = bölüm bu kullanıcıya gösterilmez (okuma izni yok). */
 type Section<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error' } | null;
@@ -34,7 +34,7 @@ interface OverdueVaccinations {
 @Component({
     selector: 'app-examination-patient-context',
     standalone: true,
-    imports: [RouterLink],
+    imports: [RouterLink, TrDatePipe],
     template: `
         <section class="card mb-0 p-4" aria-label="Hasta bağlamı" data-testid="patient-context">
             <button
@@ -58,7 +58,7 @@ interface OverdueVaccinations {
                                     <span class="font-medium">{{ w.weightKg }} kg</span>
                                     <span class="text-muted-color">
                                         @if (w.source === 'examination') {
-                                            · {{ formatDate(w.measuredAtUtc) }}
+                                            · {{ w.measuredAtUtc | trDate }}
                                         } @else {
                                             · profil kaydı
                                         }
@@ -91,7 +91,7 @@ interface OverdueVaccinations {
                                                 @for (v of o.items; track v.id) {
                                                     <li class="text-orange-700 dark:text-orange-300" data-testid="ctx-overdue-item">
                                                         <a [routerLink]="['/panel/vaccinations', v.id]" class="text-inherit no-underline font-medium">{{ v.vaccineName }}</a>
-                                                        · {{ formatDate(v.dueAtUtc) }}
+                                                        · {{ v.dueAtUtc | trDate }}
                                                     </li>
                                                 }
                                             </ul>
@@ -116,16 +116,14 @@ interface OverdueVaccinations {
                     <dt class="text-muted-color">Aktif tedavi / yatış</dt>
                     <dd class="m-0">
                         @if (activeHospitalization(); as h) {
-                            <a [routerLink]="['/panel/hospitalizations', h.id]" class="text-primary no-underline font-medium block" data-testid="ctx-hospitalization">
-                                Yatışta: {{ h.reason ?? 'Yatış' }}
-                            </a>
+                            <a [routerLink]="['/panel/hospitalizations', h.id]" class="text-primary no-underline font-medium block" data-testid="ctx-hospitalization"> Yatışta: {{ h.reason ?? 'Yatış' }} </a>
                         }
                         @if (treatments(); as s) {
                             @switch (s.state) {
                                 @case ('ok') {
                                     @for (t of activeTreatments(); track t.id) {
                                         <a [routerLink]="['/panel/treatments', t.id]" class="text-primary no-underline block" data-testid="ctx-treatment">
-                                            {{ t.title }} <span class="text-muted-color">· takip {{ formatDate(t.followUpDateUtc) }}</span>
+                                            {{ t.title }} <span class="text-muted-color">· takip {{ t.followUpDateUtc | trDate }}</span>
                                         </a>
                                     }
                                 }
@@ -155,7 +153,7 @@ interface OverdueVaccinations {
                                         <ul class="list-none m-0 p-0 space-y-1">
                                             @for (e of recentExamItems(); track e.id) {
                                                 <li data-testid="ctx-recent-exam">
-                                                    <a [routerLink]="['/panel/examinations', e.id]" class="text-primary no-underline">{{ formatDate(e.examinedAtUtc) }}</a>
+                                                    <a [routerLink]="['/panel/examinations', e.id]" class="text-primary no-underline">{{ e.examinedAtUtc | trDate }}</a>
                                                     <span class="block break-words">{{ e.visitReason }}</span>
                                                 </li>
                                             }
@@ -206,11 +204,7 @@ export class ExaminationPatientContextComponent {
     /** Aktif tedavi kuralı (ADR-025) sunucudadır (`active=true`, en yakın takip önce); burada süzülmez. */
     readonly activeTreatments = computed(() => okData(this.treatments()) ?? []);
     readonly recentExamItems = computed(() => (okData(this.recentExams()) ?? []).slice(0, RECENT_EXAM_LIMIT));
-    readonly noActiveCare = computed(
-        () => !this.activeHospitalization() && this.treatments()?.state !== 'error' && this.activeTreatments().length === 0 && this.summary()?.state !== 'loading'
-    );
-
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
+    readonly noActiveCare = computed(() => !this.activeHospitalization() && this.treatments()?.state !== 'error' && this.activeTreatments().length === 0 && this.summary()?.state !== 'loading');
 
     constructor() {
         effect(() => {
@@ -230,12 +224,7 @@ export class ExaminationPatientContextComponent {
             this.load(seq, this.summary, this.petsService.getPetSummary(petId));
 
             if (this.canReadVaccinations) {
-                this.load(
-                    seq,
-                    this.overdue,
-                    this.vaccinationsService.getVaccinations({ petId, onlyOverdue: true, page: 1, pageSize: OVERDUE_LIMIT }),
-                    (r) => ({ items: r.items, total: r.totalItems })
-                );
+                this.load(seq, this.overdue, this.vaccinationsService.getVaccinations({ petId, onlyOverdue: true, page: 1, pageSize: OVERDUE_LIMIT }), (r) => ({ items: r.items, total: r.totalItems }));
             }
 
             if (this.canReadTreatments) {

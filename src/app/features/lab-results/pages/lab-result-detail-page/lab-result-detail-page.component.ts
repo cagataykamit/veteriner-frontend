@@ -11,7 +11,6 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -20,6 +19,7 @@ import type { StoredFileVm } from '@/app/shared/files/stored-file.model';
 import { StoredFileGalleryComponent } from '@/app/shared/files/stored-file-gallery.component';
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
 const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
@@ -38,7 +38,8 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         LabResultStatusBadgesComponent,
         LabResultCancelDialogComponent,
         StoredFileGalleryComponent,
-        StoredFileUploadComponent
+        StoredFileUploadComponent,
+        TrDateTimePipe
     ],
     template: `
         @if (savedMessage(); as message) {
@@ -56,14 +57,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdateLabResult && isEditable(row()!.status)) {
                         @if (ro.mutationBlocked()) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Düzenle (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
+                            <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                         } @else {
                             <a
                                 [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
@@ -73,14 +67,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                                 [icon]="row()!.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"
                                 [class]="row()!.status === 'Requested' ? 'p-button-primary' : 'p-button-secondary'"
                             ></a>
-                            <button
-                                pButton
-                                type="button"
-                                label="İptal et"
-                                icon="pi pi-ban"
-                                class="p-button-danger p-button-outlined"
-                                (click)="cancelVisible = true"
-                            ></button>
+                            <button pButton type="button" label="İptal et" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="cancelVisible = true"></button>
                         }
                     }
                 </div>
@@ -97,27 +84,23 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                                 <app-lab-result-status-badges [status]="row()!.status" [awaitingInterpretation]="row()!.awaitingInterpretation" />
                             </dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">İstem tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.requestedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.requestedAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonuç tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.resultDateUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.resultDateUtc | trDateTime }}</dd>
                             @if (row()!.status === 'Cancelled') {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal tarihi</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.cancelledAtUtc) }}</dd>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.cancelledAtUtc | trDateTime }}</dd>
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal gerekçesi</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0 whitespace-pre-wrap">{{ row()!.cancelReason ?? '—' }}</dd>
                             }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
                             @if (row()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a
-                                        [routerLink]="['/panel/examinations', row()!.examinationId]"
-                                        class="text-primary font-medium no-underline"
-                                        >Muayene kaydına git →</a
-                                    >
+                                    <a [routerLink]="['/panel/examinations', row()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
                                 </dd>
                             }
                         </dl>
@@ -208,7 +191,6 @@ export class LabResultDetailPageComponent implements OnInit {
 
     readonly isEditable = isLabResultEditable;
     readonly editLabel = labResultEditLabel;
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     private labResultId = '';
 

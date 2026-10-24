@@ -13,24 +13,13 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { SubscriptionDiscountCardComponent } from '@/app/features/sales-partners/components/subscription-discount-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
-import type {
-    PendingPlanChangeStatusKey,
-    PendingPlanChangeTypeKey,
-    PendingPlanChangeVm,
-    SubscriptionCheckoutSessionVm,
-    SubscriptionPlanVm,
-    SubscriptionSummaryVm
-} from '@/app/features/subscriptions/models/subscription-vm.model';
+import { formatDateDisplay } from '@/app/shared/utils/date.utils';
+import type { PendingPlanChangeStatusKey, PendingPlanChangeTypeKey, PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
 import type { SubscriptionSummaryRequestOptions } from '@/app/features/subscriptions/services/subscriptions.service';
 import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { shouldOfferManualCheckoutFinalize } from '@/app/features/subscriptions/utils/subscription-checkout-provider.utils';
-import {
-    hasSubscriptionCheckoutReturnQuery,
-    parseSubscriptionCheckoutReturn,
-    type ParsedSubscriptionCheckoutReturn
-} from '@/app/features/subscriptions/utils/subscription-checkout-return.utils';
+import { hasSubscriptionCheckoutReturnQuery, parseSubscriptionCheckoutReturn, type ParsedSubscriptionCheckoutReturn } from '@/app/features/subscriptions/utils/subscription-checkout-return.utils';
 import {
     clearStoredCheckoutSessionId,
     consumeExpectingHostedCheckoutReturn,
@@ -40,15 +29,8 @@ import {
     readStoredCheckoutSessionId,
     writeStoredCheckoutSessionId
 } from '@/app/features/subscriptions/utils/subscription-checkout-storage.utils';
-import {
-    subscriptionCheckoutStatusLabel,
-    subscriptionCheckoutStatusSeverity
-} from '@/app/features/subscriptions/utils/subscription-checkout-status.utils';
-import {
-    subscriptionPlanLabel,
-    subscriptionPlanLimitLabels,
-    subscriptionPlanRank
-} from '@/app/features/subscriptions/utils/subscription-plan.utils';
+import { subscriptionCheckoutStatusLabel, subscriptionCheckoutStatusSeverity } from '@/app/features/subscriptions/utils/subscription-checkout-status.utils';
+import { subscriptionPlanLabel, subscriptionPlanLimitLabels, subscriptionPlanRank } from '@/app/features/subscriptions/utils/subscription-plan.utils';
 import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/features/subscriptions/utils/subscription-status.utils';
 import {
     expiredReadOnlyBannerMessage,
@@ -59,6 +41,7 @@ import {
     shouldShowMisleadingNextRenewal
 } from '@/app/features/subscriptions/utils/subscription-access.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 type ReturnBannerSeverity = 'info' | 'success' | 'warn' | 'secondary' | 'error';
 
@@ -76,17 +59,7 @@ interface ReturnBannerVm {
 @Component({
     selector: 'app-subscription-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ButtonModule,
-        ToastModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        AppEmptyStateComponent,
-        AppStatusTagComponent,
-        SubscriptionDiscountCardComponent
-    ],
+    imports: [CommonModule, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, SubscriptionDiscountCardComponent, TrDatePipe, TrDateTimePipe],
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
@@ -94,10 +67,7 @@ interface ReturnBannerVm {
 
         @if (summary(); as s) {
             @if (isExpiredReadOnlySubscription(s)) {
-                <div
-                    class="card mb-4 border-round bg-amber-50 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-800/60"
-                    role="status"
-                >
+                <div class="card mb-4 border-round bg-amber-50 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-800/60" role="status">
                     <p class="m-0 text-sm text-color font-medium">{{ expiredReadOnlyBannerMessage(s) }}</p>
                 </div>
             }
@@ -175,16 +145,16 @@ interface ReturnBannerVm {
                         <div class="flex flex-col gap-3">
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-muted-color">{{ periodStartLabel(s) }}</span>
-                                <span class="font-medium text-right">{{ formatDate(periodStartDate(s)) }}</span>
+                                <span class="font-medium text-right">{{ periodStartDate(s) | trDate }}</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-muted-color">{{ periodEndLabel(s) }}</span>
-                                <span class="font-medium text-right">{{ formatDate(periodEndDate(s)) }}</span>
+                                <span class="font-medium text-right">{{ periodEndDate(s) | trDate }}</span>
                             </div>
                             @if (shouldShowMisleadingNextRenewal(s)) {
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-muted-color">Sonraki yenileme</span>
-                                    <span class="font-medium text-right">{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</span>
+                                    <span class="font-medium text-right">{{ s.nextBillingAtUtc || s.currentPeriodEndUtc | trDate }}</span>
                                 </div>
                             } @else if (!isTrialingSubscription(s) && (isExpiredReadOnlySubscription(s) || isSubscriptionPeriodEndPast(s))) {
                                 <div class="flex items-center justify-between gap-2">
@@ -239,9 +209,7 @@ interface ReturnBannerVm {
                                         <div class="flex items-center justify-between gap-2">
                                             <div class="font-medium break-words">{{ planLabel(plan) }}</div>
                                             @if (isCurrentPlan(plan, s)) {
-                                                <span class="text-xs px-2 py-1 rounded-md bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                                    >Mevcut</span
-                                                >
+                                                <span class="text-xs px-2 py-1 rounded-md bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Mevcut</span>
                                             }
                                         </div>
                                         @if (plan.description) {
@@ -307,12 +275,12 @@ interface ReturnBannerVm {
                                 </div>
                                 <div>
                                     <div class="text-muted-color mb-1">{{ pendingPlanChangeEffectiveDateLabel(s) }}</div>
-                                    <div>{{ formatDate(pendingPlanChangeEffectiveDate(pending, s)) }}</div>
+                                    <div>{{ pendingPlanChangeEffectiveDate(pending, s) | trDate }}</div>
                                 </div>
                                 @if (shouldShowMisleadingNextRenewal(s)) {
                                     <div>
                                         <div class="text-muted-color mb-1">Sonraki yenileme</div>
-                                        <div>{{ formatDate(s.nextBillingAtUtc || s.currentPeriodEndUtc) }}</div>
+                                        <div>{{ s.nextBillingAtUtc || s.currentPeriodEndUtc | trDate }}</div>
                                     </div>
                                 } @else if (!isTrialingSubscription(s) && (isExpiredReadOnlySubscription(s) || isSubscriptionPeriodEndPast(s))) {
                                     <div>
@@ -374,18 +342,14 @@ interface ReturnBannerVm {
                                     </div>
                                     <div>
                                         <div class="text-muted-color mb-1">Ödeme oturumu sonu</div>
-                                        <div>{{ formatDateTime(session.expiresAtUtc) }}</div>
+                                        <div>{{ session.expiresAtUtc | trDateTime }}</div>
                                     </div>
                                     <div class="md:col-span-2">
                                         <div class="text-muted-color mb-1">Ödeme</div>
                                         @if (session.checkoutUrl) {
-                                            <p class="m-0 text-sm text-color">
-                                                Güvenli ödeme sayfasına yönlendirileceksiniz. Ödemeniz iyzico altyapısı üzerinden tamamlanır ve işlem sonrası bu sayfaya döneceksiniz.
-                                            </p>
+                                            <p class="m-0 text-sm text-color">Güvenli ödeme sayfasına yönlendirileceksiniz. Ödemeniz iyzico altyapısı üzerinden tamamlanır ve işlem sonrası bu sayfaya döneceksiniz.</p>
                                         } @else {
-                                            <span class="text-muted-color text-sm"
-                                                >Ödeme bağlantısı henüz hazır değil. Durumu yenileyerek tekrar deneyin.</span
-                                            >
+                                            <span class="text-muted-color text-sm">Ödeme bağlantısı henüz hazır değil. Durumu yenileyerek tekrar deneyin.</span>
                                         }
                                     </div>
                                     @if (session.proratedChargeMinor !== null || session.prorationRatio !== null) {
@@ -393,16 +357,12 @@ interface ReturnBannerVm {
                                             @if (isRenewalCheckoutContext(s)) {
                                                 <p class="m-0 text-sm text-color">
                                                     Ödenecek tutar:
-                                                    <span class="font-medium">{{
-                                                        formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode)
-                                                    }}</span>
+                                                    <span class="font-medium">{{ formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode) }}</span>
                                                 </p>
                                             } @else {
                                                 <p class="m-0 text-sm text-color">
                                                     Kalan dönem için hesaplanan fark:
-                                                    <span class="font-medium">{{
-                                                        formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode)
-                                                    }}</span>
+                                                    <span class="font-medium">{{ formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode) }}</span>
                                                     @if (session.prorationRatio !== null) {
                                                         <span> (oran: {{ prorationPercentText(session.prorationRatio) }})</span>
                                                     }
@@ -447,9 +407,7 @@ interface ReturnBannerVm {
                                     }
                                 </div>
                                 @if (!session.canContinue) {
-                                    <p class="text-sm text-muted-color mt-3 mb-0">
-                                        Bu ödeme işlemi artık devam ettirilemiyor. Plan değişikliğini yeniden başlatabilirsiniz.
-                                    </p>
+                                    <p class="text-sm text-muted-color mt-3 mb-0">Bu ödeme işlemi artık devam ettirilemiyor. Plan değişikliğini yeniden başlatabilirsiniz.</p>
                                 }
                             } @else {
                                 <p class="text-sm text-muted-color m-0 mb-0">Henüz başlatılmış bir ödeme işlemi bulunmuyor.</p>
@@ -526,9 +484,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     /** Uyarı banner’ındaki “Durumu yenile” — tam sayfa loading olmadan özet + checkout yeniler. */
     readonly subscriptionRefreshLoading = signal(false);
 
-    readonly subscriptionHeaderDescription = computed(
-        () => 'Kurum abonelik özetinizi, mevcut paketinizi ve plan değişikliği işlemlerinizi görüntüleyin.'
-    );
+    readonly subscriptionHeaderDescription = computed(() => 'Kurum abonelik özetinizi, mevcut paketinizi ve plan değişikliği işlemlerinizi görüntüleyin.');
 
     /** Hosted checkout / plan aksiyonu kromu — yalnızca yönetim yetkisi olan kullanıcıya gösterilir. */
     readonly showManageFlowChrome = computed(() => {
@@ -591,7 +547,6 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     });
 
     readonly formatDate = (v: string | null | undefined) => formatDateDisplay(v);
-    readonly formatDateTime = (v: string | null | undefined) => formatDateTimeDisplay(v);
     readonly shouldOfferManualCheckoutFinalize = shouldOfferManualCheckoutFinalize;
     readonly subscriptionPlanLabel = subscriptionPlanLabel;
     readonly planLimitLabels = subscriptionPlanLimitLabels;
@@ -616,8 +571,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         }
 
         const sessionForSync = (parsedReturn.sessionId?.trim() || storedId?.trim()) ?? '';
-        const shouldStartProcessingEarly =
-            hostedCheckoutEntry && parsedReturn.outcome === 'success' && !!sessionForSync;
+        const shouldStartProcessingEarly = hostedCheckoutEntry && parsedReturn.outcome === 'success' && !!sessionForSync;
 
         if (shouldStartProcessingEarly) {
             this.postCheckoutSyncing.set(true);
@@ -642,10 +596,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         this.error.set(null);
         const bust = !!options?.bustSummaryCache;
 
-        forkJoin([
-            this.subscriptions.getSubscriptionSummary({ bustCache: bust }),
-            this.pendingPlanChangeObservable({ bustCache: bust })
-        ]).subscribe({
+        forkJoin([this.subscriptions.getSubscriptionSummary({ bustCache: bust }), this.pendingPlanChangeObservable({ bustCache: bust })]).subscribe({
             next: ([data, pending]) => {
                 const merged = { ...data, pendingPlanChange: pending };
 
@@ -681,11 +632,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         };
 
         if (sessionId) {
-            forkJoin([
-                this.subscriptions.getSubscriptionSummary({ bustCache: true }),
-                this.pendingPlanChangeObservable({ bustCache: true }),
-                this.subscriptions.getCheckout(sessionId)
-            ]).subscribe({
+            forkJoin([this.subscriptions.getSubscriptionSummary({ bustCache: true }), this.pendingPlanChangeObservable({ bustCache: true }), this.subscriptions.getCheckout(sessionId)]).subscribe({
                 next: ([data, pending, session]) => {
                     const merged = this.mergeSummaryWithPending(data, pending);
 
@@ -697,10 +644,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 error: done
             });
         } else {
-            forkJoin([
-                this.subscriptions.getSubscriptionSummary({ bustCache: true }),
-                this.pendingPlanChangeObservable({ bustCache: true })
-            ]).subscribe({
+            forkJoin([this.subscriptions.getSubscriptionSummary({ bustCache: true }), this.pendingPlanChangeObservable({ bustCache: true })]).subscribe({
                 next: ([data, pending]) => {
                     const merged = this.mergeSummaryWithPending(data, pending);
 
@@ -1042,9 +986,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     }
 
     scheduledPlanChangeSuccessMessage(summary: SubscriptionSummaryVm): string {
-        return this.isTrialingSubscription(summary)
-            ? 'Plan değişikliği deneme bitimine planlandı.'
-            : 'Paket düşürme dönem sonuna planlandı.';
+        return this.isTrialingSubscription(summary) ? 'Plan değişikliği deneme bitimine planlandı.' : 'Paket düşürme dönem sonuna planlandı.';
     }
 
     pendingPlanChangeTypeLabel(type: PendingPlanChangeTypeKey, summary: SubscriptionSummaryVm): string {
@@ -1241,11 +1183,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             return;
         }
 
-        forkJoin([
-            this.subscriptions.getCheckout(sessionId),
-            this.subscriptions.getSubscriptionSummary({ bustCache: true }),
-            this.pendingPlanChangeObservable({ bustCache: true })
-        ]).subscribe({
+        forkJoin([this.subscriptions.getCheckout(sessionId), this.subscriptions.getSubscriptionSummary({ bustCache: true }), this.pendingPlanChangeObservable({ bustCache: true })]).subscribe({
             next: ([session, data, pending]) => {
                 const summary = this.mergeSummaryWithPending(data, pending);
 
@@ -1255,8 +1193,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
                 const planMatchesTarget = this.planCodeMatchesTarget(summary.planCode, session.targetPlanCode);
 
-                const terminalFailed =
-                    session.status === 'failed' || session.status === 'cancelled' || session.status === 'expired';
+                const terminalFailed = session.status === 'failed' || session.status === 'cancelled' || session.status === 'expired';
 
                 if (terminalFailed) {
                     this.postCheckoutSyncing.set(false);
@@ -1296,11 +1233,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
 
     /** Son tur: özet hâlâ hedef planı göstermiyorsa veya erişim kilitliyse anlamlı uyarı. */
     private finishPostCheckoutPollingTimeout(sessionId: string): void {
-        forkJoin([
-            this.subscriptions.getCheckout(sessionId),
-            this.subscriptions.getSubscriptionSummary({ bustCache: true }),
-            this.pendingPlanChangeObservable({ bustCache: true })
-        ]).subscribe({
+        forkJoin([this.subscriptions.getCheckout(sessionId), this.subscriptions.getSubscriptionSummary({ bustCache: true }), this.pendingPlanChangeObservable({ bustCache: true })]).subscribe({
             next: ([session, data, pending]) => {
                 const summary = this.mergeSummaryWithPending(data, pending);
 
@@ -1358,12 +1291,8 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         });
     }
 
-    private pendingPlanChangeObservable(
-        options?: SubscriptionSummaryRequestOptions
-    ): Observable<PendingPlanChangeVm | null> {
-        return this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM)
-            ? this.subscriptions.getPendingPlanChange(options)
-            : of(null);
+    private pendingPlanChangeObservable(options?: SubscriptionSummaryRequestOptions): Observable<PendingPlanChangeVm | null> {
+        return this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM) ? this.subscriptions.getPendingPlanChange(options) : of(null);
     }
 
     private mergeSummaryWithPending(data: SubscriptionSummaryVm, pending: PendingPlanChangeVm | null): SubscriptionSummaryVm {

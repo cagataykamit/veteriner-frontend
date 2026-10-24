@@ -2,8 +2,8 @@ import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
  * Hasta ve müşteri kartı başlığındaki hesap durumu satırı (ADR-020 karar 2a, 6): açık borç, [kart özgü alanlar], sonraki randevu.
@@ -12,7 +12,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-card-account-status',
     standalone: true,
-    imports: [RouterLink],
+    imports: [RouterLink, TrDateTimePipe],
     template: `
         <dl class="m-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2" aria-label="Hesap durumu">
             @if (balance(); as b) {
@@ -45,7 +45,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         @switch (n.state) {
                             @case ('ok') {
                                 @if (n.data; as a) {
-                                    <a [routerLink]="['/panel/appointments', a.id]" class="text-primary font-medium no-underline">{{ formatDt(a.scheduledAtUtc) }}</a>
+                                    <a [routerLink]="['/panel/appointments', a.id]" class="text-primary font-medium no-underline">{{ a.scheduledAtUtc | trDateTime }}</a>
                                     @if (a.petName) {
                                         <span class="text-muted-color text-sm"> · {{ a.petName }}</span>
                                     }
@@ -71,7 +71,6 @@ export class CardAccountStatusComponent {
     readonly balance = input<PetCardSection<Pick<ClientBalanceVm, 'outstandingAmount' | 'currency'>>>(null);
     /** `null` = randevu okuma yetkisi yok (alan gösterilmez); `ok` + `null` veri = planlı randevu yok. Hayvan adı müşteri kartında verilir. */
     readonly nextAppointment = input<PetCardSection<{ id: string; scheduledAtUtc: string | null; petName?: string } | null>>(null);
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     readonly outstanding = computed(() => {
         const b = this.balance();

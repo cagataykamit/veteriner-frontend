@@ -13,11 +13,7 @@ import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-su
 import type { ChargeCreateResultVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
 import { computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
-import {
-    CHARGE_SUGGESTION_PERIOD_OPTIONS,
-    ChargeSuggestionPeriod,
-    filterChargeSuggestions
-} from '@/app/features/charges/utils/charge-suggestion-filter.utils';
+import { CHARGE_SUGGESTION_PERIOD_OPTIONS, ChargeSuggestionPeriod, filterChargeSuggestions } from '@/app/features/charges/utils/charge-suggestion-filter.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
@@ -28,9 +24,10 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Sözleşme en çok 200 kalem döner; bekleyen liste bundan küçük beklenir, aşılırsa kullanıcıya söylenir. */
 const PAGE_SIZE = 200;
@@ -65,7 +62,9 @@ interface ConvertedRow {
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        MoneyPipe,
+        TrDateTimePipe
     ],
     template: `
         @if (hasCreateClaim && ro.mutationBlocked()) {
@@ -78,9 +77,7 @@ interface ConvertedRow {
             <div class="card mb-4 flex flex-wrap items-center gap-3 justify-between" role="status" data-testid="converted-row">
                 <div class="min-w-0">
                     <span class="font-medium"><i class="pi pi-check-circle text-green-600 mr-2"></i>{{ row.created ? 'Ücrete çevrildi' : 'Daha önce ücrete çevrilmişti' }}</span>
-                    <span class="text-muted-color">
-                        · {{ row.charge.clientName }} · {{ row.charge.description }} · {{ money(row.charge.amount, row.charge.currency) }}
-                    </span>
+                    <span class="text-muted-color"> · {{ row.charge.clientName }} · {{ row.charge.description }} · {{ row.charge.amount | money: row.charge.currency || 'TRY' }} </span>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <a [routerLink]="['/panel/charges']" [queryParams]="{ clientId: row.charge.clientId }" pButton size="small" severity="secondary" [outlined]="true" label="Ücret kaydı" icon="pi pi-receipt"></a>
@@ -119,10 +116,7 @@ interface ConvertedRow {
             } @else if (loading() && rows().length === 0) {
                 <app-loading-state message="Bekleyen ücretler yükleniyor…" />
             } @else if (visibleRows().length === 0) {
-                <app-empty-state
-                    [message]="rows().length === 0 ? 'Ücret bekleyen kalem yok.' : 'Süzgece uyan kalem yok.'"
-                    [hint]="rows().length === 0 ? 'Hekimin kaydettiği fiyatlı uygulamalar burada görünür.' : 'Süzgeci değiştirin.'"
-                />
+                <app-empty-state [message]="rows().length === 0 ? 'Ücret bekleyen kalem yok.' : 'Süzgece uyan kalem yok.'" [hint]="rows().length === 0 ? 'Hekimin kaydettiği fiyatlı uygulamalar burada görünür.' : 'Süzgeci değiştirin.'" />
             } @else {
                 @if (totalItems() > rows().length) {
                     <p class="text-sm text-muted-color mt-0 mb-3" role="note">İlk {{ rows().length }} kalem gösteriliyor (toplam {{ totalItems() }}); çevirdikçe kalanlar listeye gelir.</p>
@@ -145,7 +139,7 @@ interface ConvertedRow {
                         </ng-template>
                         <ng-template #body let-row>
                             <tr>
-                                <td class="whitespace-nowrap">{{ formatDate(row.occurredAtUtc) }}</td>
+                                <td class="whitespace-nowrap">{{ row.occurredAtUtc | trDateTime }}</td>
                                 <td>
                                     <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
                                 </td>
@@ -167,7 +161,7 @@ interface ConvertedRow {
                                     @if (row.suggestedUnitPrice === null) {
                                         <span class="text-amber-700 dark:text-amber-300 font-medium">Fiyat yok</span>
                                     } @else {
-                                        {{ money(row.suggestedUnitPrice, row.currency) }}
+                                        {{ row.suggestedUnitPrice | money: row.currency || 'TRY' }}
                                     }
                                 </td>
                                 <td class="text-right whitespace-nowrap font-medium">{{ rowAmount(row) }}</td>
@@ -259,7 +253,6 @@ export class ChargeSuggestionsPageComponent implements OnInit {
     /** Çevirme denemesi başına kalem için üretilen anahtar; yeniden denemede (aynı alanlar) aynısı gider, alanlar değişince yenisi üretilir. */
     private readonly attempts = new Map<string, { fields: string; requestId: string }>();
 
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly money = (amount: number | null, currency: string) => formatMoney(amount, currency || 'TRY');
 
     ngOnInit(): void {

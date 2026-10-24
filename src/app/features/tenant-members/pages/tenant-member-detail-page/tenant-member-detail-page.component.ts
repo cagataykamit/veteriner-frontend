@@ -14,61 +14,30 @@ import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.consta
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import type { OperationClaimOptionVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/features/tenant-invites/services/tenant-invites.service';
-import type {
-    TenantMemberDetailVm,
-    TenantRolePermissionMatrixRowVm
-} from '@/app/features/tenant-members/models/tenant-members-vm.model';
+import type { TenantMemberDetailVm, TenantRolePermissionMatrixRowVm } from '@/app/features/tenant-members/models/tenant-members-vm.model';
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
 import { buildTenantMemberEffectivePermissionSummary } from '@/app/features/tenant-members/utils/tenant-member-effective-permission.utils';
-import {
-    buildPermissionGroupPanels,
-    filterTenantFacingMatrixPermissions,
-    permissionDisplayLabel,
-    permissionTooltipText
-} from '@/app/features/tenant-members/utils/tenant-role-permission-display.utils';
-import {
-    isMemberClinicAlreadyAssignedConflict,
-    isMemberClinicAlreadyRemoved,
-    memberClinicAssignRemoveMessage
-} from '@/app/features/tenant-members/utils/tenant-member-clinic-mutation.utils';
-import {
-    isMemberRoleAlreadyAssignedConflict,
-    isMemberRoleAlreadyRemoved,
-    memberRoleAssignRemoveMessage
-} from '@/app/features/tenant-members/utils/tenant-member-role-mutation.utils';
+import { buildPermissionGroupPanels, filterTenantFacingMatrixPermissions, permissionDisplayLabel, permissionTooltipText } from '@/app/features/tenant-members/utils/tenant-role-permission-display.utils';
+import { isMemberClinicAlreadyAssignedConflict, isMemberClinicAlreadyRemoved, memberClinicAssignRemoveMessage } from '@/app/features/tenant-members/utils/tenant-member-clinic-mutation.utils';
+import { isMemberRoleAlreadyAssignedConflict, isMemberRoleAlreadyRemoved, memberRoleAssignRemoveMessage } from '@/app/features/tenant-members/utils/tenant-member-role-mutation.utils';
 import { TenantMemberRemoveDialogComponent } from '@/app/features/tenant-members/components/tenant-member-remove-dialog.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { catchError, forkJoin, of } from 'rxjs';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-tenant-member-detail-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        FormsModule,
-        RouterLink,
-        ButtonModule,
-        DialogModule,
-        ToastModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        AppEmptyStateComponent,
-        TenantMemberRemoveDialogComponent
-    ],
+    imports: [CommonModule, FormsModule, RouterLink, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header
-            title="Üye detayı"
-            description="Kurum üyeliği bilgileri. Salt okunur kurumda rol değişikliği yapılamaz."
-        >
+        <app-page-header title="Üye detayı" description="Kurum üyeliği bilgileri. Salt okunur kurumda rol değişikliği yapılamaz.">
             <a actions routerLink="/panel/settings/members" pButton type="button" label="Listeye dön" icon="pi pi-arrow-left" class="p-button-secondary"></a>
         </app-page-header>
 
@@ -97,7 +66,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                     </div>
                     <div class="md:col-span-2">
                         <dt class="text-muted-color font-medium m-0 mb-1">Kurum üyeliği oluşturulma</dt>
-                        <dd class="m-0">{{ formatDt(m.tenantMembershipCreatedAtUtc) }}</dd>
+                        <dd class="m-0">{{ m.tenantMembershipCreatedAtUtc | trDateTime }}</dd>
                     </div>
                 </dl>
             </div>
@@ -106,13 +75,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                 <div class="card mb-4 border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/20">
                     <h5 class="mt-0 mb-3 text-red-700 dark:text-red-300">Yıkıcı işlem</h5>
                     <div class="flex flex-wrap gap-2">
-                        <p-button
-                            label="Üyeyi kurumdan çıkar"
-                            icon="pi pi-user-minus"
-                            severity="danger"
-                            [disabled]="busyAdd() || busyAddClinic()"
-                            (onClick)="openRemoveMemberConfirm()"
-                        />
+                        <p-button label="Üyeyi kurumdan çıkar" icon="pi pi-user-minus" severity="danger" [disabled]="busyAdd() || busyAddClinic()" (onClick)="openRemoveMemberConfirm()" />
                     </div>
                 </div>
             }
@@ -127,9 +90,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                         <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ claimsOptionsError() }}</p>
                     }
                     @if (canManageTenantAccess() && !m.isCurrentUser) {
-                        <div
-                            class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700"
-                        >
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700">
                             <div class="flex-1 min-w-[12rem] w-full sm:w-auto">
                                 <label for="tmAddClaim" class="block text-xs font-medium text-muted-color mb-1">Rol ekle</label>
                                 <select
@@ -138,11 +99,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                     style="min-height: 2.5rem"
                                     [ngModel]="selectedClaimId()"
                                     (ngModelChange)="selectedClaimId.set($event)"
-                                    [disabled]="
-                                        assignableFiltered().length === 0 ||
-                                        busyAddClinic() ||
-                                        busyRemoveClinicId() !== null
-                                    "
+                                    [disabled]="assignableFiltered().length === 0 || busyAddClinic() || busyRemoveClinicId() !== null"
                                 >
                                     <option value="">Atanabilir rol seçin</option>
                                     @for (opt of assignableFiltered(); track opt.id) {
@@ -155,13 +112,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                 icon="pi pi-plus"
                                 styleClass="shrink-0"
                                 [loading]="busyAdd()"
-                                [disabled]="
-                                    !selectedClaimId() ||
-                                    assignableFiltered().length === 0 ||
-                                    busyRemoveClaimId() !== null ||
-                                    busyAddClinic() ||
-                                    busyRemoveClinicId() !== null
-                                "
+                                [disabled]="!selectedClaimId() || assignableFiltered().length === 0 || busyRemoveClaimId() !== null || busyAddClinic() || busyRemoveClinicId() !== null"
                                 (onClick)="onAddRole()"
                             />
                         </div>
@@ -171,16 +122,11 @@ import { catchError, forkJoin, of } from 'rxjs';
                         <p class="text-sm text-muted-color mt-0 mb-3">Kendi hesabınız için rol ekleyemezsiniz.</p>
                     }
                     @if (m.claims.length === 0) {
-                        <app-empty-state
-                            message="Bu üye için listelenen rol veya yetki yok."
-                            hint="Backend bu koleksiyonu boş döndürdü."
-                        />
+                        <app-empty-state message="Bu üye için listelenen rol veya yetki yok." hint="Backend bu koleksiyonu boş döndürdü." />
                     } @else {
                         <div class="flex flex-wrap gap-2 mb-3">
                             @for (c of m.claims; track c.id + c.name) {
-                                <div
-                                    class="inline-flex flex-wrap items-center gap-2 max-w-full rounded-full border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-800/40 px-3 py-1.5 text-sm"
-                                >
+                                <div class="inline-flex flex-wrap items-center gap-2 max-w-full rounded-full border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-800/40 px-3 py-1.5 text-sm">
                                     <span class="font-medium break-words">{{ c.name }}</span>
                                     @if (canManageTenantAccess() && !m.isCurrentUser && c.canRemove) {
                                         <p-button
@@ -189,12 +135,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                             severity="danger"
                                             styleClass="p-button-sm p-button-text shrink-0"
                                             [loading]="busyRemoveClaimId() === c.id"
-                                            [disabled]="
-                                                busyAdd() ||
-                                                busyAddClinic() ||
-                                                busyRemoveClinicId() !== null ||
-                                                (busyRemoveClaimId() !== null && busyRemoveClaimId() !== c.id)
-                                            "
+                                            [disabled]="busyAdd() || busyAddClinic() || busyRemoveClinicId() !== null || (busyRemoveClaimId() !== null && busyRemoveClaimId() !== c.id)"
                                             (onClick)="onRemoveRole(c.id)"
                                         />
                                     }
@@ -202,8 +143,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                             }
                         </div>
                         <p class="text-sm text-muted-color m-0 mb-2">
-                            {{ effectivePermissionSummary().assignedRoleCount }} {{ copy.tenantMemberSummaryRolesPart }}
-                            · {{ effectivePermissionSummary().uniquePermissionCount }}
+                            {{ effectivePermissionSummary().assignedRoleCount }} {{ copy.tenantMemberSummaryRolesPart }} · {{ effectivePermissionSummary().uniquePermissionCount }}
                             {{ copy.tenantMemberSummaryUniquePermsPart }}
                             · {{ effectivePermissionSummary().groupCount }} {{ copy.tenantMemberSummaryGroupsPart }}
                         </p>
@@ -211,12 +151,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                             <p class="text-xs text-orange-600 dark:text-orange-400 m-0 mb-2" role="status">{{ mxErr }}</p>
                         }
                         @if (canManageTenantAccess()) {
-                            <p-button
-                                [label]="copy.tenantMemberViewPermissionSummaryButton"
-                                icon="pi pi-list"
-                                styleClass="p-button-outlined"
-                                (onClick)="openPermissionSummary()"
-                            />
+                            <p-button [label]="copy.tenantMemberViewPermissionSummaryButton" icon="pi pi-list" styleClass="p-button-outlined" (onClick)="openPermissionSummary()" />
                         }
                         <p-dialog
                             [header]="copy.tenantMemberPermissionDialogTitle"
@@ -228,9 +163,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                             (visibleChange)="onPermissionSummaryVisible($event)"
                         >
                             <p class="text-sm text-muted-color m-0 mb-3">{{ copy.tenantMemberPermissionDialogHint }}</p>
-                            <div
-                                class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40"
-                            >
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40">
                                 <div class="text-sm">
                                     <p class="m-0 text-muted-color">{{ copy.tenantMemberSummaryRolesPart }}</p>
                                     <p class="m-0 font-semibold">{{ effectivePermissionSummary().assignedRoleCount }}</p>
@@ -249,9 +182,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                             </p>
                             <div class="flex flex-wrap gap-2 mb-4">
                                 @for (rc of m.claims; track rc.id + rc.name) {
-                                    <span
-                                        class="text-xs sm:text-sm px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600"
-                                    >
+                                    <span class="text-xs sm:text-sm px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600">
                                         {{ rc.name }}
                                     </span>
                                 }
@@ -297,14 +228,10 @@ import { catchError, forkJoin, of } from 'rxjs';
                         <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ clinicsPickerError() }}</p>
                     }
                     @if (canManageTenantAccess() && !m.isCurrentUser) {
-                        <div
-                            class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700"
-                        >
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700">
                             <div class="flex-1 min-w-[12rem] w-full sm:w-auto">
                                 <label for="tmAddClinic" class="block text-xs font-medium text-muted-color mb-1">Klinik ekle</label>
-                                <p class="text-xs text-muted-color m-0 mb-2">
-                                    Kurum kapsamındaki klinikler listelenir (kişisel klinik listeniz değil); bu üyede zaten olanlar seçenekte gösterilmez.
-                                </p>
+                                <p class="text-xs text-muted-color m-0 mb-2">Kurum kapsamındaki klinikler listelenir (kişisel klinik listeniz değil); bu üyede zaten olanlar seçenekte gösterilmez.</p>
                                 <select
                                     id="tmAddClinic"
                                     class="w-full p-inputtext p-component"
@@ -324,13 +251,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                 icon="pi pi-plus"
                                 styleClass="shrink-0"
                                 [loading]="busyAddClinic()"
-                                [disabled]="
-                                    !selectedClinicId() ||
-                                    assignableClinicsFiltered().length === 0 ||
-                                    busyAdd() ||
-                                    busyRemoveClaimId() !== null ||
-                                    busyRemoveClinicId() !== null
-                                "
+                                [disabled]="!selectedClinicId() || assignableClinicsFiltered().length === 0 || busyAdd() || busyRemoveClaimId() !== null || busyRemoveClinicId() !== null"
                                 (onClick)="onAddClinic()"
                             />
                         </div>
@@ -340,16 +261,11 @@ import { catchError, forkJoin, of } from 'rxjs';
                         <p class="text-sm text-muted-color mt-0 mb-3">Kendi hesabınız için klinik üyeliği ekleyemez veya kaldıramazsınız.</p>
                     }
                     @if (m.clinics.length === 0) {
-                        <app-empty-state
-                            message="Bu üye için listelenen klinik üyeliği yok."
-                            hint="Backend bu koleksiyonu boş döndürdü."
-                        />
+                        <app-empty-state message="Bu üye için listelenen klinik üyeliği yok." hint="Backend bu koleksiyonu boş döndürdü." />
                     } @else {
                         <ul class="list-none p-0 m-0 space-y-2">
                             @for (cl of m.clinics; track cl.id + cl.name) {
-                                <li
-                                    class="p-3 rounded-lg border border-surface-200 dark:border-surface-700 text-sm flex flex-wrap items-center justify-between gap-2"
-                                >
+                                <li class="p-3 rounded-lg border border-surface-200 dark:border-surface-700 text-sm flex flex-wrap items-center justify-between gap-2">
                                     <span class="font-medium break-words">{{ cl.name }}</span>
                                     <div class="flex flex-wrap items-center gap-2 shrink-0">
                                         @if (cl.isActive === true) {
@@ -364,12 +280,7 @@ import { catchError, forkJoin, of } from 'rxjs';
                                                 severity="danger"
                                                 styleClass="p-button-sm p-button-text shrink-0"
                                                 [loading]="busyRemoveClinicId() === cl.id"
-                                                [disabled]="
-                                                    busyAddClinic() ||
-                                                    busyAdd() ||
-                                                    busyRemoveClaimId() !== null ||
-                                                    (busyRemoveClinicId() !== null && busyRemoveClinicId() !== cl.id)
-                                                "
+                                                [disabled]="busyAddClinic() || busyAdd() || busyRemoveClaimId() !== null || (busyRemoveClinicId() !== null && busyRemoveClinicId() !== cl.id)"
                                                 (onClick)="onRemoveClinic(cl.id)"
                                             />
                                         }
@@ -402,9 +313,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
 
     /** `Tenants.InviteCreate` ve salt okunur değil — rol/klinik mutasyonları. */
-    readonly canManageTenantAccess = computed(
-        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
-    );
+    readonly canManageTenantAccess = computed(() => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked());
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -454,12 +363,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
         };
     });
 
-    readonly effectivePermissionGroups = computed(() =>
-        buildPermissionGroupPanels(
-            this.effectivePermissionSummary().permissions,
-            this.copy.tenantRoleMatrixGroupOther
-        )
-    );
+    readonly effectivePermissionGroups = computed(() => buildPermissionGroupPanels(this.effectivePermissionSummary().permissions, this.copy.tenantRoleMatrixGroupOther));
 
     readonly assignableFiltered = computed(() => {
         const m = this.member();
@@ -486,8 +390,6 @@ export class TenantMemberDetailPageComponent implements OnInit {
 
         return list.filter((c) => !assigned.has(c.id));
     });
-
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     formatConfirmed(v: boolean | null): string {
         if (v === true) {

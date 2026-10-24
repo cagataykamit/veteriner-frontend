@@ -8,26 +8,17 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
-import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TenantReadOnlyContextService } from '@/app/features/subscriptions/services/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { HbsSectionComponent } from '@/app/features/hbs/components/hbs-section.component';
 import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
+import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
     selector: 'app-prescription-detail-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        ButtonModule,
-        AppPageHeaderComponent,
-        PetAlertBannerComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        HbsSectionComponent
-    ],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, HbsSectionComponent, TrDatePipe, TrDateTimePipe],
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Reçete kaydedildi.</p>
@@ -43,14 +34,7 @@ import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
             <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Reçete" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdatePrescription && !ro.mutationBlocked()) {
-                        <a
-                            [routerLink]="['/panel/prescriptions', row()!.id, 'edit']"
-                            pButton
-                            type="button"
-                            label="Düzenle"
-                            icon="pi pi-pencil"
-                            class="p-button-secondary"
-                        ></a>
+                        <a [routerLink]="['/panel/prescriptions', row()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
                         @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
                             <a
                                 [routerLink]="['/panel/payments/new']"
@@ -67,23 +51,9 @@ import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
                             ></a>
                         }
                     } @else if (canUpdatePrescription && ro.mutationBlocked()) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Düzenle (salt okunur)"
-                            icon="pi pi-lock"
-                            [disabled]="true"
-                            class="p-button-secondary"
-                        ></button>
+                        <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                         @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <button
-                                pButton
-                                type="button"
-                                label="Ödeme Oluştur (salt okunur)"
-                                icon="pi pi-lock"
-                                [disabled]="true"
-                                class="p-button-secondary"
-                            ></button>
+                            <button pButton type="button" label="Ödeme Oluştur (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
                         }
                     }
                 </div>
@@ -96,31 +66,23 @@ import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
                         <h5 class="mt-0 mb-4">Genel</h5>
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Reçete tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.prescribedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.prescribedAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Takip tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDate(row()!.followUpDateUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.followUpDateUtc | trDate }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.createdAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDateTime(row()!.updatedAtUtc) }}</dd>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
                             @if (row()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a
-                                        [routerLink]="['/panel/examinations', row()!.examinationId]"
-                                        class="text-primary font-medium no-underline"
-                                        >Muayene kaydına git →</a
-                                    >
+                                    <a [routerLink]="['/panel/examinations', row()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
                                 </dd>
                             }
                             @if (row()!.treatmentId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Tedavi</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a
-                                        [routerLink]="['/panel/treatments', row()!.treatmentId]"
-                                        class="text-primary font-medium no-underline"
-                                        >Tedavi kaydına git →</a
-                                    >
+                                    <a [routerLink]="['/panel/treatments', row()!.treatmentId]" class="text-primary font-medium no-underline">Tedavi kaydına git →</a>
                                 </dd>
                             }
                         </dl>
@@ -188,13 +150,7 @@ import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
                     </div>
                 }
                 <div class="col-span-12">
-                    <app-hbs-section
-                        kind="prescription"
-                        [recordId]="row()!.id"
-                        [entry]="row()!.hbs"
-                        [canEdit]="canUpdatePrescription && !ro.mutationBlocked()"
-                        (entryChange)="onHbsChange($event)"
-                    />
+                    <app-hbs-section kind="prescription" [recordId]="row()!.id" [entry]="row()!.hbs" [canEdit]="canUpdatePrescription && !ro.mutationBlocked()" (entryChange)="onHbsChange($event)" />
                 </div>
             </div>
         }
@@ -211,9 +167,6 @@ export class PrescriptionDetailPageComponent implements OnInit {
     readonly row = signal<PrescriptionDetailVm | null>(null);
     readonly showSavedBanner = signal(false);
     readonly canUpdatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM);
-
-    readonly formatDate = (v: string | null) => formatUtcIsoAsLocalDateDisplay(v);
-    readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
 
     private prescriptionId = '';
 

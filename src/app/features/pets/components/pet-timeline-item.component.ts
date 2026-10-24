@@ -2,35 +2,23 @@ import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/features/administrations/utils/administration-labels';
 import type { PetTimelineItemVm } from '@/app/features/pets/models/pet-timeline-vm.model';
-import {
-    PET_TIMELINE_VOIDED_LABEL,
-    petTimelineEventLink,
-    petTimelineExaminationLink,
-    petTimelineStatusLabel,
-    petTimelineTypeIcon,
-    petTimelineTypeLabel
-} from '@/app/features/pets/utils/pet-timeline.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { PET_TIMELINE_VOIDED_LABEL, petTimelineEventLink, petTimelineExaminationLink, petTimelineStatusLabel, petTimelineTypeIcon, petTimelineTypeLabel } from '@/app/features/pets/utils/pet-timeline.utils';
+import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Zaman çizelgesinin tek satırı: tam sayfa ve hasta kartı aynı görünümü kullanır. */
 @Component({
     selector: 'li[appPetTimelineItem]',
     standalone: true,
-    imports: [RouterLink],
+    imports: [RouterLink, TrDateTimePipe],
     host: {
         class: 'flex gap-3 py-3 border-b border-surface-200 dark:border-surface-700 last:border-b-0',
         '[class.opacity-60]': 'item().isVoided'
     },
     template: `
-        <i
-            class="pi {{ icon(item().type) }} text-xl text-primary mt-1"
-            [attr.title]="typeLabel(item().type)"
-            [attr.aria-label]="typeLabel(item().type)"
-            data-testid="type-icon"
-        ></i>
+        <i class="pi {{ icon(item().type) }} text-xl text-primary mt-1" [attr.title]="typeLabel(item().type)" [attr.aria-label]="typeLabel(item().type)" data-testid="type-icon"></i>
         <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-baseline gap-x-2">
-                <span class="text-muted-color text-sm">{{ formatDt(item().eventAtUtc) }}</span>
+                <span class="text-muted-color text-sm">{{ item().eventAtUtc | trDateTime }}</span>
                 <span class="text-muted-color text-sm">· {{ typeLabel(item().type) }}</span>
                 @if (statusLabel(item()); as status) {
                     <span class="text-sm" data-testid="status">· {{ status }}</span>
@@ -68,7 +56,6 @@ export class PetTimelineItemComponent {
 
     readonly voidedLabel = PET_TIMELINE_VOIDED_LABEL;
     readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly icon = petTimelineTypeIcon;
     readonly typeLabel = petTimelineTypeLabel;
     readonly statusLabel = petTimelineStatusLabel;

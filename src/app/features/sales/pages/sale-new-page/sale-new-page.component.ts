@@ -36,7 +36,7 @@ import { TenantReadOnlyContextService } from '@/app/features/subscriptions/servi
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { formatMoney } from '@/app/shared/utils/money.utils';
+import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 
 type BatchState = { status: 'loading' } | { status: 'ready'; info: ProductStockBatchesVm } | { status: 'error'; message: string };
 
@@ -67,7 +67,7 @@ function numberFromInput(event: Event): number | null {
     selector: 'app-sale-new-page',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, SelectButtonModule, ClientSearchComponent, AppPageHeaderComponent, SaleReceiptComponent],
+    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, SelectButtonModule, ClientSearchComponent, AppPageHeaderComponent, SaleReceiptComponent, MoneyPipe],
     host: { '(keydown.control.enter)': 'submit()' },
     template: `
         <app-page-header title="Hızlı satış" description="Ürünü okutun ya da arayın; Enter ile sepete ekleyin, Ctrl+Enter ile tamamlayın." />
@@ -126,17 +126,12 @@ function numberFromInput(event: Event): number | null {
                             <ul id="sale-results" role="listbox" class="list-none m-0 mt-2 p-0 border border-surface rounded-border overflow-hidden" data-testid="sale-results">
                                 @for (p of results(); track p.id; let i = $index) {
                                     <li role="option" [attr.aria-selected]="i === activeIndex()">
-                                        <button
-                                            type="button"
-                                            class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left border-0 cursor-pointer bg-transparent"
-                                            [class.bg-emphasis]="i === activeIndex()"
-                                            (click)="addProduct(p)"
-                                        >
+                                        <button type="button" class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left border-0 cursor-pointer bg-transparent" [class.bg-emphasis]="i === activeIndex()" (click)="addProduct(p)">
                                             <span class="min-w-0">
                                                 <span class="font-medium">{{ p.name }}</span>
                                                 <span class="block text-xs text-muted-color">{{ productMeta(p) }}</span>
                                             </span>
-                                            <span class="whitespace-nowrap">{{ money(p.unitPrice, p.currency) }}</span>
+                                            <span class="whitespace-nowrap">{{ p.unitPrice | money: p.currency }}</span>
                                         </button>
                                     </li>
                                 }
@@ -172,7 +167,7 @@ function numberFromInput(event: Event): number | null {
                                         </div>
                                         <div class="col-span-12 sm:col-span-6 text-right sm:pb-2">
                                             <span class="text-xs text-muted-color mr-2">Tutar</span>
-                                            <span class="font-semibold">{{ money(v.amount) }}</span>
+                                            <span class="font-semibold">{{ v.amount | money }}</span>
                                         </div>
                                     </div>
                                     @if (v.error) {
@@ -244,12 +239,12 @@ function numberFromInput(event: Event): number | null {
 
                         <dl class="m-0 mt-5 pt-3 border-t border-surface grid grid-cols-2 gap-y-1" data-testid="sale-totals">
                             <dt class="text-lg font-semibold">Toplam</dt>
-                            <dd class="m-0 text-right text-lg font-semibold">{{ money(total()) }}</dd>
+                            <dd class="m-0 text-right text-lg font-semibold">{{ total() | money }}</dd>
                             <dt class="text-muted-color">Alınacak</dt>
-                            <dd class="m-0 text-right">{{ money(payable() ?? 0) }}</dd>
+                            <dd class="m-0 text-right">{{ payable() ?? 0 | money }}</dd>
                             @if (outstanding() > 0) {
                                 <dt class="text-muted-color">Veresiye (kalan borç)</dt>
-                                <dd class="m-0 text-right">{{ money(outstanding()) }}</dd>
+                                <dd class="m-0 text-right">{{ outstanding() | money }}</dd>
                             }
                         </dl>
 
@@ -257,17 +252,7 @@ function numberFromInput(event: Event): number | null {
                             <p class="text-red-500 mt-3 mb-1" role="alert" data-testid="sale-error">{{ submitError() }}</p>
                             <small class="text-muted-color block">Aynı sepeti yeniden göndermek güvenlidir; satış iki kez kaydedilmez.</small>
                         }
-                        <p-button
-                            class="block mt-4"
-                            styleClass="w-full"
-                            type="button"
-                            label="Satışı tamamla"
-                            icon="pi pi-check"
-                            [loading]="submitting()"
-                            [disabled]="!canSubmit()"
-                            (onClick)="submit()"
-                            data-testid="sale-submit"
-                        />
+                        <p-button class="block mt-4" styleClass="w-full" type="button" label="Satışı tamamla" icon="pi pi-check" [loading]="submitting()" [disabled]="!canSubmit()" (onClick)="submit()" data-testid="sale-submit" />
                         @if (ro.mutationBlocked()) {
                             <small class="block mt-2 text-muted-color">Kurum aboneliği salt okunur; satış kaydedilemez.</small>
                         }
@@ -290,7 +275,6 @@ export class SaleNewPageComponent {
     protected readonly methodOptions = METHOD_OPTIONS;
     protected readonly modeOptions = MODE_OPTIONS;
     protected readonly canReadSales = this.auth.hasOperationClaim(SALES_READ_CLAIM);
-    protected readonly money = (amount: number, currency = 'TRY') => formatMoney(amount, currency);
     protected readonly numberFrom = numberFromInput;
 
     protected readonly term = signal('');
@@ -339,12 +323,7 @@ export class SaleNewPageComponent {
                 amount: cartLineAmount(line),
                 error: line.quantity == null && line.unitPrice == null ? null : cartLineError(line),
                 batch: info && guide ? { ...guide, options: info.batches.length > 0 ? saleBatchOptions(info) : null } : null,
-                batchNote:
-                    state?.status === 'loading'
-                        ? 'Stok bilgisi yükleniyor…'
-                        : state?.status === 'error'
-                          ? `${state.message} Satış, SKT'si en yakın uygun partiden otomatik düşülür.`
-                          : ''
+                batchNote: state?.status === 'loading' ? 'Stok bilgisi yükleniyor…' : state?.status === 'error' ? `${state.message} Satış, SKT'si en yakın uygun partiden otomatik düşülür.` : ''
             };
         })
     );
@@ -358,7 +337,10 @@ export class SaleNewPageComponent {
 
         const names = new Map(result.sale.lines.map((l) => [l.productId, l.productName]));
 
-        return result.stocks.filter((s) => s.isBelowMinimum).map((s) => names.get(s.productId) ?? '').filter(Boolean);
+        return result.stocks
+            .filter((s) => s.isBelowMinimum)
+            .map((s) => names.get(s.productId) ?? '')
+            .filter(Boolean);
     });
 
     constructor() {
@@ -484,11 +466,7 @@ export class SaleNewPageComponent {
         }
 
         this.cartNotice.set(null);
-        this.lines.set(
-            same
-                ? current.map((l) => (l === same ? { ...l, quantity: (l.quantity ?? 0) + 1 } : l))
-                : [...current, newCartLine(product, `l${++this.lineSeq}`)]
-        );
+        this.lines.set(same ? current.map((l) => (l === same ? { ...l, quantity: (l.quantity ?? 0) + 1 } : l)) : [...current, newCartLine(product, `l${++this.lineSeq}`)]);
         this.loadBatches(product.id);
         this.clearSearch();
         this.searchInput()?.nativeElement.focus();
@@ -581,8 +559,7 @@ export class SaleNewPageComponent {
         this.batchStates.update((s) => ({ ...s, [productId]: { status: 'loading' } }));
         this.stockBatches.getByProduct(productId, clinicId).subscribe({
             next: (info) => this.batchStates.update((s) => ({ ...s, [productId]: { status: 'ready', info } })),
-            error: (e: Error) =>
-                this.batchStates.update((s) => ({ ...s, [productId]: { status: 'error', message: e.message || 'Parti bilgisi yüklenemedi.' } }))
+            error: (e: Error) => this.batchStates.update((s) => ({ ...s, [productId]: { status: 'error', message: e.message || 'Parti bilgisi yüklenemedi.' } }))
         });
     }
 }

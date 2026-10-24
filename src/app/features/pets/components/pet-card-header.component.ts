@@ -9,8 +9,8 @@ import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
-import { formatDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
+import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress', 'Completed']);
 
@@ -21,7 +21,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
 @Component({
     selector: 'app-pet-card-header',
     standalone: true,
-    imports: [RouterLink, PetAlertBadgesComponent, CardAccountStatusComponent],
+    imports: [RouterLink, PetAlertBadgesComponent, CardAccountStatusComponent, TrDatePipe, TrDateTimePipe],
     template: `
         <section class="card mb-4" aria-label="Sahip, uyarılar ve hesap durumu" data-testid="pet-card-header">
             @if (pet().status === 'Deceased') {
@@ -32,7 +32,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                 >
                     <i class="pi pi-minus-circle" aria-hidden="true"></i>Vefat
                     @if (pet().deceasedOn; as on) {
-                        <span class="font-normal">· {{ formatDate(on) }}</span>
+                        <span class="font-normal">· {{ on | trDate }}</span>
                     }
                     <span class="font-normal text-muted-color">· yeni randevu, geliş ve muayene açılmaz</span>
                 </p>
@@ -63,7 +63,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                     <dd class="m-0">
                         @if (summary()?.lastVisit; as v) {
                             @if (v.data; as visit) {
-                                {{ formatDt(visit.arrivedAtUtc) }}
+                                {{ visit.arrivedAtUtc | trDateTime }}
                                 @if (careLabel(visit.careStatus); as label) {
                                     <span class="text-muted-color text-sm"> · {{ label }}</span>
                                 }
@@ -90,8 +90,6 @@ export class PetCardHeaderComponent {
     readonly balance = input<PetCardSection<Pick<ClientBalanceVm, 'outstandingAmount' | 'currency'>>>(null);
     /** `null` = randevu okuma yetkisi yok (alan gösterilmez); `ok` + `null` veri = planlı randevu yok. */
     readonly nextAppointment = input<PetCardSection<PetNextAppointmentVm | null>>(null);
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
-    readonly formatDate = (v: string) => formatDateDisplay(v);
 
     readonly phone = computed(() => formatClientPhoneForDisplay(this.pet().clientPhone));
     readonly phoneHref = computed(() => clientPhoneTelHref(this.pet().clientPhone));

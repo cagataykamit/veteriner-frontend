@@ -13,13 +13,13 @@ import { ReportResultsComponent } from '@/app/features/reports/shared/report-res
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
-import { formatMoney } from '@/app/shared/utils/money.utils';
 import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.utils';
+import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 
 @Component({
     selector: 'app-outstanding-balances-report-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent],
+    imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, MoneyPipe],
     template: `
         <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" [title]="copy.outstandingBalancesReportTitle" [description]="copy.outstandingBalancesReportDescription" />
 
@@ -32,16 +32,11 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
             [extraFilter]="{ label: copy.outstandingBalancesReportMinAmount }"
         />
 
-        <app-report-results
-            [state]="state"
-            [totalLabel]="copy.outstandingBalancesReportTotalCount"
-            [emptyMessage]="copy.outstandingBalancesReportEmptyMessage"
-            [emptyHint]="copy.outstandingBalancesReportEmptyHint"
-        >
+        <app-report-results [state]="state" [totalLabel]="copy.outstandingBalancesReportTotalCount" [emptyMessage]="copy.outstandingBalancesReportEmptyMessage" [emptyHint]="copy.outstandingBalancesReportEmptyHint">
             <ng-template #summary>
                 <div class="col-span-12 sm:col-span-6">
                     <span class="block text-muted-color text-sm mb-1">{{ copy.outstandingBalancesReportTotalAmount }}</span>
-                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ money(state.report()!.totalOutstandingAmount) }}</div>
+                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ state.report()!.totalOutstandingAmount | money }}</div>
                 </div>
             </ng-template>
             <ng-template #rows>
@@ -76,13 +71,11 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                                     <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
                                 </td>
                                 <td>{{ row.phone ?? '—' }}</td>
-                                <td class="text-right font-medium">{{ money(row.outstandingAmount) }}</td>
+                                <td class="text-right font-medium">{{ row.outstandingAmount | money }}</td>
                                 <td class="text-right">{{ row.openChargeCount }}</td>
                                 <td>{{ date(row.oldestOpenChargeAtUtc) }}</td>
                                 <td>
-                                    <a [routerLink]="chargesRoute" [queryParams]="{ clientId: row.clientId }" class="text-primary font-medium no-underline text-sm">{{
-                                        copy.outstandingBalancesReportCharges
-                                    }}</a>
+                                    <a [routerLink]="chargesRoute" [queryParams]="{ clientId: row.clientId }" class="text-primary font-medium no-underline text-sm">{{ copy.outstandingBalancesReportCharges }}</a>
                                 </td>
                             </tr>
                         </ng-template>
@@ -94,15 +87,13 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                         <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                             <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
                             <div class="text-sm text-muted-color mb-2">{{ row.phone ?? '—' }}</div>
-                            <div class="font-medium mb-1">{{ money(row.outstandingAmount) }}</div>
+                            <div class="font-medium mb-1">{{ row.outstandingAmount | money }}</div>
                             <div class="text-sm text-muted-color mb-2">
                                 {{ copy.outstandingBalancesReportColOpenCharges }}: {{ row.openChargeCount }} · {{ copy.outstandingBalancesReportColOldest }}:
                                 {{ date(row.oldestOpenChargeAtUtc) }}
                             </div>
                             <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
-                                <a [routerLink]="chargesRoute" [queryParams]="{ clientId: row.clientId }" class="text-primary font-medium no-underline text-sm"
-                                    >{{ copy.outstandingBalancesReportCharges }} →</a
-                                >
+                                <a [routerLink]="chargesRoute" [queryParams]="{ clientId: row.clientId }" class="text-primary font-medium no-underline text-sm">{{ copy.outstandingBalancesReportCharges }} →</a>
                             </div>
                         </div>
                     }
@@ -129,7 +120,6 @@ export class OutstandingBalancesReportPageComponent implements OnInit {
     readonly displayedRows = computed(() => [...(this.state.report()?.items ?? [])]);
     readonly totalCount = computed(() => this.state.report()?.totalCount ?? 0);
 
-    readonly money = (n: number) => formatMoney(n, 'TRY');
     readonly date = (v: string) => formatUtcIsoAsLocalDateDisplay(v);
 
     ngOnInit(): void {
