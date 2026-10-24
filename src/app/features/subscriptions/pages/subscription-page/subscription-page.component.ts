@@ -12,6 +12,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { SubscriptionDiscountCardComponent } from '@/app/features/sales-partners/components/subscription-discount-card.component';
+import { ExampleClinicLoadCardComponent } from '@/app/features/example-clinic/components/example-clinic-load-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import type { PendingPlanChangeStatusKey, PendingPlanChangeTypeKey, PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
@@ -59,7 +60,7 @@ interface ReturnBannerVm {
 @Component({
     selector: 'app-subscription-page',
     standalone: true,
-    imports: [CommonModule, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, SubscriptionDiscountCardComponent, TrDatePipe, TrDateTimePipe],
+    imports: [CommonModule, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, SubscriptionDiscountCardComponent, ExampleClinicLoadCardComponent, TrDatePipe, TrDateTimePipe],
     providers: [MessageService],
     template: `
         <p-toast position="bottom-right" />
@@ -194,6 +195,8 @@ interface ReturnBannerVm {
                         }
                     </div>
                 </div>
+
+                <app-example-clinic-load-card class="col-span-12" [canManage]="canManageSubscriptionOperations(s)" [trialing]="isTrialingSubscription(s)" />
 
                 <app-subscription-discount-card class="col-span-12" [canManage]="canManageSubscriptionOperations(s)" />
 
