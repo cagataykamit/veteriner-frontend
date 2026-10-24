@@ -50,7 +50,8 @@ describe('AppMenuitem', () => {
         fixture.destroy();
         navigationEnd();
 
+        // Yalnız bileşenin kendi aboneliği ölçülür; RouterLink direktifi de router.events'e abone olur ve
+        // Angular 21.2'de yok etme sonrası akışta gözlemci bırakabilir (Subject.observed bu yüzden kullanılmaz).
         expect(update).not.toHaveBeenCalled();
-        expect(events.observed).toBeFalse();
     });
 });
