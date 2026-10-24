@@ -47,6 +47,16 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      # Kritik açık koşuyu düşürür; yüksek seviye yalnız uyarı olarak raporlanır
+      # (geliştirme araçlarındaki geçişli paketler majör yükseltme gerektirebilir).
+      - name: Dependency audit
+        run: |
+          npm audit --audit-level=critical
+          npm audit --audit-level=high || echo "::warning::npm audit: yüksek seviyeli açık var (ayrıntı yukarıda)."
+
       # Üretim API adresi depo DEĞİŞKENİ (gizli değil): Settings → Secrets and variables → Actions → Variables → API_BASE_URL.
       # Tanımsızsa derleme depodaki varsayılanla sürer; etiket (sürüm) derlemesinde tanımsızlık hatadır.
       - name: Set production API URL
@@ -65,6 +75,10 @@ jobs:
       - name: Build (production)
         run: npx ng build --configuration production
 
+      - name: Build portal (production)
+        run: npx ng build portal --configuration production
+
+      # Proje verilmeyince her iki projenin (panel + portal) testleri koşar.
       - name: Test (headless)
         run: npx ng test --watch=false --karma-config=karma.ci.conf.cjs
 
