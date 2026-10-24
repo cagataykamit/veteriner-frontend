@@ -90,6 +90,8 @@ export function mapReminderLogItemDtoToVm(dto: ReminderLogItemDto): ReminderLogI
     const clinicId = toTrimmedString(dto.clinicId) || null;
     const clinicNameFromApi = toTrimmedString(dto.clinicName);
 
+    const trialDailyLimit = isTrialDailyLimitSkip(dto.lastError);
+
     return {
         id: dto.id,
         clinicId,
@@ -97,12 +99,12 @@ export function mapReminderLogItemDtoToVm(dto: ReminderLogItemDto): ReminderLogI
         reminderTypeLabel: reminderTypeLabel(dto.reminderType),
         sourceEntityTypeLabel,
         sourceEntityId,
-        statusLabel: reminderStatusLabel(dto.status),
-        statusSeverity: reminderStatusSeverity(dto.status),
+        statusLabel: trialDailyLimit ? TRIAL_DAILY_LIMIT_STATUS_LABEL : reminderStatusLabel(dto.status),
+        statusSeverity: trialDailyLimit ? 'warn' : reminderStatusSeverity(dto.status),
         recipientDisplay: recipientDisplay(dto),
         relatedRecordLabel: relatedRecord.label,
         relatedRecordRoute: relatedRecord.route,
-        errorDisplay: mapErrorDisplay(dto.lastError),
+        errorDisplay: trialDailyLimit ? TRIAL_DAILY_LIMIT_ERROR_DISPLAY : mapErrorDisplay(dto.lastError),
         primaryDateUtc: dto.sentAtUtc ?? dto.failedAtUtc ?? dto.scheduledForUtc ?? dto.reminderDueAtUtc ?? dto.createdAtUtc ?? null
     };
 }
@@ -251,6 +253,18 @@ function relatedRecordMeta(
 }
 
 const REMINDER_ERROR_DISPLAY_MAX = 240;
+
+/**
+ * Deneme kiracısında günlük e-posta bütçesi (20) dolduğunda atlanan hatırlatma — `docs/TRIAL_LIMITS_API_CONTRACT.md` §3.3:
+ * `status = Skipped`, `lastError = "TrialDailyLimit"`. Ham kod gösterilmez; sonraki gün yeniden denenmez (K2).
+ */
+const TRIAL_DAILY_LIMIT_SKIP_REASON = 'TrialDailyLimit';
+const TRIAL_DAILY_LIMIT_STATUS_LABEL = 'Deneme günlük sınırı (20)';
+const TRIAL_DAILY_LIMIT_ERROR_DISPLAY = 'Deneme sürümünde günlük e-posta sınırı (20) dolduğu için gönderilmedi; abonelikle kalkar. Bu hatırlatma yeniden denenmez.';
+
+function isTrialDailyLimitSkip(lastError: unknown): boolean {
+    return toTrimmedString(lastError).toLowerCase() === TRIAL_DAILY_LIMIT_SKIP_REASON.toLowerCase();
+}
 
 function mapErrorDisplay(lastError: unknown): string {
     const text = toTrimmedString(lastError);
