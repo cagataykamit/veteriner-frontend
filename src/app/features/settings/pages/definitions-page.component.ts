@@ -9,7 +9,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     standalone: true,
     imports: [AppPageHeaderComponent, NavigationCardsComponent],
     template: `
-        <app-page-header [categoryLink]="settingsRoute" categoryLinkLabel="Ayarlar" title="Tanımlar" description="Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü ve muayene şablonları gibi referans kayıtlarını yönetin." />
+        <app-page-header [categoryLink]="settingsRoute" categoryLinkLabel="Ayarlar" title="Tanımlar" description="Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları ve yatış konumları gibi referans kayıtlarını yönetin." />
         <app-navigation-cards [entries]="entries" />
     `
 })

@@ -107,6 +107,7 @@ export const BREEDS_ROUTE = `${DEFINITIONS_ROUTE}/breeds`;
 export const PRODUCT_CATEGORIES_ROUTE = `${DEFINITIONS_ROUTE}/product-categories`;
 export const CLINICAL_TERMS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-terms`;
 export const EXAMINATION_TEMPLATES_ROUTE = `${DEFINITIONS_ROUTE}/examination-templates`;
+export const HOSPITALIZATION_WARDS_ROUTE = `${DEFINITIONS_ROUTE}/hospitalization-wards`;
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const REPORTS_ROUTE = '/panel/reports';
 export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
@@ -369,6 +370,14 @@ export const DEFINITION_ENTRIES: readonly CardEntry[] = [
         // Yalnız okuyan/uygulayan şablonu muayenede seçer; kart yönetebilene görünür (sözlük kartıyla aynı ilke).
         claims: [EXAMINATION_TEMPLATES_CREATE_CLAIM, EXAMINATION_TEMPLATES_UPDATE_CLAIM, EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM],
         description: 'Şikâyet, bulgu, plan ve işlem satırlarını tek seçimle dolduran paketler.'
+    },
+    {
+        label: 'Yatış konumları',
+        icon: 'pi pi-fw pi-building',
+        route: HOSPITALIZATION_WARDS_ROUTE,
+        // Okuma policy'si sözleşme §10.2 ile aynı (herhangi biri yeter); düzenleme sayfa içinde `Clinics.Update`'e bağlıdır.
+        claims: [CLINICS_UPDATE_CLAIM, CLINICS_READ_CLAIM, HOSPITALIZATIONS_READ_CLAIM],
+        description: 'Yatış formunda seçilen bölüm ve oda/kafes tanımları; klinik bazlıdır, silinmez, pasife alınır.'
     }
 ];
 
@@ -418,7 +427,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-book',
                 route: DEFINITIONS_ROUTE,
                 claims: DEFINITION_ENTRIES.flatMap((e) => e.claims ?? []),
-                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü ve muayene şablonları gibi referans kayıtları.'
+                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları ve yatış konumları gibi referans kayıtları.'
             }
         ]
     },
