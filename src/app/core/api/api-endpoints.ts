@@ -444,6 +444,10 @@ export const ApiEndpoints = {
         /** GET CSV; Query `partnerId` (yoksa tüm ortaklar). */
         exportCsv: () => `/api/v1/admin/sales-partners/export.csv`
     },
+    /** Platform yöneticisi: deneme aktivasyon özeti (`TRIAL_ACTIVATION_METRICS_API_CONTRACT.md` §3); Query `fromUtc`/`toUtc`. */
+    trialMetrics: {
+        summary: () => `/api/v1/admin/trial-metrics`
+    },
     public: {
         ownerSignup: () => `/api/v1/public/owner-signup`,
         /** Anonim, hız sınırlı: satış ortağı kodu doğrulama; geçersizde tek tip yanıt. */
