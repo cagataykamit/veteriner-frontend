@@ -35,8 +35,8 @@ export interface TrialActivationMetricsDto {
     readonly exampleClinic: TrialMetricRatioDto;
     readonly activation: TrialActivationSummaryDto;
     readonly conversion: TrialMetricRatioDto;
-    readonly firstActionBreakdown: readonly TrialFirstActionBreakdownDto[];
-    readonly byOnboarding: readonly TrialOnboardingComparisonDto[];
+    readonly firstActionBreakdown: TrialFirstActionBreakdownDto[];
+    readonly byOnboarding: TrialOnboardingComparisonDto[];
 }
 
 /** Sözleşme §2.1 `ActivationSignalKind` → ekran etiketi; bilinmeyen tür ham adıyla gösterilir. */

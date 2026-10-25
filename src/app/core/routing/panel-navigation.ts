@@ -330,7 +330,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             { label: 'Özet', category: 'Panel', icon: 'fa-solid fa-fw fa-gauge', route: DASHBOARD_ROUTE, claims: [MANAGER_LEVEL_CLAIM] },
             // Yalnız Vetinity platform yöneticisi (ADR-037); klinik kullanıcılarında hiç görünmez.
             { label: 'Satış ortakları', icon: 'fa-solid fa-fw fa-handshake', route: SALES_PARTNERS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
-            { label: 'Deneme ölçümleri', icon: 'fa-solid fa-fw fa-chart-line', route: TRIAL_METRICS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
+            { label: 'Deneme ölçümleri', icon: 'fa-solid fa-fw fa-chart-simple', route: TRIAL_METRICS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Ayarlar', icon: 'fa-solid fa-fw fa-gear', route: SETTINGS_ROUTE }
         ]
     }
