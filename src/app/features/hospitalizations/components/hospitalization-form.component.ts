@@ -14,28 +14,13 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import {
-    mapHospitalizationUpsertFormToCreateRequest
-} from '@/app/features/hospitalizations/data/hospitalization.mapper';
+import { mapHospitalizationUpsertFormToCreateRequest } from '@/app/features/hospitalizations/data/hospitalization.mapper';
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
-import {
-    type HospitalizationUpsertFieldErrors,
-    parseHospitalizationUpsertHttpError
-} from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
-import {
-    FINALIZED_EXAMINATION_OPTION_HINT,
-    hospitalizationExaminationOption,
-    hospitalizationVisitOptions,
-    type HospitalizationRelationOption
-} from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
+import { type HospitalizationUpsertFieldErrors, parseHospitalizationUpsertHttpError } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
+import { FINALIZED_EXAMINATION_OPTION_HINT, hospitalizationExaminationOption, hospitalizationVisitOptions, type HospitalizationRelationOption } from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
 import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
-import {
-    HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY,
-    hospitalizationRoomOptions,
-    hospitalizationWardOptions,
-    roomRequiredWhenWardSelectedValidator
-} from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
+import { HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY, hospitalizationRoomOptions, hospitalizationWardOptions, roomRequiredWhenWardSelectedValidator } from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { examinationListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
@@ -45,11 +30,7 @@ import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selectio
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
-import {
-    DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
+import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import {
     HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE,
     HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY,
@@ -59,46 +40,29 @@ import {
     hospitalizationPlannedDischargeMin,
     plannedDischargeNotBeforeAdmissionValidator
 } from '@/app/features/hospitalizations/utils/hospitalization-date-validation.utils';
-import {
-    parseExaminationCreateRouteContext,
-    parseVisitExaminationRouteContext,
-    prefillPetFromRoute
-} from '@/app/shared/panel/examination-create-route-context.utils';
+import { parseExaminationCreateRouteContext, parseVisitExaminationRouteContext, prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-hospitalization-form',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
         <div [class.card]="!embedded()">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; kayıt oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromExamination()) {
-                <p class="text-sm text-muted-color mt-0 mb-4">
-                    Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.
-                </p>
+                <p class="text-sm text-muted-color mt-0 mb-4">Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.</p>
             }
             @if (contextFromVisit()) {
-                <p class="text-sm text-muted-color mt-0 mb-4">
-                    Bu geliş kaydından bağlam taşındı; müşteri, hasta ve geliş alanları kilitlidir.
-                </p>
+                <p class="text-sm text-muted-color mt-0 mb-4">Bu geliş kaydından bağlam taşındı; müşteri, hasta ve geliş alanları kilitlidir.</p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
@@ -122,7 +86,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="admittedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Yatış tarihi / saati *</label>
-                        <app-date-input inputId="admittedAtLocal" type="datetime-local" formControlName="admittedAtLocal" [min]="hospitalizationDateMinAllowed()" limit="past" />
+                        <app-date-input inputId="admittedAtLocal" type="datetime-local" formControlName="admittedAtLocal" [min]="hospitalizationDateMin" limit="past" />
                         @if (form.controls.admittedAtLocal.hasError('dateYearInvalid') && form.controls.admittedAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (form.controls.admittedAtLocal.hasError('hospitalizationDateTooFarPast') && form.controls.admittedAtLocal.touched) {
@@ -189,15 +153,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
                     <div class="col-span-12 md:col-span-6">
                         <label for="wardId" class="block text-sm font-medium text-muted-color mb-2">Bölüm</label>
-                        <p-select
-                            inputId="wardId"
-                            formControlName="wardId"
-                            [options]="wardOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                            [loading]="loadingWards()"
-                        />
+                        <p-select inputId="wardId" formControlName="wardId" [options]="wardOptions()" optionLabel="label" optionValue="value" styleClass="w-full" [loading]="loadingWards()" />
                         @if (wardsError()) {
                             <small class="text-red-500 block">{{ wardsError() }}</small>
                         } @else if (!loadingWards() && wardOptions().length === 1) {
@@ -206,15 +162,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="roomId" class="block text-sm font-medium text-muted-color mb-2">Oda / kafes</label>
-                        <p-select
-                            inputId="roomId"
-                            formControlName="roomId"
-                            [options]="roomOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'"
-                            styleClass="w-full"
-                        />
+                        <p-select inputId="roomId" formControlName="roomId" [options]="roomOptions()" optionLabel="label" optionValue="value" [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'" styleClass="w-full" />
                         @if (apiFieldErrors().roomId) {
                             <small class="text-red-500">{{ apiFieldErrors().roomId }}</small>
                         } @else if (form.hasError(roomRequiredKey) && form.controls.roomId.touched) {
@@ -246,18 +194,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || applyingRouteContext() || ro.mutationBlocked()"
-                    />
+                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || applyingRouteContext() || ro.mutationBlocked()" />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="cancel()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>
-
     `
 })
 export class HospitalizationFormComponent implements OnInit {
@@ -315,23 +256,23 @@ export class HospitalizationFormComponent implements OnInit {
     readonly roomOptions = computed(() => hospitalizationRoomOptions(this.wards(), this.selectedWardId()));
     protected readonly roomRequiredKey = HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY;
 
-    readonly form = this.fb.nonNullable.group({
-        clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }, Validators.required],
-        admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), hospitalizationDateNotTooFarPastValidator()]],
-        plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
-        examinationId: [''],
-        visitId: [''],
-        wardId: [''],
-        roomId: [{ value: '', disabled: true }],
-        reason: ['', Validators.required],
-        notes: ['']
-    }, { validators: [plannedDischargeNotBeforeAdmissionValidator(), roomRequiredWhenWardSelectedValidator()] });
+    readonly form = this.fb.nonNullable.group(
+        {
+            clientId: ['', Validators.required],
+            petId: [{ value: '', disabled: true }, Validators.required],
+            admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), hospitalizationDateNotTooFarPastValidator()]],
+            plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
+            examinationId: [''],
+            visitId: [''],
+            wardId: [''],
+            roomId: [{ value: '', disabled: true }],
+            reason: ['', Validators.required],
+            notes: ['']
+        },
+        { validators: [plannedDischargeNotBeforeAdmissionValidator(), roomRequiredWhenWardSelectedValidator()] }
+    );
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
-
-
-
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
@@ -406,8 +347,7 @@ export class HospitalizationFormComponent implements OnInit {
             return;
         }
 
-        const hasPet =
-            !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
+        const hasPet = !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
 
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
@@ -420,17 +360,12 @@ export class HospitalizationFormComponent implements OnInit {
         return hospitalizationPlannedDischargeMin(this.form.controls.admittedAtLocal.value, this.datetimeLocalInputMin);
     }
 
-    hospitalizationDateMinAllowed(): string {
-        return effectiveDateTimeLocalInputMin(hospitalizationDateTimeLocalMinAllowed());
-    }
+    // Bir kez hesaplanir: her degisiklik turunda yeniden uretilen dakika degeri dev modda NG0100 veriyordu.
+    readonly hospitalizationDateMin = effectiveDateTimeLocalInputMin(hospitalizationDateTimeLocalMinAllowed());
 
     cancel(): void {
         this.cancelled.emit();
     }
-
-
-
-
 
     onSubmit(): void {
         this.submitError.set(null);
@@ -503,8 +438,6 @@ export class HospitalizationFormComponent implements OnInit {
             }
         });
     }
-
-
 
     private loadWards(): void {
         const clinicId = this.auth.getClinicId()?.trim() ?? '';
@@ -613,13 +546,9 @@ export class HospitalizationFormComponent implements OnInit {
         });
     }
 
-
-
     /** Kesinleşmiş muayeneye yatış bağlanamaz (`Examinations.Finalized`): müşteri/hayvan taşınır, muayene bağı kurulmaz. */
     private applyFinalizedExaminationContext(clientId: string, petId: string): void {
-        this.selectionError.set(
-            'Bağlam taşınan muayene kesinleşmiş; yatış kesinleşmiş muayeneye bağlanamaz. Müşteri ve hasta dolduruldu; yatışı geliş kaydıyla veya muayenesiz oluşturabilirsiniz.'
-        );
+        this.selectionError.set('Bağlam taşınan muayene kesinleşmiş; yatış kesinleşmiş muayeneye bağlanamaz. Müşteri ve hasta dolduruldu; yatışı geliş kaydıyla veya muayenesiz oluşturabilirsiniz.');
         this.form.controls.clientId.setValue(clientId);
         this.form.controls.petId.setValue(petId);
         this.applyingRouteContext.set(false);

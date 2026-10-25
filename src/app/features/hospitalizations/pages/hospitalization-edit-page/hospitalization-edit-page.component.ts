@@ -18,16 +18,8 @@ import { ExaminationsService } from '@/app/features/examinations/services/examin
 import { mapHospitalizationUpsertFormToCreateRequest } from '@/app/features/hospitalizations/data/hospitalization.mapper';
 import type { HospitalizationEditVm } from '@/app/features/hospitalizations/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
-import {
-    type HospitalizationUpsertFieldErrors,
-    type HospitalizationUpsertFormFieldKey,
-    parseHospitalizationUpsertHttpError
-} from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
-import {
-    hospitalizationExaminationOption,
-    hospitalizationVisitOptions,
-    type HospitalizationRelationOption
-} from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
+import { type HospitalizationUpsertFieldErrors, type HospitalizationUpsertFormFieldKey, parseHospitalizationUpsertHttpError } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
+import { hospitalizationExaminationOption, hospitalizationVisitOptions, type HospitalizationRelationOption } from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
 import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
 import {
@@ -49,15 +41,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import {
-    fromIstanbulDateTimeLocalInputToUtcIso,
-    toIstanbulDateTimeLocalInputValue
-} from '@/app/shared/utils/date.utils';
-import {
-    DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import {
     HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE,
     HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY,
@@ -82,7 +67,10 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         AppPageHeaderComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppErrorStateComponent,
+        ClientSearchComponent,
+        PetSearchComponent,
+        DateInputComponent
     ],
     template: `
         @if (loading()) {
@@ -102,9 +90,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
                 }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
@@ -137,7 +123,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="admittedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Yatış tarihi / saati *</label>
-                            <app-date-input inputId="admittedAtLocal" type="datetime-local" formControlName="admittedAtLocal" [min]="hospitalizationDateMinAllowed()" limit="past" />
+                            <app-date-input inputId="admittedAtLocal" type="datetime-local" formControlName="admittedAtLocal" [min]="hospitalizationDateMin" limit="past" />
                             @if (form.controls.admittedAtLocal.hasError('dateYearInvalid') && form.controls.admittedAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (form.controls.admittedAtLocal.hasError('hospitalizationDateTooFarPast') && form.controls.admittedAtLocal.touched) {
@@ -202,15 +188,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         }
                         <div class="col-span-12 md:col-span-6">
                             <label for="wardId" class="block text-sm font-medium text-muted-color mb-2">Bölüm</label>
-                            <p-select
-                                inputId="wardId"
-                                formControlName="wardId"
-                                [options]="wardOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                styleClass="w-full"
-                                [loading]="loadingWards()"
-                            />
+                            <p-select inputId="wardId" formControlName="wardId" [options]="wardOptions()" optionLabel="label" optionValue="value" styleClass="w-full" [loading]="loadingWards()" />
                             @if (wardsError()) {
                                 <small class="text-red-500 block">{{ wardsError() }}</small>
                             } @else if (legacyLocation()) {
@@ -219,15 +197,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="roomId" class="block text-sm font-medium text-muted-color mb-2">Oda / kafes</label>
-                            <p-select
-                                inputId="roomId"
-                                formControlName="roomId"
-                                [options]="roomOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'"
-                                styleClass="w-full"
-                            />
+                            <p-select inputId="roomId" formControlName="roomId" [options]="roomOptions()" optionLabel="label" optionValue="value" [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'" styleClass="w-full" />
                             @if (apiFieldErrors().roomId) {
                                 <small class="text-red-500">{{ apiFieldErrors().roomId }}</small>
                             } @else if (form.hasError(roomRequiredKey) && form.controls.roomId.touched) {
@@ -258,14 +228,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
                             <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
                             <div class="mt-3">
-                                <p-button
-                                    type="button"
-                                    label="Yazdıklarımı atıp güncel kaydı yükle"
-                                    icon="pi pi-refresh"
-                                    severity="secondary"
-                                    size="small"
-                                    (onClick)="reload()"
-                                />
+                                <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="reload()" />
                             </div>
                         </div>
                     } @else if (submitError()) {
@@ -273,21 +236,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
-                            type="submit"
-                            [label]="copy.buttonSave"
-                            icon="pi pi-check"
-                            [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
-                        />
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonCancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            (onClick)="goDetail()"
-                            [disabled]="submitting()"
-                        />
+                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
                     </div>
                 </form>
             </div>
@@ -353,31 +303,24 @@ export class HospitalizationEditPageComponent implements OnInit {
 
     private editVmCache: HospitalizationEditVm | null = null;
 
-    readonly form = this.fb.nonNullable.group({
-        clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }, Validators.required],
-        admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), hospitalizationDateNotTooFarPastValidator()]],
-        plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
-        examinationId: [''],
-        visitId: [''],
-        wardId: [''],
-        roomId: [{ value: '', disabled: true }],
-        reason: ['', Validators.required],
-        notes: ['']
-    }, { validators: [plannedDischargeNotBeforeAdmissionValidator(), roomRequiredWhenWardSelectedValidator()] });
+    readonly form = this.fb.nonNullable.group(
+        {
+            clientId: ['', Validators.required],
+            petId: [{ value: '', disabled: true }, Validators.required],
+            admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), hospitalizationDateNotTooFarPastValidator()]],
+            plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
+            examinationId: [''],
+            visitId: [''],
+            wardId: [''],
+            roomId: [{ value: '', disabled: true }],
+            reason: ['', Validators.required],
+            notes: ['']
+        },
+        { validators: [plannedDischargeNotBeforeAdmissionValidator(), roomRequiredWhenWardSelectedValidator()] }
+    );
 
     constructor() {
-        const fields: HospitalizationUpsertFormFieldKey[] = [
-            'clientId',
-            'petId',
-            'admittedAtLocal',
-            'plannedDischargeAtLocal',
-            'examinationId',
-            'visitId',
-            'roomId',
-            'reason',
-            'notes'
-        ];
+        const fields: HospitalizationUpsertFormFieldKey[] = ['clientId', 'petId', 'admittedAtLocal', 'plannedDischargeAtLocal', 'examinationId', 'visitId', 'roomId', 'reason', 'notes'];
 
         for (const f of fields) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -527,9 +470,8 @@ export class HospitalizationEditPageComponent implements OnInit {
         return hospitalizationPlannedDischargeMin(this.form.controls.admittedAtLocal.value, this.datetimeLocalInputMin);
     }
 
-    hospitalizationDateMinAllowed(): string {
-        return effectiveDateTimeLocalInputMin(hospitalizationDateTimeLocalMinAllowed());
-    }
+    // Bir kez hesaplanir: her degisiklik turunda yeniden uretilen dakika degeri dev modda NG0100 veriyordu.
+    readonly hospitalizationDateMin = effectiveDateTimeLocalInputMin(hospitalizationDateTimeLocalMinAllowed());
 
     onSubmit(): void {
         this.submitError.set(null);
@@ -661,7 +603,6 @@ export class HospitalizationEditPageComponent implements OnInit {
         }
     }
 
-
     private loadExaminationsForPetFresh(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
@@ -697,9 +638,7 @@ export class HospitalizationEditPageComponent implements OnInit {
         this.selectionError.set(null);
 
         try {
-            const ex = await firstValueFrom(
-                this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid })
-            );
+            const ex = await firstValueFrom(this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }));
 
             if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                 return;
@@ -738,9 +677,6 @@ export class HospitalizationEditPageComponent implements OnInit {
             }
         }
     }
-
-
-
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
