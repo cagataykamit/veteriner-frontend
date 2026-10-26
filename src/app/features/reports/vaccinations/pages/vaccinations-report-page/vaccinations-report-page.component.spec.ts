@@ -50,12 +50,20 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
         });
     });
 
-    it('Hayvan seçim kutusu yok; Müşteri ve Arama alanları var', () => {
-        const el: HTMLElement = create().nativeElement;
+    it('Arama alanı birincil; Müşteri seçici "Müşteri seç" altında, hayvan seçim kutusu yok', () => {
+        const fixture = create();
+        const el: HTMLElement = fixture.nativeElement;
 
-        expect(el.querySelector('app-pet-search')).toBeNull();
-        expect(el.querySelector('app-client-search')).not.toBeNull();
         expect(el.querySelector('app-search-input')).not.toBeNull();
+        expect(el.querySelector('app-client-search')).toBeNull();
+
+        const toggle = el.querySelector<HTMLButtonElement>('button[aria-controls="vacRepEntityFilters"]')!;
+
+        expect(toggle.textContent).toContain('Müşteri seç');
+        toggle.click();
+        fixture.detectChanges();
+        expect(el.querySelector('app-client-search')).not.toBeNull();
+        expect(el.querySelector('app-pet-search')).toBeNull();
     });
 
     it('"Aktif" rozeti çıkmaz', () => {

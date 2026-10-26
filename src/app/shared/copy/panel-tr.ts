@@ -32,7 +32,11 @@ export const PANEL_COPY = {
     reportsFilterDateTo: 'Bitiş tarihi',
     reportsFilterClinic: 'Klinik',
     reportsFilterSearch: 'Arama',
-    /** Müşteri/hayvan rapor filtreleri — liste yükleme uyarısı */
+    /** Müşteri/hayvan rapor filtreleri — katlanır seçici bölümü (`app-report-filter-bar`) */
+    reportsEntityFilterToggle: 'Müşteri veya hasta seç',
+    reportsEntityFilterToggleClientOnly: 'Müşteri seç',
+    reportsEntityFilterHint: 'Yalnız seçtiğiniz müşterinin veya hastanın kayıtları listelenir. Ada göre bulmak için Arama kutusu yeterlidir.',
+    reportsEntityFilterHintClientOnly: 'Yalnız seçtiğiniz müşterinin kayıtları listelenir. Ada göre bulmak için Arama kutusu yeterlidir.',
     /** Rapor filtreleri — tarih aralığı uyarısı */
     reportsDateRangeBothRequired: 'Başlangıç ve bitiş tarihi birlikte seçilmelidir.',
     reportsClinicPanelDefault: 'Panel seçili klinik',
