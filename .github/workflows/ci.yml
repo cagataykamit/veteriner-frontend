@@ -24,11 +24,11 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
-      # Lock dosyası npm 11 ile yazılır; Node 22 ile gelen npm 10 isteğe bağlı eş bağımlılıkları farklı çözer ve
-      # `npm ci` "Missing: chokidar@5.0.0 from lock file" ile reddeder. Yerel geliştirme sürümüyle aynı npm kullanılır.
+      # Lock dosyası yerelde npm 11.6.4 ile yazılır; npm sürümleri isteğe bağlı eş bağımlılıkları farklı çözebilir
+      # (npm 10'da `npm ci` "Missing: chokidar@5.0.0 from lock file" ile reddediyordu). Yerelle aynı npm sabitlenir.
       - name: Use npm 11
         run: npm install -g npm@11.6.4
 
