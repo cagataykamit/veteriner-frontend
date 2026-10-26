@@ -89,6 +89,16 @@
                                     "with": "src/environments/environment.staging.ts"
                                 }
                             ]
+                        },
+                        "testing": {
+                            "aot": false,
+                            "optimization": false,
+                            "extractLicenses": false,
+                            "assets": [
+                                "src/favicon.ico",
+                                "src/assets"
+                            ],
+                            "styles": []
                         }
                     },
                     "defaultConfiguration": "production"
@@ -112,16 +122,13 @@
                     "builder": "@angular/build:extract-i18n"
                 },
                 "test": {
-                    "builder": "@angular/build:karma",
+                    "builder": "@angular/build:unit-test",
                     "options": {
                         "tsConfig": "tsconfig.spec.json",
-                        "inlineStyleLanguage": "scss",
-                        "assets": [
-                            "src/favicon.ico",
-                            "src/assets"
-                        ],
-                        "styles": [],
-                        "scripts": []
+                        "buildTarget": ":build:testing",
+                        "runner": "vitest",
+                        "browsers": ["ChromiumHeadless"],
+                        "browserViewport": "800x600"
                     }
                 }
             }
@@ -196,6 +203,12 @@
                                     "with": "projects/portal/src/environments/environment.development.ts"
                                 }
                             ]
+                        },
+                        "testing": {
+                            "aot": false,
+                            "optimization": false,
+                            "extractLicenses": false,
+                            "styles": []
                         }
                     },
                     "defaultConfiguration": "production"
@@ -217,13 +230,13 @@
                     "defaultConfiguration": "development"
                 },
                 "test": {
-                    "builder": "@angular/build:karma",
+                    "builder": "@angular/build:unit-test",
                     "options": {
                         "tsConfig": "projects/portal/tsconfig.spec.json",
-                        "inlineStyleLanguage": "scss",
-                        "assets": [{ "glob": "**/*", "input": "projects/portal/public" }],
-                        "styles": [],
-                        "scripts": []
+                        "buildTarget": ":build:testing",
+                        "runner": "vitest",
+                        "browsers": ["ChromiumHeadless"],
+                        "browserViewport": "800x600"
                     }
                 }
             }

@@ -3,7 +3,9 @@
     "compilerOptions": {
         "outDir": "../../out-tsc/portal-spec",
         "rootDir": "./src",
-        "types": ["jasmine"],
+        "types": [
+            "vitest/globals"
+        ],
         "paths": {
             "@portal/*": ["./src/*"]
         }
