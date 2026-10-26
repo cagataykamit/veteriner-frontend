@@ -128,7 +128,8 @@
                         "buildTarget": ":build:testing",
                         "runner": "vitest",
                         "browsers": ["ChromiumHeadless"],
-                        "browserViewport": "800x600"
+                        "browserViewport": "800x600",
+                        "runnerConfig": true
                     }
                 }
             }
@@ -236,7 +237,8 @@
                         "buildTarget": ":build:testing",
                         "runner": "vitest",
                         "browsers": ["ChromiumHeadless"],
-                        "browserViewport": "800x600"
+                        "browserViewport": "800x600",
+                        "runnerConfig": true
                     }
                 }
             }
