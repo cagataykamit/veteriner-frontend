@@ -11,7 +11,7 @@ import type { ExaminationEditVm } from '@/app/features/examinations/models/exami
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { EXAMINATION_CONCURRENCY_CONFLICT_MESSAGE } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ExaminationWorkspacePageComponent } from './examination-workspace-page.component';
 
