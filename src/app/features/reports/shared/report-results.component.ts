@@ -9,6 +9,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 
 /**
  * Rapor sonucu alanı: yükleniyor / hata / özet kartı / boş / liste durumları ve mobil sayfalayıcı.
+ * "Yükleniyor" yalnız ilk yüklemede görünür; süzgeç ve sayfa yenilemesinde eski sonuç yerinde kalıp soluklaşır (tablo zıplamaz).
  * Rapora özgü kısımlar iki şablonla verilir: `#summary` (toplam kayıt kartına ek alanlar, isteğe bağlı) ve `#rows` (tablo ve mobil satırlar).
  */
 @Component({
@@ -17,7 +18,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
     imports: [NgTemplateOutlet, Paginator, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent],
     template: `
         @let s = state();
-        @if (s.loading()) {
+        @if (s.loading() && !s.report()) {
             <app-loading-state [message]="copy.reportsLoadingMessage" />
         } @else if (s.error()) {
             <div class="card">
@@ -28,42 +29,44 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
                 }
             </div>
         } @else if (s.report(); as r) {
-            @if (summaryLine()) {
-                <p class="text-sm text-muted-color mt-0 mb-3">{{ r.totalCount }} {{ copy.registerRecordCount }}</p>
-            } @else if (showSummary()) {
-            <div class="card mb-4 report-summary">
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 sm:col-span-6">
-                        <span class="block text-muted-color text-sm mb-1">{{ totalLabel() }}</span>
-                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totalCount }}</div>
+            <div data-testid="report-results-body" [class.opacity-60]="s.loading()" [attr.aria-busy]="s.loading()">
+                @if (summaryLine()) {
+                    <p class="text-sm text-muted-color mt-0 mb-3">{{ r.totalCount }} {{ copy.registerRecordCount }}</p>
+                } @else if (showSummary()) {
+                    <div class="card mb-4 report-summary">
+                        <div class="grid grid-cols-12 gap-4">
+                            <div class="col-span-12 sm:col-span-6">
+                                <span class="block text-muted-color text-sm mb-1">{{ totalLabel() }}</span>
+                                <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ r.totalCount }}</div>
+                            </div>
+                            @if (summaryTpl) {
+                                <ng-container [ngTemplateOutlet]="summaryTpl" />
+                            }
+                        </div>
                     </div>
-                    @if (summaryTpl) {
-                        <ng-container [ngTemplateOutlet]="summaryTpl" />
-                    }
-                </div>
-            </div>
-            }
+                }
 
-            @if (r.items.length === 0) {
-                <div class="card">
-                    <app-empty-state [message]="emptyMessage()" [hint]="emptyHint()" />
-                </div>
-            } @else {
-                <div class="card">
-                    <ng-container [ngTemplateOutlet]="rowsTpl" />
-                    <div [class]="alwaysPaginate() ? 'register-screen-only mt-4' : 'lg:hidden mt-4'">
-                        <p-paginator
-                            [rows]="s.pageSize()"
-                            [totalRecords]="r.totalCount"
-                            [first]="s.first()"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="s.rowsPerPageOptions"
-                            (onPageChange)="s.onMobilePageChange($event)"
-                        />
+                @if (r.items.length === 0) {
+                    <div class="card">
+                        <app-empty-state [message]="emptyMessage()" [hint]="emptyHint()" />
                     </div>
-                </div>
-            }
+                } @else {
+                    <div class="card">
+                        <ng-container [ngTemplateOutlet]="rowsTpl" />
+                        <div [class]="alwaysPaginate() ? 'register-screen-only mt-4' : 'lg:hidden mt-4'">
+                            <p-paginator
+                                [rows]="s.pageSize()"
+                                [totalRecords]="r.totalCount"
+                                [first]="s.first()"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                                [rowsPerPageOptions]="s.rowsPerPageOptions"
+                                (onPageChange)="s.onMobilePageChange($event)"
+                            />
+                        </div>
+                    </div>
+                }
+            </div>
         }
     `
 })

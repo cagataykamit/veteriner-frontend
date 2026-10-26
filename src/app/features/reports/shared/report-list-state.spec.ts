@@ -189,7 +189,7 @@ describe('ReportListState', () => {
         expect(second.currentPage()).toBe(2);
     });
 
-    it('sayfa boyutu değişince ilk sayfaya döner; mobil sayfalayıcı sonraki tablo olayını yutar', () => {
+    it('sayfa boyutu değişince ilk sayfaya döner', () => {
         const state = create();
 
         state.init();
@@ -200,6 +200,20 @@ describe('ReportListState', () => {
 
         expect(q.page).toBe(1);
         expect(q.pageSize).toBe(10);
+    });
+
+    it('mobil sayfalayıcıdan sonra tablonun sayfa olayı yutulmaz (tablo yenilemede yeniden kurulmaz)', () => {
+        const state = create();
+
+        state.init();
+        state.onTableLazyLoad({ first: 0, rows: 25 }); // init sonrası ilk olay yutulur
+        state.onMobilePageChange({ first: 25, rows: 25 });
+        expect(source.loadReport.calls.mostRecent().args[0].page).toBe(2);
+        source.loadReport.calls.reset();
+        state.onTableLazyLoad({ first: 50, rows: 25 });
+
+        expect(source.loadReport).toHaveBeenCalledTimes(1);
+        expect(source.loadReport.calls.mostRecent().args[0].page).toBe(3);
     });
 
     it('resetFilters süzgeçleri ve saklanan durumu temizler', () => {
