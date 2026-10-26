@@ -4,7 +4,7 @@
  * (`pricing-plan.utils.ts`, ADR-035), burada sayı yazılmaz; hatırlatma yalnız e-posta, deneme sonu kuralı yazılmaz.
  */
 
-import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, pricingTermsText } from './pricing-plan.utils';
+import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, pricingTermsText, YEARLY_BILLED_MONTHS } from './pricing-plan.utils';
 
 /** Çok klinik sunan paketlerin adları ("Kurumsal"). */
 const MULTI_CLINIC_PLANS = PRICING_PLAN_DEFS.filter((d) => d.maxClinics === 'coklu')
@@ -65,7 +65,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Yıllık ödeme var mı?',
-                answer: 'Hayır. Şu an aylık faturalandırıyoruz.'
+                answer: `Evet. Yıllık ödemede 12 ay için ${YEARLY_BILLED_MONTHS} ay ücreti alınır (${12 - YEARLY_BILLED_MONTHS} ay hediye). Aylık ödemeden yıllığa panelden istediğiniz an geçebilirsiniz; içinde bulunduğunuz ayın kalan günleri ücretten düşülür.`
             },
             {
                 question: 'Deneme nasıl işliyor?',

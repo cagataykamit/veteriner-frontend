@@ -40,7 +40,7 @@ const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
             <section class="public-section" aria-labelledby="packages-plans-title">
                 <h2 id="packages-plans-title" class="sr-only">Paketler</h2>
                 <p class="m-0 mb-8 text-center text-sm text-muted-color">{{ pricingTerms }}.</p>
-                <app-public-plan-cards [plans]="plans" />
+                <app-public-plan-cards [plans]="plans" [periodToggle]="true" />
             </section>
 
             <section class="public-section" aria-labelledby="packages-compare-title">

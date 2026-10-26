@@ -147,16 +147,27 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(root().textContent).not.toContain('Fiyat yakında');
     });
 
-    it('paketler: yalnız aylık fiyat (dönem seçici, yıllık tutar ve indirim yok); karşılaştırma tablosu tüm özellik satırlarını gösterir', async () => {
+    it('paketler: Aylık/Yıllık anahtarı (BILL-001) aylıkla açılır, yıllıkta 10 aylık tutar; karşılaştırma tablosu tüm özellik satırlarını gösterir', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.packages);
         harness.detectChanges();
 
-        const prices = texts('[data-plan], table.public-plan-table').join(' ');
+        const cardPrices = () => texts('[data-plan]').join(' ');
+        const toggle = root().querySelector('[aria-label="Ödeme dönemi"]');
 
-        expect(root().querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
-        expect(prices).not.toMatch(/yıllık|\/ yıl|hediye/i);
-        expect(prices).toContain('/ ay');
-        expect(root().textContent).not.toMatch(/hediye|indirim/i);
+        expect(toggle).not.toBeNull();
+        expect(cardPrices()).toContain('/ ay');
+        expect(cardPrices()).not.toMatch(/\/ yıl/);
+        expect(root().textContent).not.toMatch(/indirim/i);
+
+        const yearly = Array.from(toggle!.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Yıllık')!;
+
+        yearly.click();
+        harness.detectChanges();
+
+        expect(yearly.getAttribute('aria-pressed')).toBe('true');
+        expect(cardPrices()).toContain('₺9.990');
+        expect(cardPrices()).toContain('/ yıl');
+        expect(cardPrices()).toContain('2 ay hediye');
         const rowHeaders = texts('table.public-plan-table tbody th[scope="row"]');
 
         PRICING_FEATURE_ROWS.forEach((r) => expect(rowHeaders.some((t) => t.startsWith(r.label))).withContext(r.label).toBeTrue());

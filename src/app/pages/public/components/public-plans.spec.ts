@@ -10,6 +10,7 @@ import {
     pricingSummaryText,
     pricingTermsText,
     PRICING_PLAN_DEFS,
+    yearlyPriceTry,
     type PricingFeatureRowDef,
     type PricingPlanDef
 } from '@/app/features/public/utils/pricing-plan.utils';
@@ -62,11 +63,19 @@ describe('Paket verisi (pricing-plan.utils)', () => {
     });
 
     it('fiyat görünümü: aylık birim; teklifli pakette "İletişime geçin"', () => {
-        expect(planPriceView(PRICING_PLAN_DEFS[0])).toEqual({ amount: '₺999', unit: '/ ay' });
-        expect(planPriceView(PRICING_PLAN_DEFS[1])).toEqual({ amount: '₺1.990', unit: '/ ay' });
-        expect(planPriceView(PRICING_PLAN_DEFS[2])).toEqual({ amount: 'İletişime geçin', unit: null });
+        expect(planPriceView(PRICING_PLAN_DEFS[0])).toEqual({ amount: '₺999', unit: '/ ay', note: null });
+        expect(planPriceView(PRICING_PLAN_DEFS[1])).toEqual({ amount: '₺1.990', unit: '/ ay', note: null });
+        expect(planPriceView(PRICING_PLAN_DEFS[2])).toEqual({ amount: 'İletişime geçin', unit: null, note: null });
         expect(planPriceView(EMPTY_PLANS[0])).toBeNull();
         expect(hasPlanComparison(EMPTY_PLANS, [])).toBeFalse();
+    });
+
+    it('yıllık fiyat (BILL-001): 10 aylık tutar, "2 ay hediye" ve aylık karşılığı; teklifli pakette yine "İletişime geçin"', () => {
+        expect(yearlyPriceTry(PRICING_PLAN_DEFS[0])).toBe(9990);
+        expect(yearlyPriceTry(PRICING_PLAN_DEFS[2])).toBeNull();
+        expect(planPriceView(PRICING_PLAN_DEFS[0], 'yearly')).toEqual({ amount: '₺9.990', unit: '/ yıl', note: "2 ay hediye · aylık ₺833'e denk" });
+        expect(planPriceView(PRICING_PLAN_DEFS[1], 'yearly')).toEqual({ amount: '₺19.900', unit: '/ yıl', note: "2 ay hediye · aylık ₺1.658'e denk" });
+        expect(planPriceView(PRICING_PLAN_DEFS[2], 'yearly')).toEqual({ amount: 'İletişime geçin', unit: null, note: null });
     });
 
     it('biçimlendirme: TL tutar, sınır etiketi; null → null', () => {
